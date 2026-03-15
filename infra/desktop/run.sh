@@ -14,7 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUT_DIR="$SCRIPT_DIR/output"
-DISK_IMG="$OUT_DIR/robos.img"
+DISK_IMG="$OUT_DIR/robos-gnome.img"
 CIDATA_ISO="$OUT_DIR/cidata.iso"
 
 FIRST_BOOT=0
@@ -89,7 +89,7 @@ echo ""
 qemu-system-x86_64 \
   $KVM_FLAGS \
   -m 16G \
-  -smp 4 \
+  -smp "$(nproc)",cores="$(nproc)" \
   -hda "$DISK_IMG" \
   $CDROM_FLAGS \
   -net nic,model=virtio \
@@ -99,17 +99,17 @@ qemu-system-x86_64 \
   ${SPICE_FLAGS} \
   -device virtio-balloon \
   -rtc base=localtime \
-  -serial file:/tmp/robos-gnome-serial.log \
+  -serial file:/tmp/robos-serial.log \
   -daemonize \
-  -pidfile /tmp/robos-gnome-qemu.pid \
-  -name "RobOS-Gnome"
+  -pidfile /tmp/robos-qemu.pid \
+  -name "RobOS"
 
 echo ""
 echo "==> VM launched (daemonized)"
 echo "    VNC / display window: watch for the RobOS window on your desktop"
-echo "    Serial log:           tail -f /tmp/robos-gnome-serial.log"
+echo "    Serial log:           tail -f /tmp/robos-serial.log"
 echo "    SSH (after boot):     ssh -p 2224 robos@localhost"
-echo "    Stop VM:              kill \$(cat /tmp/robos-gnome-qemu.pid)"
+echo "    Stop VM:              kill \$(cat /tmp/robos-qemu.pid)"
 
 # ── Copy host GitHub credentials into the VM (after SSH is ready) ─────────────
 if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
@@ -121,7 +121,7 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
       GH_USER=$(gh api user --jq .login 2>/dev/null)
       if [[ -n "$GH_TOKEN" && -n "$GH_USER" ]]; then
         # Copy SSH key
-        scp -q -o StrictHostKeyChecking=no -P 2222 \
+        scp -q -o StrictHostKeyChecking=no -P 2224 \
           ~/.ssh/id_rsa ~/.ssh/id_rsa.pub robos@localhost:~/.ssh/ 2>/dev/null || true
         # Write gh hosts.yml directly (no keyring needed in VM)
         ssh -o StrictHostKeyChecking=no -p 2224 robos@localhost bash -s << SSHEOF

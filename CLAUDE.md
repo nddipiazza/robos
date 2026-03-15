@@ -4,7 +4,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RobOS is a Linux-based desktop OS (Ubuntu foundation) purpose-built for software engineers. The entire UX revolves around the SDLC: virtual desktops map to Jira tickets, MCP servers connect AI to external systems, and Electron apps provide the desktop GUI.
+RobOS is a Linux-based desktop OS (Ubuntu + GNOME) purpose-built for software engineers. The entire UX revolves around the SDLC: virtual desktops map to Jira tickets, MCP servers connect AI to external systems, and Electron apps provide the desktop GUI. It runs as a QEMU/KVM virtual machine provisioned with cloud-init.
+
+## Building and Running the VM
+
+### Host Prerequisites
+
+```bash
+sudo apt install qemu-system-x86 qemu-utils qemu-kvm xorriso wget python3 virt-viewer
+sudo adduser $USER kvm   # KVM acceleration — logout/login after
+```
+
+### Build a Fresh VM
+
+```bash
+# Build disk image (100 GB sparse) and cloud-init ISO
+./infra/desktop/build.sh
+
+# First boot — cloud-init installs GNOME, Node.js, Chrome, dev tools (~5-10 min)
+# A splash screen with ASCII art shows progress on tty1
+./infra/desktop/run.sh --firstboot --spice
+
+# After cloud-init finishes, install RobOS apps inside the VM:
+ssh -o StrictHostKeyChecking=no -p 2224 robos@localhost
+# Then inside the VM:
+bash /path/to/packages/desktop-shell/install.sh
+```
+
+### Boot an Existing VM
+
+```bash
+./infra/desktop/run.sh              # GTK window (default)
+./infra/desktop/run.sh --spice      # SPICE display (best: host↔guest clipboard via spice-vdagent)
+./infra/desktop/run.sh --vnc        # VNC display (vncviewer localhost:5912)
+```
+
+### VM Specs
+
+| Resource | Value | Notes |
+|----------|-------|-------|
+| RAM | 16 GB | `-m 16G` |
+| CPUs | All host cores | `-smp $(nproc)` — uses every available core |
+| Disk | 100 GB | Sparse qcow2; only uses actual space consumed on host |
+| Display | virtio-vga | 1920x1080 default in GNOME Settings → Displays |
+| Network | User-mode NAT | SSH forwarded on host port 2224 |
+| Clipboard | SPICE vdagent | Use `--spice` flag; spice-vdagent runs in guest |
+| Acceleration | KVM | Requires `/dev/kvm` access (kvm group) |
+
+### VM Access
+
+```bash
+# SSH
+ssh -o StrictHostKeyChecking=no -p 2224 robos@localhost
+
+# SPICE viewer (for clipboard sharing without GTK window)
+remote-viewer spice://127.0.0.1:5932
+
+# Stop VM
+kill $(cat /tmp/robos-qemu.pid)
+
+# Serial log
+tail -f /tmp/robos-serial.log
+```
+
+Login: `robos` / `robos`
+
+### Deploying Code Changes to the VM
+
+After modifying any package, deploy to the running VM:
+```bash
+# Option 1: Full reinstall (run inside the VM via SSH)
+ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
+
+# Option 2: Copy a single app and restart it
+scp -P 2224 -r packages/<app-id>/* robos@localhost:/tmp/<app-id>/
+ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo npm install --quiet"
+```
 
 ## Development Commands
 
@@ -20,23 +95,6 @@ node packages/dev-harness/harness.js --list-scenarios
 Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-missing`, `git-config-missing`, `all-broken`
 
 **Always develop and test using the dev harness before deploying to the VM.** SSH deploy is only for final verification.
-
-### Installing on the VM
-```bash
-# Full install (run inside the VM)
-packages/desktop-shell/install.sh
-
-# SSH into VM
-ssh -o StrictHostKeyChecking=no -p 2224 robos@localhost
-```
-
-### VM launch
-```bash
-./infra/desktop/run.sh              # normal boot
-./infra/desktop/run.sh --firstboot  # first boot with cloud-init
-./infra/desktop/run.sh --vnc        # VNC display (connect: vncviewer localhost:5910)
-./infra/desktop/run.sh --spice      # SPICE display (connect: remote-viewer spice://127.0.0.1:5930)
-```
 
 ## Architecture
 
@@ -79,6 +137,13 @@ All Electron apps are launched via `robos-launch <app-id>` — no per-app wrappe
 
 ### Process Detection
 `resolveAppId(pid)` reads `/proc/{pid}/cmdline` (null-separated) rather than regex-matching `ps aux` output. This correctly identifies apps even when launched from the dev-harness.
+
+## Key Technical Gotchas
+
+- **cloud-init**: `write_files` does NOT create parent directories — always `mkdir -p` in `runcmd`. cloud-init only runs once per `instance-id`; re-provision requires a fresh disk.
+- **`bootcmd` vs `runcmd`**: `bootcmd` fires before packages install (used for splash screen). `runcmd` runs after packages are installed.
+- **Electron in QEMU**: `pkill`/`killall` are not available — use `kill <PID>` with explicit PIDs. Apps started via SSH need `DISPLAY=:0`.
+- **Monaco editors**: Editors initialized while hidden render at 0x0. Call `ed.layout()` when the containing tab becomes visible.
 
 ## Conventions
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gen-userdata.py — for robos, user-data is maintained directly.
+gen-userdata.py — for robos-gnome, user-data is maintained directly.
 This script is a no-op placeholder so build.sh doesn't fail.
 """
 import pathlib

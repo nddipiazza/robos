@@ -3,7 +3,7 @@
 #
 # Usage:  ./infra/desktop/build.sh
 #
-# Output: infra/desktop/output/robos.img   (20 GB qcow2 disk)
+# Output: infra/desktop/output/robos.img   (100 GB sparse qcow2 disk)
 #         infra/desktop/output/cidata.iso   (cloud-init seed ISO)
 #
 # First boot will take ~5–10 min to install packages via cloud-init.
@@ -20,7 +20,7 @@ IMAGE_URL="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-a
 BASE_IMG="$OUT_DIR/ubuntu-base.img"
 DISK_IMG="$OUT_DIR/robos.img"
 CIDATA_ISO="$OUT_DIR/cidata.iso"
-DISK_SIZE="20G"
+DISK_SIZE="100G"
 
 # ── Dependency check ─────────────────────────────────────────────────────────
 check_dep() {
