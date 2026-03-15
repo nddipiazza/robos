@@ -14,7 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUT_DIR="$SCRIPT_DIR/output"
-DISK_IMG="$OUT_DIR/robos-gnome.img"
+DISK_IMG="$OUT_DIR/robos.img"
 CIDATA_ISO="$OUT_DIR/cidata.iso"
 
 FIRST_BOOT=0
