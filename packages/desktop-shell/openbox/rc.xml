@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc"
+                xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<resistance>
+  <strength>10</strength>
+  <screen_edge_strength>20</screen_edge_strength>
+</resistance>
+
+<focus>
+  <focusNew>yes</focusNew>
+  <followMouse>no</followMouse>
+  <focusLast>yes</focusLast>
+  <underMouse>no</underMouse>
+  <focusDelay>200</focusDelay>
+  <raiseOnFocus>no</raiseOnFocus>
+</focus>
+
+<placement>
+  <policy>Smart</policy>
+  <center>yes</center>
+  <monitor>Active</monitor>
+  <primaryMonitor>1</primaryMonitor>
+</placement>
+
+<theme>
+  <name>RobOS</name>
+  <titleLayout>L IMC</titleLayout>
+  <keepBorder>yes</keepBorder>
+  <animateIconify>no</animateIconify>
+  <font place="ActiveWindow">
+    <name>Ubuntu</name>
+    <size>11</size>
+    <weight>Bold</weight>
+    <slant>Normal</slant>
+  </font>
+  <font place="InactiveWindow">
+    <name>Ubuntu</name>
+    <size>11</size>
+    <weight>Normal</weight>
+    <slant>Normal</slant>
+  </font>
+  <font place="MenuHeader">
+    <name>Ubuntu</name>
+    <size>10</size>
+    <weight>Bold</weight>
+    <slant>Normal</slant>
+  </font>
+  <font place="MenuItem">
+    <name>Ubuntu</name>
+    <size>10</size>
+    <weight>Normal</weight>
+    <slant>Normal</slant>
+  </font>
+  <font place="ActiveOnScreenDisplay">
+    <name>Ubuntu</name>
+    <size>10</size>
+    <weight>Bold</weight>
+    <slant>Normal</slant>
+  </font>
+  <font place="InactiveOnScreenDisplay">
+    <name>Ubuntu</name>
+    <size>10</size>
+    <weight>Normal</weight>
+    <slant>Normal</slant>
+  </font>
+</theme>
+
+<desktops>
+  <number>4</number>
+  <firstdesk>1</firstdesk>
+  <names>
+    <name>Workspace 1</name>
+    <name>Workspace 2</name>
+    <name>Workspace 3</name>
+    <name>Workspace 4</name>
+  </names>
+  <popupTime>875</popupTime>
+</desktops>
+
+<resize>
+  <drawContents>yes</drawContents>
+  <popupShow>NonPixel</popupShow>
+  <popupPosition>Center</popupPosition>
+  <popupFixedPosition>
+    <x>10</x>
+    <y>10</y>
+  </popupFixedPosition>
+</resize>
+
+<applications></applications>
+
+<keyboard>
+  <chainQuitKey>C-g</chainQuitKey>
+  <keybind key="A-F4">
+    <action name="Close"/>
+  </keybind>
+  <keybind key="A-Tab">
+    <action name="NextWindow">
+      <finalactions>
+        <action name="Focus"/>
+        <action name="Raise"/>
+        <action name="Unshade"/>
+      </finalactions>
+    </action>
+  </keybind>
+  <keybind key="A-S-Tab">
+    <action name="PreviousWindow">
+      <finalactions>
+        <action name="Focus"/>
+        <action name="Raise"/>
+        <action name="Unshade"/>
+      </finalactions>
+    </action>
+  </keybind>
+  <keybind key="Super_L">
+    <action name="ShowMenu">
+      <menu>root-menu</menu>
+    </action>
+  </keybind>
+</keyboard>
+
+<mouse>
+  <dragThreshold>8</dragThreshold>
+  <doubleClickTime>500</doubleClickTime>
+  <screenEdgeWarpTime>400</screenEdgeWarpTime>
+  <screenEdgeWarpMouse>false</screenEdgeWarpMouse>
+  <context name="Frame">
+    <mousebind button="A-Left" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+      <action name="Move"/>
+    </mousebind>
+    <mousebind button="A-Right" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+      <action name="Resize"/>
+    </mousebind>
+  </context>
+  <context name="Titlebar">
+    <mousebind button="Left" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+    </mousebind>
+    <mousebind button="Left" action="Drag">
+      <action name="Move"/>
+    </mousebind>
+    <mousebind button="Left" action="DoubleClick">
+      <action name="ToggleMaximize"/>
+    </mousebind>
+    <mousebind button="Right" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+      <action name="ShowMenu">
+        <menu>client-menu</menu>
+      </action>
+    </mousebind>
+  </context>
+  <context name="Desktop">
+    <mousebind button="Right" action="Press">
+      <action name="ShowMenu">
+        <menu>root-menu</menu>
+      </action>
+    </mousebind>
+  </context>
+  <context name="Close">
+    <mousebind button="Left" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+      <action name="Unshade"/>
+    </mousebind>
+    <mousebind button="Left" action="Click">
+      <action name="Close"/>
+    </mousebind>
+  </context>
+  <context name="Maximize">
+    <mousebind button="Left" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+      <action name="Unshade"/>
+    </mousebind>
+    <mousebind button="Left" action="Click">
+      <action name="ToggleMaximize"/>
+    </mousebind>
+  </context>
+  <context name="Iconify">
+    <mousebind button="Left" action="Press">
+      <action name="Focus"/>
+      <action name="Raise"/>
+    </mousebind>
+    <mousebind button="Left" action="Click">
+      <action name="Iconify"/>
+    </mousebind>
+  </context>
+  <context name="MoveResize">
+    <mousebind button="Up" action="Scroll">
+      <action name="GoToDesktop">
+        <to>previous</to>
+        <wrap>no</wrap>
+      </action>
+    </mousebind>
+    <mousebind button="Down" action="Scroll">
+      <action name="GoToDesktop">
+        <to>next</to>
+        <wrap>no</wrap>
+      </action>
+    </mousebind>
+  </context>
+</mouse>
+
+<menu>
+  <file>menu.xml</file>
+  <hideDelay>200</hideDelay>
+  <middle>no</middle>
+  <submenuShowDelay>100</submenuShowDelay>
+  <submenuHideDelay>400</submenuHideDelay>
+  <showIcons>yes</showIcons>
+  <manageDesktops>yes</manageDesktops>
+</menu>
+
+</openbox_config>

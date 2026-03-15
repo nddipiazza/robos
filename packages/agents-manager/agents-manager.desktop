@@ -1,0 +1,10 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS AI
+X-RobOS-App=true
+Name=RobOS Agents
+Comment=Manage Copilot CLI agent sessions and settings
+Exec=/usr/local/bin/robos-launch agents-manager
+Icon=/usr/local/share/robos/agents-manager/icon.svg
+Type=Application
+Categories=Development;
+StartupWMClass=agents-manager

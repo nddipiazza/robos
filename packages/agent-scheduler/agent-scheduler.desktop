@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Dev
+X-RobOS-App=true
+Name=RobOS Agent Scheduler
+Comment=Schedule AI agent jobs
+Exec=/usr/local/bin/robos-launch agent-scheduler
+Icon=/usr/local/share/robos/agent-scheduler/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=agent-scheduler

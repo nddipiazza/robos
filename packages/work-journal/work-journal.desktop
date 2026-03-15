@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Journal
+X-RobOS-App=true
+Type=Application
+Name=RobOS Work Journal
+Comment=RobOS Work Journal — git-backed developer journal
+Exec=/usr/local/bin/robos-launch work-journal
+Icon=/usr/local/share/robos/work-journal/icon.svg
+Categories=Development;
+StartupNotify=true
+StartupWMClass=work-journal

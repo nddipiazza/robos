@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RobOS Agent Control Panel
+Comment=RobOS AI Agent Jobs — placeholder MVP
+Exec=/usr/local/bin/robos-agent-panel
+Icon=/usr/local/share/robos/icon.svg
+Terminal=false
+Categories=System;
+Keywords=agent;jobs;robos;
+X-RobOS-Category=RobOS Developer/AI

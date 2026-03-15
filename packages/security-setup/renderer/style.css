@@ -1,0 +1,116 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+input, textarea, select {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  pointer-events: auto !important;
+  cursor: text;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #c9d1d9; height: 100vh; overflow: hidden; }
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+.header { display: flex; align-items: center; gap: 14px; padding: 18px 24px 14px; border-bottom: 1px solid #21262d; background: #161b22; }
+.btn-reset {
+  margin-left: auto; background: none; border: 1px solid #f44336;
+  color: #f44336; border-radius: 6px; padding: 6px 14px;
+  font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.btn-reset:hover { background: #2d1a1a; }
+.header-icon { display:flex; align-items:center; line-height:1; }
+.header-title { font-size: 16px; font-weight: 700; color: #e6edf3; }
+.header-sub   { font-size: 12px; color: #8b949e; margin-top: 2px; }
+
+/* ── Step bar ─────────────────────────────────────────────────────────────── */
+.steps-bar {
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px 28px 14px;
+  gap: 0;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
+}
+.step-dot {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+}
+.step-dot span {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #21262d; border: 2px solid #30363d;
+  color: #8b949e; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.step-dot label { font-size: 10px; color: #484f58; white-space: nowrap; }
+.step-dot.active span { background: #00bcd4; border-color: #00bcd4; color: #000; }
+.step-dot.done   span { background: #4caf50; border-color: #4caf50; color: #000; }
+.step-dot.active label, .step-dot.done label { color: #c9d1d9; }
+.step-line { flex: 1; height: 2px; background: #21262d; min-width: 48px; margin: 0 4px 20px; }
+
+/* ── Step panels ──────────────────────────────────────────────────────────── */
+#steps { flex: 1; overflow-y: auto; }
+.step-panel { display: none; padding: 28px 36px; flex-direction: column; gap: 16px; }
+.step-panel.active { display: flex; }
+.step-panel h2 { font-size: 15px; font-weight: 600; color: #e6edf3; margin-bottom: 4px; }
+.desc { font-size: 13px; color: #8b949e; line-height: 1.6; }
+
+/* ── Status block ─────────────────────────────────────────────────────────── */
+.status-block {
+  background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+  padding: 12px 14px; font-size: 13px; min-height: 40px;
+}
+.status-block.ok  { border-color: #4caf50; color: #4caf50; }
+.status-block.warn{ border-color: #ff9800; color: #ff9800; }
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+.form-row { display: flex; flex-direction: column; gap: 5px; }
+.form-row label { font-size: 12px; color: #8b949e; }
+.form-row input, .form-row select {
+  background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+  color: #c9d1d9; font-size: 13px; padding: 8px 10px; outline: none;
+  transition: border-color .15s; width: 100%;
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+.form-row input:focus, .form-row select:focus { border-color: #00bcd4; }
+select { appearance: none; cursor: pointer; }
+
+.divider-or { text-align: center; color: #484f58; font-size: 12px; margin: 4px 0; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: #00bcd4; color: #000; border: none; border-radius: 6px;
+  padding: 10px 24px; font-size: 13px; font-weight: 600; cursor: pointer;
+  width: fit-content; margin-top: 4px;
+}
+.btn-primary:hover { background: #00acc1; }
+.btn-primary:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+.error { background: #2d1a1a; border: 1px solid #f44336; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #f44336; }
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+.spinner-wrap { display: flex; align-items: center; gap: 12px; color: #8b949e; font-size: 13px; }
+.spinner {
+  width: 20px; height: 20px; border: 2px solid #30363d;
+  border-top-color: #00bcd4; border-radius: 50%;
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Key info ─────────────────────────────────────────────────────────────── */
+.key-info {
+  background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+  padding: 10px 14px; font-size: 12px; color: #00bcd4; font-family: monospace;
+  word-break: break-all;
+}
+
+/* ── Done ─────────────────────────────────────────────────────────────────── */
+.done-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 16px; }
+.done-icon { font-size: 52px; }
+.done-wrap h2 { font-size: 20px; }
+.done-details {
+  background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+  padding: 12px 18px; font-size: 12px; color: #8b949e; width: 100%;
+  line-height: 1.8;
+}
+
+.hidden { display: none !important; }

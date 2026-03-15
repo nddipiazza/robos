@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS App Launcher
+Comment=Browse and launch all RobOS apps
+Exec=python3 /usr/local/bin/robos-app-menu.py
+Icon=/usr/local/share/robos/app-launcher/icon.svg
+Terminal=false
+Categories=System;
+Keywords=apps;launcher;menu;
+X-RobOS-Category=RobOS System
+StartupNotify=false

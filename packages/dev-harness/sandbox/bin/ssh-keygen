@@ -1,0 +1,5 @@
+#!/bin/bash
+# Stub for: ssh-keygen
+# Passes through to real ssh-keygen but writes into sandbox HOME
+
+exec /usr/bin/ssh-keygen "$@"

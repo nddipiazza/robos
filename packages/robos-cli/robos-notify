@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# robos-notify — send a desktop notification and log to RobOS notifications store
+# Usage: robos-notify "Title" "Message" [icon]
+# icon: info (default), warning, error, success, start
+
+export DISPLAY="${DISPLAY:-:0}"
+export HOME="${HOME:-/home/robos}"
+
+TITLE="${1:-RobOS}"
+MSG="${2:-}"
+ICON_TYPE="${3:-info}"
+NOTIF_FILE="$HOME/.config/robos/notifications.json"
+
+case "$ICON_TYPE" in
+  error)   NOTIFY_ICON="dialog-error" ;;
+  warning) NOTIFY_ICON="dialog-warning" ;;
+  success|start) NOTIFY_ICON="dialog-information" ;;
+  *)       NOTIFY_ICON="dialog-information" ;;
+esac
+
+# Desktop toast
+if command -v notify-send &>/dev/null; then
+  notify-send -a "RobOS" -t 6000 -i "$NOTIFY_ICON" "$TITLE" "$MSG" 2>/dev/null || true
+fi
+
+# Persist to notifications store
+mkdir -p "$(dirname "$NOTIF_FILE")"
+python3 - <<PYEOF
+import json, os, uuid
+from datetime import datetime
+f = '$NOTIF_FILE'
+try:
+    data = json.load(open(f)) if os.path.exists(f) else []
+except:
+    data = []
+data.insert(0, {
+    'id': str(uuid.uuid4()),
+    'title': '''$TITLE''',
+    'message': '''$MSG''',
+    'icon': '$ICON_TYPE',
+    'source': 'robos-notify',
+    'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+    'read': False
+})
+data = data[:200]
+with open(f, 'w') as out:
+    json.dump(data, out, indent=2)
+PYEOF

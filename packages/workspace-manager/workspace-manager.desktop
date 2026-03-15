@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Workspace Manager
+Comment=Browse and open IDE workspaces across the system
+Exec=/usr/local/bin/robos-launch workspace-manager
+Icon=/usr/local/share/robos/workspace-manager/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=RobOS Dev
+StartupNotify=false

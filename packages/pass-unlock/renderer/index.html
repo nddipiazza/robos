@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS — Unlock Pass</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Greeting header -->
+    <div id="header">
+      <div id="greeting-icon">🔑</div>
+      <div id="greeting-text">Good morning</div>
+      <div id="date-text"></div>
+    </div>
+
+    <!-- Locked state -->
+    <div id="state-locked">
+      <div id="lock-icon">🔒</div>
+      <div id="lock-msg">Your pass store is locked.<br>Enter your GPG passphrase to unlock for the day.</div>
+
+      <div id="stats-yesterday" class="hidden">
+        <div class="stats-label">Yesterday's secret access</div>
+        <div id="stats-row"></div>
+      </div>
+
+      <div id="pw-wrap">
+        <input id="passphrase" type="password" placeholder="GPG passphrase…" autocomplete="off">
+      </div>
+      <div id="error-msg" class="error hidden"></div>
+      <button id="btn-unlock" class="btn-primary">Unlock for Today</button>
+      <button id="btn-skip" class="btn-skip">Skip — remind me later</button>
+    </div>
+
+    <!-- Already unlocked state -->
+    <div id="state-unlocked" class="hidden">
+      <div id="unlock-icon">🔓</div>
+      <div id="unlock-msg">Pass is unlocked for today</div>
+      <div id="unlock-since"></div>
+
+      <div id="today-stats" class="stats-box">
+        <div class="stats-label">Today's secret access</div>
+        <div id="today-stats-row"></div>
+      </div>
+      <button id="btn-close" class="btn-primary">Close</button>
+    </div>
+
+    <!-- Success splash (shown briefly after unlock) -->
+    <div id="state-success" class="hidden">
+      <div class="success-icon">✅</div>
+      <div class="success-msg">Pass unlocked for the day!</div>
+      <div class="success-sub">Closing in <span id="countdown">3</span>s…</div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

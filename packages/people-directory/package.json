@@ -1,0 +1,8 @@
+{
+  "name": "people-directory",
+  "version": "1.0.0",
+  "description": "RobOS People Directory",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

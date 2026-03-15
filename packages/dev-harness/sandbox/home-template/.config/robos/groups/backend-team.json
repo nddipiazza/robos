@@ -1,0 +1,16 @@
+{
+  "id": "backend-team",
+  "name": "Backend Team",
+  "description": "Core backend services developers",
+  "members": [],
+  "settings": {
+    "git": [
+      { "url": "acme-corp/api-gateway", "description": "Main API gateway", "branch": "main", "notes": "" },
+      { "url": "acme-corp/auth-service", "description": "Authentication service", "branch": "main", "notes": "" }
+    ],
+    "software": [],
+    "onboarding": [],
+    "secrets": [],
+    "ci": []
+  }
+}

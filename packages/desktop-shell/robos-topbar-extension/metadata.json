@@ -1,0 +1,7 @@
+{
+  "name": "RobOS Top Bar",
+  "description": "Hides Activities, moves clock to right, workspace selector to left",
+  "uuid": "robos-topbar@robos",
+  "shell-version": ["42"],
+  "version": 1
+}

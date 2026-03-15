@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-App=true
+Type=Application
+Name=RobOS Workflow Studio
+Comment=RobOS Workflow Studio
+Exec=/usr/local/bin/robos-launch workflow-studio
+Icon=/usr/local/share/robos/workflow-studio/icon.svg
+Categories=Development;
+StartupNotify=true
+X-RobOS-Category=RobOS Dev
+StartupWMClass=workflow-studio

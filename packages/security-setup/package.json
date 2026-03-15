@@ -1,0 +1,8 @@
+{
+  "name": "security-setup",
+  "version": "1.0.0",
+  "description": "RobOS Security Setup — GPG key and pass store initialization",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

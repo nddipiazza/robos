@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Dev
+X-RobOS-App=true
+Name=RobOS Language Manager
+Comment=Manage development languages and runtime versions
+Exec=/usr/local/bin/robos-launch lang-manager
+Icon=/usr/local/share/robos/lang-manager/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=lang-manager

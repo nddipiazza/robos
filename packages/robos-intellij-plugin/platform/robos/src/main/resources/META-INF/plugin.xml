@@ -1,0 +1,74 @@
+<idea-plugin>
+    <id>com.robos.intellij</id>
+    <name>RobOS</name>
+    <vendor url="https://github.com/nddipiazza/robos-intellij">RobOS</vendor>
+
+    <description><![CDATA[
+        <b>RobOS</b> integration for JetBrains IDEs.<br/><br/>
+
+        Exposes an IPC HTTP server (default port <code>63343</code>) that the
+        RobOS Workspace Agent calls to:<br/>
+        <ul>
+          <li>Open projects and files in the IDE</li>
+          <li>Navigate to specific file / line / column</li>
+          <li>Run and stop named run configurations</li>
+          <li>Show RobOS notifications as IDE balloon popups</li>
+          <li>Update workspace metadata (active ticket, branch, collaborators)</li>
+        </ul>
+
+        Also connects to the RobOS notification-bus via WebSocket and surfaces
+        events (PR reviews needed, blockers detected, meeting reminders, etc.)
+        as IDE notifications.<br/><br/>
+
+        See the <b>RobOS</b> tool window in the right-hand sidebar for the
+        active ticket context, focus timer, and collaborator presence strip.
+    ]]></description>
+
+    <!-- Requires IntelliJ Platform 2024.3+ -->
+    <idea-version since-build="253" until-build="253.*"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <!-- ── Services ─────────────────────────────────────────────────────── -->
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- IPC HTTP server -->
+        <applicationService
+            serviceImplementation="com.robos.intellij.ipc.RobosIpcServer"/>
+
+        <!-- Notification-bus WebSocket client -->
+        <applicationService
+            serviceImplementation="com.robos.intellij.startup.NotificationBusAppService"/>
+
+        <!-- Workspace state -->
+        <applicationService
+            serviceImplementation="com.robos.intellij.services.RobosWorkspaceService"/>
+
+        <!-- Startup: starts IPC server + bus client after first project loads -->
+        <projectActivity
+            implementation="com.robos.intellij.startup.RobosStartupActivity"/>
+
+        <!-- Tool window: RobOS side panel -->
+        <toolWindow
+            id="RobOS"
+            anchor="right"
+            secondary="true"
+            icon="/icons/robos13.svg"
+            factoryClass="com.robos.intellij.ui.RobosToolWindowFactory"/>
+
+        <!-- Notification group for balloon popups -->
+        <notificationGroup
+            id="RobOS"
+            displayType="BALLOON"
+            key="notification.group.robos"/>
+
+    </extensions>    <!-- ── Listeners ────────────────────────────────────────────────────── -->
+    <applicationListeners>
+        <!-- Start IPC server as soon as the IDE frame is ready -->
+        <listener
+            class="com.robos.intellij.startup.RobosAppLifecycleListener"
+            topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+
+</idea-plugin>

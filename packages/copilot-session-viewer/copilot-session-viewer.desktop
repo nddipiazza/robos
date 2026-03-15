@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Copilot Session Viewer
+Comment=Browse and inspect Copilot session history
+Exec=/usr/local/bin/robos-launch copilot-session-viewer
+Icon=/usr/local/share/robos/copilot-session-viewer/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=RobOS AI
+StartupNotify=false
+StartupWMClass=copilot-session-viewer

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS Notifications</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="topbar">
+    <div id="topbar-left">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="app-title">RobOS Notifications</span>
+    </div>
+    <div id="topbar-actions">
+      <select id="filter-source" class="filter-sel">
+        <option value="">All Sources</option>
+        <option value="agent-scheduler">Agent Scheduler</option>
+        <option value="robos-notify">robos-notify</option>
+      </select>
+      <select id="filter-read" class="filter-sel">
+        <option value="">All</option>
+        <option value="unread">Unread</option>
+        <option value="read">Read</option>
+      </select>
+      <button id="btn-mark-all-read" class="tb-btn" title="Mark all as read">✓ Mark All Read</button>
+      <button id="btn-clear-all" class="tb-btn tb-btn-danger" title="Delete all notifications">🗑 Clear All</button>
+      <button id="btn-refresh" class="tb-btn" title="Refresh">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <span id="stat-unread">0 unread</span>
+    <span class="stat-sep">·</span>
+    <span id="stat-total">0 total</span>
+  </div>
+
+  <div id="list-container">
+    <div id="notif-list"></div>
+    <div id="empty-state" class="hidden">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></div>
+      <div class="empty-msg">No notifications</div>
+      <div class="empty-sub">New notifications will appear here when agents run or events occur.</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

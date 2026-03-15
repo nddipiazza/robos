@@ -1,0 +1,125 @@
+# RobOS Openbox window decoration theme — Modern Dark
+
+# Titlebar height = (padding.height * 2) + font size.  16 → ~32 px titlebar,
+# big enough for comfortably-clickable min/max/close buttons.
+border.width:                         2
+padding.width:                        5
+padding.height:                       16
+window.handle.width:                  0
+
+# ── Active window ──────────────────────────────────────────────────────────
+# Neutral charcoal border — no neon blue
+window.active.border.color:                      #484860
+window.active.title.separator.color:             #1c1c2c
+
+window.active.title.bg:                          flat solid
+window.active.title.bg.color:                    #262636
+
+window.active.label.bg:                          flat solid
+window.active.label.bg.color:                    #262636
+window.active.label.text.color:                  #d0d0e8
+
+# All buttons — dim at rest, light on hover
+window.active.button.unpressed.bg:               flat solid
+window.active.button.unpressed.bg.color:         #262636
+window.active.button.unpressed.image.color:      #7070a8
+
+window.active.button.hover.bg:                   flat solid
+window.active.button.hover.bg.color:             #3a3a56
+window.active.button.hover.image.color:          #e8e8ff
+
+window.active.button.pressed.bg:                 flat solid
+window.active.button.pressed.bg.color:           #181826
+window.active.button.pressed.image.color:        #ffffff
+
+# Close button — red fill on hover (clearly destructive)
+window.active.button.close.unpressed.bg:          flat solid
+window.active.button.close.unpressed.bg.color:    #262636
+window.active.button.close.unpressed.image.color: #8060a0
+window.active.button.close.hover.bg:              flat solid
+window.active.button.close.hover.bg.color:        #c0392b
+window.active.button.close.hover.image.color:     #ffffff
+window.active.button.close.pressed.bg:            flat solid
+window.active.button.close.pressed.bg.color:      #922b21
+window.active.button.close.pressed.image.color:   #ffffff
+
+# Maximize button — green on hover
+window.active.button.max.unpressed.bg:            flat solid
+window.active.button.max.unpressed.bg.color:      #262636
+window.active.button.max.unpressed.image.color:   #7070a8
+window.active.button.max.hover.bg:                flat solid
+window.active.button.max.hover.bg.color:          #27ae60
+window.active.button.max.hover.image.color:       #ffffff
+window.active.button.max.pressed.bg:              flat solid
+window.active.button.max.pressed.bg.color:        #1e8449
+window.active.button.max.pressed.image.color:     #ffffff
+
+# Iconify button — amber on hover
+window.active.button.iconify.unpressed.bg:        flat solid
+window.active.button.iconify.unpressed.bg.color:  #262636
+window.active.button.iconify.unpressed.image.color: #7070a8
+window.active.button.iconify.hover.bg:            flat solid
+window.active.button.iconify.hover.bg.color:      #d4a017
+window.active.button.iconify.hover.image.color:   #ffffff
+window.active.button.iconify.pressed.bg:          flat solid
+window.active.button.iconify.pressed.bg.color:    #a07810
+window.active.button.iconify.pressed.image.color: #ffffff
+
+window.active.handle.bg:                         flat solid
+window.active.handle.bg.color:                   #262636
+window.active.grip.bg:                           flat solid
+window.active.grip.bg.color:                     #484860
+
+# ── Inactive window ────────────────────────────────────────────────────────
+window.inactive.border.color:                    #1a1a28
+window.inactive.title.separator.color:           #141420
+
+window.inactive.title.bg:                        flat solid
+window.inactive.title.bg.color:                  #1c1c28
+
+window.inactive.label.bg:                        flat solid
+window.inactive.label.bg.color:                  #1c1c28
+window.inactive.label.text.color:                #383850
+
+# Buttons invisible on inactive windows
+window.inactive.button.unpressed.bg:             flat solid
+window.inactive.button.unpressed.bg.color:       #1c1c28
+window.inactive.button.unpressed.image.color:    #1c1c28
+
+window.inactive.handle.bg:                       flat solid
+window.inactive.handle.bg.color:                 #1c1c28
+window.inactive.grip.bg:                         flat solid
+window.inactive.grip.bg.color:                   #1a1a28
+
+# ── Menus ──────────────────────────────────────────────────────────────────
+menu.border.color:                               #404058
+menu.border.width:                               1
+menu.overlap.x:                                  0
+menu.overlap.y:                                  0
+menu.title.bg:                                   flat solid
+menu.title.bg.color:                             #262636
+menu.title.text.color:                           #9090cc
+menu.title.text.justify:                         Left
+menu.items.bg:                                   flat solid
+menu.items.bg.color:                             #1c1c28
+menu.items.text.color:                           #aaaacc
+menu.items.active.bg:                            flat solid
+menu.items.active.bg.color:                      #303048
+menu.items.active.text.color:                    #e8e8f4
+menu.items.disabled.text.color:                  #333348
+menu.items.disabled.active.text.color:           #3a3a54
+menu.separator.color:                            #2a2a3c
+menu.separator.width:                            1
+menu.separator.padding.width:                    6
+menu.separator.padding.height:                   3
+
+# ── OSD ────────────────────────────────────────────────────────────────────
+osd.border.color:                                #484860
+osd.border.width:                                1
+osd.bg:                                          flat solid
+osd.bg.color:                                    #262636
+osd.label.text.color:                            #e8e8f4
+osd.hilight.bg:                                  flat solid
+osd.hilight.bg.color:                            #484860
+osd.unhilight.bg:                                flat solid
+osd.unhilight.bg.color:                          #262636

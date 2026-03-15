@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS Copilot Session Viewer</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <!-- Top toolbar -->
+  <div class="toolbar">
+    <span class="app-logo" id="app-logo-icon"></span><span class="app-title">Copilot Session Viewer</span>
+    <div class="toolbar-search">
+      <input id="search-input" class="search-input" type="text" placeholder="Search sessions…" spellcheck="false"/>
+    </div>
+    <span id="session-count" class="session-count"></span>
+    <button id="btn-refresh" class="tb-btn" title="Refresh">↻</button>
+  </div>
+
+  <div class="body-layout">
+    <!-- Left: session list -->
+    <aside class="session-list-panel">
+      <div id="session-list" class="session-list">
+        <div class="loading">Loading sessions…</div>
+      </div>
+    </aside>
+
+    <!-- Right: session detail -->
+    <main class="detail-panel" id="detail-panel">
+      <div class="detail-empty">
+        <div class="detail-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></div>
+        <div class="detail-empty-text">Select a session to view</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "agent-scheduler",
+  "version": "1.0.0",
+  "description": "RobOS Agent Scheduler — Schedule AI agent jobs with recurrence",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
+}

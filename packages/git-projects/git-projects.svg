@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- stem -->
+  <path d="M32 54 C32 54 32 30 32 22" stroke="#3fb950" stroke-width="3" stroke-linecap="round"/>
+  <!-- left leaf -->
+  <path d="M32 36 C22 30 14 20 20 12 C26 18 32 28 32 36Z" fill="#3fb950" opacity="0.9"/>
+  <!-- right leaf -->
+  <path d="M32 28 C42 22 50 14 44 8 C38 14 32 22 32 28Z" fill="#3fb950" opacity="0.75"/>
+  <!-- ground curve -->
+  <path d="M22 54 Q32 50 42 54" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+</svg>

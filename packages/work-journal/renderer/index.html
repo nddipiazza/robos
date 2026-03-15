@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>RobOS Work Journal</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="app-title">RobOS Work Journal</span>
+      <span id="repo-badge" class="repo-badge hidden"></span>
+    </div>
+    <div class="topbar-right">
+      <button id="btn-settings" class="icon-btn" title="Journal Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ── Setup view (no journal configured) ─────────────────────────────── -->
+  <div id="view-setup" class="view hidden">
+    <div class="setup-card">
+      <div class="setup-icon">📓</div>
+      <h2>Set Up Your Work Journal</h2>
+      <p>Your Work Journal is a GitHub repository where RobOS apps automatically log your work — task breakdowns, workflow changes, daily notes, and more.</p>
+      <div class="setup-field">
+        <label>GitHub Repository</label>
+        <input id="setup-repo" type="text" class="setup-input" placeholder="e.g. nddipiazza/robos-work-journal"/>
+        <div class="setup-hint">The repo will be cloned locally and auto-pushed on every write.</div>
+      </div>
+      <div class="setup-actions">
+        <button id="btn-create-repo" class="btn btn-secondary">🆕 Create on GitHub</button>
+        <button id="btn-connect-repo" class="btn btn-primary">🔗 Connect</button>
+      </div>
+      <div id="setup-status" class="setup-status"></div>
+    </div>
+  </div>
+
+  <!-- ── Main journal view ──────────────────────────────────────────────── -->
+  <div id="view-main" class="view hidden">
+    <div class="journal-layout">
+
+      <!-- Sidebar: entry list -->
+      <aside class="journal-sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">Entries</span>
+          <button id="btn-new-entry" class="btn btn-sm btn-primary">+ Today</button>
+        </div>
+        <div id="entry-list" class="entry-list"></div>
+      </aside>
+
+      <!-- Content area -->
+      <div class="journal-content">
+        <!-- Tab bar -->
+        <div class="content-tabs">
+          <button id="tab-editor" class="content-tab active">📝 Notes</button>
+          <button id="tab-activity" class="content-tab">🤖 AI Activity</button>
+        </div>
+
+        <!-- Editor panel -->
+        <div id="panel-editor" class="content-panel">
+          <div class="editor-toolbar">
+            <span id="editor-date" class="editor-date"></span>
+            <div class="editor-toolbar-right">
+              <button id="btn-open-folder" class="btn btn-sm" title="Open journal folder in file manager">📂 Open Folder</button>
+              <button id="btn-toggle-view" class="btn btn-sm">👁 Preview</button>
+              <button id="btn-save-entry" class="btn btn-sm btn-primary">💾 Save</button>
+              <button id="btn-push" class="btn btn-sm">⬆ Push</button>
+            </div>
+          </div>
+          <textarea id="editor-area" class="editor-area" placeholder="Write your journal entry in Markdown…"></textarea>
+          <div id="preview-area" class="preview-area hidden"></div>
+          <div id="save-status" class="save-status"></div>
+        </div>
+
+        <!-- Activity feed panel -->
+        <div id="panel-activity" class="content-panel hidden">
+          <div class="activity-header">
+            <span id="activity-date-label" class="activity-date-label"></span>
+            <div id="activity-stats" class="activity-stats"></div>
+            <button id="btn-refresh-activity" class="btn btn-sm">↺ Refresh</button>
+          </div>
+          <div id="activity-feed" class="activity-feed"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Settings modal ─────────────────────────────────────────────────── -->
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Journal Settings</h3>
+        <button class="icon-btn" id="btn-close-settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>GitHub Repository URL</label>
+        <input id="settings-repo" type="text" class="setup-input" placeholder="owner/repo"/>
+        <div class="setup-hint">Change where your journal is stored. Existing entries stay in the old repo.</div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+<!-- Detail modal -->
+<div id="ae-modal" class="ae-modal hidden">
+  <div class="ae-modal-backdrop"></div>
+  <div class="ae-modal-box">
+    <div class="ae-modal-header">
+      <span id="ae-modal-title"></span>
+      <button id="ae-modal-close" class="ae-modal-close">✕</button>
+    </div>
+    <pre id="ae-modal-body" class="ae-modal-body"></pre>
+  </div>
+</div>
+</body>
+</html>

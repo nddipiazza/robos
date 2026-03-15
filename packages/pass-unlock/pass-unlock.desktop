@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Security
+X-RobOS-App=true
+Name=RobOS Pass Unlock
+Comment=Unlock the RobOS password store
+Exec=/usr/local/bin/robos-launch pass-unlock
+Icon=/usr/local/share/robos/pass-unlock/icon.svg
+Terminal=false
+Type=Application
+Categories=Security;System;
+StartupWMClass=pass-unlock

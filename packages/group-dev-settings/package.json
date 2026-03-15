@@ -1,0 +1,8 @@
+{
+  "name": "group-dev-settings",
+  "version": "1.0.0",
+  "description": "RobOS Group Developer Settings",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

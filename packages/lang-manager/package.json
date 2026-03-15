@@ -1,0 +1,12 @@
+{
+  "name": "lang-manager",
+  "version": "1.0.0",
+  "description": "RobOS Programming Languages Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.3.3"
+  }
+}

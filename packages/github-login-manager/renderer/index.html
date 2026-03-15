@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>RobOS GitHub Login Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <header>
+      <span class="app-logo" id="app-logo-icon"></span>
+      <div>
+        <h1>GitHub Login Manager</h1>
+        <p class="sub">Monitors <code>gh auth status</code> every minute</p>
+      </div>
+    </header>
+
+    <!-- Status card -->
+    <div id="status-card" class="card">
+      <div id="status-row">
+        <span id="status-dot" class="dot dot-spin"></span>
+        <span id="status-text">Checking…</span>
+        <button id="btn-refresh" class="btn-ghost btn-sm" title="Check now">↻</button>
+      </div>
+      <pre id="status-detail" class="detail-box"></pre>
+    </div>
+
+    <!-- Login flow -->
+    <div id="login-card" class="card" style="display:none">
+      <h2>Authenticate with GitHub</h2>
+      <p class="hint">
+        Click <strong>Login with Browser</strong> — a one-time code will appear below.
+        Copy it, then complete the login in the browser window that opens.
+      </p>
+
+      <div id="code-block" style="display:none">
+        <div class="label">One-time code</div>
+        <div id="otp-display" class="otp"></div>
+        <button id="btn-copy-otp" class="btn-ghost btn-sm">📋 Copy</button>
+      </div>
+
+      <pre id="login-output" class="detail-box output-scroll"></pre>
+
+      <div class="btn-row">
+        <button id="btn-login" class="btn-primary">🌐 Login with Browser</button>
+        <button id="btn-cancel" class="btn-ghost" style="display:none">✕ Cancel</button>
+      </div>
+    </div>
+
+    <!-- Success -->
+    <div id="success-card" class="card success-card" style="display:none">
+      <div class="success-icon">✓</div>
+      <h2>Authenticated!</h2>
+      <p id="success-detail"></p>
+      <button id="btn-dismiss" class="btn-ghost">Dismiss</button>
+    </div>
+
+    <footer>
+      <span id="next-check">Next check in 60s</span>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

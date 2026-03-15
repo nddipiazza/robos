@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RobOS Task Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+
+  <!-- Custom title bar -->
+  <div id="titlebar">
+    <div id="titlebar-drag">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span>RobOS Task Manager</span>
+    </div>
+    <div id="titlebar-btns">
+      <button id="btn-minimize" title="Minimize">─</button>
+      <button id="btn-close"    title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <input id="search" type="text" placeholder="Filter by name or PID…" autocomplete="off" spellcheck="false">
+    <label class="toggle-label" title="Refresh every 3 seconds">
+      <input type="checkbox" id="auto-refresh" checked>
+      <span>Auto-refresh</span>
+    </label>
+    <button id="btn-refresh" title="Refresh now">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M13.65 2.35A8 8 0 1 0 15 8h-2a6 6 0 1 1-1.06-3.39L9 7h6V1l-1.35 1.35Z" fill="currentColor"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Process table -->
+  <div id="table-wrap">
+    <table id="proc-table">
+      <thead>
+        <tr>
+          <th class="col-check"><input type="checkbox" id="check-all" title="Select all"></th>
+          <th class="col-app sortable" data-col="appName">App <span class="sort-arrow"></span></th>
+          <th class="col-pid sortable" data-col="pid">PID <span class="sort-arrow"></span></th>
+          <th class="col-cpu sortable" data-col="cpu">CPU% <span class="sort-arrow"></span></th>
+          <th class="col-mem sortable" data-col="memMb">Memory <span class="sort-arrow"></span></th>
+          <th class="col-stat">Status</th>
+          <th class="col-cmd">Command</th>
+        </tr>
+      </thead>
+      <tbody id="proc-body">
+        <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer action bar -->
+  <div id="footer">
+    <span id="count-label">— processes</span>
+    <span id="select-label"></span>
+    <div id="footer-actions">
+      <button id="btn-kill-sel"       class="btn-danger"         disabled>Kill Selected</button>
+      <button id="btn-force-kill-sel" class="btn-danger-outline" disabled>Force Kill Selected</button>
+      <button id="btn-kill-all"       class="btn-danger-outline">Kill All RobOS Apps</button>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div id="confirm-overlay" hidden>
+    <div id="confirm-box">
+      <div id="confirm-icon">⚠</div>
+      <div id="confirm-msg"></div>
+      <div id="confirm-btns">
+        <button id="confirm-ok"     class="btn-danger">Kill</button>
+        <button id="confirm-cancel" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

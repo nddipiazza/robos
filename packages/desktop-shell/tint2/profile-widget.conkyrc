@@ -1,0 +1,46 @@
+-- RobOS Profile Widget — current user identity from person service
+-- Hardcoded to robos (myProfileUid) until OAuth providers configured
+
+conky.config = {
+    update_interval = 30,
+    total_run_times = 0,
+
+    own_window = true,
+    own_window_type = 'desktop',
+    own_window_transparent = false,
+    own_window_argb_visual = true,
+    own_window_argb_value = 220,
+    own_window_colour = '#0d1a2e',
+    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+
+    double_buffer = true,
+
+    alignment = 'top_left',
+    gap_x = 20,
+    gap_y = 20,
+
+    minimum_width = 240,
+    maximum_width = 240,
+
+    use_xft = true,
+    font = 'DejaVu Sans:size=9',
+    xftalpha = 0.9,
+
+    default_color = '#c9d1d9',
+    draw_shades = false,
+    draw_outline = false,
+    draw_borders = false,
+
+    border_width = 1,
+    border_inner_margin = 10,
+
+    lua_load = '',
+};
+
+conky.text = [[
+${color #00bcd4}${font DejaVu Sans:bold:size=8}● IDENTITY${font}${color}
+${hr 1}
+${execp ~/.local/bin/profile-widget.sh}
+${hr 1}
+${color #333355}${font DejaVu Sans:size=7}robos-auth · person-service${font}${color}
+]];

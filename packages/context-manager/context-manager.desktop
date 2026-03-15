@@ -1,0 +1,10 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS AI
+X-RobOS-App=true
+Name=RobOS Context Manager
+Comment=Manage AI context sources for RobOS agents
+Exec=/usr/local/bin/robos-launch context-manager
+Icon=/usr/local/share/robos/context-manager/icon.svg
+Type=Application
+Categories=Development;
+StartupWMClass=context-manager

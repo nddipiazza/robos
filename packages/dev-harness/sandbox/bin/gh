@@ -1,0 +1,71 @@
+#!/bin/bash
+# Stub for: gh
+# Reads ROBOS_SCENARIO to return appropriate responses
+
+SCENARIO="${ROBOS_SCENARIO:-all-good}"
+CMD="$1 $2"
+
+case "$CMD" in
+  "auth status")
+    if [ "$SCENARIO" = "no-gh-auth" ] || [ "$SCENARIO" = "all-broken" ]; then
+      echo "You are not logged into any GitHub hosts. Run gh auth login to authenticate." >&2
+      exit 1
+    fi
+    echo "github.com"
+    echo "  ✓ Logged in to github.com account testuser (/home/robos/.config/gh/hosts.yml)"
+    echo "  - Active account: true"
+    echo "  - Git operations protocol: ssh"
+    echo "  - Token: gho_****"
+    echo "  - Token scopes: 'gist', 'read:org', 'repo', 'workflow'"
+    exit 0
+    ;;
+
+  "ssh-key add")
+    if [ "$SCENARIO" = "scope-missing" ]; then
+      echo "HTTP 404: Not Found (https://api.github.com/user/keys)" >&2
+      echo "This API operation needs the \"admin:public_key\" scope. To request it, run:" >&2
+      echo "  gh auth refresh -h github.com -s admin:public_key" >&2
+      exit 1
+    fi
+    echo "✓ Added SSH key to GitHub"
+    exit 0
+    ;;
+
+  "ssh-key list")
+    if [ "$SCENARIO" = "scope-missing" ]; then
+      echo "HTTP 404: Not Found" >&2
+      echo "This API operation needs the \"admin:public_key\" scope." >&2
+      exit 1
+    fi
+    if [ "$SCENARIO" = "ssh-not-on-github" ]; then
+      echo "(no keys)"
+      exit 0
+    fi
+    echo "1234567  RobOS dev-harness  ssh-ed25519 AAAAC3NzaC..."
+    exit 0
+    ;;
+
+  "auth login")
+    # Simulate OTP device flow output
+    echo "! First copy your one-time code: TEST-1234" >&2
+    echo "Press Enter to open github.com in your browser..." >&2
+    echo "https://github.com/login/device" >&2
+    sleep 2
+    echo "✓ Authentication complete." >&2
+    exit 0
+    ;;
+
+  "auth refresh")
+    echo "! First copy your one-time code: ABCD-5678" >&2
+    echo "Press Enter to open github.com in your browser..." >&2
+    echo "https://github.com/login/device" >&2
+    sleep 2
+    echo "✓ gh auth refreshed with scope admin:public_key" >&2
+    exit 0
+    ;;
+
+  *)
+    echo "gh stub: unhandled command: $*" >&2
+    exit 0
+    ;;
+esac

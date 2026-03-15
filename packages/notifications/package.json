@@ -1,0 +1,8 @@
+{
+  "name": "notifications",
+  "version": "1.0.0",
+  "description": "RobOS Notifications — view all system and agent notifications",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

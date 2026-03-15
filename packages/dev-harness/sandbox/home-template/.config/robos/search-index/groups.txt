@@ -1,0 +1,5 @@
+group:backend-team:Backend Team
+group:frontend-team:Frontend Team
+group:platform-team:Platform Team
+group:devops-team:DevOps Team
+group:mobile-team:Mobile Team

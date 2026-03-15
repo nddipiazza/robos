@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RobOS Programming Languages</title>
+<link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<!-- ── toolbar ── -->
+<div class="toolbar">
+  <div class="app-icon">⌨️</div>
+  <span class="app-logo" id="app-logo-icon"></span><span class="app-title">RobOS Language Manager</span>
+  <div class="toolbar-search">
+    <input type="text" id="search-input" placeholder="🔍  Filter languages…" autocomplete="off"/>
+  </div>
+  <div class="toolbar-filters" id="category-filters"></div>
+</div>
+
+<!-- ── main layout ── -->
+<div class="main-layout">
+  <!-- Left: language list -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-empty" id="sidebar-loading">Loading…</div>
+    <div id="lang-list"></div>
+  </div>
+
+  <!-- Right: detail panel -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-placeholder">
+      <div class="placeholder-icon">⌨️</div>
+      <div class="placeholder-text">Select a language to manage its versions and build tools</div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

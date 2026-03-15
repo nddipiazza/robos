@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS Development Apps and IDEs</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="app-logo" id="app-logo-icon"></span><span class="app-title">RobOS Development Apps and IDEs</span>
+    <div class="toolbar-right">
+      <button id="btn-refresh" class="tb-btn" title="Re-detect tools">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- RobOS Plugin status bar (compact) -->
+  <div id="plugin-banner" class="plugin-banner">
+    <span class="plugin-banner-label">🔌 RobOS JetBrains Plugin:</span>
+    <span id="plugin-banner-sub">Loading…</span>
+  </div>
+
+  <div class="page-body">
+    <div id="ide-grid" class="ide-grid">
+      <div class="loading">Detecting tools…</div>
+    </div>
+  </div>
+
+  <!-- Install log modal -->
+  <div id="install-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="modal-title">Installing…</span>
+        <button id="modal-close" class="modal-close">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

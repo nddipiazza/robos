@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS Pass Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div id="header">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span id="header-title">RobOS Pass Manager</span>
+      <div id="header-actions">
+        <span id="lock-badge" class="lock-badge locked">🔒 Locked</span>
+        <button id="btn-lock" class="btn-lock hidden" title="Lock pass store now">🔒 Lock</button>
+        <input id="search" type="text" placeholder="Search entries…">
+        <button id="btn-add" class="btn-icon" title="New entry">+</button>
+        <button id="btn-refresh" class="btn-icon" title="Refresh">↺</button>
+      </div>
+    </div>
+
+    <!-- Main layout -->
+    <div id="main">
+      <!-- Sidebar: tree -->
+      <div id="sidebar">
+        <div id="tree-container"></div>
+      </div>
+
+      <div class="panel-resizer" id="panel-resizer"></div>
+
+      <!-- Right panel -->
+      <div id="panel">
+        <div id="panel-empty">
+          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="empty-text">Select an entry to view</div>
+        </div>
+
+        <!-- Not initialized: setup panel -->
+        <div id="panel-setup" class="hidden">
+          <div class="setup-wrap">
+            <div class="setup-icon">🔐</div>
+            <h2 class="setup-title">Set Up Your Password Store</h2>
+            <p class="setup-desc">Your pass store isn't initialized yet. Create a GPG key to get started.</p>
+            <div class="form-row"><label>Your Name</label><input id="setup-name" type="text" placeholder="Jane Smith"></div>
+            <div class="form-row"><label>Email</label><input id="setup-email" type="email" placeholder="you@example.com"></div>
+            <div class="form-row"><label>Passphrase</label><input id="setup-pw" type="password" placeholder="Leave blank for no passphrase"></div>
+            <div class="form-row"><label>Confirm Passphrase</label><input id="setup-pw2" type="password" placeholder="Confirm passphrase"></div>
+            <div id="setup-error" class="error hidden"></div>
+            <div id="setup-progress" class="setup-progress hidden">⏳ Generating GPG key… this may take 15–30 seconds.</div>
+            <button id="btn-setup-init" class="btn-primary setup-btn">🔑 Initialize Password Store</button>
+          </div>
+        </div>
+
+        <!-- Entry view -->
+        <div id="panel-entry" class="hidden">
+          <div id="entry-path-bar">
+            <span id="entry-path"></span>
+            <div id="entry-actions">
+              <button id="btn-copy-pw" class="btn-sm">📋 Copy Password</button>
+              <button id="btn-edit" class="btn-sm">✏️ Edit</button>
+              <button id="btn-delete" class="btn-sm btn-danger">🗑 Delete</button>
+            </div>
+          </div>
+          <div id="password-row">
+            <label>Password</label>
+            <div id="pw-wrap">
+              <input id="pw-display" type="password" readonly>
+              <button id="btn-toggle-pw" class="btn-icon-sm">👁</button>
+            </div>
+          </div>
+          <div id="meta-row">
+            <label>Notes / Additional fields</label>
+            <pre id="meta-display"></pre>
+          </div>
+        </div>
+
+        <!-- Add/Edit form -->
+        <div id="panel-form" class="hidden">
+          <div id="form-title">New Entry</div>
+          <div class="form-row"><label>Path (e.g. work/github)</label><input id="form-path" type="text" placeholder="folder/entry-name"></div>
+          <div class="form-row form-row-radio">
+            <label>Type</label>
+            <label><input type="radio" name="form-type" value="simple" checked> Simple (password only)</label>
+            <label><input type="radio" name="form-type" value="multiline"> Multiline (password + notes)</label>
+            <label><input type="radio" name="form-type" value="generate"> Generate random</label>
+          </div>
+          <div id="form-simple-wrap">
+            <div class="form-row"><label>Password</label><input id="form-pw" type="password" placeholder="Enter password"></div>
+            <div class="form-row"><label>Confirm</label><input id="form-pw2" type="password" placeholder="Confirm password"></div>
+          </div>
+          <div id="form-multi-wrap" class="hidden">
+            <div class="form-row"><label>Content (first line = password)</label><textarea id="form-multi" rows="6" placeholder="mysecretpassword&#10;login: user@example.com&#10;url: https://example.com"></textarea></div>
+          </div>
+          <div id="form-gen-wrap" class="hidden">
+            <div class="form-row"><label>Length</label><input id="form-gen-len" type="number" value="32" min="8" max="128"></div>
+          </div>
+          <div id="form-error" class="error hidden"></div>
+          <div id="form-btns">
+            <button id="btn-form-save" class="btn-primary">Save</button>
+            <button id="btn-form-cancel" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

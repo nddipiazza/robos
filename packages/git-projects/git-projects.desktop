@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Git Projects
+Comment=Manage your git project workspaces
+Exec=/usr/local/bin/robos-launch git-projects
+Icon=/usr/local/share/robos/git-projects/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=RobOS Dev
+StartupWMClass=git-projects

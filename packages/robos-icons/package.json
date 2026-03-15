@@ -1,0 +1,13 @@
+{
+  "name": "robos-icons",
+  "version": "1.0.0",
+  "description": "RobOS Icon Library — manage and sync app icons",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

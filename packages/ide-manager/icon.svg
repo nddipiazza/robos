@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- laptop base -->
+  <rect x="8" y="38" width="48" height="6" rx="3" fill="#30363d" stroke="#58a6ff" stroke-width="1.5"/>
+  <rect x="22" y="43" width="20" height="3" rx="1.5" fill="#58a6ff" opacity="0.5"/>
+  <!-- laptop screen -->
+  <rect x="14" y="14" width="36" height="24" rx="3" fill="#21262d" stroke="#58a6ff" stroke-width="1.5"/>
+  <!-- screen content: code lines -->
+  <line x1="20" y1="22" x2="34" y2="22" stroke="#3fb950" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="28" x2="40" y2="28" stroke="#58a6ff" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="34" x2="30" y2="34" stroke="#3fb950" stroke-width="2" stroke-linecap="round"/>
+</svg>

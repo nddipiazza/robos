@@ -1,0 +1,9 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Dev
+X-RobOS-App=true
+Name=RobOS TPS Workbench
+Comment=Technical Problem Solution Workbench
+Exec=/usr/local/bin/robos-launch tech-workbench
+Icon=/usr/local/share/robos/tech-workbench/icon.svg
+Type=Application
+Categories=Development;Utility;

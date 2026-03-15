@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>RobOS Context Manager</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="vendor/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+      window._mermaid = window.mermaid;
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+    }
+  </script>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="app-title">RobOS Context Manager</span>
+      <span class="app-subtitle">AI agent context sources</span>
+    </div>
+    <div class="topbar-right">
+      <button id="btn-view-blob" class="btn btn-ghost">View Combined Context</button>
+      <button id="btn-add" class="btn btn-primary">+ Add Source</button>
+    </div>
+  </header>
+
+  <!-- ── Add / Edit modal ────────────────────────────────────────────── -->
+  <div id="modal-add" class="modal hidden">
+    <div class="modal-box">
+      <h2 id="modal-title">Add Context Source</h2>
+
+      <div class="type-toggle-row">
+        <button class="type-toggle-btn active" data-type="github">GitHub Repo</button>
+        <button class="type-toggle-btn" data-type="local">Local Folder</button>
+      </div>
+
+      <!-- GitHub section -->
+      <div id="gh-section">
+        <label class="field-label">Select from Git Projects</label>
+        <input id="gh-proj-search" class="text-input" placeholder="Filter projects…" autocomplete="off" style="margin-bottom:6px"/>
+        <div id="gh-projects-list" class="gh-projects-list">
+          <div class="gh-projects-loading">Loading projects…</div>
+        </div>
+        <div id="gh-selected" class="gh-selected hidden">
+          <span id="gh-selected-name" class="gh-selected-name"></span>
+          <button id="gh-clear" class="btn-link">clear</button>
+        </div>
+      </div>
+
+      <!-- Local section -->
+      <div id="local-section" class="hidden">
+        <label class="field-label">Folder Path</label>
+        <div class="path-row">
+          <input id="local-path" class="text-input" placeholder="/home/user/my-project"/>
+          <button id="btn-browse" class="btn btn-ghost">Browse…</button>
+        </div>
+      </div>
+
+      <label class="field-label mt">Display Name</label>
+      <input id="add-name" class="text-input" placeholder="e.g. Company API Docs"/>
+
+      <label class="field-label mt">Description (optional)</label>
+      <input id="add-desc" class="text-input" placeholder="What context does this provide?"/>
+
+      <div id="modal-error" class="error-msg hidden"></div>
+      <div class="modal-actions">
+        <button id="btn-modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-modal-confirm" class="btn btn-primary" disabled>Add Source</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Context blob viewer ─────────────────────────────────────────── -->
+  <div id="modal-blob" class="modal hidden">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header-row">
+        <h2>Combined Context Blob</h2>
+        <button id="btn-blob-close" class="btn btn-ghost btn-sm">Close</button>
+      </div>
+      <p class="modal-hint">This is what AI agents receive when all active sources are injected.</p>
+      <textarea id="blob-content" class="blob-textarea" readonly></textarea>
+      <div class="modal-actions">
+        <button id="btn-blob-copy" class="btn btn-primary">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── File preview modal ──────────────────────────────────────────── -->
+  <div id="modal-preview" class="modal hidden">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header-row">
+        <span id="preview-filename" class="preview-filename"></span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="btn-preview-raw" class="btn btn-ghost btn-sm">Raw</button>
+          <button id="btn-preview-close" class="btn btn-ghost btn-sm">Close</button>
+        </div>
+      </div>
+      <div id="preview-content" class="preview-md-content"></div>
+      <pre id="preview-raw-content" class="preview-raw-content hidden"></pre>
+    </div>
+  </div>
+
+  <!-- ── Main layout ─────────────────────────────────────────────────── -->
+  <div class="main-layout">
+
+    <!-- Left: source list -->
+    <aside class="sources-panel">
+      <div id="scope-bar" class="scope-bar"></div>
+      <div id="scope-label" class="scope-label"></div>
+      <div id="sources-list" class="sources-list"></div>
+    </aside>
+
+    <!-- Right: detail -->
+    <main class="detail-panel">
+      <div id="detail-empty" class="detail-empty">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg></div>
+        <div class="empty-title">No source selected</div>
+        <div class="empty-hint">Add a GitHub repo or local folder, then select it to see its context files.</div>
+      </div>
+
+      <div id="detail-content" class="hidden">
+
+        <div class="detail-header">
+          <div class="detail-title-row">
+            <span id="detail-name" class="detail-name"></span>
+            <span id="detail-type-badge" class="type-badge"></span>
+            <label class="active-toggle-wrap" title="Include in AI agent context">
+              <span class="active-toggle-label">Active</span>
+              <input type="checkbox" id="detail-active" class="active-checkbox"/>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="detail-path-row" class="detail-path"></div>
+          <div id="detail-desc-row" class="detail-desc hidden"></div>
+          <div id="detail-clone-status" class="clone-status"></div>
+        </div>
+
+        <div class="detail-actions">
+          <button id="btn-clone"   class="btn btn-success">Clone</button>
+          <button id="btn-pull"    class="btn btn-primary">Pull</button>
+          <button id="btn-vscode"  class="btn btn-ghost">VS Code</button>
+          <button id="btn-gh-link" class="btn btn-ghost">GitHub</button>
+          <button id="btn-rescan"  class="btn btn-ghost">Rescan Files</button>
+          <button id="btn-delete"  class="btn btn-danger">Remove</button>
+        </div>
+
+        <div id="clone-output-box" class="output-box hidden">
+          <pre id="clone-output-pre" class="output-pre"></pre>
+        </div>
+
+        <!-- Tabs -->
+        <div class="detail-tabs">
+          <button class="detail-tab active" data-tab="files">Context Files</button>
+          <button class="detail-tab" data-tab="agents">AGENTS.md</button>
+          <button class="detail-tab" data-tab="copilot">Copilot Instructions</button>
+          <button class="detail-tab" data-tab="graph">Knowledge Graph</button>
+        </div>
+
+        <!-- Tab: Context Files -->
+        <div id="tab-files" class="tab-pane">
+          <div class="files-section">
+            <div class="files-header">
+              <span class="files-label">Context Files</span>
+              <span id="files-count" class="files-count"></span>
+            </div>
+            <div id="files-list" class="files-list">
+              <span class="list-empty">Scan to discover context files</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: AGENTS.md -->
+        <div id="tab-agents" class="tab-pane hidden">
+          <div class="special-file-header">
+            <div>
+              <span class="special-file-title">AGENTS.md</span>
+              <span class="special-file-hint">Instructions for AI coding agents working in this repo</span>
+            </div>
+            <div class="special-file-actions">
+              <button id="btn-gen-agents" class="btn btn-primary btn-sm">Create with AI Agent</button>
+              <button id="btn-save-agents" class="btn btn-success btn-sm hidden">Save to Repo</button>
+            </div>
+          </div>
+          <div id="agents-status" class="graph-status hidden"></div>
+          <div id="agents-content" class="special-file-content">
+            <span class="list-empty">No AGENTS.md found. Click Rescan to check, or use "Create with AI Agent".</span>
+          </div>
+        </div>
+
+        <!-- Tab: Copilot Instructions -->
+        <div id="tab-copilot" class="tab-pane hidden">
+          <div class="special-file-header">
+            <div>
+              <span class="special-file-title">.github/copilot-instructions.md</span>
+              <span class="special-file-hint">Custom instructions that shape GitHub Copilot's responses</span>
+            </div>
+            <div class="special-file-actions">
+              <button id="btn-gen-copilot" class="btn btn-primary btn-sm">Create with AI Agent</button>
+              <button id="btn-save-copilot" class="btn btn-success btn-sm hidden">Save to Repo</button>
+            </div>
+          </div>
+          <div id="copilot-status" class="graph-status hidden"></div>
+          <div id="copilot-content" class="special-file-content">
+            <span class="list-empty">No copilot-instructions.md found. Click Rescan to check, or use "Create with AI Agent".</span>
+          </div>
+        </div>
+
+        <!-- Tab: Knowledge Graph -->
+        <div id="tab-graph" class="tab-pane hidden">
+          <div class="graph-toolbar">
+            <span class="special-file-hint">AI-generated knowledge graph from project context</span>
+            <button id="btn-gen-graph" class="btn btn-primary btn-sm">Generate via Copilot</button>
+          </div>
+          <div id="graph-status" class="graph-status hidden"></div>
+          <div id="graph-container" class="graph-container">
+            <span class="list-empty">Click "Generate via Copilot" to build a knowledge graph for this source.</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;">
+  <title>RobOS TPS Workbench</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────── -->
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <span class="app-logo" id="app-logo-icon"></span>
+        <span class="app-title">TPS Workbench</span>
+      </div>
+      <button id="btn-new-session" class="btn-new">＋ New Session</button>
+      <div id="session-list"></div>
+    </aside>
+
+    <!-- ── Main ───────────────────────────────────────────────────── -->
+    <main id="main">
+
+      <!-- Empty state -->
+      <div id="empty-state">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg></div>
+        <div class="empty-title">Technical Problem Solution Workbench</div>
+        <div class="empty-sub">Create a new session to start designing a technical solution with AI assistance.</div>
+        <button class="btn-primary" onclick="document.getElementById('btn-new-session').click()">＋ New Session</button>
+      </div>
+
+      <!-- Session view -->
+      <div id="session-view" class="hidden">
+
+        <!-- Session header -->
+        <div id="session-header">
+          <div id="session-title-row">
+            <span id="session-name-display" class="session-name"></span>
+            <button id="btn-copy-title" class="icon-btn" title="Copy session name">📋</button>
+            <button id="btn-rename" class="icon-btn" title="Rename">✏️</button>
+            <div class="header-spacer"></div>
+            <button id="btn-open-folder" class="tb-btn" title="Open in File Explorer">📁 Open Folder</button>
+            <button id="btn-delete-session" class="tb-btn tb-btn-danger" title="Delete session">🗑 Delete</button>
+          </div>
+
+          <!-- Phase stepper -->
+          <div id="phase-stepper">
+            <div class="phase-step" data-phase="describe">
+              <div class="step-dot">1</div>
+              <div class="step-label">Describe</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="phase-step" data-phase="draft">
+              <div class="step-dot">2</div>
+              <div class="step-label">Draft</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="phase-step" data-phase="questionnaire">
+              <div class="step-dot">3</div>
+              <div class="step-label">Q&amp;A</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="phase-step" data-phase="refined">
+              <div class="step-dot">4</div>
+              <div class="step-label">Refined</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="phase-step" data-phase="projects">
+              <div class="step-dot">📦</div>
+              <div class="step-label">Projects</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Phase 1: Describe ───────────────────────────────────── -->
+        <div id="phase-describe" class="phase-panel">
+          <div class="phase-intro">
+            <h2>Describe Your Problem</h2>
+            <p>Explain the technical problem or challenge you want to solve. Be as specific as possible — include context, constraints, existing systems, and what a good outcome looks like.</p>
+          </div>
+          <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
+            placeholder="Example: We have a monolithic Node.js API that handles 50k req/sec. It's becoming a bottleneck as we try to scale individual features independently. We need to migrate to a microservices architecture without downtime, keeping our PostgreSQL data layer intact. Team of 8 engineers, 6-month timeline…"></robos-ai-textarea>
+          <div class="phase-actions">
+            <button id="btn-analyze" class="btn-primary btn-large">🤖 Analyze &amp; Generate Draft</button>
+            <span class="phase-hint">or Ctrl+↵ in the text field</span>
+          </div>
+        </div>
+
+        <!-- ── Phase 2: Draft ──────────────────────────────────────── -->
+        <div id="phase-draft" class="phase-panel hidden">
+          <div class="phase-toolbar">
+            <div class="doc-tabs" id="draft-tabs">
+              <button class="doc-tab" data-doc="prompts">📝 Original Prompts</button>
+              <button class="doc-tab active" data-doc="0">📋 Brief</button>
+              <button class="doc-tab" data-doc="1">🔍 Analysis</button>
+              <button class="doc-tab" data-doc="2">💡 Solution</button>
+              <button class="doc-tab" data-doc="3">🏗 Architecture</button>
+            </div>
+            <div class="toolbar-spacer"></div>
+            <button id="btn-gen-questions" class="btn-secondary" title="AI will ask you 6-8 clarifying questions about your problem to help generate a more refined and accurate solution.">❓ Deepen with AI Questions</button>
+            <button id="btn-to-describe" class="tb-btn">← Edit Prompt</button>
+          </div>
+          <div id="draft-viewer" class="doc-viewer"></div>
+          <div id="stream-box-draft" class="stream-box hidden">
+            <div class="stream-hdr">🤖 Generating questionnaire…</div>
+            <pre id="stream-pre-draft"></pre>
+          </div>
+        </div>
+
+        <!-- ── Phase 3: Questionnaire ──────────────────────────────── -->
+        <div id="phase-questionnaire" class="phase-panel hidden">
+          <div class="phase-toolbar">
+            <h3 class="phase-title">❓ Questionnaire</h3>
+            <div class="toolbar-spacer"></div>
+            <button id="btn-back-to-draft" class="tb-btn">← Back to Draft</button>
+            <button id="btn-submit-answers" class="btn-primary">✨ Refine with Answers</button>
+          </div>
+          <div class="qa-intro">Answer as many questions as you can. Your answers will be used to refine the technical design documents.</div>
+          <div id="questions-list"></div>
+          <div id="stream-box-qa" class="stream-box hidden">
+            <div class="stream-hdr">🤖 Refining documents…</div>
+            <pre id="stream-pre-qa"></pre>
+          </div>
+        </div>
+
+        <!-- ── Phase 4: Refined ────────────────────────────────────── -->
+        <div id="phase-refined" class="phase-panel hidden">
+          <div class="phase-toolbar">
+            <div class="doc-tabs" id="refined-tabs">
+              <button class="doc-tab" data-doc="prompts">📝 Original Prompts</button>
+              <button class="doc-tab active" data-doc="0">📋 Brief</button>
+              <button class="doc-tab" data-doc="1">🔍 Analysis</button>
+              <button class="doc-tab" data-doc="2">💡 Solution</button>
+              <button class="doc-tab" data-doc="3">🏗 Architecture</button>
+            </div>
+            <div class="toolbar-spacer"></div>
+            <div class="refined-badge">✨ Refined</div>
+            <button id="btn-re-refine" class="btn-secondary">🔄 Re-Refine</button>
+            <button id="btn-back-to-qa" class="tb-btn">← Back to Q&amp;A</button>
+          </div>
+          <div id="refined-viewer" class="doc-viewer"></div>
+          <div id="stream-box-refined" class="stream-box hidden">
+            <div class="stream-hdr">🤖 Re-refining documents…</div>
+            <pre id="stream-pre-refined"></pre>
+          </div>
+        </div>
+
+        <!-- ── Phase 5: Projects & Dependencies ──────────────────── -->
+        <div id="phase-projects" class="phase-panel hidden">
+          <div class="phase-toolbar">
+            <h3 class="phase-title">📦 Projects &amp; Dependencies</h3>
+            <button id="btn-refresh-projects" class="tb-btn">🔄 Refresh</button>
+          </div>
+          <div id="projects-report" class="projects-report">
+            <div class="tps-loading">Loading project report…</div>
+          </div>
+        </div>
+
+      </div><!-- /session-view -->
+    </main>
+
+    <!-- ── New session modal ───────────────────────────────────────── -->
+    <div id="modal-new" class="modal hidden">
+      <div class="modal-box">
+        <h2>New TPS Session</h2>
+        <label class="field-label">Session Name</label>
+        <input id="new-session-name" class="text-input" placeholder="e.g. Microservices Migration, Auth Redesign…" autofocus/>
+        <div class="modal-actions">
+          <button id="btn-modal-cancel" class="tb-btn">Cancel</button>
+          <button id="btn-modal-create" class="btn-primary">Create Session</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- RobOS UI component library -->
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
+  <!-- marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <!-- mermaid.js for diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

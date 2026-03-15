@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Dev
+X-RobOS-App=true
+Name=RobOS Development Apps and IDEs
+Comment=Manage development apps, tools, and IDEs
+Exec=/usr/local/bin/robos-launch ide-manager
+Icon=/usr/local/share/robos/ide-manager/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=ide-manager

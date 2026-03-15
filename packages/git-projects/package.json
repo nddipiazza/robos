@@ -1,0 +1,16 @@
+{
+  "name": "git-projects",
+  "version": "1.0.0",
+  "description": "RobOS Git Projects Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "codemirror": "^5.65.21",
+    "monaco-editor": "^0.52.2",
+    "electron": "^30.0.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^17.0.4"
+  }
+}

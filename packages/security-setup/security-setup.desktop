@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS Security
+X-RobOS-App=true
+Name=RobOS GPG Pass Initializer
+Comment=Initialize or reset GPG key and pass password store
+Exec=/usr/local/bin/robos-launch security-setup
+Icon=/usr/local/share/robos/security-setup/icon.svg
+Terminal=false
+Type=Application
+Categories=Security;Development;
+StartupWMClass=security-setup

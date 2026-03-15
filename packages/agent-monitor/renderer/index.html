@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>RobOS Agent Monitor</title>
+<link rel="stylesheet" href="style.css"/>
+<script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+
+  <!-- Custom title bar -->
+  <div id="titlebar">
+    <div id="titlebar-drag">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span>RobOS Agent Monitor</span>
+    </div>
+    <div id="titlebar-btns">
+      <button id="btn-minimize" title="Minimize">&#x2500;</button>
+      <button id="btn-close"    title="Close">&#x2715;</button>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div id="app">
+    <!-- Left sidebar -->
+    <aside class="sidebar">
+      <div class="filter-bar">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="running">Running</button>
+        <button class="filter-tab" data-filter="claude">Claude</button>
+        <button class="filter-tab" data-filter="copilot">Copilot</button>
+      </div>
+      <div id="session-list"></div>
+    </aside>
+
+    <!-- Panel resizer -->
+    <div id="panel-resizer"></div>
+
+    <!-- Right content -->
+    <div id="main-content">
+      <!-- Detail header -->
+      <div id="detail-header">
+        <div id="detail-info">
+          <span id="detail-provider" class="detail-provider">Select a session</span>
+          <span id="detail-name" class="detail-name"></span>
+          <span id="detail-cwd" class="detail-cwd"></span>
+          <span id="detail-status" class="status-badge"></span>
+        </div>
+        <div id="detail-actions">
+          <button id="btn-kill" class="btn-danger" style="display:none" title="Kill agent process">Kill</button>
+          <button id="btn-terminal" class="btn-secondary" style="display:none" title="Open in terminal">Terminal</button>
+        </div>
+      </div>
+
+      <!-- Monaco editor for prompt display -->
+      <div id="prompt-section">
+        <div class="section-label">Prompt</div>
+        <div id="monaco-container"></div>
+      </div>
+
+      <!-- Log output -->
+      <div id="log-section">
+        <div class="section-label">Log Output</div>
+        <pre id="log-output">Select a session to view logs.</pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

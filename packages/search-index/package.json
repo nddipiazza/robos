@@ -1,0 +1,7 @@
+{
+  "name": "robos-search-index",
+  "version": "1.0.0",
+  "description": "RobOS Search Index Manager — manage file system search indexes",
+  "main": "main.js",
+  "scripts": { "start": "electron ." }
+}

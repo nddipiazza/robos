@@ -1,0 +1,8 @@
+{
+  "name": "robos-app-launcher",
+  "version": "1.0.0",
+  "description": "RobOS App Launcher",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

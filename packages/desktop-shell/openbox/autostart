@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# RobOS openbox autostart — runs when the openbox session starts
+
+# Force dark GTK theme for all GTK apps (Chromium, Tilix chrome, etc.)
+export GTK_THEME=Adwaita:dark
+export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
+# Force server-side decorations so Openbox draws all titlebars (not CSD)
+export GTK_CSD=0
+
+# Set solid dark background
+xsetroot -solid "#1a1a2e" &
+
+# Apply Xresources
+[ -f ~/.Xresources ] && xrdb -merge ~/.Xresources &
+
+# Start compositor — picom properly handles ARGB transparency (no white border bleed)
+picom --daemon --backend xrender --no-fading-openclose &
+
+# Set resolution to 1920x1080 (developer laptop size)
+(sleep 1 && xrandr --output Virtual-1 --mode 1920x1080 2>/dev/null) &
+
+# Configure Tilix dark profile on first login (needs running D-Bus session)
+[ -x /usr/local/share/robos/configure-tilix.sh ] && /usr/local/share/robos/configure-tilix.sh &
+
+# Start taskbar right-click menu daemon (must be before tint2)
+python3 /usr/local/share/robos/robos-taskbar-menu.py &
+
+# Start the tint2 panel
+tint2 -c ~/.config/tint2/tint2rc &
+
+# Start desktop widgets
+(sleep 3 && conky -c /usr/local/share/robos/copilot-quota.conkyrc) &
+(sleep 4 && conky -c /usr/local/share/robos/pass-status.conkyrc) &
+(sleep 4 && conky -c /usr/local/share/robos/journal-widget.conkyrc) &
+(sleep 4 && conky -c /usr/local/share/robos/profile-widget.conkyrc) &
+(sleep 4 && conky -c /usr/local/share/robos/desktop-task.conkyrc) &
+
+# Copilot Swim Lane — shows active streaming sessions as desktop overlay lanes
+(sleep 5 && python3 /usr/local/share/robos/copilot-swim-lane.py) &
+
+# Launch GPG Pass Initializer on first login if pass not yet set up
+(sleep 5 && [ ! -f "$HOME/.password-store/.gpg-id" ] && /usr/local/share/robos/security-setup/security-setup.sh) &
+
+# Daily pass unlock — show morning prompt if pass initialized but not yet unlocked today
+(sleep 6 && \
+  [ -f "$HOME/.password-store/.gpg-id" ] && \
+  TODAY=$(date +%Y-%m-%d) && \
+  UNLOCK_TS=$(cat "$HOME/.cache/robos/pass-unlock-time" 2>/dev/null) && \
+  UNLOCK_DAY=$([ -n "$UNLOCK_TS" ] && date -d "@$UNLOCK_TS" +%Y-%m-%d 2>/dev/null || echo "") && \
+  [ "$UNLOCK_DAY" != "$TODAY" ] && \
+  /usr/local/share/robos/pass-unlock/pass-unlock.sh) &

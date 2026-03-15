@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#1c2942"/>
+  <!-- Antenna -->
+  <line x1="32" y1="6" x2="32" y2="14" stroke="#00bcd4" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="32" cy="5" r="3" fill="#00bcd4"/>
+  <!-- Head -->
+  <rect x="14" y="14" width="36" height="26" rx="5" fill="#00bcd4"/>
+  <!-- Eyes -->
+  <rect x="20" y="21" width="8" height="7" rx="2" fill="#1c2942"/>
+  <rect x="36" y="21" width="8" height="7" rx="2" fill="#1c2942"/>
+  <!-- Eye glow -->
+  <rect x="21" y="22" width="3" height="3" rx="1" fill="#00e5ff"/>
+  <rect x="37" y="22" width="3" height="3" rx="1" fill="#00e5ff"/>
+  <!-- Mouth -->
+  <rect x="22" y="33" width="20" height="4" rx="2" fill="#1c2942"/>
+  <rect x="24" y="34" width="4" height="2" rx="1" fill="#00e5ff"/>
+  <rect x="30" y="34" width="4" height="2" rx="1" fill="#00e5ff"/>
+  <rect x="36" y="34" width="4" height="2" rx="1" fill="#00e5ff"/>
+  <!-- Body -->
+  <rect x="20" y="42" width="24" height="14" rx="4" fill="#00bcd4"/>
+  <!-- Body detail -->
+  <rect x="25" y="46" width="6" height="6" rx="2" fill="#1c2942"/>
+  <rect x="33" y="46" width="6" height="6" rx="2" fill="#1c2942"/>
+  <rect x="26" y="47" width="4" height="4" rx="1" fill="#00e5ff"/>
+</svg>

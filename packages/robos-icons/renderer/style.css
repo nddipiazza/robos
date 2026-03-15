@@ -1,0 +1,60 @@
+/* RobOS Icons */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DejaVu Sans', sans-serif; background: #0d1117; color: #c9d1d9; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+#app { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+
+/* ── Toolbar ────────────────────────────────────────────────────────────────*/
+#toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #21262d; flex-shrink: 0; background: #0d1117; }
+#toolbar-left { display: flex; align-items: center; gap: 14px; }
+#app-title { font-size: 16px; font-weight: bold; color: #e0e0ff; }
+#icon-count { font-size: 12px; color: #484f58; }
+#toolbar-right { display: flex; gap: 8px; }
+
+/* ── Search ─────────────────────────────────────────────────────────────────*/
+#search-bar { padding: 10px 20px; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+#search-input { width: 100%; background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 7px 12px; font-size: 13px; outline: none; }
+#search-input:focus { border-color: #00bcd4; }
+
+/* ── Sync status ────────────────────────────────────────────────────────────*/
+#sync-status { padding: 8px 20px; font-size: 12px; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+#sync-status.ok   { background: #0d2818; color: #3fb950; }
+#sync-status.err  { background: #2d1b1b; color: #f44336; }
+#sync-status.hidden { display: none; }
+
+/* ── Grid ───────────────────────────────────────────────────────────────────*/
+#grid-wrap { flex: 1; overflow-y: auto; padding: 20px; }
+#icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+
+/* ── Icon card ──────────────────────────────────────────────────────────────*/
+.icon-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 18px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: border-color .15s, background .15s; position: relative; }
+.icon-card:hover { border-color: #00bcd4; background: #1a2332; }
+.icon-card:hover .card-change-hint { opacity: 1; }
+
+.card-img-wrap { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #0d1117; overflow: hidden; flex-shrink: 0; }
+.card-img { width: 56px; height: 56px; object-fit: contain; }
+.card-svg { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
+.card-svg svg { width: 48px; height: 48px; }
+.card-placeholder { font-size: 36px; line-height: 1; }
+.icon-card.has-custom .card-path { color: #3fb950; }
+
+.card-label { font-size: 13px; font-weight: 600; color: #e0e0ff; text-align: center; line-height: 1.3; }
+.card-appid { font-size: 11px; color: #388bfd; font-family: monospace; }
+.card-path { font-size: 10px; color: #484f58; text-align: center; word-break: break-all; line-height: 1.4; max-height: 30px; overflow: hidden; }
+.card-change-hint { position: absolute; top: 8px; right: 8px; font-size: 10px; color: #00bcd4; opacity: 0; transition: opacity .15s; }
+
+/* ── Push progress ──────────────────────────────────────────────────────────*/
+#push-progress { padding: 8px 20px; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+#push-progress.hidden { display: none; }
+.push-msg { font-size: 12px; color: #c9d1d9; margin-bottom: 5px; min-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.push-bar { height: 4px; background: #21262d; border-radius: 2px; overflow: hidden; }
+.push-bar-fill { height: 100%; width: 0%; background: #00bcd4; border-radius: 2px; transition: width 0.1s ease; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────────*/
+.btn-primary { background: #00bcd4; border: none; color: #000; border-radius: 5px; padding: 6px 14px; font-size: 13px; font-weight: bold; cursor: pointer; }
+.btn-primary:hover { background: #0097a7; }
+.btn-primary:disabled { opacity: 0.5; cursor: default; }
+.btn-secondary { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 5px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { border-color: #00bcd4; color: #00bcd4; }
+
+/* ── Empty state ────────────────────────────────────────────────────────────*/
+.empty { grid-column: 1/-1; text-align: center; padding: 60px 0; color: #484f58; font-size: 14px; }

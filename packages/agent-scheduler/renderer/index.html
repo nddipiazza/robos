@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>RobOS Agent Scheduler</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="app-title">RobOS Agent Scheduler</span>
+    </div>
+    <div class="topbar-right">
+      <button id="btn-ai-create" class="btn btn-ai">✦ Create with AI</button>
+      <button id="btn-new" class="btn btn-primary">＋ New Schedule</button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+
+    <!-- Left: schedule list -->
+    <aside class="schedule-list-panel">
+      <!-- System Jobs -->
+      <div class="list-header">
+        <span class="list-title">⚙ System Jobs</span>
+      </div>
+      <div id="system-job-list" class="system-job-list">
+        <!-- rendered by JS -->
+      </div>
+
+      <!-- User Scheduled Jobs -->
+      <div class="list-header list-header-user">
+        <span class="list-title">Scheduled Jobs</span>
+        <span id="schedule-count" class="schedule-count">0</span>
+      </div>
+      <div id="schedule-list" class="schedule-list">
+        <div class="list-empty">No schedules yet.<br/>Click <strong>＋ New Schedule</strong> to begin.</div>
+      </div>
+    </aside>
+
+    <!-- Right: editor / empty state -->
+    <div class="panel-resizer" id="panel-resizer"></div>
+    <main class="editor-panel">
+      <div id="editor-empty" class="editor-empty">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg></div>
+        <div class="empty-title">No schedule selected</div>
+        <div class="empty-hint">Select a schedule from the list, or create a new one.</div>
+        <button class="btn btn-primary mt" onclick="startNew()">＋ New Schedule</button>
+      </div>
+
+      <div id="editor-form" class="editor-form hidden">
+        <div class="form-topbar">
+          <input id="f-name" class="form-name-input" placeholder="Schedule name…"/>
+          <div class="form-actions">
+            <button id="btn-run-now" class="btn btn-ghost">▶ Run Now</button>
+            <button id="btn-save"    class="btn btn-primary">Save</button>
+            <button id="btn-delete"  class="btn btn-danger">Delete</button>
+          </div>
+        </div>
+
+        <!-- Command section -->
+        <div class="form-section">
+          <div class="section-title">Command</div>
+          <div class="cmd-type-row">
+            <label class="radio-label">
+              <input type="radio" name="cmdType" value="shell" id="cmd-shell" checked/>
+              <span>Shell Command</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="cmdType" value="copilot" id="cmd-copilot"/>
+              <span>✦ AI Copilot Prompt</span>
+            </label>
+          </div>
+          <textarea id="f-command" class="form-command" rows="3"></textarea>
+          <div id="cmd-hint-copilot" class="cmd-hint hidden">
+            Runs <code>gh copilot suggest '…'</code> in a terminal. Use plain English prompts.<br/>
+            <span class="cmd-hint-label">RobOS actions:</span>
+            <code>write to my journal about today's PRs</code> · <code>summarize my open issues</code> · <code>check for stale PRs and notify me</code>
+          </div>
+          <div id="cmd-hint-shell" class="cmd-hint">
+            Output is logged to <code>~/.config/robos/agent-scheduler/logs/</code><br/>
+            <span class="cmd-hint-label">RobOS CLI tools:</span>
+            <code>robos-journal-append --section "Notes" "text"</code> · <code>robos-notify "Title" "Msg"</code> · <code>robos-active-task</code>
+          </div>
+        </div>
+
+        <!-- Recurrence section -->
+        <div class="form-section">
+          <div class="section-title">Recurrence</div>
+          <div class="recurrence-tabs">
+            <button class="rec-tab active" data-type="daily">Daily</button>
+            <button class="rec-tab" data-type="weekly">Weekly</button>
+            <button class="rec-tab" data-type="monthly">Monthly</button>
+            <button class="rec-tab" data-type="hourly">Hourly</button>
+            <button class="rec-tab" data-type="once">Once</button>
+            <button class="rec-tab" data-type="cron">Custom Cron</button>
+            <button class="rec-tab" data-type="manual">Manual Only</button>
+          </div>
+
+          <!-- Daily / Weekly / Monthly / Once all share a time -->
+          <div id="rec-time-row" class="rec-row">
+            <label class="rec-label">Time</label>
+            <input id="f-time" type="time" class="rec-time-input" value="09:00"/>
+          </div>
+
+          <!-- Weekly: day checkboxes -->
+          <div id="rec-days-row" class="rec-row hidden">
+            <label class="rec-label">Days</label>
+            <div class="day-checkboxes">
+              <label class="day-cb"><input type="checkbox" value="0"/><span>Su</span></label>
+              <label class="day-cb"><input type="checkbox" value="1" checked/><span>Mo</span></label>
+              <label class="day-cb"><input type="checkbox" value="2" checked/><span>Tu</span></label>
+              <label class="day-cb"><input type="checkbox" value="3" checked/><span>We</span></label>
+              <label class="day-cb"><input type="checkbox" value="4" checked/><span>Th</span></label>
+              <label class="day-cb"><input type="checkbox" value="5" checked/><span>Fr</span></label>
+              <label class="day-cb"><input type="checkbox" value="6"/><span>Sa</span></label>
+            </div>
+          </div>
+
+          <!-- Monthly: day-of-month -->
+          <div id="rec-dom-row" class="rec-row hidden">
+            <label class="rec-label">Day of month</label>
+            <select id="f-dom" class="rec-select">
+              <!-- filled by JS -->
+            </select>
+          </div>
+
+          <!-- Once: date picker -->
+          <div id="rec-date-row" class="rec-row hidden">
+            <label class="rec-label">Date</label>
+            <input id="f-date" type="date" class="rec-date-input"/>
+          </div>
+
+          <!-- Hourly: minute offset -->
+          <div id="rec-minute-row" class="rec-row hidden">
+            <label class="rec-label">At minute</label>
+            <input id="f-minute" type="number" min="0" max="59" value="0" class="rec-num-input"/>
+            <span class="rec-hint">of every hour</span>
+          </div>
+
+          <!-- Custom cron -->
+          <div id="rec-cron-row" class="rec-row hidden">
+            <label class="rec-label">Cron expression</label>
+            <input id="f-cron" class="rec-cron-input" placeholder="*/15 * * * *"/>
+          </div>
+
+          <!-- Human-readable preview -->
+          <div id="cron-preview" class="cron-preview"></div>
+
+          <!-- Manual only note -->
+          <div id="manual-note" class="manual-note hidden">
+            🖱 This schedule will only run when you click <strong>▶ Run Now</strong>. No cron entry will be created.
+          </div>
+        </div>
+
+        <!-- Notifications section -->
+        <div class="form-section">
+          <div class="section-title">Notifications</div>
+          <label class="check-label">
+            <input type="checkbox" id="f-notify-run" checked/>
+            <span>Notify when job starts</span>
+          </label>
+          <label class="check-label">
+            <input type="checkbox" id="f-notify-done" checked/>
+            <span>Notify when job completes</span>
+          </label>
+        </div>
+
+        <!-- Run history -->
+        <div class="form-section">
+          <div class="section-title-row">
+            <span class="section-title">Run History</span>
+            <button id="btn-refresh-log" class="btn-tiny">↻ Refresh</button>
+          </div>
+          <div id="last-run-info" class="last-run-info"></div>
+          <pre id="run-log" class="run-log">No runs yet.</pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- AI Create modal -->
+  <div id="ai-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">✦ Create Schedule with AI</span>
+        <button id="ai-modal-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Describe what you want to schedule in plain English. The AI will generate a schedule for you to review using RobOS context.</p>
+        <textarea id="ai-prompt-input" class="ai-prompt-input" rows="4" placeholder="e.g. Every weekday at 9am, append my open PRs to the Work Journal&#10;Every Monday morning, notify me about stale issues&#10;Daily at 6pm, write a summary of today's commits to the journal"></textarea>
+        <div id="ai-examples" class="ai-examples">
+          <span class="ai-ex-label">RobOS examples:</span>
+          <button class="ai-example-btn">Every weekday at 9am, write my open PRs to the Work Journal</button>
+          <button class="ai-example-btn">Daily at 6pm, append a commit summary to the journal</button>
+          <button class="ai-example-btn">Every Monday, notify me about stale PRs older than 7 days</button>
+          <button class="ai-example-btn">Every morning, set my active task from my top assigned issue</button>
+        </div>
+        <div class="ai-context-note">✦ AI has full RobOS context — it knows about <code>robos-journal-append</code>, <code>robos-notify</code>, <code>robos-active-task</code> and all RobOS apps.</div>
+      </div>
+      <div class="modal-footer">
+        <div id="ai-status" class="ai-status hidden"></div>
+        <button id="ai-modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="ai-modal-submit" class="btn btn-ai">✦ Generate Schedule</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

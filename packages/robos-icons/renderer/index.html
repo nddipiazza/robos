@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';">
+  <title>RobOS Icons</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header id="toolbar">
+      <div id="toolbar-left">
+        <span class="app-logo" id="app-logo-icon"></span><span id="app-title">RobOS Icons</span>
+        <span id="icon-count"></span>
+      </div>
+      <div id="toolbar-right">
+        <button id="btn-push-icons" class="btn-primary">⬆ Push Icons</button>
+        <button id="btn-refresh" class="btn-secondary">↺ Refresh</button>
+      </div>
+    </header>
+    <div id="search-bar">
+      <input id="search-input" type="text" placeholder="🔍  Filter apps…" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="sync-status" class="hidden"></div>
+    <div id="push-progress" class="hidden">
+      <div class="push-msg"></div>
+      <div class="push-bar"><div class="push-bar-fill"></div></div>
+    </div>
+    <div id="grid-wrap">
+      <div id="icon-grid"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

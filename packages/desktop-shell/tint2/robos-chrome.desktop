@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RobOS Browser
+Comment=Chromium browser for RobOS
+Exec=/usr/local/bin/robos-chrome %U
+Icon=google-chrome
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+X-RobOS-Category=RobOS Internet

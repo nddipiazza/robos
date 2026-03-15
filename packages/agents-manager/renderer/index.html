@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>RobOS Agents</title>
+<link rel="stylesheet" href="style.css"/>
+<script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="sidebar-title">RobOS Agents</span>
+    </div>
+    <div class="sidebar-section-label">AI Providers</div>
+    <div id="provider-nav"></div>
+    <div class="sidebar-spacer"></div>
+    <div id="active-provider-indicator"></div>
+  </aside>
+
+  <!-- Resizer -->
+  <div id="resizer"></div>
+
+  <!-- Main panel -->
+  <main id="main">
+    <!-- Empty state -->
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+             stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+          <path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+        </svg>
+      </div>
+      <h2>AI Agent Administration</h2>
+      <p>Select a provider from the sidebar to view sessions and configuration.</p>
+      <div id="empty-detecting" class="text-muted">Detecting installed providers...</div>
+    </div>
+
+    <!-- Provider detail pane (populated dynamically) -->
+    <div id="provider-detail" class="hidden"></div>
+  </main>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

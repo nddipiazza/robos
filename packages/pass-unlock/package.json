@@ -1,0 +1,8 @@
+{
+  "name": "pass-unlock",
+  "version": "1.0.0",
+  "description": "RobOS Daily Pass Unlock — morning passphrase prompt for all-day GPG cache",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

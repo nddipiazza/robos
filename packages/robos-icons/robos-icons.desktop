@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS System
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Icons
+Comment=Manage and sync RobOS app icons
+Exec=/usr/local/bin/robos-launch robos-icons
+Icon=/usr/local/share/robos/robos-icons/icon.svg
+StartupNotify=false
+Terminal=false
+Categories=Settings;

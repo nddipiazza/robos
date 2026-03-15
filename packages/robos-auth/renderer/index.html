@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS Auth</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div id="header">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <div id="header-title">RobOS Auth — OAuth Providers & Identity</div>
+      <div id="identity-badge" title="Current identity (hardcoded to robos until OAuth configured)">
+        <span id="id-avatar">?</span>
+        <span id="id-name">Loading…</span>
+        <span id="id-source" class="source-tag">hardcoded</span>
+      </div>
+    </div>
+
+    <!-- Main layout -->
+    <div id="main">
+      <!-- Left: provider list -->
+      <div id="sidebar">
+        <div class="sidebar-header">
+          <span>Providers</span>
+          <button id="btn-add-provider" title="Add custom provider">＋</button>
+        </div>
+        <ul id="provider-list"></ul>
+        <div class="sidebar-footer">
+          <button id="btn-reset" class="btn-ghost">Reset to defaults</button>
+        </div>
+      </div>
+
+      <!-- Right: provider config or identity panel -->
+      <div id="content">
+        <div id="empty-state">
+          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <div class="empty-title">RobOS Auth</div>
+          <div class="empty-sub">Select a provider to configure it, or view your current identity below.</div>
+          <div id="identity-panel" class="identity-panel hidden"></div>
+        </div>
+
+        <div id="provider-panel" class="hidden">
+          <div id="provider-header">
+            <span id="provider-icon"></span>
+            <span id="provider-name"></span>
+            <span id="provider-status-badge"></span>
+          </div>
+
+          <div id="provider-notice" class="notice hidden">
+            <strong>⚠ Hardcoded mode active.</strong> This provider is not yet connected.
+            Once you fill in Client ID &amp; Secret and click Enable, RobOS Auth will
+            use the real OAuth flow. For now, identity is sourced from the People Directory.
+          </div>
+
+          <form id="provider-form">
+            <div class="form-section">OAuth 2.0 Application Credentials</div>
+            <div class="form-row">
+              <label>Client ID</label>
+              <input id="f-client-id" type="text" placeholder="Paste your OAuth app client ID"/>
+            </div>
+            <div class="form-row">
+              <label>Client Secret</label>
+              <input id="f-client-secret" type="password" placeholder="Paste your OAuth app client secret"/>
+            </div>
+            <div class="form-row">
+              <label>Scopes</label>
+              <input id="f-scopes" type="text" placeholder="space or comma separated scopes"/>
+            </div>
+
+            <div class="form-section">Endpoints</div>
+            <div class="form-row">
+              <label>Auth URL</label>
+              <input id="f-auth-url" type="url" placeholder="https://…/oauth/authorize"/>
+            </div>
+            <div class="form-row">
+              <label>Token URL</label>
+              <input id="f-token-url" type="url" placeholder="https://…/oauth/token"/>
+            </div>
+            <div class="form-row">
+              <label>Callback URL</label>
+              <input id="f-callback-url" type="url" readonly/>
+            </div>
+            <div id="oidc-row" class="form-row hidden">
+              <label>Issuer URL</label>
+              <input id="f-issuer-url" type="url" placeholder="https://…/.well-known/openid-configuration"/>
+            </div>
+
+            <div class="form-section">Status</div>
+            <div class="form-row">
+              <label>Enabled</label>
+              <label class="toggle"><input id="f-enabled" type="checkbox"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-row">
+              <label>Connected Token</label>
+              <span id="f-token-status" class="token-status">Not connected</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save</button>
+              <button type="button" id="btn-connect" class="btn-secondary">Connect (OAuth flow)</button>
+              <button type="button" id="btn-delete-provider" class="btn-danger">Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

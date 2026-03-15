@@ -1,0 +1,9 @@
+{
+  "name": "robos-auth",
+  "version": "1.0.0",
+  "description": "RobOS OAuth Providers & Identity Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu"
+  }
+}
