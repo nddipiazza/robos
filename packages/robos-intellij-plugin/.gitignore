@@ -1,9 +1,0 @@
-.gradle/
-build/
-out/
-*.class
-*.jar
-*.iml
-.idea/
-local.properties
-.intellijPlatform

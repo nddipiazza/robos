@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=RobOS
-Comment=RobOS Desktop (xfwm4 + tint2)
-Exec=/usr/local/bin/robos-session
-TryExec=xfwm4
-Type=Application

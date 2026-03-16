@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=RobOS System Monitor
-Comment=Monitor system resources
-Exec=xfce4-taskmanager
-Icon=utilities-system-monitor
-Type=Application
-Categories=System;Monitor;
-StartupNotify=false

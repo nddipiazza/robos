@@ -1,8 +1,0 @@
-[Plymouth Theme]
-Name=RobOS
-Description=RobOS — AI-Powered SDLC Operating System
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/robos
-ScriptFile=/usr/share/plymouth/themes/robos/robos.script

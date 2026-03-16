@@ -1,7 +1,0 @@
-{
-  "name": "context-manager",
-  "version": "1.0.0",
-  "description": "RobOS Context Manager — manage AI context sources for agents",
-  "main": "main.js",
-  "scripts": { "start": "electron ." }
-}

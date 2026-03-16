@@ -1,8 +1,0 @@
-{
-  "name": "git-credentials-manager",
-  "version": "1.0.0",
-  "description": "RobOS GitHub Login Manager — monitors gh auth status and re-authenticates via browser",
-  "main": "main.js",
-  "scripts": { "start": "electron ." },
-  "dependencies": { "electron": "^30.0.0" }
-}

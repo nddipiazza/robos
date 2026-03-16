@@ -1,8 +1,0 @@
-{
-  "name": "pass-manager",
-  "version": "1.0.0",
-  "description": "RobOS Pass Manager — GUI for pass (password-store)",
-  "main": "main.js",
-  "scripts": { "start": "electron ." },
-  "dependencies": { "electron": "^30.0.0" }
-}

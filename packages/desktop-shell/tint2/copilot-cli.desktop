@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=RobOS Copilot CLI
-Comment=GitHub Copilot in the terminal
-Exec=tilix -e /usr/local/bin/robos-copilot
-Icon=/usr/local/share/pixmaps/copilot-cli.svg
-Type=Application
-Categories=Development;
-StartupNotify=false

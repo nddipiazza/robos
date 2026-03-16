@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=RobOS IntelliJ Plugin Auto-Install
-Comment=Installs the RobOS plugin to any JetBrains IDE found in ~/.local/share/JetBrains/
-Exec=/usr/local/bin/robos-install-intellij-plugin
-Terminal=false
-Hidden=false
-NoDisplay=true
-X-GNOME-Autostart-enabled=true

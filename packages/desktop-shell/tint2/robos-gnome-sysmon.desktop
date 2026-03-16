@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=RobOS System Monitor
-Comment=Monitor system resources
-Exec=env GTK_CSD=0 gnome-system-monitor
-Icon=utilities-system-monitor
-Type=Application
-Categories=System;Monitor;
-StartupNotify=false

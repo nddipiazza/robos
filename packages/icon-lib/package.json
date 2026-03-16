@@ -1,7 +1,0 @@
-{
-  "name": "@robos/icon-lib",
-  "version": "1.0.0",
-  "description": "RobOS shared icon registry library",
-  "main": "index.js",
-  "license": "MIT"
-}
