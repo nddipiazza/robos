@@ -1,0 +1,195 @@
+# RobOS — AI-First Software Development Operating System
+
+RobOS is a developer-first operating system and IDE ecosystem that automates the entire Software Delivery Lifecycle (SDLC) using AI. From the moment you log in, every surface is optimized for AI-assisted software development.
+
+## Vision
+
+Every developer interaction — picking up a ticket, understanding a bug, reviewing a fix, shipping code — is augmented by AI. RobOS eliminates context-switching overhead by deeply integrating task management, code intelligence, and AI agents into the OS and IDE layers.
+
+## Major Components
+
+### 1. RobOS Gnome — The Desktop OS
+
+A purpose-built Ubuntu-based Linux desktop environment where every app, panel, and widget serves the SDLC.
+
+**OS Stack:**
+- Ubuntu 22.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
+- Openbox window manager + tint2 panel (lightweight, scriptable)
+- LightDM auto-login, Tilix terminal, zsh + oh-my-zsh
+- Custom dark navy/cyan theme throughout
+
+**Desktop Components:**
+- **App Launcher** — searchable icon grid of all RobOS applications
+- **Desktop Panels** — tint2 taskbar with RobOS app launchers and systray widgets
+- **Custom Desktop Widgets** — sprint status, PR health, calendar, blocker radar
+- **Background Tasks** — agent scheduler, toast daemon, clipboard sync, notification engine
+- **Suite of Apps** — 30+ Electron apps covering the full SDLC (see App Suite below)
+
+**VM Specs:**
+- 16 GB RAM, all host CPUs, 100 GB sparse qcow2 disk
+- SSH (port 2224), VNC (port 5910), SPICE (port 5932)
+- Fully reproducible via cloud-init (stateless first-boot provisioning)
+
+### 2. RobOS IDE — AI-Powered Development Environment
+
+RobOS IDE brings the same AI-first experience into the IDE itself. The core concept:
+
+**Task-Driven Workspaces:**
+- Each Task on the task server maps to its own IDE workspace
+- When a developer picks up a task, the workspace is automatically provisioned:
+  1. The correct branch is checked out
+  2. Dev environment is spun up (servers, databases, dependencies)
+  3. The workspace is brought to a **breakpoint where the issue reproduces**
+  4. The developer sees the reproduction, understands the problem
+  5. AI presents its analysis and proposed solution plan
+  6. The developer **reviews the AI's plan** before any code changes
+- This inverts the traditional workflow: instead of "developer investigates, then codes", it becomes "AI investigates and proposes, developer reviews and approves"
+
+**IDE Plugin (IntelliJ-based):**
+- IPC HTTP server (port 63343) for communication with RobOS desktop apps
+- Endpoints: health, status, open-project, open-file, navigate, run, stop, notify, workspace
+- Workspace tool window showing active ticket context, branch, and collaborators
+- Run configuration injection (`.idea/runConfigurations/` XML generation)
+
+### 3. RobOS IDE Plugins
+
+Plugins that extend the IDE with RobOS capabilities:
+- Task server integration (Jira, GitHub Issues)
+- AI context injection (MCP-powered)
+- Workspace provisioning automation
+- Code review and plan approval UI
+- Agent session management within the IDE
+
+## App Suite
+
+All apps are Electron + vanilla JavaScript. They require `--no-sandbox --disable-gpu --disable-dev-shm-usage` flags in the QEMU VM.
+
+### Core Apps (panel-visible)
+| App | Purpose |
+|-----|---------|
+| **App Launcher** | Searchable grid of all installed RobOS apps |
+| **Dev Central** | Daily dashboard: sprint board, PR health, calendar, AI standup, blocker radar |
+| **Issue Manager** | GitHub Issues client with Kanban board, AI issue breakdown |
+| **Git Projects** | Repo manager with AI dev-setup generation, Monaco editor, terminal/IDE runners |
+| **Agents Manager** | Manage Copilot CLI / AI agent sessions |
+
+### Supporting Apps
+| App | Purpose |
+|-----|---------|
+| **IDE Manager** | Install/manage JetBrains IDEs and RobOS plugin |
+| **Workspace Manager** | Discover and open local workspaces in any IDE |
+| **Lang Manager** | Language runtime management (Node, Python, Java, Go, Rust) |
+| **Context Manager** | Curate AI context sources (files, URLs, repos, tickets) |
+| **Tech Workbench** | Technical spike research with AI assistance |
+| **Work Journal** | Git-backed developer journal with AI activity feed |
+| **Pass Manager** | GUI for GPG-encrypted password store |
+| **Workflow Studio** | Workflow and issue lifecycle management |
+| **Agent Scheduler** | Background cron-based AI agent jobs |
+| **Task Servers** | Jira / GitHub task server configuration |
+| **Claude Console** | Enhanced Claude Code GUI |
+| **File Explorer** | Dark-themed file browser |
+| **Notifications** | Notification history viewer |
+| **Toast Daemon** | System-wide overlay toast notifications |
+| **Security Setup** | First-run GPG + SSH key initialization |
+| **Search Index** | File system indexer for @-search in AI textareas |
+| **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
+
+## Architecture
+
+```
+robos/
+├── CLAUDE.md                    # This file
+├── packages/
+│   ├── <app-id>/                # Each Electron app
+│   │   ├── main.js              # Electron main process
+│   │   ├── preload.js           # contextBridge IPC
+│   │   ├── renderer/            # HTML, JS, CSS
+│   │   ├── icon.svg             # 48x48 Lucide-style icon
+│   │   └── <app-id>.desktop     # freedesktop launcher entry
+│   ├── robos-ui/                # Shared dark-theme UI components
+│   ├── robos-lib/               # Shared utilities
+│   ├── robos-icons/             # SVG icon registry
+│   ├── robos-cli/               # CLI tools and MCP library
+│   ├── desktop-manager/         # System tray + app launch IPC hub
+│   ├── desktop-shell/           # Desktop config, extensions, install.sh
+│   └── robos-intellij-plugin/   # Kotlin/Java IntelliJ plugin
+├── infra/
+│   └── desktop/
+│       ├── build.sh             # Build QEMU disk image + cloud-init ISO
+│       ├── run.sh               # Launch VM (--firstboot, --vnc, --spice)
+│       ├── gen-userdata.py      # Cloud-init user-data generator
+│       └── cloud-init/          # user-data and meta-data templates
+└── docs/                        # Jekyll documentation site
+```
+
+## Development
+
+### Prerequisites
+- QEMU/KVM with `/dev/kvm` access
+- Node.js 20+ and npm
+- For IntelliJ plugin: JDK 17+ and Gradle
+
+### Testing Apps (Dev Harness)
+Primary testing method — run apps outside the VM:
+```bash
+node packages/dev-harness/harness.js --app <app-id> --scenario <scenario>
+node packages/dev-harness/harness.js --list-apps
+node packages/dev-harness/harness.js --list-scenarios
+```
+Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-missing`, `git-config-missing`, `all-broken`
+
+### Building the VM
+```bash
+infra/desktop/build.sh        # Creates disk image + cloud-init ISO
+infra/desktop/run.sh --firstboot  # First boot with cloud-init provisioning
+infra/desktop/run.sh           # Subsequent runs
+```
+
+### Deploying to VM
+```bash
+# Full install
+ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
+
+# Single app update
+scp -P 2224 -r packages/<app-id>/* robos@localhost:/tmp/<app-id>/
+ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo npm install --quiet"
+```
+
+VM credentials: `robos` / `robos`
+
+## Conventions
+
+- **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`)
+- **No root package.json**: Each package has independent `node_modules`
+- **IPC**: All Electron apps use `contextBridge` + `ipcRenderer.invoke` (never `nodeIntegration: true`)
+- **Config storage**: All persistent data in `~/.config/robos/`
+- **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`
+- **Logging**: `pino` JSON logging
+- **Secrets**: Environment variables only, validated with `zod`; never hardcode credentials
+
+## App Registration Checklist
+
+When adding, renaming, or removing an app, update ALL of these locations:
+1. `packages/<app-id>/` — the app directory
+2. `packages/desktop-manager/main.js` — `APP_REGISTRY` and `APP_BINS`
+3. `packages/robos-icons/builtin-apps.js` — `BUILTIN_APPS` array (alphabetical)
+4. `packages/robos-icons/builtin-apps-browser.js` — `ROBOS_BUILTIN_APPS` array
+5. `packages/icon-lib/builtin-apps.js` — must match #3 exactly
+6. `packages/task-manager/main.js` — `KNOWN_APPS` map
+7. `packages/desktop-shell/install.sh` — install block
+8. `<app-id>.desktop` file
+
+## Technical Gotchas
+
+- **Electron in QEMU**: `--disable-dev-shm-usage` is critical or renderer windows go blank
+- **cloud-init**: `write_files` does NOT create parent dirs — always `mkdir -p` in `runcmd`; only runs once per `instance-id`
+- **Monaco editors**: Call `ed.layout()` when tab becomes visible (initializing while hidden renders at 0×0)
+- **Shell vars in JS**: Escape `$(...)` and `${VAR}` in template literals to avoid JS interpolation
+- **Process management in VM**: `pkill`/`killall` unavailable — use `kill <PID>` with explicit PIDs
+- **IntelliJ plugin path (Linux)**: `~/.local/share/JetBrains/IdeaIC<Version>/robos/`
+
+## Source Projects
+
+This repo consolidates work from:
+- [`robos-gnome`](https://github.com/nddipiazza/robos-gnome) — VM infrastructure, desktop shell, cloud-init provisioning
+- [`roboto-os`](https://github.com/nddipiazza/roboto-os) — Electron desktop applications, shared libraries

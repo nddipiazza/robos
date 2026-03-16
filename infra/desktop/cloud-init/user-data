@@ -1,0 +1,360 @@
+#cloud-config
+
+users:
+  - name: robos
+    gecos: RobOS User
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: $6$AZ7p5oKF3JsaKNcu$hOP9fUJ2NnlWfpds4jK7D1cOQd5BLMh0AeECNzv2RruaQo8os1qehm3ndvpYhfsiBV05AzHz8g.8T5nS0P52Y0
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDBZUSoCzvxwOur+wJWzZ4lRNvevQw8PJkC1pCVT9SeF6lGxB59XyiZB+MauAOyzmBoANCJbNHb875jA3iI9eQtrmQ3wkAVD9EzDBP7nx5tRzwOeXtgqMWKNBdGf26cbQbYs4tTjJNAec9ZqOZ23iXTh2FC3iQi5o2+Rmp0PU+waTyj7w5A64Cx/5v82bzm3ttgLh6yq2CkgJlPg3L/bBLN7J0Rk3g1CAnQSyGs/KTralra+1HP5wcCi7ulTZm1HuKAR5o/6xZxWvPETqSz9LPH5Bf9kY4gquXr3arBuJhNqhFKjfpDD5lgog1piCNQ1/iImuHo5LMvxpCh+i7NJHWDpnpIdtvxMU6XzkhE5oh8vsnKPZsoB+EDZKl7tdQi5yf+rEgSfMo4HF5gHGvrg+g88GQOgx0Ti78xSmMTL5ktny1LO0+j63c7i2fd0S36fHPWYDFcS0ABOFpwB5Ep1Pw9j8GvizAYDwz2JI3l/f/E1asTbE6Hd4yYLC400IdtvVT1owoPo81nCe1RjvjS7zmaVXIcqaMgoi01BZDUjjCOHd0OUDRKCE9Gpz5dchvTy6u5VyhLY/uNRUkBDhz5oR9JPCYBdY3r7dITJ/BQr8f+x2OUCvdKgkWXwsyBUnWJB7KsOYLsrGd1AAaaLh9MLBEEsn2K8RfN2fogcG8149UCqw== nicholas.dipiazza@lucidworks.com
+
+bootcmd:
+  - systemctl mask getty@tty1
+
+packages:
+  - curl
+  - wget
+  - gnupg
+  - python3
+  - python3-pip
+  - unzip
+  - spice-vdagent
+
+write_files:
+  # SSH hardening
+  - path: /etc/ssh/sshd_config.d/50-robos.conf
+    content: |
+      PasswordAuthentication yes
+      PermitRootLogin no
+      MaxAuthTries 6
+      X11Forwarding yes
+    permissions: "0644"
+
+  # Install splash screen — simple shell script, no FIFO, no race conditions
+  - path: /usr/local/bin/robos-splash
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      # Usage: robos-splash <current_step> [done]
+      # Draws RobOS branded progress screen on /dev/tty1
+      STEP=${1:-0}
+      DONE=${2:-""}
+      TOTAL=5
+      STEPS=("Configuring base system" "Installing GNOME desktop" "Installing dash-to-panel" "Configuring display manager" "Finalising installation")
+      TTY=/dev/tty1
+      # Clear screen and hide cursor
+      printf '\033[2J\033[H\033[?25l' > "$TTY"
+      # Logo
+      cat > "$TTY" << 'LOGO'
+
+          ██████╗  ██████╗ ██████╗  ██████╗ ███████╗
+          ██╔══██╗██╔═══██╗██╔══██╗██╔═══██╗██╔════╝
+          ██████╔╝██║   ██║██████╔╝██║   ██║███████╗
+          ██╔══██╗██║   ██║██╔══██╗██║   ██║╚════██║
+          ██║  ██║╚██████╔╝██████╔╝╚██████╔╝███████║
+          ╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝
+
+             AI-First Software Development OS
+
+      LOGO
+      # Steps
+      for i in $(seq 0 $((TOTAL-1))); do
+        n=$((i+1))
+        if [ -n "$DONE" ]; then
+          printf '       \033[32m✓\033[0m  Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+        elif [ $i -lt $STEP ]; then
+          printf '       \033[32m✓\033[0m  Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+        elif [ $i -eq $STEP ]; then
+          printf '       \033[36m▶\033[0m  Step %d/%d: \033[1m%s\033[0m ...\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+        else
+          printf '          Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+        fi
+      done
+      printf '\n' > "$TTY"
+      if [ -n "$DONE" ]; then
+        printf '       \033[32m✓ Installation complete! Rebooting...\033[0m\n\n' > "$TTY"
+      else
+        printf '       Progress: %d / %d\n\n' "$STEP" "$TOTAL" > "$TTY"
+      fi
+
+  # dconf: Dark theme, fonts, clock, Nautilus, window buttons, background
+  - path: /etc/dconf/db/local.d/01-robos
+    content: |
+      [org/gnome/desktop/interface]
+      gtk-theme='Yaru-dark'
+      icon-theme='Yaru'
+      cursor-theme='Yaru'
+      font-name='Ubuntu 11'
+      document-font-name='Ubuntu 11'
+      monospace-font-name='Ubuntu Mono 13'
+      color-scheme='prefer-dark'
+      clock-format='12h'
+      clock-show-weekday=true
+      enable-hot-corners=false
+
+      [org/gnome/desktop/wm/preferences]
+      button-layout='appmenu:minimize,maximize,close'
+      titlebar-font='Ubuntu Bold 11'
+
+      [org/gnome/desktop/background]
+      picture-uri='none'
+      picture-uri-dark='none'
+      picture-options='none'
+      primary-color='#0d1117'
+      color-shading-type='solid'
+
+      [org/gnome/desktop/screensaver]
+      picture-uri='none'
+      picture-options='none'
+      primary-color='#0d1117'
+      color-shading-type='solid'
+
+      [org/gnome/nautilus/list-view]
+      default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
+      use-tree-view=true
+
+      [org/gnome/nautilus/preferences]
+      default-folder-viewer='list-view'
+      show-hidden-files=true
+
+      [org/gtk/settings/file-chooser]
+      show-hidden=true
+    permissions: "0644"
+
+  # dconf profile: user db first, then system db (system provides defaults)
+  - path: /etc/dconf/profile/user
+    content: |
+      user-db:user
+      system-db:local
+    permissions: "0644"
+
+  # dconf: workspaces, extensions, disable ubuntu-dock
+  - path: /etc/dconf/db/local.d/02-robos-workspaces
+    content: |
+      [org/gnome/mutter]
+      dynamic-workspaces=false
+      num-workspaces=4
+
+      [org/gnome/shell]
+      enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com']
+      disabled-extensions=['ubuntu-dock@ubuntu.com']
+      favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+    permissions: "0644"
+
+  # GTK 3 dark theme for skel
+  - path: /etc/skel/.config/gtk-3.0/settings.ini
+    content: |
+      [Settings]
+      gtk-application-prefer-dark-theme=1
+      gtk-theme-name=Yaru-dark
+      gtk-icon-theme-name=Yaru
+      gtk-cursor-theme-name=Yaru
+      gtk-font-name=Ubuntu 11
+    permissions: "0644"
+
+  # GTK 4 dark theme for skel
+  - path: /etc/skel/.config/gtk-4.0/settings.ini
+    content: |
+      [Settings]
+      gtk-application-prefer-dark-theme=1
+      gtk-theme-name=Yaru-dark
+      gtk-icon-theme-name=Yaru
+      gtk-cursor-theme-name=Yaru
+      gtk-font-name=Ubuntu 11
+    permissions: "0644"
+
+  # dconf: dash-to-panel configuration
+  - path: /etc/dconf/db/local.d/03-robos-panel
+    content: |
+      [org/gnome/shell/extensions/dash-to-panel]
+      panel-positions='{"0":"BOTTOM"}'
+      panel-sizes='{"0":32}'
+      panel-element-positions='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
+      hide-overview-on-startup=true
+      stockgs-keep-dash=false
+      appicon-margin=2
+      appicon-padding=4
+      dot-style-focused='DASHES'
+      dot-style-unfocused='DOTS'
+      trans-use-custom-bg=true
+      trans-bg-color='#0d1117'
+      trans-use-custom-opacity=true
+      trans-panel-opacity=0.9
+    permissions: "0644"
+
+  # Lock dash-to-panel and key shell config so GNOME first-login doesn't override
+  - path: /etc/dconf/db/local.d/locks/robos.txt
+    content: |
+      /org/gnome/shell/extensions/dash-to-panel/panel-positions
+      /org/gnome/shell/extensions/dash-to-panel/panel-sizes
+      /org/gnome/shell/extensions/dash-to-panel/panel-element-positions
+      /org/gnome/shell/enabled-extensions
+      /org/gnome/shell/disabled-extensions
+      /org/gnome/desktop/interface/gtk-theme
+      /org/gnome/desktop/interface/color-scheme
+      /org/gnome/desktop/interface/clock-format
+      /org/gnome/desktop/interface/clock-show-weekday
+      /org/gnome/desktop/background/picture-uri
+      /org/gnome/desktop/background/picture-uri-dark
+      /org/gnome/desktop/background/picture-options
+      /org/gnome/desktop/background/primary-color
+      /org/gnome/desktop/background/color-shading-type
+      /org/gnome/mutter/dynamic-workspaces
+      /org/gnome/mutter/num-workspaces
+      /org/gnome/nautilus/preferences/default-folder-viewer
+      /org/gnome/nautilus/preferences/show-hidden-files
+    permissions: "0644"
+
+  # Disable GNOME initial-setup (first-login wizard that resets settings)
+  - path: /etc/xdg/autostart/gnome-initial-setup-first-login.desktop.bak
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Hidden=true
+    permissions: "0644"
+
+runcmd:
+  # ── Step 0: Show splash ──
+  - /usr/local/bin/robos-splash 0
+
+  # ── Step 1: Base system configuration ──
+  - echo "robos:robos" | chpasswd
+  - /usr/local/bin/robos-splash 1
+
+  # ── Step 2: Install GNOME desktop ──
+  - |
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq \
+      ubuntu-desktop-minimal \
+      gdm3 \
+      gnome-tweaks \
+      dconf-cli \
+      gnome-shell-extensions \
+      gnome-shell-extension-manager \
+      2>&1 | tee /var/log/robos-gnome-install.log
+  - /usr/local/bin/robos-splash 2
+
+  # ── Step 3: Install dash-to-panel v56 ──
+  - |
+    EXTENSION_DIR="/usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com"
+    mkdir -p "$EXTENSION_DIR"
+    cd /tmp
+    wget -q "https://extensions.gnome.org/extension-data/dash-to-paneljderose9.github.com.v56.shell-extension.zip" -O dash-to-panel.zip
+    unzip -o dash-to-panel.zip -d "$EXTENSION_DIR"
+    # Patch 1: null guard for panel._leftBox etc
+    if [ -f "$EXTENSION_DIR/panel.js" ]; then
+      sed -i 's/this\._panel\._leftBox\.get_children/this._panel._leftBox?.get_children/g' "$EXTENSION_DIR/panel.js"
+      sed -i 's/this\._panel\._centerBox\.get_children/this._panel._centerBox?.get_children/g' "$EXTENSION_DIR/panel.js"
+      sed -i 's/this\._panel\._rightBox\.get_children/this._panel._rightBox?.get_children/g' "$EXTENSION_DIR/panel.js"
+    fi
+    # Note: _initialized patch removed — it broke module-level enable() function
+    chmod -R 755 "$EXTENSION_DIR"
+    # Copy to skel so new users get it too
+    mkdir -p /etc/skel/.local/share/gnome-shell/extensions/
+    cp -r "$EXTENSION_DIR" /etc/skel/.local/share/gnome-shell/extensions/
+    rm -f /tmp/dash-to-panel.zip
+  - /usr/local/bin/robos-splash 3
+
+  # ── Step 4: Configure display manager ──
+  - |
+    # GDM3 auto-login, disable Wayland
+    mkdir -p /etc/gdm3
+    printf '%s\n' '[daemon]' 'AutomaticLoginEnable=true' 'AutomaticLogin=robos' 'WaylandEnable=false' '' '[security]' '' '[xdmcp]' '' '[chooser]' '' '[debug]' > /etc/gdm3/custom.conf
+    # Set graphical boot target
+    systemctl set-default graphical.target
+    # Disable GNOME initial setup so it doesn't reset our config on first login
+    mkdir -p /home/robos/.config
+    echo yes > /home/robos/.config/gnome-initial-setup-done
+    chown -R robos:robos /home/robos/.config
+  - /usr/local/bin/robos-splash 4
+
+  # ── Step 5: Finalise — apply all dconf and copy user configs ──
+  - |
+    # Compile dconf database from our config files
+    dconf update
+    # Copy skel files to robos home
+    cp -rn /etc/skel/.config /home/robos/ 2>/dev/null || true
+    cp -rn /etc/skel/.local /home/robos/ 2>/dev/null || true
+    # Also copy dash-to-panel extension to user dir
+    mkdir -p /home/robos/.local/share/gnome-shell/extensions/
+    cp -r "/usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com" \
+          /home/robos/.local/share/gnome-shell/extensions/
+    chown -R robos:robos /home/robos/
+    # Fix SSH directory permissions
+    mkdir -p /home/robos/.ssh
+    chmod 700 /home/robos/.ssh
+    chown robos:robos /home/robos/.ssh
+    # Apply dconf settings directly to the robos user's dconf database
+    # This ensures settings take effect on first login without needing locks alone
+    cat > /tmp/robos-dconf.ini << 'DCONF'
+    [org/gnome/desktop/interface]
+    gtk-theme='Yaru-dark'
+    icon-theme='Yaru'
+    cursor-theme='Yaru'
+    color-scheme='prefer-dark'
+    clock-format='12h'
+    clock-show-weekday=true
+    enable-hot-corners=false
+    font-name='Ubuntu 11'
+    document-font-name='Ubuntu 11'
+    monospace-font-name='Ubuntu Mono 13'
+
+    [org/gnome/desktop/wm/preferences]
+    button-layout='appmenu:minimize,maximize,close'
+
+    [org/gnome/desktop/background]
+    picture-uri='none'
+    picture-uri-dark='none'
+    picture-options='none'
+    primary-color='#0d1117'
+    color-shading-type='solid'
+
+    [org/gnome/desktop/screensaver]
+    picture-uri='none'
+    picture-options='none'
+    primary-color='#0d1117'
+    color-shading-type='solid'
+
+    [org/gnome/nautilus/list-view]
+    default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
+    use-tree-view=true
+
+    [org/gnome/nautilus/preferences]
+    default-folder-viewer='list-view'
+    show-hidden-files=true
+
+    [org/gtk/settings/file-chooser]
+    show-hidden=true
+
+    [org/gnome/mutter]
+    dynamic-workspaces=false
+    num-workspaces=4
+
+    [org/gnome/shell]
+    enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com']
+    disabled-extensions=['ubuntu-dock@ubuntu.com']
+    favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+
+    [org/gnome/shell/extensions/dash-to-panel]
+    panel-positions='{"0":"BOTTOM"}'
+    panel-sizes='{"0":32}'
+    panel-element-positions='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
+    hide-overview-on-startup=true
+    stockgs-keep-dash=false
+    appicon-margin=2
+    appicon-padding=4
+    DCONF
+    # Strip leading whitespace from heredoc (YAML indentation)
+    sed -i 's/^    //' /tmp/robos-dconf.ini
+    su - robos -c "dbus-launch dconf load / < /tmp/robos-dconf.ini" || echo "dconf load completed (dbus may warn, ok)"
+    rm -f /tmp/robos-dconf.ini
+  - /usr/local/bin/robos-splash 5 done
+
+power_state:
+  mode: reboot
+  delay: "+1"
+  message: "RobOS provisioning complete. Rebooting..."
