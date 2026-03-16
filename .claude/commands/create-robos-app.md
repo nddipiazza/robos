@@ -83,6 +83,59 @@ Add an entry to the `BUILTIN_APPS` array (in alphabetical order by appId):
 
 Add the new app to the appropriate section in the App Suite tables in CLAUDE.md.
 
+### 4. Deploy to VM
+
+After creating the app locally, deploy it to the running RobOS VM. Use `-o StrictHostKeyChecking=no` for all SSH/SCP commands.
+
+**IMPORTANT:** The RobOS App Launcher discovers apps from `.desktop` files in `/usr/share/applications/` (NOT `/usr/local/share/applications/`). All `.desktop` files MUST go there.
+
+**Step 1 — Copy app files to VM:**
+```bash
+scp -P 2224 -o StrictHostKeyChecking=no -r packages/<app-id>/* robos@localhost:/tmp/<app-id>-deploy/
+```
+
+**Step 2 — Install on VM and fix permissions:**
+`sudo cp -r` creates files owned by root with restrictive permissions. You MUST `chmod` afterwards so Electron (running as user `robos`) can read the files.
+```bash
+ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
+  'sudo rm -rf /usr/local/share/robos/<app-id> && \
+   sudo cp -r /tmp/<app-id>-deploy /usr/local/share/robos/<app-id> && \
+   sudo chmod -R a+rX /usr/local/share/robos/<app-id> && \
+   sudo bash -c "cd /usr/local/share/robos/<app-id> && npm install --quiet"'
+```
+
+**Step 3 — Install .desktop file to `/usr/share/applications/`:**
+```bash
+ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
+  'sudo cp /usr/local/share/robos/<app-id>/<app-id>.desktop /usr/share/applications/<app-id>.desktop'
+```
+
+**Step 4 — Deploy any shared library dependencies:**
+If the app requires shared packages (e.g. `robos-icons`, `robos-lib`), check if they exist on the VM at `/usr/local/share/robos/<lib-name>/` and deploy them too:
+```bash
+scp -P 2224 -o StrictHostKeyChecking=no -r packages/<lib-name>/* robos@localhost:/tmp/<lib-name>-deploy/
+ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
+  'sudo rm -rf /usr/local/share/robos/<lib-name> && \
+   sudo cp -r /tmp/<lib-name>-deploy /usr/local/share/robos/<lib-name> && \
+   sudo chmod -R a+rX /usr/local/share/robos/<lib-name>'
+```
+
+**Step 5 — Test launch:**
+```bash
+ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
+  'DISPLAY=:0 /usr/bin/electron /usr/local/share/robos/<app-id>/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage &
+   sleep 3 && ps aux | grep <app-id> | grep -v grep'
+```
+
+**Step 6 — Verify deployment:**
+```bash
+ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
+  'ls /usr/local/share/robos/<app-id>/ && \
+   cat /usr/share/applications/<app-id>.desktop'
+```
+
+VM credentials: `robos` / `robos` (SSH port 2224).
+
 ## Validation
 
 - Verify all files exist in `packages/<app-id>/`
@@ -90,3 +143,7 @@ Add the new app to the appropriate section in the App Suite tables in CLAUDE.md.
 - Verify `X-RobOS-Category` is one of: Dev, AI, Security, People, Journal, System, Internet, Tools
 - Verify icon.svg is valid SVG with 48x48 dimensions
 - Verify the app is registered in `packages/robos-icons/index.js`
+- Verify the app is deployed to `/usr/local/share/robos/<app-id>/` on the VM with world-readable permissions
+- Verify the .desktop file is installed at `/usr/share/applications/<app-id>.desktop` on the VM (NOT `/usr/local/share/applications/`)
+- Verify any shared library dependencies are deployed on the VM
+- Verify the app launches successfully via `DISPLAY=:0 /usr/bin/electron ...`

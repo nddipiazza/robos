@@ -37,6 +37,12 @@ const BUILTIN_APPS = [
     iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>`
   },
   {
+    appId: 'icon-manager',
+    label: 'Icon Manager',
+    category: 'System',
+    iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="13.5" rx="9" ry="7" fill="none"/><circle cx="7.5" cy="14" r="1.5" fill="#ef4444" stroke="none"/><circle cx="11" cy="16" r="1.5" fill="#22c55e" stroke="none"/><circle cx="15" cy="14" r="1.5" fill="#3b82f6" stroke="none"/><circle cx="13" cy="11" r="1.5" fill="#f97316" stroke="none"/><circle cx="9" cy="11" r="1.5" fill="#7c3aed" stroke="none"/><circle cx="17" cy="17.5" r="1.5"/><line x1="18" y1="7" x2="10" y2="15" stroke="#00bcd4" stroke-width="2"/><ellipse cx="19" cy="6" rx="1.5" ry="2.5" transform="rotate(-45 19 6)" fill="#00bcd4" stroke="none"/></svg>`
+  },
+  {
     appId: 'issue-manager',
     label: 'Issue Manager',
     category: 'Dev',

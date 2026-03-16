@@ -171,7 +171,7 @@ write_files:
       [org/gnome/shell/extensions/dash-to-panel]
       panel-positions='{"0":"BOTTOM"}'
       panel-sizes='{"0":32}'
-      panel-element-positions='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
+      panel-element-positions='{"0":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
       hide-overview-on-startup=true
       stockgs-keep-dash=false
       appicon-margin=2
@@ -182,6 +182,21 @@ write_files:
       trans-bg-color='#0d1117'
       trans-use-custom-opacity=true
       trans-panel-opacity=0.9
+    permissions: "0644"
+
+  # dconf: RobOS App Launcher as default (Super key, disable GNOME Activities)
+  - path: /etc/dconf/db/local.d/04-robos-launcher
+    content: |
+      [org/gnome/mutter]
+      overlay-key=''
+
+      [org/gnome/settings-daemon/plugins/media-keys]
+      custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
+
+      [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+      name='RobOS App Launcher'
+      command='/usr/bin/electron /usr/local/share/robos/app-launcher/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage'
+      binding='Super_L'
     permissions: "0644"
 
   # Lock dash-to-panel and key shell config so GNOME first-login doesn't override
@@ -370,11 +385,22 @@ runcmd:
     [org/gnome/shell/extensions/dash-to-panel]
     panel-positions='{"0":"BOTTOM"}'
     panel-sizes='{"0":32}'
-    panel-element-positions='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
+    panel-element-positions='{"0":[{"element":"showAppsButton","visible":false,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":true,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":true,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":true,"position":"stackedBR"}]}'
     hide-overview-on-startup=true
     stockgs-keep-dash=false
     appicon-margin=2
     appicon-padding=4
+
+    [org/gnome/mutter]
+    overlay-key=''
+
+    [org/gnome/settings-daemon/plugins/media-keys]
+    custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
+
+    [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+    name='RobOS App Launcher'
+    command='/usr/bin/electron /usr/local/share/robos/app-launcher/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage'
+    binding='Super_L'
     DCONF
     # Strip leading whitespace from heredoc (YAML indentation)
     sed -i 's/^    //' /tmp/robos-dconf.ini

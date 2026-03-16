@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Icon Manager
+Comment=Manage and customize RobOS app icons
+Exec=/usr/bin/electron /usr/local/share/robos/icon-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/icon-manager/icon.svg
+Terminal=false
+Categories=Settings;
+X-RobOS-Category=System
+StartupWMClass=robos-icon-manager

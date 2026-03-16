@@ -88,6 +88,7 @@ All apps are Electron + vanilla JavaScript. They require `--no-sandbox --disable
 | **Task Servers** | Jira / GitHub task server configuration |
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |
+| **Icon Manager** | Manage and customize RobOS app icons |
 | **Notifications** | Notification history viewer |
 | **Toast Daemon** | System-wide overlay toast notifications |
 | **Security Setup** | First-run GPG + SSH key initialization |
