@@ -1,0 +1,213 @@
+:root {
+  --bg-primary: #0d1117;
+  --bg-card: #161b22;
+  --bg-card-hover: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --accent: #00bcd4;
+  --accent-dim: rgba(0, 188, 212, 0.15);
+  --border: #30363d;
+  --radius: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+
+#launcher {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* Search bar */
+#search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  flex-shrink: 0;
+}
+
+#search-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+#search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+#search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Category bar */
+#category-bar {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+#category-bar::-webkit-scrollbar {
+  height: 3px;
+}
+
+#category-bar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.category-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.category-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.category-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* App grid */
+#app-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  padding: 4px;
+  align-content: start;
+}
+
+/* Scrollbar */
+#app-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+#app-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#app-grid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+#app-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* App card */
+.app-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 150ms ease;
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+}
+
+.app-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.app-card:focus-visible {
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.app-card:active {
+  background: var(--accent-dim);
+}
+
+.app-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.app-icon-fallback {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.app-name {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--text-secondary);
+}
+
+/* Empty state */
+#empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.hidden {
+  display: none !important;
+}

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=App Launcher
+Comment=RobOS searchable application launcher
+Exec=/usr/bin/electron /usr/local/share/robos/app-launcher/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/app-launcher/icon.svg
+Categories=Utility;
+StartupWMClass=robos-app-launcher

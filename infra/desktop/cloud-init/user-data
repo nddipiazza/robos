@@ -41,8 +41,8 @@ write_files:
       # Draws RobOS branded progress screen on /dev/tty1
       STEP=${1:-0}
       DONE=${2:-""}
-      TOTAL=5
-      STEPS=("Configuring base system" "Installing GNOME desktop" "Installing dash-to-panel" "Configuring display manager" "Finalising installation")
+      TOTAL=7
+      STEPS=("Configuring base system" "Installing GNOME desktop" "Installing dash-to-panel" "Configuring display manager" "Installing Node.js and Electron" "Deploying RobOS App Launcher" "Finalising installation")
       TTY=/dev/tty1
       # Clear screen and hide cursor
       printf '\033[2J\033[H\033[?25l' > "$TTY"
@@ -140,7 +140,7 @@ write_files:
       [org/gnome/shell]
       enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com']
       disabled-extensions=['ubuntu-dock@ubuntu.com']
-      favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+      favorite-apps=['robos-app-launcher.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
     permissions: "0644"
 
   # GTK 3 dark theme for skel
@@ -272,7 +272,35 @@ runcmd:
     chown -R robos:robos /home/robos/.config
   - /usr/local/bin/robos-splash 4
 
-  # ── Step 5: Finalise — apply all dconf and copy user configs ──
+  # ── Step 5: Install Node.js 20 and Electron runtime deps ──
+  - |
+    export DEBIAN_FRONTEND=noninteractive
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+    apt-get update -qq
+    apt-get install -y -qq nodejs
+    # Electron runtime dependencies for QEMU
+    apt-get install -y -qq libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
+      xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2
+  - /usr/local/bin/robos-splash 5
+
+  # ── Step 6: Deploy RobOS App Launcher ──
+  - |
+    APP_DIR="/usr/local/share/robos/app-launcher"
+    mkdir -p "$APP_DIR"
+    # The app files are deployed via SCP after first boot (see deploy.sh)
+    # For now, create a placeholder so the .desktop file doesn't break
+    echo '{"name":"robos-app-launcher","version":"0.1.0","main":"main.js","dependencies":{"electron":"^28.0.0"}}' > "$APP_DIR/package.json"
+    # Install electron globally so /usr/bin/electron exists
+    npm install -g electron@28 --unsafe-perm 2>&1 | tail -5
+    # Copy .desktop file if app is deployed
+    if [ -f "$APP_DIR/robos-app-launcher.desktop" ]; then
+      cp "$APP_DIR/robos-app-launcher.desktop" /usr/share/applications/
+    fi
+  - /usr/local/bin/robos-splash 6
+
+  # ── Step 7: Finalise — apply all dconf and copy user configs ──
   - |
     # Compile dconf database from our config files
     dconf update
@@ -352,7 +380,7 @@ runcmd:
     sed -i 's/^    //' /tmp/robos-dconf.ini
     su - robos -c "dbus-launch dconf load / < /tmp/robos-dconf.ini" || echo "dconf load completed (dbus may warn, ok)"
     rm -f /tmp/robos-dconf.ini
-  - /usr/local/bin/robos-splash 5 done
+  - /usr/local/bin/robos-splash 7 done
 
 power_state:
   mode: reboot

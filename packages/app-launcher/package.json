@@ -1,0 +1,12 @@
+{
+  "name": "robos-app-launcher",
+  "version": "0.1.0",
+  "description": "RobOS App Launcher — searchable app grid",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
