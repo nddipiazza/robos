@@ -136,7 +136,8 @@ function renderApps(apps) {
 
     const name = document.createElement('span');
     name.className = 'app-name';
-    name.textContent = app.name;
+    // Strip "RobOS " prefix for cleaner display
+    name.textContent = app.name.replace(/^RobOS\s+/i, '');
     card.appendChild(name);
 
     card.addEventListener('click', () => {
@@ -159,11 +160,13 @@ function getFilteredApps() {
   const query = searchInput.value.trim();
   if (query) {
     const q = query.toLowerCase();
-    apps = apps.filter(app =>
-      app.name.toLowerCase().includes(q) ||
-      (app.comment && app.comment.toLowerCase().includes(q)) ||
-      (app.categories && app.categories.toLowerCase().includes(q))
-    );
+    apps = apps.filter(app => {
+      const cleanName = app.name.replace(/^RobOS\s+/i, '').toLowerCase();
+      return cleanName.includes(q) ||
+        app.name.toLowerCase().includes(q) ||
+        (app.comment && app.comment.toLowerCase().includes(q)) ||
+        (app.categories && app.categories.toLowerCase().includes(q));
+    });
   }
 
   return apps;
