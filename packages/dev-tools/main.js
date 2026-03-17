@@ -42,8 +42,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'code.visualstudio.com (deb package)',
     checkCmd: 'which code',
-    installCmd: 'wget -qO /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" && sudo dpkg -i /tmp/vscode.deb || sudo apt-get install -f -y && rm -f /tmp/vscode.deb',
-    uninstallCmd: 'sudo apt-get remove -y code',
+    installCmd: 'wget -qO /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" && sudo dpkg -i /tmp/vscode.deb || sudo apt-get install -f -y && rm -f /tmp/vscode.deb && sudo cp /usr/share/applications/code.desktop /usr/share/applications/code.desktop.bak 2>/dev/null',
+    uninstallCmd: 'sudo apt-get remove -y code && sudo rm -f /usr/share/applications/code.desktop',
   },
   {
     id: 'intellij-idea-community',
@@ -52,8 +52,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (intellij-idea-community)',
     checkCmd: 'ls /opt/idea-IC-*/bin/idea.sh 2>/dev/null || ls /snap/intellij-idea-community/current 2>/dev/null',
-    installCmd: 'sudo snap install intellij-idea-community --classic',
-    uninstallCmd: 'sudo snap remove intellij-idea-community',
+    installCmd: 'sudo snap install intellij-idea-community --classic && sudo cp /var/lib/snapd/desktop/applications/intellij-idea-community_intellij-idea-community.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=IntelliJ IDEA Community\nExec=intellij-idea-community %f\nIcon=/snap/intellij-idea-community/current/bin/idea.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-idea-ce\nTerminal=false" > /usr/share/applications/intellij-idea-community.desktop\'',
+    uninstallCmd: 'sudo snap remove intellij-idea-community && sudo rm -f /usr/share/applications/intellij-idea-community*.desktop',
   },
   {
     id: 'pycharm-community',
@@ -62,8 +62,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (pycharm-community)',
     checkCmd: 'ls /snap/pycharm-community/current 2>/dev/null',
-    installCmd: 'sudo snap install pycharm-community --classic',
-    uninstallCmd: 'sudo snap remove pycharm-community',
+    installCmd: 'sudo snap install pycharm-community --classic && sudo cp /var/lib/snapd/desktop/applications/pycharm-community_pycharm-community.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=PyCharm Community\nExec=pycharm-community %f\nIcon=/snap/pycharm-community/current/bin/pycharm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-pycharm-ce\nTerminal=false" > /usr/share/applications/pycharm-community.desktop\'',
+    uninstallCmd: 'sudo snap remove pycharm-community && sudo rm -f /usr/share/applications/pycharm-community*.desktop',
   },
   {
     id: 'webstorm',
@@ -72,8 +72,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (webstorm)',
     checkCmd: 'ls /snap/webstorm/current 2>/dev/null',
-    installCmd: 'sudo snap install webstorm --classic',
-    uninstallCmd: 'sudo snap remove webstorm',
+    installCmd: 'sudo snap install webstorm --classic && sudo cp /var/lib/snapd/desktop/applications/webstorm_webstorm.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=WebStorm\nExec=webstorm %f\nIcon=/snap/webstorm/current/bin/webstorm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-webstorm\nTerminal=false" > /usr/share/applications/webstorm.desktop\'',
+    uninstallCmd: 'sudo snap remove webstorm && sudo rm -f /usr/share/applications/webstorm*.desktop',
   },
   {
     id: 'goland',
@@ -82,8 +82,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (goland)',
     checkCmd: 'ls /snap/goland/current 2>/dev/null',
-    installCmd: 'sudo snap install goland --classic',
-    uninstallCmd: 'sudo snap remove goland',
+    installCmd: 'sudo snap install goland --classic && sudo cp /var/lib/snapd/desktop/applications/goland_goland.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=GoLand\nExec=goland %f\nIcon=/snap/goland/current/bin/goland.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-goland\nTerminal=false" > /usr/share/applications/goland.desktop\'',
+    uninstallCmd: 'sudo snap remove goland && sudo rm -f /usr/share/applications/goland*.desktop',
   },
   {
     id: 'clion',
@@ -92,8 +92,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (clion)',
     checkCmd: 'ls /snap/clion/current 2>/dev/null',
-    installCmd: 'sudo snap install clion --classic',
-    uninstallCmd: 'sudo snap remove clion',
+    installCmd: 'sudo snap install clion --classic && sudo cp /var/lib/snapd/desktop/applications/clion_clion.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=CLion\nExec=clion %f\nIcon=/snap/clion/current/bin/clion.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-clion\nTerminal=false" > /usr/share/applications/clion.desktop\'',
+    uninstallCmd: 'sudo snap remove clion && sudo rm -f /usr/share/applications/clion*.desktop',
   },
   {
     id: 'rider',
@@ -102,8 +102,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (rider)',
     checkCmd: 'ls /snap/rider/current 2>/dev/null',
-    installCmd: 'sudo snap install rider --classic',
-    uninstallCmd: 'sudo snap remove rider',
+    installCmd: 'sudo snap install rider --classic && sudo cp /var/lib/snapd/desktop/applications/rider_rider.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=Rider\nExec=rider %f\nIcon=/snap/rider/current/bin/rider.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rider\nTerminal=false" > /usr/share/applications/rider.desktop\'',
+    uninstallCmd: 'sudo snap remove rider && sudo rm -f /usr/share/applications/rider*.desktop',
   },
   {
     id: 'rustrover',
@@ -112,8 +112,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (rustrover)',
     checkCmd: 'ls /snap/rustrover/current 2>/dev/null',
-    installCmd: 'sudo snap install rustrover --classic',
-    uninstallCmd: 'sudo snap remove rustrover',
+    installCmd: 'sudo snap install rustrover --classic && sudo cp /var/lib/snapd/desktop/applications/rustrover_rustrover.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=RustRover\nExec=rustrover %f\nIcon=/snap/rustrover/current/bin/rustrover.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rustrover\nTerminal=false" > /usr/share/applications/rustrover.desktop\'',
+    uninstallCmd: 'sudo snap remove rustrover && sudo rm -f /usr/share/applications/rustrover*.desktop',
   },
 
   // ── Dev Tools ──
