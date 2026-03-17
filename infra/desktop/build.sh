@@ -57,16 +57,29 @@ tar -czf "$PACKAGES_TAR" -C "$PACKAGES_DIR" \
     .
 echo "  Packages tarball: $(du -h "$PACKAGES_TAR" | cut -f1)"
 
-# --- Build cloud-init seed ISO (includes packages tarball) ---
+# --- Copy branding assets ---
+LOGO_SRC="$SCRIPT_DIR/../../logo.png"
+LOGO_DST="$OUTPUT_DIR/robos-logo.png"
+if [ -f "$LOGO_SRC" ]; then
+    cp "$LOGO_SRC" "$LOGO_DST"
+    echo "  Logo included: robos-logo.png"
+else
+    echo "  WARNING: logo.png not found at repo root, skipping"
+fi
+
+# --- Build cloud-init seed ISO (includes packages tarball + logo) ---
 echo "Building cloud-init seed ISO..."
+ISO_FILES=("$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data" "$PACKAGES_TAR")
+[ -f "$LOGO_DST" ] && ISO_FILES+=("$LOGO_DST")
+
 if [ "$ISO_CMD" = "xorriso" ]; then
     xorriso -as genisoimage -output "$SEED_ISO" \
         -volid cidata -joliet -rock \
-        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data" "$PACKAGES_TAR"
+        "${ISO_FILES[@]}"
 else
     genisoimage -output "$SEED_ISO" \
         -volid cidata -joliet -rock \
-        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data" "$PACKAGES_TAR"
+        "${ISO_FILES[@]}"
 fi
 
 echo ""

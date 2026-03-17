@@ -364,6 +364,25 @@ runcmd:
   - |
     # Compile dconf database from our config files
     dconf update
+
+    # Replace Ubuntu branding with RobOS logo
+    SEED_MOUNT="/mnt/seed"
+    mkdir -p "$SEED_MOUNT"
+    mount /dev/vdb "$SEED_MOUNT" 2>/dev/null || mount -o loop /dev/sr0 "$SEED_MOUNT" 2>/dev/null || true
+    if [ -f "$SEED_MOUNT/robos-logo.png" ]; then
+      # GDM3 login screen logo
+      cp "$SEED_MOUNT/robos-logo.png" /usr/share/pixmaps/robos-logo.png
+      # Replace Ubuntu logo used by Plymouth and GDM
+      cp "$SEED_MOUNT/robos-logo.png" /usr/share/plymouth/ubuntu-logo.png 2>/dev/null || true
+      # Replace the GDM/GNOME logo shown on the login screen
+      cp "$SEED_MOUNT/robos-logo.png" /usr/share/gnome-shell/theme/ubuntu-logo.png 2>/dev/null || true
+      # Also replace the Yaru theme logo if present
+      for f in /usr/share/gnome-shell/theme/Yaru/ubuntu-logo.png /usr/share/plymouth/themes/spinner/watermark.png; do
+        [ -f "$f" ] && cp "$SEED_MOUNT/robos-logo.png" "$f"
+      done
+      echo "RobOS logo installed."
+    fi
+    umount "$SEED_MOUNT" 2>/dev/null || true
     # Copy skel files to robos home
     cp -rn /etc/skel/.config /home/robos/ 2>/dev/null || true
     cp -rn /etc/skel/.local /home/robos/ 2>/dev/null || true
