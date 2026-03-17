@@ -58,7 +58,7 @@ tar -czf "$PACKAGES_TAR" -C "$PACKAGES_DIR" \
 echo "  Packages tarball: $(du -h "$PACKAGES_TAR" | cut -f1)"
 
 # --- Copy branding assets ---
-LOGO_SRC="$SCRIPT_DIR/../../logo.png"
+LOGO_SRC="$SCRIPT_DIR/../../robos-transparent-background.png"
 LOGO_DST="$OUTPUT_DIR/robos-logo.png"
 if [ -f "$LOGO_SRC" ]; then
     cp "$LOGO_SRC" "$LOGO_DST"
