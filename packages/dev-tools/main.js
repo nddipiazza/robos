@@ -211,7 +211,14 @@ function getToolsWithStatus() {
 
 function runInstall(tool, action) {
   const cmd = action === 'uninstall' ? tool.uninstallCmd : tool.installCmd;
-  installLogs[tool.id] = { installing: true, log: '', action };
+  const label = action === 'uninstall' ? `Uninstalling ${tool.name}...\n` : `Installing ${tool.name}...\n`;
+  installLogs[tool.id] = { installing: true, log: label, action };
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('install-progress', {
+      toolId: tool.id, text: label, done: false, action
+    });
+  }
 
   const proc = spawn('bash', ['-c', cmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' } });
 
