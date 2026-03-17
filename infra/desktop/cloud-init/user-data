@@ -222,6 +222,19 @@ write_files:
       /org/gnome/nautilus/preferences/show-hidden-files
     permissions: "0644"
 
+  # Autostart: RobOS Desktop Dashboard (widget layer behind all windows)
+  - path: /etc/xdg/autostart/robos-desktop-dashboard.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=RobOS Desktop Dashboard
+      Exec=/usr/bin/electron /usr/local/share/robos/desktop-dashboard/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+      X-GNOME-Autostart-enabled=true
+      X-GNOME-Autostart-Delay=3
+      Hidden=false
+      NoDisplay=true
+    permissions: "0644"
+
   # Disable GNOME initial-setup (first-login wizard that resets settings)
   - path: /etc/xdg/autostart/gnome-initial-setup-first-login.desktop.bak
     content: |
@@ -300,19 +313,38 @@ runcmd:
       xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2
   - /usr/local/bin/robos-splash 5
 
-  # ── Step 6: Deploy RobOS App Launcher ──
+  # ── Step 6: Deploy RobOS Apps ──
   - |
-    APP_DIR="/usr/local/share/robos/app-launcher"
-    mkdir -p "$APP_DIR"
-    # The app files are deployed via SCP after first boot (see deploy.sh)
-    # For now, create a placeholder so the .desktop file doesn't break
-    echo '{"name":"robos-app-launcher","version":"0.1.0","main":"main.js","dependencies":{"electron":"^28.0.0"}}' > "$APP_DIR/package.json"
     # Install electron globally so /usr/bin/electron exists
     npm install -g electron@28 --unsafe-perm 2>&1 | tail -5
-    # Copy .desktop file if app is deployed
-    if [ -f "$APP_DIR/robos-app-launcher.desktop" ]; then
-      cp "$APP_DIR/robos-app-launcher.desktop" /usr/share/applications/
-    fi
+    # Install xdotool and wmctrl for desktop-dashboard window management
+    apt-get install -y -qq xdotool wmctrl x11-utils 2>/dev/null
+
+    # Clone RobOS repo and deploy all Electron apps + shared libs
+    REPO_DIR="/tmp/robos-repo"
+    git clone --depth 1 https://github.com/nddipiazza/robos.git "$REPO_DIR" 2>&1 | tail -3
+
+    ROBOS_BASE="/usr/local/share/robos"
+    for pkg_dir in "$REPO_DIR"/packages/*/; do
+      pkg=$(basename "$pkg_dir")
+      echo "Deploying $pkg..."
+      mkdir -p "$ROBOS_BASE/$pkg"
+      cp -r "$pkg_dir"* "$ROBOS_BASE/$pkg/"
+      chmod -R a+rX "$ROBOS_BASE/$pkg"
+
+      # If it has a package.json with electron dependency, run npm install
+      if [ -f "$ROBOS_BASE/$pkg/package.json" ] && grep -q '"electron"' "$ROBOS_BASE/$pkg/package.json"; then
+        cd "$ROBOS_BASE/$pkg" && npm install --quiet 2>&1 | tail -2
+      fi
+
+      # Install .desktop files to /usr/share/applications/
+      for f in "$ROBOS_BASE/$pkg"/*.desktop; do
+        [ -f "$f" ] && cp "$f" /usr/share/applications/
+      done
+    done
+
+    rm -rf "$REPO_DIR"
+    echo "All RobOS apps deployed."
   - /usr/local/bin/robos-splash 6
 
   # ── Step 7: Finalise — apply all dconf and copy user configs ──
