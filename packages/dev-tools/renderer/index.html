@@ -2,39 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RobOS Dev Tools</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="toolbar">
-    <span class="app-title">RobOS Dev Tools</span>
-    <div class="toolbar-right">
-      <button id="btn-refresh" class="tb-btn">Refresh</button>
-    </div>
-  </div>
-
-  <div id="plugin-banner" class="plugin-banner">
-    <span class="plugin-banner-label">RobOS JetBrains Plugin:</span>
-    <span id="plugin-banner-sub">Loading...</span>
-  </div>
-
-  <div class="page-body">
-    <div id="tool-grid" class="tool-grid">
-      <div class="loading">Detecting tools...</div>
-    </div>
-  </div>
-
-  <div id="install-modal" class="modal hidden">
-    <div class="modal-box">
-      <div class="modal-header">
-        <span id="modal-title">Installing...</span>
-        <button id="modal-close" class="modal-close">X</button>
+  <div id="app">
+    <header>
+      <h1>Dev Tools</h1>
+      <p class="subtitle">Install and manage developer tools</p>
+    </header>
+    <div id="tool-list"></div>
+    <div id="log-panel" class="hidden">
+      <div id="log-header">
+        <span id="log-title">Install Log</span>
+        <button id="log-close">&times;</button>
       </div>
-      <div id="modal-body" class="modal-body"></div>
+      <pre id="log-output"></pre>
     </div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
