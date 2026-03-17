@@ -48,16 +48,25 @@ qemu-img resize "$DISK_IMAGE" "$DISK_SIZE"
 # --- Generate cloud-init files ---
 python3 "$SCRIPT_DIR/gen-userdata.py"
 
-# --- Build cloud-init seed ISO ---
+# --- Bundle RobOS packages tarball ---
+PACKAGES_DIR="$SCRIPT_DIR/../../packages"
+PACKAGES_TAR="$OUTPUT_DIR/robos-packages.tar.gz"
+echo "Bundling RobOS packages..."
+tar -czf "$PACKAGES_TAR" -C "$PACKAGES_DIR" \
+    --exclude='node_modules' --exclude='.git' \
+    .
+echo "  Packages tarball: $(du -h "$PACKAGES_TAR" | cut -f1)"
+
+# --- Build cloud-init seed ISO (includes packages tarball) ---
 echo "Building cloud-init seed ISO..."
 if [ "$ISO_CMD" = "xorriso" ]; then
     xorriso -as genisoimage -output "$SEED_ISO" \
         -volid cidata -joliet -rock \
-        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data"
+        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data" "$PACKAGES_TAR"
 else
     genisoimage -output "$SEED_ISO" \
         -volid cidata -joliet -rock \
-        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data"
+        "$OUTPUT_DIR/user-data" "$OUTPUT_DIR/meta-data" "$PACKAGES_TAR"
 fi
 
 echo ""

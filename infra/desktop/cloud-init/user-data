@@ -318,33 +318,46 @@ runcmd:
     # Install electron globally so /usr/bin/electron exists
     npm install -g electron@28 --unsafe-perm 2>&1 | tail -5
     # Install xdotool and wmctrl for desktop-dashboard window management
+    export DEBIAN_FRONTEND=noninteractive
     apt-get install -y -qq xdotool wmctrl x11-utils 2>/dev/null
 
-    # Clone RobOS repo and deploy all Electron apps + shared libs
-    REPO_DIR="/tmp/robos-repo"
-    git clone --depth 1 https://github.com/nddipiazza/robos.git "$REPO_DIR" 2>&1 | tail -3
+    # Extract RobOS packages from seed ISO (bundled by build.sh)
+    SEED_MOUNT="/mnt/seed"
+    mkdir -p "$SEED_MOUNT"
+    mount /dev/vdb "$SEED_MOUNT" 2>/dev/null || mount -o loop /dev/sr0 "$SEED_MOUNT" 2>/dev/null || true
 
-    ROBOS_BASE="/usr/local/share/robos"
-    for pkg_dir in "$REPO_DIR"/packages/*/; do
-      pkg=$(basename "$pkg_dir")
-      echo "Deploying $pkg..."
-      mkdir -p "$ROBOS_BASE/$pkg"
-      cp -r "$pkg_dir"* "$ROBOS_BASE/$pkg/"
-      chmod -R a+rX "$ROBOS_BASE/$pkg"
+    PACKAGES_TAR="$SEED_MOUNT/robos-packages.tar.gz"
+    if [ ! -f "$PACKAGES_TAR" ]; then
+      echo "ERROR: robos-packages.tar.gz not found on seed ISO"
+      umount "$SEED_MOUNT" 2>/dev/null || true
+    else
+      ROBOS_BASE="/usr/local/share/robos"
+      EXTRACT_DIR="/tmp/robos-packages"
+      mkdir -p "$EXTRACT_DIR"
+      tar -xzf "$PACKAGES_TAR" -C "$EXTRACT_DIR"
 
-      # If it has a package.json with electron dependency, run npm install
-      if [ -f "$ROBOS_BASE/$pkg/package.json" ] && grep -q '"electron"' "$ROBOS_BASE/$pkg/package.json"; then
-        cd "$ROBOS_BASE/$pkg" && npm install --quiet 2>&1 | tail -2
-      fi
+      for pkg_dir in "$EXTRACT_DIR"/*/; do
+        pkg=$(basename "$pkg_dir")
+        echo "Deploying $pkg..."
+        mkdir -p "$ROBOS_BASE/$pkg"
+        cp -r "$pkg_dir"* "$ROBOS_BASE/$pkg/"
+        chmod -R a+rX "$ROBOS_BASE/$pkg"
 
-      # Install .desktop files to /usr/share/applications/
-      for f in "$ROBOS_BASE/$pkg"/*.desktop; do
-        [ -f "$f" ] && cp "$f" /usr/share/applications/
+        # If it has a package.json with electron dependency, run npm install
+        if [ -f "$ROBOS_BASE/$pkg/package.json" ] && grep -q '"electron"' "$ROBOS_BASE/$pkg/package.json"; then
+          cd "$ROBOS_BASE/$pkg" && npm install --quiet 2>&1 | tail -2
+        fi
+
+        # Install .desktop files to /usr/share/applications/
+        for f in "$ROBOS_BASE/$pkg"/*.desktop; do
+          [ -f "$f" ] && cp "$f" /usr/share/applications/
+        done
       done
-    done
 
-    rm -rf "$REPO_DIR"
-    echo "All RobOS apps deployed."
+      rm -rf "$EXTRACT_DIR"
+      umount "$SEED_MOUNT" 2>/dev/null || true
+      echo "All RobOS apps deployed."
+    fi
   - /usr/local/bin/robos-splash 6
 
   # ── Step 7: Finalise — apply all dconf and copy user configs ──
