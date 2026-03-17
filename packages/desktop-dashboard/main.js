@@ -18,35 +18,47 @@ app.setName('robos-desktop-dashboard');
 let win = null;
 const TITLE = 'RobOS Desktop';
 
-// ── Push window to the desktop layer via xdotool/wmctrl ──────────────────────
-function pushToDesktopLayer() {
+// ── Set X11 window type to DESKTOP via xprop ─────────────────────────────────
+function setDesktopWindowType() {
   if (!win) return;
   const env = { ...process.env, DISPLAY: ':0' };
-  // Retry a few times since the window may take a moment to register with X
   let attempts = 0;
-  const tryPush = () => {
+
+  const trySet = () => {
     attempts++;
+    // Find the X11 window ID by PID since focusable:false windows may not have a name
     cp.exec(
-      `wmctrl -r "${TITLE}" -b add,below,sticky 2>/dev/null; wmctrl -r "${TITLE}" -b add,skip_taskbar,skip_pager 2>/dev/null`,
-      { timeout: 3000, env },
-      (err) => {
-        if (err && attempts < 5) {
-          setTimeout(tryPush, 500);
+      `WID=$(xdotool search --pid $$ --name "${TITLE}" 2>/dev/null | head -1); ` +
+      `[ -z "$WID" ] && WID=$(xdotool search --name "${TITLE}" 2>/dev/null | head -1); ` +
+      `if [ -n "$WID" ]; then ` +
+        `xprop -id $WID -f _NET_WM_WINDOW_TYPE 32a -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_DESKTOP; ` +
+        `echo "OK $WID"; ` +
+      `else echo "NOTFOUND"; fi`,
+      { timeout: 5000, env },
+      (err, stdout) => {
+        const out = (stdout || '').trim();
+        if (out.startsWith('OK')) {
+          // Success
+        } else if (attempts < 10) {
+          setTimeout(trySet, 500);
         }
       }
     );
   };
-  setTimeout(tryPush, 800);
+
+  setTimeout(trySet, 1000);
 }
 
 function createWindow() {
   const display = screen.getPrimaryDisplay();
+  // Use workAreaSize to avoid covering the panel (dash-to-panel at bottom)
+  const { width, height } = display.workAreaSize;
 
   win = new BrowserWindow({
     x: 0,
     y: 0,
-    width:  display.size.width,
-    height: display.size.height,
+    width,
+    height,
     frame: false,
     resizable: false,
     movable: false,
@@ -67,9 +79,8 @@ function createWindow() {
 
   win.on('closed', () => { win = null; });
 
-  // Once content is ready, push to desktop layer
   win.webContents.on('did-finish-load', () => {
-    pushToDesktopLayer();
+    setDesktopWindowType();
   });
 }
 
