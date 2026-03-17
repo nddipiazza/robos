@@ -1,4 +1,5 @@
 const toolList = document.getElementById('tool-list');
+const categoryBar = document.getElementById('category-bar');
 const logPanel = document.getElementById('log-panel');
 const logOutput = document.getElementById('log-output');
 const logTitle = document.getElementById('log-title');
@@ -6,15 +7,44 @@ const logClose = document.getElementById('log-close');
 
 let tools = [];
 let activeLogTool = null;
+let activeCategory = 'All';
+
+const CATEGORY_ORDER = ['All', 'AI', 'IDE', 'Dev', 'CLI'];
 
 logClose.addEventListener('click', () => {
   logPanel.classList.add('hidden');
   activeLogTool = null;
 });
 
+function renderCategoryBar() {
+  categoryBar.innerHTML = '';
+  // Only show categories that have tools
+  const activeCats = new Set(tools.map(t => t.category));
+  const cats = CATEGORY_ORDER.filter(c => c === 'All' || activeCats.has(c));
+
+  for (const cat of cats) {
+    const btn = document.createElement('button');
+    btn.className = 'category-btn' + (cat === activeCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.addEventListener('click', () => {
+      activeCategory = cat;
+      renderCategoryBar();
+      renderTools();
+    });
+    categoryBar.appendChild(btn);
+  }
+}
+
+function getFilteredTools() {
+  if (activeCategory === 'All') return tools;
+  return tools.filter(t => t.category === activeCategory);
+}
+
 function renderTools() {
   toolList.innerHTML = '';
-  for (const tool of tools) {
+  const filtered = getFilteredTools();
+
+  for (const tool of filtered) {
     const card = document.createElement('div');
     card.className = 'tool-card';
     card.dataset.toolId = tool.id;
@@ -94,9 +124,9 @@ window.robos.onInstallProgress(({ toolId, text, done, success, action }) => {
     logOutput.scrollTop = logOutput.scrollHeight;
   }
   if (done) {
-    // Refresh tool list
     window.robos.getTools().then(t => {
       tools = t;
+      renderCategoryBar();
       renderTools();
     });
   }
@@ -105,5 +135,6 @@ window.robos.onInstallProgress(({ toolId, text, done, success, action }) => {
 // Initial load
 window.robos.getTools().then(t => {
   tools = t;
+  renderCategoryBar();
   renderTools();
 });

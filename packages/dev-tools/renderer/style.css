@@ -33,6 +33,38 @@ body {
   gap: 16px;
 }
 
+#category-bar {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.category-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.category-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.category-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 header h1 {
   font-size: 20px;
   font-weight: 600;
