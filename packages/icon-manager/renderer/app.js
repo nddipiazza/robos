@@ -12,7 +12,7 @@ function esc(s) {
 }
 
 function shortPath(p) {
-  if (!p) return 'builtin (Lucide)';
+  if (!p) return '(none)';
   if (p.startsWith('/usr/local/share/robos/')) return p.replace('/usr/local/share/robos/', '.../');
   if (p.startsWith('/usr/local/share/'))       return p.replace('/usr/local/share/', '.../share/');
   if (p.startsWith('/usr/share/'))             return p.replace('/usr/share/', '.../usr/share/');
@@ -25,38 +25,40 @@ async function render(icons) {
     (a.label || a.appId).localeCompare(b.label || b.appId));
 
   if (!entries.length) {
-    grid.innerHTML = '<div class="empty">No icons registered yet.</div>';
+    grid.innerHTML = '<div class="empty">No RobOS apps found. Install apps with X-RobOS-App=true in their .desktop files.</div>';
     return;
   }
 
+  // Load custom icon images for entries that have a user override
   const imgData = await Promise.all(
     entries.map(e =>
-      !e.iconSvg && e.iconPath && e.iconPath.startsWith('/')
-        ? window.robos.readImage(e.iconPath)
+      e.customIconPath && e.customIconPath.startsWith('/')
+        ? window.robos.readImage(e.customIconPath)
         : Promise.resolve(null)
     )
   );
 
   grid.innerHTML = entries.map((e, i) => {
-    const fileImg = imgData[i];
+    const customImg = imgData[i];
     let imgHtml;
-    if (e.iconSvg && !fileImg) {
+    if (customImg) {
+      imgHtml = `<img class="card-img" src="${esc(customImg)}" alt="${esc(e.label)}">`;
+    } else if (e.iconSvg) {
       imgHtml = `<div class="card-svg">${e.iconSvg}</div>`;
-    } else if (fileImg) {
-      imgHtml = `<img class="card-img" src="${esc(fileImg)}" alt="${esc(e.label)}">`;
     } else {
       imgHtml = `<span class="card-placeholder">?</span>`;
     }
 
-    const iconLabel = fileImg ? shortPath(e.iconPath) : (e.category ? `${e.category} (builtin)` : '(none)');
-    const hasCustom = !!fileImg;
+    const iconLabel = customImg ? shortPath(e.customIconPath) : shortPath(e.iconPath);
+    const hasCustom = !!customImg;
 
     return `
-      <div class="icon-card${hasCustom ? ' has-custom' : ''}" data-appid="${esc(e.appId)}" title="${esc(e.label || e.appId)}">
+      <div class="icon-card${hasCustom ? ' has-custom' : ''}" data-appid="${esc(e.appId)}" title="${esc(e.comment || e.label || e.appId)}">
         <span class="card-change-hint">change</span>
         <div class="card-img-wrap">${imgHtml}</div>
         <div class="card-label">${esc(e.label || e.appId)}</div>
         <div class="card-appid">${esc(e.appId)}</div>
+        <div class="card-category">${esc(e.category || '')}</div>
         <div class="card-path">${esc(iconLabel)}</div>
       </div>`;
   }).join('');
@@ -72,6 +74,7 @@ function applyFilter(q) {
   const filtered = Object.fromEntries(
     Object.entries(allIcons).filter(([id, e]) =>
       !q || id.includes(lower) || (e.label || '').toLowerCase().includes(lower)
+        || (e.category || '').toLowerCase().includes(lower)
     )
   );
   render(filtered);
@@ -79,7 +82,7 @@ function applyFilter(q) {
 
 // ── Load ──────────────────────────────────────────────────────────────────────
 async function load() {
-  grid.innerHTML = '<div class="empty">Loading icons...</div>';
+  grid.innerHTML = '<div class="empty">Scanning installed apps...</div>';
   const res = await window.robos.listIcons();
   allIcons = res.icons || {};
   const n = Object.keys(allIcons).length;
@@ -91,12 +94,12 @@ async function load() {
 async function changeIcon(appId) {
   const res = await window.robos.updateIcon(appId);
   if (!res.ok) return;
-  allIcons[appId] = { ...allIcons[appId], iconPath: res.iconPath };
+  allIcons[appId] = { ...allIcons[appId], customIconPath: res.iconPath };
   applyFilter(search.value);
   showStatus(`Icon updated for ${appId}`, 'ok');
 }
 
-// ── Push Icons (write icon.svg + sync .desktop) ───────────────────────────────
+// ── Push Icons ────────────────────────────────────────────────────────────────
 document.getElementById('btn-push-icons').addEventListener('click', async () => {
   const btn      = document.getElementById('btn-push-icons');
   const progress = document.getElementById('push-progress');

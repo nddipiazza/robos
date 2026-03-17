@@ -1,0 +1,9 @@
+{
+  "name": "robos-dev-tools",
+  "version": "0.1.0",
+  "description": "RobOS Dev Tools — install and manage IDEs, CLI tools, and cloud SDKs",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

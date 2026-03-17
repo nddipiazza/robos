@@ -76,7 +76,7 @@ All apps are Electron + vanilla JavaScript. They require `--no-sandbox --disable
 ### Supporting Apps
 | App | Purpose |
 |-----|---------|
-| **IDE Manager** | Install/manage JetBrains IDEs and RobOS plugin |
+| **Dev Tools** | Install and manage IDEs, CLI tools, and cloud SDKs |
 | **Workspace Manager** | Discover and open local workspaces in any IDE |
 | **Lang Manager** | Language runtime management (Node, Python, Java, Go, Rust) |
 | **Context Manager** | Curate AI context sources (files, URLs, repos, tickets) |

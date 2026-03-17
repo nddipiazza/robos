@@ -39,6 +39,7 @@ body { font-family: 'DejaVu Sans', sans-serif; background: #0d1117; color: #c9d1
 
 .card-label { font-size: 13px; font-weight: 600; color: #e0e0ff; text-align: center; line-height: 1.3; }
 .card-appid { font-size: 11px; color: #388bfd; font-family: monospace; }
+.card-category { font-size: 10px; color: #00bcd4; opacity: 0.7; }
 .card-path { font-size: 10px; color: #484f58; text-align: center; word-break: break-all; line-height: 1.4; max-height: 30px; overflow: hidden; }
 .card-change-hint { position: absolute; top: 8px; right: 8px; font-size: 10px; color: #00bcd4; opacity: 0; transition: opacity .15s; }
 

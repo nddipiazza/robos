@@ -1,0 +1,108 @@
+/* RobOS Desktop Dashboard */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-desktop: #0d1117;
+  --bg-card: #161b22;
+  --bg-card-hover: #1a2332;
+  --border: #21262d;
+  --accent: #00bcd4;
+  --text: #c9d1d9;
+  --text-dim: #484f58;
+  --text-bright: #e0e0ff;
+  --radius: 12px;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-desktop);
+  font-family: 'DejaVu Sans', 'Ubuntu', sans-serif;
+  color: var(--text);
+  user-select: none;
+}
+
+/* ── Desktop container ─────────────────────────────────────────────────────*/
+#desktop {
+  width: 100%;
+  height: 100%;
+  padding: 48px 24px 24px 24px; /* top padding clears GNOME panel (32px + gap) */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Widget grid — normal CSS Grid flow layout ─────────────────────────────*/
+#widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+  align-content: start;
+}
+
+/* ── Widget card ───────────────────────────────────────────────────────────*/
+.widget-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.widget-card:hover {
+  border-color: var(--accent);
+}
+
+.widget-header {
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.widget-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.widget-body {
+  padding: 16px;
+}
+
+/* ── Hello World Widget ────────────────────────────────────────────────────*/
+.hello-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hello-time {
+  font-size: 42px;
+  font-weight: 300;
+  color: var(--text-bright);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.hello-date {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.hello-msg {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.hello-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}

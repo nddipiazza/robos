@@ -5,11 +5,9 @@ const path = require('path');
 const fs   = require('fs');
 const cp   = require('child_process');
 
-const { BUILTIN_APPS } = require('../robos-icons');
 const REGISTRY_PATH   = path.join(process.env.HOME, '.config', 'robos', 'icon-registry.json');
-const DESKTOP_DIR     = '/usr/local/share/applications';
+const DESKTOP_DIRS    = ['/usr/share/applications', '/usr/local/share/applications'];
 const ROBOS_BASE      = '/usr/local/share/robos';
-const PIXMAPS_BASE    = '/usr/local/share/pixmaps';
 
 // ── Registry helpers ──────────────────────────────────────────────────────────
 function readRegistry() {
@@ -22,7 +20,7 @@ function writeRegistry(reg) {
   fs.writeFileSync(REGISTRY_PATH, JSON.stringify(reg, null, 2), 'utf8');
 }
 
-// ── Parse a .desktop file → { name, icon, exec } ─────────────────────────────
+// ── Parse a .desktop file ────────────────────────────────────────────────────
 function parseDesktop(filePath) {
   try {
     const lines = fs.readFileSync(filePath, 'utf8').split('\n');
@@ -30,106 +28,82 @@ function parseDesktop(filePath) {
       const l = lines.find(l => l.startsWith(key + '='));
       return l ? l.slice(key.length + 1).trim() : null;
     };
-    return { name: get('Name'), icon: get('Icon'), exec: get('Exec') };
+    return {
+      name:     get('Name'),
+      icon:     get('Icon'),
+      exec:     get('Exec'),
+      comment:  get('Comment'),
+      category: get('X-RobOS-Category'),
+      isRobOS:  get('X-RobOS-App') === 'true',
+    };
   } catch { return null; }
 }
 
-// ── Derive appId from desktop filename ───────────────────────────────────────
-function desktopToAppId(filename) {
-  return filename.replace(/\.desktop$/, '');
-}
+// ── Discover all installed RobOS apps from .desktop files ────────────────────
+function discoverApps() {
+  const apps = {};
 
-// ── Resolve an icon reference (absolute path or theme name) ─────────────────
-function resolveIconPath(iconRef) {
-  if (!iconRef) return null;
-  if (iconRef.startsWith('/')) {
-    try { fs.accessSync(iconRef); return iconRef; } catch { return iconRef; }
-  }
-  const candidates = [
-    path.join(ROBOS_BASE, iconRef, `${iconRef}.svg`),
-    path.join(ROBOS_BASE, iconRef, 'icon.svg'),
-    path.join(ROBOS_BASE, iconRef, `${iconRef}.png`),
-    path.join(ROBOS_BASE, iconRef, 'icon.png'),
-    path.join(PIXMAPS_BASE, `${iconRef}.svg`),
-    path.join(PIXMAPS_BASE, `${iconRef}.png`),
-  ];
-  for (const p of candidates) {
-    try { fs.accessSync(p); return p; } catch {}
-  }
-  return iconRef;
-}
+  for (const dir of DESKTOP_DIRS) {
+    if (!fs.existsSync(dir)) continue;
+    for (const filename of fs.readdirSync(dir)) {
+      if (!filename.endsWith('.desktop')) continue;
+      const filePath = path.join(dir, filename);
+      const parsed = parseDesktop(filePath);
+      if (!parsed?.isRobOS || !parsed?.name) continue;
 
-// ── Bootstrap or refresh registry from .desktop files ───────────────────────
-function syncRegistryFromDesktopFiles() {
-  const reg = readRegistry();
-  let changed = false;
+      const appId = filename.replace(/\.desktop$/, '');
+      if (apps[appId]) continue; // first directory wins
 
-  if (!fs.existsSync(DESKTOP_DIR)) return reg;
+      // Try to read the icon SVG inline if it's an SVG file
+      let iconSvg = null;
+      if (parsed.icon && parsed.icon.endsWith('.svg')) {
+        try { iconSvg = fs.readFileSync(parsed.icon, 'utf8'); } catch {}
+      }
 
-  const desktopFiles = fs.readdirSync(DESKTOP_DIR)
-    .filter(f => f.endsWith('.desktop'));
+      // Also check the standard location
+      if (!iconSvg) {
+        const stdIcon = path.join(ROBOS_BASE, appId, 'icon.svg');
+        try { iconSvg = fs.readFileSync(stdIcon, 'utf8'); } catch {}
+      }
 
-  for (const filename of desktopFiles) {
-    const filePath = path.join(DESKTOP_DIR, filename);
-    const parsed   = parseDesktop(filePath);
-    if (!parsed?.name || !parsed?.icon) continue;
-    if (!parsed.name.toLowerCase().includes('robos')) continue;
-
-    const appId = desktopToAppId(filename);
-    if (!reg.icons[appId]) {
-      reg.icons[appId] = {
+      apps[appId] = {
         appId,
-        label:       parsed.name,
-        iconPath:    resolveIconPath(parsed.icon),
-        iconRef:     parsed.icon,
+        label:       parsed.name.replace(/^RobOS\s+/, ''),
+        category:    parsed.category || 'System',
+        comment:     parsed.comment || '',
+        iconPath:    parsed.icon || null,
+        iconSvg,
         desktopFile: filePath,
       };
-      changed = true;
-    } else {
-      reg.icons[appId].desktopFile = filePath;
-      if (!reg.icons[appId].label) { reg.icons[appId].label = parsed.name; changed = true; }
     }
   }
 
-  if (changed) writeRegistry(reg);
-  return reg;
+  return apps;
 }
 
-// ── Merge builtin app catalogue with filesystem registry ─────────────────────
-function buildMergedIcons() {
-  const reg = syncRegistryFromDesktopFiles();
-  const merged = {};
+// ── Build icon list: discovered apps + user customizations from registry ─────
+function buildIconList() {
+  const apps = discoverApps();
+  const reg = readRegistry();
 
-  for (const builtin of BUILTIN_APPS) {
-    merged[builtin.appId] = {
-      appId:    builtin.appId,
-      label:    builtin.label,
-      category: builtin.category,
-      iconSvg:  builtin.iconSvg,
-      iconPath: null,
-      desktopFile: null,
-    };
-  }
-
+  // Overlay user customizations (custom icon paths)
   for (const [appId, entry] of Object.entries(reg.icons)) {
-    if (merged[appId]) {
-      merged[appId] = { ...merged[appId], ...entry, iconSvg: merged[appId].iconSvg };
-    } else {
-      merged[appId] = entry;
+    if (apps[appId] && entry.iconPath) {
+      apps[appId].customIconPath = entry.iconPath;
     }
   }
 
-  return merged;
+  return apps;
 }
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
 ipcMain.handle('ri-list-icons', () => {
-  return { ok: true, icons: buildMergedIcons() };
+  return { ok: true, icons: buildIconList() };
 });
 
 ipcMain.handle('ri-get-icon', (_, appId) => {
-  const reg = readRegistry();
-  return reg.icons?.[appId] || null;
+  const icons = buildIconList();
+  return icons[appId] || null;
 });
 
 ipcMain.handle('ri-update-icon', async (_, appId) => {
@@ -144,8 +118,30 @@ ipcMain.handle('ri-update-icon', async (_, appId) => {
   const reg = readRegistry();
   if (!reg.icons[appId]) reg.icons[appId] = { appId };
   reg.icons[appId].iconPath = newPath;
-  reg.icons[appId].iconRef  = newPath;
   writeRegistry(reg);
+
+  // Also write the icon to the app's install directory and update .desktop
+  const appDir = path.join(ROBOS_BASE, appId);
+  const iconDest = path.join(appDir, 'icon.svg');
+  if (newPath.endsWith('.svg') && fs.existsSync(appDir)) {
+    try {
+      const content = fs.readFileSync(newPath, 'utf8');
+      writeFileSudo(iconDest, content);
+      // Update .desktop Icon= to point to standard location
+      for (const dir of DESKTOP_DIRS) {
+        const desktop = path.join(dir, `${appId}.desktop`);
+        if (fs.existsSync(desktop)) {
+          try {
+            let contents = fs.readFileSync(desktop, 'utf8');
+            contents = contents.replace(/^Icon=.*$/m, `Icon=${iconDest}`);
+            writeFileSudo(desktop, contents);
+          } catch {}
+          break;
+        }
+      }
+    } catch {}
+  }
+
   return { ok: true, iconPath: newPath };
 });
 
@@ -169,24 +165,35 @@ function writeFileSudo(filePath, content) {
   }
 }
 
-// ── Push all builtin icons: write icon.svg + update .desktop ─────────────────
+// ── Push icons: ensure every app's icon.svg is written and .desktop updated ──
 ipcMain.handle('ri-push-icons', async (event) => {
+  const apps = Object.values(buildIconList());
   const results = [];
-  const total = BUILTIN_APPS.length;
+  const total = apps.length;
 
-  for (let i = 0; i < BUILTIN_APPS.length; i++) {
-    const { appId, label, iconSvg } = BUILTIN_APPS[i];
+  for (let i = 0; i < apps.length; i++) {
+    const { appId, label, iconSvg, iconPath } = apps[i];
     const appDir     = path.join(ROBOS_BASE, appId);
     const iconFile   = path.join(appDir, 'icon.svg');
-    const desktopFile = path.join(DESKTOP_DIR, `${appId}.desktop`);
     const result = { appId, label, step: i + 1, total, ok: true };
 
+    if (!iconSvg) {
+      result.ok = false;
+      result.error = 'no SVG source available';
+      results.push(result);
+      event.sender.send('ri-push-progress', result);
+      await new Promise(resolve => setTimeout(resolve, 25));
+      continue;
+    }
+
+    // Ensure app directory exists
     try {
       if (!fs.existsSync(appDir)) cp.execSync(`sudo mkdir -p "${appDir}"`, { timeout: 5000 });
     } catch {
       try { fs.mkdirSync(appDir, { recursive: true }); } catch {}
     }
 
+    // Write SVG (upscale 48→64 if applicable)
     const svg64 = iconSvg.replace('width="48" height="48"', 'width="64" height="64"');
     const writeRes = writeFileSudo(iconFile, svg64);
     if (!writeRes.ok) {
@@ -196,20 +203,23 @@ ipcMain.handle('ri-push-icons', async (event) => {
       result.iconWritten = true;
     }
 
-    if (fs.existsSync(desktopFile)) {
-      let contents;
-      try { contents = fs.readFileSync(desktopFile, 'utf8'); } catch {}
-      if (contents) {
-        const updated = contents.replace(/^Icon=.*$/m, `Icon=${iconFile}`);
-        const deskRes = writeFileSudo(desktopFile, updated);
-        if (!deskRes.ok) {
-          result.error = (result.error ? result.error + '; ' : '') + `desktop: ${deskRes.error}`;
-        } else {
-          result.desktopUpdated = true;
+    // Update .desktop Icon= to point to the written file
+    for (const dir of DESKTOP_DIRS) {
+      const desktopFile = path.join(dir, `${appId}.desktop`);
+      if (fs.existsSync(desktopFile)) {
+        let contents;
+        try { contents = fs.readFileSync(desktopFile, 'utf8'); } catch {}
+        if (contents) {
+          const updated = contents.replace(/^Icon=.*$/m, `Icon=${iconFile}`);
+          const deskRes = writeFileSudo(desktopFile, updated);
+          if (!deskRes.ok) {
+            result.error = (result.error ? result.error + '; ' : '') + `desktop: ${deskRes.error}`;
+          } else {
+            result.desktopUpdated = true;
+          }
         }
+        break;
       }
-    } else {
-      result.desktopUpdated = false;
     }
 
     results.push(result);
@@ -217,29 +227,11 @@ ipcMain.handle('ri-push-icons', async (event) => {
     await new Promise(resolve => setTimeout(resolve, 25));
   }
 
-  cp.exec('update-desktop-database /usr/local/share/applications 2>/dev/null', () => {});
+  cp.exec('update-desktop-database /usr/share/applications 2>/dev/null', () => {});
 
   const pushed = results.filter(r => r.ok).length;
   const failed = results.filter(r => !r.ok).length;
   return { ok: failed === 0, results, pushed, failed };
-});
-
-ipcMain.handle('ri-sync-desktop-files', () => {
-  const reg = readRegistry();
-  const results = [];
-  for (const [appId, entry] of Object.entries(reg.icons)) {
-    if (!entry.desktopFile || !entry.iconPath) continue;
-    try {
-      let contents = fs.readFileSync(entry.desktopFile, 'utf8');
-      contents = contents.replace(/^Icon=.*$/m, `Icon=${entry.iconPath}`);
-      fs.writeFileSync(entry.desktopFile, contents, 'utf8');
-      results.push({ appId, ok: true });
-    } catch {
-      results.push({ appId, ok: false });
-    }
-  }
-  cp.exec('update-desktop-database /usr/local/share/applications 2>/dev/null', () => {});
-  return { ok: true, results };
 });
 
 ipcMain.handle('ri-read-image', (_, filePath) => {
@@ -261,6 +253,8 @@ app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
+app.setPath('userData', path.join(require('os').homedir(), '.config', 'robos', 'electron', 'icon-manager'));
+
 const lock = app.requestSingleInstanceLock();
 if (!lock) { app.quit(); }
 
@@ -280,6 +274,4 @@ app.whenReady().then(() => {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.on('closed', () => app.quit());
-
-  syncRegistryFromDesktopFiles();
 });

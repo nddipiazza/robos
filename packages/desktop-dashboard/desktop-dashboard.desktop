@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Desktop Dashboard
+Comment=Desktop widget dashboard replacing the traditional desktop
+Exec=/usr/bin/electron /usr/local/share/robos/desktop-dashboard/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/desktop-dashboard/icon.svg
+Terminal=false
+Categories=System;
+X-RobOS-Category=System
+StartupWMClass=robos-desktop-dashboard
+X-GNOME-Autostart-enabled=true
