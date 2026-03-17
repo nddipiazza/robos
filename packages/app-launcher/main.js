@@ -3,6 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 
+// Debug server for DOM snapshots (robos-lib)
+let debugServer = null;
+try {
+  const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
+  debugServer = { registerSnapshotIPC, startDebugServer };
+} catch { /* robos-lib not installed, debug disabled */ }
+
 // QEMU/VM flags
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -161,6 +168,12 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+
+  // Enable debug server for DOM snapshots
+  if (debugServer && mainWindow) {
+    debugServer.registerSnapshotIPC(mainWindow);
+    debugServer.startDebugServer(mainWindow, 19100, 'app-launcher');
+  }
 });
 
 app.on('window-all-closed', () => app.quit());

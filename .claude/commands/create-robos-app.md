@@ -32,6 +32,15 @@ Create these files following RobOS conventions:
 - `app.setName('robos-<app-id>')`
 - Register IPC handlers via `ipcMain.handle()`
 - Load `renderer/index.html`
+- Wire up debug server for DOM snapshots (see `packages/robos-lib/dom-snapshot.js`):
+```javascript
+try {
+  const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
+  registerSnapshotIPC(mainWindow);
+  startDebugServer(mainWindow, <PORT>, '<app-id>');
+} catch { /* robos-lib not installed */ }
+```
+- Use the port from the registry in `packages/robos-lib/snapshot-cli.js`. If the app-id isn't registered, add it.
 
 **`preload.js`** — contextBridge IPC (never use nodeIntegration):
 ```javascript
