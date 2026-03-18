@@ -2,7 +2,7 @@
 
 ## Release: v1.0 — RobOS AI-Assisted Engineering OS
 
-15 epics, 95 stories, ~410 story points. Stories are intentionally small so AI agents can work on them in parallel.
+16 epics, 103 stories, ~445 story points. Stories are intentionally small so AI agents can work on them in parallel.
 
 ## Epic Overview
 
@@ -23,6 +23,7 @@
 | 13 | [Security & Authentication](epic-13-security-auth/epic.md) | 5 | Not started | Epic 02 |
 | 14 | [Developer Experience & Testing](epic-14-developer-experience/epic.md) | 4 | Not started | Epic 02 |
 | 15 | [First-Class MCP Server Support](epic-15-mcp-servers/epic.md) | 11 | Not started | Epic 02 |
+| 16 | [App Test Framework](epic-16-test-framework/epic.md) | 8 | Not started | Epic 02 |
 
 ## Dependency Graph
 
@@ -36,6 +37,7 @@ Epic 01 (Desktop Foundation) ✓
         ├── Epic 13 (Security & Auth)
         ├── Epic 14 (Dev Experience & Testing)
         ├── Epic 15 (MCP Servers) ← AI-first infrastructure
+        ├── Epic 16 (Test Framework) ← build with confidence
         └── Epic 04 (Task Management)
               ├── Epic 05 (Workspace Management)
               │     └── Epic 06 (AI Agent Integration)
@@ -55,6 +57,7 @@ Once Epic 02 is done (it is), the following epics can be worked on **in parallel
 - Epic 13 (Security & Auth)
 - Epic 14 (Dev Experience & Testing)
 - Epic 15 (MCP Servers)
+- Epic 16 (Test Framework)
 
 Within each epic, stories are small enough that multiple agents can work on them simultaneously when there are no intra-epic dependencies.
 
