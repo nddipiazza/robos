@@ -2,7 +2,7 @@
 
 ## Release: v1.0 — RobOS AI-Assisted Engineering OS
 
-16 epics, 103 stories, ~445 story points. Stories are intentionally small so AI agents can work on them in parallel.
+17 epics, 111 stories, ~480 story points. Stories are intentionally small so AI agents can work on them in parallel.
 
 ## Epic Overview
 
@@ -17,13 +17,14 @@
 | 07 | [Code Review & CI/CD](epic-07-code-review-ci/epic.md) | 6 | Not started | Epic 04, 06 |
 | 08 | [Engineering Knowledge Graph](epic-08-ekgraph/epic.md) | 6 | Not started | Epic 02 |
 | 09 | [Voice & Input](epic-09-voice-input/epic.md) | 4 | Not started | Epic 02 |
-| 10 | [Management & Reporting](epic-10-management-reporting/epic.md) | 5 | Not started | Epic 04, 07 |
+| 10 | [Management & Reporting](epic-10-management-reporting/epic.md) | 4 | Not started | Epic 04, 07 |
 | 11 | [Release & Packaging](epic-11-release-packaging/epic.md) | 5 | Not started | All |
 | 12 | [System Services & Desktop Integration](epic-12-system-services/epic.md) | 7 | Not started | Epic 02 |
 | 13 | [Security & Authentication](epic-13-security-auth/epic.md) | 5 | Not started | Epic 02 |
 | 14 | [Developer Experience & Testing](epic-14-developer-experience/epic.md) | 4 | Not started | Epic 02 |
 | 15 | [First-Class MCP Server Support](epic-15-mcp-servers/epic.md) | 11 | Not started | Epic 02 |
 | 16 | [App Test Framework](epic-16-test-framework/epic.md) | 8 | Not started | Epic 02 |
+| 17 | [Work Journal](epic-17-work-journal/epic.md) | 9 | Not started | Epic 04, 12 |
 
 ## Dependency Graph
 
