@@ -64,7 +64,7 @@ function writeJournalEvent(evt) {
 // Issue number or "config" passed as CLI arg
 const cliArg   = process.argv.slice(2).find(a => /^(config|#?\d+)$/.test(a));
 const issueNum = cliArg && cliArg !== 'config' ? cliArg.replace('#', '') : null;
-const startView = (!cliArg || cliArg === 'config') ? 'config' : 'issue';
+const startView = cliArg === 'config' ? 'config' : 'issue';
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -76,7 +76,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
-    title: issueNum ? `Issue #${issueNum} — RobOS Workflow Studio` : 'RobOS Workflow Studio',
+    title: issueNum ? `Issue #${issueNum} — RobOS Issue Manager` : 'RobOS Issue Manager',
     autoHideMenuBar: true,
   });
   win.loadFile('renderer/index.html', { query: { view: startView, issue: issueNum || '' } });
