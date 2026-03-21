@@ -115,8 +115,26 @@ function checkSshConnection() {
 }
 
 function checkGitConfig() {
-  const name  = run('git config --global user.name');
-  const email = run('git config --global user.email');
+  let name  = run('git config --global user.name');
+  let email = run('git config --global user.email');
+
+  // Auto-fill from GitHub profile if git identity is missing and gh is authenticated
+  if ((!name || !email)) {
+    try {
+      const profile = run('gh api user --jq ".login, .name, .id, .email" 2>/dev/null');
+      if (profile) {
+        const [login, ghName, ghId, ghEmail] = profile.split('\n');
+        if (!name && ghName) {
+          try { execSync(`git config --global user.name ${JSON.stringify(ghName)}`, { timeout: 5000 }); name = ghName; } catch {}
+        }
+        if (!email) {
+          const resolvedEmail = ghEmail || `${ghId}+${login}@users.noreply.github.com`;
+          try { execSync(`git config --global user.email ${JSON.stringify(resolvedEmail)}`, { timeout: 5000 }); email = resolvedEmail; } catch {}
+        }
+      }
+    } catch {}
+  }
+
   const ok    = !!(name && email);
   const missing = [!name && 'user.name', !email && 'user.email'].filter(Boolean).join(', ');
 
