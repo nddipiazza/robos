@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # RobOS — AI-First Software Development Operating System
 
 RobOS is a developer-first operating system and IDE ecosystem that automates the entire Software Delivery Lifecycle (SDLC) using AI. From the moment you log in, every surface is optimized for AI-assisted software development.
@@ -107,13 +111,13 @@ robos/
 │   │   ├── renderer/            # HTML, JS, CSS
 │   │   ├── icon.svg             # 48x48 Lucide-style icon
 │   │   └── <app-id>.desktop     # freedesktop launcher entry
-│   ├── robos-ui/                # Shared dark-theme UI components
-│   ├── robos-lib/               # Shared utilities
+│   ├── robos-lib/               # Shared utilities (.desktop parsing, DOM snapshots)
 │   ├── robos-icons/             # SVG icon registry
-│   ├── robos-cli/               # CLI tools and MCP library
-│   ├── desktop-manager/         # System tray + app launch IPC hub
-│   ├── desktop-shell/           # Desktop config, extensions, install.sh
-│   └── robos-intellij-plugin/   # Kotlin/Java IntelliJ plugin
+│   ├── robos-ui/                # Shared dark-theme UI components (planned)
+│   ├── robos-cli/               # CLI tools and MCP library (planned)
+│   ├── desktop-manager/         # System tray + app launch IPC hub (planned)
+│   ├── desktop-shell/           # Desktop config, extensions, install.sh (planned)
+│   └── robos-intellij-plugin/   # Kotlin/Java IntelliJ plugin (planned)
 ├── infra/
 │   └── desktop/
 │       ├── build.sh             # Build QEMU disk image + cloud-init ISO
@@ -122,6 +126,17 @@ robos/
 │       └── cloud-init/          # user-data and meta-data templates
 └── docs/                        # Jekyll documentation site
 ```
+
+## Shared Libraries
+
+Libraries are **NOT npm dependencies** — they are deployed to `/usr/local/share/robos/` on the VM and consumed via absolute path requires:
+```js
+const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
+```
+Always wrap these requires in try/catch for dev-harness compatibility (libs may not be installed locally).
+
+- **robos-lib** — `.desktop` file parsing (`parseDesktopFile`, `loadRobOSApps`, `groupByCategory`), app categories, DOM snapshot debug server
+- **robos-icons** — Icon registry: `BUILTIN_APPS` array, `getIcon()`, `getAllIcons()`. Format: `{ appId, label, category, iconSvg }`
 
 ## Development
 
@@ -153,10 +168,32 @@ ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
 
 # Single app update
 scp -P 2224 -r packages/<app-id>/* robos@localhost:/tmp/<app-id>/
-ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo npm install --quiet"
+ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && sudo chmod -R a+rX /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo npm install --quiet"
 ```
 
 VM credentials: `robos` / `robos`
+
+### DOM Snapshot Debugging
+Each app has a unique debug port for DOM snapshots (defined in `packages/robos-lib/snapshot-cli.js`):
+```bash
+node packages/robos-lib/snapshot-cli.js <app-id> --text    # Text snapshot
+node packages/robos-lib/snapshot-cli.js <app-id> --json    # JSON DOM tree
+node packages/robos-lib/snapshot-cli.js <app-id> --screenshot  # PNG screenshot
+```
+Port range: 19100–19121 (e.g., app-launcher=19100, dev-central=19101). See `PORT_REGISTRY` in snapshot-cli.js.
+
+### Claude Code Slash Commands
+Custom operations available via `.claude/commands/`:
+- `/create-robos-app` — Create a new Electron app with full registration across all required files
+- `/remove-robos-app` — Remove an app and deregister everywhere
+- `/rename-robos-app` — Rename an app with all registration updates
+- `/update-app-icon` — Update an app's SVG icon
+- `/create-test` — Create a test file using the robos-test framework
+- `/app-snapshot` — Capture DOM snapshot from a running app
+- `/start-vm`, `/stop-vm`, `/vm-status`, `/vm-ssh` — VM lifecycle management
+- `/build-vm` — Build QEMU disk image + cloud-init ISO
+- `/deploy-to-vm` — Deploy packages to running VM
+- `/add-install-step` — Add cloud-init provisioning steps
 
 ## Conventions
 
@@ -164,13 +201,20 @@ VM credentials: `robos` / `robos`
 - **No root package.json**: Each package has independent `node_modules`
 - **IPC**: All Electron apps use `contextBridge` + `ipcRenderer.invoke` (never `nodeIntegration: true`)
 - **Config storage**: All persistent data in `~/.config/robos/`
-- **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`
+- **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
 - **Logging**: `pino` JSON logging
 - **Secrets**: Environment variables only, validated with `zod`; never hardcode credentials
 
+### CSS Theme Variables
+All apps share a consistent dark theme:
+- `--bg-primary: #0d1117` — main background
+- `--bg-card: #161b22` — card/panel background
+- `--accent: #00bcd4` — primary accent (cyan)
+
 ## App Registration Checklist
 
-When adding, renaming, or removing an app, update ALL of these locations:
+When adding, renaming, or removing an app, update ALL of these locations. Use the `/create-robos-app`, `/remove-robos-app`, or `/rename-robos-app` slash commands which handle this automatically.
+
 1. `packages/<app-id>/` — the app directory
 2. `packages/desktop-manager/main.js` — `APP_REGISTRY` and `APP_BINS`
 3. `packages/robos-icons/builtin-apps.js` — `BUILTIN_APPS` array (alphabetical)
@@ -180,14 +224,18 @@ When adding, renaming, or removing an app, update ALL of these locations:
 7. `packages/desktop-shell/install.sh` — install block
 8. `<app-id>.desktop` file
 
+**Note:** Some checklist targets (desktop-manager, icon-lib, task-manager, desktop-shell) may not exist yet. Only update files that exist; the slash commands handle this correctly.
+
 ## Technical Gotchas
 
 - **Electron in QEMU**: `--disable-dev-shm-usage` is critical or renderer windows go blank
+- **Deploy permissions**: After `sudo cp -r` to `/usr/local/share/robos/`, always `sudo chmod -R a+rX` or Electron can't read the files
 - **cloud-init**: `write_files` does NOT create parent dirs — always `mkdir -p` in `runcmd`; only runs once per `instance-id`
 - **Monaco editors**: Call `ed.layout()` when tab becomes visible (initializing while hidden renders at 0×0)
 - **Shell vars in JS**: Escape `$(...)` and `${VAR}` in template literals to avoid JS interpolation
 - **Process management in VM**: `pkill`/`killall` unavailable — use `kill <PID>` with explicit PIDs
 - **IntelliJ plugin path (Linux)**: `~/.local/share/JetBrains/IdeaIC<Version>/robos/`
+- **Shared lib requires**: Wrap `/usr/local/share/robos/robos-lib/...` requires in try/catch — they're unavailable outside the VM
 
 ## Source Projects
 
