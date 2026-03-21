@@ -10,6 +10,7 @@
 
 const { JiraAdapter } = require('./jira-adapter');
 const { GitHubAdapter } = require('./github-adapter');
+const { WORK_ITEM_TYPES, validateParentChild, calculateProgress, buildHierarchy, detectWorkItemType, statusBucket } = require('./work-item');
 
 function createAdapter(serverConfig) {
   switch (serverConfig.type) {
@@ -19,4 +20,7 @@ function createAdapter(serverConfig) {
   }
 }
 
-module.exports = { createAdapter, JiraAdapter, GitHubAdapter };
+module.exports = {
+  createAdapter, JiraAdapter, GitHubAdapter,
+  WORK_ITEM_TYPES, validateParentChild, calculateProgress, buildHierarchy, detectWorkItemType, statusBucket,
+};
