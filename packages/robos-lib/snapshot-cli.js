@@ -42,6 +42,7 @@ const PORT_REGISTRY = {
   'desktop-dashboard': 19121,
   'pass-unlock': 19122,
   'git-login-manager': 19123,
+  'task-board': 19124,
 };
 
 function getPort(appId) {

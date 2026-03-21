@@ -31,6 +31,7 @@ const PORT_MAP = {
   'task-servers': 19112,
   'issue-manager': 19103,
   'workflow-studio': 19120,
+  'task-board': 19124,
 };
 
 // Track all launched apps for process-exit cleanup

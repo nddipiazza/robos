@@ -1,0 +1,8 @@
+{
+  "name": "robos-task-board",
+  "version": "0.1.0",
+  "description": "RobOS Task Board — kanban and list views for work items",
+  "main": "main.js",
+  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

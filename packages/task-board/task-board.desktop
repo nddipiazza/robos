@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-App=true
+X-RobOS-Category=Development
+Type=Application
+Name=Task Board
+Comment=Kanban and list views for work items
+Exec=/usr/bin/electron /usr/local/share/robos/task-board/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/task-board/icon.svg
+Terminal=false
+Categories=Development;
+StartupWMClass=robos-task-board

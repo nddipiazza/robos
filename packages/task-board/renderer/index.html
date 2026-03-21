@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS Task Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>Task Board</h1>
+      <span id="server-name" class="server-badge"></span>
+    </div>
+    <div class="header-right">
+      <div class="view-toggle">
+        <button id="btn-kanban" class="view-btn active" title="Kanban view">▦ Board</button>
+        <button id="btn-list" class="view-btn" title="List view">☰ List</button>
+      </div>
+      <div class="filter-bar">
+        <select id="filter-assignee"><option value="">All assignees</option></select>
+        <select id="filter-state">
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+          <option value="all">All</option>
+        </select>
+        <input id="filter-search" type="text" placeholder="Search…">
+        <button id="btn-refresh" class="btn-icon" title="Refresh">↻</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="error-bar" class="hidden"></div>
+
+  <!-- Kanban View -->
+  <div id="kanban-view" class="board-view">
+    <div id="kanban-columns" class="kanban-columns"></div>
+  </div>
+
+  <!-- List View -->
+  <div id="list-view" class="board-view hidden">
+    <table id="issue-table">
+      <thead>
+        <tr>
+          <th class="col-key">Key</th>
+          <th class="col-summary">Summary</th>
+          <th class="col-status">Status</th>
+          <th class="col-assignee">Assignee</th>
+          <th class="col-type">Type</th>
+          <th class="col-updated">Updated</th>
+        </tr>
+      </thead>
+      <tbody id="issue-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state" class="hidden">
+    <div class="empty-icon">📋</div>
+    <div class="empty-text" id="empty-text">No issues found</div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
