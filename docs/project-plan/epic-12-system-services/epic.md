@@ -11,9 +11,9 @@ Background services, system tray, notifications, and desktop widget overlays tha
 | # | Story | Status | Points |
 |---|-------|--------|--------|
 | 01 | [Desktop Manager — system tray and IPC hub](story-01-desktop-manager.md) | Not started | 8 |
-| 02 | [Toast Daemon — system-wide overlay notifications](story-02-toast-daemon.md) | Not started | 5 |
-| 03 | [Notifications app — notification history viewer](story-03-notifications.md) | Not started | 3 |
+| 02 | [Toast Daemon — categorized overlay notifications](story-02-toast-daemon.md) | Not started | 8 |
+| 03 | [Notifications app — category-filtered history viewer](story-03-notifications-app.md) | Not started | 5 |
 | 04 | [RobOS Preferences — system-wide settings](story-04-preferences.md) | Not started | 5 |
 | 05 | [Desktop Widgets — status overlays (GTK/Electron)](story-05-desktop-widgets.md) | Not started | 5 |
-| 06 | [robos-cli tools (robos-notify, robos-active-task, robos-journal-append)](story-06-robos-cli.md) | Not started | 3 |
+| 06 | [robos-cli tools (robos-notify, robos-active-task, robos-journal-append, robos-event)](story-06-robos-cli.md) | Not started | 5 |
 | 07 | [Search Index — file system indexer for @-mentions](story-07-search-index.md) | Not started | 5 |

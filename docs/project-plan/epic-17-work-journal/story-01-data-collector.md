@@ -36,9 +36,33 @@ Background service that continuously collects activity events from all data sour
 - **Agent IPC**: AI Agent Manager sends session events
 - **robos-journal-append CLI**: Manual entries from terminal
 
+### Event Bus Publication
+
+In addition to writing events to the journal events file, the collector publishes every event to the RobOS Event Bus (Epic 18, story 18-01) when available. This enables the Rule Engine and other subscribers to react to SDLC events in real-time.
+
+**Publication behavior:**
+- Each collected event is wrapped in the Event Bus envelope format (`id`, `type`, `ts`, `source: "journal-collector"`, `category`, `payload`)
+- Category is auto-derived from event type via the `robos-lib` category mapping table
+- Publication is fire-and-forget — if the Event Bus is not running, the collector logs a debug message and continues writing to the journal file
+- No event is lost: the journal file is the primary store, the Event Bus is a secondary fanout channel
+
+**Event type → category mapping:**
+
+| Event Type | Category |
+|------------|----------|
+| task_started, task_status_changed | task |
+| branch_created, commit, file_edited | git |
+| pr_opened, pr_review_requested, pr_review_received, pr_merged | pr_review |
+| ci_started, ci_completed, deploy | ci_cd |
+| agent_session | agent |
+| manual_note | journal |
+
 ## Acceptance Criteria
 
 - [ ] Events from at least 5 sources captured
 - [ ] Events written within 60s of occurrence
 - [ ] Event file rotated daily (one file per day)
 - [ ] Daemon starts on login, runs in background
+- [ ] Every collected event published to Event Bus when available
+- [ ] Publication uses Event Bus envelope format with auto-derived category
+- [ ] Collector continues working normally if Event Bus is unavailable
