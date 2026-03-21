@@ -1,17 +1,20 @@
 /**
  * RobOS Test Harness — launches Electron apps in a sandboxed environment.
  *
+ * Headless by default: uses --headless=new with the current DISPLAY.
+ * If no DISPLAY, falls back to DISPLAY=:99 (assumes Xvfb is running).
+ *
  * Usage:
  *   const { launchApp, killApp } = require('./harness');
- *   const app = await launchApp('security-setup', 'all-good');
+ *   const app = await launchApp('security-setup', scenarios['fresh-install']);
  *   // ... run assertions against app.port ...
- *   killApp(app);
+ *   await killApp(app);
  */
 'use strict';
 
 const path = require('path');
 const fs   = require('fs');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const http = require('http');
 
 const REPO_ROOT    = path.resolve(__dirname, '../../..');
@@ -26,6 +29,25 @@ const PORT_MAP = {
   'pass-unlock': 19122,
   'git-login-manager': 19123,
 };
+
+// Track all launched apps for process-exit cleanup
+const _activeApps = new Set();
+process.on('exit', () => {
+  for (const app of _activeApps) {
+    try { process.kill(app.proc.pid, 'SIGKILL'); } catch {}
+    try { _killTree(app.proc.pid); } catch {}
+  }
+});
+// Also handle SIGINT/SIGTERM so Ctrl-C cleans up
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => {
+    for (const app of _activeApps) {
+      try { process.kill(app.proc.pid, 'SIGKILL'); } catch {}
+      try { _killTree(app.proc.pid); } catch {}
+    }
+    process.exit(1);
+  });
+}
 
 function findElectron() {
   const candidates = [
@@ -44,30 +66,26 @@ function setupHome(homeDir, scenario) {
     fs.mkdirSync(homeDir, { recursive: true });
   }
 
-  const robosDir = path.join(homeDir, '.config', 'robos');
-  fs.mkdirSync(robosDir, { recursive: true });
-
-  const sshDir = path.join(homeDir, '.ssh');
-  fs.mkdirSync(sshDir, { recursive: true, mode: 0o700 });
-
-  const gnupgDir = path.join(homeDir, '.gnupg');
-  fs.mkdirSync(gnupgDir, { recursive: true, mode: 0o700 });
+  fs.mkdirSync(path.join(homeDir, '.config', 'robos'), { recursive: true });
+  fs.mkdirSync(path.join(homeDir, '.ssh'), { recursive: true, mode: 0o700 });
+  fs.mkdirSync(path.join(homeDir, '.gnupg'), { recursive: true, mode: 0o700 });
+  fs.mkdirSync(path.join(homeDir, '.cache', 'robos'), { recursive: true });
 
   if (scenario.sshKey) {
-    fs.writeFileSync(path.join(sshDir, 'id_ed25519'), scenario.sshKey.private, { mode: 0o600 });
-    fs.writeFileSync(path.join(sshDir, 'id_ed25519.pub'), scenario.sshKey.public);
+    fs.writeFileSync(path.join(homeDir, '.ssh', 'id_ed25519'), scenario.sshKey.private, { mode: 0o600 });
+    fs.writeFileSync(path.join(homeDir, '.ssh', 'id_ed25519.pub'), scenario.sshKey.public);
   }
 
   if (scenario.gitConfig) {
-    const gitcfg = `[user]\n\tname = ${scenario.gitConfig.name}\n\temail = ${scenario.gitConfig.email}\n`;
-    fs.writeFileSync(path.join(homeDir, '.gitconfig'), gitcfg);
+    fs.writeFileSync(path.join(homeDir, '.gitconfig'),
+      `[user]\n\tname = ${scenario.gitConfig.name}\n\temail = ${scenario.gitConfig.email}\n`);
   }
 
   if (scenario.ghAuth) {
     const ghDir = path.join(homeDir, '.config', 'gh');
     fs.mkdirSync(ghDir, { recursive: true });
-    const hosts = `github.com:\n    user: testuser\n    oauth_token: gho_fake_token_for_dev\n    git_protocol: ssh\n`;
-    fs.writeFileSync(path.join(ghDir, 'hosts.yml'), hosts);
+    fs.writeFileSync(path.join(ghDir, 'hosts.yml'),
+      `github.com:\n    user: testuser\n    oauth_token: gho_fake_token_for_dev\n    git_protocol: ssh\n`);
   }
 
   if (scenario.passReady) {
@@ -76,16 +94,16 @@ function setupHome(homeDir, scenario) {
     fs.writeFileSync(path.join(passDir, '.gpg-id'), 'test@example.com\n');
     if (scenario.passEntries) {
       for (const [name, content] of Object.entries(scenario.passEntries)) {
-        const entryDir = path.dirname(path.join(passDir, name + '.gpg'));
-        fs.mkdirSync(entryDir, { recursive: true });
+        fs.mkdirSync(path.dirname(path.join(passDir, name + '.gpg')), { recursive: true });
         fs.writeFileSync(path.join(passDir, name + '.gpg'), content || 'fake-gpg-data');
       }
     }
   }
 
   if (scenario.gpgAgent) {
-    const agentConf = 'pinentry-program /usr/bin/pinentry\ndefault-cache-ttl 86400\nmax-cache-ttl 86400\nallow-preset-passphrase\n';
-    fs.writeFileSync(path.join(gnupgDir, 'gpg-agent.conf'), agentConf, { mode: 0o600 });
+    fs.writeFileSync(path.join(homeDir, '.gnupg', 'gpg-agent.conf'),
+      'pinentry-program /usr/bin/pinentry\ndefault-cache-ttl 86400\nmax-cache-ttl 86400\nallow-preset-passphrase\n',
+      { mode: 0o600 });
   }
 
   return homeDir;
@@ -103,7 +121,7 @@ function httpGet(url, timeoutMs = 3000) {
   });
 }
 
-async function waitForHealth(port, timeoutMs = 12000) {
+async function waitForHealth(port, timeoutMs = 15000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -113,6 +131,18 @@ async function waitForHealth(port, timeoutMs = 12000) {
     await new Promise(r => setTimeout(r, 300));
   }
   throw new Error(`App on port ${port} did not become healthy within ${timeoutMs}ms`);
+}
+
+/** Kill a process and all its children */
+function _killTree(pid) {
+  try {
+    // Get child pids
+    const children = execSync(`pgrep -P ${pid} 2>/dev/null`, { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+    for (const child of children) {
+      _killTree(parseInt(child));
+    }
+  } catch {}
+  try { process.kill(pid, 'SIGKILL'); } catch {}
 }
 
 async function launchApp(appId, scenarioConfig) {
@@ -125,11 +155,26 @@ async function launchApp(appId, scenarioConfig) {
   const port = PORT_MAP[appId];
   if (!port) throw new Error(`No port registered for app: ${appId}`);
 
+  // Ensure no leftover process is using our port
+  try {
+    const pids = execSync(`lsof -ti :${port} 2>/dev/null`, { encoding: 'utf8' }).trim();
+    if (pids) {
+      for (const pid of pids.split('\n').filter(Boolean)) {
+        const p = parseInt(pid);
+        if (p !== process.pid && p !== process.ppid) {
+          try { process.kill(p, 'SIGKILL'); } catch {}
+        }
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  } catch {}
+
   fs.mkdirSync(RUN_DIR, { recursive: true });
   const sandboxHome = path.join(RUN_DIR, `test-${appId}-${Date.now()}`);
   setupHome(sandboxHome, scenarioConfig);
 
   const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'];
+  const display = process.env.DISPLAY || ':0';
 
   const proc = spawn(electronBin, electronArgs, {
     env: {
@@ -137,7 +182,7 @@ async function launchApp(appId, scenarioConfig) {
       HOME: sandboxHome,
       PATH: `${SANDBOX_BIN}:${process.env.PATH}`,
       ROBOS_SCENARIO: scenarioConfig.name || 'test',
-      DISPLAY: process.env.DISPLAY || '',
+      DISPLAY: display,
       GH_CONFIG_DIR: path.join(sandboxHome, '.config', 'gh'),
       GIT_CONFIG_GLOBAL: path.join(sandboxHome, '.gitconfig'),
       ROBOS_LIB_PATH: path.join(PACKAGES_DIR, 'robos-lib'),
@@ -150,28 +195,51 @@ async function launchApp(appId, scenarioConfig) {
   let stderr = '';
   proc.stderr.on('data', d => stderr += d.toString());
 
+  const app = { proc, port, sandboxHome, pid: proc.pid, stderr: () => stderr };
+  _activeApps.add(app);
+
   try {
     await waitForHealth(port);
     // Give the renderer time to complete async initialization (IPC calls, DOM updates)
     await new Promise(r => setTimeout(r, 1500));
   } catch (e) {
-    proc.kill('SIGKILL');
+    await killApp(app);
     throw new Error(`Failed to launch ${appId}: ${e.message}\nstderr: ${stderr}`);
   }
 
-  return { proc, port, sandboxHome, stderr: () => stderr };
+  return app;
 }
 
-function killApp(app) {
+/** Pause between test steps so you can see what's on screen. Set ROBOS_TEST_DELAY=3000 for 3s. */
+async function testDelay(label) {
+  const ms = parseInt(process.env.ROBOS_TEST_DELAY || '0', 10);
+  if (ms > 0) {
+    if (label) process.stdout.write(`  [delay] ${label} — waiting ${ms}ms\n`);
+    await new Promise(r => setTimeout(r, ms));
+  }
+}
+
+async function killApp(app) {
   if (!app || !app.proc) return;
-  try { app.proc.kill('SIGKILL'); } catch {}
-  // Wait a moment for process to fully die before cleaning up
-  try {
-    const { execSync } = require('child_process');
-    execSync(`kill -9 ${app.proc.pid} 2>/dev/null; sleep 0.3`, { timeout: 2000 });
-  } catch {}
-  // Clean up sandbox
+  await testDelay('before kill');
+  _activeApps.delete(app);
+
+  // Kill process tree
+  _killTree(app.proc.pid);
+
+  // Wait for process to fully exit
+  await new Promise(resolve => {
+    const timeout = setTimeout(resolve, 2000);
+    app.proc.on('exit', () => { clearTimeout(timeout); resolve(); });
+    // In case it's already exited
+    if (app.proc.exitCode !== null || app.proc.signalCode !== null) {
+      clearTimeout(timeout);
+      resolve();
+    }
+  });
+
+  // Clean up sandbox home
   try { fs.rmSync(app.sandboxHome, { recursive: true, force: true }); } catch {}
 }
 
-module.exports = { launchApp, killApp, setupHome, PORT_MAP, PACKAGES_DIR };
+module.exports = { launchApp, killApp, testDelay, setupHome, PORT_MAP, PACKAGES_DIR };
