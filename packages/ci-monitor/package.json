@@ -1,0 +1,8 @@
+{
+  "name": "robos-ci-monitor",
+  "version": "0.1.0",
+  "description": "RobOS CI Monitor — pipeline status, build logs, and AI failure diagnosis",
+  "main": "main.js",
+  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

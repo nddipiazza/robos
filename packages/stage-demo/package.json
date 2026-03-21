@@ -1,0 +1,8 @@
+{
+  "name": "robos-stage-demo",
+  "version": "0.1.0",
+  "description": "RobOS Stage Demo Viewer — AI-generated staging deployment demos for PO review",
+  "main": "main.js",
+  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

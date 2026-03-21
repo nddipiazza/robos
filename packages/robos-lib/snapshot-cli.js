@@ -47,10 +47,9 @@ const PORT_REGISTRY = {
   'desktop-manager': 19125,
   'robos-toast': 19126,
   'desktop-widgets': 19127,
-  'dev-central': 19129,
-  'manager-dashboard': 19130,
-  'report-builder': 19131,
-  'deploy-tracker': 19132,
+  'pr-review': 19129,
+  'ci-monitor': 19130,
+  'stage-demo': 19131,
 };
 
 function getPort(appId) {

@@ -1,0 +1,8 @@
+{
+  "name": "robos-pr-review",
+  "version": "0.1.0",
+  "description": "RobOS PR Review Board — AI-assisted pull request review with breakpoint debugging",
+  "main": "main.js",
+  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

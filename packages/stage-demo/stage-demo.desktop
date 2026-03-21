@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-App=true
+X-RobOS-Category=Development
+Type=Application
+Name=Stage Demo Viewer
+Comment=AI-generated staging deployment demos for PO review
+Exec=/usr/bin/electron /usr/local/share/robos/stage-demo/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/stage-demo/icon.svg
+Terminal=false
+Categories=Development;
+StartupWMClass=robos-stage-demo

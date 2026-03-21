@@ -149,6 +149,98 @@ module.exports = {
     settings: { task_servers: [] },
   },
 
+  // ── PR review / CI monitor / Stage demo scenarios ───────────────────────
+
+  'pr-review-no-config': {
+    name: 'pr-review-no-config',
+    description: 'PR review with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'pr-review-github': {
+    name: 'pr-review-github',
+    description: 'PR review with a GitHub task server',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'Hermetiq',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'Hermetiq', repo: 'buildbarn-forms' }],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
+
+  'ci-monitor-no-config': {
+    name: 'ci-monitor-no-config',
+    description: 'CI monitor with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'ci-monitor-github': {
+    name: 'ci-monitor-github',
+    description: 'CI monitor with a GitHub task server',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'Hermetiq',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'Hermetiq', repo: 'buildbarn-forms' }],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
+
+  'stage-demo-no-config': {
+    name: 'stage-demo-no-config',
+    description: 'Stage demo viewer with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'stage-demo-github': {
+    name: 'stage-demo-github',
+    description: 'Stage demo viewer with a GitHub task server',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'Hermetiq',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'Hermetiq', repo: 'buildbarn-forms' }],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
+
   'issue-manager-github': {
     name: 'issue-manager-github',
     description: 'Issue manager with a GitHub task server',

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS CI Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>CI Monitor</h1>
+      <span id="server-name" class="server-badge"></span>
+    </div>
+    <div class="header-right">
+      <div class="filter-bar">
+        <select id="filter-status">
+          <option value="all">All Runs</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="failure">Failed</option>
+        </select>
+        <select id="filter-branch"><option value="">All branches</option></select>
+        <input id="filter-search" type="text" placeholder="Search runs...">
+        <button id="btn-refresh" class="btn-icon" title="Refresh">&#8635;</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="error-bar" class="hidden"></div>
+
+  <div id="main-content">
+    <!-- Run List Panel -->
+    <div id="run-list-panel">
+      <!-- Summary stats bar -->
+      <div id="stats-bar">
+        <div class="stat-card">
+          <span class="stat-label">Total</span>
+          <span class="stat-value" id="stat-total">0</span>
+        </div>
+        <div class="stat-card stat-success">
+          <span class="stat-label">Passed</span>
+          <span class="stat-value" id="stat-passed">0</span>
+        </div>
+        <div class="stat-card stat-failure">
+          <span class="stat-label">Failed</span>
+          <span class="stat-value" id="stat-failed">0</span>
+        </div>
+        <div class="stat-card stat-progress">
+          <span class="stat-label">Running</span>
+          <span class="stat-value" id="stat-running">0</span>
+        </div>
+      </div>
+      <div id="run-list"></div>
+    </div>
+
+    <!-- Run Detail Panel -->
+    <div id="run-detail-panel" class="hidden">
+      <div id="detail-header">
+        <button id="btn-back" class="btn-back">&larr; Back</button>
+        <div id="detail-title-area">
+          <h2 id="detail-title"></h2>
+          <div id="detail-meta"></div>
+        </div>
+        <div id="detail-actions-bar">
+          <button id="btn-rerun" class="btn-action btn-rerun">Re-run</button>
+          <button id="btn-open-gh" class="btn-action btn-gh">View on GitHub</button>
+        </div>
+      </div>
+
+      <div id="detail-tabs">
+        <button class="tab-btn active" data-tab="jobs">Jobs</button>
+        <button class="tab-btn" data-tab="log">Failed Log</button>
+        <button class="tab-btn" data-tab="diagnosis">AI Diagnosis</button>
+      </div>
+
+      <div id="tab-jobs" class="tab-content active">
+        <div id="jobs-list"></div>
+      </div>
+
+      <div id="tab-log" class="tab-content">
+        <pre id="log-output" class="log-viewer"></pre>
+      </div>
+
+      <div id="tab-diagnosis" class="tab-content">
+        <button id="btn-diagnose" class="btn-primary">Run AI Diagnosis</button>
+        <div id="diagnosis-output"></div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden">
+      <div class="empty-icon">&#9881;</div>
+      <div class="empty-text" id="empty-text">No workflow runs found</div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

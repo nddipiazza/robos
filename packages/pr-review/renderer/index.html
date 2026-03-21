@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS PR Review Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>PR Review Board</h1>
+      <span id="server-name" class="server-badge"></span>
+    </div>
+    <div class="header-right">
+      <div class="filter-bar">
+        <select id="filter-state">
+          <option value="open">Open</option>
+          <option value="merged">Merged</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select id="filter-author"><option value="">All authors</option></select>
+        <input id="filter-search" type="text" placeholder="Search PRs...">
+        <button id="btn-refresh" class="btn-icon" title="Refresh">&#8635;</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="error-bar" class="hidden"></div>
+
+  <div id="main-content">
+    <!-- PR List Panel -->
+    <div id="pr-list-panel">
+      <div id="pr-list"></div>
+    </div>
+
+    <!-- PR Detail Panel -->
+    <div id="pr-detail-panel" class="hidden">
+      <div id="detail-header">
+        <button id="btn-back" class="btn-back" title="Back to list">&larr; Back</button>
+        <div id="detail-title-area">
+          <h2 id="detail-title"></h2>
+          <div id="detail-meta"></div>
+        </div>
+      </div>
+
+      <!-- Tab navigation -->
+      <div id="detail-tabs">
+        <button class="tab-btn active" data-tab="overview">Overview</button>
+        <button class="tab-btn" data-tab="ai-review">AI Review</button>
+        <button class="tab-btn" data-tab="files">Files Changed</button>
+        <button class="tab-btn" data-tab="checks">CI Checks</button>
+        <button class="tab-btn" data-tab="actions">Review Actions</button>
+      </div>
+
+      <!-- Tab content -->
+      <div id="tab-overview" class="tab-content active">
+        <div id="overview-body"></div>
+      </div>
+
+      <div id="tab-ai-review" class="tab-content">
+        <div id="ai-review-content">
+          <button id="btn-ai-analyze" class="btn-primary">Generate AI Review Summary</button>
+          <div id="ai-summary"></div>
+        </div>
+      </div>
+
+      <div id="tab-files" class="tab-content">
+        <div id="files-list"></div>
+      </div>
+
+      <div id="tab-checks" class="tab-content">
+        <div id="checks-list"></div>
+      </div>
+
+      <div id="tab-actions" class="tab-content">
+        <div class="actions-grid">
+          <div class="action-section">
+            <h3>Review Actions</h3>
+            <div class="action-buttons">
+              <button id="btn-approve" class="btn-action btn-approve">Approve</button>
+              <button id="btn-request-changes" class="btn-action btn-request-changes">Request Changes</button>
+              <button id="btn-comment" class="btn-action btn-comment">Comment</button>
+            </div>
+            <textarea id="review-body" placeholder="Add review comment..." rows="4"></textarea>
+          </div>
+          <div class="action-section">
+            <h3>AI-Powered Actions</h3>
+            <div class="action-buttons">
+              <button id="btn-interactive-review" class="btn-action btn-ai">Interactive Review (Breakpoints)</button>
+              <button id="btn-run-tests" class="btn-action btn-ai">Run Tests Locally</button>
+              <button id="btn-gen-edge-test" class="btn-action btn-ai">Generate Edge-Case Test</button>
+            </div>
+            <div id="ai-action-output" class="hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden">
+      <div class="empty-icon">&#128269;</div>
+      <div class="empty-text" id="empty-text">No pull requests found</div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

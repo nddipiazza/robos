@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS Stage Demo Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>Stage Demo Viewer</h1>
+      <span id="server-name" class="server-badge"></span>
+    </div>
+    <div class="header-right">
+      <select id="filter-status">
+        <option value="">All Demos</option>
+        <option value="pending-review">Pending Review</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <button id="btn-new-demo" class="btn-primary">New Demo</button>
+      <button id="btn-refresh" class="btn-icon" title="Refresh">&#8635;</button>
+    </div>
+  </header>
+
+  <div id="error-bar" class="hidden"></div>
+
+  <div id="main-content">
+    <!-- Demo List -->
+    <div id="demo-list-panel">
+      <div id="demo-list"></div>
+    </div>
+
+    <!-- Demo Detail -->
+    <div id="demo-detail-panel" class="hidden">
+      <div id="detail-header">
+        <button id="btn-back" class="btn-back">&larr; Back</button>
+        <div id="detail-title-area">
+          <h2 id="detail-title"></h2>
+          <div id="detail-meta"></div>
+        </div>
+        <div id="detail-status-area"></div>
+      </div>
+
+      <div id="walkthrough-container">
+        <div id="walkthrough-steps"></div>
+        <div id="changed-files-section">
+          <h3>Changed Files</h3>
+          <div id="changed-files-list"></div>
+        </div>
+      </div>
+
+      <div id="review-bar">
+        <button id="btn-approve-demo" class="btn-action btn-approve">Approve</button>
+        <button id="btn-reject-demo" class="btn-action btn-reject">File Bug / Reject</button>
+        <button id="btn-open-pr" class="btn-action btn-link">View PR on GitHub</button>
+      </div>
+    </div>
+
+    <!-- New Demo Modal -->
+    <div id="new-demo-panel" class="hidden">
+      <div id="new-demo-header">
+        <button id="btn-back-new" class="btn-back">&larr; Back</button>
+        <h2>Generate Demo from Merged PR</h2>
+      </div>
+      <div id="merged-prs-list">
+        <div class="muted">Loading merged PRs...</div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden">
+      <div class="empty-icon">&#127916;</div>
+      <div class="empty-text" id="empty-text">No stage demos yet. Click "New Demo" to generate one from a merged PR.</div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
