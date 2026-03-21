@@ -88,4 +88,53 @@ module.exports = {
     passReady: true,
     gpgAgent: true,
   },
+
+  // ── Task server scenarios ──────────────────────────────────────────────────
+
+  'no-task-servers': {
+    name: 'no-task-servers',
+    description: 'No task servers configured — empty state',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'github-task-server': {
+    name: 'github-task-server',
+    description: 'One GitHub task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        repos: [{ org: 'Hermetiq', repo: 'buildbarn-forms' }],
+        gh_labels: [],
+      }],
+    },
+  },
+
+  'jira-task-server': {
+    name: 'jira-task-server',
+    description: 'One Jira task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'jira-1',
+        type: 'jira',
+        name: 'Acme Jira',
+        url: 'https://acme.atlassian.net',
+        username: 'dev@acme.com',
+        token_pass_path: 'acme/jira-token',
+        projects: ['BBF'],
+      }],
+    },
+  },
 };

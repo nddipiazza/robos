@@ -28,6 +28,7 @@ const PORT_MAP = {
   'pass-manager': 19113,
   'pass-unlock': 19122,
   'git-login-manager': 19123,
+  'task-servers': 19112,
 };
 
 // Track all launched apps for process-exit cleanup
@@ -104,6 +105,11 @@ function setupHome(homeDir, scenario) {
     fs.writeFileSync(path.join(homeDir, '.gnupg', 'gpg-agent.conf'),
       'pinentry-program /usr/bin/pinentry\ndefault-cache-ttl 86400\nmax-cache-ttl 86400\nallow-preset-passphrase\n',
       { mode: 0o600 });
+  }
+
+  if (scenario.settings) {
+    fs.writeFileSync(path.join(homeDir, '.config', 'robos', 'settings.json'),
+      JSON.stringify(scenario.settings, null, 2));
   }
 
   return homeDir;

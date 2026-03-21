@@ -26,6 +26,7 @@ const APP_PORTS = {
   'pass-manager': 19113,
   'pass-unlock': 19122,
   'git-login-manager': 19123,
+  'task-servers': 19112,
 };
 
 const DEFAULT_APPS = Object.keys(APP_PORTS);
