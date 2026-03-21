@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+X-RobOS-Category=RobOS Dev
+X-RobOS-App=true
+Name=RobOS Workspace Manager
+Comment=Discover and open local workspaces in any IDE
+Exec=/usr/bin/electron /usr/local/share/robos/workspace-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/workspace-manager/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=workspace-manager

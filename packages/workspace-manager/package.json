@@ -1,0 +1,8 @@
+{
+  "name": "workspace-manager",
+  "version": "1.0.0",
+  "description": "RobOS Workspace Manager — Discover and open local workspaces in any IDE",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

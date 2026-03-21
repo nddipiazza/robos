@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS Workspace Manager</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="app-title">RobOS Workspace Manager</span>
+    <input id="search-input" class="search-input" type="text" placeholder="Filter workspaces..." spellcheck="false"/>
+    <select id="filter-type" class="filter-select">
+      <option value="">All types</option>
+      <option value="vscode">VS Code / Cursor</option>
+      <option value="idea">JetBrains</option>
+    </select>
+    <span id="ws-count" class="ws-count"></span>
+    <button id="btn-scan" class="tb-btn primary">Scan</button>
+    <button id="btn-scan-opts" class="tb-btn" title="Scan options">Settings</button>
+  </div>
+
+  <!-- Scan options bar (collapsed by default) -->
+  <div id="scan-opts-bar" class="scan-opts-bar hidden">
+    <label class="scan-opts-label">Scan roots (one per line):</label>
+    <textarea id="scan-roots" class="scan-roots-input" rows="3" spellcheck="false"></textarea>
+    <button id="btn-apply-roots" class="tb-btn">Apply &amp; Scan</button>
+  </div>
+
+  <div class="body-layout">
+    <!-- Workspace list -->
+    <div class="ws-list-panel">
+      <div id="ws-list" class="ws-list">
+        <div class="empty-state">
+          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg></div>
+          <div>Click <strong>Scan</strong> to find workspaces</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div id="detail-panel" class="detail-panel">
+      <div class="detail-empty">
+        <div class="detail-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg></div>
+        <div class="detail-empty-text">Select a workspace</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
