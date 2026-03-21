@@ -30,6 +30,7 @@ const PORT_MAP = {
   'git-login-manager': 19123,
   'task-servers': 19112,
   'issue-manager': 19103,
+  'workflow-studio': 19120,
 };
 
 // Track all launched apps for process-exit cleanup

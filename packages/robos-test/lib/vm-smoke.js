@@ -28,6 +28,7 @@ const APP_PORTS = {
   'git-login-manager': 19123,
   'task-servers': 19112,
   'issue-manager': 19103,
+  'workflow-studio': 19120,
 };
 
 const DEFAULT_APPS = Object.keys(APP_PORTS);
