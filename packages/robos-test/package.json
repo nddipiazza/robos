@@ -6,7 +6,9 @@
     "test": "node --test tests/**/unit.test.js && node --test tests/security-setup/e2e.test.js && node --test tests/pass-manager/e2e.test.js && node --test tests/pass-unlock/e2e.test.js && node --test tests/git-login-manager/e2e.test.js",
     "test:unit": "node --test tests/**/unit.test.js",
     "test:e2e": "node --test tests/security-setup/e2e.test.js && node --test tests/pass-manager/e2e.test.js && node --test tests/pass-unlock/e2e.test.js && node --test tests/git-login-manager/e2e.test.js",
-    "test:slow": "ROBOS_TEST_DELAY=3000 npm run test:e2e"
+    "test:slow": "ROBOS_TEST_DELAY=1000 npm run test:e2e",
+    "test:vm": "node lib/vm-smoke.js",
+    "test:vm:no-deploy": "node lib/vm-smoke.js --no-deploy"
   },
   "dependencies": {
     "electron": "^30.5.1"
