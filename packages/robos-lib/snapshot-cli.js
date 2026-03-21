@@ -19,6 +19,7 @@ const http = require('http');
 // Debug port registry: each app gets a unique port
 const PORT_REGISTRY = {
   'app-launcher': 19100,
+  'automation-studio': 19128,
   'dev-central': 19101,
   'git-projects': 19102,
   'issue-manager': 19103,

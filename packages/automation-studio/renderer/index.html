@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <h1>Automation Studio</h1>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="rules">Rules</button>
+      <button class="tab" data-tab="jobs">Scheduled Jobs</button>
+      <button class="tab" data-tab="log">Event Log</button>
+    </nav>
+  </header>
+
+  <!-- Tab 1: Rules -->
+  <section class="tab-content active" id="tab-rules">
+    <div class="toolbar">
+      <h2>Event Rules</h2>
+      <button class="btn btn-accent" id="btn-add-rule">+ New Rule</button>
+    </div>
+    <div id="rules-list" class="list-container">
+      <div class="empty-state" id="rules-empty">No event rules configured. Click "+ New Rule" to create one.</div>
+    </div>
+
+    <!-- Rule Editor Side Panel -->
+    <div class="side-panel hidden" id="rule-editor">
+      <div class="side-panel-header">
+        <h3 id="rule-editor-title">New Rule</h3>
+        <button class="btn btn-ghost" id="btn-close-rule-editor">&times;</button>
+      </div>
+      <div class="side-panel-body">
+        <label>Name</label>
+        <input type="text" id="rule-name" placeholder="Rule name" class="input">
+
+        <label>Event Type</label>
+        <select id="rule-event-type" class="input">
+          <option value="">Select event type...</option>
+          <option value="ci.build.completed">ci.build.completed</option>
+          <option value="ci.build.failed">ci.build.failed</option>
+          <option value="pr.opened">pr.opened</option>
+          <option value="pr.merged">pr.merged</option>
+          <option value="pr.review.requested">pr.review.requested</option>
+          <option value="issue.created">issue.created</option>
+          <option value="issue.assigned">issue.assigned</option>
+          <option value="deploy.started">deploy.started</option>
+          <option value="deploy.completed">deploy.completed</option>
+          <option value="deploy.failed">deploy.failed</option>
+          <option value="git.push">git.push</option>
+          <option value="agent.task.completed">agent.task.completed</option>
+        </select>
+
+        <label>Conditions</label>
+        <div id="conditions-list" class="conditions-container"></div>
+        <button class="btn btn-small" id="btn-add-condition">+ Add Condition</button>
+
+        <label>Actions</label>
+        <div id="actions-list" class="actions-container"></div>
+        <button class="btn btn-small" id="btn-add-action">+ Add Action</button>
+
+        <div class="editor-footer">
+          <button class="btn btn-accent" id="btn-save-rule">Save Rule</button>
+          <button class="btn btn-ghost" id="btn-cancel-rule">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab 2: Scheduled Jobs -->
+  <section class="tab-content" id="tab-jobs">
+    <div class="toolbar">
+      <h2>Scheduled Jobs</h2>
+      <button class="btn btn-accent" id="btn-add-job">+ New Job</button>
+    </div>
+    <div id="jobs-list" class="list-container">
+      <div class="empty-state" id="jobs-empty">No scheduled jobs configured. Click "+ New Job" to create one.</div>
+    </div>
+
+    <!-- Job Editor Side Panel -->
+    <div class="side-panel hidden" id="job-editor">
+      <div class="side-panel-header">
+        <h3 id="job-editor-title">New Job</h3>
+        <button class="btn btn-ghost" id="btn-close-job-editor">&times;</button>
+      </div>
+      <div class="side-panel-body">
+        <label>Name</label>
+        <input type="text" id="job-name" placeholder="Job name" class="input">
+
+        <label>Cron Expression</label>
+        <input type="text" id="job-cron" placeholder="*/5 * * * *" class="input">
+        <span class="hint" id="job-cron-hint">Every 5 minutes</span>
+
+        <label>Actions</label>
+        <div id="job-actions-list" class="actions-container"></div>
+        <button class="btn btn-small" id="btn-add-job-action">+ Add Action</button>
+
+        <label class="toggle-label">
+          <input type="checkbox" id="job-enabled" checked>
+          Enabled
+        </label>
+
+        <div class="editor-footer">
+          <button class="btn btn-accent" id="btn-save-job">Save Job</button>
+          <button class="btn btn-ghost" id="btn-cancel-job">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab 3: Event Log -->
+  <section class="tab-content" id="tab-log">
+    <div class="toolbar">
+      <h2>Event Log</h2>
+      <div class="toolbar-right">
+        <select id="log-filter-type" class="input input-small">
+          <option value="">All Types</option>
+          <option value="ci">CI</option>
+          <option value="pr">PR</option>
+          <option value="issue">Issue</option>
+          <option value="deploy">Deploy</option>
+          <option value="git">Git</option>
+          <option value="agent">Agent</option>
+        </select>
+        <select id="log-filter-category" class="input input-small">
+          <option value="">All Categories</option>
+          <option value="build">Build</option>
+          <option value="review">Review</option>
+          <option value="deploy">Deploy</option>
+          <option value="task">Task</option>
+        </select>
+        <button class="btn btn-small" id="btn-toggle-pause">Pause</button>
+        <button class="btn btn-small" id="btn-refresh-log">Refresh</button>
+      </div>
+    </div>
+    <div id="event-log-list" class="list-container log-list">
+      <div class="empty-state" id="log-empty">No events recorded today.</div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -19,6 +19,12 @@
 
 const BUILTIN_APPS = [
   {
+    appId: 'automation-studio',
+    label: 'Automation Studio',
+    category: 'Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>'
+  },
+  {
     appId: 'desktop-manager',
     label: 'Desktop Manager',
     category: 'System',

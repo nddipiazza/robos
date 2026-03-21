@@ -1,0 +1,8 @@
+{
+  "name": "robos-automation-studio",
+  "version": "1.0.0",
+  "description": "RobOS Automation Studio — event rules, scheduled jobs, and event log viewer",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

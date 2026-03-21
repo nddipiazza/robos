@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+X-RobOS-Category=RobOS Development
+X-RobOS-App=true
+Name=Automation Studio
+Comment=Manage event rules, scheduled jobs, and view real-time event log
+Exec=/usr/bin/electron /usr/local/share/robos/automation-studio/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/automation-studio/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;
+StartupWMClass=automation-studio
