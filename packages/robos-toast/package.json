@@ -1,0 +1,8 @@
+{
+  "name": "robos-toast",
+  "version": "1.0.0",
+  "description": "RobOS Toast Notification Daemon — categorized overlay notifications with tier support",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

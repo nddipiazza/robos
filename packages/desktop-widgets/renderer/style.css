@@ -1,0 +1,65 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: transparent;
+  font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  color: #c9d1d9;
+  font-size: 12px;
+  padding: 10px;
+}
+
+#widgets { display: flex; flex-direction: column; gap: 12px; }
+
+.widget {
+  background: rgba(22, 27, 34, 0.85);
+  border: 1px solid rgba(48, 54, 61, 0.6);
+  border-radius: 10px;
+  padding: 10px 14px;
+  backdrop-filter: blur(8px);
+}
+
+.widget-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #00bcd4;
+  margin-bottom: 6px;
+}
+
+.widget-body {
+  font-size: 12px;
+  color: #c9d1d9;
+}
+
+.task-id {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6edf3;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.stat-label {
+  color: #8b949e;
+  font-size: 11px;
+}
+
+.stat-value {
+  color: #e6edf3;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.journal-last {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #8b949e;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

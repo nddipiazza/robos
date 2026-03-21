@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+X-RobOS-Category=RobOS System
+X-RobOS-App=true
+Name=RobOS Toast Daemon
+Comment=System-wide overlay toast notifications with category and tier support
+Exec=/usr/bin/electron /usr/local/share/robos/robos-toast/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-toast/icon.svg
+Terminal=false
+Type=Application
+Categories=System;
+StartupWMClass=robos-toast

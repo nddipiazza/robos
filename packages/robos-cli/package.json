@@ -1,0 +1,19 @@
+{
+  "name": "robos-cli",
+  "version": "1.0.0",
+  "description": "RobOS CLI tools — robos-notify, robos-active-task, robos-journal-append, robos-event",
+  "bin": {
+    "robos-notify": "./robos-notify",
+    "robos-active-task": "./robos-active-task",
+    "robos-journal-append": "./robos-journal-append",
+    "robos-event": "./robos-event"
+  },
+  "keywords": ["robos", "cli"],
+  "license": "MIT",
+  "files": [
+    "robos-notify",
+    "robos-active-task",
+    "robos-journal-append",
+    "robos-event"
+  ]
+}

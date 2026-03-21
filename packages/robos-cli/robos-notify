@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# robos-notify — send categorized desktop notifications to RobOS toast daemon
+#
+# Usage:
+#   robos-notify "message" [--title TITLE] [--category CAT] [--tier TIER] [--action CMD] [--silent] [--json]
+#
+# Categories: pr_review, ci_cd, task, agent, system (default: system)
+# Tiers: critical, warning, info (default: info)
+
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export HOME="${HOME:-/home/robos}"
+
+NOTIF_FILE="$HOME/.config/robos/notifications.json"
+SOCKET_PATH="/run/user/$(id -u)/robos-dm.sock"
+
+# Defaults
+TITLE="RobOS"
+MSG=""
+CATEGORY="system"
+TIER="info"
+ACTION=""
+SILENT=false
+JSON_MODE=false
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-notify [OPTIONS] "message"
+
+Send a categorized notification to the RobOS toast daemon.
+
+Options:
+  --title TEXT        Notification title (default: RobOS)
+  --category CAT     One of: pr_review, ci_cd, task, agent, system (default: system)
+  --tier TIER        One of: critical, warning, info (default: info)
+  --action CMD       Command to execute on click
+  --silent           Write to history only, skip toast display
+  --json             Read notification from stdin as JSON
+  --help             Show this help
+
+Examples:
+  robos-notify "Build passed" --title "CI" --category ci_cd --tier info
+  robos-notify "PR needs review" --category pr_review --tier warning
+  echo '{"title":"Deploy","message":"v1.3.1","category":"ci_cd","tier":"info"}' | robos-notify --json
+EOF
+  exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)     show_help ;;
+    --title)    TITLE="$2"; shift 2 ;;
+    --category) CATEGORY="$2"; shift 2 ;;
+    --tier)     TIER="$2"; shift 2 ;;
+    --action)   ACTION="$2"; shift 2 ;;
+    --silent)   SILENT=true; shift ;;
+    --json)     JSON_MODE=true; shift ;;
+    -*)         echo "Unknown option: $1" >&2; exit 1 ;;
+    *)          MSG="$*"; break ;;
+  esac
+done
+
+# Validate category
+case "$CATEGORY" in
+  pr_review|ci_cd|task|agent|system) ;;
+  *) echo "Invalid category: $CATEGORY (must be pr_review, ci_cd, task, agent, or system)" >&2; exit 1 ;;
+esac
+
+# Validate tier
+case "$TIER" in
+  critical|warning|info) ;;
+  *) echo "Invalid tier: $TIER (must be critical, warning, or info)" >&2; exit 1 ;;
+esac
+
+# JSON mode: read from stdin
+if $JSON_MODE; then
+  JSON_INPUT=$(cat)
+  TITLE=$(echo "$JSON_INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('title','RobOS'))" 2>/dev/null || echo "RobOS")
+  MSG=$(echo "$JSON_INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('message',''))" 2>/dev/null || echo "")
+  CATEGORY=$(echo "$JSON_INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('category','system'))" 2>/dev/null || echo "system")
+  TIER=$(echo "$JSON_INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tier','info'))" 2>/dev/null || echo "info")
+  ACTION=$(echo "$JSON_INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('action',''))" 2>/dev/null || echo "")
+fi
+
+if [ -z "$MSG" ]; then
+  echo "Error: message is required" >&2
+  echo "Usage: robos-notify [--title TITLE] [--category CAT] [--tier TIER] \"message\"" >&2
+  exit 1
+fi
+
+# Desktop toast via notify-send (fallback)
+if ! $SILENT && command -v notify-send &>/dev/null; then
+  case "$TIER" in
+    critical) NOTIFY_ICON="dialog-error" ;;
+    warning)  NOTIFY_ICON="dialog-warning" ;;
+    *)        NOTIFY_ICON="dialog-information" ;;
+  esac
+  notify-send -a "RobOS" -t 6000 -i "$NOTIFY_ICON" "$TITLE" "$MSG" 2>/dev/null || true
+fi
+
+# Persist to notifications store
+mkdir -p "$(dirname "$NOTIF_FILE")"
+python3 - <<PYEOF
+import json, os, uuid
+from datetime import datetime, timezone
+f = '$NOTIF_FILE'
+try:
+    data = json.load(open(f)) if os.path.exists(f) else []
+except:
+    data = []
+entry = {
+    'id': str(uuid.uuid4()),
+    'title': '''$TITLE''',
+    'body': '''$MSG''',
+    'icon': 'info',
+    'source': 'robos-notify',
+    'category': '$CATEGORY',
+    'tier': '$TIER',
+    'ts': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+    'read': False
+}
+data.insert(0, entry)
+data = data[:500]
+with open(f, 'w') as out:
+    json.dump(data, out, indent=2)
+PYEOF
+
+# Try IPC to desktop manager socket for toast
+if ! $SILENT && [ -S "$SOCKET_PATH" ]; then
+  python3 -c "
+import socket, json
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+try:
+    sock.connect('$SOCKET_PATH')
+    sock.sendall(json.dumps({'notify': {'title': '''$TITLE''', 'body': '''$MSG''', 'category': '$CATEGORY', 'tier': '$TIER'}}).encode())
+    sock.shutdown(socket.SHUT_WR)
+    sock.recv(4096)
+except: pass
+finally: sock.close()
+" 2>/dev/null || true
+fi
+
+echo "Notification sent: [$CATEGORY/$TIER] $TITLE — $MSG"

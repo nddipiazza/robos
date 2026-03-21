@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# robos-journal-append — write an entry to the RobOS Work Journal from CLI/cron
+#
+# Usage:
+#   robos-journal-append [--section SECTION] [--date YYYY-MM-DD] [--type TYPE] "text"
+
+set -euo pipefail
+
+HOME="${HOME:-/home/robos}"
+SETTINGS_FILE="$HOME/.config/robos/settings.json"
+
+# Default args
+SECTION="Notes"
+DATE=$(date +%Y-%m-%d)
+ENTRY_TYPE=""
+TEXT=""
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-journal-append [OPTIONS] "text to append"
+
+Write an entry to the RobOS Work Journal.
+
+Options:
+  --section NAME     Section header to append under (default: Notes)
+  --date YYYY-MM-DD  Date for the entry (default: today)
+  --type TYPE        Entry type tag (e.g., decision, note, blocker)
+  --help             Show this help
+
+Examples:
+  robos-journal-append "Discussed API design with Bob"
+  robos-journal-append --type decision "Switching to proto reflection"
+  robos-journal-append --section Tasks "Finished code review for PR #42"
+EOF
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help|-h)   show_help ;;
+    --section)   SECTION="$2"; shift 2 ;;
+    --date)      DATE="$2"; shift 2 ;;
+    --type)      ENTRY_TYPE="$2"; shift 2 ;;
+    -*)          echo "Unknown option: $1" >&2; exit 1 ;;
+    *)           TEXT="$*"; break ;;
+  esac
+done
+
+if [ -z "$TEXT" ]; then
+  echo "Usage: robos-journal-append [--section NAME] [--date YYYY-MM-DD] \"text\"" >&2
+  exit 1
+fi
+
+# Read journal repo dir from settings
+JOURNAL_REPO=$(python3 -c "
+import json, sys, os
+try:
+  s = json.load(open('$SETTINGS_FILE'))
+  repo = s.get('journal_repo','')
+  if not repo: sys.exit(1)
+  repo = repo.replace('https://github.com/','').replace('git@github.com:','').replace('.git','')
+  parts = repo.split('/')
+  print(os.path.join(os.path.expanduser('~'), 'source', 'github.com', parts[0], parts[1]))
+except: sys.exit(1)
+" 2>/dev/null) || { echo "ERROR: Work Journal repo not configured. Open RobOS Work Journal app and configure it first." >&2; exit 1; }
+
+JOURNAL_DIR="$JOURNAL_REPO"
+
+if [ ! -d "$JOURNAL_DIR/.git" ]; then
+  echo "ERROR: Journal repo not cloned at $JOURNAL_DIR" >&2
+  exit 1
+fi
+
+DAILY_DIR="$JOURNAL_DIR/daily"
+mkdir -p "$DAILY_DIR"
+
+DAILY_FILE="$DAILY_DIR/$DATE.md"
+TIMESTAMP=$(date '+%H:%M:%S')
+
+# Create daily file if missing
+if [ ! -f "$DAILY_FILE" ]; then
+  cat > "$DAILY_FILE" <<EOF
+# Journal -- $DATE
+
+## Tasks
+
+## Notes
+
+## Projects
+
+EOF
+fi
+
+# Format entry with optional type tag
+ENTRY_TEXT="$TEXT"
+if [ -n "$ENTRY_TYPE" ]; then
+  ENTRY_TEXT="[$ENTRY_TYPE] $TEXT"
+fi
+
+# Append under the section header (or create section at end)
+if grep -q "^## $SECTION" "$DAILY_FILE"; then
+  TMP=$(mktemp)
+  awk -v section="## $SECTION" -v text="$ENTRY_TEXT" -v ts="$TIMESTAMP" '
+    /^## / && found { print ""; found=0 }
+    { print }
+    $0 == section { print "- [" ts "] " text; found=1 }
+  ' "$DAILY_FILE" > "$TMP" && mv "$TMP" "$DAILY_FILE"
+else
+  printf "\n## %s\n- [%s] %s\n" "$SECTION" "$TIMESTAMP" "$ENTRY_TEXT" >> "$DAILY_FILE"
+fi
+
+# Git commit & push
+git -C "$JOURNAL_DIR" add -A
+if ! git -C "$JOURNAL_DIR" diff --cached --quiet; then
+  git -C "$JOURNAL_DIR" commit -m "journal: $DATE $SECTION -- auto update" --quiet
+  git -C "$JOURNAL_DIR" push --quiet 2>/dev/null || true
+fi
+
+echo "Appended to $DAILY_FILE under ## $SECTION"

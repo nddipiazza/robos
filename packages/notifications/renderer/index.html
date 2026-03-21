@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS Notifications</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="topbar">
+    <div id="topbar-left">
+      <span class="app-title">RobOS Notifications</span>
+    </div>
+    <div id="topbar-actions">
+      <div class="tab-bar">
+        <button class="tab active" data-tab="list">Notifications</button>
+        <button class="tab" data-tab="prefs">Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Tab -->
+  <div id="tab-list" class="tab-content active">
+    <div id="filter-bar">
+      <div id="category-filters">
+        <label class="filter-check"><input type="checkbox" data-cat="pr_review" checked> PR Review <span class="badge" id="badge-pr_review">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="ci_cd" checked> CI/CD <span class="badge" id="badge-ci_cd">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="task" checked> Task <span class="badge" id="badge-task">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="agent" checked> Agent <span class="badge" id="badge-agent">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="system" checked> System <span class="badge" id="badge-system">0</span></label>
+      </div>
+      <div id="tier-filters">
+        <label class="filter-check"><input type="checkbox" data-tier="critical" checked> Critical</label>
+        <label class="filter-check"><input type="checkbox" data-tier="warning" checked> Warning</label>
+        <label class="filter-check"><input type="checkbox" data-tier="info" checked> Info</label>
+      </div>
+      <div id="filter-actions">
+        <select id="filter-date" class="filter-sel">
+          <option value="">All Time</option>
+          <option value="today">Today</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+        </select>
+        <input id="search-input" class="search-input" placeholder="Search notifications..." />
+      </div>
+      <div id="bulk-actions">
+        <button id="btn-mark-all-read" class="tb-btn" title="Mark all as read">Mark All Read</button>
+        <button id="btn-clear-read" class="tb-btn" title="Clear read notifications">Clear Read</button>
+        <button id="btn-clear-all" class="tb-btn tb-btn-danger" title="Delete all">Clear All</button>
+      </div>
+    </div>
+
+    <div id="stats-bar">
+      <span id="stat-unread">0 unread</span>
+      <span class="stat-sep">&middot;</span>
+      <span id="stat-total">0 total</span>
+    </div>
+
+    <div id="list-container">
+      <div id="notif-list"></div>
+      <div id="empty-state" class="hidden">
+        <div class="empty-msg">No notifications</div>
+        <div class="empty-sub">New notifications will appear here when events occur.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences Tab -->
+  <div id="tab-prefs" class="tab-content">
+    <div id="prefs-panel">
+      <h3>Notification Preferences</h3>
+      <div class="prefs-section">
+        <h4>Quiet Hours</h4>
+        <label class="pref-row">
+          <input type="checkbox" id="pref-quiet-enabled" />
+          <span>Enable quiet hours</span>
+        </label>
+        <div class="pref-row">
+          <label>Start: <input type="time" id="pref-quiet-start" value="22:00" class="time-input" /></label>
+          <label>End: <input type="time" id="pref-quiet-end" value="07:00" class="time-input" /></label>
+        </div>
+      </div>
+      <div class="prefs-section">
+        <h4>Do Not Disturb</h4>
+        <label class="pref-row">
+          <input type="checkbox" id="pref-dnd" />
+          <span>Enable DND mode (suppress all toasts)</span>
+        </label>
+      </div>
+      <div class="prefs-section">
+        <button id="btn-save-prefs" class="btn btn-primary">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

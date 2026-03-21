@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# robos-active-task — get, set, or clear the active RobOS task for the current session
+#
+# Usage:
+#   robos-active-task get          Print current active task
+#   robos-active-task set TASK-42  Set active task
+#   robos-active-task clear        Clear active task
+#   robos-active-task              Print current active task (same as get)
+
+set -euo pipefail
+
+HOME="${HOME:-/home/robos}"
+TASK_FILE="$HOME/.config/robos/active-issue"
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-active-task [COMMAND] [TASK_ID]
+
+Get or set the currently active task for the session.
+
+Commands:
+  get              Print current active task (default)
+  set TASK_ID      Set active task to TASK_ID
+  clear            Clear the active task
+  --help           Show this help
+
+Examples:
+  robos-active-task get
+  robos-active-task set JIRA-42
+  robos-active-task clear
+EOF
+  exit 0
+}
+
+CMD="${1:-get}"
+
+case "$CMD" in
+  --help|-h)
+    show_help
+    ;;
+  get|"")
+    if [ -f "$TASK_FILE" ] && [ -s "$TASK_FILE" ]; then
+      cat "$TASK_FILE"
+    else
+      echo "No active task"
+      exit 1
+    fi
+    ;;
+  set)
+    shift
+    if [ $# -eq 0 ]; then
+      echo "Error: task ID required" >&2
+      echo "Usage: robos-active-task set TASK-ID" >&2
+      exit 1
+    fi
+    mkdir -p "$(dirname "$TASK_FILE")"
+    echo "$*" > "$TASK_FILE"
+    echo "Active task set to: $*"
+    ;;
+  clear)
+    if [ -f "$TASK_FILE" ]; then
+      echo -n > "$TASK_FILE"
+    fi
+    echo "Active task cleared"
+    ;;
+  *)
+    echo "Unknown command: $CMD" >&2
+    echo "Usage: robos-active-task [get|set|clear]" >&2
+    exit 1
+    ;;
+esac

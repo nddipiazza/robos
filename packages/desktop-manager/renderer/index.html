@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
+  <title>RobOS Desktop Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #c9d1d9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #header {
+      padding: 12px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #header .title { font-size: 15px; font-weight: 600; color: #e6edf3; }
+    #header .sub { font-size: 12px; color: #8b949e; margin-left: auto; }
+    #app-list { padding: 8px; flex: 1; overflow-y: auto; }
+    .app-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+    .app-item:hover { background: #21262d; }
+    .app-icon {
+      font-size: 20px;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: #21262d;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      flex-shrink: 0;
+    }
+    .app-info { flex: 1; min-width: 0; }
+    .app-name { font-size: 13px; font-weight: 500; color: #e6edf3; }
+    .app-desc { font-size: 11px; color: #8b949e; margin-top: 1px; }
+    .app-arrow { color: #484f58; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <span class="title">RobOS Desktop Manager</span>
+    <span class="sub">System Tray &amp; IPC Hub</span>
+  </div>
+  <div id="app-list"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "robos-notifications",
+  "version": "1.0.0",
+  "description": "RobOS Notifications — category-filtered notification history viewer with preferences editor",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

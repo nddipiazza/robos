@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS Desktop Widgets</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="widgets">
+    <div class="widget" id="widget-active-task">
+      <div class="widget-header">Active Task</div>
+      <div class="widget-body" id="active-task-content">No active task</div>
+    </div>
+
+    <div class="widget" id="widget-system-stats">
+      <div class="widget-header">System</div>
+      <div class="widget-body" id="system-stats-content">Loading...</div>
+    </div>
+
+    <div class="widget" id="widget-journal-summary">
+      <div class="widget-header">Journal Today</div>
+      <div class="widget-body" id="journal-content">No entries today</div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 360px;
+      background: transparent;
+      overflow: hidden;
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+    }
+    .toast {
+      width: 360px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-left: 4px solid #00bcd4;
+      border-radius: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      position: relative;
+    }
+    .toast.visible { opacity: 1; transform: translateX(0); }
+    .toast.tier-critical { border-left-color: #f85149; }
+    .toast.tier-warning  { border-left-color: #d29922; }
+    .toast.tier-info     { border-left-color: #00bcd4; }
+    .toast-emoji  { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .toast-body   { flex: 1; min-width: 0; }
+    .toast-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .toast-category { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 3px; background: #21262d; color: #8b949e; }
+    .toast-tier { font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; }
+    .toast-tier.critical { background: #3d1212; color: #f85149; }
+    .toast-tier.warning  { background: #3d2e12; color: #d29922; }
+    .toast-tier.info     { background: #0d2d3d; color: #00bcd4; }
+    .toast-title  { font-size: 13px; font-weight: 600; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toast-msg    { font-size: 11px; color: #8b949e; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toast-link   { display: none; font-size: 11px; color: #58a6ff; margin-top: 5px; text-decoration: underline; cursor: pointer; font-weight: 500; }
+    .toast-source { font-size: 10px; color: #484f58; margin-top: 3px; }
+    .toast-close  { flex-shrink: 0; color: #484f58; font-size: 16px; line-height: 1; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+    .toast-close:hover { color: #e6edf3; background: #30363d; }
+    #progress-wrap {
+      position: absolute;
+      bottom: 0; left: 4px; right: 0;
+      height: 2px;
+      background: #00bcd422;
+      border-radius: 0 0 6px 6px;
+    }
+    .progress-bar {
+      height: 2px; background: #00bcd4; border-radius: 2px;
+      width: 100%;
+    }
+    .progress-bar.shrink { width: 0%; }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast">
+    <div class="toast-emoji" id="toast-emoji"></div>
+    <div class="toast-body">
+      <div class="toast-header">
+        <span class="toast-category" id="toast-category">system</span>
+        <span class="toast-tier" id="toast-tier">info</span>
+      </div>
+      <div class="toast-title"  id="toast-title">Notification</div>
+      <div class="toast-msg"    id="toast-msg"></div>
+      <div class="toast-link"   id="toast-link"></div>
+      <div class="toast-source" id="toast-source"></div>
+    </div>
+    <div class="toast-close" id="toast-close">&times;</div>
+    <div id="progress-wrap"><div class="progress-bar" id="pbar"></div></div>
+  </div>
+  <script>
+    const CATEGORY_ICONS = {
+      pr_review: '\uD83D\uDD0D',
+      ci_cd:     '\u2699\uFE0F',
+      task:      '\uD83D\uDCCB',
+      agent:     '\uD83E\uDD16',
+      system:    '\uD83D\uDD14',
+    };
+    const TIER_ICONS = { critical: '\u274C', warning: '\u26A0\uFE0F', info: '\uD83D\uDD14' };
+    let _action = null;
+
+    window.toast.onData(n => {
+      _action = n.action || null;
+      const el = document.getElementById('toast');
+      const tier = n.tier || 'info';
+      const category = n.category || 'system';
+
+      el.className = 'toast tier-' + tier;
+
+      document.getElementById('toast-emoji').textContent = CATEGORY_ICONS[category] || CATEGORY_ICONS.system;
+      document.getElementById('toast-category').textContent = category.replace('_', ' ');
+      const tierEl = document.getElementById('toast-tier');
+      tierEl.textContent = tier;
+      tierEl.className = 'toast-tier ' + tier;
+
+      document.getElementById('toast-title').textContent = n.title || 'Notification';
+      document.getElementById('toast-msg').textContent   = n.message || n.body || '';
+      document.getElementById('toast-source').textContent = n.source ? 'from ' + n.source : '';
+
+      const linkEl = document.getElementById('toast-link');
+      if (_action && _action.label) {
+        linkEl.textContent = _action.label;
+        linkEl.style.display = 'block';
+      }
+
+      // Progress bar
+      const progressWrap = document.getElementById('progress-wrap');
+      if (n._persistent) {
+        progressWrap.style.display = 'none';
+      } else {
+        const duration = n._duration || 5000;
+        const pbar = document.getElementById('pbar');
+        pbar.style.transition = 'width ' + (duration / 1000) + 's linear';
+        progressWrap.querySelector('.progress-bar').style.background = n._tierColor || '#00bcd4';
+        setTimeout(function() { pbar.classList.add('shrink'); }, 50);
+      }
+
+      requestAnimationFrame(function() { el.classList.add('visible'); });
+    });
+
+    document.getElementById('toast-link').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (_action) window.toast.action(_action);
+    });
+    document.getElementById('toast-close').addEventListener('click', function(e) {
+      e.stopPropagation();
+      window.toast.dismiss();
+    });
+    document.getElementById('toast').addEventListener('click', function() {
+      if (_action) window.toast.action(_action);
+      else window.toast.dismiss();
+    });
+  </script>
+</body>
+</html>

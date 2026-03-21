@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS Preferences</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-title">RobOS Preferences</div>
+      <div class="header-actions">
+        <button id="btn-save" class="btn btn-primary">Save All</button>
+      </div>
+    </header>
+    <div class="body">
+      <aside class="sidebar" id="sidebar"></aside>
+      <main class="content" id="content">
+        <div id="status-msg" class="status-msg hidden"></div>
+        <div id="sections"></div>
+      </main>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

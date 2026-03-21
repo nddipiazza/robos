@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+X-RobOS-Category=RobOS System
+X-RobOS-App=true
+Name=RobOS Desktop Manager
+Comment=System tray and IPC hub for RobOS app lifecycle management
+Exec=/usr/bin/electron /usr/local/share/robos/desktop-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/desktop-manager/icon.svg
+Terminal=false
+Type=Application
+Categories=System;
+StartupWMClass=desktop-manager

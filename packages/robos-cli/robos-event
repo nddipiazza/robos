@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+# robos-event — emit and listen to events on the RobOS Event Bus
+#
+# Usage:
+#   robos-event emit TYPE [--payload JSON]
+#   robos-event listen [--type TYPE] [--category CAT]
+#   robos-event history [--last N] [--category CAT] [--since DURATION]
+
+set -euo pipefail
+
+HOME="${HOME:-/home/robos}"
+EVENT_DIR="$HOME/.config/robos/events"
+EVENT_LOG="$EVENT_DIR/event-log.jsonl"
+SOCKET_PATH="/run/user/$(id -u)/robos-events.sock"
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-event COMMAND [OPTIONS]
+
+Emit and listen to events on the RobOS Event Bus.
+
+Commands:
+  emit TYPE [--payload JSON]         Emit an event
+  listen [--type TYPE] [--category]  Listen to events (streaming NDJSON)
+  history [--last N] [--category C]  Query recent events
+
+Emit Options:
+  --payload JSON      JSON payload for the event
+
+Listen Options:
+  --type TYPE         Filter by event type
+  --category CAT      Filter by category (pr_review, ci_cd, task, agent, system)
+
+History Options:
+  --last N            Show last N events (default: 20)
+  --category CAT      Filter by category
+  --since DURATION    Show events since duration (e.g., 1h, 30m, 1d)
+
+Examples:
+  robos-event emit ci_completed --payload '{"runId":789,"status":"failure"}'
+  robos-event listen --category ci_cd
+  robos-event history --last 50
+  robos-event history --category pr_review --since 1h
+EOF
+  exit 0
+}
+
+CMD="${1:-}"
+if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ]; then
+  show_help
+fi
+shift
+
+mkdir -p "$EVENT_DIR"
+
+case "$CMD" in
+  emit)
+    EVENT_TYPE="${1:-}"
+    if [ -z "$EVENT_TYPE" ]; then
+      echo "Error: event type required" >&2
+      echo "Usage: robos-event emit TYPE [--payload JSON]" >&2
+      exit 1
+    fi
+    shift
+
+    PAYLOAD="{}"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --payload) PAYLOAD="$2"; shift 2 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+      esac
+    done
+
+    # Write to event log
+    python3 -c "
+import json, uuid
+from datetime import datetime, timezone
+event = {
+    'id': str(uuid.uuid4()),
+    'type': '$EVENT_TYPE',
+    'payload': json.loads('''$PAYLOAD'''),
+    'ts': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+}
+with open('$EVENT_LOG', 'a') as f:
+    f.write(json.dumps(event) + '\n')
+print(json.dumps(event))
+"
+    echo "Event emitted: $EVENT_TYPE"
+    ;;
+
+  listen)
+    FILTER_TYPE=""
+    FILTER_CAT=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --type)     FILTER_TYPE="$2"; shift 2 ;;
+        --category) FILTER_CAT="$2"; shift 2 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+      esac
+    done
+
+    echo "Listening for events... (Ctrl-C to stop)" >&2
+
+    # Tail the event log file
+    touch "$EVENT_LOG"
+    tail -f "$EVENT_LOG" 2>/dev/null | while IFS= read -r line; do
+      if [ -n "$FILTER_TYPE" ]; then
+        echo "$line" | python3 -c "
+import json, sys
+e = json.loads(sys.stdin.readline())
+if e.get('type') == '$FILTER_TYPE': print(json.dumps(e))
+" 2>/dev/null && continue || true
+      elif [ -n "$FILTER_CAT" ]; then
+        echo "$line" | python3 -c "
+import json, sys
+CATEGORY_MAP = {
+    'pr_review': ['pr_review_requested', 'pr_review_received', 'pr_merged'],
+    'ci_cd': ['ci_started', 'ci_completed', 'deploy'],
+    'task': ['task_started', 'task_status_changed'],
+    'agent': ['agent_session'],
+    'system': ['disk_low', 'service_crash', 'update_available'],
+}
+e = json.loads(sys.stdin.readline())
+types = CATEGORY_MAP.get('$FILTER_CAT', [])
+if e.get('type') in types or not types: print(json.dumps(e))
+" 2>/dev/null && continue || true
+      else
+        echo "$line"
+      fi
+    done
+    ;;
+
+  history)
+    LAST=20
+    FILTER_CAT=""
+    SINCE=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --last)     LAST="$2"; shift 2 ;;
+        --category) FILTER_CAT="$2"; shift 2 ;;
+        --since)    SINCE="$2"; shift 2 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+      esac
+    done
+
+    if [ ! -f "$EVENT_LOG" ]; then
+      echo "No events recorded yet."
+      exit 0
+    fi
+
+    python3 -c "
+import json, sys
+from datetime import datetime, timezone, timedelta
+
+CATEGORY_MAP = {
+    'pr_review': ['pr_review_requested', 'pr_review_received', 'pr_merged'],
+    'ci_cd': ['ci_started', 'ci_completed', 'deploy'],
+    'task': ['task_started', 'task_status_changed'],
+    'agent': ['agent_session'],
+    'system': ['disk_low', 'service_crash', 'update_available'],
+}
+
+events = []
+with open('$EVENT_LOG') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try: events.append(json.loads(line))
+        except: pass
+
+# Filter by since
+since = '$SINCE'
+if since:
+    now = datetime.now(timezone.utc)
+    unit = since[-1]
+    val = int(since[:-1])
+    if unit == 'h': cutoff = now - timedelta(hours=val)
+    elif unit == 'm': cutoff = now - timedelta(minutes=val)
+    elif unit == 'd': cutoff = now - timedelta(days=val)
+    else: cutoff = now - timedelta(hours=1)
+    events = [e for e in events if datetime.fromisoformat(e['ts'].replace('Z','+00:00')) > cutoff]
+
+# Filter by category
+cat_filter = '$FILTER_CAT'
+if cat_filter:
+    types = CATEGORY_MAP.get(cat_filter, [])
+    if types:
+        events = [e for e in events if e.get('type') in types]
+
+# Take last N
+events = events[-$LAST:]
+
+for e in events:
+    print(json.dumps(e))
+"
+    ;;
+
+  *)
+    echo "Unknown command: $CMD" >&2
+    echo "Usage: robos-event [emit|listen|history]" >&2
+    exit 1
+    ;;
+esac

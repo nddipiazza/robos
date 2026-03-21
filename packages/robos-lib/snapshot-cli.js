@@ -43,6 +43,9 @@ const PORT_REGISTRY = {
   'pass-unlock': 19122,
   'git-login-manager': 19123,
   'task-board': 19124,
+  'desktop-manager': 19125,
+  'robos-toast': 19126,
+  'desktop-widgets': 19127,
 };
 
 function getPort(appId) {

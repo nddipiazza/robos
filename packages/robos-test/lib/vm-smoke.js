@@ -30,7 +30,12 @@ const APP_PORTS = {
   'issue-manager': 19103,
   'workflow-studio': 19120,
   'task-board': 19124,
-  'workspace-manager': 19110,
+  'notifications': 19115,
+  'robos-preferences': 19116,
+  'search-index': 19119,
+  'desktop-manager': 19125,
+  'robos-toast': 19126,
+  'desktop-widgets': 19127,
 };
 
 const DEFAULT_APPS = Object.keys(APP_PORTS);
