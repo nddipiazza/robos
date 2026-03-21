@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld('api', {
   resetAll:           ()       => ipcRenderer.invoke('reset-all'),
   generateSshKey:     (opts)   => ipcRenderer.invoke('generate-ssh-key', opts),
   addSshKeyToGithub:  ()       => ipcRenderer.invoke('add-ssh-key-to-github'),
+  refreshGhScope:     ()       => ipcRenderer.invoke('refresh-gh-scope'),
+  onGhRefreshOutput:  (fn)     => ipcRenderer.on('gh-refresh-output', (_, d) => fn(d)),
 });

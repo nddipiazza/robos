@@ -175,8 +175,35 @@ ipcMain.handle('add-ssh-key-to-github', async () => {
     return { ok: true };
   } catch (e) {
     const msg = (e.stderr || e.stdout || e.message || '').toString();
-    return { ok: false, error: msg.includes('already in use') ? 'Key already added to GitHub' : msg.trim() || 'Upload failed' };
+    if (msg.includes('already in use')) return { ok: true, alreadyAdded: true };
+    const needsScope = msg.includes('admin:public_key');
+    return { ok: false, needsScope, error: needsScope
+      ? 'Your gh token is missing the admin:public_key scope. Click "Re-auth gh" to fix.'
+      : msg.trim() || 'Upload failed' };
   }
+});
+
+// ── IPC: refresh gh auth scope ────────────────────────────────────────────────
+ipcMain.handle('refresh-gh-scope', async () => {
+  return new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    const proc = spawn('gh', ['auth', 'refresh', '-h', 'github.com', '-s', 'admin:public_key'], {
+      env: { ...process.env, GH_PROMPT_DISABLED: '0' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let output = '';
+    proc.stdout.on('data', d => {
+      output += d.toString();
+      if (win && !win.isDestroyed()) win.webContents.send('gh-refresh-output', d.toString());
+    });
+    proc.stderr.on('data', d => {
+      output += d.toString();
+      if (win && !win.isDestroyed()) win.webContents.send('gh-refresh-output', d.toString());
+    });
+    proc.on('close', code => {
+      resolve({ ok: code === 0, output });
+    });
+  });
 });
 
 // ── IPC: reset everything ─────────────────────────────────────────────────────
