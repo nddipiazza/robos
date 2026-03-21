@@ -1,0 +1,213 @@
+/* Manager Dashboard */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-card: #161b22;
+  --bg-card-hover: #1a2332;
+  --border: #21262d;
+  --accent: #7c3aed;
+  --accent-light: #a78bfa;
+  --text: #c9d1d9;
+  --text-dim: #484f58;
+  --text-bright: #e0e0ff;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --cyan: #00bcd4;
+  --radius: 10px;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg-primary);
+  font-family: 'DejaVu Sans', 'Ubuntu', sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+#header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+#title { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+#controls { display: flex; gap: 10px; align-items: center; }
+
+select {
+  background: var(--bg-primary); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 12px;
+}
+select:focus { outline: none; border-color: var(--accent); }
+
+.badge {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+#dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+  padding: 20px 24px;
+  align-items: start;
+}
+
+/* ── KPI Row ──────────────────────────────────────────────────────────────── */
+.kpi-row {
+  grid-column: 1 / -1;
+  display: flex; gap: 14px;
+  flex-wrap: wrap;
+}
+
+.kpi-card {
+  flex: 1; min-width: 150px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.kpi-card:hover { border-color: var(--accent); }
+
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 28px; font-weight: 300; color: var(--text-bright);
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.card:hover { border-color: var(--accent); }
+.card.wide { grid-column: 1 / -1; }
+
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.card-body {
+  padding: 12px 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.placeholder {
+  color: var(--text-dim); font-size: 13px;
+  padding: 16px 0; text-align: center;
+}
+
+/* ── Sprint board columns ─────────────────────────────────────────────────── */
+.sprint-columns {
+  display: flex; gap: 12px; overflow-x: auto;
+}
+
+.sprint-col {
+  flex: 1; min-width: 160px;
+}
+
+.sprint-col-header {
+  font-size: 12px; font-weight: 600;
+  padding: 6px 10px; border-radius: 6px 6px 0 0;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+}
+
+.sprint-col-header .count {
+  background: rgba(255,255,255,0.1); border-radius: 8px;
+  padding: 0 6px; font-size: 10px;
+}
+
+.sprint-issue {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.sprint-issue:hover { border-color: var(--accent); cursor: pointer; }
+
+.sprint-issue .num { color: var(--blue); font-weight: 600; margin-right: 6px; }
+.sprint-issue .assignee { color: var(--text-dim); font-size: 11px; }
+
+/* ── Velocity bars ────────────────────────────────────────────────────────── */
+.velocity-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.velocity-row:last-child { border-bottom: none; }
+
+.velocity-name { font-size: 13px; width: 120px; color: var(--text); }
+.velocity-bar-bg {
+  flex: 1; height: 18px; background: var(--bg-primary);
+  border-radius: 4px; overflow: hidden;
+}
+.velocity-bar {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  transition: width 0.4s;
+}
+.velocity-val { font-size: 12px; color: var(--text-dim); width: 40px; text-align: right; }
+
+/* ── PR Activity ──────────────────────────────────────────────────────────── */
+.pr-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+}
+.pr-row:last-child { border-bottom: none; }
+.pr-row:hover { background: var(--bg-card-hover); margin: 0 -16px; padding: 6px 16px; }
+
+.pr-num { color: var(--blue); font-weight: 600; }
+.pr-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-author { color: var(--text-dim); font-size: 12px; }
+.pr-merged { color: var(--green); font-size: 11px; }
+
+/* ── Deploy row ───────────────────────────────────────────────────────────── */
+.deploy-row {
+  display: flex; gap: 12px; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.deploy-row:last-child { border-bottom: none; }
+.deploy-env {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  background: #16332a; color: var(--green);
+}
+.deploy-date { color: var(--text-dim); font-size: 12px; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

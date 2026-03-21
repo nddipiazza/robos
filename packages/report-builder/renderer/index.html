@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Report Builder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header">
+    <h1 id="title">Report Builder</h1>
+    <div id="header-right">
+      <span id="server-badge" class="badge">--</span>
+      <button id="btn-history" class="btn btn-secondary">Saved Reports</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Query input -->
+    <section id="query-section">
+      <label for="query-input" class="section-label">Ask a question about your project</label>
+      <div id="query-row">
+        <input type="text" id="query-input" placeholder="e.g. How many PRs did each developer merge this sprint?" autocomplete="off">
+        <button id="btn-run" class="btn btn-primary">Generate Report</button>
+      </div>
+      <div id="example-queries">
+        <span class="example" data-q="How many PRs did each developer merge in the last 30 days?">PRs per developer</span>
+        <span class="example" data-q="Show me tasks stuck in review for more than 2 days">Stuck reviews</span>
+        <span class="example" data-q="Compare issue close rate this month vs last month">Close rate comparison</span>
+        <span class="example" data-q="Which developers have the most open issues assigned?">Workload distribution</span>
+      </div>
+    </section>
+
+    <!-- Report output -->
+    <section id="report-section" class="hidden">
+      <div id="report-header">
+        <span class="section-label">Report</span>
+        <div>
+          <button id="btn-save" class="btn btn-secondary">Save Report</button>
+          <button id="btn-clear" class="btn btn-secondary">Clear</button>
+        </div>
+      </div>
+      <div id="report-content"></div>
+    </section>
+
+    <!-- Saved reports list -->
+    <section id="history-section" class="hidden">
+      <div id="history-header">
+        <span class="section-label">Saved Reports</span>
+        <button id="btn-back" class="btn btn-secondary">Back</button>
+      </div>
+      <div id="history-list"></div>
+    </section>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="hidden">
+      <div class="spinner"></div>
+      <span>Generating report...</span>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

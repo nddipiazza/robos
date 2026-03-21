@@ -1,0 +1,9 @@
+{
+  "name": "robos-manager-dashboard",
+  "version": "0.1.0",
+  "description": "RobOS Manager Dashboard — team metrics, velocity, cycle time, deployment frequency",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

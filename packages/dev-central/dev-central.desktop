@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=Dev Central
+Comment=Developer daily dashboard — tasks, PRs, sprint board, AI standup, blocker radar
+Exec=/usr/bin/electron /usr/local/share/robos/dev-central/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/dev-central/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=Development
+StartupWMClass=dev-central

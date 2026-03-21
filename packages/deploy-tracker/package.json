@@ -1,0 +1,9 @@
+{
+  "name": "robos-deploy-tracker",
+  "version": "0.1.0",
+  "description": "RobOS Deploy Tracker — deployment history, MTTR metrics, and deployment frequency tracking",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

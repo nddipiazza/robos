@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Deploy Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header">
+    <h1 id="title">Deploy Tracker</h1>
+    <div id="controls">
+      <span id="server-badge" class="badge">--</span>
+      <select id="time-range">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <select id="env-filter">
+        <option value="">All environments</option>
+      </select>
+    </div>
+  </header>
+
+  <main id="dashboard">
+    <!-- KPI row -->
+    <div class="kpi-row" id="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Deploys</div>
+        <div class="kpi-value" id="kpi-total-deploys">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Deploy Frequency</div>
+        <div class="kpi-value" id="kpi-deploy-freq">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Releases</div>
+        <div class="kpi-value" id="kpi-releases">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Deploy Size</div>
+        <div class="kpi-value" id="kpi-deploy-size">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">MTTR</div>
+        <div class="kpi-value" id="kpi-mttr">--</div>
+      </div>
+    </div>
+
+    <!-- Deployment timeline -->
+    <section class="card wide" id="timeline-card">
+      <div class="card-header">
+        <span class="card-title">Deployment Timeline</span>
+      </div>
+      <div class="card-body" id="timeline-content">
+        <div class="placeholder">Loading deployments...</div>
+      </div>
+    </section>
+
+    <!-- Releases -->
+    <section class="card" id="releases-card">
+      <div class="card-header">
+        <span class="card-title">Recent Releases</span>
+      </div>
+      <div class="card-body" id="releases-content">
+        <div class="placeholder">Loading releases...</div>
+      </div>
+    </section>
+
+    <!-- Deploy-to-PR mapping -->
+    <section class="card" id="changeset-card">
+      <div class="card-header">
+        <span class="card-title">Recently Merged (Changesets)</span>
+      </div>
+      <div class="card-body" id="changeset-content">
+        <div class="placeholder">Loading changesets...</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

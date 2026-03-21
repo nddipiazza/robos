@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Dev Central</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header">
+    <h1 id="title">Dev Central</h1>
+    <div id="status-bar">
+      <span id="server-badge" class="badge">--</span>
+      <span id="clock"></span>
+    </div>
+  </header>
+
+  <main id="dashboard">
+    <!-- Active Tasks -->
+    <section class="card" id="tasks-card">
+      <div class="card-header">
+        <span class="card-title">My Tasks</span>
+        <span class="card-count" id="tasks-count">0</span>
+      </div>
+      <div class="card-body" id="tasks-list">
+        <div class="placeholder">Loading tasks...</div>
+      </div>
+    </section>
+
+    <!-- Open PRs -->
+    <section class="card" id="prs-card">
+      <div class="card-header">
+        <span class="card-title">My Pull Requests</span>
+        <span class="card-count" id="prs-count">0</span>
+      </div>
+      <div class="card-body" id="prs-list">
+        <div class="placeholder">Loading PRs...</div>
+      </div>
+    </section>
+
+    <!-- Review Requests -->
+    <section class="card" id="reviews-card">
+      <div class="card-header">
+        <span class="card-title">Review Requests</span>
+        <span class="card-count" id="reviews-count">0</span>
+      </div>
+      <div class="card-body" id="reviews-list">
+        <div class="placeholder">Loading review requests...</div>
+      </div>
+    </section>
+
+    <!-- Blocker Radar -->
+    <section class="card" id="blockers-card">
+      <div class="card-header">
+        <span class="card-title">Blocker Radar</span>
+      </div>
+      <div class="card-body" id="blockers-list">
+        <div class="placeholder">Scanning for blockers...</div>
+      </div>
+    </section>
+
+    <!-- AI Standup Summary -->
+    <section class="card wide" id="standup-card">
+      <div class="card-header">
+        <span class="card-title">AI Standup Summary</span>
+      </div>
+      <div class="card-body" id="standup-content">
+        <div class="placeholder">Preparing standup...</div>
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="card" id="activity-card">
+      <div class="card-header">
+        <span class="card-title">Recent Activity</span>
+      </div>
+      <div class="card-body" id="activity-list">
+        <div class="placeholder">Loading activity...</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

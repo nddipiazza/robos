@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Manager Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header">
+    <h1 id="title">Manager Dashboard</h1>
+    <div id="controls">
+      <span id="server-badge" class="badge">--</span>
+      <select id="time-range">
+        <option value="7">Last 7 days</option>
+        <option value="14">Last 14 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <select id="dev-filter">
+        <option value="">All developers</option>
+      </select>
+    </div>
+  </header>
+
+  <main id="dashboard">
+    <!-- KPI row -->
+    <div class="kpi-row" id="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Open Issues</div>
+        <div class="kpi-value" id="kpi-open-issues">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">PRs Merged</div>
+        <div class="kpi-value" id="kpi-prs-merged">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Cycle Time</div>
+        <div class="kpi-value" id="kpi-cycle-time">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Deploy Frequency</div>
+        <div class="kpi-value" id="kpi-deploy-freq">--</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Review Approval Rate</div>
+        <div class="kpi-value" id="kpi-approval-rate">--</div>
+      </div>
+    </div>
+
+    <!-- Sprint Board -->
+    <section class="card wide" id="sprint-card">
+      <div class="card-header">
+        <span class="card-title">Tasks by Stage</span>
+      </div>
+      <div class="card-body" id="sprint-board">
+        <div class="placeholder">Loading tasks...</div>
+      </div>
+    </section>
+
+    <!-- Velocity by Developer -->
+    <section class="card" id="velocity-card">
+      <div class="card-header">
+        <span class="card-title">Velocity by Developer</span>
+      </div>
+      <div class="card-body" id="velocity-content">
+        <div class="placeholder">Loading velocity...</div>
+      </div>
+    </section>
+
+    <!-- PR Activity -->
+    <section class="card" id="pr-activity-card">
+      <div class="card-header">
+        <span class="card-title">PR Activity</span>
+      </div>
+      <div class="card-body" id="pr-activity-content">
+        <div class="placeholder">Loading PR activity...</div>
+      </div>
+    </section>
+
+    <!-- Deployment History -->
+    <section class="card wide" id="deploy-card">
+      <div class="card-header">
+        <span class="card-title">Recent Deployments</span>
+      </div>
+      <div class="card-body" id="deploy-content">
+        <div class="placeholder">Loading deployments...</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
