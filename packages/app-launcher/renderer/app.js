@@ -173,14 +173,92 @@ function getFilteredApps() {
 }
 
 searchInput.addEventListener('input', () => {
+  focusIndex = -1;
   renderApps(getFilteredApps());
 });
+
+// ── Keyboard navigation ──────────────────────────────────────────────────────
+
+let focusIndex = -1;
+
+function getGridColumns() {
+  const cards = grid.querySelectorAll('.app-card');
+  if (cards.length < 2) return 1;
+  const firstTop = cards[0].getBoundingClientRect().top;
+  let cols = 0;
+  for (const card of cards) {
+    if (card.getBoundingClientRect().top === firstTop) cols++;
+    else break;
+  }
+  return cols || 1;
+}
+
+function focusCard(index) {
+  const cards = grid.querySelectorAll('.app-card');
+  if (cards.length === 0) return;
+  focusIndex = Math.max(0, Math.min(index, cards.length - 1));
+  cards[focusIndex].focus();
+  cards[focusIndex].scrollIntoView({ block: 'nearest' });
+}
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     window.robos.closeWindow();
+    return;
+  }
+
+  const cards = grid.querySelectorAll('.app-card');
+  if (cards.length === 0) return;
+
+  // If typing a letter/number and search isn't focused, focus search
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && document.activeElement !== searchInput) {
+    searchInput.focus();
+    return;
+  }
+
+  const cols = getGridColumns();
+
+  switch (e.key) {
+    case 'ArrowRight':
+      e.preventDefault();
+      focusCard(focusIndex < 0 ? 0 : focusIndex + 1);
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      focusCard(focusIndex < 0 ? 0 : focusIndex - 1);
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      if (document.activeElement === searchInput) {
+        focusCard(0);
+      } else {
+        focusCard(focusIndex < 0 ? 0 : focusIndex + cols);
+      }
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      if (focusIndex < cols) {
+        searchInput.focus();
+        focusIndex = -1;
+      } else {
+        focusCard(focusIndex - cols);
+      }
+      break;
+    case 'Enter':
+      if (document.activeElement && document.activeElement.classList.contains('app-card')) {
+        document.activeElement.click();
+      }
+      break;
+    case 'Tab':
+      // Let tab work naturally between search and grid
+      if (document.activeElement === searchInput) {
+        e.preventDefault();
+        focusCard(0);
+      }
+      break;
   }
 });
+
 
 // Load apps on startup
 window.robos.getDesktopEntries().then(apps => {
