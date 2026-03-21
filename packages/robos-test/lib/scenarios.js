@@ -137,4 +137,54 @@ module.exports = {
       }],
     },
   },
+
+  // ── Issue manager scenarios ────────────────────────────────────────────────
+
+  'issue-manager-no-config': {
+    name: 'issue-manager-no-config',
+    description: 'Issue manager with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'issue-manager-github': {
+    name: 'issue-manager-github',
+    description: 'Issue manager with a GitHub task server',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'Hermetiq',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'Hermetiq', repo: 'buildbarn-forms' }],
+        issue_types: [
+          { id: 'bug', label: 'Bug', color: '#e11d48' },
+          { id: 'feature', label: 'Feature', color: '#2563eb' },
+        ],
+        workflows: [{
+          id: 'wf-bug',
+          name: 'Bug Workflow',
+          type_id: 'bug',
+          states: [
+            { id: 'triage', label: 'Triage', color: '#f59e0b', is_initial: true },
+            { id: 'in-progress', label: 'In Progress', color: '#3b82f6' },
+            { id: 'done', label: 'Done', color: '#22c55e' },
+          ],
+          transitions: [
+            { from: 'triage', to: 'in-progress' },
+            { from: 'in-progress', to: 'done' },
+          ],
+        }],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
 };

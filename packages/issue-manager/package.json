@@ -1,0 +1,14 @@
+{
+  "name": "issue-manager",
+  "version": "1.0.0",
+  "description": "RobOS Issue Manager — view and transition GitHub issues",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^30.0.0",
+    "marked": "^12.0.0",
+    "highlight.js": "^11.9.0"
+  }
+}

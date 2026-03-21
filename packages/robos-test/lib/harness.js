@@ -29,6 +29,7 @@ const PORT_MAP = {
   'pass-unlock': 19122,
   'git-login-manager': 19123,
   'task-servers': 19112,
+  'issue-manager': 19103,
 };
 
 // Track all launched apps for process-exit cleanup
