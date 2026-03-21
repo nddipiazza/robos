@@ -22,7 +22,9 @@ const SSH_OPTS = '-p 2224 -o StrictHostKeyChecking=no -o ConnectTimeout=5';
 const SSH_HOST = 'robos@localhost';
 
 const APP_PORTS = {
+  'agents-manager': 19104,
   'automation-studio': 19128,
+  'context-manager': 19106,
   'security-setup': 19114,
   'pass-manager': 19113,
   'pass-unlock': 19122,

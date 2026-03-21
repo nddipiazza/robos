@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-App=true
+X-RobOS-Category=RobOS AI
+Type=Application
+Name=RobOS Context Manager
+Comment=Manage AI context sources for RobOS agents
+Exec=/usr/bin/electron /usr/local/share/robos/context-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/context-manager/icon.svg
+Terminal=false
+Categories=Development;
+StartupWMClass=robos-context-manager

@@ -24,7 +24,9 @@ const HOME_TMPL    = path.join(__dirname, '..', 'sandbox', 'home-template');
 const RUN_DIR      = path.join(__dirname, '..', 'run');
 
 const PORT_MAP = {
+  'agents-manager': 19104,
   'automation-studio': 19128,
+  'context-manager': 19106,
   'security-setup': 19114,
   'pass-manager': 19113,
   'pass-unlock': 19122,

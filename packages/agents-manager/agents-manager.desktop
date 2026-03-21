@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-App=true
+X-RobOS-Category=RobOS AI
+Type=Application
+Name=RobOS Agents
+Comment=Manage AI agent sessions and providers
+Exec=/usr/bin/electron /usr/local/share/robos/agents-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/agents-manager/icon.svg
+Terminal=false
+Categories=Development;
+StartupWMClass=robos-agents-manager
