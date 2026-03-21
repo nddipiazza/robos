@@ -1,0 +1,4 @@
+#!/bin/bash
+# Stub for: gpgconf
+# Just succeed for --reload and --kill
+exit 0

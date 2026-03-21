@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RobOS Security Setup</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <span class="app-logo" id="app-logo-icon"></span>
+    <div>
+      <div class="header-title">RobOS Security Setup</div>
+      <div class="header-sub">GPG key, SSH key &amp; password store — first-run initialization</div>
+    </div>
+    <button class="btn-reset" id="btn-reset" title="Wipe everything and start over">↺ Reset</button>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="steps-bar">
+    <div class="step-dot active" data-step="1"><span>1</span><label>Pinentry</label></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="2"><span>2</span><label>GPG Key</label></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="3"><span>3</span><label>Pass Store</label></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="4"><span>4</span><label>SSH Key</label></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="5"><span>5</span><label>Done</label></div>
+  </div>
+
+  <!-- Steps -->
+  <div id="steps">
+    <!-- Step 1: Pinentry -->
+    <div class="step-panel active" data-step="1">
+      <h2>Configure GPG Passphrase Dialog</h2>
+      <p class="desc">RobOS needs to show a secure unlock dialog whenever your GPG key passphrase is required.</p>
+      <div id="pinentry-status" class="status-block"></div>
+      <button class="btn-primary" id="btn-configure-pinentry">Configure Secure Dialog</button>
+    </div>
+
+    <!-- Step 2: GPG Key -->
+    <div class="step-panel" data-step="2">
+      <h2>GPG Key</h2>
+      <div id="gpg-key-status" class="status-block"></div>
+      <div id="existing-keys-wrap" class="hidden">
+        <p class="desc">You already have a GPG key. Select it to use with the pass store, or create a new one.</p>
+        <select id="select-existing-key"></select>
+        <button class="btn-primary" id="btn-use-existing-key">Use Selected Key</button>
+        <div class="divider-or">— or create a new one —</div>
+      </div>
+      <div id="create-key-form">
+        <p class="desc">Create a new 4096-bit RSA GPG key for this RobOS installation.</p>
+        <div class="form-row"><label>Full Name</label><input id="gpg-name" type="text" placeholder="Jane Developer"></div>
+        <div class="form-row"><label>Email</label><input id="gpg-email" type="email" placeholder="jane@example.com"></div>
+        <div class="form-row"><label>Passphrase</label><input id="gpg-pass" type="password" placeholder="Strong passphrase"></div>
+        <div class="form-row"><label>Confirm</label><input id="gpg-pass2" type="password" placeholder="Repeat passphrase"></div>
+        <div id="key-error" class="error hidden"></div>
+        <button class="btn-primary" id="btn-create-key">Generate GPG Key</button>
+      </div>
+      <div id="key-creating" class="spinner-wrap hidden">
+        <div class="spinner"></div>
+        <span>Generating 4096-bit RSA key — this takes a moment…</span>
+      </div>
+    </div>
+
+    <!-- Step 3: Pass init -->
+    <div class="step-panel" data-step="3">
+      <h2>Initialize Password Store</h2>
+      <div id="pass-status" class="status-block"></div>
+      <p class="desc">The pass store will be initialized with your GPG key. All secrets stored in RobOS will be encrypted with this key.</p>
+      <div id="pass-key-info" class="key-info"></div>
+      <button class="btn-primary" id="btn-init-pass">Initialize Pass Store</button>
+    </div>
+
+    <!-- Step 4: SSH Key -->
+    <div class="step-panel" data-step="4">
+      <h2>SSH Key</h2>
+      <div id="ssh-status" class="status-block"></div>
+      <div id="ssh-existing" class="hidden">
+        <p class="desc">An SSH key already exists. You can skip this step or add it to GitHub.</p>
+        <div id="ssh-pubkey-display" class="key-info"></div>
+        <div class="btn-row">
+          <button class="btn-primary" id="btn-add-ssh-github">Add to GitHub</button>
+          <button class="btn-secondary" id="btn-skip-ssh">Skip →</button>
+        </div>
+        <div id="ssh-github-status" class="status-msg"></div>
+      </div>
+      <div id="ssh-generate-form">
+        <p class="desc">Generate an Ed25519 SSH key for authenticating with GitHub and other git hosts.</p>
+        <div class="form-row"><label>Comment</label><input id="ssh-comment" type="text" placeholder="e.g. robos@hostname"></div>
+        <div class="form-row"><label>Passphrase (optional)</label><input id="ssh-passphrase" type="password" placeholder="Leave blank for no passphrase"></div>
+        <div id="ssh-error" class="error hidden"></div>
+        <button class="btn-primary" id="btn-generate-ssh">Generate SSH Key</button>
+      </div>
+      <div id="ssh-generating" class="spinner-wrap hidden">
+        <div class="spinner"></div>
+        <span>Generating Ed25519 SSH key…</span>
+      </div>
+    </div>
+
+    <!-- Step 5: Done -->
+    <div class="step-panel" data-step="5">
+      <div class="done-wrap">
+        <div class="done-icon">✅</div>
+        <h2>All Set!</h2>
+        <p class="desc">Your GPG key, SSH key, and password store are configured.</p>
+        <div class="done-details" id="done-details"></div>
+        <button class="btn-primary" id="btn-done">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

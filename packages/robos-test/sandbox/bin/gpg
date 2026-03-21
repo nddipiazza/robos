@@ -1,0 +1,43 @@
+#!/bin/bash
+# Stub for: gpg
+SCENARIO="${ROBOS_SCENARIO:-test}"
+
+case "$*" in
+  *"--list-keys --with-colons"*)
+    if [ -f "$HOME/.gnupg/fake-key-created" ]; then
+      echo "pub:u:4096:1:ABC123DEF456:1711000000:::-:::scESC::::::23::0:"
+      echo "fpr:::::::::ABCDEF1234567890ABCDEF1234567890ABC123DEF456:"
+      echo "uid:u::::1711000000::0::Test User <test@example.com>:"
+      echo "sub:u:4096:1:789012345678:1711000000::::::e::::::23:"
+      echo "fpr:::::::::789012345678ABCDEF1234567890789012345678ABCD:"
+    fi
+    exit 0
+    ;;
+  *"--list-secret-keys --with-colons"*|*"--with-keygrip --list-secret-keys"*)
+    if [ -f "$HOME/.gnupg/fake-key-created" ]; then
+      echo "sec:u:4096:1:ABC123DEF456:1711000000:::-:::scESC::::::23::0:"
+      echo "fpr:::::::::ABCDEF1234567890ABCDEF1234567890ABC123DEF456:"
+      echo "grp:::::::::AAAA1111BBBB2222CCCC3333DDDD4444EEEE5555:"
+      echo "uid:u::::1711000000::0::Test User <test@example.com>:"
+      echo "ssb:u:4096:1:789012345678:1711000000::::::e::::::23:"
+      echo "fpr:::::::::789012345678ABCDEF1234567890789012345678ABCD:"
+      echo "grp:::::::::FFFF6666AAAA7777BBBB8888CCCC9999DDDD0000:"
+    fi
+    exit 0
+    ;;
+  *"--batch --gen-key"*)
+    # Simulate key generation
+    mkdir -p "$HOME/.gnupg"
+    touch "$HOME/.gnupg/fake-key-created"
+    echo "gpg: key ABC123DEF456 marked as ultimately trusted"
+    exit 0
+    ;;
+  *"--batch --yes --delete-secret-and-public-key"*)
+    rm -f "$HOME/.gnupg/fake-key-created"
+    exit 0
+    ;;
+  *)
+    echo "gpg stub: unhandled: $*" >&2
+    exit 0
+    ;;
+esac

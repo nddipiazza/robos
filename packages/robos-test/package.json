@@ -1,0 +1,13 @@
+{
+  "name": "robos-test",
+  "version": "0.1.0",
+  "description": "RobOS App Test Framework — unit + E2E tests for Electron apps",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "test:unit": "node --test tests/**/unit.test.js",
+    "test:e2e": "xvfb-run -a node --test tests/**/e2e.test.js"
+  },
+  "dependencies": {
+    "electron": "^30.5.1"
+  }
+}

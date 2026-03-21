@@ -1,0 +1,8 @@
+{
+  "name": "robos-security-setup",
+  "version": "0.1.0",
+  "description": "RobOS Security Setup — first-run GPG + SSH key initialization",
+  "main": "main.js",
+  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
+  "dependencies": { "electron": "^30.0.0" }
+}

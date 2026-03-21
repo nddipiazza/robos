@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=Security
+X-RobOS-App=true
+Name=Pass Manager
+Comment=GUI for GPG-encrypted password store
+Exec=/usr/local/bin/robos-launch pass-manager
+Icon=/usr/local/share/robos/pass-manager/icon.svg
+Terminal=false
+Type=Application
+Categories=Utility;Security;
+StartupWMClass=robos-pass-manager

@@ -1,0 +1,57 @@
+#!/bin/bash
+# Stub for: pass
+STORE="$HOME/.password-store"
+
+case "$1" in
+  init)
+    mkdir -p "$STORE"
+    echo "$2" > "$STORE/.gpg-id"
+    echo "Password store initialized for $2"
+    exit 0
+    ;;
+  show)
+    ENTRY="$STORE/$2.gpg"
+    if [ -f "$ENTRY" ]; then
+      echo "fake-password-for-$2"
+      echo "login: user@example.com"
+    else
+      echo "Error: $2 is not in the password store." >&2
+      exit 1
+    fi
+    exit 0
+    ;;
+  insert)
+    shift
+    # Skip flags
+    while [[ "$1" == -* ]]; do shift; done
+    ENTRY="$STORE/$1.gpg"
+    mkdir -p "$(dirname "$ENTRY")"
+    cat > "$ENTRY"
+    exit 0
+    ;;
+  rm)
+    shift
+    while [[ "$1" == -* ]]; do shift; done
+    rm -f "$STORE/$1.gpg"
+    exit 0
+    ;;
+  mv)
+    FROM="$STORE/$2.gpg"
+    TO="$STORE/$3.gpg"
+    mkdir -p "$(dirname "$TO")"
+    mv "$FROM" "$TO" 2>/dev/null
+    exit 0
+    ;;
+  generate)
+    shift
+    while [[ "$1" == -* ]]; do shift; done
+    ENTRY="$STORE/$1.gpg"
+    mkdir -p "$(dirname "$ENTRY")"
+    echo "generated-password-$(date +%s)" > "$ENTRY"
+    exit 0
+    ;;
+  *)
+    echo "pass stub: unhandled: $*" >&2
+    exit 0
+    ;;
+esac

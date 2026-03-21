@@ -1,0 +1,13 @@
+#!/bin/bash
+# Stub for: gpg-connect-agent
+SCENARIO="${ROBOS_SCENARIO:-test}"
+
+# Check if we should report cache as active
+if [ -f "$HOME/.cache/robos/pass-unlock-time" ]; then
+  echo "S KEYINFO AAAA1111BBBB2222CCCC3333DDDD4444EEEE5555 D - - - 1 - -"
+  echo "OK"
+else
+  echo "S KEYINFO AAAA1111BBBB2222CCCC3333DDDD4444EEEE5555 D - - - - - -"
+  echo "OK"
+fi
+exit 0

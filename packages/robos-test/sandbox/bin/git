@@ -1,0 +1,9 @@
+#!/bin/bash
+# Stub for: git
+# Reads from sandbox home's .gitconfig via GIT_CONFIG_GLOBAL
+
+SCENARIO="${ROBOS_SCENARIO:-all-good}"
+
+# Pass through to real git — GIT_CONFIG_GLOBAL is already set by the harness
+# to point at the sandbox .gitconfig, so config reads/writes are sandboxed.
+exec /usr/bin/git "$@"

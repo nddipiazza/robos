@@ -40,6 +40,8 @@ const PORT_REGISTRY = {
   'search-index': 19119,
   'workflow-studio': 19120,
   'desktop-dashboard': 19121,
+  'pass-unlock': 19122,
+  'git-login-manager': 19123,
 };
 
 function getPort(appId) {
