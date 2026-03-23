@@ -1,286 +1,230 @@
 # RobOS MVP Manual Test Checklist
 
-Walk through the Model Problem scenario step by step as each persona. Uses GitHub Issues (not Jira) against real repos: [Hermetiq/buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms) and [Hermetiq/buildbarn-forms-proto](https://github.com/Hermetiq/buildbarn-forms-proto).
+Prove the Model Problem works: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
+
+Uses GitHub Issues against [Hermetiq/buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms).
 
 ---
 
-## Phase 0: Build & Install RobOS
+## Setup Phases (do once)
 
-- [ ] Stop the VM if running: `infra/desktop/run.sh` → Ctrl-C or close the QEMU window
-- [ ] Rebuild with all packages: `infra/desktop/build.sh`
+### Phase 0: Build & Install RobOS
+
+- [ ] Stop VM if running
+- [ ] Rebuild: `infra/desktop/build.sh`
 - [ ] First boot: `infra/desktop/run.sh --firstboot`
-- [ ] Wait for splash screen to complete all 7 steps and VM reboots
-- [ ] VM boots to GNOME desktop with dark navy background
+- [ ] Wait for 7-step splash to complete + reboot
 - [ ] SSH works: `ssh -p 2224 robos@localhost` (password: `robos`)
-- [ ] Verify apps installed: `ls /usr/local/share/robos/ | wc -l` → should be 29+
-- [ ] Press **Super** key → App Launcher opens with icon grid
+- [ ] `ls /usr/local/share/robos/ | wc -l` → 29+
+- [ ] Super key opens App Launcher with icon grid + arrow key navigation
+
+### Phase 1: Security Setup
+
+- [ ] Open **Security Setup** → complete all 5 steps (pinentry → GPG key → pass store → SSH key → add to GitHub)
+- [ ] Open **Git Login Manager** → all 4 checks green (gh auth, SSH key, SSH → github.com, git identity)
+- [ ] Verify: `ssh -T git@github.com` → "successfully authenticated"
+
+### Phase 2: Configure Task Server
+
+- [ ] Open **Task Servers** → click ＋ → type: GitHub, name: `Buildbarn Forms`, org: `Hermetiq`, repo: `buildbarn-forms`, use gh CLI ✓
+- [ ] Test Connection → "Logged in as [username]"
+- [ ] Save
+
+### Phase 3: Define Workflow
+
+- [ ] Open **Workflow Studio** → AI Generate: `agile software team, bugs + features, AI-first development` → ✨ Generate → 💾 Save
+- [ ] Verify workflow states exist: `cat ~/.config/robos/settings.json | python3 -m json.tool | grep -c "states"`
 
 ---
 
-## Phase 1: Create Users
+## Core Flow: Developer Progresses a Story
 
-We'll use the single `robos` user for testing but simulate 4 roles.
+This is the MVP's core value proposition. A developer takes a story from backlog through every stage to deployed.
 
-### As DevManager
+### Phase 4: View the Board & Pick Up a Story
 
-- [ ] SSH into VM: `ssh -p 2224 robos@localhost`
-- [ ] Create config directory: `mkdir -p ~/.config/robos`
-- [ ] Set identity as dev manager:
+- [ ] Open **Task Board** → kanban view shows issues from buildbarn-forms
+- [ ] Find a story/issue in the "open" column
+- [ ] Note the issue number (e.g., `#42`) and title
+- [ ] Click the card → opens in browser, confirm it exists on GitHub
+
+### Phase 5: Start Work (Backlog → In Progress)
+
+- [ ] Open **Issue Manager**
+- [ ] Load the issue (enter the issue number or select from list)
+- [ ] Issue detail shows: title, description, labels, workflow state pipeline
+- [ ] Click the workflow transition to move to **In Progress** (adds `state:in-progress` label)
+- [ ] Verify on GitHub: issue now has `state:in-progress` label
+- [ ] Open **Task Board** → issue moved to the "in-progress" column
+
+### Phase 6: Set Up Workspace
+
+- [ ] In **Issue Manager**, click **🚀 Set Up Workspace**
+- [ ] Workspace provisions: repo cloned, branch created (e.g., `feat/42-worker-config`)
+- [ ] Open **Workspace Manager** → new workspace appears in the list
+- [ ] Click to open in VS Code / IDE
+
+### Phase 7: AI Questionnaire Stage
+
+- [ ] Open **Agents Manager** → verify Claude Code or Copilot is detected
+- [ ] Start an agent session for this task
+- [ ] Agent asks clarifying questions about the implementation
+- [ ] Answer the questions in the session UI
+- [ ] Agent acknowledges answers and is ready to draft
+
+### Phase 8: AI Draft Stage (In Progress → In Review)
+
+- [ ] Agent implements the solution (writes code, tests, etc.)
+- [ ] Agent creates a PR: `gh pr create --title "feat: ..." --body "..."`
+- [ ] Verify on GitHub: PR exists with description and linked issue
+- [ ] Issue automatically transitions to **In Review** (PR creation triggers status change)
+- [ ] Open **Task Board** → issue moved to "in-review" column
+- [ ] **Notification** fires: Dev Lead gets "PR needs review" notification
+- [ ] Open **Notifications** app → notification appears with `pr_review` category
+
+### Phase 9: Code Review (In Review → Approved)
+
+- [ ] Open **PR Review Board** → new PR appears in the list
+- [ ] Click PR → detail view shows:
+  - Overview with PR description
+  - AI Review: click generate → shows change summary, risk assessment, findings
+  - Files Changed: list of modified files
+  - CI Checks: GitHub Actions status
+- [ ] Click **Approve** (or leave a review comment)
+- [ ] Verify on GitHub: PR has approval
+- [ ] Issue automatically transitions to **Approved**
+- [ ] Open **Task Board** → issue moved to "approved" column
+- [ ] **Notification** fires: developer gets "PR approved" notification
+
+### Phase 10: CI Monitoring
+
+- [ ] Open **CI Monitor** → shows the CI run for this PR
+- [ ] Summary bar shows pass/fail counts
+- [ ] Click the run → Jobs tab shows step breakdown
+- [ ] If CI fails: AI Diagnosis tab shows failure category + suggested fix
+- [ ] If CI passes: green status badge
+
+### Phase 11: Merge & Deploy (Approved → Deploying → Deployed)
+
+- [ ] Merge the PR on GitHub (or via PR Review Board if merge button available)
+- [ ] Issue automatically transitions to **Deploying** (PR merged triggers transition)
+- [ ] CI/CD pipeline runs (deploy step)
+- [ ] Issue automatically transitions to **Deployed** (deploy complete triggers transition)
+- [ ] **Notification** fires to all stakeholders: "Deploy complete"
+- [ ] Open **Task Board** → issue in "deployed" column
+- [ ] Verify on GitHub: issue has `state:deployed` label, all previous state labels removed
+
+### Phase 12: DevManager Reviews Progress (throughout)
+
+At any point during Phases 5-11, the DevManager can see real-time progress:
+
+- [ ] Open **Task Board** → watch the story card move through columns as transitions happen:
+  - open → in-progress → in-review → approved → deploying → deployed
+- [ ] Open **Manager Dashboard** →
+  - Sprint board shows the story in its current stage
+  - Open Issues / PRs Merged counts update
+  - PR activity feed shows the new PR when created
+  - Velocity chart updates when story is completed
+- [ ] Open **CI Monitor** → see the CI runs for the developer's PR
+- [ ] Open **PR Review Board** → see the PR, review it, approve/request changes
+- [ ] **Notifications** arrive at each milestone:
+  - "PR created" when developer's agent opens the PR
+  - "CI passed/failed" when pipeline completes
+  - "Deploy complete" when merged and deployed
+
+### Phase 13: ProductManager Sees Completed Work
+
+After the story reaches "deployed":
+
+- [ ] Open **Task Board** → story is in "deployed" column ✓
+- [ ] Open **Dev Central** → story appears in "Recently Deployed" or completed section
+- [ ] Open **Deploy Tracker** →
+  - New deployment appears in timeline with story details
+  - KPIs updated: total deploys, deploy frequency
+- [ ] Open **Manager Dashboard** →
+  - Sprint board shows story as done
+  - Velocity chart shows the completed story point
+  - Deployment history table has the new deploy
+- [ ] **Notification** received: "Deploy complete — [story title] shipped in v1.x.x"
+- [ ] Open **Stage Demo** (if applicable) → can generate a demo walkthrough of the merged changes for PO review
+
+### Phase 14: Verify the Full Audit Trail
+
+- [ ] Check GitHub issue: full auto-comment history:
+  - `[RobOS] Status changed: backlog → in_progress`
+  - `[RobOS] PR https://github.com/... created`
+  - `[RobOS] Status changed: in_progress → in_review`
+  - `[RobOS] Status changed: in_review → approved`
+  - `[RobOS] Status changed: approved → deploying`
+  - `[RobOS] Deployed to production (v1.x.x)`
+  - `[RobOS] ⏱ Logged Xh in in_progress`
+- [ ] All `state:` labels on GitHub reflect final state (`state:deployed`)
+- [ ] No manual Jira/GitHub status updates were needed — all automatic
+
+---
+
+## Supporting Features (verify alongside core flow)
+
+### Notifications
+
+- [ ] Send test notification from CLI:
   ```bash
-  cat > ~/.config/robos/settings.json << 'EOF'
-  {
-    "myProfileUid": "robos",
-    "role": "dev-manager",
-    "displayName": "DevManager"
-  }
-  EOF
+  /usr/local/share/robos/robos-cli/robos-notify "Build passed" --category ci_cd --tier info
   ```
+- [ ] Open **Notifications** → notification appears with category badge
+- [ ] Filter by category → filters work
+
+### Automation Studio
+
+- [ ] Open **Automation Studio** → Rules tab
+- [ ] Create a rule: event `ci_completed`, condition `payload.status eq failure`, action: notify (tier: critical)
+- [ ] Save → rule appears in list
+- [ ] Event Log tab → shows recent events (if any)
+
+### Context Manager
+
+- [ ] Open **Context Manager** → add the buildbarn-forms repo as a context source
+- [ ] Shows file count and estimated token size
+
+### System Apps
+
+- [ ] Open **RobOS Preferences** → change a setting → save → reopen → persisted
+- [ ] Open **Workspace Manager** → scan → shows discovered workspaces
+- [ ] Open **Search Index** → trigger a scan
 
 ---
 
-## Phase 2: Security Setup (as DevManager)
+## Automated Verification
 
-- [ ] Open **App Launcher** → click **Security Setup**
-- [ ] Step 1 (Pinentry): Click "Configure Secure Dialog" → status turns green
-- [ ] Step 2 (GPG Key): Fill in name + email + passphrase → "Generate GPG Key" → wait for key gen
-- [ ] Step 3 (Pass Store): Click "Initialize Pass Store" → status turns green
-- [ ] Step 4 (SSH Key): Click "Generate SSH Key" → key appears
-- [ ] Step 4b: Click "Add to GitHub" → if scope error, click "Re-auth gh →", complete in browser, then retry
-- [ ] Step 5: Shows "All Set!" with key details
-- [ ] Verify from terminal:
-  ```bash
-  gpg --list-keys          # shows your key
-  ls ~/.password-store/    # shows .gpg-id
-  ls ~/.ssh/id_ed25519     # SSH key exists
-  ssh -T git@github.com    # "successfully authenticated"
-  ```
-
----
-
-## Phase 3: GitHub Auth (as DevManager)
-
-- [ ] Open **App Launcher** → click **Git Login Manager**
-- [ ] All 4 checks should be green:
-  - gh CLI authenticated ✓
-  - SSH key exists ✓
-  - SSH → github.com ✓
-  - git identity configured ✓ (should auto-fill from GitHub profile)
-- [ ] If any red: use the fix buttons (Login →, Generate Key →, Configure →)
-
----
-
-## Phase 4: Configure Task Server (as DevManager)
-
-- [ ] Open **App Launcher** → click **Task Servers**
-- [ ] Click the **＋** button to add a new server
-- [ ] Select type: **GitHub**
-- [ ] Fill in:
-  - Name: `Buildbarn Forms`
-  - Use gh CLI: ✓ (checked)
-  - Org/Owner: `Hermetiq`
-  - Repository: `buildbarn-forms`
-- [ ] Click **Test Connection** → should show "Logged in as [your-username]"
-- [ ] Click **Save**
-- [ ] Server appears in the sidebar list
-
----
-
-## Phase 5: Define Workflow (as DevManager)
-
-- [ ] Open **App Launcher** → click **Workflow Studio**
-- [ ] In the AI Generate box, type: `agile software team, bugs + features + chores, AI-first development`
-- [ ] Click **✨ Generate** → wait for AI to generate issue types and workflow states
-- [ ] Review the generated issue types (Bug, Feature, Chore, etc.) — each should have workflow states
-- [ ] Click **💾 Save**
-- [ ] Verify from terminal:
-  ```bash
-  cat ~/.config/robos/settings.json | python3 -m json.tool | grep -A5 "issue_types"
-  ```
-
----
-
-## Phase 6: View Issues on Task Board (as DevManager)
-
-- [ ] Open **App Launcher** → click **Task Board**
-- [ ] Server badge shows "Buildbarn Forms"
-- [ ] Kanban view: columns grouped by issue status, cards show title + author + labels
-- [ ] Click **☰ List** → table view with sortable columns
-- [ ] Filter: select an assignee from dropdown → board filters
-- [ ] Search: type "config" → only matching issues shown
-- [ ] Click a card/row → opens issue in browser
-- [ ] Press **1** → switches to kanban, **2** → switches to list
-
----
-
-## Phase 7: View Single Issue (as Developer)
-
-- [ ] Open **App Launcher** → click **Issue Manager**
-- [ ] Click **⚙ Config** → verify task server loaded, then switch back
-- [ ] Issue view shows:
-  - GitHub link button (↗)
-  - VS Code button (📂)
-  - Workflow state pipeline
-  - Workspace setup button (🚀)
-- [ ] Click **↗ GitHub** → opens issue in browser
-
----
-
-## Phase 8: Context Manager (as Developer)
-
-- [ ] Open **App Launcher** → click **Context Manager**
-- [ ] Click to add a new context source
-- [ ] Add a file path: `/home/robos/projects/buildbarn-forms/README.md` (or any local file)
-- [ ] Context source appears in the list with file size
-- [ ] (If repo is cloned) Add the repo as a context source
-
----
-
-## Phase 9: Agents Manager (as Developer)
-
-- [ ] Open **App Launcher** → click **Agents Manager**
-- [ ] Provider detection section shows:
-  - Claude Code: detected / not found
-  - GitHub Copilot: detected / not found
-- [ ] (If an agent is installed) Try starting a session — should show session in the list
-
----
-
-## Phase 10: PR Review Board (as Dev Lead)
-
-- [ ] Open **App Launcher** → click **PR Review Board** (pr-review)
-- [ ] Lists open PRs from Hermetiq/buildbarn-forms
-- [ ] Each PR shows: title, author, CI status badge, review decision, +/- lines
-- [ ] Click a PR → detail view with tabs:
-  - **Overview**: PR description, reviewers, labels
-  - **AI Review**: click to generate AI summary + risk assessment
-  - **Files Changed**: file list
-  - **CI Checks**: check runs
-  - **Review Actions**: approve / request changes / comment buttons
-- [ ] Click **Approve** or **Comment** → submits review via `gh pr review`
-
----
-
-## Phase 11: CI Monitor (as Dev Lead)
-
-- [ ] Open **App Launcher** → click **CI Monitor**
-- [ ] Shows GitHub Actions workflow runs for configured repo
-- [ ] Summary bar: total, passed, failed, running counts
-- [ ] Click a failed run → detail view with:
-  - Jobs tab: step-by-step breakdown
-  - Failed Log tab: error output
-  - AI Diagnosis tab: failure categorization + suggested fix
-- [ ] Click **Re-run** → re-runs the workflow via `gh run rerun`
-
----
-
-## Phase 12: Notifications (as any user)
-
-### 12a: Send notification from CLI
-- [ ] From terminal:
-  ```bash
-  /usr/local/share/robos/robos-cli/robos-notify "PR #42 needs review" \
-    --title "PR Review" --category pr_review --tier warning
-  ```
-- [ ] Verify written:
-  ```bash
-  cat ~/.config/robos/notifications.json | python3 -m json.tool | tail -20
-  ```
-
-### 12b: View in Notifications app
-- [ ] Open **App Launcher** → click **Notifications**
-- [ ] Test notification appears with category badge (pr_review) and tier (warning)
-- [ ] Filter: check/uncheck category checkboxes → list filters
-- [ ] Click "Mark all read" → badges clear
-
----
-
-## Phase 13: Automation Studio (as DevManager)
-
-- [ ] Open **App Launcher** → click **Automation Studio**
-- [ ] **Rules tab**: shows default rules or empty state
-  - Click "New Rule" → fill in event type (e.g., `ci_completed`), add condition (`payload.status` eq `failure`), add action (notify, tier: critical)
-  - Save the rule
-- [ ] **Scheduled Jobs tab**: shows empty or pre-configured jobs
-  - Can create a job with a cron schedule
-- [ ] **Event Log tab**: shows today's events (if any) or empty state
-
----
-
-## Phase 14: Dashboards (as DevManager / Dev Lead)
-
-### 14a: Dev Central (Developer view)
-- [ ] Open **App Launcher** → click **Dev Central**
-- [ ] Shows: My Tasks, My PRs, Review Requests, Blocker Radar
-- [ ] AI Standup section shows summary of recent activity
-- [ ] Recent Activity shows latest events
-
-### 14b: Manager Dashboard (Manager view)
-- [ ] Open **App Launcher** → click **Manager Dashboard**
-- [ ] Shows team metrics: Open Issues, PRs Merged, Cycle Time
-- [ ] Sprint board shows issues in kanban columns
-- [ ] Velocity chart shows per-developer bars
-- [ ] Deployment history table lists recent deploys
-
-### 14c: Deploy Tracker
-- [ ] Open **App Launcher** → click **Deploy Tracker**
-- [ ] Shows deployment timeline from GitHub
-- [ ] KPIs: Total Deploys, Frequency, Releases
-
----
-
-## Phase 15: System Apps
-
-### 15a: RobOS Preferences
-- [ ] Open **App Launcher** → click **RobOS Preferences**
-- [ ] 6 sections in sidebar: AI Provider, GitHub, IDE, Notifications, Journal, System
-- [ ] Click a section → settings form appears
-- [ ] Change a value → click Save → reopen and verify it persisted
-
-### 15b: Workspace Manager
-- [ ] Open **App Launcher** → click **Workspace Manager**
-- [ ] Click **Scan** → discovers workspaces (if any repos cloned under ~/projects or ~/source)
-- [ ] Filter by IDE type (VS Code / JetBrains)
-- [ ] Click a workspace → shows git branch, remote, changed files
-
-### 15c: Search Index
-- [ ] Open **App Launcher** → click **Search Index**
-- [ ] Shows index management UI
-- [ ] Click to add a custom index path → trigger rebuild
-
----
-
-## Phase 16: Automated Smoke Test
-
-From the **host machine** (not inside the VM):
+From the **host machine**:
 
 ```bash
 cd packages/robos-test
 node lib/vm-smoke.js
 ```
 
-- [ ] All apps show ✅ PASS with DOM snapshot preview
-- [ ] No ❌ FAIL entries
+- [ ] All apps show ✅ PASS
 
 ---
 
-## Results Summary
+## Results
 
-| Phase | Persona | What Tested | Pass? |
-|-------|---------|-------------|-------|
-| 0 | — | VM build, install, boot | |
-| 1 | DevManager | User creation | |
-| 2 | DevManager | GPG + SSH + pass store | |
-| 3 | DevManager | GitHub authentication | |
-| 4 | DevManager | Task server config (GitHub) | |
-| 5 | DevManager | Workflow definition (AI generate) | |
-| 6 | DevManager | Task board (kanban + list) | |
-| 7 | Developer | Single issue view + transitions | |
-| 8 | Developer | Context curation | |
-| 9 | Developer | AI agent session setup | |
-| 10 | Dev Lead | PR review with AI summary | |
-| 11 | Dev Lead | CI monitoring + AI diagnosis | |
-| 12 | Any | Notifications (CLI + app) | |
-| 13 | DevManager | Event rules + scheduling | |
-| 14 | All | Dashboards (dev, manager, deploy) | |
-| 15 | Any | Preferences, workspaces, search | |
-| 16 | — | Automated smoke (all apps) | |
+| Step | Who | What Happened | Pass? |
+|------|-----|--------------|-------|
+| Setup: VM install | — | All apps deployed, desktop boots | |
+| Setup: Security | DevManager | GPG + SSH + pass + git auth all green | |
+| Setup: Task server | DevManager | GitHub connected, test passes | |
+| Setup: Workflow | DevManager | AI generated issue types + states | |
+| **Pick up story** | Developer | Task Board shows issues, selected one | |
+| **Start work** | Developer | Issue → In Progress, label on GitHub | |
+| **Workspace** | Developer | Repo cloned, branch created, IDE opens | |
+| **AI questionnaire** | Developer | Agent asks questions, developer answers | |
+| **AI draft + PR** | Developer | Code written, PR created, issue → In Review auto | |
+| **DevManager sees PR** | DevManager | PR Review Board + notification | |
+| **Code review** | DevManager | AI summary, approved in PR Review Board | |
+| **CI passes** | DevManager | CI Monitor green, issue → Approved auto | |
+| **Merge + deploy** | Developer | PR merged, issue → Deploying → Deployed auto | |
+| **Deploy notification** | All | DevManager + ProductManager notified | |
+| **ProductManager views** | ProductManager | Deploy Tracker + Manager Dashboard updated | |
+| **Audit trail** | — | Full auto-comment trail on GitHub issue | |
+| Automated smoke | — | All apps ✅ PASS | |
