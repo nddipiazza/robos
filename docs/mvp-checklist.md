@@ -21,7 +21,7 @@ Walk through the Model Problem scenario step by step as each persona. Uses GitHu
 
 We'll use the single `robos` user for testing but simulate 4 roles.
 
-### As Dana (Dev Manager)
+### As DevManager
 
 - [ ] SSH into VM: `ssh -p 2224 robos@localhost`
 - [ ] Create config directory: `mkdir -p ~/.config/robos`
@@ -31,14 +31,14 @@ We'll use the single `robos` user for testing but simulate 4 roles.
   {
     "myProfileUid": "robos",
     "role": "dev-manager",
-    "displayName": "Dana (Dev Manager)"
+    "displayName": "DevManager"
   }
   EOF
   ```
 
 ---
 
-## Phase 2: Security Setup (as Dana)
+## Phase 2: Security Setup (as DevManager)
 
 - [ ] Open **App Launcher** → click **Security Setup**
 - [ ] Step 1 (Pinentry): Click "Configure Secure Dialog" → status turns green
@@ -57,7 +57,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 3: GitHub Auth (as Dana)
+## Phase 3: GitHub Auth (as DevManager)
 
 - [ ] Open **App Launcher** → click **Git Login Manager**
 - [ ] All 4 checks should be green:
@@ -69,7 +69,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 4: Configure Task Server (as Dana)
+## Phase 4: Configure Task Server (as DevManager)
 
 - [ ] Open **App Launcher** → click **Task Servers**
 - [ ] Click the **＋** button to add a new server
@@ -85,7 +85,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 5: Define Workflow (as Dana)
+## Phase 5: Define Workflow (as DevManager)
 
 - [ ] Open **App Launcher** → click **Workflow Studio**
 - [ ] In the AI Generate box, type: `agile software team, bugs + features + chores, AI-first development`
@@ -99,7 +99,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 6: View Issues on Task Board (as Dana)
+## Phase 6: View Issues on Task Board (as DevManager)
 
 - [ ] Open **App Launcher** → click **Task Board**
 - [ ] Server badge shows "Buildbarn Forms"
@@ -194,7 +194,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 13: Automation Studio (as Dana)
+## Phase 13: Automation Studio (as DevManager)
 
 - [ ] Open **App Launcher** → click **Automation Studio**
 - [ ] **Rules tab**: shows default rules or empty state
@@ -206,7 +206,7 @@ We'll use the single `robos` user for testing but simulate 4 roles.
 
 ---
 
-## Phase 14: Dashboards (as Dana / Dev Lead)
+## Phase 14: Dashboards (as DevManager / Dev Lead)
 
 ### 14a: Dev Central (Developer view)
 - [ ] Open **App Launcher** → click **Dev Central**
@@ -268,19 +268,19 @@ node lib/vm-smoke.js
 | Phase | Persona | What Tested | Pass? |
 |-------|---------|-------------|-------|
 | 0 | — | VM build, install, boot | |
-| 1 | Dana | User creation | |
-| 2 | Dana | GPG + SSH + pass store | |
-| 3 | Dana | GitHub authentication | |
-| 4 | Dana | Task server config (GitHub) | |
-| 5 | Dana | Workflow definition (AI generate) | |
-| 6 | Dana | Task board (kanban + list) | |
+| 1 | DevManager | User creation | |
+| 2 | DevManager | GPG + SSH + pass store | |
+| 3 | DevManager | GitHub authentication | |
+| 4 | DevManager | Task server config (GitHub) | |
+| 5 | DevManager | Workflow definition (AI generate) | |
+| 6 | DevManager | Task board (kanban + list) | |
 | 7 | Developer | Single issue view + transitions | |
 | 8 | Developer | Context curation | |
 | 9 | Developer | AI agent session setup | |
 | 10 | Dev Lead | PR review with AI summary | |
 | 11 | Dev Lead | CI monitoring + AI diagnosis | |
 | 12 | Any | Notifications (CLI + app) | |
-| 13 | Dana | Event rules + scheduling | |
+| 13 | DevManager | Event rules + scheduling | |
 | 14 | All | Dashboards (dev, manager, deploy) | |
 | 15 | Any | Preferences, workspaces, search | |
 | 16 | — | Automated smoke (all apps) | |
