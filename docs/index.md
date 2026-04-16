@@ -17,7 +17,7 @@ Every developer interaction — picking up a ticket, understanding a bug, review
 
 ---
 
-![RobOS App Launcher]({{ '/assets/images/screenshots/app-launcher.png' | relative_url }})
+![RobOS Desktop]({{ '/assets/images/screenshots/robos-desktop.png' | relative_url }})
 
 ---
 
