@@ -37,7 +37,9 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 
 </div>
 
-![Desktop Customizer]({{ '/assets/images/screenshots/desktop-customizer.png' | relative_url }})
+### Desktop Customizer in Action
+
+![Desktop Customizer — /help showing all available commands]({{ '/assets/images/screenshots/desktop-customizer.png' | relative_url }})
 
 ---
 
@@ -49,9 +51,7 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 
 The economics of software development have inverted. AI is doing more of the actual work — writing code, running reviews, diagnosing CI failures — while developers are shifting to oversight, architecture, and approval. The expensive part is no longer the human typing speed or the build-time compilation. It's the AI API calls, the context windows, and the orchestration layer. So why are companies still spending $3,000+ per developer on hardware and proprietary OS licenses designed for a pre-AI world?
 
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 2rem; margin: 2rem 0; border: 1px solid #30363d;">
-
-<h3 style="margin-top: 0;">The Traditional Stack — What It Actually Costs</h3>
+### The Traditional Stack — What It Actually Costs
 
 | Line Item | MacBook Pro | Windows Surface | RobOS + ThinkPad |
 |:----------|:------------|:----------------|:-----------------|
@@ -62,8 +62,6 @@ The economics of software development have inverted. AI is doing more of the act
 | **Jira/Project Mgmt** | $77/yr per user (Standard) | $77/yr per user | **$0** (RobOS Task Manager + GitHub Issues) |
 | **CI Dashboard** | $0-500/yr (third-party) | $0-500/yr | **$0** (RobOS CI Monitor) |
 | **3-Year Total** | **$3,400 - $4,100** | **$2,900 - $3,600** | **$950 - $1,700** |
-
-</div>
 
 ### That's $2,000+ per developer, per refresh cycle — saved.
 
