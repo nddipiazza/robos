@@ -105,6 +105,7 @@ Dev Central, Manager Dashboard, Report Builder, Deploy Tracker.
 ## Dependency Graph
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 graph TD
     W0[Wave 0: Foundation<br/>Epics 01-03]
     W1[Wave 1: Infrastructure<br/>Epics 04, 12, 13]

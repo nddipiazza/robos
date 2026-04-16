@@ -94,6 +94,7 @@ Alex reviews the draft in the IDE, makes minor tweaks, and the agent creates a p
 - **Notification sent**: Jordan gets a toast notification
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     participant Alex
     participant Agent as AI Agent

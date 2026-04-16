@@ -103,6 +103,7 @@ story:
 These events flow through the **Event Bus** and the **Rule Engine** matches them to status transitions.
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 graph LR
     A[Backlog] -->|Start Work| B[In Progress]
     B -->|PR Created| C[In Review]

@@ -21,6 +21,7 @@ Technical design of the RobOS platform.
 ## System Overview
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 graph TB
     subgraph Desktop["RobOS Desktop (Ubuntu 22.04 + GNOME)"]
         subgraph Apps["Electron Apps (30+)"]
@@ -150,6 +151,7 @@ All persistent data lives in `~/.config/robos/`:
 The Event Bus is the nervous system of RobOS. Every significant action emits an event, and the Rule Engine matches events to automated actions.
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     participant App as Any App
     participant EB as Event Bus
