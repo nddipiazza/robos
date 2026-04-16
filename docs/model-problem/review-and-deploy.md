@@ -41,6 +41,8 @@ The notification also appears in Jordan's **Notifications App** history and as a
 
 Jordan clicks the notification and lands in the PR Review Board:
 
+![PR Review Board]({{ '/assets/images/screenshots/pr-review.png' | relative_url }})
+
 ### AI Summary Panel
 
 | Section | Content |

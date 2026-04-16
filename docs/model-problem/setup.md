@@ -40,6 +40,8 @@ Each user's **RobOS Preferences** stores their role, notification preferences, a
 
 Dana opens the Task Servers app and configures Jira as the team's task tracking system:
 
+![Task Servers]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
+
 1. **Add connection**: Jira Cloud instance `acme.atlassian.net`
 2. **Authenticate**: OAuth 2.0 flow — Dana authorizes RobOS to access the Jira project
 3. **Map project**: Jira project `BBF` (Buildbarn Forms) to RobOS project
@@ -63,6 +65,8 @@ Dana opens the Task Servers app and configures Jira as the team's task tracking 
 <img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" alt="Workflow Studio" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Workflow Studio**
 
 Dana defines the task workflow that all stories and bugs will follow. Every transition is **event-driven** — when a PR is created, the task automatically moves to `in_review`. No manual status updates needed.
+
+![Workflow Studio]({{ '/assets/images/screenshots/workflow-studio.png' | relative_url }})
 
 ```yaml
 story:

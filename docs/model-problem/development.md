@@ -25,6 +25,8 @@ Alex picks up BBF-3 (Worker Config Form). AI asks questions, writes code, and cr
 
 Alex picks up story BBF-3. The moment Alex clicks **"Start Work"**, a cascade of automation fires:
 
+![Task Board]({{ '/assets/images/screenshots/task-board.png' | relative_url }})
+
 1. **Jira status → `In Progress`** (automatic, via Task Servers bidirectional sync)
 2. **Branch created**: `feat/bbf-3-worker-config-form` off `main`
 3. **Workspace provisioned**: repo checked out to the new branch, `npm install` runs, Storybook starts
@@ -48,6 +50,8 @@ Started: 2026-03-21 09:15
 <img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="AI Agent Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App: AI Agent Manager**
 
 The AI agent reviews the task context — proto definitions, existing form components, ROBOS.md — and asks clarifying questions **before writing any code**:
+
+![AI Agent Manager]({{ '/assets/images/screenshots/agents-manager.png' | relative_url }})
 
 > **Agent:** "The `WorkerConfiguration` message has nested `BuildExecutor` and `MountConfiguration`. Should I render these as inline fieldsets, tab panels, or collapsible sections?"
 

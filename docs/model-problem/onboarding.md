@@ -25,6 +25,8 @@ Alex logs into the RobOS VM for the first time. The **Security Setup** app launc
 
 <img src="{{ '/assets/images/icons/security-setup.svg' | relative_url }}" alt="Security Setup" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Security Setup**
 
+![Security Setup]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
+
 | Step | What Happens |
 |:-----|:-------------|
 | 1. GPG Key | Alex creates a GPG keypair for the encrypted password store |
@@ -77,6 +79,8 @@ Running: npm run test:e2e → ✓ 12 component tests passing
 ## 3.3 — Onboarding Complete
 
 <img src="{{ '/assets/images/icons/dev-central.svg' | relative_url }}" alt="Dev Central" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Dev Central**
+
+![Dev Central]({{ '/assets/images/screenshots/dev-central.png' | relative_url }})
 
 Alex's dashboard now shows:
 - **Sprint Board**: 10 stories in the BBF epic, BBF-1 is "ready to start"

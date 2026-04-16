@@ -17,6 +17,10 @@ Every developer interaction — picking up a ticket, understanding a bug, review
 
 ---
 
+![RobOS App Launcher]({{ '/assets/images/screenshots/app-launcher.png' | relative_url }})
+
+---
+
 ## The Vision
 
 RobOS is a purpose-built Linux desktop environment where **every app, panel, and widget serves the software delivery lifecycle**. From the moment you log in, AI agents are ready to help you write code, review PRs, manage tasks, and deploy with confidence.

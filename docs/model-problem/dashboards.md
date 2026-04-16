@@ -25,6 +25,8 @@ Every team member sees real-time progress — no manual reporting needed.
 
 Dana opens the Manager Dashboard and sees a real-time view of the entire project:
 
+![Manager Dashboard]({{ '/assets/images/screenshots/manager-dashboard.png' | relative_url }})
+
 ### Sprint Board
 
 ```
@@ -75,6 +77,8 @@ Backlog (4)          In Progress (1)    Deployed (5)
 <img src="{{ '/assets/images/icons/dev-central.svg' | relative_url }}" alt="Dev Central" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Dev Central**
 
 Pat sees the product-focused view:
+
+![Dev Central]({{ '/assets/images/screenshots/dev-central.png' | relative_url }})
 
 ### Epic Progress
 

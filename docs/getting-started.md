@@ -78,11 +78,17 @@ ssh -p 2224 robos@localhost
 
 ## First Login
 
-On first login, the **App Launcher** opens automatically — a searchable grid of all RobOS applications. The recommended first steps:
+On first login, the **App Launcher** opens automatically — a searchable grid of all RobOS applications.
+
+![App Launcher]({{ '/assets/images/screenshots/app-launcher.png' | relative_url }})
+
+The recommended first steps:
 
 ### 1. Security Setup
 
 Open **Security Setup** from the App Launcher. It walks you through 5 steps:
+
+![Security Setup]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
 
 1. **Pinentry** — Configure GPG pin entry
 2. **GPG Key** — Generate a new GPG key for encrypting secrets
@@ -93,6 +99,8 @@ Open **Security Setup** from the App Launcher. It walks you through 5 steps:
 ### 2. Configure a Task Server
 
 Open **Task Servers** and add your GitHub or Jira instance:
+
+![Task Servers]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
 
 | Field | Example |
 |:------|:--------|
@@ -107,6 +115,8 @@ Click **Test Connection** to verify, then **Save**.
 ### 3. Define Your Workflow
 
 Open **Workflow Studio** and use the AI generator:
+
+![Workflow Studio]({{ '/assets/images/screenshots/workflow-studio.png' | relative_url }})
 
 1. Describe your process: `agile software team, bugs + features, AI-first development`
 2. Click **Generate** — AI creates issue types and workflow states
