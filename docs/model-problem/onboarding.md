@@ -54,8 +54,8 @@ RobOS checks that Alex has the required secrets from `ROBOS.md`. Missing secrets
 
 ### Step 3: Repository Clone & Install
 ```
-Cloning https://github.com/Hermetiq/buildbarn-forms → ~/projects/buildbarn-forms
-Cloning https://github.com/Hermetiq/buildbarn-forms-proto → ~/projects/buildbarn-forms-proto
+Cloning buildbarn-forms → ~/projects/buildbarn-forms
+Cloning buildbarn-forms-proto → ~/projects/buildbarn-forms-proto
 Running: npm install (buildbarn-forms)
 Running: npm run proto:generate
 ```

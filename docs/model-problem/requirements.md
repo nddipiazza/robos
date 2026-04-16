@@ -27,7 +27,7 @@ Pat opens the Task Manager and creates a new Epic:
 
 > **Epic: Build the buildbarn-forms React Component Library**
 >
-> **Problem:** Platform engineers at Acme configure Buildbarn by hand-editing JSONNET and YAML files based on complex protobuf schemas. This is error-prone, undocumented, and requires deep proto knowledge.
+> **Problem:** Platform engineers at Acme configure Buildbarn (a remote build execution system) by hand-editing JSONNET and YAML files based on complex protobuf schemas. Configuration covers workers, storage, schedulers, and browsers — each defined by deeply nested proto messages. This is error-prone, undocumented, and requires deep proto knowledge.
 >
 > **Success Criteria:**
 > - Form components for all major Buildbarn config sections (worker, storage, scheduler, browser)

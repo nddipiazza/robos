@@ -15,11 +15,23 @@ A complete walkthrough of RobOS in action — from company setup to deployed cod
 
 ## The Scenario
 
-A company called **Acme Inc** adopts RobOS to build the [buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms) project — a **React component library** for editing Buildbarn remote build execution configurations. The companion repo [buildbarn-forms-proto](https://github.com/Hermetiq/buildbarn-forms-proto) holds the protobuf definitions.
+A company called **Acme Inc** adopts RobOS to build the **buildbarn-forms** project — a **React component library** for editing [Buildbarn](https://github.com/buildbarn) remote build execution configurations. A companion repo, **buildbarn-forms-proto**, holds the protobuf definitions that the forms library consumes.
 
-**The Problem:** Platform engineers at Acme configure Buildbarn by hand-editing JSONNET and YAML files based on complex protobuf schemas. This is error-prone, undocumented, and requires deep proto knowledge.
+**What is Buildbarn?** Buildbarn is an open-source implementation of Google's Remote Execution API, used by organizations to distribute build and test actions across fleets of workers. It is configured through complex protobuf-defined schemas covering workers, storage backends, schedulers, browsers, and more. These configurations are typically hand-edited as JSONNET or YAML files — error-prone work that requires deep protobuf knowledge.
 
-**The Solution:** A React component library that generates **validated configuration forms** from Buildbarn's protobuf definitions — with type-safe validation, JSON/YAML export, and interactive Storybook documentation.
+**What is buildbarn-forms?** A React + TypeScript component library published as `@hermetiq/buildbarn-forms` on npm. It parses `.proto` schema files, generates validated form components for each Buildbarn configuration section, and exports the form state as deployment-ready JSON or YAML. The library includes an interactive Storybook for documentation and testing.
+
+**The Problem:** Platform engineers at Acme configure Buildbarn by hand-editing JSONNET and YAML files based on complex protobuf schemas. A typical Buildbarn deployment has four major config sections — `bb_worker` (build executors, runner types, platform matchers, concurrency), `bb_storage` (blobstore backends, action cache, CAS), `bb_scheduler` (platform queues, drain configs, priority rules), and `bb_browser` (instance names, CAS settings). Each section is defined by deeply nested protobuf messages with `oneof` discriminated unions, repeated fields, and proto constraint validation. Hand-editing these files is error-prone, undocumented, and requires deep proto knowledge.
+
+**The Solution:** buildbarn-forms is a React + TypeScript component library that:
+
+- **Parses `.proto` schema files** and extracts message definitions, field types, constraints, and documentation comments
+- **Generates form components** for each Buildbarn config section — with collapsible sections for nested messages, discriminated union selectors for `oneof` fields, and dynamic array editors for repeated fields
+- **Validates input** against proto constraints (required fields, enum ranges, numeric bounds) in real time
+- **Exports deployment-ready config** as JSON or YAML matching the expected Buildbarn format
+- **Documents everything** in an interactive Storybook gallery with live form previews
+
+The library is published as `@hermetiq/buildbarn-forms` on npm and versioned via CI/CD.
 
 Every phase — company setup, developer onboarding, task breakdown, coding, review, deploy, and management dashboards — happens inside RobOS.
 

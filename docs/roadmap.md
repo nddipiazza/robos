@@ -20,7 +20,7 @@ nav_order: 7
 
 ## MVP — Model Problem End-to-End
 
-The MVP goal: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically. Validated against the [buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms) project.
+The MVP goal: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically. Validated against the **buildbarn-forms** project — a React component library for editing [Buildbarn](https://github.com/buildbarn) remote execution configurations.
 
 ### Wave 0: Foundation (Complete)
 

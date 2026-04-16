@@ -126,10 +126,10 @@ graph LR
 
 Jordan (Dev Lead) adds the two repositories:
 
-| Repository | URL | Purpose |
-|:-----------|:----|:--------|
-| buildbarn-forms | `github.com/Hermetiq/buildbarn-forms` | React component library |
-| buildbarn-forms-proto | `github.com/Hermetiq/buildbarn-forms-proto` | Protobuf definitions |
+| Repository | Purpose |
+|:-----------|:--------|
+| buildbarn-forms | React + TypeScript component library — parses proto schemas and generates validated configuration forms |
+| buildbarn-forms-proto | Protobuf definitions for all Buildbarn configuration messages (worker, storage, scheduler, browser) |
 
 For each repo, Jordan writes a `ROBOS.md` file that tells AI agents and the onboarding system how to set up, build, and test the project:
 

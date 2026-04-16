@@ -37,7 +37,7 @@ RobOS is a purpose-built Linux desktop environment where **every app, panel, and
 
 ## The Model Problem: Building Buildbarn Forms
 
-We validate every RobOS feature against a real project: **[buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms)** — a React component library for editing Buildbarn remote build execution configurations.
+We validate every RobOS feature against a real project: **buildbarn-forms** — a React component library for editing [Buildbarn](https://github.com/buildbarn) remote build execution configurations. Buildbarn is an open-source remote execution system used by organizations running large-scale distributed builds. The buildbarn-forms library reads Buildbarn's protobuf configuration schemas and renders type-safe, validated form UIs for each config section (workers, storage, schedulers, browsers).
 
 A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take a story from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
 
