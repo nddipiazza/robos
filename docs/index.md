@@ -21,15 +21,31 @@ Every developer interaction — picking up a ticket, understanding a bug, review
 
 ---
 
-## The Vision
+## Two Pillars
 
-RobOS is a purpose-built Linux desktop environment where **every app, panel, and widget serves the software delivery lifecycle**. From the moment you log in, AI agents are ready to help you write code, review PRs, manage tasks, and deploy with confidence.
+RobOS is a purpose-built Linux desktop with two major capabilities:
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+
+<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
+<h3 style="margin-top: 0;">1. Build Kick-Ass Software</h3>
+<p>An OS fully dedicated to the software delivery lifecycle. 30+ purpose-built apps cover every phase — from picking up a ticket to deploying code. AI agents write code, review PRs, manage tasks, and track deployments. Every status transition, notification, and dashboard update happens automatically.</p>
+</div>
+
+<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
+<h3 style="margin-top: 0;">2. Customize Your Desktop with Prompts</h3>
+<p>The <strong>Desktop Customizer</strong> lets you reshape the entire GNOME experience through natural language. Move the clock, resize the taskbar, add widgets, build new apps on the fly, mix UI languages — just describe what you want. Every change is versioned with one-click rollback.</p>
+</div>
+
+</div>
 
 ### What Makes RobOS Different
 
-**Task-Driven Workspaces** — Each task on the task server maps to its own IDE workspace. When a developer picks up a task, the workspace is automatically provisioned: the correct branch is checked out, the dev environment is spun up, and the workspace is brought to a breakpoint where the issue reproduces.
+**Task-Driven Workspaces** — Each task maps to its own IDE workspace. When a developer picks up a task, the workspace is automatically provisioned: branch checked out, dev environment started, breakpoint set at the issue reproduction point.
 
-**AI Investigates, Developer Reviews** — Instead of "developer investigates, then codes", RobOS inverts the flow: AI investigates and proposes a solution plan, then the developer reviews and approves before any code changes.
+**AI Investigates, Developer Reviews** — Instead of "developer investigates, then codes", RobOS inverts the flow: AI investigates and proposes, the developer reviews and approves.
+
+**Prompt-Driven Desktop** — No more searching StackOverflow for `gsettings` commands. Type "move the clock to the left and make the taskbar bigger" and it happens. Build entirely new Electron apps from a sentence. Every change is snapshotted with instant rollback.
 
 **Automatic Everything** — Status transitions, notifications, time logging, PR descriptions, reviewer checklists, and deployment tracking all happen automatically through an event-driven architecture.
 

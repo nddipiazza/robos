@@ -98,6 +98,7 @@ Dev Central, Manager Dashboard, Report Builder, Deploy Tracker.
 | 14 | Developer Experience | 5 | Not started | Shared UI components, IntelliJ plugin |
 | 19 | OAuth Providers | — | Not started | OAuth provider support |
 | 21 | GitHub Pages Docs | 6 | **In Progress** | This documentation site |
+| 22 | Desktop Customizer | 10 | Not started | Prompt-driven desktop customization with on-the-fly app builder |
 
 ---
 
