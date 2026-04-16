@@ -1,0 +1,56 @@
+title: RobOS
+description: AI-First Software Development Operating System
+url: "https://nddipiazza.github.io"
+baseurl: "/robos"
+
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+
+color_scheme: dark
+
+logo: "/assets/images/logo.png"
+
+aux_links:
+  "GitHub":
+    - "https://github.com/nddipiazza/robos"
+
+aux_links_new_tab: true
+
+heading_anchors: true
+
+nav_sort: case_insensitive
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: "RobOS &mdash; AI-First Software Development OS. Built with <a href=\"https://github.com/nddipiazza/robos\">open source</a>."
+
+mermaid:
+  version: "10.9.0"
+
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: yellow
+  tip:
+    title: Tip
+    color: green
+  important:
+    title: Important
+    color: red
+
+kramdown:
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+exclude:
+  - project-plan/
+  - model-flow.md
+  - robos-apps-plan.md
+  - user-types-and-use-cases.md
+  - workflow-examples.md
+  - mvp-checklist.md
+  - model-problem.md
