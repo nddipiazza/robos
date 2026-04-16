@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desktop Customizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>Desktop Customizer</h1>
+      <span class="header-badge">Power Tool</span>
+    </div>
+    <div class="header-right">
+      <button id="btn-help" class="btn-icon" title="Show commands">/</button>
+      <button id="btn-snapshots" class="btn-icon" title="Snapshot history">⏱</button>
+    </div>
+  </header>
+
+  <div id="warning-banner" class="warning-banner">
+    ⚠️ <strong>Desktop Customizer</strong> gives you full control over your GNOME desktop. Changes are auto-snapshotted — type <code>/restore last</code> to undo. Be careful with raw commands.
+    <button id="btn-dismiss-warning" class="btn-dismiss">Dismiss</button>
+  </div>
+
+  <main id="chat-area">
+    <div id="messages" class="messages">
+      <div class="message system">
+        <div class="msg-content">
+          <p>Welcome to <strong>Desktop Customizer</strong>. Type a slash command or describe what you want in plain English.</p>
+          <p>Quick start: <code>/help</code> &nbsp; <code>/move-clock left</code> &nbsp; <code>/theme dark</code> &nbsp; <code>/snapshot list</code></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="autocomplete" class="autocomplete hidden"></div>
+
+  <footer>
+    <div class="input-row">
+      <input type="text" id="prompt-input" placeholder="Type a command (/help) or describe what you want..." autocomplete="off" spellcheck="false">
+      <button id="btn-send" class="btn-send" title="Execute">▶</button>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
