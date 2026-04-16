@@ -1,7 +1,7 @@
 ---
 title: User Personas
 layout: default
-nav_order: 6
+nav_order: 7
 ---
 
 # User Personas
