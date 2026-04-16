@@ -1,0 +1,17 @@
+{
+  "reviews": [
+    {
+      "author": {"login": "testuser"},
+      "state": "COMMENTED",
+      "body": "A few comments on the approach.",
+      "submittedAt": "2026-04-12T10:00:00Z"
+    }
+  ],
+  "comments": [
+    {
+      "author": {"login": "bob-docs"},
+      "body": "Looks good, one minor nit on the proto field naming.",
+      "createdAt": "2026-04-12T10:00:00Z"
+    }
+  ]
+}

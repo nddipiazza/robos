@@ -1,0 +1,82 @@
+[
+  {
+    "number": 42,
+    "title": "Worker pool exhaustion under sustained load",
+    "state": "OPEN",
+    "body": "When running >200 concurrent actions, the worker pool runs out of slots and new actions queue indefinitely.\n\n## Steps to Reproduce\n1. Configure pool_size=50\n2. Submit 200 concurrent actions\n3. Observe queue depth grows unbounded",
+    "labels": [
+      {"name": "bug", "color": "e11d48"},
+      {"name": "state:triage", "color": "f59e0b"},
+      {"name": "priority:high", "color": "dc2626"}
+    ],
+    "assignees": [{"login": "testuser"}],
+    "createdAt": "2026-03-10T09:00:00Z",
+    "updatedAt": "2026-04-14T11:30:00Z",
+    "closedAt": null,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/42",
+    "milestone": {"title": "v2.5"}
+  },
+  {
+    "number": 38,
+    "title": "Add CAS deduplication metrics to dashboard",
+    "state": "OPEN",
+    "body": "The dashboard should show content-addressable storage dedup ratio per mnemonic.",
+    "labels": [
+      {"name": "feature", "color": "2563eb"},
+      {"name": "state:in-progress", "color": "3b82f6"}
+    ],
+    "assignees": [{"login": "alice-dev"}],
+    "createdAt": "2026-03-05T14:20:00Z",
+    "updatedAt": "2026-04-13T16:00:00Z",
+    "closedAt": null,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/38",
+    "milestone": {"title": "v2.5"}
+  },
+  {
+    "number": 35,
+    "title": "Scheduler queue priority not respected for tagged actions",
+    "state": "OPEN",
+    "body": "Actions with priority tags are not getting scheduled before lower-priority actions.",
+    "labels": [
+      {"name": "bug", "color": "e11d48"},
+      {"name": "state:triage", "color": "f59e0b"}
+    ],
+    "assignees": [],
+    "createdAt": "2026-02-28T10:00:00Z",
+    "updatedAt": "2026-04-10T08:00:00Z",
+    "closedAt": null,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/35",
+    "milestone": null
+  },
+  {
+    "number": 30,
+    "title": "gRPC health check should include storage backend status",
+    "state": "OPEN",
+    "body": "Health endpoint currently only checks scheduler. Should also verify storage backends.",
+    "labels": [
+      {"name": "feature", "color": "2563eb"},
+      {"name": "state:triage", "color": "f59e0b"}
+    ],
+    "assignees": [{"login": "testuser"}],
+    "createdAt": "2026-02-15T08:30:00Z",
+    "updatedAt": "2026-04-08T14:00:00Z",
+    "closedAt": null,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/30",
+    "milestone": {"title": "v2.6"}
+  },
+  {
+    "number": 25,
+    "title": "Document configuration proto message fields",
+    "state": "OPEN",
+    "body": "Many proto fields lack documentation. Generate docs from proto comments.",
+    "labels": [
+      {"name": "docs", "color": "0075ca"}
+    ],
+    "assignees": [{"login": "bob-docs"}],
+    "createdAt": "2026-02-01T12:00:00Z",
+    "updatedAt": "2026-03-28T09:00:00Z",
+    "closedAt": null,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/25",
+    "milestone": null
+  }
+]

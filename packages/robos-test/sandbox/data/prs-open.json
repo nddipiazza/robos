@@ -1,0 +1,77 @@
+[
+  {
+    "number": 15,
+    "title": "Add worker fleet health monitoring endpoint",
+    "state": "OPEN",
+    "author": {"login": "alice-dev"},
+    "reviewRequests": [{"login": "testuser"}],
+    "statusCheckRollup": [
+      {"state": "SUCCESS", "context": "ci/build"},
+      {"state": "SUCCESS", "context": "ci/test"}
+    ],
+    "createdAt": "2026-04-10T08:00:00Z",
+    "updatedAt": "2026-04-14T16:00:00Z",
+    "headRefName": "feat/fleet-health",
+    "baseRefName": "main",
+    "additions": 245,
+    "deletions": 12,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/pull/15",
+    "isDraft": false,
+    "mergeable": "MERGEABLE",
+    "body": "Adds a /health/fleet endpoint that reports worker availability, queue depth, and utilization.",
+    "labels": [{"name": "feature"}, {"name": "size/M"}],
+    "comments": [
+      {"author": {"login": "bob-docs"}, "body": "Looks good, one minor nit on the proto field naming.", "createdAt": "2026-04-12T10:00:00Z"}
+    ],
+    "reviewDecision": "REVIEW_REQUIRED",
+    "mergedAt": null
+  },
+  {
+    "number": 14,
+    "title": "Fix CAS blob TTL calculation overflow",
+    "state": "OPEN",
+    "author": {"login": "testuser"},
+    "reviewRequests": [{"login": "alice-dev"}],
+    "statusCheckRollup": [
+      {"state": "FAILURE", "context": "ci/test"}
+    ],
+    "createdAt": "2026-04-08T14:00:00Z",
+    "updatedAt": "2026-04-13T09:00:00Z",
+    "headRefName": "fix/cas-ttl-overflow",
+    "baseRefName": "main",
+    "additions": 18,
+    "deletions": 5,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/pull/14",
+    "isDraft": false,
+    "mergeable": "MERGEABLE",
+    "body": "The TTL calculation overflows when blob size exceeds 2GB due to int32 truncation.",
+    "labels": [{"name": "bug"}, {"name": "size/S"}],
+    "comments": [],
+    "reviewDecision": "",
+    "mergedAt": null
+  },
+  {
+    "number": 12,
+    "title": "WIP: Scheduler queue visualization dashboard",
+    "state": "OPEN",
+    "author": {"login": "testuser"},
+    "reviewRequests": [],
+    "statusCheckRollup": [
+      {"state": "PENDING", "context": "ci/build"}
+    ],
+    "createdAt": "2026-04-01T11:00:00Z",
+    "updatedAt": "2026-04-11T15:00:00Z",
+    "headRefName": "feat/queue-viz",
+    "baseRefName": "main",
+    "additions": 520,
+    "deletions": 30,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/pull/12",
+    "isDraft": true,
+    "mergeable": "CONFLICTING",
+    "body": "Dashboard panel showing real-time queue depth and scheduling latency.",
+    "labels": [{"name": "feature"}, {"name": "size/L"}],
+    "comments": [],
+    "reviewDecision": "",
+    "mergedAt": null
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "number": 42,
+  "title": "Worker pool exhaustion under sustained load",
+  "body": "When running >200 concurrent actions, the worker pool runs out of slots and new actions queue indefinitely.\n\n## Steps to Reproduce\n1. Configure pool_size=50\n2. Submit 200 concurrent actions\n3. Observe queue depth grows unbounded",
+  "labels": [
+    {"name": "bug", "color": "e11d48"},
+    {"name": "state:triage", "color": "f59e0b"},
+    {"name": "priority:high", "color": "dc2626"}
+  ],
+  "state": "OPEN",
+  "url": "https://github.com/Hermetiq/buildbarn-forms/issues/42",
+  "assignees": [{"login": "testuser"}],
+  "createdAt": "2026-03-10T09:00:00Z",
+  "updatedAt": "2026-04-14T11:30:00Z",
+  "comments": [
+    {
+      "author": {"login": "alice-dev"},
+      "body": "I can reproduce this. Setting pool_size=100 delays the issue but doesn't fix it.",
+      "createdAt": "2026-03-12T15:00:00Z"
+    },
+    {
+      "author": {"login": "testuser"},
+      "body": "Root cause: the semaphore release is missing in the error path. Fix coming in #43.",
+      "createdAt": "2026-03-14T10:00:00Z"
+    }
+  ]
+}

@@ -72,6 +72,90 @@ function flatText(tree) {
   return getAllText(tree).join(' ');
 }
 
+// ── Interaction helpers (wrap POST /eval) ────────────────────────────────────
+
+function httpPost(url, body, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'Content-Length': Buffer.byteLength(body) },
+      timeout: timeoutMs,
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve({ status: res.statusCode, data }));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+/** Execute arbitrary JS in the renderer via POST /eval */
+async function evalJS(port, js) {
+  const res = await httpPost(`http://localhost:${port}/eval`, js);
+  try { return JSON.parse(res.data).result; }
+  catch { return res.data; }
+}
+
+/** Click an element by CSS selector */
+async function evalClick(port, selector) {
+  return evalJS(port, `
+    (() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) throw new Error('Element not found: ' + ${JSON.stringify(selector)});
+      el.click();
+      return true;
+    })()
+  `);
+}
+
+/** Type text into an input (sets value + dispatches input/change events) */
+async function evalType(port, selector, text) {
+  return evalJS(port, `
+    (() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) throw new Error('Element not found: ' + ${JSON.stringify(selector)});
+      el.value = ${JSON.stringify(text)};
+      el.dispatchEvent(new Event('input', {bubbles: true}));
+      el.dispatchEvent(new Event('change', {bubbles: true}));
+      return true;
+    })()
+  `);
+}
+
+/** Change a select element's value */
+async function evalSelect(port, selector, value) {
+  return evalJS(port, `
+    (() => {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) throw new Error('Element not found: ' + ${JSON.stringify(selector)});
+      el.value = ${JSON.stringify(value)};
+      el.dispatchEvent(new Event('change', {bubbles: true}));
+      return el.value;
+    })()
+  `);
+}
+
+/** Poll snapshot until predicate returns true, or timeout */
+async function evalWaitFor(port, predicateFn, timeoutMs = 10000, pollMs = 500) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const snap = await getSnapshot(port);
+    try {
+      if (predicateFn(snap)) return snap;
+    } catch {}
+    await new Promise(r => setTimeout(r, pollMs));
+  }
+  throw new Error(`evalWaitFor timed out after ${timeoutMs}ms`);
+}
+
+/** Convenience: wait for text to appear in the DOM */
+async function waitForText(port, text, timeoutMs = 10000) {
+  return evalWaitFor(port, (snap) => flatText(snap).includes(text), timeoutMs);
+}
+
 // ── Assertion helpers ────────────────────────────────────────────────────────
 
 function assertNodeExists(tree, id, message) {
@@ -119,6 +203,12 @@ module.exports = {
   findByClass,
   getAllText,
   flatText,
+  evalJS,
+  evalClick,
+  evalType,
+  evalSelect,
+  evalWaitFor,
+  waitForText,
   assertNodeExists,
   assertTextContains,
   assertTextNotContains,

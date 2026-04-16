@@ -1,0 +1,52 @@
+[
+  {
+    "number": 11,
+    "title": "Implement action result caching with TTL",
+    "state": "MERGED",
+    "author": {"login": "alice-dev"},
+    "reviewRequests": [],
+    "statusCheckRollup": [
+      {"state": "SUCCESS", "context": "ci/build"},
+      {"state": "SUCCESS", "context": "ci/test"}
+    ],
+    "createdAt": "2026-03-28T09:00:00Z",
+    "updatedAt": "2026-04-02T14:00:00Z",
+    "headRefName": "feat/action-cache-ttl",
+    "baseRefName": "main",
+    "additions": 380,
+    "deletions": 45,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/pull/11",
+    "isDraft": false,
+    "mergeable": "UNKNOWN",
+    "body": "Adds configurable TTL for action results in the cache layer.",
+    "labels": [{"name": "feature"}, {"name": "size/L"}],
+    "comments": [],
+    "reviewDecision": "APPROVED",
+    "mergedAt": "2026-04-02T14:00:00Z"
+  },
+  {
+    "number": 10,
+    "title": "Fix scheduler deadlock on worker disconnect",
+    "state": "MERGED",
+    "author": {"login": "testuser"},
+    "reviewRequests": [],
+    "statusCheckRollup": [
+      {"state": "SUCCESS", "context": "ci/build"},
+      {"state": "SUCCESS", "context": "ci/test"}
+    ],
+    "createdAt": "2026-03-20T11:00:00Z",
+    "updatedAt": "2026-03-25T10:00:00Z",
+    "headRefName": "fix/scheduler-deadlock",
+    "baseRefName": "main",
+    "additions": 42,
+    "deletions": 8,
+    "url": "https://github.com/Hermetiq/buildbarn-forms/pull/10",
+    "isDraft": false,
+    "mergeable": "UNKNOWN",
+    "body": "Fixes a deadlock when a worker disconnects mid-execution.",
+    "labels": [{"name": "bug"}, {"name": "size/S"}],
+    "comments": [],
+    "reviewDecision": "APPROVED",
+    "mergedAt": "2026-03-25T10:00:00Z"
+  }
+]

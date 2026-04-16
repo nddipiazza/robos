@@ -1,0 +1,4 @@
+pkg/storage/cas/blob_access.go
+pkg/storage/cas/blob_access_test.go
+proto/configuration/cas/cas.proto
+BUILD.bazel

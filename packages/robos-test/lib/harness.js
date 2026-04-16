@@ -44,6 +44,10 @@ const PORT_MAP = {
   'pr-review': 19129,
   'ci-monitor': 19130,
   'stage-demo': 19131,
+  'deploy-tracker': 19132,
+  'dev-central': 19133,
+  'manager-dashboard': 19134,
+  'report-builder': 19135,
 };
 
 // Track all launched apps for process-exit cleanup

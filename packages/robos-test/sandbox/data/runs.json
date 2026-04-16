@@ -1,0 +1,54 @@
+[
+  {
+    "databaseId": 1001,
+    "name": "CI Pipeline",
+    "displayTitle": "Add worker fleet health monitoring endpoint",
+    "headBranch": "feat/fleet-health",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "createdAt": "2026-04-14T15:00:00Z",
+    "updatedAt": "2026-04-14T15:15:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1001",
+    "workflowName": "CI Pipeline"
+  },
+  {
+    "databaseId": 1000,
+    "name": "CI Pipeline",
+    "displayTitle": "Fix CAS blob TTL calculation overflow",
+    "headBranch": "fix/cas-ttl-overflow",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "createdAt": "2026-04-13T09:00:00Z",
+    "updatedAt": "2026-04-13T09:18:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1000",
+    "workflowName": "CI Pipeline"
+  },
+  {
+    "databaseId": 999,
+    "name": "Release",
+    "displayTitle": "Release v2.4.3",
+    "headBranch": "main",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "release",
+    "createdAt": "2026-04-12T10:00:00Z",
+    "updatedAt": "2026-04-12T10:25:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/999",
+    "workflowName": "Release"
+  },
+  {
+    "databaseId": 998,
+    "name": "CI Pipeline",
+    "displayTitle": "WIP: Scheduler queue visualization dashboard",
+    "headBranch": "feat/queue-viz",
+    "status": "in_progress",
+    "conclusion": null,
+    "event": "push",
+    "createdAt": "2026-04-11T15:00:00Z",
+    "updatedAt": "2026-04-11T15:10:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/998",
+    "workflowName": "CI Pipeline"
+  }
+]

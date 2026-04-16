@@ -1,0 +1,4 @@
+2026-04-13T09:15:00Z FAIL pkg/storage/cas TestBlobTTL
+2026-04-13T09:15:00Z     Expected: ttl <= 86400
+2026-04-13T09:15:00Z     Got: ttl = -2147483648
+2026-04-13T09:15:00Z     at blob_access_test.go:142

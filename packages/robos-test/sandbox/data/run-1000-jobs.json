@@ -1,0 +1,27 @@
+{
+  "jobs": [
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-04-13T09:00:00Z",
+      "completedAt": "2026-04-13T09:05:00Z",
+      "steps": [
+        {"name": "Checkout", "status": "completed", "conclusion": "success", "number": 1},
+        {"name": "Setup Go", "status": "completed", "conclusion": "success", "number": 2},
+        {"name": "Build", "status": "completed", "conclusion": "success", "number": 3}
+      ]
+    },
+    {
+      "name": "Test",
+      "status": "completed",
+      "conclusion": "failure",
+      "startedAt": "2026-04-13T09:05:00Z",
+      "completedAt": "2026-04-13T09:18:00Z",
+      "steps": [
+        {"name": "Checkout", "status": "completed", "conclusion": "success", "number": 1},
+        {"name": "Run tests", "status": "completed", "conclusion": "failure", "number": 2}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "number": 20,
+    "title": "Fix blob store GC race condition",
+    "state": "CLOSED",
+    "body": "Garbage collection deletes blobs that are still referenced by in-flight actions.",
+    "labels": [
+      {"name": "bug", "color": "e11d48"},
+      {"name": "state:deployed", "color": "22c55e"}
+    ],
+    "assignees": [{"login": "testuser"}],
+    "createdAt": "2026-01-15T10:00:00Z",
+    "updatedAt": "2026-02-20T14:00:00Z",
+    "closedAt": "2026-02-20T14:00:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/20",
+    "milestone": {"title": "v2.4"}
+  },
+  {
+    "number": 18,
+    "title": "Add Prometheus metrics for action cache hit rate",
+    "state": "CLOSED",
+    "body": "Export cache hit/miss counters per mnemonic via Prometheus endpoint.",
+    "labels": [
+      {"name": "feature", "color": "2563eb"},
+      {"name": "state:deployed", "color": "22c55e"}
+    ],
+    "assignees": [{"login": "alice-dev"}],
+    "createdAt": "2026-01-10T08:00:00Z",
+    "updatedAt": "2026-02-15T11:00:00Z",
+    "closedAt": "2026-02-15T11:00:00Z",
+    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/18",
+    "milestone": {"title": "v2.4"}
+  }
+]

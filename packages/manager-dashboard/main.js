@@ -60,7 +60,7 @@ function createWindow() {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.on('closed', () => { win = null; });
-  if (_debugServer) _debugServer.startDebugServer(win, 19130);
+  if (_debugServer) _debugServer.startDebugServer(win, 19134);
 }
 
 app.whenReady().then(createWindow);

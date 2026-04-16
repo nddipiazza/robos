@@ -1,11 +1,16 @@
 #!/bin/bash
 # Stub for: gh
-# Reads ROBOS_SCENARIO to return appropriate responses
+# Reads ROBOS_SCENARIO to return appropriate responses.
+# Large JSON responses live in sandbox/data/ and are cat'd.
 
 SCENARIO="${ROBOS_SCENARIO:-all-good}"
 CMD="$1 $2"
+DATA_DIR="$(dirname "$0")/../data"
 
 case "$CMD" in
+
+  # ── Auth & SSH (existing) ───────────────────────────────────────────────────
+
   "auth status")
     if [ "$SCENARIO" = "no-gh-auth" ] || [ "$SCENARIO" = "all-broken" ]; then
       echo "You are not logged into any GitHub hosts. Run gh auth login to authenticate." >&2
@@ -46,7 +51,6 @@ case "$CMD" in
     ;;
 
   "auth login")
-    # Simulate OTP device flow output
     echo "! First copy your one-time code: TEST-1234" >&2
     echo "Press Enter to open github.com in your browser..." >&2
     echo "https://github.com/login/device" >&2
@@ -63,6 +67,220 @@ case "$CMD" in
     echo "✓ gh auth refreshed with scope admin:public_key" >&2
     exit 0
     ;;
+
+  # ── Issue commands ──────────────────────────────────────────────────────────
+
+  "issue list")
+    # Parse flags
+    STATE="open"
+    ASSIGNEE=""
+    for arg in "$@"; do
+      case "$arg" in
+        --state) shift_next=state ;;
+        --assignee) shift_next=assignee ;;
+        *)
+          if [ "$shift_next" = "state" ]; then STATE="$arg"; shift_next=""; fi
+          if [ "$shift_next" = "assignee" ]; then ASSIGNEE="$arg"; shift_next=""; fi
+          ;;
+      esac
+    done
+    # Also handle --state=value and --assignee=value forms
+    for arg in "$@"; do
+      case "$arg" in
+        --state=*) STATE="${arg#--state=}" ;;
+        --assignee=*) ASSIGNEE="${arg#--assignee=}" ;;
+      esac
+    done
+
+    if [ "$STATE" = "closed" ]; then
+      cat "$DATA_DIR/issues-closed.json"
+    elif [ "$ASSIGNEE" = "@me" ]; then
+      # Filter to testuser-assigned issues (numbers 42 and 30)
+      cat "$DATA_DIR/issues-open.json" | python3 -c "
+import sys, json
+issues = json.load(sys.stdin)
+filtered = [i for i in issues if any(a.get('login') == 'testuser' for a in i.get('assignees', []))]
+json.dump(filtered, sys.stdout)
+" 2>/dev/null || cat "$DATA_DIR/issues-open.json"
+    else
+      cat "$DATA_DIR/issues-open.json"
+    fi
+    exit 0
+    ;;
+
+  "issue view")
+    cat "$DATA_DIR/issue-42.json"
+    exit 0
+    ;;
+
+  "issue edit")
+    # Write-only: exit success silently
+    exit 0
+    ;;
+
+  "label create")
+    echo "label created"
+    exit 0
+    ;;
+
+  # ── PR commands ─────────────────────────────────────────────────────────────
+
+  "pr list")
+    STATE="open"
+    AUTHOR=""
+    SEARCH=""
+    for arg in "$@"; do
+      case "$arg" in
+        --state) shift_next=state ;;
+        --author) shift_next=author ;;
+        --search) shift_next=search ;;
+        *)
+          if [ "$shift_next" = "state" ]; then STATE="$arg"; shift_next=""; fi
+          if [ "$shift_next" = "author" ]; then AUTHOR="$arg"; shift_next=""; fi
+          if [ "$shift_next" = "search" ]; then SEARCH="$arg"; shift_next=""; fi
+          ;;
+      esac
+    done
+    for arg in "$@"; do
+      case "$arg" in
+        --state=*) STATE="${arg#--state=}" ;;
+        --author=*) AUTHOR="${arg#--author=}" ;;
+        --search=*) SEARCH="${arg#--search=}" ;;
+      esac
+    done
+
+    if [ "$STATE" = "merged" ]; then
+      cat "$DATA_DIR/prs-merged.json"
+    elif [ "$AUTHOR" = "@me" ]; then
+      # Filter to testuser PRs (numbers 14 and 12)
+      cat "$DATA_DIR/prs-open.json" | python3 -c "
+import sys, json
+prs = json.load(sys.stdin)
+filtered = [p for p in prs if p.get('author', {}).get('login') == 'testuser']
+json.dump(filtered, sys.stdout)
+" 2>/dev/null || cat "$DATA_DIR/prs-open.json"
+    elif echo "$SEARCH" | grep -q "review-requested"; then
+      # Filter to PRs requesting testuser review (number 15)
+      cat "$DATA_DIR/prs-open.json" | python3 -c "
+import sys, json
+prs = json.load(sys.stdin)
+filtered = [p for p in prs if any(r.get('login') == 'testuser' for r in p.get('reviewRequests', []))]
+json.dump(filtered, sys.stdout)
+" 2>/dev/null || cat "$DATA_DIR/prs-open.json"
+    else
+      cat "$DATA_DIR/prs-open.json"
+    fi
+    exit 0
+    ;;
+
+  "pr view")
+    # Check if --json contains reviews (pr-review detail) vs full PR (stage-demo)
+    JSON_FIELDS=""
+    for arg in "$@"; do
+      case "$arg" in
+        --json) shift_next=json ;;
+        *)
+          if [ "$shift_next" = "json" ]; then JSON_FIELDS="$arg"; shift_next=""; fi
+          ;;
+      esac
+    done
+    for arg in "$@"; do
+      case "$arg" in --json=*) JSON_FIELDS="${arg#--json=}" ;; esac
+    done
+
+    if echo "$JSON_FIELDS" | grep -q "reviews"; then
+      cat "$DATA_DIR/pr-15-reviews.json"
+    else
+      # Return full PR object (first open PR as default)
+      cat "$DATA_DIR/prs-open.json" | python3 -c "
+import sys, json
+prs = json.load(sys.stdin)
+json.dump(prs[0] if prs else {}, sys.stdout)
+" 2>/dev/null || echo '{}'
+    fi
+    exit 0
+    ;;
+
+  "pr diff")
+    # Check for --name-only flag
+    for arg in "$@"; do
+      if [ "$arg" = "--name-only" ]; then
+        cat "$DATA_DIR/pr-diff-files.txt"
+        exit 0
+      fi
+    done
+    echo "diff output not stubbed"
+    exit 0
+    ;;
+
+  "pr checks")
+    cat "$DATA_DIR/pr-checks.json"
+    exit 0
+    ;;
+
+  "pr review")
+    # Write-only: exit success
+    exit 0
+    ;;
+
+  # ── Run commands ────────────────────────────────────────────────────────────
+
+  "run list")
+    cat "$DATA_DIR/runs.json"
+    exit 0
+    ;;
+
+  "run view")
+    # Check for --log-failed or --json flags
+    for arg in "$@"; do
+      if [ "$arg" = "--log-failed" ]; then
+        cat "$DATA_DIR/run-1000-log-failed.txt"
+        exit 0
+      fi
+    done
+    # Default: return jobs JSON
+    cat "$DATA_DIR/run-1000-jobs.json"
+    exit 0
+    ;;
+
+  "run rerun")
+    echo "Requested rerun of workflow run"
+    exit 0
+    ;;
+
+  # ── Repo commands ───────────────────────────────────────────────────────────
+
+  "repo clone")
+    # Create target directory to satisfy workspace setup checks
+    TARGET="${!#}"  # last argument
+    if [ -n "$TARGET" ] && [ "$TARGET" != "clone" ]; then
+      mkdir -p "$TARGET/.git" 2>/dev/null
+    fi
+    echo "Cloning into '${TARGET}'..."
+    exit 0
+    ;;
+
+  # ── API commands ────────────────────────────────────────────────────────────
+
+  "api "*)
+    ENDPOINT="$2"
+    # Check for --jq flag (contributors endpoint)
+    HAS_JQ=""
+    for arg in "$@"; do
+      if [ "$arg" = "--jq" ]; then HAS_JQ=1; fi
+    done
+
+    if echo "$ENDPOINT" | grep -q "contributors"; then
+      cat "$DATA_DIR/contributors.txt"
+    elif echo "$ENDPOINT" | grep -q "deployments"; then
+      cat "$DATA_DIR/deployments.json"
+    else
+      echo "[]"
+    fi
+    exit 0
+    ;;
+
+  # ── Fallthrough ─────────────────────────────────────────────────────────────
 
   *)
     echo "gh stub: unhandled command: $*" >&2
