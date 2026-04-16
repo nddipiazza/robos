@@ -12,7 +12,7 @@ nav_order: 1
 Every developer interaction — picking up a ticket, understanding a bug, reviewing a fix, shipping code — is augmented by AI. RobOS eliminates context-switching overhead by deeply integrating task management, code intelligence, and AI agents into the OS and IDE layers.
 {: .fs-6 .fw-300 }
 
-[Get Started]({% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [View on GitHub](https://github.com/nddipiazza/robos){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
@@ -41,7 +41,7 @@ We validate every RobOS feature against a real project: **buildbarn-forms** — 
 
 A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take a story from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
 
-[Read the Full Walkthrough]({% link model-problem/index.md %}){: .btn .btn-outline .fs-5 }
+[Read the Full Walkthrough]({{ site.baseurl }}{% link model-problem/index.md %}){: .btn .btn-outline .fs-5 }
 
 ---
 
@@ -59,7 +59,7 @@ A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take 
 
 </div>
 
-[See All Apps]({% link apps/index.md %}){: .btn .btn-outline .fs-5 }
+[See All Apps]({{ site.baseurl }}{% link apps/index.md %}){: .btn .btn-outline .fs-5 }
 
 ---
 
@@ -75,4 +75,4 @@ RobOS Desktop (Ubuntu 22.04 + GNOME)
 └── Shared Libraries ───── robos-lib, robos-icons, robos-ui
 ```
 
-[Architecture Deep Dive]({% link architecture.md %}){: .btn .btn-outline .fs-5 }
+[Architecture Deep Dive]({{ site.baseurl }}{% link architecture.md %}){: .btn .btn-outline .fs-5 }

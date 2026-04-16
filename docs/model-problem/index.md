@@ -55,37 +55,37 @@ Every phase — company setup, developer onboarding, task breakdown, coding, rev
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #00bcd4;">
 <h3 style="margin-top: 0;">Phase 1: Setup</h3>
 <p>Dana provisions the team, configures Jira, and defines the task workflow in Workflow Studio.</p>
-<a href="{% link model-problem/setup.md %}">Read Phase 1 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/setup.md %}">Read Phase 1 &rarr;</a>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #2563eb;">
 <h3 style="margin-top: 0;">Phase 2: Requirements</h3>
 <p>Pat creates the epic and AI breaks it down into 10 stories with effort estimates.</p>
-<a href="{% link model-problem/requirements.md %}">Read Phase 2 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/requirements.md %}">Read Phase 2 &rarr;</a>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #22c55e;">
 <h3 style="margin-top: 0;">Phase 3: Onboarding</h3>
 <p>Alex joins the team and is fully productive in 3 minutes — secrets, tools, and repos all auto-provisioned.</p>
-<a href="{% link model-problem/onboarding.md %}">Read Phase 3 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/onboarding.md %}">Read Phase 3 &rarr;</a>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #f59e0b;">
 <h3 style="margin-top: 0;">Phase 4: Development</h3>
 <p>Alex picks up a story. AI asks questions, writes code, and creates a PR — all with developer oversight.</p>
-<a href="{% link model-problem/development.md %}">Read Phase 4 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/development.md %}">Read Phase 4 &rarr;</a>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #e11d48;">
 <h3 style="margin-top: 0;">Phase 5-6: Review & Deploy</h3>
 <p>Jordan reviews with AI assistance, Alex merges, and the deploy pipeline runs — all status transitions are automatic.</p>
-<a href="{% link model-problem/review-and-deploy.md %}">Read Phases 5-6 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/review-and-deploy.md %}">Read Phases 5-6 &rarr;</a>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #8b5cf6;">
 <h3 style="margin-top: 0;">Phase 7-8: Dashboards</h3>
 <p>Every team member sees real-time progress. Zero manual status updates needed throughout the entire lifecycle.</p>
-<a href="{% link model-problem/dashboards.md %}">Read Phases 7-8 &rarr;</a>
+<a href="{{ site.baseurl }}{% link model-problem/dashboards.md %}">Read Phases 7-8 &rarr;</a>
 </div>
 
 </div>

@@ -163,6 +163,6 @@ ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/task-board \
 
 ## Next Steps
 
-- [**The Model Problem**]({% link model-problem/index.md %}) — See how a team uses RobOS to build buildbarn-forms
-- [**App Suite**]({% link apps/index.md %}) — Explore all 30+ RobOS applications
-- [**Architecture**]({% link architecture.md %}) — Understand the technical design
+- [**The Model Problem**]({{ site.baseurl }}{% link model-problem/index.md %}) — See how a team uses RobOS to build buildbarn-forms
+- [**App Suite**]({{ site.baseurl }}{% link apps/index.md %}) — Explore all 30+ RobOS applications
+- [**Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Understand the technical design
