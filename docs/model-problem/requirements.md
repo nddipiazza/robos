@@ -33,7 +33,7 @@ Pat opens the Task Manager and creates a new Epic:
 > - Form components for all major Buildbarn config sections (worker, storage, scheduler, browser)
 > - Type-safe validation against proto constraints
 > - JSON/YAML export for deployment
-> - Published as `@hermetiq/buildbarn-forms` npm package
+> - Published as `@acme/buildbarn-forms` npm package
 >
 > **Repos:** buildbarn-forms, buildbarn-forms-proto
 

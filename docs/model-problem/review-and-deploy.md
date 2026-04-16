@@ -97,14 +97,14 @@ Alex clicks **"Merge"** on the PR.
 **Event cascade:**
 1. `pr_merged` event → **Jira status → `Deploying`**
 2. CI/CD pipeline triggers: build, test, npm publish
-3. GitHub Actions publishes `@hermetiq/buildbarn-forms@1.3.0`
+3. GitHub Actions publishes `@acme/buildbarn-forms@1.3.0`
 4. `deploy_pipeline_completed` event → **Jira status → `Deployed`**
 
 **Notifications sent to the entire team:**
 
 | Recipient | Notification |
 |:----------|:-------------|
-| Alex (developer) | "BBF-3 shipped in @hermetiq/buildbarn-forms@1.3.0" |
+| Alex (developer) | "BBF-3 shipped in @acme/buildbarn-forms@1.3.0" |
 | Jordan (dev lead) | "buildbarn-forms v1.3.0 published — includes PR #12" |
 | Dana (manager) | "buildbarn-forms v1.3.0 — BBF-3 Worker Config Form deployed" |
 | Pat (product owner) | "buildbarn-forms v1.3.0 — BBF-3 Worker Config Form deployed" |
@@ -119,7 +119,7 @@ Status: Deployed ✅
 Assignee: Alex
 Branch: feat/bbf-3-worker-config-form (merged)
 PR: #12 (merged, 1 review cycle)
-Version: @hermetiq/buildbarn-forms@1.3.0
+Version: @acme/buildbarn-forms@1.3.0
 Timeline:
   Started:     2026-03-21 09:15
   PR Created:  2026-03-21 11:30

@@ -1,6 +1,6 @@
 # RobOS Model Problem: Acme Inc Builds Buildbarn Forms
 
-This document walks through RobOS end-to-end using a concrete scenario. A company called **Acme Inc** adopts RobOS to build the [buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms) project — a React component library for editing Buildbarn remote build execution configurations. The companion repo [buildbarn-forms-proto](https://github.com/Hermetiq/buildbarn-forms-proto) holds the protobuf definitions.
+This document walks through RobOS end-to-end using a concrete scenario. A company called **Acme Inc** adopts RobOS to build the [buildbarn-forms](https://github.com/acme-corp/buildbarn-forms) project — a React component library for editing Buildbarn remote build execution configurations. The companion repo [buildbarn-forms-proto](https://github.com/acme-corp/buildbarn-forms-proto) holds the protobuf definitions.
 
 Every phase — company setup, developer onboarding, task breakdown, coding, review, deploy, and management dashboards — happens inside RobOS.
 
@@ -103,13 +103,13 @@ These events flow through the Event Bus (Epic 18) and the Rule Engine matches th
 Jordan (Dev Lead) adds the two repositories to RobOS:
 
 **Repository 1: buildbarn-forms**
-- URL: `https://github.com/Hermetiq/buildbarn-forms`
+- URL: `https://github.com/acme-corp/buildbarn-forms`
 - Clone path: `~/projects/buildbarn-forms`
 - Branch strategy: feature branches off `main`
 - CI: GitHub Actions
 
 **Repository 2: buildbarn-forms-proto**
-- URL: `https://github.com/Hermetiq/buildbarn-forms-proto`
+- URL: `https://github.com/acme-corp/buildbarn-forms-proto`
 - Clone path: `~/projects/buildbarn-forms-proto`
 - Branch strategy: feature branches off `main`
 
@@ -129,7 +129,7 @@ Jordan writes project-specific RobOS instructions that AI agents and the onboard
 
 ## App Secrets
 - GITHUB_TOKEN — GitHub personal access token (repo, read:org scopes)
-- NPM_TOKEN — npm publish token (for @hermetiq scope)
+- NPM_TOKEN — npm publish token (for @acme scope)
 - JIRA_API_TOKEN — Jira API token for status sync
 
 ## Local Dev Setup
@@ -181,7 +181,7 @@ Pat (Product Engineer) opens the Task Manager and creates a new Epic:
 > - Form components for all major Buildbarn config sections (worker, storage, scheduler, browser)
 > - Type-safe validation against proto constraints
 > - JSON/YAML export for deployment
-> - Published as `@hermetiq/buildbarn-forms` npm package
+> - Published as `@acme/buildbarn-forms` npm package
 >
 > **Repos:** buildbarn-forms, buildbarn-forms-proto
 
@@ -249,8 +249,8 @@ Alex opens Git Projects and sees the two repos Jordan configured. Clicking "Set 
 
 **Step 3: Repository Clone & Install**
 ```
-Cloning https://github.com/Hermetiq/buildbarn-forms → ~/projects/buildbarn-forms
-Cloning https://github.com/Hermetiq/buildbarn-forms-proto → ~/projects/buildbarn-forms-proto
+Cloning https://github.com/acme-corp/buildbarn-forms → ~/projects/buildbarn-forms
+Cloning https://github.com/acme-corp/buildbarn-forms-proto → ~/projects/buildbarn-forms-proto
 Running: npm install (buildbarn-forms)
 Running: npm run proto:generate
 ```
@@ -455,7 +455,7 @@ Alex clicks "Merge" on the PR.
 
 ### 6.2 — Deploy Pipeline Completes
 
-GitHub Actions publishes `@hermetiq/buildbarn-forms@1.3.0` and deploys the updated Storybook docs.
+GitHub Actions publishes `@acme/buildbarn-forms@1.3.0` and deploys the updated Storybook docs.
 
 **Event chain:**
 1. `deploy` event hits Event Bus (source: CI monitor polling GitHub Actions)
@@ -464,7 +464,7 @@ GitHub Actions publishes `@hermetiq/buildbarn-forms@1.3.0` and deploys the updat
 
 **To Alex (developer):**
 > ✅ **Deploy Complete**
-> BBF-3 shipped in @hermetiq/buildbarn-forms@1.3.0
+> BBF-3 shipped in @acme/buildbarn-forms@1.3.0
 
 **To Jordan (dev lead / repo owner):**
 > ℹ️ **Deploy Complete**
@@ -484,7 +484,7 @@ Status: Deployed ✅
 Assignee: Alex
 Branch: feat/bbf-3-worker-config-form (merged)
 PR: #12 (merged, 1 review cycle)
-Version: @hermetiq/buildbarn-forms@1.3.0
+Version: @acme/buildbarn-forms@1.3.0
 Timeline:
   Started:     2026-03-21 09:15
   PR Created:  2026-03-21 11:30

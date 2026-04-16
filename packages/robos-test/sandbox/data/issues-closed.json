@@ -12,7 +12,7 @@
     "createdAt": "2026-01-15T10:00:00Z",
     "updatedAt": "2026-02-20T14:00:00Z",
     "closedAt": "2026-02-20T14:00:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/20",
+    "url": "https://github.com/acme-corp/buildbarn-forms/issues/20",
     "milestone": {"title": "v2.4"}
   },
   {
@@ -28,7 +28,7 @@
     "createdAt": "2026-01-10T08:00:00Z",
     "updatedAt": "2026-02-15T11:00:00Z",
     "closedAt": "2026-02-15T11:00:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/issues/18",
+    "url": "https://github.com/acme-corp/buildbarn-forms/issues/18",
     "milestone": {"title": "v2.4"}
   }
 ]

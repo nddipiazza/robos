@@ -56,7 +56,7 @@ sandbox/data/
 
 ### Fake Data Conventions
 
-- Repo: `Hermetiq/buildbarn-forms`
+- Repo: `acme-corp/buildbarn-forms`
 - Authenticated user: `testuser`
 - Collaborators: `alice-dev`, `bob-docs`
 - Issue numbers: 25, 30, 35, 38, 42

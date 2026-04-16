@@ -106,7 +106,7 @@ Open **Task Servers** and add your GitHub or Jira instance:
 |:------|:--------|
 | Type | GitHub |
 | Name | My Project |
-| Org | `Hermetiq` |
+| Org | `acme-corp` |
 | Repo | `buildbarn-forms` |
 | Auth | Use `gh` CLI |
 

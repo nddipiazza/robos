@@ -49,7 +49,7 @@ describe('issue-manager E2E', () => {
       const allText = flatText(snap);
       assert.ok(
         allText.includes('Bug') || allText.includes('Feature') ||
-        allText.includes('Workflow') || allText.includes('Hermetiq') ||
+        allText.includes('Workflow') || allText.includes('acme-corp') ||
         allText.includes('buildbarn'),
         `Should show workflow or repo info, got: ${allText.substring(0, 300)}`
       );

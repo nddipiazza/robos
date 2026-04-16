@@ -19,7 +19,7 @@ A company called **Acme Inc** adopts RobOS to build the **buildbarn-forms** proj
 
 **What is Buildbarn?** Buildbarn is an open-source implementation of Google's Remote Execution API, used by organizations to distribute build and test actions across fleets of workers. It is configured through complex protobuf-defined schemas covering workers, storage backends, schedulers, browsers, and more. These configurations are typically hand-edited as JSONNET or YAML files — error-prone work that requires deep protobuf knowledge.
 
-**What is buildbarn-forms?** A React + TypeScript component library published as `@hermetiq/buildbarn-forms` on npm. It parses `.proto` schema files, generates validated form components for each Buildbarn configuration section, and exports the form state as deployment-ready JSON or YAML. The library includes an interactive Storybook for documentation and testing.
+**What is buildbarn-forms?** A React + TypeScript component library published as `@acme/buildbarn-forms` on npm. It parses `.proto` schema files, generates validated form components for each Buildbarn configuration section, and exports the form state as deployment-ready JSON or YAML. The library includes an interactive Storybook for documentation and testing.
 
 **The Problem:** Platform engineers at Acme configure Buildbarn by hand-editing JSONNET and YAML files based on complex protobuf schemas. A typical Buildbarn deployment has four major config sections — `bb_worker` (build executors, runner types, platform matchers, concurrency), `bb_storage` (blobstore backends, action cache, CAS), `bb_scheduler` (platform queues, drain configs, priority rules), and `bb_browser` (instance names, CAS settings). Each section is defined by deeply nested protobuf messages with `oneof` discriminated unions, repeated fields, and proto constraint validation. Hand-editing these files is error-prone, undocumented, and requires deep proto knowledge.
 
@@ -31,7 +31,7 @@ A company called **Acme Inc** adopts RobOS to build the **buildbarn-forms** proj
 - **Exports deployment-ready config** as JSON or YAML matching the expected Buildbarn format
 - **Documents everything** in an interactive Storybook gallery with live form previews
 
-The library is published as `@hermetiq/buildbarn-forms` on npm and versioned via CI/CD.
+The library is published as `@acme/buildbarn-forms` on npm and versioned via CI/CD.
 
 Every phase — company setup, developer onboarding, task breakdown, coding, review, deploy, and management dashboards — happens inside RobOS.
 

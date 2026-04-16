@@ -87,13 +87,13 @@ describe('GitHubAdapter unit tests', () => {
 
   it('constructor: parses config correctly', () => {
     const adapter = new GitHubAdapter({
-      gh_org: 'Hermetiq',
+      gh_org: 'acme-corp',
       gh_repo: 'buildbarn-forms',
       use_gh_cli: true,
     });
-    assert.strictEqual(adapter.org, 'Hermetiq');
+    assert.strictEqual(adapter.org, 'acme-corp');
     assert.strictEqual(adapter.repo, 'buildbarn-forms');
-    assert.strictEqual(adapter._repoSlug, 'Hermetiq/buildbarn-forms');
+    assert.strictEqual(adapter._repoSlug, 'acme-corp/buildbarn-forms');
     assert.strictEqual(adapter.type, 'github');
   });
 
@@ -105,7 +105,7 @@ describe('GitHubAdapter unit tests', () => {
   });
 
   it('_mapIssue: maps GitHub issue to RobOS work item', () => {
-    const adapter = new GitHubAdapter({ gh_org: 'Hermetiq', gh_repo: 'buildbarn-forms' });
+    const adapter = new GitHubAdapter({ gh_org: 'acme-corp', gh_repo: 'buildbarn-forms' });
     const mapped = adapter._mapIssue({
       number: 42,
       title: 'Worker config form crashes',
@@ -126,7 +126,7 @@ describe('GitHubAdapter unit tests', () => {
     assert.strictEqual(mapped.priority, 'High');
     assert.strictEqual(mapped.assignee, 'alexdev');
     assert.strictEqual(mapped.parent.key, 'v1.0');
-    assert.strictEqual(mapped.url, 'https://github.com/Hermetiq/buildbarn-forms/issues/42');
+    assert.strictEqual(mapped.url, 'https://github.com/acme-corp/buildbarn-forms/issues/42');
   });
 
   it('_mapIssue: handles missing labels/assignees', () => {

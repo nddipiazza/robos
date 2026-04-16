@@ -5,7 +5,7 @@
     "description": "Build completed",
     "startedAt": "2026-04-14T15:00:00Z",
     "completedAt": "2026-04-14T15:08:00Z",
-    "detailsUrl": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1001"
+    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
   },
   {
     "name": "Test / unit-tests",
@@ -13,7 +13,7 @@
     "description": "All 142 tests passed",
     "startedAt": "2026-04-14T15:00:00Z",
     "completedAt": "2026-04-14T15:12:00Z",
-    "detailsUrl": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1001"
+    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
   },
   {
     "name": "Lint / golangci-lint",
@@ -21,6 +21,6 @@
     "description": "No lint issues",
     "startedAt": "2026-04-14T15:00:00Z",
     "completedAt": "2026-04-14T15:03:00Z",
-    "detailsUrl": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1001"
+    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
   }
 ]

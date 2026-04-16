@@ -8,7 +8,7 @@
     {"name": "priority:high", "color": "dc2626"}
   ],
   "state": "OPEN",
-  "url": "https://github.com/Hermetiq/buildbarn-forms/issues/42",
+  "url": "https://github.com/acme-corp/buildbarn-forms/issues/42",
   "assignees": [{"login": "testuser"}],
   "createdAt": "2026-03-10T09:00:00Z",
   "updatedAt": "2026-04-14T11:30:00Z",

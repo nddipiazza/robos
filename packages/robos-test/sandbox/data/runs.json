@@ -9,7 +9,7 @@
     "event": "push",
     "createdAt": "2026-04-14T15:00:00Z",
     "updatedAt": "2026-04-14T15:15:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1001",
+    "url": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001",
     "workflowName": "CI Pipeline"
   },
   {
@@ -22,7 +22,7 @@
     "event": "push",
     "createdAt": "2026-04-13T09:00:00Z",
     "updatedAt": "2026-04-13T09:18:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/1000",
+    "url": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1000",
     "workflowName": "CI Pipeline"
   },
   {
@@ -35,7 +35,7 @@
     "event": "release",
     "createdAt": "2026-04-12T10:00:00Z",
     "updatedAt": "2026-04-12T10:25:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/999",
+    "url": "https://github.com/acme-corp/buildbarn-forms/actions/runs/999",
     "workflowName": "Release"
   },
   {
@@ -48,7 +48,7 @@
     "event": "push",
     "createdAt": "2026-04-11T15:00:00Z",
     "updatedAt": "2026-04-11T15:10:00Z",
-    "url": "https://github.com/Hermetiq/buildbarn-forms/actions/runs/998",
+    "url": "https://github.com/acme-corp/buildbarn-forms/actions/runs/998",
     "workflowName": "CI Pipeline"
   }
 ]

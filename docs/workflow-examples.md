@@ -2,7 +2,7 @@
 
 This document walks through the complete RobOS workflow for each work item type, using a real example project:
 
-**Example Project:** [buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms) — A React component library that generates configuration forms for [Buildbarn](https://github.com/buildbarn), a remote build execution system. The library reads Buildbarn's protobuf config schemas and renders type-safe, validated form UIs for each config section (workers, storage, schedulers, etc.).
+**Example Project:** [buildbarn-forms](https://github.com/acme-corp/buildbarn-forms) — A React component library that generates configuration forms for [Buildbarn](https://github.com/buildbarn), a remote build execution system. The library reads Buildbarn's protobuf config schemas and renders type-safe, validated form UIs for each config section (workers, storage, schedulers, etc.).
 
 ---
 
@@ -144,9 +144,9 @@ A release groups epics into a shippable unit with a coordinated timeline and qua
 ### Release Candidate → Production
 
 **App: CI Monitor**
-9. RC published: `@hermetiq/buildbarn-forms@1.0.0-rc.1`
+9. RC published: `@acme/buildbarn-forms@1.0.0-rc.1`
 10. Smoke tests pass, QA signs off.
-11. Production publish: `@hermetiq/buildbarn-forms@1.0.0`
+11. Production publish: `@acme/buildbarn-forms@1.0.0`
 
 **App: Task Manager**
 12. Release status → `Shipped`. All epics and stories closed.
@@ -181,7 +181,7 @@ An epic is a large body of work broken into user stories. It flows through all f
 
 **App: EKGraph**
 3. PO links the epic to relevant EKGraph nodes:
-   - Repository: `github.com/Hermetiq/buildbarn-forms`
+   - Repository: `github.com/acme-corp/buildbarn-forms`
    - Proto source: `github.com/buildbarn/bb-storage`, `bb-remote-execution`, etc.
    - Related service: Buildbarn cluster (staging + prod)
    - Team: Platform Engineering
@@ -190,7 +190,7 @@ An epic is a large body of work broken into user stories. It flows through all f
 4. PO creates a context bundle for the epic:
    - Buildbarn proto definitions (`.proto` files)
    - Existing Buildbarn JSONNET configs as examples
-   - Hermetiq dashboard screenshots showing where forms will be used
+   - Acme dashboard screenshots showing where forms will be used
    - Links to Buildbarn config documentation
 
 ### Phase 2: Breakdown (Product Owner + Dev Lead)
@@ -240,7 +240,7 @@ A user story is a single deliverable unit of work. This is where the AI-assisted
 
 **App: Workspace Manager**
 2. Workspace auto-provisions:
-   - Clones `github.com/Hermetiq/buildbarn-forms`
+   - Clones `github.com/acme-corp/buildbarn-forms`
    - Checks out branch `feat/us-3-worker-config-form`
    - Runs `npm install`
    - Starts Storybook dev server (`npm run storybook`)
@@ -384,7 +384,7 @@ A user story is a single deliverable unit of work. This is where the AI-assisted
 **App: CI Monitor**
 25. npm publish pipeline runs:
     - Builds package
-    - Publishes `@hermetiq/buildbarn-forms@1.3.0`
+    - Publishes `@acme/buildbarn-forms@1.3.0`
     - Updates Storybook docs site
 
 **App: Task Manager**

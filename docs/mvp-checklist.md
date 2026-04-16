@@ -2,7 +2,7 @@
 
 Prove the Model Problem works: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
 
-Uses GitHub Issues against [Hermetiq/buildbarn-forms](https://github.com/Hermetiq/buildbarn-forms).
+Uses GitHub Issues against [acme-corp/buildbarn-forms](https://github.com/acme-corp/buildbarn-forms).
 
 ---
 
@@ -26,7 +26,7 @@ Uses GitHub Issues against [Hermetiq/buildbarn-forms](https://github.com/Hermeti
 
 ### Phase 2: Configure Task Server
 
-- [ ] Open **Task Servers** → click ＋ → type: GitHub, name: `Buildbarn Forms`, org: `Hermetiq`, repo: `buildbarn-forms`, use gh CLI ✓
+- [ ] Open **Task Servers** → click ＋ → type: GitHub, name: `Buildbarn Forms`, org: `acme-corp`, repo: `buildbarn-forms`, use gh CLI ✓
 - [ ] Test Connection → "Logged in as [username]"
 - [ ] Save
 
