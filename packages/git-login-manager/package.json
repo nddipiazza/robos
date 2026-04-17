@@ -1,8 +1,12 @@
 {
   "name": "robos-git-login-manager",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "RobOS Git Login Manager — monitors and manages git credentials",
   "main": "main.js",
-  "scripts": { "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ." },
-  "dependencies": { "electron": "^30.0.0" }
+  "scripts": {
+    "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ."
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
 }

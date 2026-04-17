@@ -1,6 +1,6 @@
 {
   "name": "robos-desktop-customizer",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Prompt-driven desktop customization — reshape GNOME with natural language and slash commands",
   "main": "main.js",
   "dependencies": {

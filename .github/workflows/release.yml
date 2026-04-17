@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install test dependencies
+        run: cd packages/robos-test && npm install
+
+      - name: Run unit tests
+        run: cd packages/robos-test && npm run test:unit
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+
+      - name: Build packages tarball
+        run: |
+          mkdir -p release
+          tar czf release/robos-v${{ steps.version.outputs.version }}-packages.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='__pycache__' \
+            -C packages .
+
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum robos-v* > SHA256SUMS
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          {
+            echo "## RobOS v${VERSION}"
+            echo ""
+            echo "### Installation"
+            echo ""
+            echo '```bash'
+            echo "# Clone and build"
+            echo "git clone https://github.com/nddipiazza/robos.git"
+            echo "cd robos && git checkout v${VERSION}"
+            echo "infra/desktop/build.sh"
+            echo "infra/desktop/run.sh --firstboot"
+            echo '```'
+            echo ""
+            echo "Or download the packages tarball from this release and extract to \`packages/\`."
+            echo ""
+            echo "### What's New"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              git log "${PREV_TAG}..HEAD" --oneline --no-decorate
+            else
+              echo "Initial release."
+              echo ""
+              git log --oneline --no-decorate -20
+            fi
+            echo ""
+            echo "### Checksums"
+            echo ""
+            echo '```'
+            cat release/SHA256SUMS
+            echo '```'
+            echo ""
+            echo "### System Requirements"
+            echo ""
+            echo "- QEMU/KVM with \`/dev/kvm\` access"
+            echo "- Node.js 20+"
+            echo "- 16 GB RAM, 100 GB disk space"
+            echo ""
+            echo "**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)**"
+          } > release/RELEASE-NOTES.md
+
+          # Also set as output for the release body
+          {
+            echo 'body<<EOFNOTES'
+            cat release/RELEASE-NOTES.md
+            echo 'EOFNOTES'
+          } >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RobOS v${{ steps.version.outputs.version }}
+          body: ${{ steps.notes.outputs.body }}
+          files: |
+            release/robos-v${{ steps.version.outputs.version }}-packages.tar.gz
+            release/SHA256SUMS
+            release/RELEASE-NOTES.md

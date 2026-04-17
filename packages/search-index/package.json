@@ -1,8 +1,12 @@
 {
   "name": "robos-search-index",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "RobOS Search Index — file system indexer for @-mention search across AI text areas",
   "main": "main.js",
-  "scripts": { "start": "electron ." },
-  "dependencies": { "electron": "^30.0.0" }
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
 }

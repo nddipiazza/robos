@@ -1,6 +1,6 @@
 {
   "name": "robos-dev-central",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "RobOS Dev Central — developer daily dashboard with tasks, PRs, sprint board, and AI standup",
   "main": "main.js",
   "dependencies": {

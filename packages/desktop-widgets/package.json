@@ -1,8 +1,12 @@
 {
   "name": "robos-desktop-widgets",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "RobOS Desktop Widgets — status overlays for active task, system stats, and journal summary",
   "main": "main.js",
-  "scripts": { "start": "electron ." },
-  "dependencies": { "electron": "^30.0.0" }
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
 }
