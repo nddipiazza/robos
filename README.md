@@ -50,11 +50,13 @@ Every change is git-snapshotted with instant rollback. Build entirely new Electr
 
 ### Option A: Install on a Laptop (Bare Metal)
 
-1. Install **Ubuntu 22.04 LTS** on any x86_64 machine (ThinkPad, Dell, HP, etc.)
-2. Download the **seed ISO** from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases)
-3. Mount it and run the provisioner — installs Node.js, Electron, all 30+ RobOS apps, dark theme
+1. Download the **RobOS Installer** for your OS from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases) (Linux AppImage, macOS dmg, Windows exe)
+2. Run it — select your USB drive, click Flash
+3. Boot from USB — RobOS installs unattended in ~15 minutes
 
-See the [full bare-metal guide](https://nddipiazza.github.io/robos/getting-started.html) for step-by-step instructions including USB flash drive creation.
+Or use the CLI: `sudo bash scripts/flash-robos.sh /dev/sdX`
+
+See the [full guide](https://nddipiazza.github.io/robos/getting-started.html) for details.
 
 ### Option B: Run as a VM
 

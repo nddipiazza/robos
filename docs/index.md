@@ -95,6 +95,16 @@ Ubuntu Pro is free for up to 5 machines and $25/machine/year after that — with
 
 ---
 
+## Install in 3 Clicks
+
+The **RobOS Installer** runs on Linux, macOS, and Windows. Pick your USB drive, click Flash, boot from USB. That's it.
+
+![RobOS Installer]({{ '/assets/images/screenshots/robos-installer.png' | relative_url }})
+
+Download the installer from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases).
+
+---
+
 ## What Makes RobOS Different
 
 **Task-Driven Workspaces** — Each task maps to its own IDE workspace. When a developer picks up a task, the workspace is automatically provisioned: branch checked out, dev environment started, breakpoint set at the issue reproduction point.

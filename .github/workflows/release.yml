@@ -31,8 +31,77 @@ jobs:
       - name: Run unit tests
         run: cd packages/robos-test && npm run test:unit
 
-  release:
+  # Build the RobOS Installer GUI for Linux
+  build-installer-linux:
     needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and build
+        run: cd installer && npm install && npm run build:linux
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-linux
+          path: |
+            installer/dist/*.AppImage
+            installer/dist/*.deb
+
+  # Build the RobOS Installer GUI for macOS
+  build-installer-mac:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and build
+        run: cd installer && npm install && npm run build:mac
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-mac
+          path: installer/dist/*.dmg
+
+  # Build the RobOS Installer GUI for Windows
+  build-installer-win:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and build
+        run: cd installer && npm install && npm run build:win
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-win
+          path: installer/dist/*.exe
+
+  # Build OS images and create GitHub Release
+  release:
+    needs: [test, build-installer-linux, build-installer-mac, build-installer-win]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,31 +127,48 @@ jobs:
       - name: Build VM disk image and seed ISO
         run: cd infra/desktop && bash build.sh
 
+      - name: Download installer builds
+        uses: actions/download-artifact@v4
+        with:
+          path: installer-builds
+
       - name: Version the release artifacts
         run: |
           VERSION=${{ steps.version.outputs.version }}
           mkdir -p release
 
-          # Installer ISO (bootable — flash to USB, installs RobOS unattended)
+          # Installer ISO (bootable — flash to USB)
           cp infra/desktop/output/robos.iso release/robos-v${VERSION}.iso
 
-          # Packages tarball (standalone, for users who want just the apps)
+          # Packages tarball
           tar czf release/robos-v${VERSION}-packages.tar.gz \
-            --exclude='node_modules' \
-            --exclude='.git' \
-            --exclude='__pycache__' \
+            --exclude='node_modules' --exclude='.git' --exclude='__pycache__' \
             -C packages .
 
-          # Seed ISO (cloud-init provisioner for existing VMs)
+          # Seed ISO (cloud-init for VMs)
           cp infra/desktop/output/seed.iso release/robos-v${VERSION}-seed.iso
 
-          # Disk image (qcow2 — ready-to-boot VM)
+          # VM disk image
           cp infra/desktop/output/robos.qcow2 release/robos-v${VERSION}.qcow2
+
+          # Installer GUI builds — rename with version
+          for f in installer-builds/installer-linux/*.AppImage; do
+            [ -f "$f" ] && cp "$f" release/RobOS-Installer-v${VERSION}-linux.AppImage
+          done
+          for f in installer-builds/installer-linux/*.deb; do
+            [ -f "$f" ] && cp "$f" release/RobOS-Installer-v${VERSION}-linux.deb
+          done
+          for f in installer-builds/installer-mac/*.dmg; do
+            [ -f "$f" ] && cp "$f" release/RobOS-Installer-v${VERSION}-mac.dmg
+          done
+          for f in installer-builds/installer-win/*.exe; do
+            [ -f "$f" ] && cp "$f" release/RobOS-Installer-v${VERSION}-win.exe
+          done
 
       - name: Generate checksums
         run: |
           cd release
-          sha256sum robos-v* > SHA256SUMS
+          sha256sum robos-v* RobOS-Installer-* > SHA256SUMS 2>/dev/null || sha256sum robos-v* > SHA256SUMS
 
       - name: Generate release notes
         id: notes
@@ -93,36 +179,41 @@ jobs:
           {
             echo "## RobOS v${VERSION}"
             echo ""
-            echo "### Quick Start"
+            echo "### Install RobOS"
             echo ""
-            echo "Download \`robos-v${VERSION}.qcow2\` (VM disk image) and \`robos-v${VERSION}-seed.iso\` (installer), then:"
+            echo "**Easiest: Use the RobOS Installer app** (recommended)"
+            echo ""
+            echo "Download the installer for your OS, run it, select your USB drive, and click Flash:"
+            echo ""
+            echo "| OS | Download |"
+            echo "|:---|:---------|"
+            echo "| Linux | \`RobOS-Installer-v${VERSION}-linux.AppImage\` or \`.deb\` |"
+            echo "| macOS | \`RobOS-Installer-v${VERSION}-mac.dmg\` |"
+            echo "| Windows | \`RobOS-Installer-v${VERSION}-win.exe\` |"
+            echo ""
+            echo "**Alternative: Flash the ISO manually**"
             echo ""
             echo '```bash'
-            echo "# First boot — provisions the full RobOS desktop"
-            echo "qemu-system-x86_64 -m 16G -smp \$(nproc) -enable-kvm -cpu host \\"
-            echo "  -drive file=robos-v${VERSION}.qcow2,format=qcow2,if=virtio \\"
-            echo "  -drive file=robos-v${VERSION}-seed.iso,format=raw,if=virtio \\"
-            echo "  -netdev user,id=net0,hostfwd=tcp::2224-:22 \\"
-            echo "  -device virtio-net-pci,netdev=net0 \\"
-            echo "  -display gtk"
+            echo "# Linux"
+            echo "sudo dd if=robos-v${VERSION}.iso of=/dev/sdX bs=4M status=progress"
             echo ""
-            echo "# After first boot completes and VM reboots, run without seed ISO:"
-            echo "qemu-system-x86_64 -m 16G -smp \$(nproc) -enable-kvm -cpu host \\"
-            echo "  -drive file=robos-v${VERSION}.qcow2,format=qcow2,if=virtio \\"
-            echo "  -netdev user,id=net0,hostfwd=tcp::2224-:22 \\"
-            echo "  -device virtio-net-pci,netdev=net0 \\"
-            echo "  -display gtk"
+            echo "# macOS — use balenaEtcher"
+            echo "# Windows — use Rufus"
             echo '```'
             echo ""
-            echo "Or build from source: \`git clone\`, \`infra/desktop/build.sh\`, \`infra/desktop/run.sh --firstboot\`"
+            echo "Then boot from USB. RobOS installs unattended in ~15 minutes."
+            echo ""
+            echo "**For VMs:** Download \`robos-v${VERSION}.qcow2\` + \`robos-v${VERSION}-seed.iso\` and boot with QEMU."
             echo ""
             echo "### Release Assets"
             echo ""
             echo "| File | Description |"
-            echo "|------|-------------|"
-            echo "| \`robos-v${VERSION}.qcow2\` | Ready-to-boot VM disk image (Ubuntu 22.04 base, ~700 MB download) |"
-            echo "| \`robos-v${VERSION}-seed.iso\` | Cloud-init seed ISO — provisions RobOS desktop + 30+ apps on first boot |"
-            echo "| \`robos-v${VERSION}-packages.tar.gz\` | All RobOS Electron app packages (for manual install or development) |"
+            echo "|:-----|:------------|"
+            echo "| \`RobOS-Installer-*\` | GUI installer app (Linux AppImage/deb, macOS dmg, Windows exe) |"
+            echo "| \`robos-v${VERSION}.iso\` | Bootable installer ISO — flash to USB, installs RobOS unattended |"
+            echo "| \`robos-v${VERSION}.qcow2\` | Ready-to-boot VM disk image |"
+            echo "| \`robos-v${VERSION}-seed.iso\` | Cloud-init seed ISO for VM provisioning |"
+            echo "| \`robos-v${VERSION}-packages.tar.gz\` | All RobOS Electron app packages |"
             echo "| \`SHA256SUMS\` | Checksums for all artifacts |"
             echo ""
             echo "### What's New"
@@ -143,9 +234,9 @@ jobs:
             echo ""
             echo "### System Requirements"
             echo ""
-            echo "- QEMU/KVM with \`/dev/kvm\` access (or any hypervisor that reads qcow2)"
-            echo "- 16 GB RAM, 100 GB disk space"
-            echo "- SSH: port 2224 | VNC: port 5910 | SPICE: port 5932"
+            echo "- Any x86_64 PC/laptop with 16 GB+ RAM and 100 GB+ disk"
+            echo "- USB flash drive (4 GB+) for bare-metal install"
+            echo "- Or: QEMU/KVM for VM usage"
             echo ""
             echo "**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)**"
           } > release/RELEASE-NOTES.md
@@ -162,6 +253,7 @@ jobs:
           name: RobOS v${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
           files: |
+            release/RobOS-Installer-*
             release/robos-v${{ steps.version.outputs.version }}.iso
             release/robos-v${{ steps.version.outputs.version }}.qcow2
             release/robos-v${{ steps.version.outputs.version }}-seed.iso

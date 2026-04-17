@@ -20,32 +20,51 @@ Install RobOS on bare metal or run it as a VM.
 
 ## Option A: Install on a Laptop (Bare Metal)
 
-The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC that runs Ubuntu. One ISO, one flash, one boot.
+The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC. Three clicks and you're done.
 
-### What You Need
+### The Easy Way: RobOS Installer App
 
-- A USB flash drive (4 GB+)
-- A laptop or desktop with 16 GB+ RAM and 100 GB+ disk
-- An internet connection (the installer downloads packages during provisioning)
+Download the **RobOS Installer** for your OS from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases):
 
-### Step 1: Download the RobOS ISO
+| Your OS | Download |
+|:--------|:---------|
+| **Linux** | `RobOS-Installer-linux.AppImage` or `.deb` |
+| **macOS** | `RobOS-Installer-mac.dmg` |
+| **Windows** | `RobOS-Installer-win.exe` |
 
-Download `robos.iso` from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases).
+Run the installer and follow the 3-step wizard:
 
-### Step 2: Flash to USB
+![RobOS Installer — select your USB drive and click Flash]({{ '/assets/images/screenshots/robos-installer.png' | relative_url }})
 
-| OS | Tool | Command |
-|:---|:-----|:--------|
-| **Linux** | `dd` | `sudo dd if=robos.iso of=/dev/sdX bs=4M status=progress` |
-| **Mac** | [balenaEtcher](https://etcher.balena.io/) | Open Etcher → Select ISO → Select drive → Flash |
-| **Windows** | [Rufus](https://rufus.ie/) | Open Rufus → Select ISO → Select drive → Start |
+1. **Select your USB drive** — the installer detects all removable drives
+2. **Download RobOS** — automatically downloads the latest ISO with a progress bar
+3. **Flash** — writes the ISO to your USB drive (confirm before erasing)
+
+Then plug the USB into your target laptop, boot from it, and wait ~15 minutes. Done.
+
+### The Manual Way: Flash with dd/Rufus
+
+If you prefer command-line tools:
+
+```bash
+# Download the ISO
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.3.iso
+
+# Linux — flash with dd
+sudo dd if=robos-v0.0.3.iso of=/dev/sdX bs=4M status=progress
+
+# Or use the included CLI tool
+sudo bash scripts/flash-robos.sh /dev/sdX
+```
+
+On **macOS** use [balenaEtcher](https://etcher.balena.io/). On **Windows** use [Rufus](https://rufus.ie/).
 
 {: .warning }
-> **This will erase the target drive.** Double-check you're writing to the USB drive, not your system disk. On Linux, use `lsblk` to identify the correct device.
+> **This will erase the target drive.** Double-check you're writing to the USB drive, not your system disk.
 
-### Step 3: Boot and Wait
+### Boot and Wait
 
-1. Insert the USB drive and boot from it (usually F12 or F2 at BIOS splash for boot menu)
+1. Insert the USB drive and boot from it (F12 or F2 at BIOS splash for boot menu)
 2. The RobOS installer starts automatically — **no interaction needed**
 3. It installs Ubuntu 22.04, creates the `robos` user, installs GNOME + Node.js + Electron + all 30+ RobOS apps, applies the dark theme, and reboots
 4. After ~15-20 minutes (depending on internet speed), you'll see the RobOS desktop
@@ -53,7 +72,7 @@ Download `robos.iso` from the latest [GitHub Release](https://github.com/nddipia
 **Default credentials:** username `robos`, password `robos`
 
 {: .important }
-> The installer will **use the entire disk**. If you need dual-boot or custom partitioning, use Option B (VM) or install Ubuntu manually first, then download the seed ISO from the release and run `robos-provision.sh`.
+> The installer will **use the entire disk**. If you need dual-boot or custom partitioning, use Option B (VM) or install Ubuntu manually first, then run `robos-provision.sh` from the release.
 
 ---
 
