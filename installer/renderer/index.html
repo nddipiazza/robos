@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Installer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <h1>RobOS Installer</h1>
+      </div>
+      <span id="version-badge" class="badge"></span>
+    </header>
+
+    <!-- Step 1: Select Drive -->
+    <section id="step-1" class="step active">
+      <div class="step-header">
+        <span class="step-number">1</span>
+        <h2>Select USB Drive</h2>
+      </div>
+      <p class="step-desc">Choose the drive to install RobOS on. This will <strong>erase all data</strong> on the selected drive.</p>
+
+      <div id="drive-list" class="drive-list">
+        <div class="loading">Scanning for drives...</div>
+      </div>
+
+      <button id="btn-refresh-drives" class="btn-secondary">Refresh Drives</button>
+      <div class="step-actions">
+        <button id="btn-step1-next" class="btn-primary" disabled>Next: Download RobOS</button>
+      </div>
+    </section>
+
+    <!-- Step 2: Download -->
+    <section id="step-2" class="step">
+      <div class="step-header">
+        <span class="step-number">2</span>
+        <h2>Download RobOS</h2>
+      </div>
+      <p class="step-desc">Downloading the latest RobOS installer image from GitHub.</p>
+
+      <div id="download-status" class="status-box">
+        <div class="progress-bar-container">
+          <div id="download-progress" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <span id="download-text">Preparing download...</span>
+      </div>
+
+      <div class="step-actions">
+        <button id="btn-step2-back" class="btn-secondary">Back</button>
+        <button id="btn-step2-next" class="btn-primary" disabled>Next: Flash Drive</button>
+      </div>
+    </section>
+
+    <!-- Step 3: Flash -->
+    <section id="step-3" class="step">
+      <div class="step-header">
+        <span class="step-number">3</span>
+        <h2>Flash to Drive</h2>
+      </div>
+
+      <div id="flash-summary" class="summary-box">
+        <div class="summary-row"><span>Drive:</span> <strong id="flash-drive-name"></strong></div>
+        <div class="summary-row"><span>Image:</span> <strong id="flash-iso-name"></strong></div>
+      </div>
+
+      <div id="flash-warning" class="warning-box">
+        ⚠️ This will <strong>permanently erase</strong> all data on the selected drive. This cannot be undone.
+      </div>
+
+      <div id="flash-status" class="status-box hidden">
+        <div class="progress-bar-container">
+          <div id="flash-progress" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <span id="flash-text">Ready to flash</span>
+      </div>
+
+      <div class="step-actions">
+        <button id="btn-step3-back" class="btn-secondary">Back</button>
+        <button id="btn-flash" class="btn-danger">Flash RobOS to Drive</button>
+      </div>
+    </section>
+
+    <!-- Step 4: Done -->
+    <section id="step-4" class="step">
+      <div class="step-header">
+        <span class="step-number done">✓</span>
+        <h2>RobOS is Ready!</h2>
+      </div>
+      <div class="done-box">
+        <p>Your USB drive is now a RobOS installer. Next steps:</p>
+        <ol>
+          <li>Remove the USB drive from this computer</li>
+          <li>Insert it into the target laptop</li>
+          <li>Boot from USB (press F12 or F2 at BIOS splash for boot menu)</li>
+          <li>RobOS will install automatically — wait ~15-20 minutes</li>
+          <li>Login with: <code>robos</code> / <code>robos</code></li>
+        </ol>
+      </div>
+      <div class="step-actions">
+        <button id="btn-docs" class="btn-secondary">Open Documentation</button>
+        <button id="btn-done" class="btn-primary">Close</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

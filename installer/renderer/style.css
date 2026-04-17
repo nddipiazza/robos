@@ -1,0 +1,191 @@
+:root {
+  --bg: #0d1117;
+  --bg-card: #161b22;
+  --bg-input: #1c2128;
+  --border: #30363d;
+  --accent: #00bcd4;
+  --accent-hover: #00a0b4;
+  --text: #e6edf3;
+  --text-dim: #7d8590;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --orange: #f97316;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 0;
+}
+
+/* ── Header ─────────────────────────────────────── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+h1 { font-size: 18px; font-weight: 600; color: var(--accent); }
+.badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+/* ── Steps ──────────────────────────────────────── */
+.step {
+  display: none;
+  flex-direction: column;
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+.step.active { display: flex; }
+
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.step-number {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  flex-shrink: 0;
+}
+.step-number.done { background: var(--green); font-size: 18px; }
+h2 { font-size: 20px; font-weight: 600; }
+.step-desc { color: var(--text-dim); margin-bottom: 16px; font-size: 13px; }
+
+/* ── Drive list ─────────────────────────────────── */
+.drive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.drive-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.drive-item:hover { border-color: var(--accent); }
+.drive-item.selected { border-color: var(--accent); background: rgba(0, 188, 212, 0.08); }
+.drive-icon { font-size: 24px; }
+.drive-info { flex: 1; }
+.drive-name { font-weight: 600; }
+.drive-meta { font-size: 12px; color: var(--text-dim); }
+.drive-size { font-size: 13px; color: var(--text-dim); font-family: monospace; }
+.loading { color: var(--text-dim); padding: 20px; text-align: center; }
+.no-drives { color: var(--orange); padding: 20px; text-align: center; }
+
+/* ── Buttons ────────────────────────────────────── */
+.step-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 16px;
+}
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--bg-input); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+
+/* ── Progress ───────────────────────────────────── */
+.status-box { margin: 16px 0; }
+.status-box.hidden { display: none; }
+.progress-bar-container {
+  height: 8px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+#download-text, #flash-text { font-size: 13px; color: var(--text-dim); }
+
+/* ── Summary & Warning ──────────────────────────── */
+.summary-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.summary-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.summary-row span { color: var(--text-dim); }
+
+.warning-box {
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--yellow);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ── Done ───────────────────────────────────────── */
+.done-box {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 12px 0;
+}
+.done-box ol { padding-left: 20px; margin: 12px 0; }
+.done-box li { margin: 6px 0; }
+.done-box code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
