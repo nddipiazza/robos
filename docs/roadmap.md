@@ -7,8 +7,11 @@ nav_order: 8
 # Project Roadmap
 {: .no_toc }
 
-21 epics organized by dependency wave. The MVP delivers the Model Problem end-to-end.
+RobOS is under heavy active development. This is an early-stage project with an ambitious vision — what you see today is the foundation, and there's a mountain of work ahead. New epics are being added weekly.
 {: .fs-6 .fw-300 }
+
+{: .warning }
+> **Early Stage.** RobOS is pre-1.0 software. Apps are functional but rough around the edges. APIs will change. Things will break. If that excites you rather than scares you, you're in the right place.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -18,9 +21,25 @@ nav_order: 8
 
 ---
 
+## Current Status: v0.0.4
+
+**24 epics planned.** 40+ Electron apps built. 440+ tests passing. Installer shipping for Linux, macOS, and Windows. Moving fast.
+
+| Metric | Count |
+|:-------|:------|
+| Epics total | 24 |
+| Epics complete | 14 |
+| Epics in progress | 4 |
+| Epics planned | 6 |
+| Electron apps | 40+ |
+| Unit tests | 440+ |
+| E2E test suites | 22 |
+
+---
+
 ## MVP — Model Problem End-to-End
 
-The MVP goal: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically. Validated against the **buildbarn-forms** project — a React component library for editing [Buildbarn](https://github.com/buildbarn) remote execution configurations.
+The MVP goal: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
 
 ### Wave 0: Foundation (Complete)
 
@@ -77,7 +96,7 @@ Dev Central, Manager Dashboard, Report Builder, Deploy Tracker.
 
 ---
 
-## Infrastructure Epics (Complete)
+## Platform Epics (Complete / In Progress)
 
 | # | Epic | Stories | Status |
 |:--|:-----|:--------|:-------|
@@ -85,20 +104,85 @@ Dev Central, Manager Dashboard, Report Builder, Deploy Tracker.
 | 16 | Test Framework | 8 | **Complete** |
 | 17 | Work Journal | 9 | **Complete** |
 | 20 | Deep Test Coverage | 8 | **In Progress** |
+| 21 | GitHub Pages Docs | 6 | **Complete** |
+| 22 | Desktop Customizer | 10 | **Complete** |
+| 23 | Release Pipeline & Versioning | 5 | **Complete** |
 
 ---
 
-## Post-MVP Epics
+## Next Up
 
-| # | Epic | Stories | Status | Description |
-|:--|:-----|:--------|:-------|:------------|
-| 08 | EKGraph | 6 | Not started | Enterprise knowledge graph with AI indexing |
-| 09 | Voice Input | 4 | Not started | Local STT engine, push-to-talk |
-| 11 | Release Packaging | 5 | Not started | Automated VM build, OVA export, update mechanism |
-| 14 | Developer Experience | 5 | Not started | Shared UI components, IntelliJ plugin |
-| 19 | OAuth Providers | — | Not started | OAuth provider support |
-| 21 | GitHub Pages Docs | 6 | **In Progress** | This documentation site |
-| 22 | Desktop Customizer | 10 | Not started | Prompt-driven desktop customization with on-the-fly app builder |
+### Epic 24: AI Agent Orchestration (65 pts, 12 stories)
+
+The big one. Inspired by [gstack](https://github.com/garrytan/gstack) and [Paperclip](https://github.com/paperclipai/paperclip). Multi-agent teams with role specialization (architect, implementer, reviewer, tester), org charts, budget controls, human approval gates, and a live Agent Command Center dashboard. Run an entire sprint autonomously with 5 agents working 5 stories in parallel.
+
+| Story | Points |
+|:------|:-------|
+| Agent Role system | 5 |
+| Org Chart with delegation | 5 |
+| Parallel agent execution | 8 |
+| Budget system (per-sprint/task/agent) | 5 |
+| Human approval gates | 5 |
+| Agent Command Center app | 8 |
+| Role templates (gstack-style presets) | 3 |
+| Multi-provider (Claude, Copilot, Codex, Gemini, Ollama) | 5 |
+| Sprint automation | 8 |
+| Agent memory and context handoff | 5 |
+| Marketplace (downloadable team templates) | 5 |
+| Event Bus integration | 3 |
+
+---
+
+## Future Epics
+
+| # | Epic | Description | Status |
+|:--|:-----|:------------|:-------|
+| 08 | EKGraph | Enterprise knowledge graph — structured company wiki with AI indexing, search, and cross-linking | Not started |
+| 09 | Voice Input | Local STT engine (Whisper/Vosk), push-to-talk, voice-to-text in any AI textarea | Not started |
+| 11 | Release Packaging | Automated full VM build, OVA/qcow2 cloud export, RobOS update mechanism | Not started |
+| 14 | Developer Experience | robos-ui shared Web Components library, IntelliJ plugin, People Directory | Not started |
+| 19 | OAuth Providers | OAuth 2.0 provider support for Jira, GitHub, GitLab, Linear | Not started |
+
+---
+
+## Content & Community Roadmap
+
+Beyond code, there's a content plan to make RobOS accessible:
+
+### YouTube Demo Series (Coming Soon)
+
+Individual video walkthroughs of every RobOS Electron app — what it does, how it works, and how it fits into the SDLC workflow.
+
+| Video | Status |
+|:------|:-------|
+| App Launcher + Desktop Tour | Planned |
+| Security Setup — GPG, SSH, GitHub in 2 minutes | Planned |
+| Task Board + Issue Manager — GitHub Issues Kanban | Planned |
+| Workflow Studio — AI-generated task workflows | Planned |
+| PR Review Board — AI-assisted code review | Planned |
+| CI Monitor — pipeline monitoring with AI diagnosis | Planned |
+| Dev Central — the developer daily dashboard | Planned |
+| Manager Dashboard — sprint metrics and velocity | Planned |
+| Desktop Customizer — reshape GNOME with prompts | Planned |
+| Workspace Manager — auto-provisioned dev environments | Planned |
+| AI Agent Manager — Claude/Copilot session management | Planned |
+| Dev Tools — install IDEs and CLI tools | Planned |
+| Automation Studio — event-driven rules and scheduled jobs | Planned |
+| Notifications + Toast Daemon — the notification system | Planned |
+| Pass Manager — GPG-encrypted secrets GUI | Planned |
+
+### Full Model Problem Video (Coming Soon)
+
+A complete end-to-end video walkthrough of the Model Problem: a team of four builds the buildbarn-forms project using RobOS from start to finish.
+
+- Company setup (Jira, workflows, Git projects)
+- Developer onboarding (3-minute zero-to-productive)
+- Story implementation with AI (questionnaire → draft → PR)
+- Code review with AI assistance (breakpoint review, "start the app")
+- Merge, deploy, and automatic status transitions
+- Dashboard visibility for all four personas
+
+This will be the definitive demo of what RobOS can do.
 
 ---
 
@@ -113,12 +197,18 @@ graph TD
     W3[Wave 3: AI Agents<br/>Epic 06]
     W4[Wave 4: Review + CI<br/>Epic 07]
     W5[Wave 5: Dashboards<br/>Epic 10]
+    W6[Desktop Customizer<br/>Epic 22]
+    W7[AI Orchestration<br/>Epic 24]
+    W8[EKGraph + Voice<br/>Epics 08, 09]
 
     W0 --> W1
     W1 --> W2
     W2 --> W3
     W3 --> W4
     W4 --> W5
+    W3 --> W7
+    W5 --> W8
+    W1 --> W6
 
     style W0 fill:#22c55e,stroke:#16a34a,color:#fff
     style W1 fill:#22c55e,stroke:#16a34a,color:#fff
@@ -126,6 +216,9 @@ graph TD
     style W3 fill:#22c55e,stroke:#16a34a,color:#fff
     style W4 fill:#22c55e,stroke:#16a34a,color:#fff
     style W5 fill:#22c55e,stroke:#16a34a,color:#fff
+    style W6 fill:#22c55e,stroke:#16a34a,color:#fff
+    style W7 fill:#f59e0b,stroke:#d97706,color:#fff
+    style W8 fill:#6b7280,stroke:#4b5563,color:#fff
 ```
 
-All MVP waves are **complete**. Post-MVP epics (EKGraph, Voice, Release Packaging) add depth but are not required for the core workflow.
+**Green** = complete | **Yellow** = next up | **Grey** = planned

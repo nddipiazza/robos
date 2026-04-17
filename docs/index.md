@@ -13,6 +13,9 @@ nav_exclude: false
 A purpose-built Linux desktop where AI does the heavy lifting — writing code, reviewing PRs, managing tasks, tracking deployments — and the entire OS can be reshaped with a single prompt. Drop expensive hardware and proprietary licenses. Ship software faster on a $700 ThinkPad.
 {: .fs-6 .fw-300 }
 
+{: .note }
+> **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. This is the foundation. [YouTube demos of every app]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series-coming-soon) and a [full Model Problem walkthrough video]({{ site.baseurl }}{% link roadmap.md %}#full-model-problem-video-coming-soon) are coming soon. Star the repo and follow along.
+
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [View on GitHub](https://github.com/nddipiazza/robos){: .btn .fs-5 .mb-4 .mb-md-0 }
 
