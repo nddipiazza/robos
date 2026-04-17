@@ -48,35 +48,40 @@ Every change is git-snapshotted with instant rollback. Build entirely new Electr
 
 ## Quick Start
 
-### Prerequisites
+### Option A: Install on a Laptop (Bare Metal)
 
-- QEMU/KVM with `/dev/kvm` access
-- Node.js 20+
-- 16 GB RAM, 100 GB disk
+1. Install **Ubuntu 22.04 LTS** on any x86_64 machine (ThinkPad, Dell, HP, etc.)
+2. Download the **seed ISO** from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases)
+3. Mount it and run the provisioner — installs Node.js, Electron, all 30+ RobOS apps, dark theme
 
-### Build and Run
+See the [full bare-metal guide](https://nddipiazza.github.io/robos/getting-started.html) for step-by-step instructions including USB flash drive creation.
+
+### Option B: Run as a VM
+
+```bash
+# Download pre-built image from GitHub Releases
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2.qcow2
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
+
+# First boot (provisions the full desktop)
+qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
+  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
+  -drive file=robos-v0.0.2-seed.iso,format=raw,if=virtio \
+  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
+  -device virtio-net-pci,netdev=net0 -display gtk
+```
+
+### Option C: Build from Source
 
 ```bash
 git clone https://github.com/nddipiazza/robos.git
 cd robos
-
-# Build the VM disk image
-infra/desktop/build.sh
-
-# First boot (cloud-init provisioning)
-infra/desktop/run.sh --firstboot
-
-# Subsequent boots
-infra/desktop/run.sh
+infra/desktop/build.sh           # Build disk image + seed ISO
+infra/desktop/run.sh --firstboot # First boot with provisioning
+infra/desktop/run.sh             # Subsequent boots
 ```
 
-### Connect
-
-```bash
-ssh -p 2224 robos@localhost    # Password: robos
-```
-
-VNC on port 5910, SPICE on port 5932.
+**SSH**: `ssh -p 2224 robos@localhost` (password: `robos`) | **VNC**: port 5910 | **SPICE**: port 5932
 
 ---
 

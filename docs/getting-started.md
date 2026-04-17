@@ -7,7 +7,7 @@ nav_order: 2
 # Getting Started
 {: .no_toc }
 
-Build and run RobOS on your machine.
+Install RobOS on bare metal or run it as a VM.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,22 +18,135 @@ Build and run RobOS on your machine.
 
 ---
 
-## Prerequisites
+## Option A: Install on a Laptop (Bare Metal)
 
-| Requirement | Version | Notes |
-|:------------|:--------|:------|
-| QEMU/KVM | Latest | `/dev/kvm` access required |
-| Node.js | 20+ | For building Electron apps |
-| npm | 10+ | Comes with Node.js |
-| Host RAM | 16 GB+ | VM uses 16 GB |
-| Disk | 100 GB free | Sparse qcow2 image |
+The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC that runs Ubuntu.
+
+### What You Need
+
+- A USB flash drive (8 GB+)
+- A laptop or desktop with 16 GB+ RAM and 100 GB+ disk
+- An internet connection (for first-boot provisioning)
+
+### Step 1: Install Ubuntu 22.04 LTS
+
+Download the Ubuntu 22.04 LTS desktop ISO from [ubuntu.com/download/desktop](https://ubuntu.com/download/desktop).
+
+**Create a bootable USB drive:**
+
+| OS | Tool |
+|:---|:-----|
+| Linux | `sudo dd if=ubuntu-22.04-desktop-amd64.iso of=/dev/sdX bs=4M status=progress` |
+| Mac | [balenaEtcher](https://etcher.balena.io/) or `dd` |
+| Windows | [Rufus](https://rufus.ie/) or [balenaEtcher](https://etcher.balena.io/) |
+
+Boot from the USB drive and install Ubuntu with these settings:
+- **User**: `robos` (password: your choice)
+- **Disk**: Use entire disk (or a partition if dual-booting)
+- **Minimal installation** is fine — RobOS provisioning installs everything else
+
+### Step 2: Download the RobOS Seed ISO
+
+After Ubuntu is installed and you're logged in, download the seed ISO from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases):
+
+```bash
+# Download the latest seed ISO (contains all RobOS apps + provisioning scripts)
+cd ~/Downloads
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
+```
+
+### Step 3: Mount and Run the Provisioner
+
+```bash
+# Mount the seed ISO
+sudo mkdir -p /mnt/seed
+sudo mount -o loop ~/Downloads/robos-v0.0.2-seed.iso /mnt/seed
+
+# Extract the packages
+sudo tar xzf /mnt/seed/robos-packages.tar.gz -C /tmp/robos-packages/
+
+# Copy packages to /usr/local/share/robos/
+sudo mkdir -p /usr/local/share/robos
+for pkg in /tmp/robos-packages/*/; do
+  name=$(basename "$pkg")
+  sudo cp -r "$pkg" "/usr/local/share/robos/$name"
+  sudo chmod -R a+rX "/usr/local/share/robos/$name"
+done
+
+# Install Node.js 20 (if not already installed)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install Electron globally
+sudo npm install -g electron@28
+
+# Install npm dependencies for each app
+for pkg in /usr/local/share/robos/*/; do
+  if [ -f "$pkg/package.json" ] && grep -q electron "$pkg/package.json"; then
+    sudo bash -c "cd '$pkg' && npm install --quiet"
+  fi
+done
+
+# Install .desktop files so apps appear in the launcher
+for desktop in /usr/local/share/robos/*/*.desktop; do
+  [ -f "$desktop" ] && sudo cp "$desktop" /usr/share/applications/
+done
+
+# Copy logo
+sudo cp /mnt/seed/robos-logo.png /usr/share/pixmaps/robos-logo.png 2>/dev/null || true
+
+# Unmount
+sudo umount /mnt/seed
+```
+
+### Step 4: Apply the RobOS Theme (Optional)
+
+```bash
+# Dark theme
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
+
+# Auto-login (so RobOS boots straight to desktop)
+sudo sed -i 's/#  AutomaticLoginEnable/AutomaticLoginEnable/' /etc/gdm3/custom.conf
+sudo sed -i "s/#  AutomaticLogin = user1/AutomaticLogin = $(whoami)/" /etc/gdm3/custom.conf
+```
+
+Log out and back in (or reboot). All RobOS apps are now available in the GNOME application menu.
 
 ---
 
-## Build the VM
+## Option B: Run as a VM (QEMU/KVM)
+
+Best for development, testing, or trying RobOS without modifying your host system.
+
+### From GitHub Releases (Fastest)
+
+Download the pre-built VM image and seed ISO from the latest [release](https://github.com/nddipiazza/robos/releases):
 
 ```bash
-# Clone the repository
+# Download artifacts
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2.qcow2
+wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
+
+# First boot — cloud-init provisions the full RobOS desktop
+qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
+  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
+  -drive file=robos-v0.0.2-seed.iso,format=raw,if=virtio \
+  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -display gtk
+
+# After provisioning completes and VM reboots, run without seed ISO:
+qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
+  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
+  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -display gtk
+```
+
+### From Source
+
+```bash
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
@@ -42,6 +155,29 @@ infra/desktop/build.sh
 
 # First boot with cloud-init provisioning
 infra/desktop/run.sh --firstboot
+
+# Subsequent boots
+infra/desktop/run.sh
+```
+
+### Prerequisites (VM)
+
+| Requirement | Version | Notes |
+|:------------|:--------|:------|
+| QEMU/KVM | Latest | `/dev/kvm` access required |
+| Node.js | 20+ | For building from source |
+| Host RAM | 16 GB+ | VM uses 16 GB |
+| Disk | 100 GB free | Sparse qcow2 image |
+
+### Connect to the VM
+
+```bash
+# SSH access
+ssh -p 2224 robos@localhost
+# Password: robos
+
+# VNC access (for GUI): port 5910
+# SPICE access (clipboard sharing): port 5932
 ```
 
 The first boot runs a 7-step provisioning sequence via cloud-init:
@@ -52,27 +188,6 @@ The first boot runs a 7-step provisioning sequence via cloud-init:
 5. Desktop panels, widgets, and launcher configuration
 6. LightDM auto-login setup
 7. Final reboot
-
----
-
-## Connect to the VM
-
-After the first boot completes and the VM reboots:
-
-```bash
-# Subsequent launches (no --firstboot)
-infra/desktop/run.sh
-
-# SSH access
-ssh -p 2224 robos@localhost
-# Password: robos
-
-# VNC access (for GUI)
-# Port 5910
-
-# SPICE access (clipboard sharing)
-# Port 5932
-```
 
 ---
 
@@ -107,7 +222,7 @@ Open **Task Servers** and add your GitHub or Jira instance:
 | Type | GitHub |
 | Name | My Project |
 | Org | `acme-corp` |
-| Repo | `buildbarn-forms` |
+| Repo | `my-project` |
 | Auth | Use `gh` CLI |
 
 Click **Test Connection** to verify, then **Save**.
@@ -129,12 +244,10 @@ Open **Workflow Studio** and use the AI generator:
 You don't need the VM to test apps during development. The dev harness runs Electron apps locally in a sandbox:
 
 ```bash
-# Run an app with a test scenario
 cd packages/robos-test
 npm install
-node lib/harness.js --app security-setup --scenario fresh-install
 
-# Run all unit tests (432 tests)
+# Run all unit tests (440 tests)
 npm run test:unit
 
 # Run all E2E tests
@@ -148,9 +261,6 @@ Test scenarios simulate different credential states (`all-good`, `fresh-install`
 ## Deploying Changes to the VM
 
 ```bash
-# Full install (all packages)
-ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
-
 # Single app update
 scp -P 2224 -r packages/task-board/* robos@localhost:/tmp/task-board/
 ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/task-board \
