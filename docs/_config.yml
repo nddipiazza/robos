@@ -1,7 +1,13 @@
 title: RobOS
-description: AI-First Software Development Operating System
+tagline: The AI-Native Operating System for Software Teams
+description: "A purpose-built Linux desktop where AI writes code, reviews PRs, manages tasks, and tracks deployments — and the entire OS can be reshaped with a single prompt. Drop expensive hardware and proprietary licenses. Ship software faster on a $700 ThinkPad."
 url: "https://nddipiazza.github.io"
 baseurl: "/robos"
+
+# Open Graph / LinkedIn / Twitter preview
+og_image: "/robos/assets/images/screenshots/robos-desktop.png"
+twitter:
+  card: summary_large_image
 
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 

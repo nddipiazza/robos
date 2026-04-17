@@ -1,7 +1,8 @@
 ---
-title: Home
+title: RobOS — The AI-Native Operating System
 layout: home
 nav_order: 1
+nav_exclude: false
 ---
 
 # RobOS
