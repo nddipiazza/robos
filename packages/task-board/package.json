@@ -1,6 +1,6 @@
 {
   "name": "robos-task-board",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RobOS Task Board — kanban and list views for work items",
   "main": "main.js",
   "scripts": {

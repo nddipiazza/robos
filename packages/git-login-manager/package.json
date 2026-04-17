@@ -1,6 +1,6 @@
 {
   "name": "robos-git-login-manager",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RobOS Git Login Manager — monitors and manages git credentials",
   "main": "main.js",
   "scripts": {

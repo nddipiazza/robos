@@ -1,6 +1,6 @@
 {
   "name": "robos-app-launcher",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RobOS App Launcher — searchable app grid",
   "main": "main.js",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "robos-store",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RobOS Distributed Config Store — git-backed, versioned, team-shared configuration",
   "main": "index.js"
 }
