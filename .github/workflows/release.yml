@@ -45,18 +45,34 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y qemu-utils xorriso
+
       - name: Read version
         id: version
         run: echo "version=$(cat VERSION | tr -d '[:space:]')" >> $GITHUB_OUTPUT
 
-      - name: Build packages tarball
+      - name: Build VM disk image and seed ISO
         run: |
+          cd infra/desktop && bash build.sh
+
+      - name: Version the release artifacts
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
           mkdir -p release
-          tar czf release/robos-v${{ steps.version.outputs.version }}-packages.tar.gz \
+
+          # Packages tarball (standalone, for users who want just the apps)
+          tar czf release/robos-v${VERSION}-packages.tar.gz \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='__pycache__' \
             -C packages .
+
+          # Seed ISO (cloud-init provisioner — the actual installer)
+          cp infra/desktop/output/seed.iso release/robos-v${VERSION}-seed.iso
+
+          # Disk image (qcow2 — ready-to-boot VM, large file)
+          cp infra/desktop/output/robos.qcow2 release/robos-v${VERSION}.qcow2
 
       - name: Generate checksums
         run: |
@@ -72,17 +88,37 @@ jobs:
           {
             echo "## RobOS v${VERSION}"
             echo ""
-            echo "### Installation"
+            echo "### Quick Start"
+            echo ""
+            echo "Download \`robos-v${VERSION}.qcow2\` (VM disk image) and \`robos-v${VERSION}-seed.iso\` (installer), then:"
             echo ""
             echo '```bash'
-            echo "# Clone and build"
-            echo "git clone https://github.com/nddipiazza/robos.git"
-            echo "cd robos && git checkout v${VERSION}"
-            echo "infra/desktop/build.sh"
-            echo "infra/desktop/run.sh --firstboot"
+            echo "# First boot — provisions the full RobOS desktop"
+            echo "qemu-system-x86_64 -m 16G -smp \$(nproc) -enable-kvm -cpu host \\"
+            echo "  -drive file=robos-v${VERSION}.qcow2,format=qcow2,if=virtio \\"
+            echo "  -drive file=robos-v${VERSION}-seed.iso,format=raw,if=virtio \\"
+            echo "  -netdev user,id=net0,hostfwd=tcp::2224-:22 \\"
+            echo "  -device virtio-net-pci,netdev=net0 \\"
+            echo "  -display gtk"
+            echo ""
+            echo "# After first boot completes and VM reboots, run without seed ISO:"
+            echo "qemu-system-x86_64 -m 16G -smp \$(nproc) -enable-kvm -cpu host \\"
+            echo "  -drive file=robos-v${VERSION}.qcow2,format=qcow2,if=virtio \\"
+            echo "  -netdev user,id=net0,hostfwd=tcp::2224-:22 \\"
+            echo "  -device virtio-net-pci,netdev=net0 \\"
+            echo "  -display gtk"
             echo '```'
             echo ""
-            echo "Or download the packages tarball from this release and extract to \`packages/\`."
+            echo "Or build from source: \`git clone\`, \`infra/desktop/build.sh\`, \`infra/desktop/run.sh --firstboot\`"
+            echo ""
+            echo "### Release Assets"
+            echo ""
+            echo "| File | Description |"
+            echo "|------|-------------|"
+            echo "| \`robos-v${VERSION}.qcow2\` | Ready-to-boot VM disk image (Ubuntu 22.04 base, ~700 MB download) |"
+            echo "| \`robos-v${VERSION}-seed.iso\` | Cloud-init seed ISO — provisions RobOS desktop + 30+ apps on first boot |"
+            echo "| \`robos-v${VERSION}-packages.tar.gz\` | All RobOS Electron app packages (for manual install or development) |"
+            echo "| \`SHA256SUMS\` | Checksums for all artifacts |"
             echo ""
             echo "### What's New"
             echo ""
@@ -102,14 +138,13 @@ jobs:
             echo ""
             echo "### System Requirements"
             echo ""
-            echo "- QEMU/KVM with \`/dev/kvm\` access"
-            echo "- Node.js 20+"
+            echo "- QEMU/KVM with \`/dev/kvm\` access (or any hypervisor that reads qcow2)"
             echo "- 16 GB RAM, 100 GB disk space"
+            echo "- SSH: port 2224 | VNC: port 5910 | SPICE: port 5932"
             echo ""
             echo "**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)**"
           } > release/RELEASE-NOTES.md
 
-          # Also set as output for the release body
           {
             echo 'body<<EOFNOTES'
             cat release/RELEASE-NOTES.md
@@ -122,6 +157,8 @@ jobs:
           name: RobOS v${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
           files: |
+            release/robos-v${{ steps.version.outputs.version }}.qcow2
+            release/robos-v${{ steps.version.outputs.version }}-seed.iso
             release/robos-v${{ steps.version.outputs.version }}-packages.tar.gz
             release/SHA256SUMS
             release/RELEASE-NOTES.md

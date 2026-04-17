@@ -1,6 +1,6 @@
 {
   "name": "robos-ci-monitor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS CI Monitor — pipeline status, build logs, and AI failure diagnosis",
   "main": "main.js",
   "scripts": {

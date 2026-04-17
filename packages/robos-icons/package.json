@@ -1,6 +1,6 @@
 {
   "name": "robos-icons",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS SVG icon registry for built-in apps",
   "main": "index.js"
 }

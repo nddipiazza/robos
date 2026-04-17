@@ -1,6 +1,6 @@
 {
   "name": "robos-task-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Task Client — unified adapter for Jira, GitHub Issues, and other task servers",
   "main": "index.js"
 }

@@ -1,6 +1,6 @@
 {
   "name": "robos-scheduler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Scheduler — cron-based and event-triggered job scheduling",
   "main": "index.js",
   "dependencies": {}

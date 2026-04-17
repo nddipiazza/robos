@@ -1,6 +1,6 @@
 {
   "name": "robos-action-registry",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Action Registry — pluggable action type system for event-driven automation",
   "main": "index.js",
   "dependencies": {}

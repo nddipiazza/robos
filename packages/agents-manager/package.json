@@ -1,6 +1,6 @@
 {
   "name": "agents-manager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Agents Manager — manage AI agent sessions and providers",
   "main": "main.js",
   "dependencies": {

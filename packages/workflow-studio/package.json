@@ -1,6 +1,6 @@
 {
   "name": "workflow-studio",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Workflow Studio — view and transition GitHub issues",
   "main": "main.js",
   "scripts": {

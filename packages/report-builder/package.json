@@ -1,6 +1,6 @@
 {
   "name": "robos-report-builder",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Report Builder — AI-generated reports from natural language queries",
   "main": "main.js",
   "dependencies": {

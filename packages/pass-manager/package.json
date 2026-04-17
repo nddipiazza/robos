@@ -1,6 +1,6 @@
 {
   "name": "robos-pass-manager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "RobOS Pass Manager — GUI for GPG-encrypted password store",
   "main": "main.js",
   "scripts": {
