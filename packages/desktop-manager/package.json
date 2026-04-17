@@ -1,6 +1,6 @@
 {
   "name": "robos-desktop-manager",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Desktop Manager — system tray, app lifecycle, and IPC hub",
   "main": "main.js",
   "scripts": {

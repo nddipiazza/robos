@@ -1,6 +1,6 @@
 {
   "name": "task-servers",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Task Servers — Configure Jira and GitHub Issues task server connections",
   "main": "main.js",
   "scripts": {

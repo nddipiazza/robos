@@ -20,98 +20,40 @@ Install RobOS on bare metal or run it as a VM.
 
 ## Option A: Install on a Laptop (Bare Metal)
 
-The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC that runs Ubuntu.
+The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC that runs Ubuntu. One ISO, one flash, one boot.
 
 ### What You Need
 
-- A USB flash drive (8 GB+)
+- A USB flash drive (4 GB+)
 - A laptop or desktop with 16 GB+ RAM and 100 GB+ disk
-- An internet connection (for first-boot provisioning)
+- An internet connection (the installer downloads packages during provisioning)
 
-### Step 1: Install Ubuntu 22.04 LTS
+### Step 1: Download the RobOS ISO
 
-Download the Ubuntu 22.04 LTS desktop ISO from [ubuntu.com/download/desktop](https://ubuntu.com/download/desktop).
+Download `robos.iso` from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases).
 
-**Create a bootable USB drive:**
+### Step 2: Flash to USB
 
-| OS | Tool |
-|:---|:-----|
-| Linux | `sudo dd if=ubuntu-22.04-desktop-amd64.iso of=/dev/sdX bs=4M status=progress` |
-| Mac | [balenaEtcher](https://etcher.balena.io/) or `dd` |
-| Windows | [Rufus](https://rufus.ie/) or [balenaEtcher](https://etcher.balena.io/) |
+| OS | Tool | Command |
+|:---|:-----|:--------|
+| **Linux** | `dd` | `sudo dd if=robos.iso of=/dev/sdX bs=4M status=progress` |
+| **Mac** | [balenaEtcher](https://etcher.balena.io/) | Open Etcher → Select ISO → Select drive → Flash |
+| **Windows** | [Rufus](https://rufus.ie/) | Open Rufus → Select ISO → Select drive → Start |
 
-Boot from the USB drive and install Ubuntu with these settings:
-- **User**: `robos` (password: your choice)
-- **Disk**: Use entire disk (or a partition if dual-booting)
-- **Minimal installation** is fine — RobOS provisioning installs everything else
+{: .warning }
+> **This will erase the target drive.** Double-check you're writing to the USB drive, not your system disk. On Linux, use `lsblk` to identify the correct device.
 
-### Step 2: Download the RobOS Seed ISO
+### Step 3: Boot and Wait
 
-After Ubuntu is installed and you're logged in, download the seed ISO from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases):
+1. Insert the USB drive and boot from it (usually F12 or F2 at BIOS splash for boot menu)
+2. The RobOS installer starts automatically — **no interaction needed**
+3. It installs Ubuntu 22.04, creates the `robos` user, installs GNOME + Node.js + Electron + all 30+ RobOS apps, applies the dark theme, and reboots
+4. After ~15-20 minutes (depending on internet speed), you'll see the RobOS desktop
 
-```bash
-# Download the latest seed ISO (contains all RobOS apps + provisioning scripts)
-cd ~/Downloads
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
-```
+**Default credentials:** username `robos`, password `robos`
 
-### Step 3: Mount and Run the Provisioner
-
-```bash
-# Mount the seed ISO
-sudo mkdir -p /mnt/seed
-sudo mount -o loop ~/Downloads/robos-v0.0.2-seed.iso /mnt/seed
-
-# Extract the packages
-sudo tar xzf /mnt/seed/robos-packages.tar.gz -C /tmp/robos-packages/
-
-# Copy packages to /usr/local/share/robos/
-sudo mkdir -p /usr/local/share/robos
-for pkg in /tmp/robos-packages/*/; do
-  name=$(basename "$pkg")
-  sudo cp -r "$pkg" "/usr/local/share/robos/$name"
-  sudo chmod -R a+rX "/usr/local/share/robos/$name"
-done
-
-# Install Node.js 20 (if not already installed)
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Install Electron globally
-sudo npm install -g electron@28
-
-# Install npm dependencies for each app
-for pkg in /usr/local/share/robos/*/; do
-  if [ -f "$pkg/package.json" ] && grep -q electron "$pkg/package.json"; then
-    sudo bash -c "cd '$pkg' && npm install --quiet"
-  fi
-done
-
-# Install .desktop files so apps appear in the launcher
-for desktop in /usr/local/share/robos/*/*.desktop; do
-  [ -f "$desktop" ] && sudo cp "$desktop" /usr/share/applications/
-done
-
-# Copy logo
-sudo cp /mnt/seed/robos-logo.png /usr/share/pixmaps/robos-logo.png 2>/dev/null || true
-
-# Unmount
-sudo umount /mnt/seed
-```
-
-### Step 4: Apply the RobOS Theme (Optional)
-
-```bash
-# Dark theme
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
-
-# Auto-login (so RobOS boots straight to desktop)
-sudo sed -i 's/#  AutomaticLoginEnable/AutomaticLoginEnable/' /etc/gdm3/custom.conf
-sudo sed -i "s/#  AutomaticLogin = user1/AutomaticLogin = $(whoami)/" /etc/gdm3/custom.conf
-```
-
-Log out and back in (or reboot). All RobOS apps are now available in the GNOME application menu.
+{: .important }
+> The installer will **use the entire disk**. If you need dual-boot or custom partitioning, use Option B (VM) or install Ubuntu manually first, then download the seed ISO from the release and run `robos-provision.sh`.
 
 ---
 

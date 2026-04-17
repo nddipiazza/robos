@@ -1,6 +1,6 @@
 {
   "name": "context-manager",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Context Manager — manage AI context sources for agents",
   "main": "main.js",
   "dependencies": {

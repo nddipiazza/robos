@@ -1,6 +1,6 @@
 {
   "name": "robos-search-index",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Search Index — file system indexer for @-mention search across AI text areas",
   "main": "main.js",
   "scripts": {

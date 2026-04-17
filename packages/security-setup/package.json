@@ -1,6 +1,6 @@
 {
   "name": "robos-security-setup",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Security Setup — first-run GPG + SSH key initialization",
   "main": "main.js",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "robos-agent-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Agent Client — AI agent lifecycle management for Claude Code, GitHub Copilot CLI, and more",
   "main": "index.js"
 }

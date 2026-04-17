@@ -1,6 +1,6 @@
 {
   "name": "robos-pr-review",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS PR Review Board — AI-assisted pull request review with breakpoint debugging",
   "main": "main.js",
   "scripts": {

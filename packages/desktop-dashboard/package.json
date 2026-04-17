@@ -1,6 +1,6 @@
 {
   "name": "robos-desktop-dashboard",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Desktop Dashboard — widget grid replacing the traditional desktop",
   "main": "main.js",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "robos-pass-unlock",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Pass Unlock — daily GPG passphrase unlock dialog",
   "main": "main.js",
   "scripts": {

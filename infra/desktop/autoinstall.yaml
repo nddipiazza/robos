@@ -1,0 +1,40 @@
+#cloud-config
+autoinstall:
+  version: 1
+
+  locale: en_US.UTF-8
+  timezone: America/Chicago
+
+  keyboard:
+    layout: us
+
+  identity:
+    hostname: robos
+    username: robos
+    # Password: robos (SHA-512 hash)
+    password: "$6$AZ7p5oKF3JsaKNcu$hOP9fUJ2NnlWfpds4jK7D1cOQd5BLMh0AeECNzv2RruaQo8os1qehm3ndvpYhfsiBV05AzHz8g.8T5nS0P52Y0"
+
+  storage:
+    layout:
+      name: direct
+
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  packages:
+    - curl
+    - wget
+    - gnupg
+    - python3
+    - unzip
+    - spice-vdagent
+
+  late-commands:
+    # Copy RobOS provisioner and packages from the ISO into the installed system
+    - cp /cdrom/robos-packages.tar.gz /target/tmp/robos-packages.tar.gz
+    - cp /cdrom/robos-provision.sh /target/tmp/robos-provision.sh
+    - test -f /cdrom/robos-logo.png && cp /cdrom/robos-logo.png /target/tmp/robos-logo.png || true
+    - chmod +x /target/tmp/robos-provision.sh
+    # Run the provisioner inside the installed system (chroot)
+    - curtin in-target -- bash /tmp/robos-provision.sh

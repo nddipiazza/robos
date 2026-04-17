@@ -1,6 +1,6 @@
 {
   "name": "robos-automation-studio",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "RobOS Automation Studio — event rules, scheduled jobs, and event log viewer",
   "main": "main.js",
   "scripts": {
