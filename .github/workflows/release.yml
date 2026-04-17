@@ -20,6 +20,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Configure git identity (needed by robos-store tests)
+        run: |
+          git config --global user.name "RobOS CI"
+          git config --global user.email "ci@robos.dev"
+
       - name: Install test dependencies
         run: cd packages/robos-test && npm install
 
