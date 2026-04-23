@@ -39,13 +39,29 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <img src="{{ '/assets/images/icons/task-board.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Kanban and list view of all issues from your task server. Filter by state, assignee, or search.
 
-![Task Board]({{ '/assets/images/screenshots/task-board.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/BnbGA7ivVJM"
+    title="RobOS Task Board — your whole backlog on one screen"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Issue Manager
 
 <img src="{{ '/assets/images/icons/issue-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> GitHub Issues client with AI issue breakdown, workflow state transitions, and workspace provisioning from any issue.
 
-![Issue Manager]({{ '/assets/images/screenshots/issue-manager.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/5xKT8YXG_X4"
+    title="RobOS Issue Manager — AI-assisted deep dive on every ticket"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### PR Review Board
 
@@ -163,7 +179,15 @@ Set up your development environment and manage credentials.
 
 <img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Define custom task workflows with AI generation. Configure issue types, states, and event-driven transitions.
 
-![Workflow Studio]({{ '/assets/images/screenshots/workflow-studio.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/e13RZlZ1yeU"
+    title="RobOS Workflow Studio — design your team's ticket lifecycle with AI"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### RobOS Preferences
 
