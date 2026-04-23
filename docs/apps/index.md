@@ -181,8 +181,8 @@ Set up your development environment and manage credentials.
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/e13RZlZ1yeU"
-    title="RobOS Workflow Studio — design your team's ticket lifecycle with AI"
+    src="https://www.youtube-nocookie.com/embed/gqRYI6ja-q8"
+    title="RobOS Workflow Studio — design ticket workflows in plain English"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen

@@ -155,7 +155,7 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 
 | Video | Status |
 |:------|:-------|
-| [Workflow Studio — design your team's ticket lifecycle with AI](https://youtu.be/e13RZlZ1yeU) | **Published** |
+| [Workflow Studio — design ticket workflows in plain English](https://youtu.be/gqRYI6ja-q8) | **Published** |
 | [Issue Manager — AI-assisted deep dive on every ticket](https://youtu.be/5xKT8YXG_X4) | **Published** |
 | [Task Board — your whole backlog on one screen](https://youtu.be/BnbGA7ivVJM) | **Published** |
 | [Security Setup — GPG, SSH, and pass store in 90 seconds](https://www.youtube.com/shorts/QGmIybkj878) | **Published** |
