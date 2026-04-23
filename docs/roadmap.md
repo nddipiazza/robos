@@ -156,12 +156,12 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | Video | Status |
 |:------|:-------|
 | [Workflow Studio — design ticket workflows in plain English](https://youtu.be/gqRYI6ja-q8) | **Published** |
+| [PR Review Board — AI-assisted code review](https://youtu.be/gV0vsmR5I7E) | **Published** |
 | [Issue Manager — focused, AI-assisted view of any ticket](https://youtu.be/3awlQtEaWmE) | **Published** |
 | [Task Board — your whole backlog on one screen](https://youtu.be/BnbGA7ivVJM) | **Published** |
 | [Security Setup — GPG, SSH, and pass store in 90 seconds](https://www.youtube.com/shorts/QGmIybkj878) | **Published** |
 | [Notifications — unified workflow signals](https://www.youtube.com/watch?v=6iQgeIIvTH0) | **Published** |
 | App Launcher + Desktop Tour | Planned |
-| PR Review Board — AI-assisted code review | Planned |
 | CI Monitor — pipeline monitoring with AI diagnosis | Planned |
 | Dev Central — the developer daily dashboard | Planned |
 | Manager Dashboard — sprint metrics and velocity | Planned |
