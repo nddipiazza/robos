@@ -149,14 +149,15 @@ The big one. Inspired by [gstack](https://github.com/garrytan/gstack) and [Paper
 
 Beyond code, there's a content plan to make RobOS accessible:
 
-### YouTube Demo Series (Coming Soon)
+### YouTube Demo Series
 
-Individual video walkthroughs of every RobOS Electron app — what it does, how it works, and how it fits into the SDLC workflow.
+Individual video walkthroughs of every RobOS Electron app — what it does, how it works, and how it fits into the SDLC workflow. Subscribe on the [RobOS YouTube channel](https://www.youtube.com/@RobOS-e5i).
 
 | Video | Status |
 |:------|:-------|
+| [Security Setup — GPG, SSH, and pass store in 90 seconds](https://www.youtube.com/shorts/QGmIybkj878) | **Published** |
+| [Notifications — unified workflow signals](https://www.youtube.com/watch?v=6iQgeIIvTH0) | **Published** |
 | App Launcher + Desktop Tour | Planned |
-| Security Setup — GPG, SSH, GitHub in 2 minutes | Planned |
 | Task Board + Issue Manager — GitHub Issues Kanban | Planned |
 | Workflow Studio — AI-generated task workflows | Planned |
 | PR Review Board — AI-assisted code review | Planned |
@@ -168,7 +169,7 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | AI Agent Manager — Claude/Copilot session management | Planned |
 | Dev Tools — install IDEs and CLI tools | Planned |
 | Automation Studio — event-driven rules and scheduled jobs | Planned |
-| Notifications + Toast Daemon — the notification system | Planned |
+| Toast Daemon — system-wide overlay toasts | Planned |
 | Pass Manager — GPG-encrypted secrets GUI | Planned |
 
 ### Full Model Problem Video (Coming Soon)

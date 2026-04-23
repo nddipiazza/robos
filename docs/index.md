@@ -14,14 +14,51 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 {: .fs-6 .fw-300 }
 
 {: .note }
-> **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. This is the foundation. [YouTube demos of every app]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series-coming-soon) and a [full Model Problem walkthrough video]({{ site.baseurl }}{% link roadmap.md %}#full-model-problem-video-coming-soon) are coming soon. Star the repo and follow along.
+> **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. App demos are shipping on [YouTube]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series) with more landing weekly. Star the repo and [subscribe](https://www.youtube.com/@RobOS-e5i) to follow along.
 
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [View on GitHub](https://github.com/nddipiazza/robos){: .btn .fs-5 .mb-4 .mb-md-0 }
+[Watch on YouTube](https://www.youtube.com/@RobOS-e5i){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
 
 ![RobOS Desktop]({{ '/assets/images/screenshots/robos-desktop.png' | relative_url }})
+
+---
+
+## See It in Action
+
+### Security Setup — GPG, SSH, and Password Store in 90 seconds
+
+<div style="max-width: 360px; margin: 1.5rem auto;">
+  <div style="position: relative; padding-bottom: 177.78%; height: 0; overflow: hidden; border-radius: 8px;">
+    <iframe
+      src="https://www.youtube-nocookie.com/embed/QGmIybkj878"
+      title="RobOS Security Setup — first-run wizard"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+  </div>
+</div>
+
+The first-run wizard that configures everything a developer needs for signed commits, encrypted secrets, and SSH access to GitHub — in a single flow. [Watch on YouTube](https://www.youtube.com/shorts/QGmIybkj878).
+
+### Notifications — one place for every workflow signal
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/6iQgeIIvTH0"
+    title="RobOS Notifications — app walkthrough"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+Pull requests, CI, tasks, agents, and system alerts — filtered by category and severity, searchable, and mutable with Do Not Disturb. [Watch on YouTube](https://www.youtube.com/watch?v=6iQgeIIvTH0).
+
+More app walkthroughs landing weekly on the [RobOS channel](https://www.youtube.com/@RobOS-e5i).
 
 ---
 
