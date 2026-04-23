@@ -81,7 +81,15 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <img src="{{ '/assets/images/icons/ci-monitor.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Watch CI/CD pipelines in real time. AI diagnoses failures and suggests fixes. One-click rerun.
 
-![CI Monitor]({{ '/assets/images/screenshots/ci-monitor.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/Xs89Tea-mNE"
+    title="RobOS CI Monitor — AI-diagnosed pipeline failures"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Workspace Manager
 
