@@ -129,7 +129,17 @@ Set up your development environment and manage credentials.
 
 <img src="{{ '/assets/images/icons/security-setup.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> First-run wizard: GPG key generation, SSH key setup, GitHub authentication, and password store initialization.
 
-![Security Setup]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
+<div style="max-width: 360px; margin: 1rem auto;">
+  <div style="position: relative; padding-bottom: 177.78%; height: 0; overflow: hidden; border-radius: 8px;">
+    <iframe
+      src="https://www.youtube-nocookie.com/embed/QGmIybkj878"
+      title="RobOS Security Setup — first-run wizard"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+  </div>
+</div>
 
 ### Git Login Manager
 
@@ -177,7 +187,15 @@ Background services and desktop integration.
 
 <img src="{{ '/assets/images/icons/notifications.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Notification history viewer. Filter by category (PR, CI/CD, System) and tier (Critical, Warning, Info).
 
-![Notifications]({{ '/assets/images/screenshots/notifications.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/6iQgeIIvTH0"
+    title="RobOS Notifications — app walkthrough"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Search Index
 
