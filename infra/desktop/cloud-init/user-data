@@ -140,7 +140,7 @@ write_files:
       [org/gnome/shell]
       enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
       disabled-extensions=['ubuntu-dock@ubuntu.com']
-      favorite-apps=['robos-app-launcher.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+      favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
     permissions: "0644"
 
   # GTK 3 dark theme for skel
@@ -231,6 +231,19 @@ write_files:
       Exec=/usr/bin/electron /usr/local/share/robos/desktop-dashboard/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
       X-GNOME-Autostart-enabled=true
       X-GNOME-Autostart-Delay=3
+      Hidden=false
+      NoDisplay=true
+    permissions: "0644"
+
+  # Autostart: RobOS Desktop Manager (launches keepAlive apps: git-login-manager, notifications, toast, widgets)
+  - path: /etc/xdg/autostart/robos-desktop-manager.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=RobOS Desktop Manager
+      Exec=/usr/bin/electron /usr/local/share/robos/desktop-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+      X-GNOME-Autostart-enabled=true
+      X-GNOME-Autostart-Delay=5
       Hidden=false
       NoDisplay=true
     permissions: "0644"

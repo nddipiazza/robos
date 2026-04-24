@@ -47,6 +47,7 @@ const PORT_MAP = {
   'deploy-tracker': 19132,
   'desktop-customizer': 19136,
   'dev-central': 19133,
+  'workspace-manager': 19110,
   'manager-dashboard': 19134,
   'report-builder': 19135,
 };

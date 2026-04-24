@@ -1,6 +1,6 @@
 {
   "name": "robos-event-bus",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Event Bus — Unix domain socket pub/sub with NDJSON protocol",
   "main": "index.js",
   "scripts": {

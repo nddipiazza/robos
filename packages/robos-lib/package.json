@@ -1,6 +1,6 @@
 {
   "name": "robos-lib",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS shared utilities — categories, .desktop file parsing, app registry",
   "main": "index.js"
 }

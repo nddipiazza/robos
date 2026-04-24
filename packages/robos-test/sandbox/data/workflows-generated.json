@@ -1,0 +1,54 @@
+[
+  {
+    "id": "bug",
+    "label": "Bug",
+    "color": "#e11d48",
+    "workflow": {
+      "states": [
+        { "id": "triage",      "label": "Triage",      "color": "#f59e0b", "is_initial": true, "on_enter_script": "", "on_enter_prompt": "" },
+        { "id": "in-progress", "label": "In Progress", "color": "#3b82f6", "on_enter_script": "", "on_enter_prompt": "Analyze the reproduction steps, find the bug in the codebase, and draft a fix with tests." },
+        { "id": "in-review",   "label": "In Review",   "color": "#8b5cf6", "on_enter_script": "", "on_enter_prompt": "" },
+        { "id": "done",        "label": "Done",        "color": "#22c55e", "on_enter_script": "", "on_enter_prompt": "" }
+      ],
+      "transitions": [
+        { "from": "triage",      "to": "in-progress" },
+        { "from": "in-progress", "to": "in-review" },
+        { "from": "in-review",   "to": "done" }
+      ]
+    }
+  },
+  {
+    "id": "feature",
+    "label": "Feature",
+    "color": "#2563eb",
+    "workflow": {
+      "states": [
+        { "id": "backlog",  "label": "Backlog",  "color": "#8b949e", "is_initial": true, "on_enter_script": "", "on_enter_prompt": "" },
+        { "id": "design",   "label": "Design",   "color": "#a855f7", "on_enter_script": "", "on_enter_prompt": "Draft a technical design doc covering API shape, data model, and rollout plan." },
+        { "id": "building", "label": "Building", "color": "#3b82f6", "on_enter_script": "", "on_enter_prompt": "" },
+        { "id": "shipped",  "label": "Shipped",  "color": "#22c55e", "on_enter_script": "", "on_enter_prompt": "" }
+      ],
+      "transitions": [
+        { "from": "backlog",  "to": "design" },
+        { "from": "design",   "to": "building" },
+        { "from": "building", "to": "shipped" }
+      ]
+    }
+  },
+  {
+    "id": "spike",
+    "label": "Spike",
+    "color": "#f59e0b",
+    "workflow": {
+      "states": [
+        { "id": "proposed", "label": "Proposed", "color": "#8b949e", "is_initial": true, "on_enter_script": "", "on_enter_prompt": "" },
+        { "id": "research", "label": "Research", "color": "#3b82f6", "on_enter_script": "", "on_enter_prompt": "Summarize prior art, list open questions, and propose up to three approaches with tradeoffs." },
+        { "id": "decided",  "label": "Decided",  "color": "#22c55e", "on_enter_script": "", "on_enter_prompt": "" }
+      ],
+      "transitions": [
+        { "from": "proposed", "to": "research" },
+        { "from": "research", "to": "decided" }
+      ]
+    }
+  }
+]

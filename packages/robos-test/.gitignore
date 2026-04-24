@@ -1,0 +1,8 @@
+# Piper voice model (~60 MB, downloaded on demand)
+models/
+# Python venv used to install piper-tts (when that path is taken)
+.venv/
+# Generated demo outputs: raw webm captures, muxed finals, audio, cue wavs
+run/demos/
+# Install recording artifacts
+install-raw.webm

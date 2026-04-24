@@ -1,6 +1,6 @@
 {
   "name": "robos-icon-manager",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Icon Manager — manage and customize app icons",
   "main": "main.js",
   "scripts": {

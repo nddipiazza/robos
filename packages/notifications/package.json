@@ -1,6 +1,6 @@
 {
   "name": "robos-notifications",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Notifications — category-filtered notification history viewer with preferences editor",
   "main": "main.js",
   "scripts": {

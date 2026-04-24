@@ -1,6 +1,6 @@
 {
   "name": "robos-preferences",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Preferences — system-wide settings for AI providers, IDE, notifications, and more",
   "main": "main.js",
   "scripts": {

@@ -71,6 +71,10 @@ function createWindow() {
   win.on('close', (e) => { e.preventDefault(); win.hide(); });
 
   if (_debugServer) _debugServer.startDebugServer(win, 19115);
+
+  if (process.env.ROBOS_DEMO_SHOW === '1') {
+    win.once('ready-to-show', () => { win.show(); win.focus(); });
+  }
 }
 
 function showWindow() {

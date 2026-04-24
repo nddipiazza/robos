@@ -2,7 +2,35 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
-const { execSync } = require('child_process');
+const cp   = require('child_process');
+const { execSync } = cp;
+
+// Match the renderer's <title> so xdotool can find the window after document.title
+// loads (HTML title wins over BrowserWindow title at runtime in Electron).
+const WIDGET_WINDOW_TITLE = 'RobOS Desktop Widgets';
+
+// Pin the widget below every other window via _NET_WM_STATE_BELOW + sticky.
+// Ignores TYPE (Electron clobbers that); uses STATE (which survives).
+// Re-asserts forever on an interval — Electron raises the window during its
+// own startup animations, focus changes, and HMR-style reloads.
+function pinBelow() {
+  const LOG = '/tmp/dw-pin.log';
+  const env = { ...process.env, DISPLAY: ':0' };
+  const apply = () => {
+    cp.exec(
+      `WID=$(xdotool search --name "${WIDGET_WINDOW_TITLE}" 2>/dev/null | head -1); ` +
+      `if [ -n "$WID" ]; then ` +
+        `wmctrl -ir $WID -b add,below,sticky,skip_taskbar,skip_pager 2>&1; ` +
+        `echo "[$(date +%H:%M:%S)] applied to $WID"; ` +
+      `else echo "[$(date +%H:%M:%S)] no WID yet"; fi >> ${LOG}`,
+      { timeout: 5000, env, shell: '/bin/bash' },
+      () => {}
+    );
+  };
+  // Apply initially with a small delay, then every 3s forever.
+  setTimeout(apply, 800);
+  setInterval(apply, 3000);
+}
 
 // Debug server (optional)
 var _debugServer = null;
@@ -114,21 +142,34 @@ function getJournalSummary() {
 let win;
 app.setName('desktop-widgets');
 
+function widgetBounds() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const W = 320;
+  return {
+    x:      width - W - 20,
+    y:      40,
+    width:  W,
+    height: height - 60,
+  };
+}
+
 app.whenReady().then(() => {
-  const display = screen.getPrimaryDisplay();
-  const { width, height } = display.workAreaSize;
+  const b = widgetBounds();
 
   win = new BrowserWindow({
-    width: 320,
-    height: height - 60,
-    x: width - 340,
-    y: 40,
+    ...b,
+    // Keep the window WM-managed (NOT override-redirect) so wmctrl's BELOW
+    // state actually controls stacking. `focusable: false` and `type: 'desktop'`
+    // both force override-redirect on Linux — so we avoid them.
+    // `frame: false` and `transparent: true` together do NOT force
+    // override-redirect in Electron 28+, so we get real alpha blending AND
+    // WM-managed stacking.
+    title: WIDGET_WINDOW_TITLE,
     frame: false,
     transparent: true,
-    alwaysOnTop: false,
+    autoHideMenuBar: true,
     skipTaskbar: true,
     resizable: false,
-    focusable: false,
     hasShadow: false,
     backgroundColor: '#00000000',
     webPreferences: {
@@ -138,13 +179,25 @@ app.whenReady().then(() => {
     },
   });
 
-  // Set window type to desktop (below all windows)
-  try {
-    win.setIgnoreMouseEvents(true, { forward: true });
-  } catch {}
-
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+
+  // Pin below all other windows via wmctrl state flags.
+  pinBelow();
+  win.webContents.on('did-finish-load', () => pinBelow());
+
+  // Keep widgets anchored to the right edge when resolution changes.
+  const onDisplayChange = () => {
+    if (win && !win.isDestroyed()) win.setBounds(widgetBounds());
+  };
+  screen.on('display-metrics-changed', onDisplayChange);
+  screen.on('display-added',            onDisplayChange);
+  screen.on('display-removed',          onDisplayChange);
+  win.on('closed', () => {
+    screen.off('display-metrics-changed', onDisplayChange);
+    screen.off('display-added',            onDisplayChange);
+    screen.off('display-removed',          onDisplayChange);
+  });
 
   if (_debugServer) _debugServer.startDebugServer(win, 19127);
 

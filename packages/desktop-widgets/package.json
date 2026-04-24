@@ -1,6 +1,6 @@
 {
   "name": "robos-desktop-widgets",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Desktop Widgets — status overlays for active task, system stats, and journal summary",
   "main": "main.js",
   "scripts": {

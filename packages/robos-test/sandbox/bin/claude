@@ -1,0 +1,18 @@
+#!/bin/bash
+# Stub for: claude (Claude Code CLI)
+# Used by agents-manager to detect installation + version.
+
+case "$1" in
+  --version)
+    echo "Claude Code 1.2.3 (stub)"
+    exit 0
+    ;;
+  --help|-h)
+    echo "Claude Code CLI — stub for RobOS demo tests"
+    exit 0
+    ;;
+  *)
+    echo "claude stub: $*"
+    exit 0
+    ;;
+esac

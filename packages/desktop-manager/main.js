@@ -1,5 +1,5 @@
 // Force GtkStatusIcon instead of AppIndicator so tray click events fire on Linux
-if (process.env.XDG_CURRENT_DESKTOP) process.env.XDG_CURRENT_DESKTOP = 'Openbox';
+if (process.env.XDG_CURRENT_DESKTOP) process.env.XDG_CURRENT_DESKTOP = 'GNOME';
 
 const { app, Tray, Menu, BrowserWindow, ipcMain, nativeImage } = require('electron');
 const net  = require('net');

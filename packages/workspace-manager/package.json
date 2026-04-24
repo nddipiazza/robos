@@ -1,6 +1,6 @@
 {
   "name": "workspace-manager",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "RobOS Workspace Manager — Discover and open local workspaces in any IDE",
   "main": "main.js",
   "scripts": {

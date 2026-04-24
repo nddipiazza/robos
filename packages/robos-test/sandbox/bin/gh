@@ -9,6 +9,18 @@ DATA_DIR="$(dirname "$0")/../data"
 
 case "$CMD" in
 
+  # ── Version / extension list (for agents-manager provider detection) ────────
+
+  "--version "*|"--version ")
+    echo "gh version 2.54.0 (stub)"
+    exit 0
+    ;;
+
+  "extension list")
+    echo "gh copilot    github/gh-copilot    v1.2.0"
+    exit 0
+    ;;
+
   # ── Auth & SSH (existing) ───────────────────────────────────────────────────
 
   "auth status")
@@ -260,6 +272,15 @@ json.dump(prs[0] if prs else {}, sys.stdout)
     exit 0
     ;;
 
+  # ── Copilot (AI generation) ─────────────────────────────────────────────────
+
+  "copilot "*)
+    # Simulate AI latency so the "⏳ Asking AI agent…" status is visible
+    sleep 2
+    cat "$DATA_DIR/workflows-generated.json"
+    exit 0
+    ;;
+
   # ── API commands ────────────────────────────────────────────────────────────
 
   "api "*)
@@ -274,6 +295,9 @@ json.dump(prs[0] if prs else {}, sys.stdout)
       cat "$DATA_DIR/contributors.txt"
     elif echo "$ENDPOINT" | grep -q "deployments"; then
       cat "$DATA_DIR/deployments.json"
+    elif [ "$ENDPOINT" = "user" ]; then
+      # agents-manager calls `gh api user --jq '.login'`
+      echo "testuser"
     else
       echo "[]"
     fi

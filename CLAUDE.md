@@ -18,13 +18,13 @@ A purpose-built Ubuntu-based Linux desktop environment where every app, panel, a
 
 **OS Stack:**
 - Ubuntu 22.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
-- Openbox window manager + tint2 panel (lightweight, scriptable)
+- GNOME desktop environment
 - LightDM auto-login, Tilix terminal, zsh + oh-my-zsh
 - Custom dark navy/cyan theme throughout
 
 **Desktop Components:**
 - **App Launcher** — searchable icon grid of all RobOS applications
-- **Desktop Panels** — tint2 taskbar with RobOS app launchers and systray widgets
+- **Desktop Panels** — GNOME panel with RobOS app launchers and systray widgets
 - **Custom Desktop Widgets** — sprint status, PR health, calendar, blocker radar
 - **Background Tasks** — agent scheduler, toast daemon, clipboard sync, notification engine
 - **Suite of Apps** — 30+ Electron apps covering the full SDLC (see App Suite below)
