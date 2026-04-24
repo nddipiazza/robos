@@ -157,7 +157,7 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 |:------|:-------|
 | [Git Login Manager — the silent safety net for your git credentials](https://youtube.com/shorts/vO7pY9c_b2Q) | **Published** |
 | [Stage Demo Viewer — AI walkthroughs of every merged PR](https://youtu.be/n3TUdYDd5e4) | **Published** |
-| [Report Builder — AI-generated sprint reports in plain English](https://youtu.be/VtfvYyjYhjg) | **Published** |
+| [Report Builder — AI-generated sprint reports in plain English](https://youtu.be/jzUt2vsZ5-I) | **Published** |
 | [Deploy Tracker — timeline, frequency, and MTTR in one view](https://www.youtube.com/watch?v=-X5xDypHatQ) | **Published** |
 | [Context Manager — ground every AI agent in what your team knows](https://youtu.be/w5HmwQvfBPE) | **Published** |
 | [Task Servers — one config for GitHub, Jira, and Linear](https://youtu.be/vyMGbo_-qk0) | **Published** |

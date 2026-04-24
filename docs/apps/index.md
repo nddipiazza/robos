@@ -193,7 +193,7 @@ Real-time visibility for every role on the team.
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/VtfvYyjYhjg"
+    src="https://www.youtube-nocookie.com/embed/jzUt2vsZ5-I"
     title="RobOS Report Builder — AI-generated sprint reports in plain English"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
