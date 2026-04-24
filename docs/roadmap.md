@@ -155,6 +155,8 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 
 | Video | Status |
 |:------|:-------|
+| [Search Index — the invisible plumbing behind @-mentions](https://youtu.be/YkWkw-s75Os) | **Published** |
+| [Dev Tools — one-click install for every IDE, CLI, and AI agent](https://youtu.be/Q5_vzC3MOy0) | **Published** |
 | [Git Login Manager — the silent safety net for your git credentials](https://youtube.com/shorts/vO7pY9c_b2Q) | **Published** |
 | [Stage Demo Viewer — AI walkthroughs of every merged PR](https://youtu.be/n3TUdYDd5e4) | **Published** |
 | [Report Builder — AI-generated sprint reports in plain English](https://youtu.be/jzUt2vsZ5-I) | **Published** |
@@ -176,7 +178,6 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | [Security Setup — GPG, SSH, and pass store in 90 seconds](https://www.youtube.com/shorts/QGmIybkj878) | **Published** |
 | [Notifications — unified workflow signals](https://www.youtube.com/watch?v=6iQgeIIvTH0) | **Published** |
 | App Launcher + Desktop Tour | Planned |
-| Dev Tools — install IDEs and CLI tools | Planned |
 | Toast Daemon — system-wide overlay toasts | Planned |
 
 ### Full Model Problem Video (Coming Soon)

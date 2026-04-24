@@ -137,7 +137,15 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <img src="{{ '/assets/images/icons/dev-tools.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Install and manage IDEs, CLI tools, and cloud SDKs. 19 tools including Claude CLI, VS Code, JetBrains suite, Docker, ripgrep.
 
-![Dev Tools]({{ '/assets/images/screenshots/dev-tools.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/Q5_vzC3MOy0"
+    title="RobOS Dev Tools — one-click install for every IDE, CLI, and AI agent"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ---
 
@@ -339,4 +347,12 @@ Background services and desktop integration.
 
 <img src="{{ '/assets/images/icons/search-index.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> File system indexer for @-mention search in AI textareas. Fast lookup across all project files.
 
-![Search Index]({{ '/assets/images/screenshots/search-index.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/YkWkw-s75Os"
+    title="RobOS Search Index — the invisible plumbing behind @-mentions"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
