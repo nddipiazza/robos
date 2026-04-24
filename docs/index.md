@@ -28,37 +28,21 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 
 ## See It in Action
 
-### Security Setup — GPG, SSH, and Password Store in 90 seconds
-
-<div style="max-width: 360px; margin: 1.5rem auto;">
-  <div style="position: relative; padding-bottom: 177.78%; height: 0; overflow: hidden; border-radius: 8px;">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/QGmIybkj878"
-      title="RobOS Security Setup — first-run wizard"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-  </div>
-</div>
-
-The first-run wizard that configures everything a developer needs for signed commits, encrypted secrets, and SSH access to GitHub — in a single flow. [Watch on YouTube](https://www.youtube.com/shorts/QGmIybkj878).
-
-### Notifications — one place for every workflow signal
+### Install RobOS from Scratch — Ubuntu + GNOME + 40 Apps on a Fresh QEMU VM
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/6iQgeIIvTH0"
-    title="RobOS Notifications — app walkthrough"
+    src="https://www.youtube-nocookie.com/embed/J4SMH4bskeo"
+    title="Installing RobOS from scratch — Ubuntu + GNOME + 40 Electron apps on a fresh QEMU VM"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
-Pull requests, CI, tasks, agents, and system alerts — filtered by category and severity, searchable, and mutable with Do Not Disturb. [Watch on YouTube](https://www.youtube.com/watch?v=6iQgeIIvTH0).
+The full RobOS install captured end-to-end — `build.sh` packs the image and cloud-init seed, `run.sh --firstboot` provisions Ubuntu 22.04 + GNOME + LightDM + Node.js + Electron + 40+ RobOS apps, reboots into the new desktop. Lightly trimmed so you can see it finish without sitting through the real install waits. [Watch on YouTube](https://youtu.be/J4SMH4bskeo).
 
-More app walkthroughs landing weekly on the [RobOS channel](https://www.youtube.com/@RobOS-e5i).
+Individual walkthroughs of every RobOS app are landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
 
 ---
 
