@@ -156,6 +156,9 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | Video | Status |
 |:------|:-------|
 | [Workflow Studio — design ticket workflows in plain English](https://youtu.be/gqRYI6ja-q8) | **Published** |
+| [Automation Studio — event-driven rules and scheduled jobs](https://youtu.be/XCpE7CDKDqk) | **Published** |
+| [AI Agent Manager — one console for Claude, Copilot, and every agent](https://youtu.be/fomJ99guQY8) | **Published** |
+| [Workspace Manager — every project, every IDE, one click away](https://youtu.be/TZvC7Ii6nPg) | **Published** |
 | [Dev Central — your daily developer dashboard](https://youtu.be/vs6Grzfd074) | **Published** |
 | [CI Monitor — AI-diagnosed pipeline failures](https://youtu.be/Xs89Tea-mNE) | **Published** |
 | [PR Review Board — AI-assisted code review](https://youtu.be/gV0vsmR5I7E) | **Published** |
@@ -166,10 +169,7 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | App Launcher + Desktop Tour | Planned |
 | Manager Dashboard — sprint metrics and velocity | Planned |
 | Desktop Customizer — reshape GNOME with prompts | Planned |
-| Workspace Manager — auto-provisioned dev environments | Planned |
-| AI Agent Manager — Claude/Copilot session management | Planned |
 | Dev Tools — install IDEs and CLI tools | Planned |
-| Automation Studio — event-driven rules and scheduled jobs | Planned |
 | Toast Daemon — system-wide overlay toasts | Planned |
 | Pass Manager — GPG-encrypted secrets GUI | Planned |
 

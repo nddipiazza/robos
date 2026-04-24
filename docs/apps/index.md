@@ -95,13 +95,29 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <img src="{{ '/assets/images/icons/workspace-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Discover and manage local workspaces. Open in any IDE. Auto-provisions workspace per task with branch, deps, and dev server.
 
-![Workspace Manager]({{ '/assets/images/screenshots/workspace-manager.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/TZvC7Ii6nPg"
+    title="RobOS Workspace Manager — every project, every IDE, one click away"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### AI Agent Manager
 
 <img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Manage AI agent sessions (Claude Code, Copilot, Codex, Gemini). Assign agents to tasks. Monitor questionnaire, draft, and review-fix cycles.
 
-![AI Agent Manager]({{ '/assets/images/screenshots/agents-manager.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/fomJ99guQY8"
+    title="RobOS AI Agent Manager — one console for Claude, Copilot, and every agent"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Context Manager
 
@@ -229,7 +245,15 @@ Background services and desktop integration.
 
 <img src="{{ '/assets/images/icons/automation-studio.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Create event-driven rules (event → condition → action). Manage scheduled AI agent jobs. View event log.
 
-![Automation Studio]({{ '/assets/images/screenshots/automation-studio.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/XCpE7CDKDqk"
+    title="RobOS Automation Studio — event-driven rules for the whole desktop"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Notifications
 
