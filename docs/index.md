@@ -80,7 +80,15 @@ More app walkthroughs landing weekly on the [RobOS channel](https://www.youtube.
 
 ### Desktop Customizer in Action
 
-![Desktop Customizer — /help showing all available commands]({{ '/assets/images/screenshots/desktop-customizer.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/P8dPsploaks"
+    title="RobOS Desktop Customizer — reshape GNOME in plain English"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ---
 

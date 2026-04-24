@@ -156,6 +156,9 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | Video | Status |
 |:------|:-------|
 | [Workflow Studio — design ticket workflows in plain English](https://youtu.be/gqRYI6ja-q8) | **Published** |
+| [Pass Manager — GPG-encrypted secrets in a GUI](https://youtu.be/RhVt-ch2rIA) | **Published** |
+| [Desktop Customizer — reshape GNOME in plain English](https://youtu.be/P8dPsploaks) | **Published** |
+| [Manager Dashboard — sprint metrics, velocity, and deploy frequency](https://www.youtube.com/watch?v=RgMbLzuV9rY) | **Published** |
 | [Automation Studio — event-driven rules and scheduled jobs](https://youtu.be/XCpE7CDKDqk) | **Published** |
 | [AI Agent Manager — one console for Claude, Copilot, and every agent](https://youtu.be/fomJ99guQY8) | **Published** |
 | [Workspace Manager — every project, every IDE, one click away](https://youtu.be/TZvC7Ii6nPg) | **Published** |
@@ -167,11 +170,8 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | [Security Setup — GPG, SSH, and pass store in 90 seconds](https://www.youtube.com/shorts/QGmIybkj878) | **Published** |
 | [Notifications — unified workflow signals](https://www.youtube.com/watch?v=6iQgeIIvTH0) | **Published** |
 | App Launcher + Desktop Tour | Planned |
-| Manager Dashboard — sprint metrics and velocity | Planned |
-| Desktop Customizer — reshape GNOME with prompts | Planned |
 | Dev Tools — install IDEs and CLI tools | Planned |
 | Toast Daemon — system-wide overlay toasts | Planned |
-| Pass Manager — GPG-encrypted secrets GUI | Planned |
 
 ### Full Model Problem Video (Coming Soon)
 

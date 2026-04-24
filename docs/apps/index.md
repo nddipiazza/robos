@@ -155,7 +155,15 @@ Real-time visibility for every role on the team.
 
 <img src="{{ '/assets/images/icons/manager-dashboard.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Sprint board, velocity charts, per-developer metrics, deployment history, and team health indicators.
 
-![Manager Dashboard]({{ '/assets/images/screenshots/manager-dashboard.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/RgMbLzuV9rY"
+    title="RobOS Manager Dashboard — sprint metrics, velocity, and deploy frequency"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Deploy Tracker
 
@@ -207,7 +215,15 @@ Set up your development environment and manage credentials.
 
 <img src="{{ '/assets/images/icons/pass-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> GUI for GPG-encrypted password store. Create, view, edit, and delete secrets. Team secret distribution.
 
-![Pass Manager]({{ '/assets/images/screenshots/pass-manager.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/RhVt-ch2rIA"
+    title="RobOS Pass Manager — GPG-encrypted secrets in a GUI"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Task Servers
 
