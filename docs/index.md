@@ -16,6 +16,23 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 {: .note }
 > **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. App demos are shipping on [YouTube]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series) with more landing weekly. Star the repo and [subscribe](https://www.youtube.com/@RobOS-e5i) to follow along.
 
+<div style="display: flex; justify-content: center; margin: 2rem 0 1rem;">
+  <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener"
+     style="display: inline-flex; align-items: center; gap: 0.75rem;
+            padding: 1rem 2.5rem; font-size: 1.25rem; font-weight: 600;
+            color: #fff; background: linear-gradient(135deg, #00bcd4 0%, #0288a3 100%);
+            border: 2px solid #00e5ff; border-radius: 999px;
+            box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
+            text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;"
+     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 28px rgba(0, 229, 255, 0.55)'"
+     onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(0, 188, 212, 0.4)'">
+    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#ffd54a" stroke="#ffd54a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+    Star RobOS on GitHub
+  </a>
+</div>
+
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [View on GitHub](https://github.com/nddipiazza/robos){: .btn .fs-5 .mb-4 .mb-md-0 }
 [Watch on YouTube](https://www.youtube.com/@RobOS-e5i){: .btn .fs-5 .mb-4 .mb-md-0 }
