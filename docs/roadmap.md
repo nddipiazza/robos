@@ -155,6 +155,9 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 
 | Video | Status |
 |:------|:-------|
+| [Deploy Tracker — timeline, frequency, and MTTR in one view](https://www.youtube.com/watch?v=-X5xDypHatQ) | **Published** |
+| [Context Manager — ground every AI agent in what your team knows](https://youtu.be/w5HmwQvfBPE) | **Published** |
+| [Task Servers — one config for GitHub, Jira, and Linear](https://youtu.be/vyMGbo_-qk0) | **Published** |
 | [Workflow Studio — design ticket workflows in plain English](https://youtu.be/gqRYI6ja-q8) | **Published** |
 | [Pass Manager — GPG-encrypted secrets in a GUI](https://youtu.be/RhVt-ch2rIA) | **Published** |
 | [Desktop Customizer — reshape GNOME in plain English](https://youtu.be/P8dPsploaks) | **Published** |

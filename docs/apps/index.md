@@ -123,7 +123,15 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <img src="{{ '/assets/images/icons/context-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Curate AI context sources — files, folders, URLs, repos, tickets. Auto-attached when an agent starts working on a task.
 
-![Context Manager]({{ '/assets/images/screenshots/context-manager.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/w5HmwQvfBPE"
+    title="RobOS Context Manager — ground every AI agent in what your team knows"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Dev Tools
 
@@ -169,7 +177,15 @@ Real-time visibility for every role on the team.
 
 <img src="{{ '/assets/images/icons/deploy-tracker.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Deployment timeline with per-version story lists, deploy frequency KPIs, and rollback tracking.
 
-![Deploy Tracker]({{ '/assets/images/screenshots/deploy-tracker.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/-X5xDypHatQ"
+    title="RobOS Deploy Tracker — timeline, frequency, and MTTR in one view"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Report Builder
 
@@ -229,7 +245,15 @@ Set up your development environment and manage credentials.
 
 <img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Configure connections to Jira, GitHub Issues, or Linear. Authentication, project mapping, and bidirectional sync.
 
-![Task Servers]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/vyMGbo_-qk0"
+    title="RobOS Task Servers — one config for GitHub, Jira, and Linear"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ### Workflow Studio
 
