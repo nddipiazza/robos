@@ -16,10 +16,7 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 {: .note }
 > **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. App demos are shipping on [YouTube]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series) with more landing weekly. Star the repo and [subscribe](https://www.youtube.com/@RobOS-e5i) to follow along.
 
-<a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="btn btn-primary fs-5 mb-4 mb-md-0 mr-2" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#ffd54a" stroke="#ffd54a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: -3px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-Star on GitHub
-</a>
+[⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Watch on YouTube](https://www.youtube.com/@RobOS-e5i){: .btn .fs-5 .mb-4 .mb-md-0 }
 
