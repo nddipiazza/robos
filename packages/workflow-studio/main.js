@@ -202,6 +202,15 @@ ipcMain.handle('run-ai-prompt', async (event, { prompt, env }) => {
 
 ipcMain.handle('generate-with-ai', async (_, { prompt }) => {
   try {
+    // If a fixture file exists at ~/.config/robos/workflow-fixture.json, use it instantly
+    // (used for demos and dev — drop the file, click Generate, get instant results)
+    const fixturePath = path.join(os.homedir(), '.config', 'robos', 'workflow-fixture.json');
+    if (fs.existsSync(fixturePath)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+        return { ok: true, data, raw: JSON.stringify(data) };
+      } catch (e) { /* fall through to real AI */ }
+    }
     const text = await new Promise((resolve, reject) => {
       const child = cp.spawn('gh', ['copilot', '--', '-p', prompt, '--allow-all-tools', '--silent'],
         { encoding: 'utf8' });
