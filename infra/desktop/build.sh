@@ -48,6 +48,23 @@ qemu-img resize "$DISK_IMAGE" "$DISK_SIZE"
 # --- Generate cloud-init files ---
 python3 "$SCRIPT_DIR/gen-userdata.py"
 
+# --- Inject model-problem secrets via envsubst (optional — only if pass entries exist) ---
+if command -v pass &>/dev/null; then
+  JIRA_TOKEN_FROM_BUILD="$(pass show robos-acme-inc/jira-token 2>/dev/null | head -1 || true)"
+  GITHUB_PAT_FROM_BUILD="$(pass show acme/github-pat 2>/dev/null | head -1 || true)"
+fi
+JIRA_TOKEN_FROM_BUILD="${JIRA_TOKEN_FROM_BUILD:-PLACEHOLDER_JIRA_TOKEN}"
+GITHUB_PAT_FROM_BUILD="${GITHUB_PAT_FROM_BUILD:-PLACEHOLDER_GITHUB_PAT}"
+if [ "$JIRA_TOKEN_FROM_BUILD" = "PLACEHOLDER_JIRA_TOKEN" ] || [ "$GITHUB_PAT_FROM_BUILD" = "PLACEHOLDER_GITHUB_PAT" ]; then
+  echo "WARNING: pass entries robos-acme-inc/jira-token or acme/github-pat not found on host." >&2
+  echo "         The four model-problem users (dana/pat/jordan/alex) will not have credentials seeded." >&2
+  echo "         Run: pass insert -e robos-acme-inc/jira-token && pass insert -e acme/github-pat" >&2
+fi
+export JIRA_TOKEN_FROM_BUILD GITHUB_PAT_FROM_BUILD
+envsubst '${JIRA_TOKEN_FROM_BUILD} ${GITHUB_PAT_FROM_BUILD}' \
+  < "$OUTPUT_DIR/user-data" > "$OUTPUT_DIR/user-data.expanded"
+mv "$OUTPUT_DIR/user-data.expanded" "$OUTPUT_DIR/user-data"
+
 # --- Bundle RobOS packages tarball ---
 PACKAGES_DIR="$SCRIPT_DIR/../../packages"
 PACKAGES_TAR="$OUTPUT_DIR/robos-packages.tar.gz"
