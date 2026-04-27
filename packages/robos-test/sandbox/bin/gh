@@ -272,6 +272,32 @@ json.dump(prs[0] if prs else {}, sys.stdout)
     exit 0
     ;;
 
+  # ── Repo list / search (for git-projects + workspace tooling) ───────────────
+
+  "repo list"|"repo list "*)
+    cat <<'EOF'
+[{"nameWithOwner":"acme-corp/buildbarn-forms","url":"https://github.com/acme-corp/buildbarn-forms","description":"React forms for editing Buildbarn configurations","isPrivate":false,"isFork":false},
+ {"nameWithOwner":"acme-corp/buildbarn-forms-proto","url":"https://github.com/acme-corp/buildbarn-forms-proto","description":"Generated proto types for buildbarn-forms","isPrivate":false,"isFork":false},
+ {"nameWithOwner":"acme-corp/scheduler-dashboard","url":"https://github.com/acme-corp/scheduler-dashboard","description":"Real-time scheduler queue dashboard","isPrivate":false,"isFork":false},
+ {"nameWithOwner":"acme-corp/worker-pool","url":"https://github.com/acme-corp/worker-pool","description":"Crossbeam-deque worker pool","isPrivate":false,"isFork":false},
+ {"nameWithOwner":"acme-corp/robos-cli","url":"https://github.com/acme-corp/robos-cli","description":"RobOS CLI tooling","isPrivate":false,"isFork":false}]
+EOF
+    exit 0
+    ;;
+
+  "org list")
+    echo "acme-corp"
+    exit 0
+    ;;
+
+  "search repos"|"search repos "*)
+    cat <<'EOF'
+[{"fullName":"buildbarn/bb-storage","description":"Buildbarn blobstore implementations","isPrivate":false,"isFork":false},
+ {"fullName":"buildbarn/bb-scheduler","description":"Buildbarn scheduler service","isPrivate":false,"isFork":false}]
+EOF
+    exit 0
+    ;;
+
   # ── Copilot (AI generation) ─────────────────────────────────────────────────
 
   "copilot "*)

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>RobOS Git Projects</title>
+  <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css"/>
+  <link rel="stylesheet" href="../node_modules/codemirror/theme/material-darker.css"/>
+  <link rel="stylesheet" href="../node_modules/highlight.js/styles/github-dark.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+<div id="intellij-wait-banner" class="intellij-wait-banner hidden">
+  <span class="intellij-wait-pulse">🧠</span>
+  <span id="intellij-wait-msg">Waiting for IntelliJ…</span>
+</div>
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="app-logo" id="app-logo-icon"></span>
+      <span class="app-title">RobOS Git Projects</span>
+    </div>
+    <div class="topbar-right">
+      <button id="btn-add-group" class="btn btn-secondary" disabled title="Add all repos from a Dev Group">＋ Add Dev Group Repos</button>
+      <button id="btn-add" class="btn btn-primary">＋ Add Project</button>
+    </div>
+  </header>
+
+  <!-- Add project modal -->
+  <div id="modal-add" class="modal hidden">
+    <div class="modal-box">
+      <h2>Add Git Project</h2>
+      <label class="field-label">Pick from GitHub</label>
+      <div class="gh-pick-wrap">
+        <div class="gh-combo">
+          <input id="gh-repo-filter" class="text-input gh-filter-input" placeholder="Search your repos…" autocomplete="off"/>
+          <div id="gh-repo-dropdown" class="gh-dropdown hidden"></div>
+        </div>
+        <button id="btn-public-toggle" class="btn btn-ghost gh-public-toggle" title="Include public GitHub repos in search">Public</button>
+        <span id="gh-pick-status" class="gh-pick-status"></span>
+      </div>
+      <div class="divider-or"><span>or paste URLs manually (one per line)</span></div>
+      <label class="field-label">Git URLs (https or ssh, one per line)</label>
+      <textarea id="add-url" class="text-input url-textarea" rows="4" placeholder="https://github.com/org/repo&#10;git@github.com:org/repo.git&#10;…"></textarea>
+      <div id="add-error" class="error-msg hidden"></div>
+      <div id="url-valid-count" class="url-valid-count hidden"></div>
+      <div id="clone-now-row" class="clone-now-row hidden">
+        <label class="clone-now-label">
+          <input type="checkbox" id="clone-now-chk" checked/>
+          Clone project now
+        </label>
+        <span class="clone-now-hint">into default local path</span>
+      </div>
+      <div id="clone-progress" class="clone-progress hidden">
+        <div class="clone-progress-hdr">⏳ Cloning…</div>
+        <pre id="clone-progress-pre" class="clone-progress-pre"></pre>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-add-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-add-confirm" class="btn btn-primary" disabled>Add Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dev Group picker modal -->
+  <div id="modal-group-picker" class="modal hidden">
+    <div class="modal-box">
+      <h2>Add Repos from Dev Group</h2>
+      <p class="modal-sub">Choose a group to import all its Git repositories into your project list.</p>
+      <div id="group-picker-list" class="group-picker-list"></div>
+      <div id="group-picker-error" class="error-msg hidden"></div>
+      <div class="clone-now-row" id="group-clone-now-row" style="display:none">
+        <label class="clone-now-label">
+          <input type="checkbox" id="group-clone-now-chk" checked/>
+          Clone all repos now
+        </label>
+        <span class="clone-now-hint">into default local paths</span>
+      </div>
+      <div id="group-clone-progress" class="clone-progress hidden">
+        <div class="clone-progress-hdr" id="group-clone-progress-hdr">⏳ Cloning…</div>
+        <pre id="group-clone-progress-pre" class="clone-progress-pre"></pre>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-group-picker-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-group-picker-confirm" class="btn btn-primary" disabled>Add Repos</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Left: tree -->
+    <aside class="tree-panel">
+      <div class="tree-search-wrap">
+        <input id="tree-search" class="tree-search" placeholder="🔍 Search…"/>
+        <div class="tree-sort-wrap">
+          <label class="sort-label">Sort</label>
+          <select id="tree-sort" class="sort-select">
+            <option value="name-asc">Name A→Z</option>
+            <option value="name-desc">Name Z→A</option>
+            <option value="host-org">Host / Org</option>
+            <option value="cloned-first">Cloned first</option>
+            <option value="uncloned-first">Uncloned first</option>
+          </select>
+        </div>
+      </div>
+      <div id="project-tree" class="project-tree"></div>
+    </aside>
+
+    <!-- Right: detail -->
+    <main class="detail-panel">
+      <div id="detail-empty" class="detail-empty">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6a9 9 0 0 0-9 9V3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/></svg></div>
+        <div class="empty-title">No project selected</div>
+        <div class="empty-hint">Select a project from the tree, or click <strong>＋ Add Project</strong></div>
+      </div>
+
+      <div id="detail-content" class="hidden">
+        <div class="detail-header">
+          <div class="detail-title-row">
+            <span id="detail-repo-name" class="detail-repo-name"></span>
+            <button class="btn-clip" id="clip-name" title="Copy project name"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            <span id="detail-clone-badge" class="clone-badge"></span>
+          </div>
+          <div id="detail-url-row" class="detail-url-row">
+            <a id="detail-url" href="#" class="detail-url"></a>
+            <button class="btn-clip" id="clip-https" title="Copy HTTPS URL"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+          <div id="detail-ssh-row" class="detail-ssh-row hidden">
+            <span class="path-icon">🔑</span>
+            <span id="detail-ssh" class="detail-ssh"></span>
+            <button class="btn-clip" id="clip-ssh" title="Copy SSH URL"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+          <div id="detail-path-row" class="detail-path-row">
+            <span class="path-icon">📁</span>
+            <span id="detail-path" class="detail-path"></span>
+            <button class="btn-clip" id="clip-path" title="Copy local path"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+          <div id="detail-notes-row" class="detail-notes-row hidden">
+            <span id="detail-notes" class="detail-notes"></span>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button id="btn-clone"    class="btn btn-success">⬇ Clone</button>
+          <button id="btn-pull"     class="btn btn-primary">↑ Pull</button>
+          <div class="ide-dropdown-wrap">
+            <button id="btn-open-ide" class="btn btn-ghost">Load in IDE ▾</button>
+            <div id="ide-dropdown-menu" class="ide-dropdown-menu hidden"></div>
+          </div>
+          <button id="btn-terminal" class="btn btn-ghost">Terminal</button>
+          <button id="btn-browser"  class="btn btn-ghost">GitHub ↗</button>
+        </div>
+
+        <div class="output-box hidden" id="output-box">
+          <div class="output-hdr">Output <button id="btn-clear-output" class="btn-tiny">✕</button></div>
+          <pre id="output-pre"></pre>
+        </div>
+
+        <div class="detail-tabs">
+          <button class="tab-btn active" data-tab="commits">🕒 Recent Commits</button>
+          <button class="tab-btn" data-tab="branches"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px;margin-right:4px"><line x1="7" y1="5" x2="7" y2="20" stroke="#4ADE80" stroke-width="2" stroke-linecap="round"/><line x1="7" y1="9" x2="17" y2="4" stroke="#4ADE80" stroke-width="2" stroke-linecap="round"/><circle cx="7" cy="5" r="2.5" fill="#4ADE80"/><circle cx="17" cy="4" r="2.5" fill="#4ADE80"/><circle cx="7" cy="20" r="2.5" fill="#4ADE80"/></svg>Branches</button>
+          <button class="tab-btn" data-tab="secrets">🔑 Secrets</button>
+          <button class="tab-btn" data-tab="devsetup">🛠 Local Dev Setup</button>
+          <button class="tab-btn" data-tab="edit">✏️ Edit</button>
+        </div>
+
+        <div id="tab-commits" class="tab-content active">
+          <div id="commits-list" class="commits-list"></div>
+        </div>
+        <div id="tab-branches" class="tab-content hidden">
+          <div id="branches-list" class="branches-list"></div>
+        </div>
+        <div id="tab-devsetup" class="tab-content hidden">
+          <div class="devsetup-intro">AI will attempt to build this project on your machine, iterating until the setup succeeds, then produce verified instructions and a working setup script.</div>
+
+          <!-- ── AI generation ── -->
+          <div class="ai-gen-box">
+            <div class="ai-gen-header">
+              🤖 AI — Generate Tab Content
+            </div>
+            <div class="ai-gen-fills-row">
+              Generates content for:
+              <span class="fills-pill">📋 Instructions</span>
+              <span class="fills-pill">⚙️ Setup</span>
+              <span class="fills-pill">▶️ Start</span>
+              <span class="fills-pill">🧪 Test</span>
+              <span class="fills-pill">🔬 E2E</span>
+            </div>
+            <div class="devsetup-hint">Describe anything the AI should know: VPN requirements, private registries, env vars not in <code>.env.example</code>, platform quirks, etc. Use <kbd>@</kbd> to mention files.</div>
+            <div class="ai-prompt-row">
+              <robos-ai-textarea id="devsetup-ai-prompt" show-submit="false" show-commands="false"
+                placeholder="e.g. 'requires VPN connected to corp-vpn before npm install, uses pnpm not npm, needs JAVA_HOME set to Java 17'"></robos-ai-textarea>
+              <div class="generate-btn-group">
+                <button id="btn-ai-interview" class="btn btn-secondary" title="AI will ask you targeted questions about this project before generating">🎤 Ask me first</button>
+                <button id="btn-ai-devsetup" class="btn btn-ai">🤖 Generate all tabs</button>
+              </div>
+            </div>
+            <!-- Questionnaire panel (shown after 🎤) -->
+            <div id="devsetup-questionnaire" class="devsetup-questionnaire hidden">
+              <div class="questionnaire-header">AI Questions — answer what you can, leave blank to skip</div>
+              <div id="questionnaire-questions"></div>
+              <div class="edit-actions" style="margin-top:8px">
+                <button id="btn-questionnaire-use" class="btn btn-primary">✓ Use answers &amp; Build</button>
+                <button id="btn-questionnaire-cancel" class="btn btn-secondary">Cancel</button>
+              </div>
+            </div>
+            <div id="ai-devsetup-status" class="ai-status hidden"></div>
+          </div>
+
+          <!-- ── Inner tabs ── -->
+          <div class="devsetup-tabs-wrap">
+            <div class="devsetup-tabs-arrow">▼ results appear in tabs below, or you can edit them manually</div>
+            <div class="devsetup-tabs">
+              <button class="devsetup-tab active" data-dstab="instructions">📋 Instructions<span class="ds-tab-dot" id="dot-instructions"></span></button>
+              <button class="devsetup-tab" data-dstab="setup">⚙️ Setup<span class="ds-tab-dot" id="dot-setup"></span></button>
+              <button class="devsetup-tab" data-dstab="start">▶️ Start<span class="ds-tab-dot" id="dot-start"></span></button>
+              <button class="devsetup-tab" data-dstab="test">🧪 Test<span class="ds-tab-dot" id="dot-test"></span></button>
+              <button class="devsetup-tab" data-dstab="e2e">🔬 E2E<span class="ds-tab-dot" id="dot-e2e"></span></button>
+            </div>
+          </div>
+
+          <!-- Instructions -->
+          <div id="devsetup-tab-instructions" class="devsetup-tab-pane">
+            <div class="md-editor-wrap">
+              <div class="md-editor-toolbar">
+                <button id="btn-md-preview" class="btn-icon-preview" title="Toggle preview">👁</button>
+              </div>
+              <div class="md-editor-panes">
+                <div id="monaco-instructions" class="monaco-instructions-editor"></div>
+                <div id="devsetup-instructions-preview" class="md-preview hidden"></div>
+              </div>
+            </div>
+            <textarea id="devsetup-instructions" class="hidden"></textarea>
+            <div class="refine-row">
+              <robos-ai-textarea id="refine-instructions-prompt" class="refine-prompt-input" show-submit="false" show-commands="false"
+                placeholder="Optional: describe what to improve (e.g. 'add docker section', 'make it shorter')…"></robos-ai-textarea>
+              <button id="btn-refine-instructions" class="btn btn-secondary">🔄 Refine</button>
+            </div>
+            <div id="ai-refine-instructions-status" class="ai-status hidden"></div>
+          </div>
+
+          <!-- Setup Script -->
+          <div id="devsetup-tab-setup" class="devsetup-tab-pane hidden">
+            <div id="monaco-setup" class="monaco-script-editor tab-editor"></div>
+            <textarea id="devsetup-script" class="hidden"></textarea>
+            <div class="refine-row">
+              <robos-ai-textarea id="refine-script-prompt" class="refine-prompt-input" show-submit="false" show-commands="false"
+                placeholder="Optional: describe what to improve…"></robos-ai-textarea>
+              <button id="btn-refine-script" class="btn btn-secondary">🔄 Refine</button>
+            </div>
+            <div id="ai-refine-script-status" class="ai-status hidden"></div>
+            <div class="edit-actions">
+              <button id="btn-run-devsetup" class="btn btn-secondary">▶ Run in Terminal</button>
+              <button class="btn btn-secondary btn-run-intellij" data-key="setup">🧠 Run in IntelliJ</button>
+            </div>
+            <div id="devsetup-output" class="devsetup-output hidden">
+              <pre id="devsetup-pre"></pre>
+              <div id="devsetup-fix-row" class="devsetup-fix-row hidden">
+                <span class="devsetup-fix-hint">Setup failed — AI can fix</span>
+                <button id="btn-fix-script" class="btn btn-ai">🤖 Fix</button>
+              </div>
+              <div id="ai-fix-status" class="ai-status hidden"></div>
+            </div>
+          </div>
+
+          <!-- Start Script -->
+          <div id="devsetup-tab-start" class="devsetup-tab-pane hidden">
+            <div id="monaco-start" class="monaco-script-editor tab-editor"></div>
+            <textarea id="start-script" class="hidden"></textarea>
+            <div class="refine-row">
+              <robos-ai-textarea id="refine-start-prompt" class="refine-prompt-input" show-submit="false" show-commands="false"
+                placeholder="Optional: describe what to improve…"></robos-ai-textarea>
+              <button id="btn-refine-start" class="btn btn-secondary">🔄 Refine</button>
+            </div>
+            <div id="ai-refine-start-status" class="ai-status hidden"></div>
+            <div class="edit-actions">
+              <button id="btn-run-start" class="btn btn-secondary">▶ Run in Terminal</button>
+              <button class="btn btn-secondary btn-run-intellij" data-key="start">🧠 Run in IntelliJ</button>
+            </div>
+            <div id="start-output" class="devsetup-output hidden">
+              <pre id="start-pre"></pre>
+              <div id="start-fix-row" class="devsetup-fix-row hidden">
+                <span class="devsetup-fix-hint">Start failed — AI can fix</span>
+                <button id="btn-fix-start" class="btn btn-ai">🤖 Fix</button>
+              </div>
+              <div id="ai-fix-start-status" class="ai-status hidden"></div>
+            </div>
+          </div>
+
+          <!-- Test Script -->
+          <div id="devsetup-tab-test" class="devsetup-tab-pane hidden">
+            <div id="monaco-test" class="monaco-script-editor tab-editor"></div>
+            <textarea id="test-script" class="hidden"></textarea>
+            <div class="refine-row">
+              <robos-ai-textarea id="refine-test-prompt" class="refine-prompt-input" show-submit="false" show-commands="false"
+                placeholder="Optional: describe what to improve…"></robos-ai-textarea>
+              <button id="btn-refine-test" class="btn btn-secondary">🔄 Refine</button>
+            </div>
+            <div id="ai-refine-test-status" class="ai-status hidden"></div>
+            <div class="edit-actions">
+              <button id="btn-run-test" class="btn btn-secondary">▶ Run in Terminal</button>
+              <button class="btn btn-secondary btn-run-intellij" data-key="test">🧠 Run in IntelliJ</button>
+            </div>
+            <div id="test-output" class="devsetup-output hidden">
+              <pre id="test-pre"></pre>
+              <div id="test-fix-row" class="devsetup-fix-row hidden">
+                <span class="devsetup-fix-hint">Tests failed — AI can fix</span>
+                <button id="btn-fix-test" class="btn btn-ai">🤖 Fix</button>
+              </div>
+              <div id="ai-fix-test-status" class="ai-status hidden"></div>
+            </div>
+          </div>
+
+          <!-- E2E Test Script -->
+          <div id="devsetup-tab-e2e" class="devsetup-tab-pane hidden">
+            <div id="monaco-e2e" class="monaco-script-editor tab-editor"></div>
+            <textarea id="e2e-script" class="hidden"></textarea>
+            <div class="refine-row">
+              <robos-ai-textarea id="refine-e2e-prompt" class="refine-prompt-input" show-submit="false" show-commands="false"
+                placeholder="Optional: describe what to improve…"></robos-ai-textarea>
+              <button id="btn-refine-e2e" class="btn btn-secondary">🔄 Refine</button>
+            </div>
+            <div id="ai-refine-e2e-status" class="ai-status hidden"></div>
+            <div class="edit-actions">
+              <button id="btn-run-e2e" class="btn btn-secondary">▶ Run in Terminal</button>
+              <button class="btn btn-secondary btn-run-intellij" data-key="e2e">🧠 Run in IntelliJ</button>
+            </div>
+            <div id="e2e-output" class="devsetup-output hidden">
+              <pre id="e2e-pre"></pre>
+              <div id="e2e-fix-row" class="devsetup-fix-row hidden">
+                <span class="devsetup-fix-hint">E2E tests failed — AI can fix</span>
+                <button id="btn-fix-e2e" class="btn btn-ai">🤖 Fix</button>
+              </div>
+              <div id="ai-fix-e2e-status" class="ai-status hidden"></div>
+            </div>
+          </div>
+
+          <div class="edit-actions" style="margin-top:12px">
+            <button id="btn-save-devsetup" class="btn btn-primary">Save Dev Setup</button>
+          </div>
+        </div>
+
+        <!-- Secrets tab -->
+        <div id="tab-secrets" class="tab-content hidden">
+          <div class="secrets-intro">Map environment variable names to <code>pass</code> paths. When reproducing an issue, these secrets are resolved and injected as env vars before starting services.</div>
+          <div class="ai-gen-box" style="margin-bottom:12px">
+            <div class="ai-gen-header">🤖 AI — Detect Required Secrets</div>
+            <div class="devsetup-hint">AI will read the project source and suggest environment variable names and pass paths. Detected entries are appended below.</div>
+            <div class="edit-actions" style="margin-top:6px">
+              <button id="btn-ai-detect-secrets" class="btn btn-ai">🤖 Read project and add secret names</button>
+            </div>
+            <div id="ai-secrets-status" class="ai-status hidden"></div>
+          </div>
+          <div class="secrets-table-wrap">
+            <table class="secrets-table" id="secrets-table">
+              <thead><tr><th>ENV Name</th><th>pass path</th><th>Actions</th></tr></thead>
+              <tbody id="secrets-tbody"></tbody>
+            </table>
+          </div>
+          <div class="edit-actions">
+            <button id="btn-add-secret" class="btn btn-secondary">＋ Add Secret</button>
+            <button id="btn-save-secrets" class="btn btn-primary">Save Secrets</button>
+          </div>
+        </div>
+
+        <div id="tab-edit" class="tab-content hidden">
+          <label class="field-label">Label</label>
+          <input id="edit-label" class="text-input"/>
+          <label class="field-label mt">Git URL</label>
+          <input id="edit-url" class="text-input"/>
+          <label class="field-label mt">Local Path</label>
+          <input id="edit-path" class="text-input"/>
+          <label class="field-label mt">Notes</label>
+          <robos-ai-textarea id="edit-notes" class="text-input notes-input" min-height="80"
+            show-commands="false"
+            placeholder="Project notes — AI can help expand, summarize, or improve…"></robos-ai-textarea>
+          <div class="edit-actions">
+            <button id="btn-save-edit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</div>
+
+<!-- Pass picker modal -->
+<div id="pass-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span>Select pass entry</span>
+      <button id="pass-modal-close">✕</button>
+    </div>
+    <input id="pass-search" type="text" placeholder="Filter…" autocomplete="off">
+    <ul id="pass-list"></ul>
+  </div>
+</div>
+
+<script src="../node_modules/codemirror/lib/codemirror.js"></script>
+<script src="../node_modules/codemirror/mode/shell/shell.js"></script>
+<script src="../node_modules/codemirror/mode/markdown/markdown.js"></script>
+<script src="../node_modules/marked/lib/marked.umd.js"></script>
+<script src="../node_modules/highlight.js/highlight.min.js"></script>
+<script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
+<script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

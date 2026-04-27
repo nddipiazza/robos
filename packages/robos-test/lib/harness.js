@@ -48,6 +48,8 @@ const PORT_MAP = {
   'desktop-customizer': 19136,
   'dev-central': 19133,
   'workspace-manager': 19110,
+  'dev-tools': 19137,
+  'git-projects': 19138,
   'manager-dashboard': 19134,
   'report-builder': 19135,
 };

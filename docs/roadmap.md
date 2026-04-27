@@ -155,6 +155,7 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 
 | Video | Status |
 |:------|:-------|
+| Git Projects — every repo, every IDE, every script in one panel | Recorded — pending upload |
 | [Search Index — the invisible plumbing behind @-mentions](https://youtu.be/YkWkw-s75Os) | **Published** |
 | [Dev Tools — one-click install for every IDE, CLI, and AI agent](https://youtu.be/Q5_vzC3MOy0) | **Published** |
 | [Git Login Manager — the silent safety net for your git credentials](https://youtube.com/shorts/vO7pY9c_b2Q) | **Published** |

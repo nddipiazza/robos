@@ -1,0 +1,16 @@
+{
+  "name": "git-projects",
+  "version": "0.0.5",
+  "description": "RobOS Git Projects — clone, manage, and launch git repos directly from the desktop",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "codemirror": "^5.65.21",
+    "monaco-editor": "^0.52.2",
+    "electron": "^30.0.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^17.0.4"
+  }
+}

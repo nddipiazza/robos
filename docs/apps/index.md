@@ -91,6 +91,23 @@ These apps drive the main development flow — from picking up a task to deployi
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
+### Git Projects
+
+<img src="{{ '/assets/images/icons/git-projects.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> The front door to every git repository on the team — clone, run dev-setup scripts, open in any IDE, browse GitHub repos you already have access to. AI-generated dev-setup, test, and run scripts per project.
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src=""
+    data-src-pending-publish="git-projects"
+    title="RobOS Git Projects — clone, manage, and launch every repo from one panel"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+> Embed will go live when the YouTube upload completes; see `packages/robos-test/run/demos/git-projects/` for the source `.webm` and `youtube.md`.
+
 ### Workspace Manager
 
 <img src="{{ '/assets/images/icons/workspace-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Discover and manage local workspaces. Open in any IDE. Auto-provisions workspace per task with branch, deps, and dev server.
