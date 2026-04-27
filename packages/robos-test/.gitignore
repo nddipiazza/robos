@@ -3,6 +3,12 @@ models/
 # Python venv used to install piper-tts (when that path is taken)
 .venv/
 # Generated demo outputs: raw webm captures, muxed finals, audio, cue wavs
-run/demos/
+# (cues.json and youtube.md are tracked as source)
+run/demos/**/*.webm
+run/demos/**/*.mkv
+run/demos/**/*.mp4
+run/demos/**/*.wav
+run/demos/**/*.vtt
+run/demos/**/wavs/
 # Install recording artifacts
 install-raw.webm

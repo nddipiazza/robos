@@ -1,0 +1,37 @@
+[
+  {
+    "startMs": 0,
+    "label": "Security Setup",
+    "narration": "Day one. Dana opens Security Setup to create her encryption key and initialize the password store."
+  },
+  {
+    "startMs": 10000,
+    "label": "Pass unlock",
+    "narration": "The pass store is initialized — RobOS asks for the GPG passphrase once to unlock it for the day."
+  },
+  {
+    "startMs": 46000,
+    "label": "Pass Manager",
+    "narration": "Three credentials added — Jira token, GitHub PAT, and username — all encrypted on disk, visible only as asterisks."
+  },
+  {
+    "startMs": 90000,
+    "label": "Task Servers",
+    "narration": "Task Servers connects RobOS to Acme's Jira. The API token loads straight from the password store."
+  },
+  {
+    "startMs": 100000,
+    "label": "Workflow Studio",
+    "narration": "Workflow Studio — Dana describes the team in plain English and RobOS drafts the full ticket lifecycle."
+  },
+  {
+    "startMs": 112000,
+    "label": "Git Projects",
+    "narration": "Git Projects — both repos registered. RobOS detects the stack and drafts dev-setup scripts automatically."
+  },
+  {
+    "startMs": 175000,
+    "label": "Wrap",
+    "narration": "Three minutes, one source of truth. Every RobOS app picks it up from here."
+  }
+]
