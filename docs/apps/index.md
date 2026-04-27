@@ -97,7 +97,7 @@ These apps drive the main development flow — from picking up a task to deployi
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/5joqxBHkrqw"
+    src="https://www.youtube-nocookie.com/embed/IBCpM-tCCL0"
     title="RobOS Git Projects — clone, manage, and launch every repo from one panel"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
