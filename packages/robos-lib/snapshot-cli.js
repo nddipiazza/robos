@@ -34,7 +34,7 @@ const https = require('https');
 const PORT_REGISTRY = {
   'app-launcher':      19100,
   'dev-central':       19101,
-  'git-projects':      19102,
+  'git-projects':      19138,
   'issue-manager':     19103,
   'agents-manager':    19104,
   'agent-scheduler':   19105,

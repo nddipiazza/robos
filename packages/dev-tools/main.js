@@ -311,12 +311,22 @@ app.whenReady().then(() => {
 
   createWindow();
 
-  // Debug server
-  try {
-    const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
-    registerSnapshotIPC(mainWindow);
-    startDebugServer(mainWindow, 19122, 'dev-tools');
-  } catch { /* robos-lib not deployed yet */ }
+  // Debug server (optional) — same resolution order as every other RobOS app.
+  let _debug = null;
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
+    path.resolve(__dirname, '..', 'robos-lib', 'dom-snapshot'),
+    '/usr/local/share/robos/robos-lib/dom-snapshot',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { _debug = require(p); break; } catch {}
+  }
+  if (_debug) {
+    try {
+      _debug.registerSnapshotIPC(mainWindow);
+      _debug.startDebugServer(mainWindow, 19137, 'dev-tools');
+    } catch {}
+  }
 });
 
 app.on('window-all-closed', () => app.quit());
