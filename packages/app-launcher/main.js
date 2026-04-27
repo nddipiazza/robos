@@ -1,7 +1,46 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { spawn } = require('child_process');
+const cp = require('child_process');
+const { spawn } = cp;
+
+const WINDOW_TITLE = 'RobOS App Launcher';
+
+// Mutter / dash-to-panel ignore Electron's skipTaskbar:true on Linux unless the
+// X11 state explicitly carries _NET_WM_STATE_SKIP_TASKBAR. We set type:'utility'
+// in BrowserWindow (covers most WMs) and also wmctrl-pin the state below as
+// belt-and-suspenders.
+function pinSkipTaskbar() {
+  cp.exec(
+    `WID=$(xdotool search --name "${WINDOW_TITLE}" 2>/dev/null | head -1); ` +
+    `[ -n "$WID" ] && wmctrl -ir $WID -b add,skip_taskbar,skip_pager 2>/dev/null`,
+    { timeout: 3000, env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }, shell: '/bin/bash' },
+    () => {}
+  );
+}
+
+// Distinct app name + userData so this app's single-instance lock doesn't
+// collide with the default ~/.config/Electron/ shared by every other Electron
+// process. Without this, a stale Singleton lock from any unrelated Electron
+// crash would silently block the launcher from spawning.
+app.setName('robos-app-launcher');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'app-launcher'));
+
+// Toggle behavior: pressing Super_L while the launcher is already open should
+// close it, not spawn a second process. requestSingleInstanceLock() returns
+// false in the second invocation; the running first instance receives the
+// 'second-instance' event and closes its window (which exits the app per the
+// window-all-closed handler at the bottom of this file).
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+  process.exit(0);
+}
+app.on('second-instance', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.close();
+  }
+});
 
 // Debug server for DOM snapshots (robos-lib)
 let debugServer = null;
@@ -123,6 +162,12 @@ function createWindow() {
     frame: false,
     resizable: false,
     skipTaskbar: true,
+    // type:'utility' tells the WM "this is a transient tool window" — Mutter
+    // and dash-to-panel skip it in taskbar/pager, and it doesn't get an
+    // app-shaped icon group. Doesn't force override-redirect (unlike type:
+    // 'desktop'), so the WM stays in charge of stacking.
+    type: 'utility',
+    title: WINDOW_TITLE,
     backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -132,6 +177,14 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  // Re-assert skip-taskbar at the X11 state level after the window appears,
+  // and once more shortly after — Electron's setSkipTaskbar via X11 hint can
+  // be overridden by Mutter's first activation event.
+  mainWindow.once('ready-to-show', () => {
+    setTimeout(pinSkipTaskbar, 200);
+    setTimeout(pinSkipTaskbar, 1500);
+  });
 
   // Close on blur (click outside)
   mainWindow.on('blur', () => {
