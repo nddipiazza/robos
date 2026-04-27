@@ -142,7 +142,7 @@ Engineering-specific additions:
 
 | # | Video | Fixtures ready | Script drafted | Recorded | Published | YouTube URL |
 |:-:|:------|:-:|:-:|:-:|:-:|:-----------:|
-| 01 | Dana sets up RobOS | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 01 | Dana sets up RobOS | ✅ | ✅ | ⬜ | ⬜ | — |
 | 02 | Pat breaks down the rewrite | ⬜ | ⬜ | ⬜ | ⬜ | — |
 | 03 | Jordan wires up CI/CD | ⬜ | ⬜ | ⬜ | ⬜ | — |
 | 04 | Alex's first day | ⬜ | ⬜ | ⬜ | ⬜ | — |
