@@ -1,0 +1,7 @@
+[
+  {"startMs": 500,  "label": "intro",        "narration": "Back in Git Login Manager. Dana just finished GitHub device auth in the browser."},
+  {"startMs": 8000, "label": "check-now",    "narration": "Dana hits Check now — RobOS re-runs all four credential checks."},
+  {"startMs": 16000,"label": "ssh-green",    "narration": "SSH key verified. GitHub recognizes Dana's public key."},
+  {"startMs": 23000,"label": "gitcfg-green", "narration": "Git identity is configured — name and email are set for commits."},
+  {"startMs": 31000,"label": "all-green",    "narration": "All checks green. Dana's environment is fully connected to GitHub and ready to code."}
+]
