@@ -9,6 +9,13 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Videos
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+
 # Editor files
 *.swp
 *.swo
