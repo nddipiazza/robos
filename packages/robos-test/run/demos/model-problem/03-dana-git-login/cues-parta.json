@@ -1,0 +1,8 @@
+[
+  {"startMs": 500,  "label": "intro",         "narration": "Video 3: Git Login Manager. After installing the tools, I need to connect them to GitHub."},
+  {"startMs": 7000, "label": "app-launcher",  "narration": "App Launcher — I'll search for Git Login Manager."},
+  {"startMs": 10500,"label": "app-open",      "narration": "Git Login Manager shows three issues to resolve: GitHub CLI auth, SSH key, and git identity."},
+  {"startMs": 18000,"label": "login-click",   "narration": "Starting with GitHub auth. I'll click Login to trigger the device flow."},
+  {"startMs": 24000,"label": "otp",           "narration": "RobOS launches Firefox and shows a one-time device code."},
+  {"startMs": 36000,"label": "pause",         "narration": "I'll complete sign-in now. In Part B, we'll see all three checks go green."}
+]
