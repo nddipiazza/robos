@@ -306,7 +306,7 @@ ipcMain.handle("start-gh-login", () => {
   if (loginProc) {
     try { process.kill(loginProc.pid, 0); return { error: "Login already in progress." }; } catch {}
   }
-  loginProc = spawn("gh", ["auth", "login", "--web", "--hostname", "github.com"], {
+  loginProc = spawn("gh", ["auth", "login", "--web", "--hostname", "github.com", "--scopes", "admin:public_key"], {
     env: { ...process.env, GH_PROMPT_DISABLED: "0" },
   });
   loginProc.stdout.on("data", d => { if (win && !win.isDestroyed()) win.webContents.send("login-output", d.toString()); });
