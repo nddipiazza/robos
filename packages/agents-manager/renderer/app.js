@@ -30,8 +30,11 @@ const COPILOT_FLAGS = [
   { id: 'name', flag: '--name', type: 'text', label: 'Session Name',
     desc: 'Set a name for the new session',
     common: true },
+  { id: 'cwd', flag: '--cwd', type: 'dir', label: 'Working Directory',
+    desc: 'Start Copilot in this directory (cd before launching)',
+    common: true },
   // ── All ──
-  { id: 'add-dir', flag: '--add-dir', type: 'text', label: 'Add Directory',
+  { id: 'add-dir', flag: '--add-dir', type: 'dir', label: 'Add Directory',
     desc: 'Add a directory to the allowed list for file access',
     common: false },
   { id: 'allow-all-paths', flag: '--allow-all-paths', type: 'bool', label: 'Allow All Paths',
@@ -367,7 +370,7 @@ async function renderCopilotDetail(provider) {
 
   document.getElementById('btn-cop-login').onclick = () => window.agents.copilotLogin();
   document.getElementById('btn-cop-terminal').onclick = () =>
-    window.agents.copilotLaunchTerminal(null, buildCopilotArgs());
+    window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
 
   // Flags dropdown toggle
   document.getElementById('btn-cop-flags-toggle').onclick = (e) => {
@@ -473,6 +476,7 @@ function renderFlagsDropdown() {
     } else {
       const val = copilotFlagValues[f.id] || '';
       const enabled = !!val;
+      const isDirType = f.type === 'dir';
       row.innerHTML = `
         <div class="flags-value-row" title="${esc(f.desc)}">
           <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
@@ -481,7 +485,12 @@ function renderFlagsDropdown() {
             <select class="flags-select flags-value-input" data-id="${f.id}">
               <option value="">-- choose --</option>
               ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
-            </select>` : `
+            </select>` : isDirType ? `
+            <div class="flags-dir-group">
+              <input type="text" class="flags-text-input flags-value-input" data-id="${f.id}"
+                value="${esc(String(val))}" placeholder="choose directory…" readonly/>
+              <button class="btn btn-sm flags-dir-browse" title="Browse…">📁</button>
+            </div>` : `
             <input type="${f.type === 'number' ? 'number' : 'text'}" class="flags-text-input flags-value-input"
               data-id="${f.id}" value="${esc(String(val))}"
               placeholder="${f.type === 'number' ? '0' : f.label}"/>`}
@@ -494,11 +503,28 @@ function renderFlagsDropdown() {
         else if (input.value) copilotFlagValues[f.id] = input.value;
         saveFlagState();
       };
-      input.oninput = input.onchange = () => {
-        if (input.value) { copilotFlagValues[f.id] = input.value; checkbox.checked = true; }
-        else { delete copilotFlagValues[f.id]; checkbox.checked = false; }
-        saveFlagState();
-      };
+      if (isDirType) {
+        row.querySelector('.flags-dir-browse').onclick = async () => {
+          const chosen = await window.agents.openDirDialog();
+          if (chosen) {
+            input.value = chosen;
+            copilotFlagValues[f.id] = chosen;
+            checkbox.checked = true;
+            saveFlagState();
+          }
+        };
+        input.oninput = input.onchange = () => {
+          if (input.value) { copilotFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete copilotFlagValues[f.id]; checkbox.checked = false; }
+          saveFlagState();
+        };
+      } else {
+        input.oninput = input.onchange = () => {
+          if (input.value) { copilotFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete copilotFlagValues[f.id]; checkbox.checked = false; }
+          saveFlagState();
+        };
+      }
     }
     listEl.appendChild(row);
   }
@@ -532,6 +558,7 @@ function renderFlagsDropdown() {
 function buildCopilotArgs() {
   const args = [];
   for (const f of COPILOT_FLAGS) {
+    if (f.id === 'cwd') continue;  // handled via cd before launch, not a real copilot flag
     const val = copilotFlagValues[f.id];
     if (!val) continue;
     if (f.type === 'bool') {

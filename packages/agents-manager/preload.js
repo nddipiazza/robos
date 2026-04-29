@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('agents', {
   copilotSessions:          ()    => ipcRenderer.invoke('copilot-sessions'),
   copilotDeleteSession:     (id)  => ipcRenderer.invoke('copilot-delete-session', id),
   copilotFetchModels:       ()             => ipcRenderer.invoke('copilot-fetch-models'),
-  copilotLaunchTerminal:    (id, extraArgs)  => ipcRenderer.invoke('copilot-launch-terminal', id, extraArgs),
+  copilotLaunchTerminal:    (id, extraArgs, cwd)  => ipcRenderer.invoke('copilot-launch-terminal', id, extraArgs, cwd),
   copilotLogin:             ()    => ipcRenderer.invoke('copilot-login'),
   copilotUpdate:            ()    => ipcRenderer.invoke('copilot-update'),
   copilotInstallExtension:  ()    => ipcRenderer.invoke('copilot-install-extension'),

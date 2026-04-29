@@ -198,12 +198,15 @@ ipcMain.handle('copilot-delete-session', (_, sessionId) => {
   try { fs.rmSync(path.join(COPILOT_SESSION_DIR, sessionId), { recursive: true, force: true }); } catch {}
 });
 
-ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs) => {
+ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs, cwd) => {
   const parts = ['/usr/bin/copilot'];
   if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   if (sessionId) parts.push('--resume', sessionId);
   const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
+  const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
+    ? `cd '${cwd.trim().replace(/'/g, "'\\''")}' && `
+    : '';
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
