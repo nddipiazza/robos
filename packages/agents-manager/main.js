@@ -89,16 +89,16 @@ ipcMain.handle('detect-providers', async () => {
 
   // GitHub Copilot
   const ghVer = await run('gh', ['--version']);
-  const copExt = await run('sh', ['-c', "'gh extension list 2>/dev/null | grep copilot | head -1'"]);
+  const copNpm = await run('sh', ['-c', 'which copilot 2>/dev/null || (test -f /usr/bin/copilot && echo /usr/bin/copilot)']);
   const ghUser = await run('gh', ['api', 'user', '--jq', "'.login'"]);
+  const copilotInstalled = !!(copNpm.output && copNpm.output.trim());
   providers.push({
     id: 'github-copilot',
     name: 'GitHub Copilot',
-    installed: !!(copExt.output),
+    installed: copilotInstalled,
     ghInstalled: !!(ghVer.output && !ghVer.output.includes('not found')),
     authenticated: !!(ghUser.output && !ghUser.output.startsWith('{')),
     version: ghVer.output.split('\n')[0] || '',
-    extensionVersion: copExt.output || '',
     user: ghUser.output && !ghUser.output.startsWith('{') ? ghUser.output : '',
   });
 
@@ -166,17 +166,49 @@ ipcMain.handle('copilot-delete-session', (_, sessionId) => {
   try { fs.rmSync(path.join(COPILOT_SESSION_DIR, sessionId), { recursive: true, force: true }); } catch {}
 });
 
-ipcMain.handle('copilot-launch-terminal', (_, sessionId) => {
-  const cmd = sessionId
-    ? `gh copilot -- --resume ${sessionId}`
-    : `gh copilot`;
-  cp.spawn('tilix', ['-e', `bash -c '${cmd}; read -p "Press Enter to close..." x'`], {
+ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs) => {
+  const parts = ['/usr/bin/copilot'];
+  if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
+  if (sessionId) parts.push('--resume', sessionId);
+  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
 
+ipcMain.handle('copilot-fetch-models', async () => {
+  return new Promise(res => {
+    const homeDir = os.homedir();
+    const env = { ...process.env, HOME: homeDir, GH_CONFIG_DIR: path.join(homeDir, '.config', 'gh') };
+    cp.exec('bash -lc "gh auth token 2>/dev/null"', { timeout: 5000, env }, (err, token) => {
+      if (err || !token.trim()) return res({ error: 'Not authenticated with gh CLI' });
+      const t = token.trim();
+      cp.exec(
+        `curl -sf -H "Authorization: Bearer ${t}" -H "Copilot-Integration-Id: vscode-chat" -H "Editor-Version: vscode/1.90.0" https://api.githubcopilot.com/models`,
+        { timeout: 15000 }, (err2, stdout) => {
+          if (err2) return res({ error: err2.message });
+          try {
+            const data = JSON.parse(stdout);
+            const list = Array.isArray(data) ? data : (data.data || data.models || []);
+            // Only return models the user actually has access to (policy=enabled)
+            const models = list
+              .filter(m => (m.policy || {}).state === 'enabled')
+              .map(m => m.id || m.name)
+              .filter(Boolean)
+              .sort();
+            res({ models });
+          } catch (e) {
+            res({ error: 'Could not parse response: ' + stdout.slice(0, 200) });
+          }
+        }
+      );
+    });
+  });
+});
+
+
 ipcMain.handle('copilot-login', () => {
-  cp.spawn('tilix', ['-e', 'gh auth login'], {
+  cp.spawn('x-terminal-emulator', ['-e', 'gh auth login'], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
@@ -192,9 +224,9 @@ ipcMain.handle('copilot-update', async () => {
 
 ipcMain.handle('copilot-install-extension', async () => {
   return new Promise(res => {
-    cp.exec('gh extension install github/gh-copilot 2>&1',
+    cp.exec('gh extension install github/gh-copilot',
       { timeout: 60000 }, (err, stdout, stderr) => {
-        res(stdout || stderr || 'Done');
+        res((stdout + '\n' + stderr).trim() || (err ? err.message : 'Done'));
       });
   });
 });
@@ -297,13 +329,13 @@ ipcMain.handle('claude-launch-terminal', (_, sessionId) => {
   const cmd = sessionId
     ? `claude --resume ${sessionId}`
     : `claude`;
-  cp.spawn('tilix', ['-e', `bash -c '${cmd}; read -p "Press Enter to close..." x'`], {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -c '${cmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
 
 ipcMain.handle('claude-install', () => {
-  cp.spawn('tilix', ['-e', `bash -c 'echo "Installing Claude Code CLI..." && npm install -g @anthropic-ai/claude-code && echo "Done!" && read -p "Press Enter to close..." x'`], {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -c 'echo "Installing Claude Code CLI..." && npm install -g @anthropic-ai/claude-code && echo "Done!" && read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });

@@ -4,6 +4,100 @@ let providers = [];
 let activeProviderId = null;
 let selectedProviderId = null;
 
+// ── Copilot CLI flag definitions ─────────────────────────────────────────────
+// type: 'bool' | 'text' | 'number' | 'select'
+// common: shown in "Most Common" mode
+
+const COPILOT_FLAGS = [
+  // ── Most Common ──
+  { id: 'model', flag: '--model', type: 'model-select', label: 'Model',
+    desc: 'AI model to use — fetched from the GitHub Copilot API (only models you have access to)',
+    common: true },
+  { id: 'mode', flag: '--mode', type: 'select', label: 'Mode',
+    desc: 'Set the initial agent mode',
+    options: ['interactive', 'plan', 'autopilot'],
+    common: true },
+  { id: 'effort', flag: '--effort', type: 'select', label: 'Reasoning Effort',
+    desc: 'Set the reasoning effort level',
+    options: ['low', 'medium', 'high', 'xhigh'],
+    common: true },
+  { id: 'yolo', flag: '--yolo', type: 'bool', label: 'Yolo (Allow All)',
+    desc: 'Enable all permissions: tools, paths, and URLs — no confirmation prompts',
+    common: true },
+  { id: 'allow-all-tools', flag: '--allow-all-tools', type: 'bool', label: 'Allow All Tools',
+    desc: 'Allow all tools to run automatically without confirmation',
+    common: true },
+  { id: 'name', flag: '--name', type: 'text', label: 'Session Name',
+    desc: 'Set a name for the new session',
+    common: true },
+  // ── All ──
+  { id: 'add-dir', flag: '--add-dir', type: 'text', label: 'Add Directory',
+    desc: 'Add a directory to the allowed list for file access',
+    common: false },
+  { id: 'allow-all-paths', flag: '--allow-all-paths', type: 'bool', label: 'Allow All Paths',
+    desc: 'Disable file path verification — allow access to any path',
+    common: false },
+  { id: 'allow-all-urls', flag: '--allow-all-urls', type: 'bool', label: 'Allow All URLs',
+    desc: 'Allow access to all URLs without confirmation',
+    common: false },
+  { id: 'autopilot', flag: '--autopilot', type: 'bool', label: 'Autopilot',
+    desc: 'Start in autopilot mode',
+    common: true },
+  { id: 'continue', flag: '--continue', type: 'bool', label: 'Continue',
+    desc: 'Resume the most recent session',
+    common: false },
+  { id: 'experimental', flag: '--experimental', type: 'bool', label: 'Experimental',
+    desc: 'Enable experimental features',
+    common: false },
+  { id: 'log-level', flag: '--log-level', type: 'select', label: 'Log Level',
+    desc: 'Set the log verbosity level',
+    options: ['none', 'error', 'warning', 'info', 'debug', 'all'],
+    common: false },
+  { id: 'max-autopilot-continues', flag: '--max-autopilot-continues', type: 'number',
+    label: 'Max Autopilot Continues',
+    desc: 'Maximum number of continuation messages in autopilot mode',
+    common: false },
+  { id: 'no-ask-user', flag: '--no-ask-user', type: 'bool', label: 'No Ask User',
+    desc: 'Disable the ask_user tool — agent works fully autonomously',
+    common: false },
+  { id: 'no-auto-update', flag: '--no-auto-update', type: 'bool', label: 'No Auto-Update',
+    desc: 'Disable automatic CLI update download',
+    common: false },
+  { id: 'no-color', flag: '--no-color', type: 'bool', label: 'No Color',
+    desc: 'Disable all color output',
+    common: false },
+  { id: 'no-custom-instructions', flag: '--no-custom-instructions', type: 'bool',
+    label: 'No Custom Instructions',
+    desc: 'Disable loading of custom instructions from AGENTS.md',
+    common: false },
+  { id: 'no-remote', flag: '--no-remote', type: 'bool', label: 'No Remote',
+    desc: 'Disable remote control of your session from GitHub web and mobile',
+    common: false },
+  { id: 'output-format', flag: '--output-format', type: 'select', label: 'Output Format',
+    desc: 'Output format for non-interactive mode',
+    options: ['text', 'json'],
+    common: false },
+  { id: 'plan', flag: '--plan', type: 'bool', label: 'Plan Mode',
+    desc: 'Start in plan mode',
+    common: false },
+  { id: 'plain-diff', flag: '--plain-diff', type: 'bool', label: 'Plain Diff',
+    desc: 'Disable rich diff rendering',
+    common: false },
+  { id: 'stream', flag: '--stream', type: 'select', label: 'Stream',
+    desc: 'Enable or disable streaming mode',
+    options: ['on', 'off'],
+    common: false },
+];
+
+let copilotFlagMode = localStorage.getItem('copilotFlagMode') || 'common';
+let copilotFlagValues = (() => { try { return JSON.parse(localStorage.getItem('copilotFlagValues') || '{}'); } catch { return {}; } })();
+let cachedModels = null; // populated from GitHub Copilot API (policy=enabled only)
+
+function saveFlagState() {
+  localStorage.setItem('copilotFlagMode', copilotFlagMode);
+  localStorage.setItem('copilotFlagValues', JSON.stringify(copilotFlagValues));
+}
+
 // ── Provider icons (inline SVG) ─────────────────────────────────────────────
 
 const PROVIDER_ICONS = {
@@ -103,8 +197,6 @@ async function renderCopilotDetail(provider) {
         <div class="info-grid">
           <span class="info-label">gh CLI</span>
           <span class="info-value mono">${esc(provider.version || 'not installed')}</span>
-          <span class="info-label">Copilot Extension</span>
-          <span class="info-value mono">${esc(provider.extensionVersion || 'not installed')}</span>
           <span class="info-label">Logged in as</span>
           <span class="info-value">${esc(provider.user || 'not logged in')}</span>
           <span class="info-label">Status</span>
@@ -114,11 +206,25 @@ async function renderCopilotDetail(provider) {
         </div>
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cop-refresh">Refresh</button>
-          ${provider.ghInstalled && !provider.installed ? `<button class="btn btn-primary btn-sm" id="btn-cop-install-ext">Install gh-copilot Extension</button>` : ''}
-          ${provider.installed ? `<button class="btn btn-sm" id="btn-cop-update">Update Extension</button>` : ''}
-          <button class="btn btn-primary btn-sm" id="btn-cop-login">Login / Re-auth</button>
-          <button class="btn btn-ai btn-sm" id="btn-cop-terminal">Open Terminal</button>
+          <button class="btn btn-primary btn-sm" id="btn-cop-login">${provider.authenticated ? 'Re-auth to GitHub' : 'Login to GitHub'}</button>
+          <div class="split-btn-group" id="cop-terminal-group">
+            <button class="btn btn-ai btn-sm" id="btn-cop-terminal">Open Copilot CLI Terminal</button>
+            <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-cop-flags-toggle" title="Configure launch flags">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
         </div>
+        <div class="flags-dropdown hidden" id="cop-flags-dropdown">
+          <div class="flags-dropdown-header">
+            <span class="flags-dropdown-title">Launch Flags</span>
+            <div class="flags-mode-toggle">
+              <button class="flags-mode-btn ${copilotFlagMode === 'common' ? 'active' : ''}" id="flags-mode-common">Most Common</button>
+              <button class="flags-mode-btn ${copilotFlagMode === 'all' ? 'active' : ''}" id="flags-mode-all">All</button>
+            </div>
+          </div>
+          <div id="flags-list" class="flags-list"></div>
+        </div>
+        <div id="cop-install-status" style="display:none"></div>
       </div>
 
       <!-- Sessions -->
@@ -148,35 +254,185 @@ async function renderCopilotDetail(provider) {
   };
 
   document.getElementById('btn-cop-login').onclick = () => window.agents.copilotLogin();
-  const updateBtn = document.getElementById('btn-cop-update');
-  if (updateBtn) {
-    updateBtn.onclick = async () => {
-      updateBtn.disabled = true;
-      updateBtn.textContent = 'Updating...';
-      await window.agents.copilotUpdate();
-      updateBtn.textContent = 'Update Extension';
-      updateBtn.disabled = false;
-    };
-  }
-  const installExtBtn = document.getElementById('btn-cop-install-ext');
-  if (installExtBtn) {
-    installExtBtn.onclick = async () => {
-      installExtBtn.disabled = true;
-      installExtBtn.textContent = 'Installing...';
-      await window.agents.copilotInstallExtension();
-      installExtBtn.textContent = 'Install gh-copilot Extension';
-      installExtBtn.disabled = false;
-      providers = await window.agents.detectProviders();
-      renderSidebar();
-      await renderCopilotDetail(providers.find(p => p.id === 'github-copilot'));
-    };
-  }
-  document.getElementById('btn-cop-terminal').onclick = () => window.agents.copilotLaunchTerminal();
+  document.getElementById('btn-cop-terminal').onclick = () =>
+    window.agents.copilotLaunchTerminal(null, buildCopilotArgs());
+
+  // Flags dropdown toggle
+  document.getElementById('btn-cop-flags-toggle').onclick = (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('cop-flags-dropdown');
+    dd.classList.toggle('hidden');
+    if (!dd.classList.contains('hidden')) {
+      renderFlagsDropdown();
+      // Auto-fetch models the first time the panel opens
+      if (!cachedModels) {
+        window.agents.copilotFetchModels().then(result => {
+          if (!result.error) {
+            cachedModels = result.models;
+            renderFlagsDropdown();
+          }
+        });
+      }
+    }
+  };
+  document.getElementById('cop-flags-dropdown').addEventListener('click', e => e.stopPropagation());
+  document.getElementById('flags-mode-common').onclick = () => {
+    copilotFlagMode = 'common';
+    saveFlagState();
+    renderFlagsDropdown();
+  };
+  document.getElementById('flags-mode-all').onclick = () => {
+    copilotFlagMode = 'all';
+    saveFlagState();
+    renderFlagsDropdown();
+  };
+  // Initial render if dropdown was open
+  renderFlagsDropdown();
 
   // Load sessions
   const sessions = await window.agents.copilotSessions();
   renderCopilotSessions(sessions);
 }
+
+// ── Copilot flags dropdown ───────────────────────────────────────────────────
+
+function renderFlagsDropdown() {
+  const listEl = document.getElementById('flags-list');
+  if (!listEl) return;
+
+  // Update mode button states
+  document.getElementById('flags-mode-common')?.classList.toggle('active', copilotFlagMode === 'common');
+  document.getElementById('flags-mode-all')?.classList.toggle('active', copilotFlagMode === 'all');
+
+  const flags = copilotFlagMode === 'common'
+    ? COPILOT_FLAGS.filter(f => f.common)
+    : [...COPILOT_FLAGS].sort((a, b) => a.label.localeCompare(b.label));
+
+  listEl.innerHTML = '';
+  for (const f of flags) {
+    const row = document.createElement('div');
+    row.className = 'flags-row';
+
+    if (f.type === 'bool') {
+      const checked = !!copilotFlagValues[f.id];
+      row.innerHTML = `
+        <label class="flags-bool-label" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${checked ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          <span class="flags-label-text">${esc(f.label)}</span>
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </label>`;
+      row.querySelector('input').onchange = (e) => {
+        if (e.target.checked) copilotFlagValues[f.id] = true;
+        else delete copilotFlagValues[f.id];
+        saveFlagState();
+      };
+    } else if (f.type === 'model-select') {
+      // Dynamic select populated from the Copilot API (policy=enabled only)
+      const val = copilotFlagValues[f.id] || '';
+      const enabled = !!val;
+      const models = cachedModels || [];
+      const optionsHtml = models.length
+        ? models.map(m => `<option value="${esc(m)}" ${val === m ? 'selected' : ''}>${esc(m)}</option>`).join('')
+        : (val ? `<option value="${esc(val)}" selected>${esc(val)}</option>` : '');
+      row.innerHTML = `
+        <div class="flags-value-row" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          <select class="flags-select flags-value-input" data-id="${f.id}" id="model-select">
+            <option value="">${models.length ? '-- choose model --' : '(click ↻ to load)'}</option>
+            ${optionsHtml}
+          </select>
+          <button class="btn btn-sm flags-fetch-btn" id="btn-fetch-models" title="Fetch available models from GitHub API">↻</button>
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </div>`;
+      const checkbox = row.querySelector('.flags-checkbox');
+      const select = row.querySelector('.flags-value-input');
+      checkbox.onchange = (e) => {
+        if (!e.target.checked) { delete copilotFlagValues[f.id]; select.value = ''; }
+        else if (select.value) copilotFlagValues[f.id] = select.value;
+        saveFlagState();
+      };
+      select.onchange = () => {
+        if (select.value) { copilotFlagValues[f.id] = select.value; checkbox.checked = true; }
+        else { delete copilotFlagValues[f.id]; checkbox.checked = false; }
+        saveFlagState();
+      };
+    } else {
+      const val = copilotFlagValues[f.id] || '';
+      const enabled = !!val;
+      row.innerHTML = `
+        <div class="flags-value-row" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          ${f.type === 'select' ? `
+            <select class="flags-select flags-value-input" data-id="${f.id}">
+              <option value="">-- choose --</option>
+              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            </select>` : `
+            <input type="${f.type === 'number' ? 'number' : 'text'}" class="flags-text-input flags-value-input"
+              data-id="${f.id}" value="${esc(String(val))}"
+              placeholder="${f.type === 'number' ? '0' : f.label}"/>`}
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </div>`;
+      const checkbox = row.querySelector('.flags-checkbox');
+      const input = row.querySelector('.flags-value-input');
+      checkbox.onchange = (e) => {
+        if (!e.target.checked) { delete copilotFlagValues[f.id]; input.value = ''; }
+        else if (input.value) copilotFlagValues[f.id] = input.value;
+        saveFlagState();
+      };
+      input.oninput = input.onchange = () => {
+        if (input.value) { copilotFlagValues[f.id] = input.value; checkbox.checked = true; }
+        else { delete copilotFlagValues[f.id]; checkbox.checked = false; }
+        saveFlagState();
+      };
+    }
+    listEl.appendChild(row);
+  }
+
+  // Wire the fetch-models refresh button
+  const fetchBtn = document.getElementById('btn-fetch-models');
+  if (fetchBtn) {
+    fetchBtn.onclick = async (e) => {
+      e.stopPropagation();
+      fetchBtn.textContent = '…';
+      fetchBtn.disabled = true;
+      fetchBtn.title = 'Fetching models…';
+      const result = await window.agents.copilotFetchModels();
+      fetchBtn.disabled = false;
+      if (result.error) {
+        fetchBtn.textContent = '✗';
+        fetchBtn.title = result.error;
+        setTimeout(() => { fetchBtn.textContent = '↻'; fetchBtn.title = 'Fetch available models from GitHub API'; }, 3000);
+        return;
+      }
+      cachedModels = result.models;
+      fetchBtn.textContent = '✓';
+      fetchBtn.title = `${result.models.length} models available`;
+      setTimeout(() => { fetchBtn.textContent = '↻'; fetchBtn.title = 'Refresh model list from GitHub API'; }, 2000);
+      // Re-render to populate the select with fresh models
+      renderFlagsDropdown();
+    };
+  }
+}
+
+function buildCopilotArgs() {
+  const args = [];
+  for (const f of COPILOT_FLAGS) {
+    const val = copilotFlagValues[f.id];
+    if (!val) continue;
+    if (f.type === 'bool') {
+      args.push(f.flag);
+    } else {
+      const str = String(val).trim();
+      if (str) { args.push(f.flag, str); }
+    }
+  }
+  return args;
+}
+
+// ── Copilot sessions ─────────────────────────────────────────────────────────
 
 function renderCopilotSessions(sessions) {
   const container = document.getElementById('copilot-sessions-list');
@@ -439,4 +695,10 @@ function formatDate(iso) {
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  // Close flags dropdown when clicking outside
+  document.addEventListener('click', () => {
+    document.getElementById('cop-flags-dropdown')?.classList.add('hidden');
+  });
+  init();
+});
