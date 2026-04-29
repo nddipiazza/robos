@@ -9,7 +9,8 @@ contextBridge.exposeInMainWorld('agents', {
   // GitHub Copilot
   copilotSessions:          ()    => ipcRenderer.invoke('copilot-sessions'),
   copilotDeleteSession:     (id)  => ipcRenderer.invoke('copilot-delete-session', id),
-  copilotLaunchTerminal:    (id)  => ipcRenderer.invoke('copilot-launch-terminal', id),
+  copilotFetchModels:       ()             => ipcRenderer.invoke('copilot-fetch-models'),
+  copilotLaunchTerminal:    (id, extraArgs)  => ipcRenderer.invoke('copilot-launch-terminal', id, extraArgs),
   copilotLogin:             ()    => ipcRenderer.invoke('copilot-login'),
   copilotUpdate:            ()    => ipcRenderer.invoke('copilot-update'),
   copilotInstallExtension:  ()    => ipcRenderer.invoke('copilot-install-extension'),
@@ -20,6 +21,11 @@ contextBridge.exposeInMainWorld('agents', {
   claudeLaunchTerminal:  (id)  => ipcRenderer.invoke('claude-launch-terminal', id),
   claudeInstall:         ()    => ipcRenderer.invoke('claude-install'),
   claudeWriteSettings:   (s)   => ipcRenderer.invoke('claude-write-settings', s),
+
+  // Codex
+  codexSessions:       ()     => ipcRenderer.invoke('codex-sessions'),
+  codexLaunchTerminal: (id)   => ipcRenderer.invoke('codex-launch-terminal', id),
+  codexLogin:          ()     => ipcRenderer.invoke('codex-login'),
 
   // General
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),

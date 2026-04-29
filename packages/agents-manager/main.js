@@ -113,6 +113,27 @@ ipcMain.handle('detect-providers', async () => {
     version: clVer.output.split('\n')[0] || '',
   });
 
+  // Codex CLI
+  const cxVer = await run('codex', ['--version']);
+  const cxInstalled = !!(cxVer.output && !cxVer.output.includes('not found') && !cxVer.output.includes('No such file'));
+  let cxUser = '';
+  let cxAuth = false;
+  if (cxInstalled) {
+    const cxStatus = await run('codex', ['login', 'status']);
+    cxAuth = cxStatus.output.toLowerCase().includes('logged in') ||
+             (cxStatus.code === 0 && !cxStatus.output.toLowerCase().includes('not logged in'));
+    const m = cxStatus.output.match(/logged in as\s+(\S+)/i);
+    if (m) cxUser = m[1];
+  }
+  providers.push({
+    id: 'codex',
+    name: 'Codex',
+    installed: cxInstalled,
+    authenticated: cxAuth,
+    version: cxVer.output.split('\n')[0] || '',
+    user: cxUser,
+  });
+
   return providers;
 });
 
@@ -228,6 +249,64 @@ ipcMain.handle('copilot-install-extension', async () => {
       { timeout: 60000 }, (err, stdout, stderr) => {
         res((stdout + '\n' + stderr).trim() || (err ? err.message : 'Done'));
       });
+  });
+});
+
+// ── Codex IPC ────────────────────────────────────────────────────────────────
+
+const CODEX_DIR = path.join(os.homedir(), '.codex');
+
+ipcMain.handle('codex-sessions', () => {
+  const sessions = [];
+  const tmpDir = path.join(CODEX_DIR, 'tmp');
+  try {
+    const dirs = fs.readdirSync(tmpDir).filter(d => {
+      try { return fs.statSync(path.join(tmpDir, d)).isDirectory(); } catch { return false; }
+    });
+    for (const d of dirs) {
+      try {
+        const stat = fs.statSync(path.join(tmpDir, d));
+        let firstMessage = '';
+        let cwd = '';
+        try {
+          const msgPath = path.join(tmpDir, d, 'messages.jsonl');
+          const lines = fs.readFileSync(msgPath, 'utf8').split('\n').filter(Boolean);
+          for (const l of lines) {
+            const ev = JSON.parse(l);
+            if (ev.role === 'user' && (ev.content || '').trim()) {
+              firstMessage = (typeof ev.content === 'string' ? ev.content : JSON.stringify(ev.content)).slice(0, 120);
+              break;
+            }
+          }
+        } catch {}
+        try {
+          const meta = JSON.parse(fs.readFileSync(path.join(tmpDir, d, 'session.json'), 'utf8'));
+          cwd = meta.cwd || '';
+        } catch {}
+        sessions.push({
+          session_id: d,
+          name: cwd ? path.basename(cwd) : d.slice(0, 8),
+          cwd,
+          first_message: firstMessage,
+          updated_at: stat.mtime.toISOString(),
+        });
+      } catch {}
+    }
+  } catch {}
+  sessions.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
+  return sessions;
+});
+
+ipcMain.handle('codex-launch-terminal', (_, sessionId) => {
+  const cmd = sessionId ? `codex resume ${sessionId}` : `codex`;
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cmd}; read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
+  });
+});
+
+ipcMain.handle('codex-login', () => {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'codex login; read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
 

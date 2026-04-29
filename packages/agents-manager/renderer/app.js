@@ -103,6 +103,7 @@ function saveFlagState() {
 const PROVIDER_ICONS = {
   'github-copilot': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 19 4.77 5.07 5.07 0 0 0 18.91 1S17.73.65 15 2.48a13.38 13.38 0 0 0-7 0C5.27.65 4.09 1 4.09 1A5.07 5.07 0 0 0 4 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 8 18.13V22"/></svg>`,
   'claude-code': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>`,
+  'codex': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg>`,
 };
 
 // ── Init ────────────────────────────────────────────────────────────────────
@@ -171,6 +172,8 @@ async function selectProvider(id) {
     await renderCopilotDetail(provider);
   } else if (id === 'claude-code') {
     await renderClaudeDetail(provider);
+  } else if (id === 'codex') {
+    await renderCodexDetail(provider);
   }
 }
 
@@ -630,6 +633,113 @@ function renderClaudeSessions(sessions) {
 
     card.querySelector('.btn-resume').onclick = () =>
       window.agents.claudeLaunchTerminal(s.session_id);
+    container.appendChild(card);
+  }
+}
+
+// ── Codex Detail ────────────────────────────────────────────────────────────
+
+async function renderCodexDetail(provider) {
+  const detail = document.getElementById('provider-detail');
+  const isActive = activeProviderId === 'codex';
+
+  detail.innerHTML = `
+    <div class="detail-scroll">
+      <div class="detail-header">
+        <div class="detail-title-row">
+          <span class="detail-icon">${PROVIDER_ICONS['codex']}</span>
+          <h2>Codex</h2>
+          ${isActive ? '<span class="active-badge">ACTIVE PROVIDER</span>' : `<button class="btn btn-primary btn-sm" id="btn-set-active">Set as Active</button>`}
+        </div>
+        <p class="detail-sub">OpenAI Codex CLI</p>
+      </div>
+
+      <!-- Status -->
+      <div class="detail-section">
+        <h3 class="section-title">Status</h3>
+        <div class="info-grid">
+          <span class="info-label">codex CLI</span>
+          <span class="info-value mono">${esc(provider.version || 'not installed')}</span>
+          <span class="info-label">Logged in as</span>
+          <span class="info-value">${esc(provider.user || 'not logged in')}</span>
+          <span class="info-label">Status</span>
+          <span class="info-value" style="color:${provider.authenticated ? '#3fb950' : provider.installed ? '#e3b341' : '#f85149'}">
+            ${provider.authenticated ? 'Connected' : provider.installed ? 'Not authenticated' : 'Not installed'}
+          </span>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-sm" id="btn-cx-refresh">Refresh</button>
+          ${provider.installed ? `<button class="btn btn-primary btn-sm" id="btn-cx-login">Login / Re-auth</button>` : ''}
+          ${provider.installed ? `<button class="btn btn-ai btn-sm" id="btn-cx-terminal">Open Terminal</button>` : ''}
+        </div>
+      </div>
+
+      ${provider.installed ? `
+      <!-- Sessions -->
+      <div class="detail-section">
+        <h3 class="section-title">Recent Sessions</h3>
+        <div id="codex-sessions-list" class="sessions-list">
+          <div class="text-muted" style="padding:12px">Loading sessions...</div>
+        </div>
+      </div>` : `
+      <div class="detail-section">
+        <div class="empty-sessions">Codex is not installed. Install it via Dev Tools.</div>
+      </div>`}
+    </div>`;
+
+  if (!isActive) {
+    document.getElementById('btn-set-active').onclick = async () => {
+      await window.agents.setActiveProvider('codex');
+      activeProviderId = 'codex';
+      renderSidebar();
+      await renderCodexDetail(provider);
+    };
+  }
+
+  document.getElementById('btn-cx-refresh').onclick = async () => {
+    providers = await window.agents.detectProviders();
+    const updated = providers.find(p => p.id === 'codex');
+    renderSidebar();
+    await renderCodexDetail(updated);
+  };
+
+  const loginBtn = document.getElementById('btn-cx-login');
+  if (loginBtn) loginBtn.onclick = () => window.agents.codexLogin();
+
+  const termBtn = document.getElementById('btn-cx-terminal');
+  if (termBtn) termBtn.onclick = () => window.agents.codexLaunchTerminal();
+
+  if (provider.installed) {
+    const sessions = await window.agents.codexSessions();
+    renderCodexSessions(sessions);
+  }
+}
+
+function renderCodexSessions(sessions) {
+  const container = document.getElementById('codex-sessions-list');
+  if (!sessions.length) {
+    container.innerHTML = '<div class="empty-sessions">No Codex sessions found. Open a terminal to start one.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  for (const s of sessions) {
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    card.innerHTML = `
+      <div class="session-card-main">
+        <div class="session-card-name">${esc(s.name)}</div>
+        <div class="session-card-message">${esc(s.first_message || 'No messages')}</div>
+        <div class="session-card-meta">
+          <span class="mono text-muted">${esc(s.cwd || '')}</span>
+          <span class="text-muted">${formatDate(s.updated_at)}</span>
+        </div>
+      </div>
+      <div class="session-card-actions">
+        <button class="btn btn-ai btn-sm btn-resume" title="Resume in terminal">Resume</button>
+      </div>`;
+    card.querySelector('.btn-resume').onclick = () =>
+      window.agents.codexLaunchTerminal(s.session_id);
     container.appendChild(card);
   }
 }
