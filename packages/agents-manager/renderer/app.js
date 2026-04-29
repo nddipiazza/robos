@@ -234,8 +234,33 @@ async function init() {
   // Handle --check-provider mode
   window.agents.onOpenProvider((id) => selectProvider(id));
 
+  // Auto-refresh: sessions every 5s, full provider status every 30s
+  setInterval(() => refreshCurrentSessions(), 5000);
+  setInterval(async () => {
+    providers = await window.agents.detectProviders();
+    renderSidebar();
+    if (selectedProviderId) {
+      const p = providers.find(pr => pr.id === selectedProviderId);
+      if (p) await selectProvider(selectedProviderId);
+    }
+  }, 30000);
+
   // Init resizer
   initResizer();
+}
+
+async function refreshCurrentSessions() {
+  if (!selectedProviderId) return;
+  if (selectedProviderId === 'github-copilot') {
+    const sessions = await window.agents.copilotSessions();
+    renderCopilotSessions(sessions);
+  } else if (selectedProviderId === 'claude-code') {
+    const sessions = await window.agents.claudeSessions();
+    renderClaudeSessions(sessions);
+  } else if (selectedProviderId === 'codex') {
+    const sessions = await window.agents.codexSessions();
+    renderCodexSessions(sessions);
+  }
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
