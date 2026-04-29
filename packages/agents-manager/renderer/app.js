@@ -98,6 +98,61 @@ function saveFlagState() {
   localStorage.setItem('copilotFlagValues', JSON.stringify(copilotFlagValues));
 }
 
+// ── Codex CLI flag definitions ───────────────────────────────────────────────
+
+const CODEX_FLAGS = [
+  // ── Most Common ──
+  { id: 'model', flag: '--model', type: 'text', label: 'Model',
+    desc: 'AI model to use (e.g. o4-mini, o3, gpt-4.1)',
+    common: true },
+  { id: 'ask-for-approval', flag: '--ask-for-approval', type: 'select', label: 'Approval Policy',
+    desc: 'When to ask for human approval before executing commands',
+    options: ['untrusted', 'on-request', 'never'],
+    common: true },
+  { id: 'sandbox', flag: '--sandbox', type: 'select', label: 'Sandbox Mode',
+    desc: 'Filesystem sandbox policy for model-generated shell commands',
+    options: ['read-only', 'workspace-write', 'danger-full-access'],
+    common: true },
+  { id: 'full-auto', flag: '--full-auto', type: 'bool', label: 'Full Auto',
+    desc: 'Convenience alias for low-friction sandboxed automatic execution',
+    common: true },
+  { id: 'search', flag: '--search', type: 'bool', label: 'Web Search',
+    desc: 'Enable live web search — adds the native web_search tool (no per-call approval)',
+    common: true },
+  { id: 'cd', flag: '--cd', type: 'text', label: 'Working Directory',
+    desc: 'Tell the agent to use the specified directory as its working root',
+    common: true },
+  // ── All ──
+  { id: 'profile', flag: '--profile', type: 'text', label: 'Config Profile',
+    desc: 'Configuration profile from config.toml to use',
+    common: false },
+  { id: 'add-dir', flag: '--add-dir', type: 'text', label: 'Add Writable Directory',
+    desc: 'Additional directory that should be writable alongside the primary workspace',
+    common: false },
+  { id: 'dangerously-bypass-approvals-and-sandbox', flag: '--dangerously-bypass-approvals-and-sandbox',
+    type: 'bool', label: 'Bypass All Approvals ⚠',
+    desc: 'Skip ALL confirmation prompts and execute without sandboxing. EXTREMELY DANGEROUS.',
+    common: false },
+  { id: 'oss', flag: '--oss', type: 'bool', label: 'Use OSS Provider',
+    desc: 'Use an open-source provider (lmstudio / ollama)',
+    common: false },
+  { id: 'local-provider', flag: '--local-provider', type: 'select', label: 'Local Provider',
+    desc: 'Which local OSS provider to use (requires --oss)',
+    options: ['lmstudio', 'ollama'],
+    common: false },
+  { id: 'no-alt-screen', flag: '--no-alt-screen', type: 'bool', label: 'No Alt Screen',
+    desc: 'Disable alternate screen mode — runs TUI inline (useful in Zellij/tmux)',
+    common: false },
+];
+
+let codexFlagMode = localStorage.getItem('codexFlagMode') || 'common';
+let codexFlagValues = (() => { try { return JSON.parse(localStorage.getItem('codexFlagValues') || '{}'); } catch { return {}; } })();
+
+function saveCodexFlagState() {
+  localStorage.setItem('codexFlagMode', codexFlagMode);
+  localStorage.setItem('codexFlagValues', JSON.stringify(codexFlagValues));
+}
+
 // ── Provider icons (inline SVG) ─────────────────────────────────────────────
 
 const PROVIDER_ICONS = {
@@ -736,6 +791,7 @@ function renderCodexSessions(sessions) {
         <div class="session-card-message">${esc(s.first_message || 'No messages')}</div>
         <div class="session-card-meta">
           <span class="mono text-muted">${esc(s.cwd || '')}</span>
+          ${s.model ? `<span class="text-muted">${esc(s.model)}</span>` : ''}
           <span class="text-muted">${formatDate(s.updated_at)}</span>
         </div>
       </div>

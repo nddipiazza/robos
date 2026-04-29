@@ -257,81 +257,38 @@ ipcMain.handle('copilot-install-extension', async () => {
 const CODEX_DIR = path.join(os.homedir(), '.codex');
 
 ipcMain.handle('codex-sessions', () => {
-  // Codex stores sessions in a SQLite DB (created on first run).
-  // Possible locations: ~/.codex/state.db, ~/.codex/memories/state.db, etc.
-  // Also check ~/.codex/rollout_summaries/*.md as a fallback source.
+  // Codex stores sessions in ~/.codex/state_N.sqlite (versioned name).
+  // Schema: threads(id, title, first_user_message, cwd, model, updated_at, archived)
   const sessions = [];
 
-  // Try to find the state DB by scanning for *.db files under ~/.codex
+  // Find state_*.sqlite files (skip WAL/SHM helper files and logs_*.sqlite)
   const dbCandidates = [];
   try {
-    const scan = (dir, depth = 0) => {
-      if (depth > 2) return;
-      for (const f of fs.readdirSync(dir)) {
-        const full = path.join(dir, f);
-        try {
-          const st = fs.statSync(full);
-          if (st.isDirectory() && f !== 'tmp') scan(full, depth + 1);
-          else if (f.endsWith('.db') || f.endsWith('.sqlite') || f.endsWith('.sqlite3')) dbCandidates.push(full);
-        } catch {}
+    for (const f of fs.readdirSync(CODEX_DIR)) {
+      if (/^state_\d+\.sqlite$/.test(f)) {
+        dbCandidates.push(path.join(CODEX_DIR, f));
       }
-    };
-    scan(CODEX_DIR);
+    }
   } catch {}
 
   for (const dbPath of dbCandidates) {
     try {
-      // Query threads table — codex stores sessions here
       const result = cp.execSync(
-        `sqlite3 -json "${dbPath}" "SELECT id, thread_name, rollout_path, updated_at, updated_at_ms FROM threads WHERE archived = 0 ORDER BY updated_at_ms DESC LIMIT 50" 2>/dev/null`,
+        `sqlite3 -readonly -json "${dbPath}" "SELECT id, title, first_user_message, cwd, model, updated_at FROM threads WHERE archived = 0 ORDER BY updated_at DESC LIMIT 50" 2>/dev/null`,
         { timeout: 5000 }
       );
       const rows = JSON.parse(result.toString().trim() || '[]');
       for (const row of rows) {
-        let firstMessage = '';
-        // Try to read first user message from rollout file
-        if (row.rollout_path) {
-          try {
-            const rollout = fs.readFileSync(row.rollout_path, 'utf8');
-            const m = rollout.match(/^#{1,3}\s*(?:Prompt|Task|User)[:\s]+(.+)/im);
-            if (m) firstMessage = m[1].trim().slice(0, 120);
-            else firstMessage = rollout.split('\n').find(l => l.trim() && !l.startsWith('#'))?.trim().slice(0, 120) || '';
-          } catch {}
-        }
-        const cwd = row.rollout_path ? path.dirname(row.rollout_path) : '';
         sessions.push({
           session_id: row.id,
-          name: row.thread_name || (cwd ? path.basename(cwd) : (row.id || '').slice(0, 8)),
-          cwd,
-          first_message: firstMessage,
-          updated_at: row.updated_at || '',
+          name: row.title || row.cwd ? path.basename(row.cwd || '') || (row.id || '').slice(0, 8) : (row.id || '').slice(0, 8),
+          cwd: row.cwd || '',
+          first_message: (row.first_user_message || '').slice(0, 120),
+          model: row.model || '',
+          updated_at: row.updated_at ? new Date(row.updated_at * 1000).toISOString() : '',
         });
       }
-      if (sessions.length) break; // found sessions in this DB
-    } catch {}
-  }
-
-  // Fallback: scan rollout_summaries/*.md if DB yielded nothing
-  if (!sessions.length) {
-    const rolloutDir = path.join(CODEX_DIR, 'rollout_summaries');
-    try {
-      const files = fs.readdirSync(rolloutDir).filter(f => f.endsWith('.md'));
-      for (const f of files) {
-        try {
-          const full = path.join(rolloutDir, f);
-          const stat = fs.statSync(full);
-          const content = fs.readFileSync(full, 'utf8');
-          const firstLine = content.split('\n').find(l => l.trim())?.trim().slice(0, 120) || '';
-          const id = f.replace(/\.md$/, '');
-          sessions.push({
-            session_id: id,
-            name: id.slice(0, 16),
-            cwd: '',
-            first_message: firstLine,
-            updated_at: stat.mtime.toISOString(),
-          });
-        } catch {}
-      }
+      if (sessions.length) break;
     } catch {}
   }
 
