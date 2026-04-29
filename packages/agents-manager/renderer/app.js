@@ -98,6 +98,55 @@ function saveFlagState() {
   localStorage.setItem('copilotFlagValues', JSON.stringify(copilotFlagValues));
 }
 
+// ── Claude Code flag definitions ─────────────────────────────────────────────
+
+const CLAUDE_FLAGS = [
+  // ── Most Common ──
+  { id: 'model', flag: '--model', type: 'text', label: 'Model',
+    desc: "Model alias (e.g. 'sonnet', 'opus') or full name (e.g. 'claude-sonnet-4-6')",
+    common: true },
+  { id: 'effort', flag: '--effort', type: 'select', label: 'Effort Level',
+    desc: 'Effort level for the current session',
+    options: ['low', 'medium', 'high', 'xhigh', 'max'],
+    common: true },
+  { id: 'add-dir', flag: '--add-dir', type: 'dir', label: 'Add Directory',
+    desc: 'Additional directory to allow tool access to',
+    common: true },
+  { id: 'continue', flag: '--continue', type: 'bool', label: 'Continue Last Session',
+    desc: 'Continue the most recent conversation in the current directory',
+    common: true },
+  { id: 'dangerously-skip-permissions', flag: '--dangerously-skip-permissions', type: 'bool', label: 'Skip Permissions ⚠',
+    desc: 'Bypass all permission checks. Recommended only for sandboxed environments.',
+    common: true },
+  // ── All ──
+  { id: 'ide', flag: '--ide', type: 'bool', label: 'Connect to IDE',
+    desc: 'Automatically connect to IDE on startup if exactly one valid IDE is available',
+    common: false },
+  { id: 'append-system-prompt', flag: '--append-system-prompt', type: 'text', label: 'Append System Prompt',
+    desc: 'Append a system prompt to the default system prompt',
+    common: false },
+  { id: 'allowedTools', flag: '--allowedTools', type: 'text', label: 'Allowed Tools',
+    desc: 'Comma or space-separated list of tool names to allow (e.g. "Bash(git *) Edit")',
+    common: false },
+  { id: 'disallowedTools', flag: '--disallowedTools', type: 'text', label: 'Disallowed Tools',
+    desc: 'Comma or space-separated list of tool names to deny',
+    common: false },
+  { id: 'bare', flag: '--bare', type: 'bool', label: 'Bare / Minimal Mode',
+    desc: 'Minimal mode: skip hooks, LSP, plugin sync, auto-memory, and background prefetches',
+    common: false },
+  { id: 'mcp-debug', flag: '--mcp-debug', type: 'bool', label: 'MCP Debug',
+    desc: 'Enable MCP debug mode (shows MCP server errors)',
+    common: false },
+];
+
+let claudeFlagMode = localStorage.getItem('claudeFlagMode') || 'common';
+let claudeFlagValues = (() => { try { return JSON.parse(localStorage.getItem('claudeFlagValues') || '{}'); } catch { return {}; } })();
+
+function saveClaudeFlagState() {
+  localStorage.setItem('claudeFlagMode', claudeFlagMode);
+  localStorage.setItem('claudeFlagValues', JSON.stringify(claudeFlagValues));
+}
+
 // ── Codex CLI flag definitions ───────────────────────────────────────────────
 
 const CODEX_FLAGS = [
@@ -536,11 +585,6 @@ async function renderClaudeDetail(provider) {
   const detail = document.getElementById('provider-detail');
   const isActive = activeProviderId === 'claude-code';
 
-  let config = { settings: {}, projects: [] };
-  if (provider.installed) {
-    config = await window.agents.claudeConfig();
-  }
-
   detail.innerHTML = `
     <div class="detail-scroll">
       <div class="detail-header">
@@ -558,69 +602,50 @@ async function renderClaudeDetail(provider) {
         <div class="info-grid">
           <span class="info-label">claude CLI</span>
           <span class="info-value mono">${esc(provider.version || 'not installed')}</span>
+          <span class="info-label">Logged in as</span>
+          <span class="info-value">${esc(provider.user || 'not logged in')}</span>
           <span class="info-label">Status</span>
-          <span class="info-value" style="color:${provider.installed ? '#3fb950' : '#f85149'}">
-            ${provider.installed ? 'Installed' : 'Not installed'}
+          <span class="info-value" style="color:${provider.authenticated ? '#3fb950' : provider.installed ? '#e3b341' : '#f85149'}">
+            ${provider.authenticated ? 'Connected' : provider.installed ? 'Not authenticated' : 'Not installed'}
           </span>
         </div>
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cl-refresh">Refresh</button>
           ${!provider.installed ? '<button class="btn btn-primary btn-sm" id="btn-cl-install">Install Claude Code</button>' : ''}
-          <button class="btn btn-ai btn-sm" id="btn-cl-terminal">Open Terminal</button>
+          ${provider.installed ? `
+          <div class="split-btn-group" id="cl-terminal-group">
+            <button class="btn btn-ai btn-sm" id="btn-cl-terminal">Open Claude Terminal</button>
+            <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-cl-flags-toggle" title="Configure launch flags">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>` : ''}
         </div>
+        ${provider.installed ? `
+        <div class="flags-dropdown hidden" id="cl-flags-dropdown">
+          <div class="flags-dropdown-header">
+            <span class="flags-dropdown-title">Launch Flags</span>
+            <div class="flags-mode-toggle">
+              <button class="flags-mode-btn ${claudeFlagMode === 'common' ? 'active' : ''}" id="cl-flags-mode-common">Most Common</button>
+              <button class="flags-mode-btn ${claudeFlagMode === 'all' ? 'active' : ''}" id="cl-flags-mode-all">All</button>
+            </div>
+          </div>
+          <div id="cl-flags-list" class="flags-list"></div>
+        </div>` : ''}
       </div>
 
-      <!-- Configuration -->
       ${provider.installed ? `
-      <div class="detail-section">
-        <h3 class="section-title">Configuration</h3>
-        <div class="config-grid">
-          <div class="config-item">
-            <label class="config-label">Default Mode</label>
-            <select class="config-select" id="cfg-default-mode">
-              <option value="normal" ${(config.settings.defaultMode || 'normal') === 'normal' ? 'selected' : ''}>Normal (ask for permissions)</option>
-              <option value="bypassPermissions" ${config.settings.defaultMode === 'bypassPermissions' ? 'selected' : ''}>Bypass Permissions</option>
-              <option value="plan" ${config.settings.defaultMode === 'plan' ? 'selected' : ''}>Plan Mode</option>
-            </select>
-          </div>
-          <div class="config-item">
-            <label class="config-label">
-              <input type="checkbox" id="cfg-skip-danger-prompt" ${config.settings.skipDangerousModePermissionPrompt ? 'checked' : ''}/>
-              Skip dangerous mode permission prompt
-            </label>
-          </div>
-        </div>
-        <div class="section-actions">
-          <button class="btn btn-primary btn-sm" id="btn-cl-save-config">Save Configuration</button>
-        </div>
-      </div>
-
-      <!-- Projects -->
-      ${config.projects.length ? `
-      <div class="detail-section">
-        <h3 class="section-title">Projects</h3>
-        <div class="projects-list">
-          ${config.projects.map(p => `
-            <div class="project-card">
-              <span class="project-path mono">${esc(p.decodedPath)}</span>
-            </div>`).join('')}
-        </div>
-      </div>` : ''}
-
       <!-- Sessions -->
       <div class="detail-section">
         <h3 class="section-title">Sessions</h3>
         <div id="claude-sessions-list" class="sessions-list">
           <div class="text-muted" style="padding:12px">Loading sessions...</div>
         </div>
-      </div>
-      ` : `
+      </div>` : `
       <div class="detail-section">
         <div class="empty-sessions">Claude Code is not installed. Click "Install Claude Code" to set it up.</div>
       </div>`}
     </div>`;
 
-  // Wire buttons
   if (!isActive) {
     document.getElementById('btn-set-active').onclick = async () => {
       await window.agents.setActiveProvider('claude-code');
@@ -640,26 +665,135 @@ async function renderClaudeDetail(provider) {
   const installBtn = document.getElementById('btn-cl-install');
   if (installBtn) installBtn.onclick = () => window.agents.claudeInstall();
 
-  document.getElementById('btn-cl-terminal').onclick = () => window.agents.claudeLaunchTerminal();
+  const termBtn = document.getElementById('btn-cl-terminal');
+  if (termBtn) termBtn.onclick = () => window.agents.claudeLaunchTerminal(null, buildClaudeArgs());
 
-  // Save config
-  const saveBtn = document.getElementById('btn-cl-save-config');
-  if (saveBtn) {
-    saveBtn.onclick = async () => {
-      const settings = { ...config.settings };
-      settings.defaultMode = document.getElementById('cfg-default-mode').value;
-      settings.skipDangerousModePermissionPrompt = document.getElementById('cfg-skip-danger-prompt').checked;
-      await window.agents.claudeWriteSettings(settings);
-      saveBtn.textContent = 'Saved!';
-      setTimeout(() => { saveBtn.textContent = 'Save Configuration'; }, 2000);
+  const flagsToggle = document.getElementById('btn-cl-flags-toggle');
+  if (flagsToggle) {
+    flagsToggle.onclick = (e) => {
+      e.stopPropagation();
+      const dd = document.getElementById('cl-flags-dropdown');
+      dd.classList.toggle('hidden');
+      if (!dd.classList.contains('hidden')) renderClaudeFlagsDropdown();
     };
+    document.getElementById('cl-flags-dropdown').addEventListener('click', e => e.stopPropagation());
+    document.getElementById('cl-flags-mode-common').onclick = () => {
+      claudeFlagMode = 'common'; saveClaudeFlagState(); renderClaudeFlagsDropdown();
+    };
+    document.getElementById('cl-flags-mode-all').onclick = () => {
+      claudeFlagMode = 'all'; saveClaudeFlagState(); renderClaudeFlagsDropdown();
+    };
+    renderClaudeFlagsDropdown();
   }
 
-  // Load sessions
   if (provider.installed) {
     const sessions = await window.agents.claudeSessions();
     renderClaudeSessions(sessions);
   }
+}
+
+// ── Claude flags dropdown ────────────────────────────────────────────────────
+
+function renderClaudeFlagsDropdown() {
+  const listEl = document.getElementById('cl-flags-list');
+  if (!listEl) return;
+
+  document.getElementById('cl-flags-mode-common')?.classList.toggle('active', claudeFlagMode === 'common');
+  document.getElementById('cl-flags-mode-all')?.classList.toggle('active', claudeFlagMode === 'all');
+
+  const flags = claudeFlagMode === 'common'
+    ? CLAUDE_FLAGS.filter(f => f.common)
+    : [...CLAUDE_FLAGS].sort((a, b) => a.label.localeCompare(b.label));
+
+  listEl.innerHTML = '';
+  for (const f of flags) {
+    const row = document.createElement('div');
+    row.className = 'flags-row';
+
+    if (f.type === 'bool') {
+      const checked = !!claudeFlagValues[f.id];
+      row.innerHTML = `
+        <label class="flags-bool-label" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${checked ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          <span class="flags-label-text">${esc(f.label)}</span>
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </label>`;
+      row.querySelector('input').onchange = (e) => {
+        if (e.target.checked) claudeFlagValues[f.id] = true;
+        else delete claudeFlagValues[f.id];
+        saveClaudeFlagState();
+      };
+    } else {
+      const val = claudeFlagValues[f.id] || '';
+      const enabled = !!val;
+      const inputHtml = f.type === 'select'
+        ? `<select class="flags-select flags-value-input" data-id="${f.id}">
+             <option value="">-- choose --</option>
+             ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+           </select>`
+        : f.type === 'dir'
+        ? `<div class="flags-dir-group">
+             <input type="text" class="flags-text-input flags-value-input"
+               data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}" readonly/>
+             <button class="btn btn-sm flags-dir-browse" data-id="${f.id}" title="Browse\u2026">\uD83D\uDCC1</button>
+           </div>`
+        : `<input type="text" class="flags-text-input flags-value-input"
+             data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}"/>`;
+      row.innerHTML = `
+        <div class="flags-value-row" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          ${inputHtml}
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </div>`;
+      const checkbox = row.querySelector('.flags-checkbox');
+      const input = row.querySelector('.flags-value-input');
+      checkbox.onchange = (e) => {
+        if (!e.target.checked) { delete claudeFlagValues[f.id]; input.value = ''; }
+        else if (input.value) claudeFlagValues[f.id] = input.value;
+        saveClaudeFlagState();
+      };
+      if (f.type === 'dir') {
+        row.querySelector('.flags-dir-browse').onclick = async () => {
+          const chosen = await window.agents.openDirDialog();
+          if (chosen) {
+            input.value = chosen;
+            claudeFlagValues[f.id] = chosen;
+            checkbox.checked = true;
+            saveClaudeFlagState();
+          }
+        };
+        input.oninput = input.onchange = () => {
+          if (input.value) { claudeFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete claudeFlagValues[f.id]; checkbox.checked = false; }
+          saveClaudeFlagState();
+        };
+      } else {
+        input.oninput = input.onchange = () => {
+          if (input.value) { claudeFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete claudeFlagValues[f.id]; checkbox.checked = false; }
+          saveClaudeFlagState();
+        };
+      }
+    }
+    listEl.appendChild(row);
+  }
+}
+
+function buildClaudeArgs() {
+  const args = [];
+  for (const f of CLAUDE_FLAGS) {
+    const val = claudeFlagValues[f.id];
+    if (!val) continue;
+    if (f.type === 'bool') {
+      args.push(f.flag);
+    } else {
+      const str = String(val).trim();
+      if (str) args.push(f.flag, str);
+    }
+  }
+  return args;
 }
 
 function renderClaudeSessions(sessions) {

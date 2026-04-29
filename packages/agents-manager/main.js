@@ -105,12 +105,23 @@ ipcMain.handle('detect-providers', async () => {
   // Claude Code
   const clVer = await run('claude', ['--version']);
   const clInstalled = !!(clVer.output && !clVer.output.includes('not found') && !clVer.output.includes('No such file'));
+  let clAuth = false;
+  let clUser = '';
+  if (clInstalled) {
+    const clStatus = await run('claude', ['auth', 'status']);
+    try {
+      const parsed = JSON.parse(clStatus.output.trim());
+      clAuth = !!parsed.loggedIn;
+      if (parsed.account) clUser = parsed.account.emailAddress || parsed.account.accountUuid || '';
+    } catch { clAuth = false; }
+  }
   providers.push({
     id: 'claude-code',
     name: 'Claude Code',
     installed: clInstalled,
-    authenticated: clInstalled, // claude --version succeeding implies auth
+    authenticated: clAuth,
     version: clVer.output.split('\n')[0] || '',
+    user: clUser,
   });
 
   // Codex CLI
@@ -412,11 +423,16 @@ ipcMain.handle('claude-config', () => {
   return { settings, projects };
 });
 
-ipcMain.handle('claude-launch-terminal', (_, sessionId) => {
-  const cmd = sessionId
-    ? `claude --resume ${sessionId}`
-    : `claude`;
-  cp.spawn('x-terminal-emulator', ['-e', `bash -c '${cmd}; read -p "Press Enter to close..." x'`], {
+ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs) => {
+  let parts;
+  if (sessionId) {
+    parts = ['claude', '--resume', sessionId];
+  } else {
+    parts = ['claude'];
+    if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
+  }
+  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });

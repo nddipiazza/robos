@@ -16,11 +16,11 @@ contextBridge.exposeInMainWorld('agents', {
   copilotInstallExtension:  ()    => ipcRenderer.invoke('copilot-install-extension'),
 
   // Claude Code
-  claudeSessions:        ()    => ipcRenderer.invoke('claude-sessions'),
-  claudeConfig:          ()    => ipcRenderer.invoke('claude-config'),
-  claudeLaunchTerminal:  (id)  => ipcRenderer.invoke('claude-launch-terminal', id),
-  claudeInstall:         ()    => ipcRenderer.invoke('claude-install'),
-  claudeWriteSettings:   (s)   => ipcRenderer.invoke('claude-write-settings', s),
+  claudeSessions:        ()              => ipcRenderer.invoke('claude-sessions'),
+  claudeConfig:          ()              => ipcRenderer.invoke('claude-config'),
+  claudeLaunchTerminal:  (id, extraArgs) => ipcRenderer.invoke('claude-launch-terminal', id, extraArgs),
+  claudeInstall:         ()              => ipcRenderer.invoke('claude-install'),
+  claudeWriteSettings:   (s)             => ipcRenderer.invoke('claude-write-settings', s),
 
   // Codex
   codexSessions:       ()              => ipcRenderer.invoke('codex-sessions'),
