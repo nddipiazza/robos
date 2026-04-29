@@ -30,7 +30,7 @@ const COPILOT_FLAGS = [
   { id: 'name', flag: '--name', type: 'text', label: 'Session Name',
     desc: 'Set a name for the new session',
     common: true },
-  { id: 'cwd', flag: '--cwd', type: 'dir', label: 'Working Directory',
+  { id: 'cwd', flag: 'cwd', type: 'dir', label: 'Working Directory',
     desc: 'Start Copilot in this directory (cd before launching)',
     common: true },
   // ── All ──
@@ -112,7 +112,7 @@ const CLAUDE_FLAGS = [
     desc: 'Effort level for the current session',
     options: ['low', 'medium', 'high', 'xhigh', 'max'],
     common: true },
-  { id: 'cwd', flag: '--cwd', type: 'dir', label: 'Working Directory',
+  { id: 'cwd', flag: 'cwd', type: 'dir', label: 'Working Directory',
     desc: 'Start Claude in this directory (cd before launching)',
     common: true },
   { id: 'add-dir', flag: '--add-dir', type: 'dir', label: 'Add Directory',
