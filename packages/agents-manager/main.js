@@ -257,48 +257,97 @@ ipcMain.handle('copilot-install-extension', async () => {
 const CODEX_DIR = path.join(os.homedir(), '.codex');
 
 ipcMain.handle('codex-sessions', () => {
+  // Codex stores sessions in a SQLite DB (created on first run).
+  // Possible locations: ~/.codex/state.db, ~/.codex/memories/state.db, etc.
+  // Also check ~/.codex/rollout_summaries/*.md as a fallback source.
   const sessions = [];
-  const tmpDir = path.join(CODEX_DIR, 'tmp');
+
+  // Try to find the state DB by scanning for *.db files under ~/.codex
+  const dbCandidates = [];
   try {
-    const dirs = fs.readdirSync(tmpDir).filter(d => {
-      try { return fs.statSync(path.join(tmpDir, d)).isDirectory(); } catch { return false; }
-    });
-    for (const d of dirs) {
-      try {
-        const stat = fs.statSync(path.join(tmpDir, d));
+    const scan = (dir, depth = 0) => {
+      if (depth > 2) return;
+      for (const f of fs.readdirSync(dir)) {
+        const full = path.join(dir, f);
+        try {
+          const st = fs.statSync(full);
+          if (st.isDirectory() && f !== 'tmp') scan(full, depth + 1);
+          else if (f.endsWith('.db') || f.endsWith('.sqlite') || f.endsWith('.sqlite3')) dbCandidates.push(full);
+        } catch {}
+      }
+    };
+    scan(CODEX_DIR);
+  } catch {}
+
+  for (const dbPath of dbCandidates) {
+    try {
+      // Query threads table — codex stores sessions here
+      const result = cp.execSync(
+        `sqlite3 -json "${dbPath}" "SELECT id, thread_name, rollout_path, updated_at, updated_at_ms FROM threads WHERE archived = 0 ORDER BY updated_at_ms DESC LIMIT 50" 2>/dev/null`,
+        { timeout: 5000 }
+      );
+      const rows = JSON.parse(result.toString().trim() || '[]');
+      for (const row of rows) {
         let firstMessage = '';
-        let cwd = '';
-        try {
-          const msgPath = path.join(tmpDir, d, 'messages.jsonl');
-          const lines = fs.readFileSync(msgPath, 'utf8').split('\n').filter(Boolean);
-          for (const l of lines) {
-            const ev = JSON.parse(l);
-            if (ev.role === 'user' && (ev.content || '').trim()) {
-              firstMessage = (typeof ev.content === 'string' ? ev.content : JSON.stringify(ev.content)).slice(0, 120);
-              break;
-            }
-          }
-        } catch {}
-        try {
-          const meta = JSON.parse(fs.readFileSync(path.join(tmpDir, d, 'session.json'), 'utf8'));
-          cwd = meta.cwd || '';
-        } catch {}
+        // Try to read first user message from rollout file
+        if (row.rollout_path) {
+          try {
+            const rollout = fs.readFileSync(row.rollout_path, 'utf8');
+            const m = rollout.match(/^#{1,3}\s*(?:Prompt|Task|User)[:\s]+(.+)/im);
+            if (m) firstMessage = m[1].trim().slice(0, 120);
+            else firstMessage = rollout.split('\n').find(l => l.trim() && !l.startsWith('#'))?.trim().slice(0, 120) || '';
+          } catch {}
+        }
+        const cwd = row.rollout_path ? path.dirname(row.rollout_path) : '';
         sessions.push({
-          session_id: d,
-          name: cwd ? path.basename(cwd) : d.slice(0, 8),
+          session_id: row.id,
+          name: row.thread_name || (cwd ? path.basename(cwd) : (row.id || '').slice(0, 8)),
           cwd,
           first_message: firstMessage,
-          updated_at: stat.mtime.toISOString(),
+          updated_at: row.updated_at || '',
         });
-      } catch {}
-    }
-  } catch {}
+      }
+      if (sessions.length) break; // found sessions in this DB
+    } catch {}
+  }
+
+  // Fallback: scan rollout_summaries/*.md if DB yielded nothing
+  if (!sessions.length) {
+    const rolloutDir = path.join(CODEX_DIR, 'rollout_summaries');
+    try {
+      const files = fs.readdirSync(rolloutDir).filter(f => f.endsWith('.md'));
+      for (const f of files) {
+        try {
+          const full = path.join(rolloutDir, f);
+          const stat = fs.statSync(full);
+          const content = fs.readFileSync(full, 'utf8');
+          const firstLine = content.split('\n').find(l => l.trim())?.trim().slice(0, 120) || '';
+          const id = f.replace(/\.md$/, '');
+          sessions.push({
+            session_id: id,
+            name: id.slice(0, 16),
+            cwd: '',
+            first_message: firstLine,
+            updated_at: stat.mtime.toISOString(),
+          });
+        } catch {}
+      }
+    } catch {}
+  }
+
   sessions.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
   return sessions;
 });
 
 ipcMain.handle('codex-launch-terminal', (_, sessionId) => {
-  const cmd = sessionId ? `codex resume ${sessionId}` : `codex`;
+  let cmd;
+  if (sessionId === '--resume-picker') {
+    cmd = 'codex resume';
+  } else if (sessionId) {
+    cmd = `codex resume ${sessionId}`;
+  } else {
+    cmd = 'codex';
+  }
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });

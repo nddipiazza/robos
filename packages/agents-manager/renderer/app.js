@@ -718,7 +718,11 @@ async function renderCodexDetail(provider) {
 function renderCodexSessions(sessions) {
   const container = document.getElementById('codex-sessions-list');
   if (!sessions.length) {
-    container.innerHTML = '<div class="empty-sessions">No Codex sessions found. Open a terminal to start one.</div>';
+    container.innerHTML = `<div class="empty-sessions">
+      No Codex sessions found.
+      <button class="btn btn-ai btn-sm" id="btn-cx-resume-picker" style="margin-left:8px">Resume a session…</button>
+    </div>`;
+    document.getElementById('btn-cx-resume-picker').onclick = () => window.agents.codexLaunchTerminal('--resume-picker');
     return;
   }
 
