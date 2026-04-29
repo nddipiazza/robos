@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('agents', {
 
   // Codex
   codexSessions:       ()              => ipcRenderer.invoke('codex-sessions'),
+  codexFetchModels:    ()              => ipcRenderer.invoke('codex-fetch-models'),
   codexLaunchTerminal: (id, extraArgs) => ipcRenderer.invoke('codex-launch-terminal', id, extraArgs),
   codexLogin:          ()              => ipcRenderer.invoke('codex-login'),
 

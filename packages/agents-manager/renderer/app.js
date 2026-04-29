@@ -102,8 +102,8 @@ function saveFlagState() {
 
 const CODEX_FLAGS = [
   // ── Most Common ──
-  { id: 'model', flag: '--model', type: 'text', label: 'Model',
-    desc: 'AI model to use (e.g. o4-mini, o3, gpt-4.1)',
+  { id: 'model', flag: '--model', type: 'model-select', label: 'Model',
+    desc: 'AI model to use — fetched from codex debug models (only models available to you)',
     common: true },
   { id: 'ask-for-approval', flag: '--ask-for-approval', type: 'select', label: 'Approval Policy',
     desc: 'When to ask for human approval before executing commands',
@@ -147,6 +147,7 @@ const CODEX_FLAGS = [
 
 let codexFlagMode = localStorage.getItem('codexFlagMode') || 'common';
 let codexFlagValues = (() => { try { return JSON.parse(localStorage.getItem('codexFlagValues') || '{}'); } catch { return {}; } })();
+let codexModelList = [];  // cached from codex debug models
 
 function saveCodexFlagState() {
   localStorage.setItem('codexFlagMode', codexFlagMode);
@@ -784,6 +785,15 @@ async function renderCodexDetail(provider) {
   // Flags dropdown toggle
   const flagsToggle = document.getElementById('btn-cx-flags-toggle');
   if (flagsToggle) {
+    // Auto-fetch models the first time the panel opens
+    if (codexModelList.length === 0) {
+      window.agents.codexFetchModels().then(result => {
+        if (result && result.models) {
+          codexModelList = result.models;
+          renderCodexFlagsDropdown();
+        }
+      });
+    }
     flagsToggle.onclick = (e) => {
       e.stopPropagation();
       const dd = document.getElementById('cx-flags-dropdown');
@@ -846,6 +856,14 @@ function renderCodexFlagsDropdown() {
              <option value="">-- choose --</option>
              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
            </select>`
+        : f.type === 'model-select'
+        ? `<div class="flags-dir-group">
+             <select class="flags-select flags-value-input" data-id="${f.id}" style="width:150px">
+               <option value="">-- choose model --</option>
+               ${codexModelList.map(m => `<option value="${esc(m.slug)}" ${val === m.slug ? 'selected' : ''}>${esc(m.label || m.slug)}</option>`).join('')}
+             </select>
+             <button class="btn btn-sm flags-fetch-btn" id="btn-cx-fetch-models" title="Refresh model list from Codex">↻</button>
+           </div>`
         : f.type === 'dir'
         ? `<div class="flags-dir-group">
              <input type="text" class="flags-text-input flags-value-input"
@@ -868,7 +886,27 @@ function renderCodexFlagsDropdown() {
         else if (input.value) codexFlagValues[f.id] = input.value;
         saveCodexFlagState();
       };
-      if (f.type === 'dir') {
+      if (f.type === 'model-select') {
+        const refreshBtn = row.querySelector('#btn-cx-fetch-models');
+        refreshBtn.onclick = async () => {
+          refreshBtn.textContent = '⟳'; refreshBtn.disabled = true;
+          const result = await window.agents.codexFetchModels();
+          refreshBtn.disabled = false;
+          if (result && result.models) {
+            codexModelList = result.models;
+            refreshBtn.title = `${codexModelList.length} models available`;
+            renderCodexFlagsDropdown();
+          } else {
+            refreshBtn.textContent = '✗'; refreshBtn.title = result.error || 'Failed';
+            setTimeout(() => { refreshBtn.textContent = '↻'; refreshBtn.title = 'Refresh model list'; }, 3000);
+          }
+        };
+        input.onchange = () => {
+          if (input.value) { codexFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete codexFlagValues[f.id]; checkbox.checked = false; }
+          saveCodexFlagState();
+        };
+      } else if (f.type === 'dir') {
         row.querySelector('.flags-dir-browse').onclick = async () => {
           const chosen = await window.agents.openDirDialog();
           if (chosen) {

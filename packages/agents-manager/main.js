@@ -463,7 +463,24 @@ ipcMain.handle('set-active-provider', (_, providerId) => {
   fs.writeFileSync(AI_PROVIDER_CONFIG, JSON.stringify(config, null, 2));
 });
 
-ipcMain.handle('open-dir-dialog', async () => {
+ipcMain.handle('codex-fetch-models', async () => {
+  return new Promise(res => {
+    cp.exec('bash -lc "codex debug models 2>/dev/null"', { timeout: 15000 }, (err, stdout) => {
+      if (err || !stdout.trim()) return res({ error: 'Could not run codex debug models' });
+      try {
+        const data = JSON.parse(stdout);
+        const models = (data.models || [])
+          .map(m => ({ slug: m.slug, label: m.display_name || m.slug }))
+          .filter(m => m.slug);
+        res({ models });
+      } catch (e) {
+        res({ error: 'Could not parse codex model catalog: ' + stdout.slice(0, 200) });
+      }
+    });
+  });
+});
+
+
   const { dialog } = require('electron');
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
   return result.canceled ? null : result.filePaths[0];
