@@ -23,7 +23,7 @@
         <div class="check-row" id="row-ghAuth">
           <span class="check-dot"></span>
           <div class="check-body">
-            <div class="check-label">gh CLI authenticated</div>
+            <div class="check-label">GitHub CLI (gh) Authentication</div>
             <div class="check-detail muted-text"></div>
           </div>
           <button class="btn-fix btn-blue" data-fix="gh-login">Login →</button>
@@ -59,16 +59,15 @@
       </div>
 
       <div id="gh-login-panel" class="card" style="display:none">
-        <h2>Login with GitHub</h2>
-        <p class="hint">A one-time code will appear — copy it, then complete login in the browser.</p>
+        <h2>GitHub Authentication</h2>
         <div id="otp-block" style="display:none">
-          <div class="label-sm">One-time code</div>
+          <div class="label-sm">One-time code — enter this in the browser</div>
           <div id="otp-display" class="otp"></div>
           <button id="btn-copy-otp" class="btn-ghost btn-sm">📋 Copy</button>
         </div>
         <pre id="gh-output" class="output-box"></pre>
         <div class="btn-row">
-          <button id="btn-gh-login" class="btn-primary">🌐 Login with Browser</button>
+          <button id="btn-gh-login" class="btn-primary">🌐 Open Browser Again</button>
           <button id="btn-gh-cancel" class="btn-ghost" style="display:none">✕ Cancel</button>
         </div>
       </div>

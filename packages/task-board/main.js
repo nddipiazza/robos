@@ -47,6 +47,12 @@ function getActiveServer() {
 
 let win;
 app.setName('task-board');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'task-board'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
 app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1200, height: 800,

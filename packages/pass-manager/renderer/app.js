@@ -204,10 +204,10 @@ async function copyPassword() {
   const btn = document.getElementById('btn-copy-pw');
   if (res.ok) {
     btn.textContent = '✓ Copied!';
-    setTimeout(() => { btn.textContent = '📋 Copy Password'; }, 2000);
+    setTimeout(() => { btn.textContent = '📋 Copy Secret'; }, 2000);
   } else {
     btn.textContent = 'Error';
-    setTimeout(() => { btn.textContent = '📋 Copy Password'; }, 2000);
+    setTimeout(() => { btn.textContent = '📋 Copy Secret'; }, 2000);
   }
 }
 
@@ -287,8 +287,8 @@ async function saveForm() {
   if (type === 'simple') {
     const pw = document.getElementById('form-pw').value;
     const pw2 = document.getElementById('form-pw2').value;
-    if (!pw) { showFormErr(errEl, 'Password is required.'); btn.disabled = false; btn.textContent = 'Save'; return; }
-    if (pw !== pw2) { showFormErr(errEl, 'Passwords do not match.'); btn.disabled = false; btn.textContent = 'Save'; return; }
+    if (!pw) { showFormErr(errEl, 'Secret value is required.'); btn.disabled = false; btn.textContent = 'Save'; return; }
+    if (pw !== pw2) { showFormErr(errEl, 'Secret values do not match.'); btn.disabled = false; btn.textContent = 'Save'; return; }
     res = await window.api.addEntry({ entryPath, value: pw });
   } else if (type === 'multiline') {
     const val = document.getElementById('form-multi').value;

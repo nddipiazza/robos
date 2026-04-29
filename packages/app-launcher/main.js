@@ -58,6 +58,7 @@ let mainWindow = null;
 
 const DESKTOP_DIRS = [
   '/usr/share/applications',
+  '/var/lib/snapd/desktop/applications',
   path.join(process.env.HOME || '/home/robos', '.local/share/applications')
 ];
 

@@ -75,7 +75,7 @@ window.git.onLoginOutput(chunk => {
 
 window.git.onLoginDone(({ ok }) => {
   document.getElementById('btn-gh-login').disabled = false;
-  document.getElementById('btn-gh-login').textContent = '\uD83C\uDF10 Login with Browser';
+  document.getElementById('btn-gh-login').textContent = '🌐 Open Browser Again';
   document.getElementById('btn-gh-cancel').style.display = 'none';
   if (ok) {
     document.getElementById('gh-login-panel').style.display = 'none';
@@ -94,6 +94,7 @@ document.querySelectorAll('.btn-fix').forEach(btn => {
     const fix = btn.dataset.fix;
     if (fix === 'gh-login') {
       showPanel('gh-login-panel');
+      startGhLogin();
     } else if (fix === 'generate-key') {
       showPanel('generate-key-panel');
     } else if (fix === 'add-key-github') {
@@ -127,15 +128,17 @@ async function showAddKeyPanel() {
 
 // ── gh login panel ─────────────────────────────────────────────────────────────
 
-document.getElementById('btn-gh-login').addEventListener('click', async () => {
+async function startGhLogin() {
   const btn = document.getElementById('btn-gh-login');
   btn.disabled = true;
-  btn.textContent = '\u23F3 Waiting for GitHub\u2026';
+  btn.textContent = '⏳ Waiting for GitHub…';
   document.getElementById('btn-gh-cancel').style.display = 'inline-block';
   document.getElementById('gh-output').textContent = '';
   document.getElementById('otp-block').style.display = 'none';
   await window.git.startGhLogin();
-});
+}
+
+document.getElementById('btn-gh-login').addEventListener('click', () => startGhLogin());
 
 document.getElementById('btn-gh-cancel').addEventListener('click', async () => {
   await window.git.cancelLogin();

@@ -6,6 +6,12 @@ app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 app.setName('robos-dev-tools');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'dev-tools'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
 
 let mainWindow = null;
 const installLogs = {};
@@ -116,6 +122,38 @@ const TOOLS = [
     uninstallCmd: 'sudo snap remove rustrover && sudo rm -f /usr/share/applications/rustrover*.desktop',
   },
 
+  // ── Browsers ──
+  {
+    id: 'firefox',
+    name: 'Firefox',
+    description: 'Mozilla Firefox web browser (pre-installed as snap)',
+    category: 'Browser',
+    source: 'snap (firefox)',
+    checkCmd: 'snap list firefox 2>/dev/null | grep -q firefox || which firefox',
+    installCmd: 'sudo snap install firefox',
+    uninstallCmd: 'sudo snap remove firefox',
+  },
+  {
+    id: 'chromium',
+    name: 'Chromium',
+    description: 'Open-source browser from the Chromium project',
+    category: 'Browser',
+    source: 'snap (chromium)',
+    checkCmd: 'snap list chromium 2>/dev/null | grep -q chromium || which chromium-browser || which chromium',
+    installCmd: 'sudo snap install chromium',
+    uninstallCmd: 'sudo snap remove chromium',
+  },
+  {
+    id: 'google-chrome',
+    name: 'Google Chrome',
+    description: 'Google Chrome browser — downloaded directly from Google',
+    category: 'Browser',
+    source: 'dl.google.com (deb package)',
+    checkCmd: 'which google-chrome || which google-chrome-stable',
+    installCmd: 'wget -qO /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i /tmp/google-chrome.deb; sudo apt-get install -f -y; rm -f /tmp/google-chrome.deb',
+    uninstallCmd: 'sudo apt-get remove -y google-chrome-stable',
+  },
+
   // ── Dev Tools ──
   {
     id: 'gh-cli',
@@ -146,6 +184,30 @@ const TOOLS = [
     checkCmd: 'which lazygit',
     installCmd: 'LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep \'"tag_name"\' | sed -E \'s/.*"v([^"]+)".*/\\1/\') && curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" && cd /tmp && tar xf lazygit.tar.gz lazygit && sudo install lazygit /usr/local/bin/',
     uninstallCmd: 'sudo rm -f /usr/local/bin/lazygit',
+  },
+
+  // ── Screen Capture ──
+  {
+    id: 'flameshot',
+    name: 'Flameshot',
+    description: 'Powerful screenshot tool with annotation and upload support',
+    category: 'Media',
+    source: 'apt (flameshot)',
+    checkCmd: 'which flameshot',
+    installCmd: 'sudo apt-get install -y flameshot',
+    uninstallCmd: 'pgrep flameshot | xargs -r kill; sudo apt-get remove -y flameshot',
+    postInstallCmd: 'mkdir -p ~/.config/autostart && SRC=$(find /usr/share/applications -name "*lameshot*" | head -1) && [ -n "$SRC" ] && cp "$SRC" ~/.config/autostart/$(basename "$SRC"); DISPLAY=:0 nohup flameshot >/dev/null 2>&1 &',
+    postUninstallCmd: 'rm -f ~/.config/autostart/*lameshot*',
+  },
+  {
+    id: 'kazam',
+    name: 'Kazam',
+    description: 'Simple screen recorder with audio support',
+    category: 'Media',
+    source: 'apt (kazam)',
+    checkCmd: 'which kazam',
+    installCmd: 'sudo apt-get install -y kazam',
+    uninstallCmd: 'sudo apt-get remove -y kazam',
   },
 
   // ── CLI Utilities ──
@@ -275,6 +337,10 @@ function runInstall(tool, action) {
         success: code === 0,
         action
       });
+    }
+    if (code === 0) {
+      const postCmd = action === 'uninstall' ? tool.postUninstallCmd : tool.postInstallCmd;
+      if (postCmd) spawn('bash', ['-c', postCmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' }, detached: true, stdio: 'ignore' }).unref();
     }
   });
 }

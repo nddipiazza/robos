@@ -24,17 +24,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-use-existing-key').addEventListener('click', doUseExistingKey);
   document.getElementById('btn-init-pass').addEventListener('click', doInitPass);
   document.getElementById('btn-generate-ssh').addEventListener('click', doGenerateSsh);
-  document.getElementById('btn-add-ssh-github').addEventListener('click', doAddSshGithub);
   document.getElementById('btn-skip-ssh').addEventListener('click', () => goStep(5));
-  document.getElementById('btn-reauth-gh').addEventListener('click', doReauthGh);
   document.getElementById('btn-done').addEventListener('click', () => window.close());
-
-  // Listen for gh refresh output
-  window.api.onGhRefreshOutput((chunk) => {
-    const el = document.getElementById('gh-refresh-output');
-    el.textContent += chunk;
-    el.scrollTop = el.scrollHeight;
-  });
 
   // Smart startup: jump to the right step
   try {
@@ -213,61 +204,6 @@ async function doGenerateSsh() {
   } else {
     document.getElementById('ssh-generate-form').classList.remove('hidden');
     showErr(errEl, res.error || 'SSH key generation failed.');
-  }
-}
-
-async function doAddSshGithub() {
-  const btn = document.getElementById('btn-add-ssh-github');
-  const statusEl = document.getElementById('ssh-github-status');
-  btn.disabled = true; btn.textContent = 'Uploading…';
-  statusEl.textContent = '';
-  document.getElementById('btn-reauth-gh').classList.add('hidden');
-  document.getElementById('gh-refresh-panel').classList.add('hidden');
-
-  const res = await window.api.addSshKeyToGithub();
-  btn.disabled = false; btn.textContent = 'Add to GitHub';
-
-  if (res.ok) {
-    statusEl.className = 'status-msg ok';
-    statusEl.textContent = res.alreadyAdded ? '✓ Key already on GitHub.' : '✓ SSH key added to GitHub!';
-    setTimeout(() => goStep(5), 1200);
-    await showDoneSummary(await window.api.getSecurityStatus());
-  } else if (res.needsScope) {
-    statusEl.className = 'status-msg err';
-    statusEl.textContent = res.error;
-    document.getElementById('btn-reauth-gh').classList.remove('hidden');
-  } else {
-    statusEl.className = 'status-msg err';
-    statusEl.textContent = res.error || 'Failed to add key to GitHub.';
-  }
-}
-
-async function doReauthGh() {
-  const btn = document.getElementById('btn-reauth-gh');
-  const statusEl = document.getElementById('ssh-github-status');
-  const panel = document.getElementById('gh-refresh-panel');
-  const output = document.getElementById('gh-refresh-output');
-
-  btn.disabled = true; btn.textContent = 'Waiting for browser…';
-  panel.classList.remove('hidden');
-  output.textContent = '';
-  statusEl.textContent = 'Opening GitHub in your browser…';
-  statusEl.className = 'status-msg';
-
-  const res = await window.api.refreshGhScope();
-
-  btn.disabled = false; btn.textContent = 'Re-auth gh →';
-
-  if (res.ok) {
-    statusEl.className = 'status-msg ok';
-    statusEl.textContent = '✓ Scope granted! Retrying key upload…';
-    panel.classList.add('hidden');
-    btn.classList.add('hidden');
-    // Retry the upload now that we have the scope
-    setTimeout(() => doAddSshGithub(), 1000);
-  } else {
-    statusEl.className = 'status-msg err';
-    statusEl.textContent = 'Re-auth failed. Check the output below.';
   }
 }
 

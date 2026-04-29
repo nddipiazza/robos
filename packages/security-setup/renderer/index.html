@@ -79,17 +79,10 @@
       <h2>SSH Key</h2>
       <div id="ssh-status" class="status-block"></div>
       <div id="ssh-existing" class="hidden">
-        <p class="desc">An SSH key already exists. You can skip this step or add it to GitHub.</p>
+        <p class="desc">An SSH key already exists. Click Next to continue.</p>
         <div id="ssh-pubkey-display" class="key-info"></div>
         <div class="btn-row">
-          <button class="btn-primary" id="btn-add-ssh-github">Add to GitHub</button>
-          <button class="btn-primary hidden" id="btn-reauth-gh" style="background:#1f6feb">Re-auth gh →</button>
-          <button class="btn-secondary" id="btn-skip-ssh">Skip →</button>
-        </div>
-        <div id="ssh-github-status" class="status-msg"></div>
-        <div id="gh-refresh-panel" class="hidden" style="margin-top:12px">
-          <p class="desc">Complete the GitHub auth in your browser to grant the <code>admin:public_key</code> scope:</p>
-          <pre id="gh-refresh-output" class="key-info" style="max-height:120px;overflow-y:auto;white-space:pre-wrap;font-size:11px"></pre>
+          <button class="btn-primary" id="btn-skip-ssh">Next →</button>
         </div>
       </div>
       <div id="ssh-generate-form">

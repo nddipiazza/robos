@@ -47,6 +47,12 @@ function createWindow() {
 }
 
 app.setName('agents-manager');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'agents-manager'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');

@@ -167,7 +167,7 @@ const SCRIPT = [
     minHold: 3000,
   },
   {
-    narration: 'With the key on disk, RobOS can upload the public key directly to GitHub through the gh CLI.',
+    narration: 'The key is generated and stored on disk. Click Next to continue.',
     js: MARK_SSH_GENERATED,
     minHold: 3500,
   },

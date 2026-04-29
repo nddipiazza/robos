@@ -68,7 +68,7 @@ function createWindow() {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
-  win.on('close', (e) => { e.preventDefault(); win.hide(); });
+  win.on('close', () => { app.quit(); });
 
   if (_debugServer) _debugServer.startDebugServer(win, 19115);
 
@@ -88,7 +88,7 @@ app.on('second-instance', () => showWindow());
 
 app.setName('notifications');
 app.whenReady().then(createWindow);
-app.on('window-all-closed', () => {});
+
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
 

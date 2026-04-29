@@ -84,6 +84,12 @@ function createWindow() {
 }
 
 app.setName('workflow-studio');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'workflow-studio'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
 

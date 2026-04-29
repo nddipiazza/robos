@@ -4,6 +4,7 @@ const os    = require('os');
 const fs    = require('fs');
 const { execSync, spawn } = require('child_process');
 
+app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'git-login-manager'));
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); process.exit(0); }
 
@@ -58,7 +59,7 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
   if (_debugServer) _debugServer.startDebugServer(win, 19123);
-  win.on('close', (e) => { e.preventDefault(); win.hide(); });
+  win.on('close', () => { app.quit(); });
 }
 
 function showWindow() {

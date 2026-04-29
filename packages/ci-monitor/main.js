@@ -42,6 +42,12 @@ function getRepos(server) {
 
 let win;
 app.setName('ci-monitor');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'ci-monitor'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
 app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1300, height: 850,

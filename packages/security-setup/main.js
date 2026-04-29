@@ -26,6 +26,13 @@ try {
 // ── Window ───────────────────────────────────────────────────────────────────
 let win;
 app.setName('security-setup');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'security-setup'));
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+app.on('second-instance', () => {
+  const w = require('electron').BrowserWindow.getAllWindows()[0];
+  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+});
+
 app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 640, height: 680,

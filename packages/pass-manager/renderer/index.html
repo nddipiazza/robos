@@ -59,14 +59,13 @@
           <div id="entry-path-bar">
             <span id="entry-path"></span>
             <div id="entry-actions">
-              <button id="btn-copy-pw" class="btn-sm">📋 Copy Password</button>
+              <button id="btn-copy-pw" class="btn-sm">📋 Copy Secret</button>
               <button id="btn-edit" class="btn-sm">✏️ Edit</button>
               <button id="btn-delete" class="btn-sm btn-danger">🗑 Delete</button>
             </div>
           </div>
           <div id="password-row">
-            <label>Password</label>
-            <div id="pw-wrap">
+            <label>Secret Value</label>
               <input id="pw-display" type="password" readonly>
               <button id="btn-toggle-pw" class="btn-icon-sm">👁</button>
             </div>
@@ -83,16 +82,16 @@
           <div class="form-row"><label>Path (e.g. work/github)</label><input id="form-path" type="text" placeholder="folder/entry-name"></div>
           <div class="form-row form-row-radio">
             <label>Type</label>
-            <label><input type="radio" name="form-type" value="simple" checked> Simple (password only)</label>
+            <label><input type="radio" name="form-type" value="simple" checked> Simple (secret value only)</label>
             <label><input type="radio" name="form-type" value="multiline"> Multiline (password + notes)</label>
             <label><input type="radio" name="form-type" value="generate"> Generate random</label>
           </div>
           <div id="form-simple-wrap">
-            <div class="form-row"><label>Password</label><input id="form-pw" type="password" placeholder="Enter password"></div>
-            <div class="form-row"><label>Confirm</label><input id="form-pw2" type="password" placeholder="Confirm password"></div>
+            <div class="form-row"><label>Secret Value</label><input id="form-pw" type="password" placeholder="Enter secret value"></div>
+            <div class="form-row"><label>Confirm</label><input id="form-pw2" type="password" placeholder="Confirm secret value"></div>
           </div>
           <div id="form-multi-wrap" class="hidden">
-            <div class="form-row"><label>Content (first line = password)</label><textarea id="form-multi" rows="6" placeholder="mysecretpassword&#10;login: user@example.com&#10;url: https://example.com"></textarea></div>
+            <div class="form-row"><label>Content (first line = secret value)</label><textarea id="form-multi" rows="6" placeholder="mysecretpassword&#10;login: user@example.com&#10;url: https://example.com"></textarea></div>
           </div>
           <div id="form-gen-wrap" class="hidden">
             <div class="form-row"><label>Length</label><input id="form-gen-len" type="number" value="32" min="8" max="128"></div>

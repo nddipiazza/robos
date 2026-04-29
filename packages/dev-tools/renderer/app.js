@@ -9,7 +9,7 @@ let tools = [];
 let activeLogTool = null;
 let activeCategory = 'All';
 
-const CATEGORY_ORDER = ['All', 'AI', 'IDE', 'Dev', 'CLI'];
+const CATEGORY_ORDER = ['All', 'AI', 'IDE', 'Browser', 'Media', 'Dev', 'CLI'];
 
 logClose.addEventListener('click', () => {
   logPanel.classList.add('hidden');
