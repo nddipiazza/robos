@@ -1,0 +1,9 @@
+[
+  {"startMs": 500,  "label": "intro",      "narration": "Video 4: Agents Manager. Git is set up. Now RobOS needs to know which AI agent to use."},
+  {"startMs": 8000, "label": "launch",     "narration": "Dana searches for Agents Manager in the App Launcher and opens it."},
+  {"startMs": 14000,"label": "not-authed", "narration": "GitHub Copilot is installed but not authenticated — yellow dot. She clicks Login."},
+  {"startMs": 22000,"label": "device",     "narration": "A terminal opens with the gh auth device flow. Same process as Git Login Manager, different scope."},
+  {"startMs": 42000,"label": "authorize",  "narration": "Code entered, access authorized. Back in Agents Manager, Dana hits Refresh."},
+  {"startMs": 52000,"label": "green",      "narration": "Green dot. Connected. Now she sets GitHub Copilot as the active provider."},
+  {"startMs": 62000,"label": "done",       "narration": "Every AI textarea in RobOS — Issue Manager, Workflow Studio, Git Projects — now has a working agent behind it."}
+]
