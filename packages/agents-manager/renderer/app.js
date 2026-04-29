@@ -322,6 +322,7 @@ async function renderCopilotDetail(provider) {
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cop-refresh">Refresh</button>
           <button class="btn btn-primary btn-sm" id="btn-cop-login">${provider.authenticated ? 'Re-auth to GitHub' : 'Login to GitHub'}</button>
+          ${provider.authenticated ? '<button class="btn btn-danger btn-sm" id="btn-cop-logout">Logout</button>' : ''}
           <div class="split-btn-group" id="cop-terminal-group">
             <button class="btn btn-ai btn-sm" id="btn-cop-terminal">Open Copilot CLI Terminal</button>
             <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-cop-flags-toggle" title="Configure launch flags">
@@ -369,6 +370,8 @@ async function renderCopilotDetail(provider) {
   };
 
   document.getElementById('btn-cop-login').onclick = () => window.agents.copilotLogin();
+  const copLogoutBtn = document.getElementById('btn-cop-logout');
+  if (copLogoutBtn) copLogoutBtn.onclick = () => window.agents.copilotLogout();
   document.getElementById('btn-cop-terminal').onclick = () =>
     window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
 
@@ -643,6 +646,8 @@ async function renderClaudeDetail(provider) {
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cl-refresh">Refresh</button>
           ${!provider.installed ? '<button class="btn btn-primary btn-sm" id="btn-cl-install">Install Claude Code</button>' : ''}
+          ${provider.installed && !provider.authenticated ? '<button class="btn btn-primary btn-sm" id="btn-cl-login">Login</button>' : ''}
+          ${provider.installed && provider.authenticated ? '<button class="btn btn-danger btn-sm" id="btn-cl-logout">Logout</button>' : ''}
           ${provider.installed ? `
           <div class="split-btn-group" id="cl-terminal-group">
             <button class="btn btn-ai btn-sm" id="btn-cl-terminal">Open Claude Terminal</button>
@@ -695,6 +700,12 @@ async function renderClaudeDetail(provider) {
 
   const installBtn = document.getElementById('btn-cl-install');
   if (installBtn) installBtn.onclick = () => window.agents.claudeInstall();
+
+  const clLoginBtn = document.getElementById('btn-cl-login');
+  if (clLoginBtn) clLoginBtn.onclick = () => window.agents.claudeLogin();
+
+  const clLogoutBtn = document.getElementById('btn-cl-logout');
+  if (clLogoutBtn) clLogoutBtn.onclick = () => window.agents.claudeLogout();
 
   const termBtn = document.getElementById('btn-cl-terminal');
   if (termBtn) termBtn.onclick = () => window.agents.claudeLaunchTerminal(null, buildClaudeArgs(), claudeFlagValues['cwd'] || null);
@@ -928,7 +939,8 @@ async function renderCodexDetail(provider) {
         </div>
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cx-refresh">Refresh</button>
-          ${provider.installed ? `<button class="btn btn-primary btn-sm" id="btn-cx-login">Login / Re-auth</button>` : ''}
+          ${provider.installed && !provider.authenticated ? `<button class="btn btn-primary btn-sm" id="btn-cx-login">Login / Re-auth</button>` : ''}
+          ${provider.installed && provider.authenticated ? `<button class="btn btn-danger btn-sm" id="btn-cx-logout">Logout</button>` : ''}
           ${provider.installed ? `
           <div class="split-btn-group" id="cx-terminal-group">
             <button class="btn btn-ai btn-sm" id="btn-cx-terminal">Open Codex Terminal</button>
@@ -981,6 +993,9 @@ async function renderCodexDetail(provider) {
 
   const loginBtn = document.getElementById('btn-cx-login');
   if (loginBtn) loginBtn.onclick = () => window.agents.codexLogin();
+
+  const cxLogoutBtn = document.getElementById('btn-cx-logout');
+  if (cxLogoutBtn) cxLogoutBtn.onclick = () => window.agents.codexLogout();
 
   const termBtn = document.getElementById('btn-cx-terminal');
   if (termBtn) termBtn.onclick = () => window.agents.codexLaunchTerminal(null, buildCodexArgs());

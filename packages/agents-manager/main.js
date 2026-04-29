@@ -248,6 +248,12 @@ ipcMain.handle('copilot-login', () => {
   });
 });
 
+ipcMain.handle('copilot-logout', () => {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'gh auth logout; read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
+  });
+});
+
 ipcMain.handle('copilot-update', async () => {
   return new Promise(res => {
     cp.exec('gh extension upgrade gh-copilot 2>&1 || gh extension install github/gh-copilot 2>&1',
@@ -328,6 +334,12 @@ ipcMain.handle('codex-launch-terminal', (_, sessionId, extraArgs) => {
 
 ipcMain.handle('codex-login', () => {
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'codex login; read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
+  });
+});
+
+ipcMain.handle('codex-logout', () => {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'codex logout; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
@@ -445,6 +457,18 @@ ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs, cwd) => {
 
 ipcMain.handle('claude-install', () => {
   cp.spawn('x-terminal-emulator', ['-e', `bash -c 'echo "Installing Claude Code CLI..." && npm install -g @anthropic-ai/claude-code && echo "Done!" && read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
+  });
+});
+
+ipcMain.handle('claude-login', () => {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'claude auth login; read -p "Press Enter to close..." x'`], {
+    env: { ...process.env, DISPLAY: ':0' }, detached: true,
+  });
+});
+
+ipcMain.handle('claude-logout', () => {
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'claude auth logout; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });

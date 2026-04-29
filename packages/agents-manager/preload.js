@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('agents', {
   copilotFetchModels:       ()             => ipcRenderer.invoke('copilot-fetch-models'),
   copilotLaunchTerminal:    (id, extraArgs, cwd)  => ipcRenderer.invoke('copilot-launch-terminal', id, extraArgs, cwd),
   copilotLogin:             ()    => ipcRenderer.invoke('copilot-login'),
+  copilotLogout:            ()    => ipcRenderer.invoke('copilot-logout'),
   copilotUpdate:            ()    => ipcRenderer.invoke('copilot-update'),
   copilotInstallExtension:  ()    => ipcRenderer.invoke('copilot-install-extension'),
 
@@ -21,6 +22,8 @@ contextBridge.exposeInMainWorld('agents', {
   claudeFetchModels:     ()              => ipcRenderer.invoke('claude-fetch-models'),
   claudeLaunchTerminal:  (id, extraArgs, cwd) => ipcRenderer.invoke('claude-launch-terminal', id, extraArgs, cwd),
   claudeInstall:         ()              => ipcRenderer.invoke('claude-install'),
+  claudeLogin:           ()              => ipcRenderer.invoke('claude-login'),
+  claudeLogout:          ()              => ipcRenderer.invoke('claude-logout'),
   claudeWriteSettings:   (s)             => ipcRenderer.invoke('claude-write-settings', s),
 
   // Codex
@@ -28,6 +31,7 @@ contextBridge.exposeInMainWorld('agents', {
   codexFetchModels:    ()              => ipcRenderer.invoke('codex-fetch-models'),
   codexLaunchTerminal: (id, extraArgs) => ipcRenderer.invoke('codex-launch-terminal', id, extraArgs),
   codexLogin:          ()              => ipcRenderer.invoke('codex-login'),
+  codexLogout:         ()              => ipcRenderer.invoke('codex-logout'),
 
   // General
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),
