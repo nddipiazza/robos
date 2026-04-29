@@ -40,7 +40,18 @@ const TOOLS = [
     uninstallCmd: 'sudo npm uninstall -g @githubnext/github-copilot-cli',
   },
 
-  // ── IDEs & Editors ──
+  {
+    id: 'openai-codex',
+    name: 'OpenAI Codex CLI',
+    description: 'OpenAI Codex — AI coding agent in your terminal',
+    category: 'AI',
+    source: 'npm (@openai/codex)',
+    checkCmd: 'which codex',
+    installCmd: 'sudo npm install -g @openai/codex && sudo apt-get install -y sqlite3',
+    uninstallCmd: 'sudo npm uninstall -g @openai/codex',
+  },
+
+
   {
     id: 'vscode',
     name: 'VS Code',
@@ -166,6 +177,17 @@ const TOOLS = [
     uninstallCmd: 'sudo apt-get remove -y gh',
   },
   {
+    id: 'gh-copilot',
+    name: 'GitHub Copilot CLI',
+    description: 'GitHub Copilot coding agent for the terminal',
+    category: 'Dev',
+    source: 'npm (@github/copilot)',
+    checkCmd: 'which copilot || test -f /usr/bin/copilot',
+    installCmd: 'sudo npm install -g @github/copilot',
+    uninstallCmd: 'sudo npm uninstall -g @github/copilot',
+    updateCmd: 'sudo npm install -g @github/copilot@latest',
+  },
+  {
     id: 'docker',
     name: 'Docker',
     description: 'Container runtime',
@@ -208,6 +230,16 @@ const TOOLS = [
     checkCmd: 'which kazam',
     installCmd: 'sudo apt-get install -y kazam',
     uninstallCmd: 'sudo apt-get remove -y kazam',
+  },
+  {
+    id: 'vlc',
+    name: 'VLC Media Player',
+    description: 'Free and open source cross-platform multimedia player',
+    category: 'Media',
+    source: 'apt (vlc)',
+    checkCmd: 'which vlc',
+    installCmd: 'sudo apt-get install -y vlc',
+    uninstallCmd: 'sudo apt-get remove -y vlc',
   },
 
   // ── CLI Utilities ──
@@ -270,6 +302,16 @@ const TOOLS = [
     checkCmd: 'which htop',
     installCmd: 'sudo apt-get install -y htop',
     uninstallCmd: 'sudo apt-get remove -y htop',
+  },
+  {
+    id: 'sqlite3',
+    name: 'SQLite3',
+    description: 'Lightweight serverless SQL database engine and CLI',
+    category: 'CLI',
+    source: 'apt (sqlite3)',
+    checkCmd: 'which sqlite3',
+    installCmd: 'sudo apt-get install -y sqlite3',
+    uninstallCmd: 'sudo apt-get remove -y sqlite3',
   },
 ];
 
