@@ -234,16 +234,9 @@ async function init() {
   // Handle --check-provider mode
   window.agents.onOpenProvider((id) => selectProvider(id));
 
-  // Auto-refresh: sessions every 5s, full provider status every 30s
+  // Auto-refresh: sessions every 5s, auth status every 5s (lightweight DOM patch)
   setInterval(() => refreshCurrentSessions(), 5000);
-  setInterval(async () => {
-    providers = await window.agents.detectProviders();
-    renderSidebar();
-    if (selectedProviderId) {
-      const p = providers.find(pr => pr.id === selectedProviderId);
-      if (p) await selectProvider(selectedProviderId);
-    }
-  }, 30000);
+  setInterval(() => refreshProviderStatus(), 5000);
 
   // Init resizer
   initResizer();
@@ -260,6 +253,25 @@ async function refreshCurrentSessions() {
   } else if (selectedProviderId === 'codex') {
     const sessions = await window.agents.codexSessions();
     renderCodexSessions(sessions);
+  }
+}
+
+let _lastAuthState = {};
+
+async function refreshProviderStatus() {
+  const updated = await window.agents.detectProviders();
+  // Check if auth state changed for any provider
+  let authChanged = false;
+  for (const p of updated) {
+    const prev = _lastAuthState[p.id];
+    if (prev !== undefined && prev !== p.authenticated) authChanged = true;
+    _lastAuthState[p.id] = p.authenticated;
+  }
+  providers = updated;
+  renderSidebar();
+  // Only do a full panel re-render if auth actually changed or this is the first run
+  if (authChanged && selectedProviderId) {
+    await selectProvider(selectedProviderId);
   }
 }
 
