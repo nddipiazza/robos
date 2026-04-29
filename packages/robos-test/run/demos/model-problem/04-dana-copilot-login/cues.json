@@ -1,9 +1,20 @@
 [
-  {"startMs": 500,  "label": "intro",      "narration": "Video 4: Agents Manager. Git is set up. Now RobOS needs to know which AI agent to use."},
-  {"startMs": 8000, "label": "launch",     "narration": "Dana searches for Agents Manager in the App Launcher and opens it."},
-  {"startMs": 14000,"label": "not-authed", "narration": "GitHub Copilot is installed but not authenticated — yellow dot. She clicks Login."},
-  {"startMs": 22000,"label": "device",     "narration": "A terminal opens with the gh auth device flow. Same process as Git Login Manager, different scope."},
-  {"startMs": 42000,"label": "authorize",  "narration": "Code entered, access authorized. Back in Agents Manager, Dana hits Refresh."},
-  {"startMs": 52000,"label": "green",      "narration": "Green dot. Connected. Now she sets GitHub Copilot as the active provider."},
-  {"startMs": 62000,"label": "done",       "narration": "Every AI textarea in RobOS — Issue Manager, Workflow Studio, Git Projects — now has a working agent behind it."}
+  {"startMs": 500,    "label": "intro",           "narration": "Video 4: RobOS Agents Manager. One hub for all your AI coding agents — Codex, GitHub Copilot, and Claude Code."},
+  {"startMs": 8000,   "label": "codex-overview",  "narration": "Codex is up and running. Two active sessions are listed — real conversations from prior work, ready to resume."},
+  {"startMs": 60000,  "label": "sessions",        "narration": "Each session shows the last message. Dana can see exactly what was asked and jump back in at any point."},
+  {"startMs": 120000, "label": "flags",           "narration": "Clicking the options arrow opens the launch flags panel. Every configurable setting for the agent is surfaced here."},
+  {"startMs": 130000, "label": "flags-detail",    "narration": "Yolo mode bypasses pull request creation. Model lets Dana pick the underlying LLM. Working directory anchors the agent to a specific codebase."},
+  {"startMs": 260000, "label": "copilot",         "narration": "Switching to GitHub Copilot. It's already connected — previous sessions appear immediately."},
+  {"startMs": 340000, "label": "copilot-session", "narration": "The session list carries over between runs. Dana can resume from exactly where she left off without re-explaining context."},
+  {"startMs": 450000, "label": "copilot-terminal","narration": "Opening a Copilot terminal launches a live agent shell session. The agent can run commands, browse files, and stream output directly."},
+  {"startMs": 680000, "label": "terminal-run",    "narration": "The terminal stays open alongside the Agents panel. Dana can watch the agent work without switching windows."},
+  {"startMs": 880000, "label": "browser-auth",    "narration": "GitHub's access confirmation page opens in the browser. The device code from the terminal matches — Dana clicks Authorize."},
+  {"startMs": 960000, "label": "connected",       "narration": "Authentication confirmed. Copilot is back online. Sessions and status refresh automatically."},
+  {"startMs": 1200000,"label": "explore",         "narration": "Dana explores the panel — status badge, session list, and action buttons are all visible at a glance."},
+  {"startMs": 1290000,"label": "logout",          "narration": "She clicks Logout to show the full authentication flow. The status updates immediately to not logged in."},
+  {"startMs": 1350000,"label": "relogin-browser", "narration": "The browser shows the Copilot CLI authorization page. GitHub asks to confirm the requested access scopes."},
+  {"startMs": 1400000,"label": "auth-terminal",   "narration": "The device code is visible in the terminal. The login flow is transparent — no hidden configuration."},
+  {"startMs": 1450000,"label": "cwd-picker",      "narration": "Finally, the working directory chooser. Dana opens a native file picker to set where the next agent session will run."},
+  {"startMs": 1560000,"label": "cwd-selected",    "narration": "Folder selected. The agent will start grounded in that directory — no path typing, no guessing."},
+  {"startMs": 1640000,"label": "outro",           "narration": "Agents Manager is a unified control plane for AI development. Login, configure, launch, and manage — three agents, one panel."}
 ]
