@@ -140,6 +140,6 @@ html, body { background: #0d1117; color: #e6edf3; font-family: -apple-system, Bl
 .flags-fetch-btn { padding: 2px 7px !important; font-size: 13px !important; min-width: 26px; border-color: #30363d; color: #79c0ff; flex-shrink: 0; }
 .flags-fetch-btn:hover { border-color: #388bfd; color: #58a6ff; }
 .flags-dir-group { display: flex; align-items: center; gap: 4px; }
-.flags-dir-group .flags-text-input { width: 130px; cursor: default; }
+.flags-dir-group .flags-text-input { width: 260px; cursor: default; }
 .flags-dir-browse { padding: 2px 7px !important; font-size: 13px !important; min-width: 28px; border-color: #30363d; color: #79c0ff; flex-shrink: 0; }
 .flags-dir-browse:hover { border-color: #388bfd; color: #58a6ff; }
