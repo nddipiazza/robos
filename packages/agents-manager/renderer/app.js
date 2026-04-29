@@ -109,6 +109,9 @@ const CLAUDE_FLAGS = [
     desc: 'Effort level for the current session',
     options: ['low', 'medium', 'high', 'xhigh', 'max'],
     common: true },
+  { id: 'cwd', flag: '--cwd', type: 'dir', label: 'Working Directory',
+    desc: 'Start Claude in this directory (cd before launching)',
+    common: true },
   { id: 'add-dir', flag: '--add-dir', type: 'dir', label: 'Add Directory',
     desc: 'Additional directory to allow tool access to',
     common: true },
@@ -667,7 +670,7 @@ async function renderClaudeDetail(provider) {
   if (installBtn) installBtn.onclick = () => window.agents.claudeInstall();
 
   const termBtn = document.getElementById('btn-cl-terminal');
-  if (termBtn) termBtn.onclick = () => window.agents.claudeLaunchTerminal(null, buildClaudeArgs());
+  if (termBtn) termBtn.onclick = () => window.agents.claudeLaunchTerminal(null, buildClaudeArgs(), claudeFlagValues['cwd'] || null);
 
   const flagsToggle = document.getElementById('btn-cl-flags-toggle');
   if (flagsToggle) {
@@ -822,6 +825,7 @@ function renderClaudeFlagsDropdown() {
 function buildClaudeArgs() {
   const args = [];
   for (const f of CLAUDE_FLAGS) {
+    if (f.id === 'cwd') continue;  // handled via cd before launch, not a real claude flag
     const val = claudeFlagValues[f.id];
     if (!val) continue;
     if (f.type === 'bool') {

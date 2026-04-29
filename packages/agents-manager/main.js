@@ -423,7 +423,7 @@ ipcMain.handle('claude-config', () => {
   return { settings, projects };
 });
 
-ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs) => {
+ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs, cwd) => {
   let parts;
   if (sessionId) {
     parts = ['claude', '--resume', sessionId];
@@ -432,7 +432,10 @@ ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs) => {
     if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
   const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
+  const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
+    ? `cd '${cwd.trim().replace(/'/g, "'\\''")}' && `
+    : '';
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
