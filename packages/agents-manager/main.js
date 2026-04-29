@@ -479,6 +479,42 @@ ipcMain.handle('set-active-provider', (_, providerId) => {
   fs.writeFileSync(AI_PROVIDER_CONFIG, JSON.stringify(config, null, 2));
 });
 
+ipcMain.handle('claude-fetch-models', async () => {
+  const KNOWN_CLAUDE_MODELS = [
+    { id: 'claude-opus-4-5',            label: 'Claude Opus 4.5' },
+    { id: 'claude-sonnet-4-5',          label: 'Claude Sonnet 4.5' },
+    { id: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5' },
+    { id: 'claude-opus-4',              label: 'Claude Opus 4' },
+    { id: 'claude-sonnet-4',            label: 'Claude Sonnet 4' },
+    { id: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
+    { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+    { id: 'claude-3-5-haiku-20241022',  label: 'Claude 3.5 Haiku' },
+    { id: 'claude-3-opus-20240229',     label: 'Claude 3 Opus' },
+  ];
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return { models: KNOWN_CLAUDE_MODELS, source: 'builtin' };
+
+  return new Promise(res => {
+    cp.exec(
+      `curl -sf https://api.anthropic.com/v1/models -H "x-api-key: ${apiKey}" -H "anthropic-version: 2023-06-01"`,
+      { timeout: 10000 }, (err, stdout) => {
+        if (err || !stdout.trim()) return res({ models: KNOWN_CLAUDE_MODELS, source: 'builtin' });
+        try {
+          const data = JSON.parse(stdout);
+          const list = (data.data || [])
+            .filter(m => m.id && m.id.startsWith('claude-'))
+            .map(m => ({ id: m.id, label: m.display_name || m.id }));
+          res({ models: list.length ? list : KNOWN_CLAUDE_MODELS, source: list.length ? 'api' : 'builtin' });
+        } catch {
+          res({ models: KNOWN_CLAUDE_MODELS, source: 'builtin' });
+        }
+      }
+    );
+  });
+});
+
+
 ipcMain.handle('codex-fetch-models', async () => {
   return new Promise(res => {
     cp.exec('bash -lc "codex debug models 2>/dev/null"', { timeout: 15000 }, (err, stdout) => {

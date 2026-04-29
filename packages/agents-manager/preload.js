@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('agents', {
   // Claude Code
   claudeSessions:        ()              => ipcRenderer.invoke('claude-sessions'),
   claudeConfig:          ()              => ipcRenderer.invoke('claude-config'),
+  claudeFetchModels:     ()              => ipcRenderer.invoke('claude-fetch-models'),
   claudeLaunchTerminal:  (id, extraArgs) => ipcRenderer.invoke('claude-launch-terminal', id, extraArgs),
   claudeInstall:         ()              => ipcRenderer.invoke('claude-install'),
   claudeWriteSettings:   (s)             => ipcRenderer.invoke('claude-write-settings', s),

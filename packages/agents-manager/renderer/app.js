@@ -102,8 +102,8 @@ function saveFlagState() {
 
 const CLAUDE_FLAGS = [
   // ── Most Common ──
-  { id: 'model', flag: '--model', type: 'text', label: 'Model',
-    desc: "Model alias (e.g. 'sonnet', 'opus') or full name (e.g. 'claude-sonnet-4-6')",
+  { id: 'model', flag: '--model', type: 'model-select', label: 'Model',
+    desc: "Model to use — choose an alias ('sonnet', 'opus') or full model name",
     common: true },
   { id: 'effort', flag: '--effort', type: 'select', label: 'Effort Level',
     desc: 'Effort level for the current session',
@@ -141,6 +141,7 @@ const CLAUDE_FLAGS = [
 
 let claudeFlagMode = localStorage.getItem('claudeFlagMode') || 'common';
 let claudeFlagValues = (() => { try { return JSON.parse(localStorage.getItem('claudeFlagValues') || '{}'); } catch { return {}; } })();
+let claudeModelList = [];  // cached from claude-fetch-models
 
 function saveClaudeFlagState() {
   localStorage.setItem('claudeFlagMode', claudeFlagMode);
@@ -670,6 +671,15 @@ async function renderClaudeDetail(provider) {
 
   const flagsToggle = document.getElementById('btn-cl-flags-toggle');
   if (flagsToggle) {
+    // Auto-fetch models the first time the panel opens
+    if (claudeModelList.length === 0) {
+      window.agents.claudeFetchModels().then(result => {
+        if (result && result.models) {
+          claudeModelList = result.models;
+          renderClaudeFlagsDropdown();
+        }
+      });
+    }
     flagsToggle.onclick = (e) => {
       e.stopPropagation();
       const dd = document.getElementById('cl-flags-dropdown');
@@ -732,6 +742,14 @@ function renderClaudeFlagsDropdown() {
              <option value="">-- choose --</option>
              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
            </select>`
+        : f.type === 'model-select'
+        ? `<div class="flags-dir-group">
+             <select class="flags-select flags-value-input" data-id="${f.id}" style="width:200px">
+               <option value="">-- choose model --</option>
+               ${claudeModelList.map(m => `<option value="${esc(m.id)}" ${val === m.id ? 'selected' : ''}>${esc(m.label || m.id)}</option>`).join('')}
+             </select>
+             <button class="btn btn-sm flags-fetch-btn" id="btn-cl-fetch-models" title="Refresh model list">↻</button>
+           </div>`
         : f.type === 'dir'
         ? `<div class="flags-dir-group">
              <input type="text" class="flags-text-input flags-value-input"
@@ -754,7 +772,27 @@ function renderClaudeFlagsDropdown() {
         else if (input.value) claudeFlagValues[f.id] = input.value;
         saveClaudeFlagState();
       };
-      if (f.type === 'dir') {
+      if (f.type === 'model-select') {
+        const refreshBtn = row.querySelector('#btn-cl-fetch-models');
+        refreshBtn.onclick = async () => {
+          refreshBtn.textContent = '⟳'; refreshBtn.disabled = true;
+          const result = await window.agents.claudeFetchModels();
+          refreshBtn.disabled = false;
+          if (result && result.models) {
+            claudeModelList = result.models;
+            refreshBtn.title = `${claudeModelList.length} models loaded`;
+            renderClaudeFlagsDropdown();
+          } else {
+            refreshBtn.textContent = '✗';
+            setTimeout(() => { refreshBtn.textContent = '↻'; refreshBtn.title = 'Refresh model list'; }, 3000);
+          }
+        };
+        input.onchange = () => {
+          if (input.value) { claudeFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete claudeFlagValues[f.id]; checkbox.checked = false; }
+          saveClaudeFlagState();
+        };
+      } else if (f.type === 'dir') {
         row.querySelector('.flags-dir-browse').onclick = async () => {
           const chosen = await window.agents.openDirDialog();
           if (chosen) {
