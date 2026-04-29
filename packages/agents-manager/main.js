@@ -481,6 +481,7 @@ ipcMain.handle('codex-fetch-models', async () => {
 });
 
 
+ipcMain.handle('open-dir-dialog', async () => {
   const { dialog } = require('electron');
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
   return result.canceled ? null : result.filePaths[0];
