@@ -106,3 +106,40 @@ html, body { background: #0d1117; color: #e6edf3; font-family: -apple-system, Bl
 .btn-danger { background: #3d1f1f; color: #f85149; border-color: #da3633; }
 .btn-danger:hover { background: #4a2424; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+/* ── Split button ── */
+.split-btn-group { display: inline-flex; align-items: stretch; position: relative; }
+.split-btn-group .btn { border-radius: 6px 0 0 6px; border-right: none; }
+.split-btn-arrow { border-radius: 0 6px 6px 0 !important; border-left: 1px solid rgba(88,166,255,.3) !important; padding: 5px 8px !important; display: flex; align-items: center; justify-content: center; }
+.split-btn-arrow:hover { background: linear-gradient(135deg, #2d3f5a, #162032) !important; }
+
+/* ── Flags dropdown ── */
+.flags-dropdown { position: relative; background: #161b22; border: 1px solid #30363d; border-radius: 8px; margin-top: 6px; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.5); overflow: hidden; }
+.flags-dropdown-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #21262d; background: #0d1117; }
+.flags-dropdown-title { font-size: 11px; font-weight: 700; color: #8b949e; text-transform: uppercase; letter-spacing: .05em; }
+.flags-mode-toggle { display: flex; gap: 0; border: 1px solid #30363d; border-radius: 5px; overflow: hidden; }
+.flags-mode-btn { background: #21262d; border: none; color: #8b949e; font-size: 11px; font-family: inherit; padding: 3px 10px; cursor: pointer; transition: background .1s, color .1s; }
+.flags-mode-btn:hover { background: #30363d; color: #e6edf3; }
+.flags-mode-btn.active { background: #1f6feb; color: #fff; }
+.flags-list { padding: 8px; display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+.flags-list::-webkit-scrollbar { width: 5px; }
+.flags-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.flags-row { padding: 2px 0; }
+.flags-bool-label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; cursor: pointer; transition: background .1s; }
+.flags-bool-label:hover { background: #1c2128; }
+.flags-checkbox { accent-color: #388bfd; width: 13px; height: 13px; flex-shrink: 0; cursor: pointer; }
+.flags-flag-name { font-family: monospace; font-size: 11px; color: #79c0ff; white-space: nowrap; min-width: 130px; }
+.flags-label-text { font-size: 12px; color: #e0e0e0; white-space: nowrap; }
+.flags-desc { font-size: 11px; color: #484f58; flex: 1; }
+.flags-value-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; transition: background .1s; }
+.flags-value-row:hover { background: #1c2128; }
+.flags-text-input { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; padding: 3px 8px; font-size: 12px; font-family: monospace; width: 160px; outline: none; }
+.flags-text-input:focus { border-color: #388bfd; }
+.flags-text-input:disabled { opacity: .4; cursor: not-allowed; }
+.flags-select { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; padding: 3px 8px; font-size: 12px; font-family: inherit; width: 160px; outline: none; }
+.flags-fetch-btn { padding: 2px 7px !important; font-size: 13px !important; min-width: 26px; border-color: #30363d; color: #79c0ff; flex-shrink: 0; }
+.flags-fetch-btn:hover { border-color: #388bfd; color: #58a6ff; }
+.flags-dir-group { display: flex; align-items: center; gap: 4px; }
+.flags-dir-group .flags-text-input { width: 130px; cursor: default; }
+.flags-dir-browse { padding: 2px 7px !important; font-size: 13px !important; min-width: 28px; border-color: #30363d; color: #79c0ff; flex-shrink: 0; }
+.flags-dir-browse:hover { border-color: #388bfd; color: #58a6ff; }

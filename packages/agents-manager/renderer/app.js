@@ -119,14 +119,14 @@ const CODEX_FLAGS = [
   { id: 'search', flag: '--search', type: 'bool', label: 'Web Search',
     desc: 'Enable live web search — adds the native web_search tool (no per-call approval)',
     common: true },
-  { id: 'cd', flag: '--cd', type: 'text', label: 'Working Directory',
+  { id: 'cd', flag: '--cd', type: 'dir', label: 'Working Directory',
     desc: 'Tell the agent to use the specified directory as its working root',
     common: true },
   // ── All ──
   { id: 'profile', flag: '--profile', type: 'text', label: 'Config Profile',
     desc: 'Configuration profile from config.toml to use',
     common: false },
-  { id: 'add-dir', flag: '--add-dir', type: 'text', label: 'Add Writable Directory',
+  { id: 'add-dir', flag: '--add-dir', type: 'dir', label: 'Add Writable Directory',
     desc: 'Additional directory that should be writable alongside the primary workspace',
     common: false },
   { id: 'dangerously-bypass-approvals-and-sandbox', flag: '--dangerously-bypass-approvals-and-sandbox',
@@ -841,17 +841,24 @@ function renderCodexFlagsDropdown() {
     } else {
       const val = codexFlagValues[f.id] || '';
       const enabled = !!val;
+      const inputHtml = f.type === 'select'
+        ? `<select class="flags-select flags-value-input" data-id="${f.id}">
+             <option value="">-- choose --</option>
+             ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+           </select>`
+        : f.type === 'dir'
+        ? `<div class="flags-dir-group">
+             <input type="text" class="flags-text-input flags-value-input"
+               data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}" readonly/>
+             <button class="btn btn-sm flags-dir-browse" data-id="${f.id}" title="Browse\u2026">\uD83D\uDCC1</button>
+           </div>`
+        : `<input type="text" class="flags-text-input flags-value-input"
+             data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}"/>`;
       row.innerHTML = `
         <div class="flags-value-row" title="${esc(f.desc)}">
           <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
           <span class="flags-flag-name">${esc(f.flag)}</span>
-          ${f.type === 'select' ? `
-            <select class="flags-select flags-value-input" data-id="${f.id}">
-              <option value="">-- choose --</option>
-              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
-            </select>` : `
-            <input type="text" class="flags-text-input flags-value-input"
-              data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}"/>`}
+          ${inputHtml}
           <span class="flags-desc">${esc(f.desc)}</span>
         </div>`;
       const checkbox = row.querySelector('.flags-checkbox');
@@ -861,11 +868,28 @@ function renderCodexFlagsDropdown() {
         else if (input.value) codexFlagValues[f.id] = input.value;
         saveCodexFlagState();
       };
-      input.oninput = input.onchange = () => {
-        if (input.value) { codexFlagValues[f.id] = input.value; checkbox.checked = true; }
-        else { delete codexFlagValues[f.id]; checkbox.checked = false; }
-        saveCodexFlagState();
-      };
+      if (f.type === 'dir') {
+        row.querySelector('.flags-dir-browse').onclick = async () => {
+          const chosen = await window.agents.openDirDialog();
+          if (chosen) {
+            input.value = chosen;
+            codexFlagValues[f.id] = chosen;
+            checkbox.checked = true;
+            saveCodexFlagState();
+          }
+        };
+        input.oninput = input.onchange = () => {
+          if (input.value) { codexFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete codexFlagValues[f.id]; checkbox.checked = false; }
+          saveCodexFlagState();
+        };
+      } else {
+        input.oninput = input.onchange = () => {
+          if (input.value) { codexFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete codexFlagValues[f.id]; checkbox.checked = false; }
+          saveCodexFlagState();
+        };
+      }
     }
     listEl.appendChild(row);
   }
