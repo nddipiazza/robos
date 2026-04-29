@@ -725,8 +725,25 @@ async function renderCodexDetail(provider) {
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cx-refresh">Refresh</button>
           ${provider.installed ? `<button class="btn btn-primary btn-sm" id="btn-cx-login">Login / Re-auth</button>` : ''}
-          ${provider.installed ? `<button class="btn btn-ai btn-sm" id="btn-cx-terminal">Open Terminal</button>` : ''}
+          ${provider.installed ? `
+          <div class="split-btn-group" id="cx-terminal-group">
+            <button class="btn btn-ai btn-sm" id="btn-cx-terminal">Open Codex Terminal</button>
+            <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-cx-flags-toggle" title="Configure launch flags">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>` : ''}
         </div>
+        ${provider.installed ? `
+        <div class="flags-dropdown hidden" id="cx-flags-dropdown">
+          <div class="flags-dropdown-header">
+            <span class="flags-dropdown-title">Launch Flags</span>
+            <div class="flags-mode-toggle">
+              <button class="flags-mode-btn ${codexFlagMode === 'common' ? 'active' : ''}" id="cx-flags-mode-common">Most Common</button>
+              <button class="flags-mode-btn ${codexFlagMode === 'all' ? 'active' : ''}" id="cx-flags-mode-all">All</button>
+            </div>
+          </div>
+          <div id="cx-flags-list" class="flags-list"></div>
+        </div>` : ''}
       </div>
 
       ${provider.installed ? `
@@ -762,12 +779,111 @@ async function renderCodexDetail(provider) {
   if (loginBtn) loginBtn.onclick = () => window.agents.codexLogin();
 
   const termBtn = document.getElementById('btn-cx-terminal');
-  if (termBtn) termBtn.onclick = () => window.agents.codexLaunchTerminal();
+  if (termBtn) termBtn.onclick = () => window.agents.codexLaunchTerminal(null, buildCodexArgs());
+
+  // Flags dropdown toggle
+  const flagsToggle = document.getElementById('btn-cx-flags-toggle');
+  if (flagsToggle) {
+    flagsToggle.onclick = (e) => {
+      e.stopPropagation();
+      const dd = document.getElementById('cx-flags-dropdown');
+      dd.classList.toggle('hidden');
+      if (!dd.classList.contains('hidden')) renderCodexFlagsDropdown();
+    };
+    document.getElementById('cx-flags-dropdown').addEventListener('click', e => e.stopPropagation());
+    document.getElementById('cx-flags-mode-common').onclick = () => {
+      codexFlagMode = 'common'; saveCodexFlagState(); renderCodexFlagsDropdown();
+    };
+    document.getElementById('cx-flags-mode-all').onclick = () => {
+      codexFlagMode = 'all'; saveCodexFlagState(); renderCodexFlagsDropdown();
+    };
+    renderCodexFlagsDropdown();
+  }
 
   if (provider.installed) {
     const sessions = await window.agents.codexSessions();
     renderCodexSessions(sessions);
   }
+}
+
+// ── Codex flags dropdown ─────────────────────────────────────────────────────
+
+function renderCodexFlagsDropdown() {
+  const listEl = document.getElementById('cx-flags-list');
+  if (!listEl) return;
+
+  document.getElementById('cx-flags-mode-common')?.classList.toggle('active', codexFlagMode === 'common');
+  document.getElementById('cx-flags-mode-all')?.classList.toggle('active', codexFlagMode === 'all');
+
+  const flags = codexFlagMode === 'common'
+    ? CODEX_FLAGS.filter(f => f.common)
+    : [...CODEX_FLAGS].sort((a, b) => a.label.localeCompare(b.label));
+
+  listEl.innerHTML = '';
+  for (const f of flags) {
+    const row = document.createElement('div');
+    row.className = 'flags-row';
+
+    if (f.type === 'bool') {
+      const checked = !!codexFlagValues[f.id];
+      row.innerHTML = `
+        <label class="flags-bool-label" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${checked ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          <span class="flags-label-text">${esc(f.label)}</span>
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </label>`;
+      row.querySelector('input').onchange = (e) => {
+        if (e.target.checked) codexFlagValues[f.id] = true;
+        else delete codexFlagValues[f.id];
+        saveCodexFlagState();
+      };
+    } else {
+      const val = codexFlagValues[f.id] || '';
+      const enabled = !!val;
+      row.innerHTML = `
+        <div class="flags-value-row" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          ${f.type === 'select' ? `
+            <select class="flags-select flags-value-input" data-id="${f.id}">
+              <option value="">-- choose --</option>
+              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            </select>` : `
+            <input type="text" class="flags-text-input flags-value-input"
+              data-id="${f.id}" value="${esc(String(val))}" placeholder="${esc(f.label)}"/>`}
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </div>`;
+      const checkbox = row.querySelector('.flags-checkbox');
+      const input = row.querySelector('.flags-value-input');
+      checkbox.onchange = (e) => {
+        if (!e.target.checked) { delete codexFlagValues[f.id]; input.value = ''; }
+        else if (input.value) codexFlagValues[f.id] = input.value;
+        saveCodexFlagState();
+      };
+      input.oninput = input.onchange = () => {
+        if (input.value) { codexFlagValues[f.id] = input.value; checkbox.checked = true; }
+        else { delete codexFlagValues[f.id]; checkbox.checked = false; }
+        saveCodexFlagState();
+      };
+    }
+    listEl.appendChild(row);
+  }
+}
+
+function buildCodexArgs() {
+  const args = [];
+  for (const f of CODEX_FLAGS) {
+    const val = codexFlagValues[f.id];
+    if (!val) continue;
+    if (f.type === 'bool') {
+      args.push(f.flag);
+    } else {
+      const str = String(val).trim();
+      if (str) args.push(f.flag, str);
+    }
+  }
+  return args;
 }
 
 function renderCodexSessions(sessions) {

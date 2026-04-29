@@ -23,9 +23,9 @@ contextBridge.exposeInMainWorld('agents', {
   claudeWriteSettings:   (s)   => ipcRenderer.invoke('claude-write-settings', s),
 
   // Codex
-  codexSessions:       ()     => ipcRenderer.invoke('codex-sessions'),
-  codexLaunchTerminal: (id)   => ipcRenderer.invoke('codex-launch-terminal', id),
-  codexLogin:          ()     => ipcRenderer.invoke('codex-login'),
+  codexSessions:       ()              => ipcRenderer.invoke('codex-sessions'),
+  codexLaunchTerminal: (id, extraArgs) => ipcRenderer.invoke('codex-launch-terminal', id, extraArgs),
+  codexLogin:          ()              => ipcRenderer.invoke('codex-login'),
 
   // General
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),

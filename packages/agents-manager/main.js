@@ -296,16 +296,18 @@ ipcMain.handle('codex-sessions', () => {
   return sessions;
 });
 
-ipcMain.handle('codex-launch-terminal', (_, sessionId) => {
-  let cmd;
+ipcMain.handle('codex-launch-terminal', (_, sessionId, extraArgs) => {
+  let parts;
   if (sessionId === '--resume-picker') {
-    cmd = 'codex resume';
+    parts = ['codex', 'resume'];
   } else if (sessionId) {
-    cmd = `codex resume ${sessionId}`;
+    parts = ['codex', 'resume', sessionId];
   } else {
-    cmd = 'codex';
+    parts = ['codex'];
+    if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cmd}; read -p "Press Enter to close..." x'`], {
+  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
 });
