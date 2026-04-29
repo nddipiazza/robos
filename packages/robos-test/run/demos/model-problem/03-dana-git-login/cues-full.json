@@ -1,0 +1,14 @@
+[
+  {"startMs": 500,  "label": "intro",       "narration": "Video 3: Git Login Manager. Time to wire up my git credentials from scratch."},
+  {"startMs": 5000, "label": "launch",      "narration": "I search for Git Login Manager in the App Launcher and launch it."},
+  {"startMs": 10000,"label": "four-issues", "narration": "Four issues: GitHub auth, SSH key, SSH connection, and git identity."},
+  {"startMs": 17000,"label": "gh-login",    "narration": "Clicking Login starts the GitHub device flow. Firefox opens to GitHub sign-in."},
+  {"startMs": 26000,"label": "2fa",         "narration": "After entering credentials, GitHub asks for a two-factor code."},
+  {"startMs": 40000,"label": "device-code", "narration": "Now the device activation page. I peek back at Git Login Manager to copy the one-time code."},
+  {"startMs": 49000,"label": "authorize",   "narration": "GitHub CLI is requesting access to repos, keys, and workflows. I authorize it."},
+  {"startMs": 56000,"label": "auth-green",  "narration": "Device connected. GitHub auth is now green. Two issues remain."},
+  {"startMs": 62000,"label": "gen-key",     "narration": "I generate a new Ed25519 key, labeling it with my work identity for easy identification on GitHub."},
+  {"startMs": 72000,"label": "key-ready",   "narration": "Key generated. Now I register it with GitHub so git can authenticate over SSH."},
+  {"startMs": 77000,"label": "upload",      "narration": "One click to upload the public key to GitHub."},
+  {"startMs": 84000,"label": "all-green",   "narration": "All four checks are green. SSH connected. Git Login Manager is healthy. Ready to ship."}
+]
