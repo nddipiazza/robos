@@ -157,8 +157,9 @@ uid (kebab-case unique id), displayName, givenName, sn (surname), mail, title, d
 Fill in reasonable placeholder values for any missing info. Return valid JSON only.`;
   const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
   try {
-    const raw = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
-    let json = raw.trim();
+    const result = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
+    if (!result.ok) return { ok: false, error: result.error || 'AI generation failed' };
+    let json = (result.text || '').trim();
     // strip code fences if present
     json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     const person = JSON.parse(json);
