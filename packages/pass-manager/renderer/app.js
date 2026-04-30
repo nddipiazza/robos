@@ -90,6 +90,10 @@ async function doLock() {
   const res = await window.api.lockStore();
   btn.disabled = false; btn.textContent = '🔒 Lock';
   if (res.ok) {
+    // Blank out any displayed secret so it's not visible after locking
+    document.getElementById('pw-display').value = '';
+    document.getElementById('pw-display').type = 'password';
+    document.getElementById('meta-display').textContent = '';
     await updateLockBadge();
   } else {
     alert('Lock failed: ' + res.error);
