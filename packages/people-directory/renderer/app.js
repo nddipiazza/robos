@@ -112,7 +112,7 @@ function showProfile(p) {
       </div>
       <div class="profile-actions">
         ${p.uid === myProfileUid
-          ? '<span class="me-badge-large">👤 This is you</span>'
+          ? '<button class="btn-me-active" id="btn-set-me" title="Click to unset">👤 This is you  ✕</button>'
           : `<button class="btn-secondary" id="btn-set-me">Set as My Profile</button>`}
         <button class="btn-secondary" id="btn-edit">Edit</button>
         <button class="btn-danger" id="btn-delete">Delete</button>
@@ -132,8 +132,9 @@ function showProfile(p) {
   document.getElementById('btn-delete').addEventListener('click', () => doDelete(p.uid));
   const btnMe = document.getElementById('btn-set-me');
   if (btnMe) btnMe.addEventListener('click', async () => {
-    await window.api.setMyProfile(p.uid);
-    myProfileUid = p.uid;
+    const isMe = p.uid === myProfileUid;
+    await window.api.setMyProfile(isMe ? null : p.uid);
+    myProfileUid = isMe ? null : p.uid;
     renderList();
     showProfile(p);
   });

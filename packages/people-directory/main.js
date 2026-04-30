@@ -143,7 +143,7 @@ ipcMain.handle('pd-import-ldif',     (_, ldifText) => importLdif(ldifText));
 
 ipcMain.handle('pd-get-my-profile',  ()            => loadSettings().myProfileUid || null);
 ipcMain.handle('pd-set-my-profile',  (_, uid)      => {
-  const s = loadSettings(); s.myProfileUid = uid; saveSettings(s); return { ok: true };
+  const s = loadSettings(); s.myProfileUid = uid || null; saveSettings(s); return { ok: true };
 });
 
 ipcMain.handle('pd-list-ai-providers', async () => {
@@ -153,16 +153,26 @@ ipcMain.handle('pd-list-ai-providers', async () => {
 
 ipcMain.handle('pd-ai-add-person', async (_, { prompt, providerId }) => {
   if (!aiAgent) return { ok: false, error: 'AI library not available' };
-  const systemPrompt = `You are a people-directory assistant. Given a description of one or more people, return ONLY a JSON array (no markdown, no code fences) where each element is an object with these fields:
+  const systemPrompt = `You are a people-directory assistant. Given a description of one or more people, return ONLY a JSON array where each element is an object with these fields:
 uid (kebab-case unique id), displayName, firstName, lastName, email, title, department, phone, location, username, bio.
-If only one person is described, still return a JSON array with one element. Fill in reasonable values for any missing fields. Return valid JSON only.`;
+If only one person is described, still return a JSON array with one element. Fill in reasonable values for any missing fields.
+
+IMPORTANT OUTPUT RULES:
+- Output ONLY the raw JSON array — no markdown fences, no explanation, no comments
+- Use plain ASCII text only — no emoji, no Unicode symbols, no special characters
+- Do not include any ANSI escape codes or control characters`;
   const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
   try {
     const result = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
     if (!result.ok) return { ok: false, error: result.error || 'AI generation failed' };
-    let json = (result.text || '').trim();
-    // strip code fences if present
+    // Strip ANSI escape codes that Copilot CLI can inject
+    // eslint-disable-next-line no-control-regex
+    let json = (result.text || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '').trim();
+    // Strip markdown fences
     json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    // Extract first JSON array if there is leading/trailing prose
+    const arrMatch = json.match(/\[[\s\S]*\]/);
+    if (arrMatch) json = arrMatch[0];
     let parsed = JSON.parse(json);
     // Normalize: handle both single object and array responses
     if (!Array.isArray(parsed)) parsed = [parsed];

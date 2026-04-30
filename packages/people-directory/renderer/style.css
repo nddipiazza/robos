@@ -104,3 +104,5 @@ code { background: #161b22; border: 1px solid #30363d; border-radius: 3px; paddi
 #ai-status.success { color: #4caf50; }
 
 .me-badge-large { display: inline-flex; align-items: center; background: #00bcd4; color: #0d1117; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
+.btn-me-active { background: #00bcd4; border: 1px solid #00bcd4; color: #0d1117; border-radius: 4px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-me-active:hover { background: #e53e3e; border-color: #e53e3e; color: #fff; }
