@@ -214,6 +214,12 @@ ipcMain.handle('gds-open-folder', (_, dir) => {
 // ── AI: Create group from natural-language prompt ────────────────────────────
 const GROUP_SCHEMA_PROMPT = `You are a RobOS Group Manager assistant. Generate a complete developer group configuration as a single JSON object.
 
+IMPORTANT OUTPUT RULES:
+- Output ONLY the raw JSON object — no markdown fences, no explanation, no comments
+- Use plain ASCII text only — no emoji, no Unicode symbols, no special characters
+- All string values must use printable ASCII characters only
+- Do not include any ANSI escape codes or control characters
+
 The JSON must match this exact schema (all fields optional except id and name):
 {
   "id": "lowercase-hyphen-id",
@@ -243,7 +249,7 @@ The JSON must match this exact schema (all fields optional except id and name):
 Rules:
 - id must be lowercase letters, numbers, hyphens only
 - Include only what the user described — do not invent details not mentioned
-- Output ONLY the raw JSON object, no markdown fences, no explanation
+- Output ONLY the raw JSON object, no markdown fences, no explanation, no emoji
 `;
 
 // ── AI provider list ──────────────────────────────────────────────────────────
@@ -337,13 +343,17 @@ ipcMain.handle('gm-ai-create-group', async (_, { prompt, providerId }) => {
 });
 
 function parseGroupFromAIOutput(raw) {
-  const stripped = (raw || '').replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+  // Strip ANSI escape codes (colour, cursor, etc.) that Copilot CLI can inject
+  // eslint-disable-next-line no-control-regex
+  const noAnsi = (raw || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '');
+  // Strip markdown fences and trim
+  const stripped = noAnsi.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
   // Try direct parse first
   try {
     const obj = JSON.parse(stripped);
     if (obj && obj.id && obj.name) return { ok: true, group: normaliseGroup(obj) };
   } catch {}
-  // Try to extract first JSON object
+  // Try to extract first JSON object (handles leading/trailing prose)
   const match = stripped.match(/\{[\s\S]*\}/);
   if (match) {
     try {
