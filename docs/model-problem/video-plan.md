@@ -58,7 +58,7 @@ Each row links to the per-video doc in [`videos/`](videos/) where we track scrip
 | [01](videos/01-dana-setup.md) | Dana sets up RobOS for Acme | Dana | Setup | 3:00 | Task Servers, Workflow Studio, Git Projects, RobOS Preferences |
 | [02](videos/02-pat-epic-breakdown.md) | Pat breaks the rewrite into 10 stories | Pat | Setup | 2:30 | Issue Manager, Context Manager, Workflow Studio |
 | [03](videos/03-jordan-ci-setup.md) | Jordan wires up CI/CD + npm publishing | Jordan | Setup | 2:30 | Git Projects, Pass Manager, CI Monitor, Automation Studio |
-| [04](videos/04-dana-copilot-login.md) | Dana connects GitHub Copilot | Dana | Setup | 1:30 | App Launcher, Agents Manager |
+| [04](videos/04-dana-copilot-login.md) | Dana configures RobOS Agents (login, sessions, default agent) | Dana | Setup | 3:06 | App Launcher, Agents Manager |
 | [05](videos/04-alex-onboarding.md) | Alex's first day on the project | Alex | Setup | 3:00 | Security Setup, Pass Manager, Dev Tools, Git Projects, Workspace Manager |
 | [05](videos/05-p1-proto-metadata.md) | **P1 — Proto Metadata API** (*hero episode, full flow*) | Alex ↔ Jordan ↔ automated | Engineering | 6:00 | AI Agent Manager, Task Board, Issue Manager, PR Review, CI Monitor, Deploy Tracker, Notifications |
 | [06](videos/06-p2-default-values.md) | P2 — Default value generator | Alex | Engineering | 4:00 | Task Board, AI Agent Manager, PR Review |

@@ -153,3 +153,31 @@ npm run test:e2e # Playwright component tests
 ```
 
 Jordan also configures **project secrets** via Pass Manager — `GITHUB_TOKEN`, `NPM_TOKEN`, and `JIRA_API_TOKEN` — which will be auto-distributed to developers during onboarding.
+
+---
+
+## 1.5 — Dana Configures RobOS Agents
+
+<img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Agents Manager**
+
+Before the team can use any AI-powered feature, RobOS needs an active AI agent. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the **default AI Agent** for the team.
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/whtovwKcpV8"
+    title="RobOS Model Problem · 04 — Dana configures RobOS Agents"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+**Steps:**
+
+1. Open App Launcher → **Agents Manager** — GitHub Copilot shows not logged in; Codex and Claude are already authenticated.
+2. **Login** to GitHub Copilot via the Agents panel.
+3. Open a **Copilot terminal** and show session resume and custom CLI parameters.
+4. Name the session **"Dana's Session"** to demonstrate named sessions.
+5. Set **GitHub Copilot as the default AI Agent** — every AI textarea in RobOS now routes through it.
+
+Every AI-powered feature in the platform — Issue Manager, Workflow Studio, Git Projects, Dev Central — is now active for the whole team.

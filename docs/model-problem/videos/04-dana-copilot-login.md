@@ -1,58 +1,72 @@
 ---
-title: "04 — Dana connects GitHub Copilot"
+title: "04 — Dana configures RobOS Agents"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
 nav_order: 4
 ---
 
-# Video 04 — Dana connects GitHub Copilot
+# Video 04 — Dana configures RobOS Agents
 {: .no_toc }
 
 **Protagonist:** Dana (Dev Manager)
 **Arc:** Setup
-**Target length:** 1:30
+**Actual length:** 3:06
 **Apps in frame:** App Launcher · Agents Manager
+**YouTube:** [https://youtu.be/whtovwKcpV8](https://youtu.be/whtovwKcpV8)
+
+---
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/whtovwKcpV8"
+    title="RobOS Model Problem · 04 — Dana configures RobOS Agents"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+---
 
 ## Story beat
 
-Git is wired up. But every AI textarea in RobOS — in Issue Manager, Workflow Studio, Git Projects, and everywhere else — needs an active AI provider before it can do anything useful. Dana opens Agents Manager, logs in to GitHub Copilot, and sets it as the active provider. One step, done for everyone on the team.
+Git is wired up. Now RobOS needs an active AI agent before the rest of the team can use any AI-powered feature. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the default AI Agent for the whole team.
 
-## Pre-seeded state
+## What happens in the video
 
-- `gh` CLI is installed and authenticated (done in Video 03 — Git Login Manager).
-- `gh copilot` extension is installed (done in Video 02 — Dev Tools).
-- Agents Manager detects GitHub Copilot as installed but **not yet authenticated** (yellow dot).
+| Time | Scene |
+|:-----|:------|
+| 0:06 | Dana opens App Launcher and navigates to Agents |
+| 0:09 | Agents Manager is open — GitHub Copilot shows **not logged in**; Codex and Claude are already authenticated |
+| 0:13 | Dana logs in to GitHub Copilot via the Agents Manager |
+| 1:21 | Back in Agents — Copilot is now **logged in** and green |
+| 1:34 | Dana opens a Copilot terminal session |
+| 1:42 | She shows how to resume a previous session |
+| 1:52 | Custom CLI parameters — passing flags to the Copilot CLI for different behavior |
+| 2:10 | She names the new session **"Dana's Session"** |
+| 2:30 | The session appears in the list with the custom name |
+| 2:42 | Same workflow demonstrated for Codex |
+| 2:55 | Dana sets **GitHub Copilot as the default AI Agent** for RobOS |
 
-## Scene list
-
-1. **Open Agents Manager (0:00–0:15)** — Dana opens App Launcher, types "agents", launches Agents Manager. The sidebar shows GitHub Copilot with a yellow dot (installed, not authenticated) and Claude Code with a red dot (not installed).
-
-2. **Click Login (0:15–0:30)** — Dana clicks the GitHub Copilot row. The detail panel shows: gh CLI version, Copilot extension version, "not logged in". She clicks **Login / Re-auth**. A Tilix terminal opens running `gh auth login`.
-
-3. **Device flow (0:30–1:00)** — Dana selects "GitHub.com" → "HTTPS" → the device code appears. Firefox opens to `github.com/login/device`. She enters the code, authorizes. *(Same flow viewers saw in Video 03 — this time it's for Copilot-scoped auth.)*
-
-4. **All green (1:00–1:15)** — Back in Agents Manager, Dana clicks **Refresh**. GitHub Copilot dot turns green. Status: "Connected". Her username shows.
-
-5. **Set as Active Provider (1:15–1:30)** — Dana clicks **Set as Active**. The "ACTIVE PROVIDER" badge appears. Every AI textarea in RobOS will now route through GitHub Copilot.
-
-## Narration cues (draft)
+## Narration
 
 | # | At | Text |
-|:-:|:-:|:-----|
-| 1 | 0:00 | Git is set up. Now RobOS needs to know which AI agent to use. That's what Agents Manager is for. |
-| 2 | 0:18 | GitHub Copilot is installed but not yet logged in. Dana clicks Login — a terminal opens with the gh auth flow. |
-| 3 | 0:35 | The device flow again — same as Git Login Manager, just a different scope: Copilot access. |
-| 4 | 1:02 | Refresh. Green dot. Connected. Dana sets GitHub Copilot as the active provider. |
-| 5 | 1:18 | Done. Every AI textarea in RobOS — Issue Manager, Workflow Studio, Git Projects — now has a working agent behind it. |
-
-## Blockers / ready-checklist
-
-- [ ] Confirm `gh copilot` extension is installed in Dana's VM session (Video 02 Dev Tools should have covered this).
-- [ ] Confirm `gh auth login` picks up the correct scopes for Copilot (`copilot` scope or via the GitHub app authorization).
-- [ ] Verify Agents Manager yellow→green transition works on Refresh after `gh auth login` completes.
+|:-:|:--:|:-----|
+| 1 | 0:06 | Opening the RobOS App Launcher and selecting Agents. |
+| 2 | 0:09 | RobOS Agents is open. GitHub Copilot shows as not logged in, while the other agents are already logged in. |
+| 3 | 0:13 | Logging in to GitHub Copilot. |
+| 4 | 1:21 | Back in the RobOS Agents app — GitHub Copilot is now logged in. |
+| 5 | 1:34 | Opening a Copilot terminal. |
+| 6 | 1:42 | Here I show how to resume a previous session. |
+| 7 | 1:52 | You can also pass custom parameters to the Copilot CLI for different behavior. |
+| 8 | 2:10 | Naming this session: Dana's Session. |
+| 9 | 2:30 | The session we created came up, named Dana's. |
+| 10 | 2:42 | The same workflow works for Codex as well. |
+| 11 | 2:55 | Setting GitHub Copilot as the default AI Agent for RobOS. |
 
 ## Deliverables produced by this video
 
 - Dana's session has an authenticated GitHub Copilot active provider.
-- All subsequent videos can use AI textareas without a separate auth step.
+- GitHub Copilot is pinned as the **default AI Agent** for RobOS.
+- All subsequent videos can use AI-powered features without a separate auth step.
