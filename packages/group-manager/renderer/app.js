@@ -99,16 +99,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // AI Create panel
   initAIPanel();
-
-  // Wire @-mention typeahead for all robos-ai-textarea elements
-  customElements.whenDefined('robos-ai-textarea').then(() => {
-    document.querySelectorAll('robos-ai-textarea').forEach(el => {
-      el.addEventListener('robos-path-query', async (e) => {
-        const r = await window.api.listPath(e.detail.query);
-        if (r && r.ok) el._showMentions(r.items);
-      });
-    });
-  });
 });
 
 // ── Groups list ───────────────────────────────────────────────────────────────
@@ -678,6 +668,20 @@ function initAIPanel() {
   const textarea = document.getElementById('ai-prompt');
   const btn      = document.getElementById('ai-generate-btn');
   const status   = document.getElementById('ai-status');
+
+  // Wire @-mention file typeahead — match people-directory pattern exactly
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      if (textarea && textarea.addEventListener) {
+        textarea.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.api.listPath(e.detail.query);
+            if (r && r.ok && textarea._showMentions) textarea._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
 
   // Populate the agent dropdown from RobOS Agents config
   window.api.listAIProviders().then(({ activeId, activeName, providers }) => {
