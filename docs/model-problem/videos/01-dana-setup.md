@@ -13,7 +13,18 @@ nav_order: 1
 **Arc:** Setup
 **Target length:** 3:00
 **Apps in frame:** Task Servers · Workflow Studio · Git Projects · RobOS Preferences
-**Status:** ⬜ Not yet recorded — first take pulled, retake pending
+**YouTube:** [https://youtu.be/jB1YQYEA-jA](https://youtu.be/jB1YQYEA-jA)
+**Status:** ✅ Published
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/jB1YQYEA-jA"
+    title="RobOS Model Problem · 01 — Dana sets up RobOS for Acme"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ## Table of contents
 {: .no_toc .text-delta }
