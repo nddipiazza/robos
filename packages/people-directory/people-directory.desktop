@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-RobOS-Category=RobOS People
+X-RobOS-App=true
+Name=RobOS People Directory
+Comment=RobOS People Directory
+Exec=/usr/local/bin/robos-launch people-directory
+Icon=/usr/local/share/robos/people-directory/icon.svg
+Terminal=false
+Type=Application
+Categories=Office;
+StartupWMClass=people-directory

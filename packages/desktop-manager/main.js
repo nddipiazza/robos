@@ -65,6 +65,8 @@ const APPS = [
   { id: 'workflow-studio',         label: 'Workflow Studio',        icon: '🎯', desc: 'Workflow & issue tracker',        category: 'RobOS Dev' },
   { id: 'task-servers',            label: 'Task Servers',           icon: '🔗', desc: 'Jira/GitHub connections',         category: 'RobOS Dev' },
   { id: 'tech-workbench',          label: 'TPS Workbench',          icon: '🛠️', desc: 'Technical problem solver',        category: 'RobOS Dev' },
+  // People
+  { id: 'people-directory',         label: 'People Directory',       icon: '👤', desc: 'Team people directory',             category: 'RobOS People' },
   // AI
   { id: 'agent-scheduler',         label: 'Agent Scheduler',        icon: '⏰', desc: 'Schedule AI agent jobs',          category: 'RobOS AI' },
   { id: 'agents-manager',          label: 'Agents Manager',         icon: '🤖', desc: 'Manage agent sessions',           category: 'RobOS AI' },
@@ -114,6 +116,8 @@ const APP_BINS = {
   'agents-manager':          mkBin('agents-manager'),
   'context-manager':         mkBin('context-manager'),
   'claude-console':          mkBin('claude-console'),
+  // People
+  'people-directory':        mkBin('people-directory'),
 };
 
 const running = {};

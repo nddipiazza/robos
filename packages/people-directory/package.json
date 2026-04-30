@@ -1,0 +1,9 @@
+{
+  "name": "robos-people-directory",
+  "version": "0.1.0",
+  "description": "RobOS People Directory — manage your team directory with LDAP/filesystem backend",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
