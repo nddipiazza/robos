@@ -152,9 +152,9 @@ ipcMain.handle('pd-list-ai-providers', async () => {
 
 ipcMain.handle('pd-ai-add-person', async (_, { prompt, providerId }) => {
   if (!aiAgent) return { ok: false, error: 'AI library not available' };
-  const systemPrompt = `You are a people-directory assistant. Given a description of a person, return ONLY a JSON object (no markdown, no code fences) with these fields:
-uid (kebab-case unique id), displayName, givenName, sn (surname), mail, title, department, ou, telephoneNumber.
-Fill in reasonable placeholder values for any missing info. Return valid JSON only.`;
+  const systemPrompt = `You are a people-directory assistant. Given a description of one or more people, return ONLY a JSON array (no markdown, no code fences) where each element is an object with these fields:
+uid (kebab-case unique id), displayName, firstName, lastName, email, title, department, phone, location, username, bio.
+If only one person is described, still return a JSON array with one element. Fill in reasonable values for any missing fields. Return valid JSON only.`;
   const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
   try {
     const result = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
@@ -162,11 +162,22 @@ Fill in reasonable placeholder values for any missing info. Return valid JSON on
     let json = (result.text || '').trim();
     // strip code fences if present
     json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-    const person = JSON.parse(json);
-    if (!person.uid) person.uid = `person-${Date.now()}`;
-    if (!person.displayName) person.displayName = `${person.givenName || ''} ${person.sn || ''}`.trim() || person.uid;
-    savePerson(person);
-    return { ok: true, person };
+    let parsed = JSON.parse(json);
+    // Normalize: handle both single object and array responses
+    if (!Array.isArray(parsed)) parsed = [parsed];
+    const people = [];
+    for (const person of parsed) {
+      if (!person.uid) person.uid = `person-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+      if (!person.displayName) person.displayName = `${person.firstName || person.givenName || ''} ${person.lastName || person.sn || ''}`.trim() || person.uid;
+      // Normalize LDAP field names to app field names
+      if (!person.firstName && person.givenName) { person.firstName = person.givenName; delete person.givenName; }
+      if (!person.lastName && person.sn) { person.lastName = person.sn; delete person.sn; }
+      if (!person.email && person.mail) { person.email = person.mail; delete person.mail; }
+      if (!person.phone && person.telephoneNumber) { person.phone = person.telephoneNumber; delete person.telephoneNumber; }
+      savePerson(person);
+      people.push(person);
+    }
+    return { ok: true, people, person: people[0] };
   } catch (e) {
     return { ok: false, error: e.message || String(e) };
   }

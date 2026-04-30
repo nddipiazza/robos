@@ -313,10 +313,13 @@ function initAIPanel() {
       const providerId = select.value || null;
       const result = await window.api.aiAddPerson(prompt, providerId);
       if (!result.ok) { showStatus(result.error || 'AI generation failed.', 'error'); return; }
-      activeUid = result.person.uid;
+      const people = result.people || [result.person];
       await reload();
-      selectPerson(result.person.uid);
-      showStatus(`✅ Added "${result.person.displayName}"`, 'success');
+      // Select the first person added
+      activeUid = people[0].uid;
+      selectPerson(people[0].uid);
+      const names = people.map(p => p.displayName).join(', ');
+      showStatus(`✅ Added ${people.length} ${people.length === 1 ? 'person' : 'people'}: ${names}`, 'success');
       textarea.value = '';
     } catch (e) {
       showStatus(e.message || String(e), 'error');
