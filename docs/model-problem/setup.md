@@ -8,7 +8,7 @@ nav_order: 1
 # Phase 1: Company & Environment Setup
 {: .no_toc }
 
-Dana (Dev Manager) provisions the team and configures the development infrastructure.
+Dana (Dev Manager) provisions the team and configures the development infrastructure. This phase is captured in **five published videos** (01–05) — each linked from the corresponding section below.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -19,9 +19,9 @@ Dana (Dev Manager) provisions the team and configures the development infrastruc
 
 ---
 
-## 1.1 — Create RobOS Users
+## Cast of users
 
-Dana provisions the RobOS VM and creates accounts for the team. Each user gets a RobOS desktop login, `~/.config/robos/` profile, and GPG/SSH keys via the **Security Setup** app on first login.
+Each role logs in as a separate Linux user on the same RobOS VM. Each user has their own RobOS desktop login, `~/.config/robos/` profile, and GPG/SSH keys (initialized via the **Security Setup** app on first login).
 
 | User | Login | Role in RobOS |
 |:-----|:------|:--------------|
@@ -30,22 +30,34 @@ Dana provisions the RobOS VM and creates accounts for the team. Each user gets a
 | Jordan | `jordan@acme` | Dev Lead — code review, architecture decisions, PR approvals |
 | Alex | `alex@acme` | Developer — task implementation, AI-assisted coding |
 
-Each user's **RobOS Preferences** stores their role, notification preferences, and AI model settings.
-
 ---
 
-## 1.2 — Dana Sets Up Jira
+## 1.1 — Dana sets up RobOS for Acme
 
-<img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" alt="Task Servers" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Task Servers**
+<img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" alt="Task Servers" style="width: 32px; height: 32px; vertical-align: middle;"> **Apps:** Task Servers · Workflow Studio · Git Projects · RobOS Preferences
 
-Dana opens the Task Servers app and configures Jira as the team's task tracking system:
+📺 **[Video 01 — Dana sets up RobOS for Acme]({{ site.baseurl }}{% link model-problem/videos/01-dana-setup.md %})**
 
-![Task Servers]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/gVX_qDteFu8"
+    title="RobOS Model Problem · 01 — Dana sets up RobOS for Acme"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
-1. **Add connection**: Jira Cloud instance `acme.atlassian.net`
-2. **Authenticate**: OAuth 2.0 flow — Dana authorizes RobOS to access the Jira project
-3. **Map project**: Jira project `BBF` (Buildbarn Forms) to RobOS project
-4. **Map statuses**: Jira statuses to RobOS workflow stages:
+In one sitting, Dana hooks RobOS up to Jira, designs the workflow every ticket will follow, and registers the two repos the team will work on.
+
+### Jira (Task Servers)
+
+Dana opens **Task Servers** and configures Jira as the team's task tracking system:
+
+1. **Add connection** — Jira Cloud instance `acme.atlassian.net`
+2. **Authenticate** — token loaded from the Pass Manager, never pasted
+3. **Map project** — Jira project `KAN` (Buildbarn Forms) to a RobOS project
+4. **Map statuses** — Jira statuses to RobOS workflow stages:
 
 | Jira Status | RobOS Stage |
 |:------------|:------------|
@@ -55,18 +67,11 @@ Dana opens the Task Servers app and configures Jira as the team's task tracking 
 | Deploying | `deploying` |
 | Done | `deployed` |
 
-{:style="counter-reset:none"}
-5. **Sync**: Initial sync pulls all existing Jira issues into RobOS. Bidirectional sync enabled.
+Initial sync pulls all existing Jira issues into RobOS. Bidirectional sync stays enabled.
 
----
-
-## 1.3 — Dana Creates the Task Workflow
-
-<img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" alt="Workflow Studio" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Workflow Studio**
+### Task workflow (Workflow Studio)
 
 Dana defines the task workflow that all stories and bugs will follow. Every transition is **event-driven** — when a PR is created, the task automatically moves to `in_review`. No manual status updates needed.
-
-![Workflow Studio]({{ '/assets/images/screenshots/workflow-studio.png' | relative_url }})
 
 ```yaml
 story:
@@ -100,7 +105,7 @@ story:
       auto_enter: deploy_pipeline_completed
 ```
 
-These events flow through the **Event Bus** and the **Rule Engine** matches them to status transitions.
+Events flow through the **Event Bus** and the **Rule Engine** matches them to status transitions.
 
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
@@ -119,20 +124,16 @@ graph LR
     style F fill:#10b981,stroke:#059669,color:#fff
 ```
 
----
+### Repos (Git Projects)
 
-## 1.4 — Jordan Sets Up Git Projects
-
-<img src="{{ '/assets/images/icons/workspace-manager.svg' | relative_url }}" alt="Git Projects" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Git Projects**
-
-Jordan (Dev Lead) adds the two repositories:
+Dana adds the two repositories the team will work on:
 
 | Repository | Purpose |
 |:-----------|:--------|
-| buildbarn-forms | React + TypeScript component library — parses proto schemas and generates validated configuration forms |
-| buildbarn-forms-proto | Protobuf definitions for all Buildbarn configuration messages (worker, storage, scheduler, browser) |
+| `buildbarn-forms` | React + TypeScript component library — parses proto schemas and generates validated configuration forms |
+| `buildbarn-forms-proto` | Protobuf definitions for all Buildbarn configuration messages (worker, storage, scheduler, browser) |
 
-For each repo, Jordan writes a `ROBOS.md` file that tells AI agents and the onboarding system how to set up, build, and test the project:
+Each repo carries a `ROBOS.md` that tells AI agents and the onboarding system how to set up, build, and test the project:
 
 ```markdown
 # ROBOS.md — buildbarn-forms
@@ -152,25 +153,25 @@ npm test         # Jest unit tests
 npm run test:e2e # Playwright component tests
 ```
 
-Jordan also configures **project secrets** via Pass Manager — `GITHUB_TOKEN`, `NPM_TOKEN`, and `JIRA_API_TOKEN` — which will be auto-distributed to developers during onboarding.
-
 ---
 
-## 1.5 — Dana Configures RobOS Agents
+## 1.2 — Dana configures RobOS Agents
 
-<img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App: Agents Manager**
+<img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Agents Manager
 
-Before the team can use any AI-powered feature, RobOS needs an active AI agent. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the **default AI Agent** for the team.
+📺 **[Video 02 — Dana configures RobOS Agents]({{ site.baseurl }}{% link model-problem/videos/02-dana-robos-agents.md %})**
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/whtovwKcpV8"
-    title="RobOS Model Problem · 04 — Dana configures RobOS Agents"
+    src="https://www.youtube-nocookie.com/embed/e4JiiQ7xER8"
+    title="RobOS Model Problem · 02 — Dana configures RobOS Agents"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
+
+Before the team can use any AI-powered feature, RobOS needs an active AI agent. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the **default AI Agent** for the team.
 
 **Steps:**
 
@@ -180,4 +181,86 @@ Before the team can use any AI-powered feature, RobOS needs an active AI agent. 
 4. Name the session **"Dana's Session"** to demonstrate named sessions.
 5. Set **GitHub Copilot as the default AI Agent** — every AI textarea in RobOS now routes through it.
 
-Every AI-powered feature in the platform — Issue Manager, Workflow Studio, Git Projects, Dev Central — is now active for the whole team.
+Every AI-powered feature — Issue Manager, Workflow Studio, Git Projects, Dev Central — is now active for the whole team. **This step blocks every later episode**, which is why it lands so early in the setup arc.
+
+---
+
+## 1.3 — Dana sets up People Manager
+
+<img src="{{ '/assets/images/icons/people-directory.svg' | relative_url }}" alt="People Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** People Manager
+
+📺 **[Video 03 — Dana sets up People Manager]({{ site.baseurl }}{% link model-problem/videos/03-dana-people-manager.md %})**
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/ZdvQwFQwwbg"
+    title="RobOS Model Problem · 03 — Dana sets up People Manager"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+People Manager is where every RobOS user gets created — name, email, role, GitHub login, the "this is me" marker. The hero feature: an AI textarea that creates one or more users from a plain-English prompt or an at-mentioned external file (a roster, a contractor list, an org chart).
+
+Dana drops the team roster into the AI prompt and gets every user from the document created in one shot.
+
+---
+
+## 1.4 — Dana sets up Group Manager
+
+<img src="{{ '/assets/images/icons/group-manager.svg' | relative_url }}" alt="Group Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Group Manager
+
+📺 **[Video 04 — Dana sets up Group Manager]({{ site.baseurl }}{% link model-problem/videos/04-dana-group-manager.md %})**
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/mxnPjiJ0G8I"
+    title="RobOS Model Problem · 04 — Dana sets up Group Manager"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+Group Manager owns the developer side of every team:
+
+- **Git Projects** — which repos a group owns
+- **Software Installations** — toolchains per group
+- **Onboarding steps** — the AI's runbook for new joiners
+- **Secrets** — per-group credential vault (`GITHUB_TOKEN`, `NPM_TOKEN`, `JIRA_API_TOKEN`)
+- **CI management** — environments visible in RobOS CI
+- **Members** — who's on the team and what role
+- **Workspaces** — RobOS Workspaces owned by the group
+
+Same hero pattern as People Manager: an AI textarea drafts a whole group — repos, members, software, onboarding steps — from a prompt or an @-mentioned external file.
+
+---
+
+## 1.5 — Dana installs the team toolchain
+
+<img src="{{ '/assets/images/icons/dev-tools.svg' | relative_url }}" alt="Dev Tools" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Dev Tools
+
+📺 **[Video 05 — Dana installs the team toolchain]({{ site.baseurl }}{% link model-problem/videos/05-dana-dev-tools.md %})**
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/0QWB7I5e9Mw"
+    title="RobOS Model Problem · 05 — Dana installs the team toolchain"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+People are in (1.3), groups are in (1.4). Now Dana provisions the **toolchain** every developer on the team will share — the IDEs, CLI tools, and cloud SDKs that show up the moment a teammate logs in. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions.
+
+This is the bridge between **manager setup** (videos 01–05) and **developer onboarding** (Phase 3, Alex). Without it, the team's first login would land in a workspace with no IDE, no `gh`, no SDKs — and every developer would set up their own.
+
+---
+
+## What's next
+
+With Phase 1 complete, RobOS knows the people, the groups, the repos, the workflow, the AI agent, and the toolchain. Pat takes over in **[Phase 2: Requirements]({{ site.baseurl }}{% link model-problem/requirements.md %})** to break the rewrite into ten engineering stories.
+
+For the full 20-episode video series — Pat's epic breakdown, Jordan's CI/CD setup, Alex's onboarding, and the ten engineering phases — see the **[Video Production Plan]({{ site.baseurl }}{% link model-problem/video-plan.md %})**.
