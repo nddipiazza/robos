@@ -1,12 +1,12 @@
 ---
-title: "02 — Dana configures RobOS Agents"
+title: "03 — Dana configures RobOS Agents"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 2
+nav_order: 3
 ---
 
-# Video 02 — Dana configures RobOS Agents
+# Video 03 — Dana configures RobOS Agents
 {: .no_toc }
 
 **Protagonist:** Dana (Dev Manager)
@@ -32,7 +32,7 @@ nav_order: 2
 
 ## Story beat
 
-Git is wired up. Now RobOS needs an active AI agent before the rest of the team can use any AI-powered feature. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the default AI Agent for the whole team.
+Dev tools are installed. Now RobOS needs an active AI agent before Dana can use any AI-powered feature — including the AI textareas in People Manager and Group Manager. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the default AI Agent for the whole team.
 
 ## What happens in the video
 

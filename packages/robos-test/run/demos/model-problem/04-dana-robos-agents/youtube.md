@@ -1,9 +1,9 @@
-# Model Problem · 05 — Dana uses RobOS Agents Manager
+# Model Problem · 04 — Dana uses RobOS Agents Manager
 
 ## YouTube title
 
 ```
-RobOS Model Problem · 05 — Agents Manager: Login, Sessions & Default Agent
+RobOS Model Problem · 04 — Agents Manager: Login, Sessions & Default Agent
 ```
 
 ## Description
@@ -27,7 +27,7 @@ Chapters
 2:42  Same workflow for Codex
 2:55  Set GitHub Copilot as default AI Agent
 
-This is episode 05 of the RobOS Model Problem series — four people, one fresh RobOS install, one shipped React library.
+This is episode 04 of the RobOS Model Problem series — four people, one fresh RobOS install, one shipped React library.
 
 Links
 Series playlist: https://www.youtube.com/playlist?list=<<PLAYLIST_ID>>

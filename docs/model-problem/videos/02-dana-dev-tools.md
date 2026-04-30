@@ -1,12 +1,12 @@
 ---
-title: "05 — Dana installs the team toolchain"
+title: "02 — Dana installs the team toolchain"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 5
+nav_order: 2
 ---
 
-# Video 05 — Dana installs the team toolchain
+# Video 02 — Dana installs the team toolchain
 {: .no_toc }
 
 **Protagonist:** Dana (Dev Manager)
@@ -28,7 +28,7 @@ nav_order: 5
 
 ## Story beat
 
-People are in (video 03), groups are in (video 04). Now Dana provisions the **toolchain** every developer on the team will share — the IDEs, CLI tools, and cloud SDKs that show up the moment a teammate logs in. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions.
+RobOS is configured (video 01). Before Dana can use any AI-powered feature or set up people and groups, she provisions the **toolchain** every developer on the team will share — the IDEs, CLI tools, and cloud SDKs that show up the moment a teammate logs in. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions.
 
 ## Chapters
 
@@ -45,7 +45,7 @@ People are in (video 03), groups are in (video 04). Now Dana provisions the **to
 
 ## Why this video matters
 
-This is the bridge between **manager setup** (videos 01–04) and **developer onboarding** (video 08, Alex). Without it, the team's first login would land in a workspace with no IDE, no `gh`, no SDKs — and every developer would set up their own. Dev Tools makes the toolchain a configuration artifact, not a tribal-knowledge ritual.
+This is the bridge between the initial RobOS setup (video 01) and the AI-powered steps that follow (Agents, People Manager, Group Manager). Without the CLI tools installed, Dana can't authenticate agents or set up the team. Dev Tools makes the toolchain a configuration artifact, not a tribal-knowledge ritual.
 
 ## Deliverables produced by this video
 

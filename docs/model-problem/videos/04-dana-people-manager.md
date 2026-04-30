@@ -1,12 +1,12 @@
 ---
-title: "03 — Dana sets up People Manager"
+title: "04 — Dana sets up People Manager"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 3
+nav_order: 4
 ---
 
-# Video 03 — Dana sets up People Manager
+# Video 04 — Dana sets up People Manager
 {: .no_toc }
 
 **Protagonist:** Dana (Dev Manager)

@@ -49,5 +49,5 @@ Split screen: left half shows the LightDM login screen with "dana" typed in; rig
 ## End screen
 
 - Subscribe card at 2:40
-- Video card → Video 02 (Pat breaks down the rewrite)
+- Video card → Video 02 (Dana installs dev tools)
 - Playlist card → Model Problem series

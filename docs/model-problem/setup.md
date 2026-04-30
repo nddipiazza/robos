@@ -100,23 +100,43 @@ npm run test:e2e # Playwright component tests
 
 ---
 
-## 1.2 — Dana configures RobOS Agents
+## 1.2 — Dana installs the team toolchain
 
-<img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Agents Manager
+<img src="{{ '/assets/images/icons/dev-tools.svg' | relative_url }}" alt="Dev Tools" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Dev Tools
 
-📺 **[Video 02 — Dana configures RobOS Agents]({{ site.baseurl }}{% link model-problem/videos/02-dana-robos-agents.md %})**
+📺 **[Video 02 — Dana installs the team toolchain]({{ site.baseurl }}{% link model-problem/videos/02-dana-dev-tools.md %})**
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/ZubntVBA6Pw"
-    title="RobOS Model Problem · 02 — Dana configures RobOS Agents"
+    src="https://www.youtube-nocookie.com/embed/0QWB7I5e9Mw"
+    title="RobOS Model Problem · 02 — Dana installs the team toolchain"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
-Before the team can use any AI-powered feature, RobOS needs an active AI agent. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the **default AI Agent** for the team.
+Before Dana can authenticate agents or use any AI feature, the CLI tools must be in place. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions. **This step unblocks 1.3 (Agents) which unblocks every AI-powered step that follows.**
+
+---
+
+## 1.3 — Dana configures RobOS Agents
+
+<img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Agents Manager
+
+📺 **[Video 03 — Dana configures RobOS Agents]({{ site.baseurl }}{% link model-problem/videos/03-dana-robos-agents.md %})**
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/ZubntVBA6Pw"
+    title="RobOS Model Problem · 03 — Dana configures RobOS Agents"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+Dev tools are installed. Now RobOS needs an active AI agent before Dana can use any AI-powered feature — including the AI textareas in People Manager and Group Manager. Dana opens Agents Manager, logs in to GitHub Copilot, explores session management and custom CLI parameters, and pins Copilot as the **default AI Agent** for the team.
 
 **Steps:**
 
@@ -126,20 +146,20 @@ Before the team can use any AI-powered feature, RobOS needs an active AI agent. 
 4. Name the session **"Dana's Session"** to demonstrate named sessions.
 5. Set **GitHub Copilot as the default AI Agent** — every AI textarea in RobOS now routes through it.
 
-Every AI-powered feature — Issue Manager, Workflow Studio, Git Projects, Dev Central — is now active for the whole team. **This step blocks every later episode**, which is why it lands so early in the setup arc.
+Every AI-powered feature — People Manager, Group Manager, Issue Manager, Workflow Studio, Git Projects, Dev Central — is now active for the whole team. **This step blocks every later episode.**
 
 ---
 
-## 1.3 — Dana sets up People Manager
+## 1.4 — Dana sets up People Manager
 
 <img src="{{ '/assets/images/icons/people-directory.svg' | relative_url }}" alt="People Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** People Manager
 
-📺 **[Video 03 — Dana sets up People Manager]({{ site.baseurl }}{% link model-problem/videos/03-dana-people-manager.md %})**
+📺 **[Video 04 — Dana sets up People Manager]({{ site.baseurl }}{% link model-problem/videos/04-dana-people-manager.md %})**
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
     src="https://www.youtube-nocookie.com/embed/ZdvQwFQwwbg"
-    title="RobOS Model Problem · 03 — Dana sets up People Manager"
+    title="RobOS Model Problem · 04 — Dana sets up People Manager"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
@@ -152,16 +172,16 @@ Dana drops the team roster into the AI prompt and gets every user from the docum
 
 ---
 
-## 1.4 — Dana sets up Group Manager
+## 1.5 — Dana sets up Group Manager
 
 <img src="{{ '/assets/images/icons/group-manager.svg' | relative_url }}" alt="Group Manager" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Group Manager
 
-📺 **[Video 04 — Dana sets up Group Manager]({{ site.baseurl }}{% link model-problem/videos/04-dana-group-manager.md %})**
+📺 **[Video 05 — Dana sets up Group Manager]({{ site.baseurl }}{% link model-problem/videos/05-dana-group-manager.md %})**
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
     src="https://www.youtube-nocookie.com/embed/mxnPjiJ0G8I"
-    title="RobOS Model Problem · 04 — Dana sets up Group Manager"
+    title="RobOS Model Problem · 05 — Dana sets up Group Manager"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
@@ -179,28 +199,6 @@ Group Manager owns the developer side of every team:
 - **Workspaces** — RobOS Workspaces owned by the group
 
 Same hero pattern as People Manager: an AI textarea drafts a whole group — repos, members, software, onboarding steps — from a prompt or an @-mentioned external file.
-
----
-
-## 1.5 — Dana installs the team toolchain
-
-<img src="{{ '/assets/images/icons/dev-tools.svg' | relative_url }}" alt="Dev Tools" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Dev Tools
-
-📺 **[Video 05 — Dana installs the team toolchain]({{ site.baseurl }}{% link model-problem/videos/05-dana-dev-tools.md %})**
-
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/0QWB7I5e9Mw"
-    title="RobOS Model Problem · 05 — Dana installs the team toolchain"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-</div>
-
-People are in (1.3), groups are in (1.4). Now Dana provisions the **toolchain** every developer on the team will share — the IDEs, CLI tools, and cloud SDKs that show up the moment a teammate logs in. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions.
-
-This is the bridge between **manager setup** (videos 01–05) and **developer onboarding** (Phase 3, Alex). Without it, the team's first login would land in a workspace with no IDE, no `gh`, no SDKs — and every developer would set up their own.
 
 ---
 
