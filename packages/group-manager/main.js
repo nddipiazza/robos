@@ -310,6 +310,21 @@ ipcMain.handle('gm-list-path', (_, prefix) => {
           if (items.length >= 30) break;
         }
       }
+      // Fallback: filesystem find when search-index has no matches
+      if (!items.length) {
+        const home2 = os.homedir();
+        const result = cp.spawnSync('find', [
+          home2, '-maxdepth', '6',
+          '-not', '-path', '*/node_modules/*', '-not', '-path', '*/.git/*',
+          '-not', '-path', '*/dist/*', '-not', '-path', '*/.cache/*',
+          '-not', '-name', '.*', '-iname', `*${partial}*`,
+        ], { encoding: 'utf8', timeout: 4000 });
+        items = (result.stdout || '').split('\n').filter(Boolean).slice(0, 30).map(p => {
+          let isDirectory = false;
+          try { isDirectory = fs.statSync(p).isDirectory(); } catch {}
+          return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
+        });
+      }
       return { ok: true, items };
     }
 
