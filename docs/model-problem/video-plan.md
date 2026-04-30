@@ -24,9 +24,9 @@ We prove RobOS can solve a real engineering problem by recording the team (Dana,
 
 **What we're building:** the second half of `@hermetiq/buildbarn-forms` — a React component library that renders any Buildbarn configuration as a Monaco editor plus an interactive proto-typed tree view. The `buildbarn-forms-proto` package is already shipped; the forms package is mid-refactor from a form-based approach to a Monaco + tree approach. Ten concrete engineering phases remain, sourced from the knowledge graph at `~/source/hermetiq/hermetiq-genai-agent` and the draft repo at `~/source/hermetiq/buildbarn-forms`.
 
-**What we're recording:** a 16-episode series showing every phase of the work inside RobOS, with the four role accounts (Dana / Pat / Jordan / Alex) logging in as separate Linux users on the same v0.0.5 VM. Each episode is one sitting, one protagonist, one piece of work.
+**What we're recording:** a 20-episode series showing every phase of the work inside RobOS, with the four role accounts (Dana / Pat / Jordan / Alex) logging in as separate Linux users on the same v0.0.5 VM. Each episode is one sitting, one protagonist, one piece of work.
 
-**End state:** by video 16, buildbarn-forms is merged, published as `@hermetiq/buildbarn-forms@1.0.0` on GitHub Packages, Storybook is live, and every engineering phase has a YouTube link you can point at.
+**End state:** by video 20, buildbarn-forms is merged, published as `@hermetiq/buildbarn-forms@1.0.0` on GitHub Packages, Storybook is live, and every engineering phase has a YouTube link you can point at.
 
 ---
 
@@ -49,31 +49,34 @@ Pulled from the scouting pass on the three reference repos. Each phase is an ind
 
 ---
 
-## The 16-episode series
+## The 20-episode series
 
 Each row links to the per-video doc in [`videos/`](videos/) where we track script, fixtures, and production status.
 
 | # | Video | Protagonist | Arc | Length | Apps in frame |
 |:-:|:------|:------------|:----|:------:|:--------------|
 | [01](videos/01-dana-setup.md) | Dana sets up RobOS for Acme | Dana | Setup | 3:00 | Task Servers, Workflow Studio, Git Projects, RobOS Preferences |
-| [02](videos/02-pat-epic-breakdown.md) | Pat breaks the rewrite into 10 stories | Pat | Setup | 2:30 | Issue Manager, Context Manager, Workflow Studio |
-| [03](videos/03-jordan-ci-setup.md) | Jordan wires up CI/CD + npm publishing | Jordan | Setup | 2:30 | Git Projects, Pass Manager, CI Monitor, Automation Studio |
-| [04](videos/04-dana-copilot-login.md) | Dana configures RobOS Agents (login, sessions, default agent) | Dana | Setup | 3:06 | App Launcher, Agents Manager |
-| [05](videos/04-alex-onboarding.md) | Alex's first day on the project | Alex | Setup | 3:00 | Security Setup, Pass Manager, Dev Tools, Git Projects, Workspace Manager |
-| [05](videos/05-p1-proto-metadata.md) | **P1 — Proto Metadata API** (*hero episode, full flow*) | Alex ↔ Jordan ↔ automated | Engineering | 6:00 | AI Agent Manager, Task Board, Issue Manager, PR Review, CI Monitor, Deploy Tracker, Notifications |
-| [06](videos/06-p2-default-values.md) | P2 — Default value generator | Alex | Engineering | 4:00 | Task Board, AI Agent Manager, PR Review |
-| [07](videos/07-p3-tree-mutations.md) | P3 — Proto-aware tree mutations | Alex | Engineering | 5:00 | AI Agent Manager, Issue Manager, PR Review |
-| [08](videos/08-p4-mcp-integration.md) | P4 — MCP HTTP integration | Alex | Engineering | 5:00 | AI Agent Manager, Context Manager, CI Monitor |
-| [09](videos/09-p5-config-browser.md) | P5 — ConfigBrowser component | Alex | Engineering | 4:00 | AI Agent Manager, PR Review, Stage Demo |
-| [10](videos/10-p6-proto-tooltips.md) | P6 — Proto-tooltip integration | Alex | Engineering | 3:30 | AI Agent Manager, PR Review |
-| [11](videos/11-p7-validation.md) | P7 — Validation pipeline | Alex ↔ Jordan | Engineering | 5:00 | AI Agent Manager, PR Review, CI Monitor |
-| [12](videos/12-p8-storybook.md) | P8 — Storybook component library | Alex | Engineering | 4:00 | AI Agent Manager, Deploy Tracker, Stage Demo |
-| [13](videos/13-p9-e2e-hardening.md) | P9 — E2E test hardening | Jordan | Engineering | 4:00 | AI Agent Manager, CI Monitor, Automation Studio |
-| [14](videos/14-p10-polish.md) | P10 — Performance + polish, 1.0.0 release | Alex | Engineering | 5:00 | AI Agent Manager, CI Monitor, Deploy Tracker, Notifications |
-| [15](videos/15-retrospective.md) | Sprint retrospective — what shipped, what it means | All four (dashboards tour) | Wrap | 4:00 | Manager Dashboard, Dev Central, Report Builder, Stage Demo |
-| [16](videos/16-master-cut.md) | **Master cut** — "How four people shipped a React library on RobOS" | Narrated compilation | Wrap | 12:00 | Clips from 01–15 |
+| [02](videos/02-dana-robos-agents.md) | Dana configures RobOS Agents (login, sessions, default agent) | Dana | Setup | 3:06 | App Launcher, Agents Manager |
+| [03](videos/03-dana-people-manager.md) | Dana sets up People Manager | Dana | Setup | 1:58 | App Launcher, People Manager |
+| [04](videos/04-dana-group-manager.md) | Dana sets up Group Manager | Dana | Setup | 3:08 | App Launcher, Group Manager |
+| [05](videos/05-dana-dev-tools.md) | Dana installs the team toolchain | Dana | Setup | 2:30 | App Launcher, Dev Tools |
+| [06](videos/06-pat-epic-breakdown.md) | Pat breaks the rewrite into 10 stories | Pat | Setup | 2:30 | Issue Manager, Context Manager, Workflow Studio |
+| [07](videos/07-jordan-ci-setup.md) | Jordan wires up CI/CD + npm publishing | Jordan | Setup | 2:30 | Git Projects, Pass Manager, CI Monitor, Automation Studio |
+| [08](videos/08-alex-onboarding.md) | Alex's first day on the project | Alex | Setup | 3:00 | Security Setup, Pass Manager, Dev Tools, Git Projects, Workspace Manager |
+| [09](videos/09-p1-proto-metadata.md) | **P1 — Proto Metadata API** (*hero episode, full flow*) | Alex ↔ Jordan ↔ automated | Engineering | 6:00 | AI Agent Manager, Task Board, Issue Manager, PR Review, CI Monitor, Deploy Tracker, Notifications |
+| [10](videos/10-p2-default-values.md) | P2 — Default value generator | Alex | Engineering | 4:00 | Task Board, AI Agent Manager, PR Review |
+| [11](videos/11-p3-tree-mutations.md) | P3 — Proto-aware tree mutations | Alex | Engineering | 5:00 | AI Agent Manager, Issue Manager, PR Review |
+| [12](videos/12-p4-mcp-integration.md) | P4 — MCP HTTP integration | Alex | Engineering | 5:00 | AI Agent Manager, Context Manager, CI Monitor |
+| [13](videos/13-p5-config-browser.md) | P5 — ConfigBrowser component | Alex | Engineering | 4:00 | AI Agent Manager, PR Review, Stage Demo |
+| [14](videos/14-p6-proto-tooltips.md) | P6 — Proto-tooltip integration | Alex | Engineering | 3:30 | AI Agent Manager, PR Review |
+| [15](videos/15-p7-validation.md) | P7 — Validation pipeline | Alex ↔ Jordan | Engineering | 5:00 | AI Agent Manager, PR Review, CI Monitor |
+| [16](videos/16-p8-storybook.md) | P8 — Storybook component library | Alex | Engineering | 4:00 | AI Agent Manager, Deploy Tracker, Stage Demo |
+| [17](videos/17-p9-e2e-hardening.md) | P9 — E2E test hardening | Jordan | Engineering | 4:00 | AI Agent Manager, CI Monitor, Automation Studio |
+| [18](videos/18-p10-polish.md) | P10 — Performance + polish, 1.0.0 release | Alex | Engineering | 5:00 | AI Agent Manager, CI Monitor, Deploy Tracker, Notifications |
+| [19](videos/19-retrospective.md) | Sprint retrospective — what shipped, what it means | All four (dashboards tour) | Wrap | 4:00 | Manager Dashboard, Dev Central, Report Builder, Stage Demo |
+| [20](videos/20-master-cut.md) | **Master cut** — "How four people shipped a React library on RobOS" | Narrated compilation | Wrap | 12:00 | Clips from 01–19 |
 
-**Total production target:** ~72 minutes across 16 episodes + 12-minute master cut = ~84 minutes of watchable content.
+**Total production target:** ~80 minutes across 19 episodes + 12-minute master cut = ~92 minutes of watchable content.
 
 ---
 
@@ -118,13 +121,13 @@ Every fixture has a fully-specified build procedure in [`fixtures.md`](fixtures.
 | F1 | `acme-fresh` VM snapshot | v0.0.5 qcow2 with cloud-init seeded for dana/pat/jordan/alex | 01 | [F1](fixtures.md#f1-acme-fresh-vm-snapshot) |
 | F2 | GitHub repos | `nddipiazza/buildbarn-forms` + `nddipiazza/buildbarn-forms-proto` public + GH PATs in pass | 01 | [F2](fixtures.md#f2-github-repos) |
 | F3 | Jira project | `https://robos-acme.atlassian.net/` project KAN with workflow + types | 01 | [F3](fixtures.md#f3-jira-project) |
-| F4 | Epic `KAN-0` + stories `KAN-1..KAN-10` | One story per engineering phase, authored by Pat | 02 | [F4](fixtures.md#f4-epic--stories) |
-| F5 | `buildbarn-forms` worktree at base commit | The rough-draft state Alex picks up | 04 | [F5](fixtures.md#f5-buildbarn-forms-worktree) |
-| F6 | Local Verdaccio with `@hermetiq/buildbarn-forms-proto` published | Lets `npm install` resolve without hitting prod GitHub Packages | 04 | [F6](fixtures.md#f6-local-verdaccio) |
-| F7 | Per-phase Claude prompts + canned diffs | Deterministic AI output so retakes match | 05 | [F7](fixtures.md#f7-canned-ai-output) |
-| F8 | CI + deploy mock | Stubbed `gh run list` / deploy events for the post-merge flow | 05 | [F8](fixtures.md#f8-ci--deploy-mock) |
+| F4 | Epic `KAN-0` + stories `KAN-1..KAN-10` | One story per engineering phase, authored by Pat | 06 | [F4](fixtures.md#f4-epic--stories) |
+| F5 | `buildbarn-forms` worktree at base commit | The rough-draft state Alex picks up | 08 | [F5](fixtures.md#f5-buildbarn-forms-worktree) |
+| F6 | Local Verdaccio with `@hermetiq/buildbarn-forms-proto` published | Lets `npm install` resolve without hitting prod GitHub Packages | 08 | [F6](fixtures.md#f6-local-verdaccio) |
+| F7 | Per-phase Claude prompts + canned diffs | Deterministic AI output so retakes match | 09 | [F7](fixtures.md#f7-canned-ai-output) |
+| F8 | CI + deploy mock | Stubbed `gh run list` / deploy events for the post-merge flow | 09 | [F8](fixtures.md#f8-ci--deploy-mock) |
 
-F1–F4 block episode 01. F5–F6 block episode 04. F7–F8 block episode 05 onward.
+F1–F4 block episode 01. F5–F6 block episode 08. F7–F8 block episode 09 onward.
 
 ---
 
@@ -143,23 +146,26 @@ Engineering-specific additions:
 
 | # | Video | Fixtures ready | Script drafted | Recorded | Published | YouTube URL |
 |:-:|:------|:-:|:-:|:-:|:-:|:-----------:|
-| 01 | Dana sets up RobOS | ✅ | ✅ | ⬜ | ⬜ | — |
-| 02 | Pat breaks down the rewrite | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 03 | Jordan wires up CI/CD | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 04 | Dana connects GitHub Copilot | ✅ | ✅ | ⬜ | ⬜ | — |
-| 05 | Alex's first day | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 05 | P1 — Proto Metadata (hero) | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 06 | P2 — Default values | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 07 | P3 — Tree mutations | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 08 | P4 — MCP integration | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 09 | P5 — ConfigBrowser | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 10 | P6 — Proto tooltips | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 11 | P7 — Validation | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 12 | P8 — Storybook | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 13 | P9 — E2E hardening | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 14 | P10 — Polish + 1.0.0 | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 15 | Retrospective | ⬜ | ⬜ | ⬜ | ⬜ | — |
-| 16 | Master cut | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 01 | Dana sets up RobOS              | ✅ | ✅ | ✅ | ✅ | [gVX_qDteFu8](https://youtu.be/gVX_qDteFu8) |
+| 02 | Dana — RobOS Agents             | ✅ | ✅ | ✅ | ✅ | [e4JiiQ7xER8](https://youtu.be/e4JiiQ7xER8) |
+| 03 | Dana — People Manager           | ✅ | ✅ | ✅ | ✅ | [ZdvQwFQwwbg](https://youtu.be/ZdvQwFQwwbg) |
+| 04 | Dana — Group Manager            | ✅ | ✅ | ✅ | ✅ | [mxnPjiJ0G8I](https://youtu.be/mxnPjiJ0G8I) |
+| 05 | Dana — Dev Tools                | ✅ | ✅ | ✅ | ✅ | [0QWB7I5e9Mw](https://youtu.be/0QWB7I5e9Mw) |
+| 06 | Pat breaks down the rewrite     | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 07 | Jordan wires up CI/CD           | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 08 | Alex's first day                | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 09 | P1 — Proto Metadata (hero)      | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 10 | P2 — Default values             | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 11 | P3 — Tree mutations             | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 12 | P4 — MCP integration            | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 13 | P5 — ConfigBrowser              | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 14 | P6 — Proto tooltips             | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 15 | P7 — Validation                 | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 16 | P8 — Storybook                  | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 17 | P9 — E2E hardening              | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 18 | P10 — Polish + 1.0.0            | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 19 | Retrospective                   | ⬜ | ⬜ | ⬜ | ⬜ | — |
+| 20 | Master cut                      | ⬜ | ⬜ | ⬜ | ⬜ | — |
 
 ---
 
@@ -173,9 +179,9 @@ The work is fully spec'd. Run the steps in order — each one points at the doc 
 4. **Generate narration** with the command in [`handoff.md`](handoff.md#narration).
 5. **Write the YouTube `.md`** by copying [`metadata-template.md`](metadata-template.md) and filling in the Video 01 specifics.
 6. **Upload** following [`handoff.md`](handoff.md#upload). Update the status board above.
-7. **Move to Video 02.** Same loop: fixtures (F4 if not yet built) → record → narrate → metadata → upload → tick.
+7. **Move to Video 06.** Same loop: fixtures (F4 if not yet built) → record → narrate → metadata → upload → tick. (Videos 02–05 are already published; the engineering arc starts at 06.)
 
-The other 15 per-video docs under [`videos/`](videos/) are seeded with scene outline and app inventory; their narration scripts get fleshed out just-in-time as we approach each recording.
+The other 14 per-video docs under [`videos/`](videos/) are seeded with scene outline and app inventory; their narration scripts get fleshed out just-in-time as we approach each recording.
 
 ## Reference index
 

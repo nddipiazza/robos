@@ -1,12 +1,12 @@
 ---
-title: "03 — Jordan wires up CI/CD + npm publishing"
+title: "07 — Jordan wires up CI/CD + npm publishing"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 3
+nav_order: 7
 ---
 
-# Video 03 — Jordan wires up CI/CD + npm publishing
+# Video 07 — Jordan wires up CI/CD + npm publishing
 {: .no_toc }
 
 **Protagonist:** Jordan (Dev Lead)

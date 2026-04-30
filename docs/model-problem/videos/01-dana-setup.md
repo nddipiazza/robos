@@ -13,6 +13,18 @@ nav_order: 1
 **Arc:** Setup
 **Target length:** 3:00
 **Apps in frame:** Task Servers · Workflow Studio · Git Projects · RobOS Preferences
+**YouTube:** [https://youtu.be/gVX_qDteFu8](https://youtu.be/gVX_qDteFu8)
+**Status:** ✅ Published
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/gVX_qDteFu8"
+    title="RobOS Model Problem · Dana — Setup"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
 
 ## Table of contents
 {: .no_toc .text-delta }

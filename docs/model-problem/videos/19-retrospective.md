@@ -1,26 +1,26 @@
 ---
-title: "09 — P5 — ConfigBrowser component"
+title: "19 — Sprint retrospective — what shipped, what it means"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 9
+nav_order: 19
 ---
 
-# Video 09 — P5 — ConfigBrowser component
+# Video 19 — Sprint retrospective — what shipped, what it means
 {: .no_toc }
 
-**Protagonist:** Alex
+**Protagonist:** All four (dashboards tour)
 **Arc:** Engineering
 **Target length:** 4:00
-**Apps in frame:** AI Agent Manager · PR Review · Stage Demo
+**Apps in frame:** Manager Dashboard · Dev Central · Report Builder · Stage Demo
 
 ## Unique to this episode
 
-A full VS Code–style file tree on the left of the editor. Scene highlight: scrolling the real Buildbarn configs from `e2e/public/tests/real-configs/`, clicking one, watching it load into the JsonnetEditor. Icons, active-row highlight, collapse/expand.
+Four-way dashboard tour. Each role gets ~45s showing what the sprint looked like from their vantage point, with Report Builder producing the retrospective write-up live. No new engineering.
 
 ## The real engineering work
 
-`src/ConfigBrowser/ConfigBrowser.tsx` — new component. FontAwesome icons for folders/files, `collections` prop defines the tree shape, `onFileLoad` callback fires when a file is selected. The e2e app is updated to use ConfigBrowser instead of the dropdown selector.
+No code. Each dashboard view is already covered by the earlier app demos (videos 07–17 of the app series); this episode just assembles them into the specific sprint narrative for buildbarn-forms.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ A full VS Code–style file tree on the left of the editor. Scene highlight: scr
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p5-config-browser/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/retrospective/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

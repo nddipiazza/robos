@@ -1,26 +1,26 @@
 ---
-title: "10 — P6 — Proto-tooltip integration"
+title: "10 — P2 — Default value generator"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
 nav_order: 10
 ---
 
-# Video 10 — P6 — Proto-tooltip integration
+# Video 10 — P2 — Default value generator
 {: .no_toc }
 
 **Protagonist:** Alex
 **Arc:** Engineering
-**Target length:** 3:30
-**Apps in frame:** AI Agent Manager · PR Review
+**Target length:** 4:00
+**Apps in frame:** AI Agent Manager · Task Board · PR Review · CI Monitor
 
 ## Unique to this episode
 
-Every field tooltip now carries real documentation from the proto source, not placeholder text. Scene highlight: hovering four different fields in sequence, each showing its actual proto comment. Narration covers why this is the payoff for Video 05's descriptors.
+The hook is *generating sensible defaults without the UI guessing*. Scene highlight: a side-by-side of the old heuristic output and the new descriptor-driven output. Narration calls out scalar, message, repeated, and oneof cases.
 
 ## The real engineering work
 
-`useProtoComments` hook loads `proto-comments.json` from the proto package and indexes by message+field. Tooltip component wired to it. Covers TreeView nodes and FormFields alike.
+`protoFieldUtils.ts` replaces the heuristic with a proper generator that consumes the proto descriptors shipped in Video 05. Unit tests cover ApplicationConfiguration, BlobAccessConfiguration, ServerConfiguration.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ Every field tooltip now carries real documentation from the proto source, not pl
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p6-proto-tooltips/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p2-default-values/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

@@ -1,26 +1,26 @@
 ---
-title: "15 — Sprint retrospective — what shipped, what it means"
+title: "17 — P9 — E2E test hardening"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 15
+nav_order: 17
 ---
 
-# Video 15 — Sprint retrospective — what shipped, what it means
+# Video 17 — P9 — E2E test hardening
 {: .no_toc }
 
-**Protagonist:** All four (dashboards tour)
+**Protagonist:** Jordan
 **Arc:** Engineering
 **Target length:** 4:00
-**Apps in frame:** Manager Dashboard · Dev Central · Report Builder · Stage Demo
+**Apps in frame:** AI Agent Manager · CI Monitor · Automation Studio
 
 ## Unique to this episode
 
-Four-way dashboard tour. Each role gets ~45s showing what the sprint looked like from their vantage point, with Report Builder producing the retrospective write-up live. No new engineering.
+Jordan's episode — the dev lead cares most about test stability. Scene highlight: CI Monitor showing the green streak across 20 recent runs, the visual regression report from the hardened Playwright suite, and the Automation Studio rule that blocks PR merge if e2e fails.
 
 ## The real engineering work
 
-No code. Each dashboard view is already covered by the earlier app demos (videos 07–17 of the app series); this episode just assembles them into the specific sprint narrative for buildbarn-forms.
+Playwright coverage expanded to add/remove/edit/oneof, validation errors, MCP flows. Visual snapshots captured via monocart reporter. Flake fixes (deterministic waits, network mocks). CI gate rule added in Automation Studio.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ No code. Each dashboard view is already covered by the earlier app demos (videos
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/retrospective/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p9-e2e-hardening/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

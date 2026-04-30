@@ -1,26 +1,27 @@
 ---
-title: "04 — Dana configures RobOS Agents"
+title: "02 — Dana configures RobOS Agents"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 4
+nav_order: 2
 ---
 
-# Video 04 — Dana configures RobOS Agents
+# Video 02 — Dana configures RobOS Agents
 {: .no_toc }
 
 **Protagonist:** Dana (Dev Manager)
 **Arc:** Setup
 **Actual length:** 3:06
 **Apps in frame:** App Launcher · Agents Manager
-**YouTube:** [https://youtu.be/whtovwKcpV8](https://youtu.be/whtovwKcpV8)
+**YouTube:** [https://youtu.be/e4JiiQ7xER8](https://youtu.be/e4JiiQ7xER8)
+**Status:** ✅ Published
 
 ---
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/whtovwKcpV8"
-    title="RobOS Model Problem · 04 — Dana configures RobOS Agents"
+    src="https://www.youtube-nocookie.com/embed/e4JiiQ7xER8"
+    title="RobOS Model Problem · 02 — Dana configures RobOS Agents"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen

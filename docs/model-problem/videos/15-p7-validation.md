@@ -1,26 +1,26 @@
 ---
-title: "07 — P3 — Proto-aware tree mutations"
+title: "15 — P7 — Validation pipeline"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 7
+nav_order: 15
 ---
 
-# Video 07 — P3 — Proto-aware tree mutations
+# Video 15 — P7 — Validation pipeline
 {: .no_toc }
 
-**Protagonist:** Alex
+**Protagonist:** Alex ↔ Jordan
 **Arc:** Engineering
 **Target length:** 5:00
-**Apps in frame:** AI Agent Manager · Issue Manager · PR Review · Workspace Manager
+**Apps in frame:** AI Agent Manager · PR Review · CI Monitor
 
 ## Unique to this episode
 
-First episode where the UI becomes *editable*. Scene highlight: clicking + on a node and watching the field appear in both the tree and the Monaco editor live, with the dirty-state indicator lighting up. Narration emphasizes Immer-backed mutation.
+Both Alex and Jordan touch this because validation involves frontend *and* backend. Scene highlight: trying to save a config with a missing required field, seeing the inline red border + banner, fixing it, saving cleanly. Jordan's scene: review round where the validation schema itself needs a subject-matter tweak.
 
 ## The real engineering work
 
-Introduces the `useProtoJsonEditor` hook and wires `onAddChild`, `onRemoveChild`, `onChangeOneOf` callbacks. TreeView context menu buttons are enabled. Tested against the e2e app's real-config fixtures.
+Frontend: type + required + format checks against proto descriptors, with per-field red borders and a grouped error banner. Backend (MCP): `jsonnet-lint` + Buildbarn schema validation. Save button disabled until clean. `onValidationError` callback.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ Introduces the `useProtoJsonEditor` hook and wires `onAddChild`, `onRemoveChild`
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p3-tree-mutations/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p7-validation/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

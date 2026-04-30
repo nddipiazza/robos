@@ -1,26 +1,26 @@
 ---
-title: "14 — P10 — Performance + polish, 1.0.0 release"
+title: "20 — Master cut — how four people shipped a React library on RobOS"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 14
+nav_order: 20
 ---
 
-# Video 14 — P10 — Performance + polish, 1.0.0 release
+# Video 20 — Master cut — how four people shipped a React library on RobOS
 {: .no_toc }
 
-**Protagonist:** Alex
+**Protagonist:** Narrated compilation
 **Arc:** Engineering
-**Target length:** 5:00
-**Apps in frame:** AI Agent Manager · CI Monitor · Deploy Tracker · Notifications
+**Target length:** 12:00
+**Apps in frame:** Clips from episodes 01–15
 
 ## Unique to this episode
 
-The victory lap. Scene highlight: loading a 50MB real Buildbarn config, watching the virtualized tree render in under a second, toggling dark mode, using Ctrl+S to save, and finally tagging `v1.0.0` in Git Projects — publish job kicks off, `@hermetiq/buildbarn-forms@1.0.0` lands in the registry. Final Deploy Tracker entry.
+The feature video we pin on the channel. Cold open with the problem statement, 30-second trailers for each arc, landing shots of the shipped library. This is the one we put on the home page.
 
 ## The real engineering work
 
-Tree virtualization for large arrays, lazy-load of proto metadata, dark-mode toggle, keyboard shortcuts (Ctrl+S, Ctrl+K), a11y sweep to WCAG 2.1 AA, performance benchmarks. Version bumped to 1.0.0 and published.
+No new engineering. Pure post-production: cut the best 30–60 seconds from each of the previous 15 episodes, rerecord fresh narration over the transitions, end card with subscribe + per-episode links.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ Tree virtualization for large arrays, lazy-load of proto metadata, dark-mode tog
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p10-polish/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/master-cut/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

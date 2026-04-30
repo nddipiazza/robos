@@ -1,12 +1,12 @@
 ---
-title: "05 — P1: Proto Metadata API (hero episode)"
+title: "09 — P1: Proto Metadata API (hero episode)"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 5
+nav_order: 9
 ---
 
-# Video 05 — P1: Proto Metadata API
+# Video 09 — P1: Proto Metadata API
 {: .no_toc }
 
 **Protagonist:** Alex (implementer) → Jordan (reviewer) → automated pipeline

@@ -1,26 +1,26 @@
 ---
-title: "06 — P2 — Default value generator"
+title: "13 — P5 — ConfigBrowser component"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 6
+nav_order: 13
 ---
 
-# Video 06 — P2 — Default value generator
+# Video 13 — P5 — ConfigBrowser component
 {: .no_toc }
 
 **Protagonist:** Alex
 **Arc:** Engineering
 **Target length:** 4:00
-**Apps in frame:** AI Agent Manager · Task Board · PR Review · CI Monitor
+**Apps in frame:** AI Agent Manager · PR Review · Stage Demo
 
 ## Unique to this episode
 
-The hook is *generating sensible defaults without the UI guessing*. Scene highlight: a side-by-side of the old heuristic output and the new descriptor-driven output. Narration calls out scalar, message, repeated, and oneof cases.
+A full VS Code–style file tree on the left of the editor. Scene highlight: scrolling the real Buildbarn configs from `e2e/public/tests/real-configs/`, clicking one, watching it load into the JsonnetEditor. Icons, active-row highlight, collapse/expand.
 
 ## The real engineering work
 
-`protoFieldUtils.ts` replaces the heuristic with a proper generator that consumes the proto descriptors shipped in Video 05. Unit tests cover ApplicationConfiguration, BlobAccessConfiguration, ServerConfiguration.
+`src/ConfigBrowser/ConfigBrowser.tsx` — new component. FontAwesome icons for folders/files, `collections` prop defines the tree shape, `onFileLoad` callback fires when a file is selected. The e2e app is updated to use ConfigBrowser instead of the dropdown selector.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ The hook is *generating sensible defaults without the UI guessing*. Scene highli
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p2-default-values/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p5-config-browser/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

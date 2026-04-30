@@ -1,12 +1,12 @@
 ---
-title: "02 — Pat breaks the rewrite into 10 stories"
+title: "06 — Pat breaks the rewrite into 10 stories"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 2
+nav_order: 6
 ---
 
-# Video 02 — Pat breaks the rewrite into 10 stories
+# Video 06 — Pat breaks the rewrite into 10 stories
 {: .no_toc }
 
 **Protagonist:** Pat (Product Engineer)

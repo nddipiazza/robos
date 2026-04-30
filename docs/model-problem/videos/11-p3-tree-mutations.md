@@ -1,26 +1,26 @@
 ---
-title: "12 — P8 — Storybook component library"
+title: "11 — P3 — Proto-aware tree mutations"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 12
+nav_order: 11
 ---
 
-# Video 12 — P8 — Storybook component library
+# Video 11 — P3 — Proto-aware tree mutations
 {: .no_toc }
 
 **Protagonist:** Alex
 **Arc:** Engineering
-**Target length:** 4:00
-**Apps in frame:** AI Agent Manager · Deploy Tracker · Stage Demo
+**Target length:** 5:00
+**Apps in frame:** AI Agent Manager · Issue Manager · PR Review · Workspace Manager
 
 ## Unique to this episode
 
-The moment buildbarn-forms becomes *reusable*. Scene highlight: navigating the deployed Storybook on GitHub Pages, playing with JsonnetEditor and ConfigBrowser knobs live, viewing the auto-generated visual diffs from Chromatic. Narration pitches this as the 'component library maturity' beat.
+First episode where the UI becomes *editable*. Scene highlight: clicking + on a node and watching the field appear in both the tree and the Monaco editor live, with the dirty-state indicator lighting up. Narration emphasizes Immer-backed mutation.
 
 ## The real engineering work
 
-Stories for JsonnetEditor, TreeView, TreeNode, ConfigBrowser, Tooltip. Storybook deployed to GitHub Pages. Chromatic wired in for visual regression.
+Introduces the `useProtoJsonEditor` hook and wires `onAddChild`, `onRemoveChild`, `onChangeOneOf` callbacks. TreeView context menu buttons are enabled. Tested against the e2e app's real-config fixtures.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ Stories for JsonnetEditor, TreeView, TreeNode, ConfigBrowser, Tooltip. Storybook
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p8-storybook/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p3-tree-mutations/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

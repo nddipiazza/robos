@@ -1,26 +1,26 @@
 ---
-title: "13 — P9 — E2E test hardening"
+title: "16 — P8 — Storybook component library"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 13
+nav_order: 16
 ---
 
-# Video 13 — P9 — E2E test hardening
+# Video 16 — P8 — Storybook component library
 {: .no_toc }
 
-**Protagonist:** Jordan
+**Protagonist:** Alex
 **Arc:** Engineering
 **Target length:** 4:00
-**Apps in frame:** AI Agent Manager · CI Monitor · Automation Studio
+**Apps in frame:** AI Agent Manager · Deploy Tracker · Stage Demo
 
 ## Unique to this episode
 
-Jordan's episode — the dev lead cares most about test stability. Scene highlight: CI Monitor showing the green streak across 20 recent runs, the visual regression report from the hardened Playwright suite, and the Automation Studio rule that blocks PR merge if e2e fails.
+The moment buildbarn-forms becomes *reusable*. Scene highlight: navigating the deployed Storybook on GitHub Pages, playing with JsonnetEditor and ConfigBrowser knobs live, viewing the auto-generated visual diffs from Chromatic. Narration pitches this as the 'component library maturity' beat.
 
 ## The real engineering work
 
-Playwright coverage expanded to add/remove/edit/oneof, validation errors, MCP flows. Visual snapshots captured via monocart reporter. Flake fixes (deterministic waits, network mocks). CI gate rule added in Automation Studio.
+Stories for JsonnetEditor, TreeView, TreeNode, ConfigBrowser, Tooltip. Storybook deployed to GitHub Pages. Chromatic wired in for visual regression.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ Playwright coverage expanded to add/remove/edit/oneof, validation errors, MCP fl
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p9-e2e-hardening/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p8-storybook/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

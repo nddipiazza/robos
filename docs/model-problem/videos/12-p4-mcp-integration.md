@@ -1,26 +1,26 @@
 ---
-title: "16 — Master cut — how four people shipped a React library on RobOS"
+title: "12 — P4 — MCP HTTP integration"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 16
+nav_order: 12
 ---
 
-# Video 16 — Master cut — how four people shipped a React library on RobOS
+# Video 12 — P4 — MCP HTTP integration
 {: .no_toc }
 
-**Protagonist:** Narrated compilation
+**Protagonist:** Alex
 **Arc:** Engineering
-**Target length:** 12:00
-**Apps in frame:** Clips from episodes 01–15
+**Target length:** 5:00
+**Apps in frame:** AI Agent Manager · Context Manager · CI Monitor · Notifications
 
 ## Unique to this episode
 
-The feature video we pin on the channel. Cold open with the problem statement, 30-second trailers for each arc, landing shots of the shipped library. This is the one we put on the home page.
+The UI starts talking to a real backend. Scene highlight: flipping between local-only mode (no `mcpBaseURL`) and MCP mode (with URL), watching the mutation round-trip via HTTP. Narration covers the amber error banner + fallback. Optionally include a forced failure to show the retry flow.
 
 ## The real engineering work
 
-No new engineering. Pure post-production: cut the best 30–60 seconds from each of the previous 15 episodes, rerecord fresh narration over the transitions, end card with subscribe + per-episode links.
+`src/JsonnetEditor/mcpClient.ts` wraps local callbacks in HTTP POSTs to the MCP server. New prop `mcpBaseURL` on JsonnetEditor. Error banner with retry + local-fallback. Tested against a mock MCP server running on the VM.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ No new engineering. Pure post-production: cut the best 30–60 seconds from each
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/master-cut/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p4-mcp-integration/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

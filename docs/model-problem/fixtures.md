@@ -120,7 +120,7 @@ ssh -p 2224 dana@localhost 'pass show robos-acme-inc/jira-token | head -c 8 && e
 ssh -p 2224 dana@localhost 'pass show acme/github-pat | head -c 8 && echo "  ← github pat present"'
 ```
 
-Each user should be sudo-capable (`sudo -n true`), have an empty `~/.config/robos/`, and **not** have completed Security Setup yet (Video 04 shows Alex going through it; Dana goes through it inside Video 01's recording).
+Each user should be sudo-capable (`sudo -n true`), have an empty `~/.config/robos/`, and **not** have completed Security Setup yet (Video 08 shows Alex going through it; Dana goes through it inside Video 01's recording).
 
 #### 5. F1 snapshot {#f1-snapshot}
 
@@ -248,7 +248,7 @@ You should see all five statuses listed.
 
 ## F4 — Epic + stories
 
-One epic and ten stories in the `KAN` project, authored as if Pat wrote them. Created in advance so Video 02 can show them being broken-down rather than typed live.
+One epic and ten stories in the `KAN` project, authored as if Pat wrote them. Created in advance so Video 06 can show them being broken-down rather than typed live.
 
 ### Build procedure
 
@@ -342,7 +342,7 @@ git checkout -b model-problem-base $(git log --oneline | head -1 | awk '{print $
 EOSU
 ```
 
-The exact base SHA may drift; update [`videos/04-alex-onboarding.md`](videos/04-alex-onboarding.md) and this fixture every time we re-cut the series.
+The exact base SHA may drift; update [`videos/08-alex-onboarding.md`](videos/08-alex-onboarding.md) and this fixture every time we re-cut the series.
 
 ---
 

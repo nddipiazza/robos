@@ -1,26 +1,26 @@
 ---
-title: "08 — P4 — MCP HTTP integration"
+title: "14 — P6 — Proto-tooltip integration"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 8
+nav_order: 14
 ---
 
-# Video 08 — P4 — MCP HTTP integration
+# Video 14 — P6 — Proto-tooltip integration
 {: .no_toc }
 
 **Protagonist:** Alex
 **Arc:** Engineering
-**Target length:** 5:00
-**Apps in frame:** AI Agent Manager · Context Manager · CI Monitor · Notifications
+**Target length:** 3:30
+**Apps in frame:** AI Agent Manager · PR Review
 
 ## Unique to this episode
 
-The UI starts talking to a real backend. Scene highlight: flipping between local-only mode (no `mcpBaseURL`) and MCP mode (with URL), watching the mutation round-trip via HTTP. Narration covers the amber error banner + fallback. Optionally include a forced failure to show the retry flow.
+Every field tooltip now carries real documentation from the proto source, not placeholder text. Scene highlight: hovering four different fields in sequence, each showing its actual proto comment. Narration covers why this is the payoff for Video 05's descriptors.
 
 ## The real engineering work
 
-`src/JsonnetEditor/mcpClient.ts` wraps local callbacks in HTTP POSTs to the MCP server. New prop `mcpBaseURL` on JsonnetEditor. Error banner with retry + local-fallback. Tested against a mock MCP server running on the VM.
+`useProtoComments` hook loads `proto-comments.json` from the proto package and indexes by message+field. Tooltip component wired to it. Covers TreeView nodes and FormFields alike.
 
 ## Scene list (abbreviated — hero episode shows the full flow)
 
@@ -32,7 +32,7 @@ The UI starts talking to a real backend. Scene highlight: flipping between local
 
 ## Blockers / ready-checklist
 
-- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p4-mcp-integration/`.
+- [ ] Canned Claude diff for this story under `packages/robos-test/sandbox/data/model-problem/p6-proto-tooltips/`.
 - [ ] Any phase-specific fixture (e.g. proto descriptors from Video 05) must be in place — don't start recording until the previous episode's artifacts are real.
 - [ ] Narration script: draft ~6 cues specific to this phase's story.
 

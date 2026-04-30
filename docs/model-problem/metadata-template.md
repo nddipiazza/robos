@@ -120,13 +120,13 @@ Chapter titles should be 4–8 words. No punctuation other than em-dash.
 
 ### Tags
 
-The static tags in the template apply to every episode. Append one phase-specific tag — e.g. `proto descriptors` for video 05, `MCP` for video 08, `storybook` for video 12.
+The static tags in the template apply to every episode. Append one phase-specific tag — e.g. `proto descriptors` for video 09, `MCP` for video 12, `storybook` for video 16.
 
 ### End screen
 
 Always: Subscribe button + previous episode + next episode (or master cut for the final episodes).
 
-For the master cut (video 16), the end screen should link to the **most-watched** prior episode, not the first one.
+For the master cut (video 20), the end screen should link to the **most-watched** prior episode, not the first one.
 
 ---
 

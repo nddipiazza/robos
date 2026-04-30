@@ -101,10 +101,10 @@ done
 Each video doc (`videos/NN-*.md`) lists the fixtures it needs. Run only those. Most engineering videos need at least F5–F7.
 
 ```bash
-# Example for video 02:
+# Example for video 06 (Pat — epic breakdown):
 bash docs/model-problem/scripts/apply-fixture.sh F4
 
-# Example for video 05:
+# Example for video 09 (P1 hero):
 bash docs/model-problem/scripts/apply-fixture.sh F5 F6 F7 F8
 ```
 
@@ -225,9 +225,9 @@ If you'd rather automate, the `gh`-style API path is:
 # 1. Tick the row in video-plan.md status board (turn ⬜ → ✅)
 # 2. Add the URL to that row
 # 3. Add the embed somewhere appropriate:
-#    - Setup arc (videos 01-04): nowhere on home page
-#    - Hero (video 05): home page replaces install video
-#    - Master cut (video 16): home page replaces hero
+#    - Setup arc (videos 01-08): nowhere on home page
+#    - Hero (video 09): home page replaces install video
+#    - Master cut (video 20): home page replaces hero
 #    - All others: docs/model-problem/ embedded in their phase doc
 
 # Then:

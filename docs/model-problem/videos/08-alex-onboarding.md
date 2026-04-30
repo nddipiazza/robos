@@ -1,12 +1,12 @@
 ---
-title: "04 — Alex's first day on the project"
+title: "08 — Alex's first day on the project"
 parent: Video Production Plan
 grand_parent: The Model Problem
 layout: default
-nav_order: 4
+nav_order: 8
 ---
 
-# Video 04 — Alex's first day on the project
+# Video 08 — Alex's first day on the project
 {: .no_toc }
 
 **Protagonist:** Alex (Developer)
