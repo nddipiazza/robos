@@ -333,6 +333,28 @@ runcmd:
     # GDM3 auto-login, disable Wayland
     mkdir -p /etc/gdm3
     printf '%s\n' '[daemon]' 'AutomaticLoginEnable=true' 'AutomaticLogin=robos' 'WaylandEnable=false' '' '[security]' '' '[xdmcp]' '' '[chooser]' '' '[debug]' > /etc/gdm3/custom.conf
+    # GDM3 greeter: RobOS dark theme, enable user switching
+    cat > /usr/share/gdm/dconf/95-robos-greeter << 'GDMEOF'
+[org/gnome/desktop/interface]
+gtk-theme="Yaru-dark"
+icon-theme="Yaru"
+cursor-theme="Yaru"
+color-scheme="prefer-dark"
+
+[org/gnome/desktop/background]
+picture-uri="none"
+picture-options="none"
+primary-color="#0d1117"
+secondary-color="#0d1117"
+color-shading-type="solid"
+
+[org/gnome/desktop/lockdown]
+disable-user-switching=false
+
+[org/gnome/login-screen]
+disable-user-list=false
+GDMEOF
+    dconf update
     # Set graphical boot target
     systemctl set-default graphical.target
     # Disable GNOME initial setup so it doesn't reset our config on first login
