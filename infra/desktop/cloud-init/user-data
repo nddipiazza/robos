@@ -443,10 +443,36 @@ GDMEOF
       for f in /usr/share/gnome-shell/theme/Yaru/ubuntu-logo.png /usr/share/plymouth/themes/spinner/watermark.png; do
         [ -f "$f" ] && cp "$SEED_MOUNT/robos-logo.png" "$f"
       done
-      # Patch GNOME Shell CSS to constrain logo size (prevents full-screen rendering)
-      for css in /usr/share/gnome-shell/theme/Yaru/gnome-shell.css /usr/share/gnome-shell/theme/gnome-classic.css; do
-        [ -f "$css" ] && sed -i 's/\.login-dialog-logo-bin {/\.login-dialog-logo-bin {\n  width: 96px;\n  height: 72px;/' "$css" 2>/dev/null || true
-      done
+      # Patch GNOME Shell gresource CSS to constrain logo size
+      # (GNOME Shell loads CSS from compiled .gresource binaries, not disk files)
+      if which glib-compile-resources >/dev/null 2>&1; then
+        for GRES in /usr/share/gnome-shell/gnome-shell-theme.gresource /usr/share/gnome-shell/gdm-theme.gresource; do
+          [ -f "$GRES" ] || continue
+          TMPDIR=$(mktemp -d)
+          (
+            cd "$TMPDIR"
+            mkdir -p extracted
+            while IFS= read -r res; do
+              relpath="${res#/org/gnome/shell/}"
+              mkdir -p "extracted/$(dirname "$relpath")"
+              gresource extract "$GRES" "$res" > "extracted/$relpath"
+            done < <(gresource list "$GRES")
+            find extracted -name "*.css" -exec grep -l "login-dialog-logo-bin" {} \; | while read css; do
+              sed -i 's/\.login-dialog-logo-bin {/.login-dialog-logo-bin {\n  width: 96px;\n  height: 72px;/' "$css"
+            done
+            { echo '<?xml version="1.0" encoding="UTF-8"?>'
+              echo '<gresources><gresource prefix="/org/gnome/shell">'
+              find extracted -type f | sort | while read f; do echo "  <file>$f</file>"; done
+              echo '</gresource></gresources>'
+            } > res.xml
+            glib-compile-resources res.xml --target=patched.gresource
+            cp "$GRES" "${GRES}.bak"
+            cp patched.gresource "$GRES"
+            echo "Patched: $GRES"
+          )
+          rm -rf "$TMPDIR"
+        done
+      fi
       echo "RobOS logo installed."
     fi
     umount "$SEED_MOUNT" 2>/dev/null || true
