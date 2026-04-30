@@ -5,6 +5,7 @@ const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
 
+app.setName('robos-people-directory');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'people-directory'));
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); process.exit(0); }
