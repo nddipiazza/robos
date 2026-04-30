@@ -1,13 +1,3 @@
-/**
- * RobOS People Directory — main.js
- *
- * Data backend: filesystem JSON store at ~/.config/robos/people/
- *   - people/<uid>.json  — person record
- *   - people/config.json — backend config (type: 'filesystem' | 'ldap')
- *
- * LDAP abstraction layer ready: swap `backend` to 'ldap' in config.json
- * and populate ldap.url, ldap.baseDn, ldap.bindDn, ldap.bindPassPath.
- */
 'use strict';
 
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -22,6 +12,32 @@ if (!gotLock) { app.quit(); process.exit(0); }
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
+
+// ── Shared AI library ─────────────────────────────────────────────────────────
+let aiAgent = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-agent'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+    '/usr/local/share/robos/robos-lib/ai-agent',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { aiAgent = require(p); break; } catch {}
+  }
+} catch {}
+
+// ── Debug snapshot server ─────────────────────────────────────────────────────
+let _debugServer = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
+    path.resolve(__dirname, '..', 'robos-lib', 'dom-snapshot'),
+    '/usr/local/share/robos/robos-lib/dom-snapshot',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { _debugServer = require(p); break; } catch {}
+  }
+} catch {}
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
@@ -53,6 +69,7 @@ app.whenReady().then(() => {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+  if (_debugServer) _debugServer.startDebugServer(win, 19133);
   buildPeopleIndex();
 });
 
@@ -125,6 +142,32 @@ ipcMain.handle('pd-import-ldif',     (_, ldifText) => importLdif(ldifText));
 ipcMain.handle('pd-get-my-profile',  ()            => loadSettings().myProfileUid || null);
 ipcMain.handle('pd-set-my-profile',  (_, uid)      => {
   const s = loadSettings(); s.myProfileUid = uid; saveSettings(s); return { ok: true };
+});
+
+ipcMain.handle('pd-list-ai-providers', async () => {
+  if (!aiAgent) return { activeName: 'GitHub Copilot', providers: [] };
+  return aiAgent.listProviders();
+});
+
+ipcMain.handle('pd-ai-add-person', async (_, { prompt, providerId }) => {
+  if (!aiAgent) return { ok: false, error: 'AI library not available' };
+  const systemPrompt = `You are a people-directory assistant. Given a description of a person, return ONLY a JSON object (no markdown, no code fences) with these fields:
+uid (kebab-case unique id), displayName, givenName, sn (surname), mail, title, department, ou, telephoneNumber.
+Fill in reasonable placeholder values for any missing info. Return valid JSON only.`;
+  const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
+  try {
+    const raw = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
+    let json = raw.trim();
+    // strip code fences if present
+    json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const person = JSON.parse(json);
+    if (!person.uid) person.uid = `person-${Date.now()}`;
+    if (!person.displayName) person.displayName = `${person.givenName || ''} ${person.sn || ''}`.trim() || person.uid;
+    savePerson(person);
+    return { ok: true, person };
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
 });
 
 // ── LDIF importer ─────────────────────────────────────────────────────────────

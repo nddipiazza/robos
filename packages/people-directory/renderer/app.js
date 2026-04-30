@@ -25,6 +25,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('cfg-backend').addEventListener('change', e => {
     document.getElementById('ldap-fields').classList.toggle('hidden', e.target.value !== 'ldap');
   });
+  initAIPanel();
 });
 
 async function reload() {
@@ -269,6 +270,62 @@ async function saveSettings() {
   document.getElementById('settings-modal').classList.add('hidden');
 }
 
+
+// ── AI Add Person panel ───────────────────────────────────────────────────────
+function initAIPanel() {
+  const toggle   = document.getElementById('ai-panel-toggle');
+  const body     = document.getElementById('ai-panel-body');
+  const select   = document.getElementById('ai-agent-select');
+  const textarea = document.getElementById('ai-prompt');
+  const btn      = document.getElementById('ai-generate-btn');
+  const status   = document.getElementById('ai-status');
+
+  function showStatus(msg, type = '') {
+    status.textContent = msg;
+    status.className = type;
+    status.classList.remove('hidden');
+    if (type === 'success') setTimeout(() => status.classList.add('hidden'), 4000);
+  }
+
+  // Populate agent dropdown
+  window.api.listAIProviders().then(({ activeName, providers }) => {
+    select.options[0].textContent = `Default (${activeName})`;
+    providers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      select.appendChild(opt);
+    });
+  }).catch((e) => { console.error('[ai-panel] listAIProviders failed:', e?.message || e); });
+
+  toggle.addEventListener('click', () => {
+    body.classList.toggle('hidden');
+    toggle.textContent = body.classList.contains('hidden') ? '✨ Add with AI' : '✨ Add with AI ▲';
+  });
+
+  btn.addEventListener('click', async () => {
+    const prompt = textarea.value.trim();
+    if (!prompt) { showStatus('Describe the person first.', 'error'); return; }
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating…';
+    showStatus('', '');
+    try {
+      const providerId = select.value || null;
+      const result = await window.api.aiAddPerson(prompt, providerId);
+      if (!result.ok) { showStatus(result.error || 'AI generation failed.', 'error'); return; }
+      activeUid = result.person.uid;
+      await reload();
+      selectPerson(result.person.uid);
+      showStatus(`✅ Added "${result.person.displayName}"`, 'success');
+      textarea.value = '';
+    } catch (e) {
+      showStatus(e.message || String(e), 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Generate & Add';
+    }
+  });
+}
 
 // ── RobOS icon registry injection ────────────────────────────────────
 (function() {

@@ -65,6 +65,7 @@ const PORT_REGISTRY = {
   'ci-monitor':        19130,
   'stage-demo':        19131,
   'group-manager':     19132,
+  'people-directory':  19133,
 };
 
 function getPort(appId) {

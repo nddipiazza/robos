@@ -23,6 +23,22 @@
         <select id="filter-dept"><option value="">All departments</option></select>
       </div>
       <ul id="people-list"></ul>
+      <!-- AI add panel -->
+      <div id="ai-panel">
+        <button id="ai-panel-toggle" title="Add person with AI">✨ Add with AI</button>
+        <div id="ai-panel-body" class="hidden">
+          <div class="ai-row">
+            <label for="ai-agent-select">Agent</label>
+            <select id="ai-agent-select">
+              <option value="">Default (RobOS Agents)</option>
+            </select>
+          </div>
+          <textarea id="ai-prompt" placeholder="Describe the person — name, title, email, team…" rows="3"></textarea>
+          <button id="ai-generate-btn" class="btn-primary ai-btn">Generate &amp; Add</button>
+          <div id="ai-status" class="hidden"></div>
+        </div>
+      </div>
+
       <div id="sidebar-footer">
         <button id="btn-import" title="Import LDIF">Import LDIF</button>
         <button id="btn-settings" title="Backend settings">⚙</button>

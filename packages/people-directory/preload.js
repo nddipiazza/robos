@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('api', {
   importLdif:     (text)     => ipcRenderer.invoke('pd-import-ldif', text),
   getMyProfile:   ()         => ipcRenderer.invoke('pd-get-my-profile'),
   setMyProfile:   (uid)      => ipcRenderer.invoke('pd-set-my-profile', uid),
+  listAIProviders:()         => ipcRenderer.invoke('pd-list-ai-providers'),
+  aiAddPerson:    (prompt, providerId) => ipcRenderer.invoke('pd-ai-add-person', { prompt, providerId: providerId || null }),
 });
