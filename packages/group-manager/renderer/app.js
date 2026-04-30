@@ -722,21 +722,22 @@ function initAIPanel() {
         showAIStatus(result.error || 'AI generation failed.', 'error');
         return;
       }
-      const group = result.group;
-      let finalId = group.id;
-      if (allGroups.find(g => g.id === finalId)) {
-        finalId = `${finalId}-${Date.now().toString(36)}`;
-        group.id = finalId;
+      const groups = result.groups || [result.group];
+      for (const group of groups) {
+        if (allGroups.find(g => g.id === group.id)) {
+          group.id = `${group.id}-${Date.now().toString(36)}`;
+        }
+        await window.api.saveGroup(group);
       }
-      const saved = await window.api.saveGroup(group);
       allGroups = await window.api.listGroups();
       renderGroupList();
-      selectGroup(saved.id || group.id);
+      selectGroup(groups[groups.length - 1].id);
 
       // Clear textarea for next group
       clearTextarea(textarea);
 
-      showAIStatus(`✅ "${group.name}" created. Describe another group to add more.`, 'success');
+      const names = groups.map(g => `"${g.name}"`).join(', ');
+      showAIStatus(`✅ ${groups.length} group${groups.length === 1 ? '' : 's'} created: ${names}`, 'success');
       // Auto-dismiss success after 6s so the panel looks fresh for the next group
       clearTimeout(_statusTimer);
       _statusTimer = setTimeout(() => {

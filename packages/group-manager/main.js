@@ -212,17 +212,18 @@ ipcMain.handle('gds-open-folder', (_, dir) => {
 });
 
 // ── AI: Create group from natural-language prompt ────────────────────────────
-const GROUP_SCHEMA_PROMPT = `You are a RobOS Group Manager assistant. Generate a complete developer group configuration as a single JSON object.
+const GROUP_SCHEMA_PROMPT = `You are a RobOS Group Manager assistant. Generate one or more developer group configurations.
 
 CRITICAL OUTPUT RULES — MUST FOLLOW EXACTLY:
-- Output ONLY the raw JSON object — no markdown, no code fences, no backticks, no explanation, no prose
+- Output ONLY a raw JSON array — no markdown, no code fences, no backticks, no explanation, no prose
+- Even if only one group is described, still return a JSON array with one element
 - ALL string values must contain ONLY plain printable ASCII characters (codes 32-126)
 - NO emoji, NO Unicode symbols, NO non-ASCII characters of any kind
 - NO ANSI escape codes, NO control characters, NO special formatting
 - NO bullet points, NO dashes used as decorators, NO ASCII art of any kind
 - Descriptions and notes must be plain English sentences — nothing that would break JSON parsing
 
-The JSON must match this exact schema (all fields optional except id and name):
+Each element in the array must match this exact schema (all fields optional except id and name):
 {
   "id": "lowercase-hyphen-id",
   "name": "Human Readable Name",
@@ -251,7 +252,7 @@ The JSON must match this exact schema (all fields optional except id and name):
 Rules:
 - id must be lowercase letters, numbers, hyphens only
 - Include only what the user described — do not invent details not mentioned
-- Output ONLY the raw JSON object — plain ASCII text in all values, no markdown, no emoji, no special characters
+- Output ONLY the raw JSON array — plain ASCII text in all values, no markdown, no emoji, no special characters
 `;
 
 // ── AI provider list ──────────────────────────────────────────────────────────
@@ -356,28 +357,47 @@ ipcMain.handle('gm-ai-create-group', async (_, { prompt, providerId }) => {
   const fullPrompt = `${GROUP_SCHEMA_PROMPT}\n\nUser description:\n${prompt}`;
   const result = await aiAgent.ask(fullPrompt, providerId ? { providerId } : {});
   if (!result.ok) return { ok: false, error: result.error };
-  return parseGroupFromAIOutput(result.text);
+  return parseGroupsFromAIOutput(result.text);
 });
 
-function parseGroupFromAIOutput(raw) {
-  // Strip ANSI escape codes (colour, cursor, etc.) that Copilot CLI can inject
+function parseGroupsFromAIOutput(raw) {
+  // Strip ANSI escape codes and markdown fences
   // eslint-disable-next-line no-control-regex
   const noAnsi = (raw || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '');
-  // Strip markdown fences and trim
   const stripped = noAnsi.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
-  // Try direct parse first
+
+  // Try parsing as array first
   try {
-    const obj = JSON.parse(stripped);
-    if (obj && obj.id && obj.name) return { ok: true, group: normaliseGroup(obj) };
+    const parsed = JSON.parse(stripped);
+    if (Array.isArray(parsed)) {
+      const groups = parsed.map(normaliseGroup).filter(g => g.id && g.name);
+      if (groups.length) return { ok: true, groups };
+    } else if (parsed && parsed.id && parsed.name) {
+      return { ok: true, groups: [normaliseGroup(parsed)] };
+    }
   } catch {}
-  // Try to extract first JSON object (handles leading/trailing prose)
-  const match = stripped.match(/\{[\s\S]*\}/);
-  if (match) {
+
+  // Try extracting array from output
+  const arrMatch = stripped.match(/\[[\s\S]*\]/);
+  if (arrMatch) {
     try {
-      const obj = JSON.parse(match[0]);
-      if (obj && obj.id && obj.name) return { ok: true, group: normaliseGroup(obj) };
+      const parsed = JSON.parse(arrMatch[0]);
+      if (Array.isArray(parsed)) {
+        const groups = parsed.map(normaliseGroup).filter(g => g.id && g.name);
+        if (groups.length) return { ok: true, groups };
+      }
     } catch {}
   }
+
+  // Fall back to extracting first JSON object
+  const objMatch = stripped.match(/\{[\s\S]*\}/);
+  if (objMatch) {
+    try {
+      const obj = JSON.parse(objMatch[0]);
+      if (obj && obj.id && obj.name) return { ok: true, groups: [normaliseGroup(obj)] };
+    } catch {}
+  }
+
   return { ok: false, error: 'AI response did not contain valid group JSON.\n\nRaw output:\n' + stripped.slice(0, 500) };
 }
 
