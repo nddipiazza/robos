@@ -698,8 +698,12 @@ function initAIPanel() {
     toggle.textContent = body.classList.contains('hidden') ? '✨ Create with AI' : '✨ Create with AI ▲';
   });
 
+  let _statusTimer = null;
+
   btn.addEventListener('click', async () => {
-    const prompt     = textarea.value.trim();
+    // Read value — robos-ai-textarea exposes .value; fall back to plain textarea
+    const rawValue   = typeof textarea.value !== 'undefined' ? textarea.value : textarea.innerText || '';
+    const prompt     = rawValue.trim();
     const providerId = select.value || null; // null = use RobOS default
     if (!prompt) { showAIStatus('Please describe the group first.', 'error'); return; }
 
@@ -724,17 +728,37 @@ function initAIPanel() {
       allGroups = await window.api.listGroups();
       renderGroupList();
       selectGroup(saved.id || group.id);
-      showAIStatus(`✅ Created "${group.name}" — review and save any edits.`, 'success');
-      textarea.value = '';
+
+      // Clear textarea for next group
+      clearTextarea(textarea);
+
+      showAIStatus(`✅ "${group.name}" created. Describe another group to add more.`, 'success');
+      // Auto-dismiss success after 6s so the panel looks fresh for the next group
+      clearTimeout(_statusTimer);
+      _statusTimer = setTimeout(() => {
+        status.classList.add('hidden');
+        status.textContent = '';
+      }, 6000);
     } catch (e) {
       showAIStatus(e.message || String(e), 'error');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Generate';
+      // Refocus textarea so user can type the next prompt immediately
+      if (textarea.focus) textarea.focus();
     }
   });
 
+  function clearTextarea(el) {
+    // Works for both <robos-ai-textarea> (contenteditable, .value setter) and plain <textarea>
+    try { el.value = ''; } catch {}
+    // Belt-and-suspenders: also clear inner contenteditable if present
+    const inner = el._inner || el.shadowRoot && el.shadowRoot.querySelector('[contenteditable]');
+    if (inner) { try { inner.innerText = ''; } catch {} }
+  }
+
   function showAIStatus(msg, type) {
+    clearTimeout(_statusTimer);
     status.textContent = msg;
     status.className = type || '';
     status.classList.remove('hidden');
