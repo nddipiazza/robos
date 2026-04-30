@@ -12,7 +12,7 @@ textarea { resize: vertical; }
 #app { display: flex; height: 100vh; }
 
 /* Groups sidebar */
-#groups-sidebar { width: 220px; min-width: 180px; max-width: 420px; background: #0d1117; border-right: none; display: flex; flex-direction: column; flex-shrink: 0; }
+#groups-sidebar { width: 260px; min-width: 220px; max-width: 420px; background: #0d1117; border-right: none; display: flex; flex-direction: column; flex-shrink: 0; }
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 10px; border-bottom: 1px solid #21262d; }
 .logo { font-size: 14px; font-weight: bold; color: #e0e0ff; }
 #btn-new-group { background: #00bcd4; border: none; color: #000; border-radius: 4px; width: 26px; height: 26px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
