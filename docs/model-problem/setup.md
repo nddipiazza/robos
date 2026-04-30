@@ -69,61 +69,6 @@ Dana opens **Task Servers** and configures Jira as the team's task tracking syst
 
 Initial sync pulls all existing Jira issues into RobOS. Bidirectional sync stays enabled.
 
-### Task workflow (Workflow Studio)
-
-Dana defines the task workflow that all stories and bugs will follow. Every transition is **event-driven** — when a PR is created, the task automatically moves to `in_review`. No manual status updates needed.
-
-```yaml
-story:
-  stages:
-    - id: backlog
-      name: Backlog
-      transitions: [in_progress]
-
-    - id: in_progress
-      name: In Progress
-      auto_enter: task_assigned_and_branch_created
-      transitions: [in_review]
-
-    - id: in_review
-      name: In Review
-      auto_enter: pr_created
-      transitions: [approved]
-
-    - id: approved
-      name: Approved
-      auto_enter: pr_approved
-      transitions: [deploying]
-
-    - id: deploying
-      name: Deploying
-      auto_enter: pr_merged
-      transitions: [deployed]
-
-    - id: deployed
-      name: Deployed
-      auto_enter: deploy_pipeline_completed
-```
-
-Events flow through the **Event Bus** and the **Rule Engine** matches them to status transitions.
-
-```mermaid
-%%{init: {'theme': 'dark'}}%%
-graph LR
-    A[Backlog] -->|Start Work| B[In Progress]
-    B -->|PR Created| C[In Review]
-    C -->|PR Approved| D[Approved]
-    D -->|PR Merged| E[Deploying]
-    E -->|Deploy Complete| F[Deployed]
-
-    style A fill:#6b7280,stroke:#374151,color:#fff
-    style B fill:#3b82f6,stroke:#2563eb,color:#fff
-    style C fill:#f59e0b,stroke:#d97706,color:#fff
-    style D fill:#22c55e,stroke:#16a34a,color:#fff
-    style E fill:#8b5cf6,stroke:#7c3aed,color:#fff
-    style F fill:#10b981,stroke:#059669,color:#fff
-```
-
 ### Repos (Git Projects)
 
 Dana adds the two repositories the team will work on:
@@ -256,6 +201,69 @@ Same hero pattern as People Manager: an AI textarea drafts a whole group — rep
 People are in (1.3), groups are in (1.4). Now Dana provisions the **toolchain** every developer on the team will share — the IDEs, CLI tools, and cloud SDKs that show up the moment a teammate logs in. Dev Tools is RobOS's package-style installer for developer software: pick what the team needs, it gets staged centrally, and every workspace inherits the same versions.
 
 This is the bridge between **manager setup** (videos 01–05) and **developer onboarding** (Phase 3, Alex). Without it, the team's first login would land in a workspace with no IDE, no `gh`, no SDKs — and every developer would set up their own.
+
+---
+
+## 1.6 — Dana defines the task workflow
+
+<img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" alt="Workflow Studio" style="width: 32px; height: 32px; vertical-align: middle;"> **App:** Workflow Studio
+
+📺 *Captured at the end of [Video 01]({{ site.baseurl }}{% link model-problem/videos/01-dana-setup.md %}) — once the team, repos, agent, and toolchain are in place, Dana defines how every ticket moves.*
+
+Dana defines the task workflow that all stories and bugs will follow. Every transition is **event-driven** — when a PR is created, the task automatically moves to `in_review`. No manual status updates needed.
+
+```yaml
+story:
+  stages:
+    - id: backlog
+      name: Backlog
+      transitions: [in_progress]
+
+    - id: in_progress
+      name: In Progress
+      auto_enter: task_assigned_and_branch_created
+      transitions: [in_review]
+
+    - id: in_review
+      name: In Review
+      auto_enter: pr_created
+      transitions: [approved]
+
+    - id: approved
+      name: Approved
+      auto_enter: pr_approved
+      transitions: [deploying]
+
+    - id: deploying
+      name: Deploying
+      auto_enter: pr_merged
+      transitions: [deployed]
+
+    - id: deployed
+      name: Deployed
+      auto_enter: deploy_pipeline_completed
+```
+
+Events flow through the **Event Bus** and the **Rule Engine** matches them to status transitions.
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+graph LR
+    A[Backlog] -->|Start Work| B[In Progress]
+    B -->|PR Created| C[In Review]
+    C -->|PR Approved| D[Approved]
+    D -->|PR Merged| E[Deploying]
+    E -->|Deploy Complete| F[Deployed]
+
+    style A fill:#6b7280,stroke:#374151,color:#fff
+    style B fill:#3b82f6,stroke:#2563eb,color:#fff
+    style C fill:#f59e0b,stroke:#d97706,color:#fff
+    style D fill:#22c55e,stroke:#16a34a,color:#fff
+    style E fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style F fill:#10b981,stroke:#059669,color:#fff
+```
+
+This is the **last** thing Dana does in Phase 1: it codifies the contract every later step enforces. Pat's stories (Phase 2) get authored against these stages, Jordan's CI gates (1.6 of his arc) fire the transitions, and Alex's task workspaces (Phase 3) provision themselves the moment a ticket lands in `in_progress`.
 
 ---
 
