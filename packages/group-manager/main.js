@@ -248,6 +248,81 @@ Rules:
 
 // ── AI provider list ──────────────────────────────────────────────────────────
 
+// ── list-path: @ mention typeahead ────────────────────────────────────────────
+ipcMain.handle('gm-list-path', (_, prefix) => {
+  try {
+    const home     = os.homedir();
+    const expanded = (prefix || '').replace(/^~/, home);
+    const isDir    = expanded.endsWith('/');
+    const dir      = isDir ? expanded : path.dirname(expanded);
+    const partial  = isDir ? '' : path.basename(expanded);
+
+    const isRecursive = partial && !expanded.slice(home.length + 1).includes('/');
+    if (isRecursive) {
+      const INDEX_DIR = path.join(home, '.config', 'robos', 'search-index');
+      let items = [];
+      if (fs.existsSync(INDEX_DIR)) {
+        const indexFiles = fs.readdirSync(INDEX_DIR).filter(f => f.endsWith('.txt'));
+        const seen = new Set();
+        for (const indexFile of indexFiles) {
+          const fp = path.join(INDEX_DIR, indexFile);
+          const r = cp.spawnSync('grep', ['-i', '-m', '30', partial, fp], { encoding: 'utf8', timeout: 2000 });
+          for (const p of (r.stdout || '').split('\n').filter(Boolean)) {
+            if (seen.has(p)) continue;
+            seen.add(p);
+            if (p.startsWith('github.com/')) {
+              const parts = p.replace('github.com/', '').split('/');
+              if (parts.length === 2) {
+                const [org, repo] = parts;
+                if (!repo.toLowerCase().includes(partial.toLowerCase()) && !org.toLowerCase().includes(partial.toLowerCase())) continue;
+                items.push({ name: `${org}/${repo}`, path: p, isRepo: true });
+              }
+              continue;
+            }
+            if (p.startsWith('person:')) {
+              const [, username, ...nameParts] = p.split(':');
+              const displayName = nameParts.join(':');
+              if (!username && !displayName) continue;
+              items.push({ name: displayName || username, path: username, isPerson: true });
+              continue;
+            }
+            if (p.startsWith('group:')) {
+              const [, groupId, ...nameParts] = p.split(':');
+              const groupName = nameParts.join(':');
+              if (!groupId && !groupName) continue;
+              items.push({ name: groupName || groupId, path: groupId, isGroup: true });
+              continue;
+            }
+            if (!path.basename(p).toLowerCase().includes(partial.toLowerCase())) continue;
+            let isDirectory = false;
+            try { isDirectory = fs.statSync(p).isDirectory(); } catch {}
+            items.push({ name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true });
+            if (items.length >= 30) break;
+          }
+          if (items.length >= 30) break;
+        }
+      }
+      return { ok: true, items };
+    }
+
+    // Direct directory listing
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return { ok: true, items: [] }; }
+    const filtered = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 30)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+        isDir: e.isDirectory(),
+        isPath: true,
+      }));
+    return { ok: true, items: filtered };
+  } catch (e) {
+    return { ok: true, items: [] };
+  }
+});
+
 ipcMain.handle('gm-list-ai-providers', () => {
   if (aiAgent) return aiAgent.listProviders();
   return { activeId: 'github-copilot', activeName: 'GitHub Copilot', providers: [] };

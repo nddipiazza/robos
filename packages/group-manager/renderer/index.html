@@ -30,7 +30,8 @@
               <option value="">Default (RobOS Agents)</option>
             </select>
           </div>
-          <textarea id="ai-prompt" rows="4" placeholder="Describe the group… e.g. 'Backend team for the payments service. They need Docker, Java 17, access to the payments-api and fraud-engine repos, and use GitHub Actions for CI.'"></textarea>
+          <robos-ai-textarea id="ai-prompt" show-submit="false" show-commands="false" min-height="80"
+            placeholder="Describe the group… e.g. 'Backend team for the payments service. They need Docker, Java 17, access to the payments-api and fraud-engine repos, and use GitHub Actions for CI.'"></robos-ai-textarea>
           <button id="ai-generate-btn" class="btn-primary">Generate</button>
           <div id="ai-status" class="hidden"></div>
         </div>
@@ -125,6 +126,7 @@
   </div>
 
   
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -280,6 +280,20 @@ function initAIPanel() {
   const btn      = document.getElementById('ai-generate-btn');
   const status   = document.getElementById('ai-status');
 
+  // Wire @-mention file typeahead for robos-ai-textarea
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      if (textarea && textarea.addEventListener) {
+        textarea.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.api.searchIndex(e.detail.query);
+            if (r && r.ok && textarea._showMentions) textarea._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
+
   function showStatus(msg, type = '') {
     status.textContent = msg;
     status.className = type;

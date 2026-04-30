@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('api', {
   openDevConsole:  ()                  => ipcRenderer.invoke('gds-open-dev-console'),
   listAIProviders: ()                  => ipcRenderer.invoke('gm-list-ai-providers'),
   aiCreateGroup:   (prompt, provider)  => ipcRenderer.invoke('gm-ai-create-group', { prompt, providerId: provider || null }),
+  listPath:        (prefix)            => ipcRenderer.invoke('gm-list-path', prefix),
 });

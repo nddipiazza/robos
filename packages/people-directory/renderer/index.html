@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'">
   <title>RobOS People Directory</title>
   <link rel="stylesheet" href="style.css">
   <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
@@ -33,7 +33,7 @@
               <option value="">Default (RobOS Agents)</option>
             </select>
           </div>
-          <textarea id="ai-prompt" placeholder="Describe the person — name, title, email, team…" rows="3"></textarea>
+          <robos-ai-textarea id="ai-prompt" show-submit="false" show-commands="false" placeholder="Describe the person — name, title, email, team…" min-height="68"></robos-ai-textarea>
           <button id="ai-generate-btn" class="btn-primary ai-btn">Generate &amp; Add</button>
           <div id="ai-status" class="hidden"></div>
         </div>
@@ -92,6 +92,7 @@
     </div>
   </div>
 
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

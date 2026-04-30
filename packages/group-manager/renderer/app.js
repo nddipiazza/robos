@@ -99,6 +99,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // AI Create panel
   initAIPanel();
+
+  // Wire @-mention typeahead for all robos-ai-textarea elements
+  customElements.whenDefined('robos-ai-textarea').then(() => {
+    document.querySelectorAll('robos-ai-textarea').forEach(el => {
+      el.addEventListener('robos-path-query', async (e) => {
+        const r = await window.api.listPath(e.detail.query);
+        if (r && r.ok) el._showMentions(r.items);
+      });
+    });
+  });
 });
 
 // ── Groups list ───────────────────────────────────────────────────────────────
