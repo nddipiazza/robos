@@ -202,9 +202,10 @@ ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs, cwd) => {
   const parts = ['/usr/bin/copilot'];
   if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   if (sessionId) parts.push('--resume', sessionId);
-  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
-    ? `cd '${cwd.trim().replace(/'/g, "'\\''")}' && `
+    ? `cd "${dqEscape(cwd.trim())}" && `
     : '';
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
@@ -326,7 +327,8 @@ ipcMain.handle('codex-launch-terminal', (_, sessionId, extraArgs) => {
     parts = ['codex'];
     if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
-  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
   });
@@ -446,9 +448,10 @@ ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs, cwd) => {
     parts = ['claude'];
     if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
-  const shellCmd = parts.map(a => `'${String(a).replace(/'/g, "'\\''")}'`).join(' ');
+  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
-    ? `cd '${cwd.trim().replace(/'/g, "'\\''")}' && `
+    ? `cd "${dqEscape(cwd.trim())}" && `
     : '';
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0' }, detached: true,
