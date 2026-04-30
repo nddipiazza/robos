@@ -86,6 +86,7 @@ All apps are Electron + vanilla JavaScript. They require `--no-sandbox --disable
 | **Context Manager** | Curate AI context sources (files, URLs, repos, tickets) |
 | **Tech Workbench** | Technical spike research with AI assistance |
 | **Work Journal** | Git-backed developer journal with AI activity feed |
+| **Group Manager** | Manage GitHub organizations and teams — view members, roles, and repo access |
 | **Pass Manager** | GUI for GPG-encrypted password store |
 | **Workflow Studio** | Workflow and issue lifecycle management |
 | **Agent Scheduler** | Background cron-based AI agent jobs |

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' file:">
+  <title>RobOS Group Developer Settings</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Groups sidebar -->
+    <aside id="groups-sidebar">
+      <div class="sidebar-head">
+        <span class="app-logo" id="app-logo-icon"></span>
+      <span class="logo">Groups</span>
+        <button id="btn-new-group" title="New group">＋</button>
+      </div>
+      <input id="group-search" type="text" placeholder="Search groups…">
+      <ul id="group-list"></ul>
+
+      <!-- AI Create panel -->
+      <div id="ai-panel">
+        <button id="ai-panel-toggle" title="Create group with AI">✨ Create with AI</button>
+        <div id="ai-panel-body" class="hidden">
+          <div class="ai-agent-row">
+            <label for="ai-agent-select">Agent</label>
+            <select id="ai-agent-select">
+              <option value="">Default (RobOS Agents)</option>
+            </select>
+          </div>
+          <textarea id="ai-prompt" rows="4" placeholder="Describe the group… e.g. 'Backend team for the payments service. They need Docker, Java 17, access to the payments-api and fraud-engine repos, and use GitHub Actions for CI.'"></textarea>
+          <button id="ai-generate-btn" class="btn-primary">Generate</button>
+          <div id="ai-status" class="hidden"></div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <button class="btn-console" id="btn-dev-console" title="Open Cockpit developer console">
+          🖥 Dev Console
+        </button>
+        <div class="config-path-wrap">
+          <span class="config-path-label">Config stored at:</span>
+          <span id="config-path-display" class="config-path-val">~/.config/robos/groups/</span>
+          <button class="btn-open-folder" id="btn-open-folder" title="Open in file manager">📂</button>
+        </div>
+      </div>
+    </aside>
+
+    <div id="sidebar-resize-handle"></div>
+
+    <!-- Main area: split left (categories) / right (content) -->
+    <div id="main-area">
+      <div id="no-group">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div>
+        <div class="empty-title">No group selected</div>
+        <div class="empty-sub">Select a group or create a new one.</div>
+      </div>
+
+      <div id="group-workspace" class="hidden">
+        <!-- Group header -->
+        <div id="group-header">
+          <div id="group-header-left">
+            <h2 id="group-name-display"></h2>
+            <div id="group-meta"></div>
+          </div>
+          <div id="group-header-actions">
+            <button class="btn-secondary" id="btn-edit-group">Edit Group</button>
+            <button class="btn-danger"    id="btn-delete-group">Delete</button>
+          </div>
+        </div>
+
+        <!-- Resizable split: category nav | category content -->
+        <div id="settings-split">
+          <nav id="cat-nav">
+            <ul id="cat-list">
+              <li class="cat-item active" data-cat="git">
+                <span class="cat-icon">🔀</span> Git Projects
+              </li>
+              <li class="cat-item" data-cat="software">
+                <span class="cat-icon">📦</span> Software Installations
+              </li>
+              <li class="cat-item" data-cat="onboarding">
+                <span class="cat-icon">🚀</span> Onboarding Steps
+              </li>
+              <li class="cat-item" data-cat="secrets">
+                <span class="cat-icon">🔐</span> Secret Management
+              </li>
+              <li class="cat-item" data-cat="ci">
+                <span class="cat-icon">⚙️</span> CI Environments
+              </li>
+              <li class="cat-item" data-cat="members">
+                <span class="cat-icon">👥</span> Members
+              </li>
+              <li class="cat-item" data-cat="workspaces">
+                <span class="cat-icon">🖥</span> Workspaces
+              </li>
+            </ul>
+          </nav>
+
+          <div id="resize-handle"></div>
+
+          <div id="cat-content">
+            <!-- Content rendered by JS per category -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New / Edit Group modal -->
+  <div id="group-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="group-modal-title">New Group</span>
+        <button id="group-modal-close">✕</button>
+      </div>
+      <div class="form-row"><label>Group ID *</label><input id="gf-id" type="text" placeholder="e.g. backend-devs"></div>
+      <div class="form-row"><label>Name *</label><input id="gf-name" type="text" placeholder="Backend Developers"></div>
+      <div class="form-row"><label>Description</label><input id="gf-desc" type="text"></div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btn-save-group-modal">Save</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <script src="app.js"></script>
+</body>
+</html>

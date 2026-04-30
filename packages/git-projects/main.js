@@ -493,12 +493,14 @@ ipcMain.handle('open-in-explorer', (_, localPath) => {
 
 // ── AI Dev Setup ──────────────────────────────────────────────────────────────
 // ── Shared AI runner — uses robos-copilot-lib ─────────────────────────────────
-const copilot = require('/usr/local/share/robos/robos-copilot-lib');
+let copilot;
+try { copilot = require('/usr/local/share/robos/robos-copilot-lib'); } catch { copilot = null; }
 
 // Context injected into every AI prompt in this module
 const ROBOS_CTX = `IMPORTANT CONTEXT: You are assisting RobOS, an AI-powered developer OS. The scripts and instructions you generate are stored in RobOS config files (~/.config/robos/git-projects/), NOT committed to the git repository. They exist solely so RobOS can automatically set up a developer's local environment when they pick up a ticket. Keep everything self-contained and runnable on the developer's machine using the project's own tooling. IMPORTANT: All scripts are executed with cwd already set to the project clone directory — do NOT include any "cd" commands to change into the project directory.`;
 
 ipcMain.handle('ai-dev-setup-step', async (_, { localPath, repoUrl, extraPrompt, step }) => {
+  if (!copilot) return { error: 'AI features unavailable: robos-copilot-lib not installed' };
   try {
     const filesToRead = ['README.md', 'README.rst', 'package.json', 'pom.xml',
       'build.gradle', 'Makefile', 'docker-compose.yml', 'docker-compose.yaml',
@@ -562,6 +564,7 @@ ipcMain.handle('ai-dev-setup-step', async (_, { localPath, repoUrl, extraPrompt,
 });
 
 ipcMain.handle('ai-dev-setup-interview', async (_, { localPath, repoUrl, extraPrompt }) => {
+  if (!copilot) return { error: 'AI features unavailable: robos-copilot-lib not installed' };
   try {
     const filesToRead = ['README.md', 'package.json', 'pom.xml', 'build.gradle', '.env.example', 'docker-compose.yml', 'go.mod'];
     let context = `Repository: ${repoUrl || 'unknown'}\nLocal path: ${localPath || 'not cloned'}\n\n`;
@@ -583,6 +586,7 @@ ipcMain.handle('ai-dev-setup-interview', async (_, { localPath, repoUrl, extraPr
 });
 
 ipcMain.handle('ai-fix-devsetup-script', async (_, { localPath, repoUrl, script, errorOutput, type }) => {
+  if (!copilot) return { error: 'AI features unavailable: robos-copilot-lib not installed' };
   try {
     const errSnip    = (errorOutput || '').split('\n').slice(-30).join('\n');
     const scriptSnip = (script || '').slice(0, 1500);
@@ -597,6 +601,7 @@ ipcMain.handle('ai-fix-devsetup-script', async (_, { localPath, repoUrl, script,
 });
 
 ipcMain.handle('ai-refine-devsetup', async (_, { localPath, repoUrl, field, current, feedback }) => {
+  if (!copilot) return { error: 'AI features unavailable: robos-copilot-lib not installed' };
   try {
     const isBash = field === 'script' || field === 'start' || field === 'test' || field === 'e2e';
     const feedbackLine = feedback ? `\n\nUser feedback: ${feedback}` : '';
@@ -617,6 +622,7 @@ ipcMain.handle('ai-refine-devsetup', async (_, { localPath, repoUrl, field, curr
 
 
 ipcMain.handle('ai-detect-secrets', async (_, { localPath, repoUrl }) => {
+  if (!copilot) return { error: 'AI features unavailable: robos-copilot-lib not installed' };
   try {
     const filesToRead = ['README.md', '.env.example', '.env.sample', 'package.json',
       'docker-compose.yml', 'docker-compose.yaml', 'pom.xml', 'build.gradle',

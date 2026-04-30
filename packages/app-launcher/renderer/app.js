@@ -247,6 +247,13 @@ document.addEventListener('keydown', (e) => {
     case 'Enter':
       if (document.activeElement && document.activeElement.classList.contains('app-card')) {
         document.activeElement.click();
+      } else if (document.activeElement === searchInput) {
+        const filtered = getFilteredApps();
+        if (filtered.length === 1) {
+          window.robos.launchApp(filtered[0].exec);
+        } else if (filtered.length > 1) {
+          focusCard(0);
+        }
       }
       break;
     case 'Tab':

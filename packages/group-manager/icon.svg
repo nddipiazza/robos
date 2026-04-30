@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Left person (muted) -->
+  <circle cx="20" cy="20" r="8" fill="#21262d" stroke="#8b949e" stroke-width="1.5"/>
+  <path d="M4 44 Q4 33 20 33 Q36 33 36 44" fill="none" stroke="#8b949e" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Right person (accent) -->
+  <circle cx="40" cy="18" r="9" fill="#1e3a5f" stroke="#00bcd4" stroke-width="2"/>
+  <path d="M22 46 Q22 33 40 33 Q58 33 58 46" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round"/>
+  <!-- Gear badge (bottom-right) -->
+  <circle cx="50" cy="50" r="12" fill="#0d1117"/>
+  <g transform="translate(50,50)">
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(45)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(90)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(135)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(180)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(225)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(270)"/>
+    <rect x="-2.5" y="-11" width="5" height="4.5" rx="1" fill="#00bcd4" transform="rotate(315)"/>
+    <circle r="7.5" fill="#00bcd4"/>
+    <circle r="3.5" fill="#0d1117"/>
+  </g>
+</svg>

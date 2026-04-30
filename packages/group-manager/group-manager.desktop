@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Group Manager
+Comment=Manage RobOS developer groups, members, software, onboarding, and CI settings
+Exec=/usr/bin/electron /usr/local/share/robos/group-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/group-manager/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=Dev
+StartupWMClass=robos-group-manager
