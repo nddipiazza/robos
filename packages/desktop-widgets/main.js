@@ -10,9 +10,6 @@ const { execSync } = cp;
 const WIDGET_WINDOW_TITLE = 'RobOS Desktop Widgets';
 
 // Pin the widget below every other window via _NET_WM_STATE_BELOW + sticky.
-// Ignores TYPE (Electron clobbers that); uses STATE (which survives).
-// Re-asserts forever on an interval — Electron raises the window during its
-// own startup animations, focus changes, and HMR-style reloads.
 function pinBelow() {
   const LOG = '/tmp/dw-pin.log';
   const env = { ...process.env, DISPLAY: ':0' };
@@ -30,6 +27,31 @@ function pinBelow() {
   // Apply initially with a small delay, then every 3s forever.
   setTimeout(apply, 800);
   setInterval(apply, 3000);
+}
+
+// Set _NET_WM_WINDOW_TYPE_DESKTOP via xprop — same approach as desktop-dashboard.
+// This removes the window from the taskbar at the WM level.
+function setDesktopWindowType() {
+  if (!win) return;
+  const env = { ...process.env, DISPLAY: ':0' };
+  let attempts = 0;
+  const trySet = () => {
+    attempts++;
+    cp.exec(
+      `WID=$(xdotool search --pid $$ --name "${WIDGET_WINDOW_TITLE}" 2>/dev/null | head -1); ` +
+      `[ -z "$WID" ] && WID=$(xdotool search --name "${WIDGET_WINDOW_TITLE}" 2>/dev/null | head -1); ` +
+      `if [ -n "$WID" ]; then ` +
+        `xprop -id $WID -f _NET_WM_WINDOW_TYPE 32a -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_DESKTOP; ` +
+        `echo "OK $WID"; ` +
+      `else echo "NOTFOUND"; fi`,
+      { timeout: 5000, env },
+      (err, stdout) => {
+        const out = (stdout || '').trim();
+        if (!out.startsWith('OK') && attempts < 10) setTimeout(trySet, 500);
+      }
+    );
+  };
+  setTimeout(trySet, 1000);
 }
 
 // Debug server (optional)
@@ -160,12 +182,7 @@ app.whenReady().then(() => {
 
   win = new BrowserWindow({
     ...b,
-    // Keep the window WM-managed (NOT override-redirect) so wmctrl's BELOW
-    // state actually controls stacking. `focusable: false` and `type: 'desktop'`
-    // both force override-redirect on Linux — so we avoid them.
-    // `frame: false` and `transparent: true` together do NOT force
-    // override-redirect in Electron 28+, so we get real alpha blending AND
-    // WM-managed stacking.
+    type: 'desktop',
     title: WIDGET_WINDOW_TITLE,
     frame: false,
     transparent: true,
@@ -185,9 +202,12 @@ app.whenReady().then(() => {
   win.setMenuBarVisibility(false);
   win.setSkipTaskbar(true);
 
-  // Pin below all other windows via wmctrl state flags.
+  // Pin below all other windows and set DESKTOP window type to hide from taskbar.
   pinBelow();
-  win.webContents.on('did-finish-load', () => pinBelow());
+  win.webContents.on('did-finish-load', () => {
+    setDesktopWindowType();
+    pinBelow();
+  });
 
   // Keep widgets anchored to the right edge when resolution changes.
   const onDisplayChange = () => {
