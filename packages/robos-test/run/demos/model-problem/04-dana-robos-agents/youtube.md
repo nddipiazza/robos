@@ -49,6 +49,10 @@ RobOS, Model Problem, Agents Manager, GitHub Copilot, Codex, sessions, default a
 
 Agents Manager panel with GitHub Copilot showing a green "logged in" badge and an active session card labeled "Dana's Session". Bold overlay text: **"Login. Session. Default. Done."**
 
+## YouTube URL
+
+https://youtu.be/whtovwKcpV8
+
 ## End screen
 
 - Subscribe card at 3:06
