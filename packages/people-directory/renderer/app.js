@@ -355,3 +355,32 @@ function initAIPanel() {
   }
 })();
 // ─────────────────────────────────────────────────────────────────────
+
+// ── Resizable sidebar splitter ────────────────────────────────────────────────
+(function() {
+  const handle  = document.getElementById('resize-handle');
+  const sidebar = document.getElementById('sidebar');
+  if (!handle || !sidebar) return;
+  let dragging = false, startX = 0, startW = 0;
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX;
+    startW = sidebar.getBoundingClientRect().width;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const newW = Math.min(520, Math.max(180, startW + (e.clientX - startX)));
+    sidebar.style.width = newW + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+})();

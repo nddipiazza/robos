@@ -11,8 +11,10 @@ code { background: #161b22; border: 1px solid #30363d; border-radius: 3px; paddi
 
 /* ── Layout ──────────────────────────────────────────────────────────────────*/
 #app { display: flex; height: 100vh; }
-#sidebar { width: 280px; min-width: 200px; background: #0d1117; border-right: 1px solid #21262d; display: flex; flex-direction: column; flex-shrink: 0; }
-#main { flex: 1; overflow-y: auto; background: #0d1117; }
+#sidebar { width: 280px; min-width: 180px; max-width: 520px; background: #0d1117; border-right: none; display: flex; flex-direction: column; flex-shrink: 0; }
+#resize-handle { width: 5px; background: #21262d; cursor: col-resize; flex-shrink: 0; transition: background .15s; }
+#resize-handle:hover, #resize-handle.dragging { background: #00bcd4; }
+#main { flex: 1; overflow-y: auto; background: #0d1117; min-width: 0; }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────────*/
 #sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 10px; border-bottom: 1px solid #21262d; }
