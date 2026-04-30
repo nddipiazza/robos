@@ -87,17 +87,24 @@ Name=Disabled
 Hidden=true
 EOF
 
-# ── Step 5: Install Node.js 20 and Electron runtime deps ────────────────────
+# ── Step 5: Install Node.js 24 and Electron runtime deps ────────────────────
 log "Step 5/7: Installing Node.js and Electron..."
 
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
 apt-get update -qq
 apt-get install -y -qq nodejs
 apt-get install -y -qq libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
   xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2
 npm install -g electron@28 --unsafe-perm 2>&1 | tail -3
+
+# Ensure node binary and AI CLI native binaries are executable by all users.
+# The copilot CLI bundles a native binary that must be world-executable, and
+# node itself must be executable for the copilot npm-loader to spawn it.
+chmod a+rx /usr/bin/node 2>/dev/null || true
+find /usr/lib/node_modules/@github/copilot -name 'copilot' -type f -exec chmod a+rx {} \; 2>/dev/null || true
+find /usr/lib/node_modules/@anthropic-ai -type f -name '*.node' -exec chmod a+rx {} \; 2>/dev/null || true
 
 # ── Step 6: Deploy RobOS Apps ────────────────────────────────────────────────
 log "Step 6/7: Deploying RobOS apps..."
