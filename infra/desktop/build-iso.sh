@@ -65,7 +65,7 @@ touch "$STAGING/autoinstall/meta-data"
 cp "$SCRIPT_DIR/robos-provision.sh" "$STAGING/robos-provision.sh"
 
 # Logo
-[ -f "$REPO_ROOT/logo-ascii.png" ] && cp "$REPO_ROOT/logo-ascii.png" "$STAGING/robos-logo.png"
+[ -f "$REPO_ROOT/logo.png" ] && cp "$REPO_ROOT/logo.png" "$STAGING/robos-logo.png"
 
 # Packages tarball
 cp "$PACKAGES_TAR" "$STAGING/robos-packages.tar.gz"
