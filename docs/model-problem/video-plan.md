@@ -147,7 +147,7 @@ Engineering-specific additions:
 | # | Video | Fixtures ready | Script drafted | Recorded | Published | YouTube URL |
 |:-:|:------|:-:|:-:|:-:|:-:|:-----------:|
 | 01 | Dana sets up RobOS              | ✅ | ✅ | ⬜ | ⬜ | — |
-| 02 | Dana — RobOS Agents             | ✅ | ✅ | ✅ | ✅ | [GemKH2GvThw](https://youtu.be/GemKH2GvThw) |
+| 02 | Dana — RobOS Agents             | ✅ | ✅ | ✅ | ✅ | [TZdhwKiGdEw](https://youtu.be/TZdhwKiGdEw) |
 | 03 | Dana — People Manager           | ✅ | ✅ | ✅ | ✅ | [ZdvQwFQwwbg](https://youtu.be/ZdvQwFQwwbg) |
 | 04 | Dana — Group Manager            | ✅ | ✅ | ✅ | ✅ | [mxnPjiJ0G8I](https://youtu.be/mxnPjiJ0G8I) |
 | 05 | Dana — Dev Tools                | ✅ | ✅ | ✅ | ✅ | [0QWB7I5e9Mw](https://youtu.be/0QWB7I5e9Mw) |
