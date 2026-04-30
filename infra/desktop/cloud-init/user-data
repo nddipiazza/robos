@@ -443,6 +443,10 @@ GDMEOF
       for f in /usr/share/gnome-shell/theme/Yaru/ubuntu-logo.png /usr/share/plymouth/themes/spinner/watermark.png; do
         [ -f "$f" ] && cp "$SEED_MOUNT/robos-logo.png" "$f"
       done
+      # Patch GNOME Shell CSS to constrain logo size (prevents full-screen rendering)
+      for css in /usr/share/gnome-shell/theme/Yaru/gnome-shell.css /usr/share/gnome-shell/theme/gnome-classic.css; do
+        [ -f "$css" ] && sed -i 's/\.login-dialog-logo-bin {/\.login-dialog-logo-bin {\n  width: 96px;\n  height: 72px;/' "$css" 2>/dev/null || true
+      done
       echo "RobOS logo installed."
     fi
     umount "$SEED_MOUNT" 2>/dev/null || true

@@ -64,12 +64,12 @@ touch "$STAGING/autoinstall/meta-data"
 # Provisioner script
 cp "$SCRIPT_DIR/robos-provision.sh" "$STAGING/robos-provision.sh"
 
-# Logo — resize to 300px wide for GDM3/GNOME Shell login screen
+# Logo — resize to 96px for GDM3/GNOME Shell login screen
 if [ -f "$REPO_ROOT/logo.png" ]; then
   python3 -c "
 from PIL import Image
 img = Image.open('$REPO_ROOT/logo.png')
-img.thumbnail((300, 300), Image.LANCZOS)
+img.thumbnail((96, 96), Image.LANCZOS)
 img.save('$STAGING/robos-logo.png')
 " 2>/dev/null || cp "$REPO_ROOT/logo.png" "$STAGING/robos-logo.png"
 fi
