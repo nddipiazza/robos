@@ -45,6 +45,9 @@ try {
   }
 } catch {}
 
+app.setName('desktop-widgets');
+app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'desktop-widgets'));
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); process.exit(0); }
 
@@ -140,7 +143,6 @@ function getJournalSummary() {
 }
 
 let win;
-app.setName('desktop-widgets');
 
 function widgetBounds() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -181,6 +183,7 @@ app.whenReady().then(() => {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+  win.setSkipTaskbar(true);
 
   // Pin below all other windows via wmctrl state flags.
   pinBelow();
