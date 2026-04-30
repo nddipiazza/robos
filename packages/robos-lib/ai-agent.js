@@ -79,7 +79,7 @@ function listProviders() {
   const activeId   = getActiveProviderId();
   const activeP    = PROVIDER_MAP[activeId] || PROVIDERS[0];
   const activeName = activeP.name;
-  const providers  = PROVIDERS.filter(p => p.id !== activeId);
+  const providers  = PROVIDERS.filter(p => p.id !== activeId).map(({ id, name }) => ({ id, name }));
   return { activeId, activeName, providers };
 }
 
