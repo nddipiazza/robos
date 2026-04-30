@@ -1,0 +1,13 @@
+[
+  {"startMs": 6000,   "label": "app-launcher",    "narration": "Opening the RobOS App Launcher and selecting Agents."},
+  {"startMs": 9000,   "label": "copilot-status",  "narration": "RobOS Agents is open. GitHub Copilot shows as not logged in, while the other agents are already logged in."},
+  {"startMs": 13000,  "label": "copilot-login",   "narration": "Logging in to GitHub Copilot."},
+  {"startMs": 81000,  "label": "copilot-ready",   "narration": "Back in the RobOS Agents app — GitHub Copilot is now logged in."},
+  {"startMs": 94000,  "label": "open-terminal",   "narration": "Opening a Copilot terminal."},
+  {"startMs": 102000, "label": "resume-session",  "narration": "Here I show how to resume a previous session."},
+  {"startMs": 112000, "label": "custom-params",   "narration": "You can also pass custom parameters to the Copilot CLI for different behavior."},
+  {"startMs": 130000, "label": "name-session",    "narration": "Naming this session: Dana's Session."},
+  {"startMs": 150000, "label": "session-appears", "narration": "The session we created came up, named Dana's."},
+  {"startMs": 162000, "label": "codex-demo",      "narration": "The same workflow works for Codex as well."},
+  {"startMs": 175000, "label": "set-default",     "narration": "Setting GitHub Copilot as the default AI Agent for RobOS."}
+]
