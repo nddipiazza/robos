@@ -1,11 +1,12 @@
 [Desktop Entry]
-X-RobOS-Category=RobOS People
 X-RobOS-App=true
+Version=1.0
+Type=Application
 Name=RobOS People Directory
-Comment=RobOS People Directory
-Exec=/usr/local/bin/robos-launch people-directory
+Comment=Browse and manage the RobOS people directory
+Exec=/usr/bin/electron /usr/local/share/robos/people-directory/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
 Icon=/usr/local/share/robos/people-directory/icon.svg
 Terminal=false
-Type=Application
 Categories=Office;
-StartupWMClass=people-directory
+X-RobOS-Category=RobOS People
+StartupWMClass=robos-people-directory
