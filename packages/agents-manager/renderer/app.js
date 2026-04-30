@@ -340,7 +340,7 @@ async function renderCopilotDetail(provider) {
           <h2>GitHub Copilot</h2>
           ${isActive ? '<span class="active-badge">ACTIVE PROVIDER</span>' : `<button class="btn btn-primary btn-sm" id="btn-set-active">Set as Active</button>`}
         </div>
-        <p class="detail-sub">GitHub Copilot CLI via gh extension</p>
+
       </div>
 
       <!-- Status -->
