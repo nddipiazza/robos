@@ -214,17 +214,19 @@ ipcMain.handle('gds-open-folder', (_, dir) => {
 // ── AI: Create group from natural-language prompt ────────────────────────────
 const GROUP_SCHEMA_PROMPT = `You are a RobOS Group Manager assistant. Generate a complete developer group configuration as a single JSON object.
 
-IMPORTANT OUTPUT RULES:
-- Output ONLY the raw JSON object — no markdown fences, no explanation, no comments
-- Use plain ASCII text only — no emoji, no Unicode symbols, no special characters
-- All string values must use printable ASCII characters only
-- Do not include any ANSI escape codes or control characters
+CRITICAL OUTPUT RULES — MUST FOLLOW EXACTLY:
+- Output ONLY the raw JSON object — no markdown, no code fences, no backticks, no explanation, no prose
+- ALL string values must contain ONLY plain printable ASCII characters (codes 32-126)
+- NO emoji, NO Unicode symbols, NO non-ASCII characters of any kind
+- NO ANSI escape codes, NO control characters, NO special formatting
+- NO bullet points, NO dashes used as decorators, NO ASCII art of any kind
+- Descriptions and notes must be plain English sentences — nothing that would break JSON parsing
 
 The JSON must match this exact schema (all fields optional except id and name):
 {
   "id": "lowercase-hyphen-id",
   "name": "Human Readable Name",
-  "description": "One sentence description",
+  "description": "One sentence plain text description",
   "members": [],
   "workspaces": [],
   "settings": {
@@ -249,7 +251,7 @@ The JSON must match this exact schema (all fields optional except id and name):
 Rules:
 - id must be lowercase letters, numbers, hyphens only
 - Include only what the user described — do not invent details not mentioned
-- Output ONLY the raw JSON object, no markdown fences, no explanation, no emoji
+- Output ONLY the raw JSON object — plain ASCII text in all values, no markdown, no emoji, no special characters
 `;
 
 // ── AI provider list ──────────────────────────────────────────────────────────
