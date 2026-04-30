@@ -24,7 +24,7 @@
       <div id="ai-panel">
         <button id="ai-panel-toggle" title="Create group with AI">✨ Create with AI</button>
         <div id="ai-panel-body" class="hidden">
-          <div class="ai-agent-row">
+          <div class="ai-row">
             <label for="ai-agent-select">Agent</label>
             <select id="ai-agent-select">
               <option value="">Default (RobOS Agents)</option>
@@ -32,7 +32,7 @@
           </div>
           <robos-ai-textarea id="ai-prompt" show-submit="false" show-commands="false" min-height="80"
             placeholder="Describe the group… e.g. 'Backend team for the payments service. They need Docker, Java 17, access to the payments-api and fraud-engine repos, and use GitHub Actions for CI.'"></robos-ai-textarea>
-          <button id="ai-generate-btn" class="btn-primary">Generate</button>
+          <button id="ai-generate-btn" class="btn-primary ai-btn">Generate</button>
           <div id="ai-status" class="hidden"></div>
         </div>
       </div>
