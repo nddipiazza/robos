@@ -153,7 +153,7 @@ npm run test:e2e # Playwright component tests
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/e4JiiQ7xER8"
+    src="https://www.youtube-nocookie.com/embed/GemKH2GvThw"
     title="RobOS Model Problem · 02 — Dana configures RobOS Agents"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
