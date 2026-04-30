@@ -632,7 +632,7 @@ function initResize() {
   makeResizable(
     document.getElementById('sidebar-resize-handle'),
     document.getElementById('groups-sidebar'),
-    160, 420
+    180, 420
   );
 }
 
