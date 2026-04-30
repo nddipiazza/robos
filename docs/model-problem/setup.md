@@ -36,17 +36,7 @@ Each role logs in as a separate Linux user on the same RobOS VM. Each user has t
 
 <img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" alt="Task Servers" style="width: 32px; height: 32px; vertical-align: middle;"> **Apps:** Task Servers · Workflow Studio · Git Projects · RobOS Preferences
 
-📺 **[Video 01 — Dana sets up RobOS for Acme]({{ site.baseurl }}{% link model-problem/videos/01-dana-setup.md %})**
-
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/gVX_qDteFu8"
-    title="RobOS Model Problem · 01 — Dana sets up RobOS for Acme"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-</div>
+📺 **[Video 01 — Dana sets up RobOS for Acme]({{ site.baseurl }}{% link model-problem/videos/01-dana-setup.md %})** · *retake pending — embed coming once a clean take is uploaded.*
 
 In one sitting, Dana hooks RobOS up to Jira, designs the workflow every ticket will follow, and registers the two repos the team will work on.
 
