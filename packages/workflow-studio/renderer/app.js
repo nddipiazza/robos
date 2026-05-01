@@ -9,6 +9,9 @@ const ISSUE_NUM = params.get('issue') || '';
 const viewIssue  = document.getElementById('view-issue');
 const viewConfig = document.getElementById('view-config');
 
+// Module-level dirty callback — set by initConfig so renderConfigTypes can trigger it
+let _notifyDirty = null;
+
 if (VIEW === 'config') {
   viewConfig.classList.remove('hidden');
   initConfig();
@@ -408,6 +411,25 @@ Use descriptive state labels like "AI Triage", "AI Investigation", "AI Draft", "
 async function initConfig() {
   const settings = await robos.readSettings();
   const ts       = getTS(settings);
+  let dirty = false;
+
+  function markDirty() {
+    if (!dirty) { dirty = true; robos.setDirty(true); }
+  }
+  function markClean() {
+    dirty = false; robos.setDirty(false);
+  }
+  _notifyDirty = markDirty;
+
+  // Handle save-then-close triggered by main process close dialog
+  robos.onCloseResponse(async (action) => {
+    if (action === 'save') {
+      const data = collectConfig(ts, settings);
+      await robos.writeSettings(data);
+      markClean();
+      window.close();
+    }
+  });
 
   // back to issue
   const btnToIssue = document.getElementById('btn-to-issue');
@@ -427,6 +449,7 @@ async function initConfig() {
   document.getElementById('btn-save').onclick = async () => {
     const data = collectConfig(ts, settings);
     await robos.writeSettings(data);
+    markClean();
     const st = document.getElementById('save-status');
     st.textContent = '✓ Saved';
     setTimeout(() => (st.textContent = ''), 2000);
@@ -439,6 +462,7 @@ async function initConfig() {
     renderConfigTypes(ts);
     const data = collectConfig(ts, settings);
     await robos.writeSettings(data);
+    markClean();
     const st = document.getElementById('save-status');
     st.textContent = '✓ Cleared';
     setTimeout(() => (st.textContent = ''), 2000);
@@ -459,6 +483,7 @@ async function initConfig() {
       transitions: [{ from: 'open', to: 'done' }],
     });
     renderConfigTypes(ts);
+    markDirty();
   };
 
   // AI generate
@@ -470,7 +495,7 @@ async function initConfig() {
   document.getElementById('btn-generate').onclick = async () => {
     const userHint = (genPromptEl.value || '').trim();
     const fullPrompt = AI_GENERATE_PROMPT + (userHint ? `\n\nAdditional context: ${userHint}` : '');
-    genStatus.textContent = '⏳ Asking AI agent… this may take 30–60 seconds…';
+    genStatus.textContent = '⏳ Asking AI agent… this may take some time while the AI agent works…';
     genStatus.style.color = 'var(--yellow)';
 
     const result = await robos.generateWithAi({ prompt: fullPrompt });
@@ -484,6 +509,7 @@ async function initConfig() {
       const generated = Array.isArray(result.data) ? result.data : [result.data];
       applyGeneratedTypes(ts, generated);
       renderConfigTypes(ts);
+      markDirty();
       genStatus.textContent = `✓ Generated ${generated.length} issue type(s) — review and Save when ready.`;
       genStatus.style.color = 'var(--green)';
     } catch (e) {
@@ -574,6 +600,7 @@ function renderConfigTypes(ts) {
         t[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'color')
           card.querySelector('.type-color-dot').style.background = inp.value;
+        if (_notifyDirty) _notifyDirty();
       };
     });
 
@@ -583,6 +610,7 @@ function renderConfigTypes(ts) {
       const fld = e.target.dataset.stateField;
       if (isNaN(si) || !fld) return;
       states[si][fld] = e.target.value;
+      if (_notifyDirty) _notifyDirty();
     });
 
     // add state
@@ -593,6 +621,7 @@ function renderConfigTypes(ts) {
       });
       card.querySelector('.states-list').innerHTML =
         states.map((s, si) => renderStateRow(s, si, t.id)).join('');
+      if (_notifyDirty) _notifyDirty();
     };
 
     // delete type
@@ -600,6 +629,7 @@ function renderConfigTypes(ts) {
       ts.issue_types.splice(idx, 1);
       ts.workflows = (ts.workflows || []).filter(w => w.type_id !== t.id);
       renderConfigTypes(ts);
+      if (_notifyDirty) _notifyDirty();
     };
   });
 }

@@ -14,6 +14,12 @@ contextBridge.exposeInMainWorld('robos', {
   runAiPrompt:     (args)  => ipcRenderer.invoke('run-ai-prompt', args),
   generateWithAi:  (args)  => ipcRenderer.invoke('generate-with-ai', args),
   listPath:        (prefix)=> ipcRenderer.invoke('ws-list-path', prefix),
+  setDirty:        (dirty) => ipcRenderer.send('set-dirty', dirty),
+  onCloseResponse: (cb)    => {
+    const handler = (_, action) => cb(action);
+    ipcRenderer.on('close-response', handler);
+    return () => ipcRenderer.off('close-response', handler);
+  },
   onStream:        (cb)    => {
     const handler = (_, data) => cb(data);
     ipcRenderer.on('stream', handler);

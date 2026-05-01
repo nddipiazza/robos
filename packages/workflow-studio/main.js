@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -79,6 +79,8 @@ const cliArg   = process.argv.slice(2).find(a => /^(config|#?\d+)$/.test(a));
 const issueNum = cliArg && cliArg !== 'config' ? cliArg.replace('#', '') : null;
 const startView = (!cliArg || cliArg === 'config') ? 'config' : 'issue';
 
+let isDirty = false;
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000, height: 760,
@@ -94,6 +96,29 @@ function createWindow() {
   });
   win.loadFile('renderer/index.html', { query: { view: startView, issue: issueNum || '' } });
   if (_debugServer) _debugServer.startDebugServer(win, 19120);
+
+  win.on('close', async (e) => {
+    if (!isDirty) return;
+    e.preventDefault();
+    const { response } = await dialog.showMessageBox(win, {
+      type: 'question',
+      buttons: ['Save', "Don't Save", 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes.',
+      detail: 'Do you want to save before closing?',
+    });
+    if (response === 0) {
+      // Save then close
+      win.webContents.send('close-response', 'save');
+    } else if (response === 1) {
+      // Discard and close
+      isDirty = false;
+      win.close();
+    }
+    // response === 2: Cancel — do nothing
+  });
 }
 
 app.setName('workflow-studio');
@@ -105,6 +130,8 @@ app.on('second-instance', () => {
 });
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
+
+ipcMain.on('set-dirty', (_, dirty) => { isDirty = dirty; });
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 
