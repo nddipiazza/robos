@@ -185,13 +185,16 @@ body {
 
 /* ── AI panel ─────────────────────────────────────────────────────────── */
 .panel-ai { flex-shrink: 0; border-color: #4a1d96; }
-.ai-controls { display: flex; gap: 8px; }
-.ai-input {
+.ai-controls { display: flex; gap: 8px; align-items: flex-start; }
+/* Plain <input class="ai-input"> styling — kept as fallback */
+input.ai-input, textarea.ai-input {
   flex: 1; background: var(--bg-0); border: 1px solid var(--border);
   color: var(--text-0); font-size: 13px; padding: 6px 10px;
   border-radius: 6px; outline: none;
 }
-.ai-input:focus { border-color: #7c3aed; }
+input.ai-input:focus, textarea.ai-input:focus { border-color: #7c3aed; }
+/* robos-ai-textarea host needs explicit flex sizing in this row */
+robos-ai-textarea.ai-input { flex: 1 1 0; min-width: 0; }
 .ai-output { margin-top: 10px; color: #c9d1d9; }
 
 /* ── Config Header ────────────────────────────────────────────────────── */
@@ -215,14 +218,15 @@ body {
   padding: 10px 14px;
   flex-shrink: 0;
 }
-.generate-bar-inner { display: flex; align-items: center; gap: 8px; }
-.generate-bar-label { font-size: 12px; color: var(--purple); font-weight: 600; white-space: nowrap; }
-.generate-input {
+.generate-bar-inner { display: flex; align-items: flex-start; gap: 8px; }
+.generate-bar-label { font-size: 12px; color: var(--purple); font-weight: 600; white-space: nowrap; padding-top: 8px; }
+input.generate-input, textarea.generate-input {
   flex: 1; background: var(--bg-0); border: 1px solid #4a1d96;
   color: var(--text-0); font-size: 13px; padding: 6px 10px;
   border-radius: 6px; outline: none;
 }
-.generate-input:focus { border-color: #7c3aed; }
+input.generate-input:focus, textarea.generate-input:focus { border-color: #7c3aed; }
+robos-ai-textarea.generate-input { flex: 1 1 0; min-width: 0; }
 .generate-status { font-size: 12px; color: var(--text-1); margin-top: 6px; min-height: 16px; }
 
 /* ── Config Types List ────────────────────────────────────────────────── */

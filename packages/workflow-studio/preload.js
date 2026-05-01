@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('robos', {
   runScript:       (args)  => ipcRenderer.invoke('run-script', args),
   runAiPrompt:     (args)  => ipcRenderer.invoke('run-ai-prompt', args),
   generateWithAi:  (args)  => ipcRenderer.invoke('generate-with-ai', args),
+  listPath:        (prefix)=> ipcRenderer.invoke('ws-list-path', prefix),
   onStream:        (cb)    => {
     const handler = (_, data) => cb(data);
     ipcRenderer.on('stream', handler);

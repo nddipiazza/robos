@@ -233,8 +233,9 @@ async function initIssue() {
   // AI ask
   const aiInput  = document.getElementById('ai-prompt-input');
   const aiOutput = document.getElementById('ai-output');
+  wirePathQuery(aiInput);
   document.getElementById('btn-ai-ask').onclick = async () => {
-    const p = aiInput.value.trim();
+    const p = (aiInput.value || '').trim();
     if (!p) return;
     aiOutput.textContent = '⏳ Thinking…';
     aiOutput.classList.remove('hidden');
@@ -248,7 +249,26 @@ async function initIssue() {
     });
     unsub();
   };
-  aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btn-ai-ask').click(); });
+  // Cmd/Ctrl+Enter submits; plain Enter inserts a newline (multi-line textarea)
+  aiInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      document.getElementById('btn-ai-ask').click();
+    }
+  });
+}
+
+// ── @-mention file typeahead — wires a robos-ai-textarea to listPath IPC ─────
+function wirePathQuery(textarea) {
+  if (!textarea || typeof customElements === 'undefined' || !textarea.addEventListener) return;
+  customElements.whenDefined('robos-ai-textarea').then(() => {
+    textarea.addEventListener('robos-path-query', async (e) => {
+      try {
+        const r = await robos.listPath(e.detail.query);
+        if (r && r.ok && textarea._showMentions) textarea._showMentions(r.items);
+      } catch (_) {}
+    });
+  }).catch(() => {});
 }
 
 function setIssueError(msg) {
@@ -445,9 +465,10 @@ async function initConfig() {
   const genPromptEl = document.getElementById('generate-prompt');
   const genStatus   = document.getElementById('generate-status');
   genPromptEl.value = '';
+  wirePathQuery(genPromptEl);
 
   document.getElementById('btn-generate').onclick = async () => {
-    const userHint = genPromptEl.value.trim();
+    const userHint = (genPromptEl.value || '').trim();
     const fullPrompt = AI_GENERATE_PROMPT + (userHint ? `\n\nAdditional context: ${userHint}` : '');
     genStatus.textContent = '⏳ Asking AI agent… this may take 30–60 seconds…';
     genStatus.style.color = 'var(--yellow)';

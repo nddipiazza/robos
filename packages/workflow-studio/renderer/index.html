@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'">
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>RobOS Workflow Studio</title>
   <link rel="stylesheet" href="style.css"/>
@@ -73,8 +74,9 @@
           <section class="panel panel-ai">
             <div class="panel-label">🤖 AI Agent</div>
             <div class="ai-controls">
-              <input id="ai-prompt-input" type="text" class="ai-input"
-                placeholder="Ask the AI agent something about this issue…"/>
+              <robos-ai-textarea id="ai-prompt-input" class="ai-input"
+                show-submit="false" show-commands="false" min-height="60"
+                placeholder="Ask the AI agent — type @ to attach files, repos, or people…"></robos-ai-textarea>
               <button id="btn-ai-ask" class="btn btn-ai">Ask</button>
             </div>
             <pre id="ai-output" class="ai-output hidden"></pre>
@@ -109,8 +111,9 @@
       <div class="generate-bar">
         <div class="generate-bar-inner">
           <span class="generate-bar-label">🤖 AI Generate</span>
-          <input id="generate-prompt" type="text" class="generate-input"
-            placeholder="Describe your team (e.g. 'agile software team, bugs + features + chores, AI-first development')…"/>
+          <robos-ai-textarea id="generate-prompt" class="generate-input"
+            show-submit="false" show-commands="false" min-height="80"
+            placeholder="Describe your team — type @ to attach a roster, charter, or runbook (e.g. 'agile software team, bugs + features + chores, AI-first development')…"></robos-ai-textarea>
           <button id="btn-generate" class="btn btn-ai">✨ Generate</button>
         </div>
         <div id="generate-status" class="generate-status"></div>
@@ -140,6 +143,7 @@
 
   </div><!-- /app -->
 
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
