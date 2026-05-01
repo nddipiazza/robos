@@ -7,6 +7,19 @@ const cp   = require('child_process');
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
+// ── AI (shared robos-lib/ai-agent) ────────────────────────────────────────────
+let aiAgent = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-agent'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+    '/usr/local/share/robos/robos-lib/ai-agent',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { aiAgent = require(p); break; } catch {}
+  }
+} catch { aiAgent = null; }
+
 // Debug server (optional)
 var _debugServer = null;
 try {
@@ -206,32 +219,20 @@ ipcMain.handle('run-ai-prompt', async (event, { prompt, env }) => {
   });
 });
 
-ipcMain.handle('generate-with-ai', async (_, { prompt }) => {
+ipcMain.handle('generate-with-ai', async (_, { prompt, providerId }) => {
   try {
-    // If a fixture file exists at ~/.config/robos/workflow-fixture.json, use it instantly
-    // (used for demos and dev — drop the file, click Generate, get instant results)
-    const fixturePath = path.join(os.homedir(), '.config', 'robos', 'workflow-fixture.json');
-    if (fs.existsSync(fixturePath)) {
-      try {
-        const data = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-        return { ok: true, data, raw: JSON.stringify(data) };
-      } catch (e) { /* fall through to real AI */ }
-    }
-    const text = await new Promise((resolve, reject) => {
-      const child = cp.spawn('gh', ['copilot', '--', '-p', prompt, '--allow-all-tools', '--silent'],
-        { encoding: 'utf8' });
-      let stdout = '', stderr = '';
-      child.stdout.on('data', d => { stdout += d; });
-      child.stderr.on('data', d => { stderr += d; });
-      const timer = setTimeout(() => { child.kill(); reject(new Error('Timed out after 3 minutes')); }, 180000);
-      child.on('close', code => {
-        clearTimeout(timer);
-        if (code !== 0 && !stdout) reject(new Error(stderr || 'AI agent failed'));
-        else resolve(stdout);
-      });
-    });
-    const clean = stripAiFooter(text).replace(/^```[\w]*\r?\n?/gm, '').replace(/^```\r?$/gm, '').trim();
-    try { return { ok: true, data: JSON.parse(clean), raw: text }; } catch (_) {}
+    if (!aiAgent) return { ok: false, error: 'AI agent library not available. Check your RobOS installation.' };
+    const result = await aiAgent.ask(prompt, providerId ? { providerId } : {});
+    if (!result.ok) return { ok: false, error: result.error || 'AI request failed' };
+    const text = result.text || '';
+    const clean = text.replace(/^```[\w]*\r?\n?/gm, '').replace(/^```\r?$/gm, '').trim();
+    try {
+      const parsed = JSON.parse(clean);
+      const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
+      if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
+      writeJournalEvent({ source: 'workflow-studio', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
+      return { ok: true, data: parsed, raw: text };
+    } catch (_) {}
     const m = clean.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
     if (!m) return { ok: false, error: 'No JSON in response. Output:\n' + text.slice(0, 400) };
     try {
