@@ -322,3 +322,16 @@ robos-ai-textarea.generate-input { flex: 1 1 0; min-width: 0; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
+
+/* ── Spinner ─────────────────────────────────────────────────────────── */
+@keyframes robos-spin { to { transform: rotate(360deg); } }
+.robos-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,188,212,0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: robos-spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}

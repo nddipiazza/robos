@@ -240,10 +240,10 @@ async function initIssue() {
   document.getElementById('btn-ai-ask').onclick = async () => {
     const p = (aiInput.value || '').trim();
     if (!p) return;
-    aiOutput.textContent = '⏳ Thinking…';
+    aiOutput.innerHTML = '<span class="robos-spinner"></span>Thinking…';
     aiOutput.classList.remove('hidden');
     const unsub = robos.onStream(data => {
-      if (aiOutput.textContent === '⏳ Thinking…') aiOutput.textContent = '';
+      if (aiOutput.querySelector('.robos-spinner')) aiOutput.innerHTML = '';
       aiOutput.textContent += data;
       aiOutput.scrollTop = aiOutput.scrollHeight;
     });
@@ -382,6 +382,12 @@ const AI_GENERATE_PROMPT = `You are setting up an AI-powered software developmen
 
 Generate a JSON array of issue type configurations for an AI-first engineering team. Return ONLY valid JSON — no explanation, no markdown, no code fences.
 
+CRITICAL JSON RULES — you MUST follow these exactly:
+- All string values must be on a single line. Do NOT include literal newlines, tabs, or other control characters inside string values.
+- Use \\n (escaped backslash-n) if you need a newline within a string, never a real newline character.
+- Do not use smart quotes (\u201c\u201d\u2018\u2019) — use only straight ASCII double quotes.
+- The entire response must be parseable by JSON.parse() with no modification.
+
 Each item in the array should be an object with:
 - "id": string (kebab-case, e.g. "bug", "feature-request")
 - "label": string (display name)
@@ -392,7 +398,7 @@ Each item in the array should be an object with:
     - "label": string
     - "color": string (hex)
     - "is_initial": boolean (true for the first state only)
-    - "on_enter_prompt": string (what the AI agent should do when entering this state — be specific and actionable, mentioning GitHub, VS Code, etc.; use {number}, {org}, {repo} as placeholders)
+    - "on_enter_prompt": string (what the AI agent should do when entering this state — be specific and actionable, mentioning GitHub, VS Code, etc.; use {number}, {org}, {repo} as placeholders; keep it on ONE line)
     - "on_enter_script": string (bash commands if any, otherwise "")
   - "transitions": array of {"from": "state-id", "to": "state-id"} objects
 
@@ -495,7 +501,7 @@ async function initConfig() {
   document.getElementById('btn-generate').onclick = async () => {
     const userHint = (genPromptEl.value || '').trim();
     const fullPrompt = AI_GENERATE_PROMPT + (userHint ? `\n\nAdditional context: ${userHint}` : '');
-    genStatus.textContent = '⏳ Asking AI agent… this may take some time while the AI agent works…';
+    genStatus.innerHTML = '<span class="robos-spinner"></span>Asking AI agent… this may take some time while the AI agent works…';
     genStatus.style.color = 'var(--yellow)';
 
     const result = await robos.generateWithAi({ prompt: fullPrompt });

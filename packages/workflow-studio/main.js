@@ -247,29 +247,46 @@ ipcMain.handle('run-ai-prompt', async (event, { prompt, env }) => {
 });
 
 ipcMain.handle('generate-with-ai', async (_, { prompt, providerId }) => {
+  let jsonrepair = null;
+  try { jsonrepair = require('jsonrepair').jsonrepair; } catch {}
+
+  function tryParse(str) {
+    // First: standard parse
+    try { return JSON.parse(str); } catch {}
+    // Second: jsonrepair
+    if (jsonrepair) {
+      try { return JSON.parse(jsonrepair(str)); } catch {}
+    }
+    // Third: replace literal newlines/tabs inside strings with escaped versions
+    try {
+      const sanitized = str.replace(/"(?:[^"\\]|\\.)*"/g, m =>
+        m.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+          .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '')
+      );
+      return JSON.parse(sanitized);
+    } catch {}
+    return null;
+  }
+
   try {
     if (!aiAgent) return { ok: false, error: 'AI agent library not available. Check your RobOS installation.' };
     const result = await aiAgent.ask(prompt, providerId ? { providerId } : {});
     if (!result.ok) return { ok: false, error: result.error || 'AI request failed' };
     const text = result.text || '';
     const clean = text.replace(/^```[\w]*\r?\n?/gm, '').replace(/^```\r?$/gm, '').trim();
-    try {
-      const parsed = JSON.parse(clean);
-      const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
-      if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
-      writeJournalEvent({ source: 'workflow-studio', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
-      return { ok: true, data: parsed, raw: text };
-    } catch (_) {}
-    const m = clean.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
-    if (!m) return { ok: false, error: 'No JSON in response. Output:\n' + text.slice(0, 400) };
-    try {
-      const parsed = JSON.parse(m[0]);
-      const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
-      if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
-      writeJournalEvent({ source: 'workflow-studio', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
-      return { ok: true, data: parsed, raw: text };
+
+    let parsed = tryParse(clean);
+    if (!parsed) {
+      // Try extracting a JSON array/object from the text first
+      const m = clean.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+      if (m) parsed = tryParse(m[0]);
     }
-    catch (e) { return { ok: false, error: 'JSON parse error: ' + e.message + '\nRaw:\n' + text.slice(0, 400) }; }
+    if (!parsed) return { ok: false, error: 'No valid JSON in response. Output:\n' + text.slice(0, 400) };
+
+    const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
+    if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
+    writeJournalEvent({ source: 'workflow-studio', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
+    return { ok: true, data: parsed, raw: text };
   } catch (e) { return { ok: false, error: e.message }; }
 });
 
