@@ -52,12 +52,27 @@ In one sitting, Dana hooks RobOS up to Jira, designs the workflow every ticket w
 
 ### Jira (Task Servers)
 
+📺 **Deep-dive:** [Dana — Task Servers (Jira via Pass Manager)](https://youtu.be/vygBUoocpbg)
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/vygBUoocpbg"
+    title="RobOS Model Problem · Dana — Task Servers"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
 Dana opens **Task Servers** and configures Jira as the team's task tracking system:
 
-1. **Add connection** — Jira Cloud instance `acme.atlassian.net`
-2. **Authenticate** — token loaded from the Pass Manager, never pasted
-3. **Map project** — Jira project `KAN` (Buildbarn Forms) to a RobOS project
-4. **Map statuses** — Jira statuses to RobOS workflow stages:
+1. **Stash the API token in Pass Manager** — credentials never live in plain-text config
+2. **Add connection** — Jira Cloud instance `acme.atlassian.net`
+3. **Reference the pass entry by path** — Task Servers reads the token directly from the password store
+4. **Project keys** — list the keys (e.g. `KAN`) the team uses, so RobOS can enumerate them
+5. **Test the connection**, then **Save**
+
+Initial sync pulls all existing Jira issues into RobOS. Bidirectional sync stays enabled. Every other RobOS app — Issue Manager, Task Board, Dev Central, PR Review, Manager Dashboard — reads from this one task server.
 
 | Jira Status | RobOS Stage |
 |:------------|:------------|
@@ -66,8 +81,6 @@ Dana opens **Task Servers** and configures Jira as the team's task tracking syst
 | In Review | `in_review` |
 | Deploying | `deploying` |
 | Done | `deployed` |
-
-Initial sync pulls all existing Jira issues into RobOS. Bidirectional sync stays enabled.
 
 ### Repos (Git Projects)
 
