@@ -378,15 +378,17 @@ async function doTransition(issue, repo, settings, fromId, toId, wf) {
 // CONFIG VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 
-const AI_GENERATE_PROMPT = `You are setting up an AI-powered software development lifecycle system called RobOS.
-
-Generate a JSON array of issue type configurations for an AI-first engineering team. Return ONLY valid JSON — no explanation, no markdown, no code fences.
-
-CRITICAL JSON RULES — you MUST follow these exactly:
+const FALLBACK_JSON_RULES = `CRITICAL JSON RULES — you MUST follow these exactly:
 - All string values must be on a single line. Do NOT include literal newlines, tabs, or other control characters inside string values.
 - Use \\n (escaped backslash-n) if you need a newline within a string, never a real newline character.
 - Do not use smart quotes (\u201c\u201d\u2018\u2019) — use only straight ASCII double quotes.
-- The entire response must be parseable by JSON.parse() with no modification.
+- The entire response must be parseable by JSON.parse() with no modification.`;
+
+const AI_GENERATE_PROMPT_BODY = `You are setting up an AI-powered software development lifecycle system called RobOS.
+
+Generate a JSON array of issue type configurations for an AI-first engineering team. Return ONLY valid JSON — no explanation, no markdown, no code fences.
+
+{JSON_RULES}
 
 Each item in the array should be an object with:
 - "id": string (kebab-case, e.g. "bug", "feature-request")
@@ -413,6 +415,15 @@ Make the workflow states reflect an AI-assisted SDLC where the AI agent actively
 6. Handles code review feedback
 
 Use descriptive state labels like "AI Triage", "AI Investigation", "AI Draft", "Human Review", "AI Testing", "AI PR Creation", "Code Review", "Done". Not every type needs all states — keep them lean and relevant.`;
+
+async function buildGeneratePrompt() {
+  let rules = FALLBACK_JSON_RULES;
+  try {
+    const fromLib = await robos.getJsonRulesPrompt();
+    if (fromLib && fromLib.trim()) rules = fromLib;
+  } catch {}
+  return AI_GENERATE_PROMPT_BODY.replace('{JSON_RULES}', rules);
+}
 
 async function initConfig() {
   const settings = await robos.readSettings();
@@ -500,7 +511,8 @@ async function initConfig() {
 
   document.getElementById('btn-generate').onclick = async () => {
     const userHint = (genPromptEl.value || '').trim();
-    const fullPrompt = AI_GENERATE_PROMPT + (userHint ? `\n\nAdditional context: ${userHint}` : '');
+    const basePrompt = await buildGeneratePrompt();
+    const fullPrompt = basePrompt + (userHint ? `\n\nAdditional context: ${userHint}` : '');
     genStatus.innerHTML = '<span class="robos-spinner"></span>Asking AI agent… this may take some time while the AI agent works…';
     genStatus.style.color = 'var(--yellow)';
 

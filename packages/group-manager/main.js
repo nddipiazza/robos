@@ -46,6 +46,19 @@ try {
   }
 } catch { aiAgent = null; }
 
+// ── AI JSON utilities (shared robos-lib/ai-json) ──────────────────────────────
+let aiJson = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-json'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-json'),
+    '/usr/local/share/robos/robos-lib/ai-json',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { aiJson = require(p); break; } catch {}
+  }
+} catch { aiJson = null; }
+
 var _debugServer = null;
 try {
   const libPaths = [
@@ -393,51 +406,34 @@ ipcMain.handle('gm-list-ai-providers', () => {
 
 ipcMain.handle('gm-ai-create-group', async (_, { prompt, providerId }) => {
   if (!aiAgent) return { ok: false, error: 'AI agent library not available. Check your RobOS installation.' };
-  const fullPrompt = `${GROUP_SCHEMA_PROMPT}\n\nUser description:\n${prompt}`;
+  const rulesPrompt = aiJson ? aiJson.JSON_RULES_PROMPT : '';
+  const fullPrompt = `${GROUP_SCHEMA_PROMPT}${rulesPrompt ? '\n\n' + rulesPrompt : ''}\n\nUser description:\n${prompt}`;
   const result = await aiAgent.ask(fullPrompt, providerId ? { providerId } : {});
   if (!result.ok) return { ok: false, error: result.error };
-  return parseGroupsFromAIOutput(result.text);
+
+  let parsed = null;
+  if (aiJson) {
+    const r = aiJson.parseAIJson(result.text);
+    if (r.ok) parsed = r.data;
+    else return { ok: false, error: `JSON parse error: ${r.error}\n\nRaw:\n${r.raw || ''}` };
+  } else {
+    parsed = parseGroupsFromAIOutputFallback(result.text);
+    if (!parsed) return { ok: false, error: 'AI response did not contain valid group JSON.' };
+  }
+
+  const arr = Array.isArray(parsed) ? parsed : [parsed];
+  const groups = arr.map(normaliseGroup).filter(g => g.id && g.name);
+  if (!groups.length) return { ok: false, error: 'No valid groups found in AI response.' };
+  return { ok: true, groups };
 });
 
-function parseGroupsFromAIOutput(raw) {
-  // Strip ANSI escape codes and markdown fences
+function parseGroupsFromAIOutputFallback(raw) {
   // eslint-disable-next-line no-control-regex
-  const noAnsi = (raw || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '');
-  const stripped = noAnsi.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
-
-  // Try parsing as array first
-  try {
-    const parsed = JSON.parse(stripped);
-    if (Array.isArray(parsed)) {
-      const groups = parsed.map(normaliseGroup).filter(g => g.id && g.name);
-      if (groups.length) return { ok: true, groups };
-    } else if (parsed && parsed.id && parsed.name) {
-      return { ok: true, groups: [normaliseGroup(parsed)] };
-    }
-  } catch {}
-
-  // Try extracting array from output
-  const arrMatch = stripped.match(/\[[\s\S]*\]/);
-  if (arrMatch) {
-    try {
-      const parsed = JSON.parse(arrMatch[0]);
-      if (Array.isArray(parsed)) {
-        const groups = parsed.map(normaliseGroup).filter(g => g.id && g.name);
-        if (groups.length) return { ok: true, groups };
-      }
-    } catch {}
-  }
-
-  // Fall back to extracting first JSON object
-  const objMatch = stripped.match(/\{[\s\S]*\}/);
-  if (objMatch) {
-    try {
-      const obj = JSON.parse(objMatch[0]);
-      if (obj && obj.id && obj.name) return { ok: true, groups: [normaliseGroup(obj)] };
-    } catch {}
-  }
-
-  return { ok: false, error: 'AI response did not contain valid group JSON.\n\nRaw output:\n' + stripped.slice(0, 500) };
+  const stripped = (raw || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+  try { return JSON.parse(stripped); } catch {}
+  const m = stripped.match(/\[[\s\S]*\]/) || stripped.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch {} }
+  return null;
 }
 
 function normaliseGroup(g) {

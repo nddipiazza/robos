@@ -28,6 +28,19 @@ try {
   }
 } catch {}
 
+// ── AI JSON utilities (shared robos-lib/ai-json) ──────────────────────────────
+let aiJson = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-json'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-json'),
+    '/usr/local/share/robos/robos-lib/ai-json',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { aiJson = require(p); break; } catch {}
+  }
+} catch {}
+
 // ── Debug snapshot server ─────────────────────────────────────────────────────
 let _debugServer = null;
 try {
@@ -153,6 +166,7 @@ ipcMain.handle('pd-list-ai-providers', async () => {
 
 ipcMain.handle('pd-ai-add-person', async (_, { prompt, providerId }) => {
   if (!aiAgent) return { ok: false, error: 'AI library not available' };
+  const rulesPrompt = aiJson ? aiJson.JSON_RULES_PROMPT : '';
   const systemPrompt = `You are a people-directory assistant. Given a description of one or more people, return ONLY a JSON array where each element is an object with these fields:
 uid (kebab-case unique id), displayName, firstName, lastName, email, title, department, phone, location, username, bio.
 If only one person is described, still return a JSON array with one element. Fill in reasonable values for any missing fields.
@@ -160,27 +174,31 @@ If only one person is described, still return a JSON array with one element. Fil
 IMPORTANT OUTPUT RULES:
 - Output ONLY the raw JSON array — no markdown fences, no explanation, no comments
 - Use plain ASCII text only — no emoji, no Unicode symbols, no special characters
-- Do not include any ANSI escape codes or control characters`;
+- Do not include any ANSI escape codes or control characters${rulesPrompt ? '\n\n' + rulesPrompt : ''}`;
   const fullPrompt = `${systemPrompt}\n\nDescription: ${prompt}`;
   try {
     const result = await aiAgent.ask(fullPrompt, { providerId: providerId || undefined });
     if (!result.ok) return { ok: false, error: result.error || 'AI generation failed' };
-    // Strip ANSI escape codes that Copilot CLI can inject
-    // eslint-disable-next-line no-control-regex
-    let json = (result.text || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '').trim();
-    // Strip markdown fences
-    json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-    // Extract first JSON array if there is leading/trailing prose
-    const arrMatch = json.match(/\[[\s\S]*\]/);
-    if (arrMatch) json = arrMatch[0];
-    let parsed = JSON.parse(json);
-    // Normalize: handle both single object and array responses
+
+    let parsed;
+    if (aiJson) {
+      const r = aiJson.parseAIJson(result.text);
+      if (!r.ok) return { ok: false, error: `JSON parse error: ${r.error}` };
+      parsed = r.data;
+    } else {
+      // eslint-disable-next-line no-control-regex
+      let json = (result.text || '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\x1b[()][0-9A-Z]/g, '').trim();
+      json = json.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      const arrMatch = json.match(/\[[\s\S]*\]/);
+      if (arrMatch) json = arrMatch[0];
+      parsed = JSON.parse(json);
+    }
+
     if (!Array.isArray(parsed)) parsed = [parsed];
     const people = [];
     for (const person of parsed) {
       if (!person.uid) person.uid = `person-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
       if (!person.displayName) person.displayName = `${person.firstName || person.givenName || ''} ${person.lastName || person.sn || ''}`.trim() || person.uid;
-      // Normalize LDAP field names to app field names
       if (!person.firstName && person.givenName) { person.firstName = person.givenName; delete person.givenName; }
       if (!person.lastName && person.sn) { person.lastName = person.sn; delete person.sn; }
       if (!person.email && person.mail) { person.email = person.mail; delete person.mail; }

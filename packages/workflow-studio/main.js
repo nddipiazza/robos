@@ -20,6 +20,19 @@ try {
   }
 } catch { aiAgent = null; }
 
+// ── AI JSON utilities (shared robos-lib/ai-json) ──────────────────────────────
+let aiJson = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-json'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-json'),
+    '/usr/local/share/robos/robos-lib/ai-json',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { aiJson = require(p); break; } catch {}
+  }
+} catch { aiJson = null; }
+
 // Debug server (optional)
 var _debugServer = null;
 try {
@@ -132,6 +145,7 @@ app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
 
 ipcMain.on('set-dirty', (_, dirty) => { isDirty = dirty; });
+ipcMain.handle('get-json-rules-prompt', () => aiJson ? aiJson.JSON_RULES_PROMPT : '');
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 
@@ -247,46 +261,26 @@ ipcMain.handle('run-ai-prompt', async (event, { prompt, env }) => {
 });
 
 ipcMain.handle('generate-with-ai', async (_, { prompt, providerId }) => {
-  let jsonrepair = null;
-  try { jsonrepair = require('jsonrepair').jsonrepair; } catch {}
-
-  function tryParse(str) {
-    // First: standard parse
-    try { return JSON.parse(str); } catch {}
-    // Second: jsonrepair
-    if (jsonrepair) {
-      try { return JSON.parse(jsonrepair(str)); } catch {}
-    }
-    // Third: replace literal newlines/tabs inside strings with escaped versions
-    try {
-      const sanitized = str.replace(/"(?:[^"\\]|\\.)*"/g, m =>
-        m.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
-          .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '')
-      );
-      return JSON.parse(sanitized);
-    } catch {}
-    return null;
-  }
-
   try {
     if (!aiAgent) return { ok: false, error: 'AI agent library not available. Check your RobOS installation.' };
     const result = await aiAgent.ask(prompt, providerId ? { providerId } : {});
     if (!result.ok) return { ok: false, error: result.error || 'AI request failed' };
-    const text = result.text || '';
-    const clean = text.replace(/^```[\w]*\r?\n?/gm, '').replace(/^```\r?$/gm, '').trim();
 
-    let parsed = tryParse(clean);
-    if (!parsed) {
-      // Try extracting a JSON array/object from the text first
-      const m = clean.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
-      if (m) parsed = tryParse(m[0]);
-    }
-    if (!parsed) return { ok: false, error: 'No valid JSON in response. Output:\n' + text.slice(0, 400) };
+    const parseResult = aiJson
+      ? aiJson.parseAIJson(result.text || '')
+      : (() => {
+          // Inline fallback if robos-lib not available
+          try { return { ok: true, data: JSON.parse((result.text || '').trim()) }; } catch {}
+          return { ok: false, error: 'No valid JSON in response.', raw: (result.text || '').slice(0, 400) };
+        })();
 
+    if (!parseResult.ok) return { ok: false, error: `JSON parse error: ${parseResult.error}\nRaw:\n${parseResult.raw || ''}` };
+
+    const parsed = parseResult.data;
     const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
     if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
     writeJournalEvent({ source: 'workflow-studio', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
-    return { ok: true, data: parsed, raw: text };
+    return { ok: true, data: parsed, raw: result.text };
   } catch (e) { return { ok: false, error: e.message }; }
 });
 

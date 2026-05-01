@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('robos', {
   runAiPrompt:     (args)  => ipcRenderer.invoke('run-ai-prompt', args),
   generateWithAi:  (args)  => ipcRenderer.invoke('generate-with-ai', args),
   listPath:        (prefix)=> ipcRenderer.invoke('ws-list-path', prefix),
-  setDirty:        (dirty) => ipcRenderer.send('set-dirty', dirty),
+  getJsonRulesPrompt: () => ipcRenderer.invoke('get-json-rules-prompt'),
   onCloseResponse: (cb)    => {
     const handler = (_, action) => cb(action);
     ipcRenderer.on('close-response', handler);
