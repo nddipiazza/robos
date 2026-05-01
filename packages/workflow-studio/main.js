@@ -280,9 +280,61 @@ ipcMain.handle('open-vscode', (_, { repo, org }) => {
 
 ipcMain.handle('open-url', (_, url) => shell.openExternal(url));
 
+// ── Task-server typeahead helper ──────────────────────────────────────────────
+function sanitizeTaskServerName(n) {
+  return (n || '').trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+function getTaskServerSuggestions(prefix) {
+  try {
+    const settingsFile = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+    if (!fs.existsSync(settingsFile)) return [];
+    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const servers = settings.task_servers || [];
+    if (!servers.length) return [];
+
+    // robos-ai-textarea wraps bare @word as "~/<word>". Strip ~ / ~/ to get the user's typed text.
+    const raw = String(prefix || '').replace(/^~\//, '').replace(/^~/, '');
+    const slashIdx = raw.indexOf('/');
+    const typePart = (slashIdx >= 0 ? raw.slice(0, slashIdx) : raw).toLowerCase();
+    const namePart = slashIdx >= 0 ? raw.slice(slashIdx + 1).toLowerCase() : '';
+
+    const filtered = servers.filter(s => {
+      const sType = (s.type || '').toLowerCase();
+      const sName = (s.name || '').toLowerCase();
+      const sSan  = sanitizeTaskServerName(s.name).toLowerCase();
+      if (slashIdx >= 0) {
+        if (sType !== typePart) return false;
+        if (!namePart) return true;
+        return sSan.includes(namePart) || sName.includes(namePart);
+      }
+      if (!typePart) return true;
+      return sType.includes(typePart) || sName.includes(typePart) || sSan.includes(typePart);
+    });
+
+    return filtered.map(s => {
+      const sanitized = sanitizeTaskServerName(s.name);
+      const mentionPath = `${s.type}/${sanitized}`;
+      return {
+        name: mentionPath,
+        path: mentionPath,
+        displayName: s.name,
+        taskServerType: s.type,
+        isTaskServer: true,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 // ── ws-list-path: @-mention typeahead for robos-ai-textarea ───────────────────
 ipcMain.handle('ws-list-path', (_, prefix) => {
   try {
+    const taskServers = getTaskServerSuggestions(prefix);
     const home     = os.homedir();
     const expanded = (prefix || '').replace(/^~/, home);
     const isDir    = expanded.endsWith('/');
@@ -347,11 +399,11 @@ ipcMain.handle('ws-list-path', (_, prefix) => {
           return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
         });
       }
-      return { ok: true, items };
+      return { ok: true, items: [...taskServers, ...items] };
     }
 
     let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return { ok: true, items: [] }; }
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return { ok: true, items: taskServers }; }
     const filtered = entries
       .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
       .slice(0, 30)
@@ -361,7 +413,7 @@ ipcMain.handle('ws-list-path', (_, prefix) => {
         isDir: e.isDirectory(),
         isPath: true,
       }));
-    return { ok: true, items: filtered };
+    return { ok: true, items: [...taskServers, ...filtered] };
   } catch {
     return { ok: true, items: [] };
   }

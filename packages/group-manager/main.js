@@ -257,9 +257,48 @@ Rules:
 
 // ── AI provider list ──────────────────────────────────────────────────────────
 
+// ── Task-server typeahead helper ──────────────────────────────────────────────
+function gmSanitizeTaskServerName(n) {
+  return (n || '').trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+function gmGetTaskServerSuggestions(prefix) {
+  try {
+    const settingsFile = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+    if (!fs.existsSync(settingsFile)) return [];
+    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const servers = settings.task_servers || [];
+    if (!servers.length) return [];
+    const raw = String(prefix || '').replace(/^~\//, '').replace(/^~/, '');
+    const slashIdx = raw.indexOf('/');
+    const typePart = (slashIdx >= 0 ? raw.slice(0, slashIdx) : raw).toLowerCase();
+    const namePart = slashIdx >= 0 ? raw.slice(slashIdx + 1).toLowerCase() : '';
+    return servers.filter(s => {
+      const sType = (s.type || '').toLowerCase();
+      const sName = (s.name || '').toLowerCase();
+      const sSan  = gmSanitizeTaskServerName(s.name).toLowerCase();
+      if (slashIdx >= 0) {
+        if (sType !== typePart) return false;
+        if (!namePart) return true;
+        return sSan.includes(namePart) || sName.includes(namePart);
+      }
+      if (!typePart) return true;
+      return sType.includes(typePart) || sName.includes(typePart) || sSan.includes(typePart);
+    }).map(s => {
+      const sanitized = gmSanitizeTaskServerName(s.name);
+      const mentionPath = `${s.type}/${sanitized}`;
+      return { name: mentionPath, path: mentionPath, displayName: s.name, taskServerType: s.type, isTaskServer: true };
+    });
+  } catch { return []; }
+}
+
 // ── list-path: @ mention typeahead ────────────────────────────────────────────
 ipcMain.handle('gm-list-path', (_, prefix) => {
   try {
+    const taskServers = gmGetTaskServerSuggestions(prefix);
     const home     = os.homedir();
     const expanded = (prefix || '').replace(/^~/, home);
     const isDir    = expanded.endsWith('/');
@@ -326,12 +365,12 @@ ipcMain.handle('gm-list-path', (_, prefix) => {
           return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
         });
       }
-      return { ok: true, items };
+      return { ok: true, items: [...taskServers, ...items] };
     }
 
     // Direct directory listing
     let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return { ok: true, items: [] }; }
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return { ok: true, items: taskServers }; }
     const filtered = entries
       .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
       .slice(0, 30)
@@ -341,7 +380,7 @@ ipcMain.handle('gm-list-path', (_, prefix) => {
         isDir: e.isDirectory(),
         isPath: true,
       }));
-    return { ok: true, items: filtered };
+    return { ok: true, items: [...taskServers, ...filtered] };
   } catch (e) {
     return { ok: true, items: [] };
   }

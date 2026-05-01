@@ -923,7 +923,7 @@ robos-ai-textarea {
         return;
       }
 
-      // Repos first, then people, then groups, then files — fuzzy-score each group separately
+      // Task servers first, then repos, people, groups, files — fuzzy-score each group separately
       const q = (this._mentionFilter || '').replace(/^.*\//, '');
       const scored = items.map(item => {
         const name = (item.name || '').replace(/\/$/, '');
@@ -933,7 +933,7 @@ robos-ai-textarea {
         const bestScore = altScore.score > score ? altScore.score : score;
         return { item, score: bestScore, indices: altScore.score > score ? altScore.indices : indices };
       }).sort((a, b) => {
-        const typeOrder = v => v.isRepo ? 0 : v.isPerson ? 1 : v.isGroup ? 2 : 3;
+        const typeOrder = v => v.isTaskServer ? 0 : v.isRepo ? 1 : v.isPerson ? 2 : v.isGroup ? 3 : 4;
         const to = typeOrder(a.item) - typeOrder(b.item);
         if (to !== 0) return to;
         return b.score - a.score;
@@ -942,21 +942,32 @@ robos-ai-textarea {
       this._mentionOpen = true;
       this._mentionIdx  = 0;
       this._mentionItems = scored.map(s => s.item);
+      const hasTaskServers = items.some(i => i.isTaskServer);
       const hasRepos   = items.some(i => i.isRepo);
       const hasPeople  = items.some(i => i.isPerson);
       const hasGroups  = items.some(i => i.isGroup);
-      const hasFiles   = items.some(i => !i.isRepo && !i.isPerson && !i.isGroup);
+      const hasFiles   = items.some(i => !i.isRepo && !i.isPerson && !i.isGroup && !i.isTaskServer);
       const parts = [];
-      if (hasRepos)  parts.push('🗄 Repos');
-      if (hasPeople) parts.push('👤 People');
-      if (hasGroups) parts.push('👥 Groups');
-      if (hasFiles)  parts.push('📂 Files');
+      if (hasTaskServers) parts.push('🎫 Task Servers');
+      if (hasRepos)       parts.push('🗄 Repos');
+      if (hasPeople)      parts.push('👤 People');
+      if (hasGroups)      parts.push('👥 Groups');
+      if (hasFiles)       parts.push('📂 Files');
       const hdrLabel = parts.join(' &amp; ') || '📂 Files';
       this._mentionList.innerHTML =
         `<div class="robos-mention-list-hdr">${hdrLabel} matching <em>${this._esc(this._mentionFilter || '')}</em></div>` +
         scored.map(({ item, indices }, i) => {
           const name = (item.name || '').replace(/\/$/, '');
           const nameHl = this._fuzzyHighlight(name, indices);
+          if (item.isTaskServer) {
+            return `<div class="robos-mention-item${i === 0 ? ' highlighted' : ''}" data-idx="${i}">
+              <span class="robos-mention-item-icon">🎫</span>
+              <span class="robos-mention-item-body">
+                <span class="robos-mention-item-name">${nameHl}</span>
+                <span class="robos-mention-item-dir" style="color:#a371f7">${this._esc(item.displayName || item.taskServerType || '')}</span>
+              </span>
+            </div>`;
+          }
           if (item.isRepo) {
             return `<div class="robos-mention-item${i === 0 ? ' highlighted' : ''}" data-idx="${i}">
               <span class="robos-mention-item-icon">🗄</span>
@@ -1028,8 +1039,8 @@ robos-ai-textarea {
     _mentionSelect() {
       const item = (this._mentionItems || [])[this._mentionIdx];
       if (!item) return;
-      // For repos: use github.com/org/repo path; for people: GitHub username; for groups: group id; for path completions: full path; else name
-      const replacement = item.isRepo || item.isPerson || item.isGroup ? item.path : (item.isPath && item.path) ? item.path : (item.name || item.path);
+      // For repos: use github.com/org/repo path; for people: GitHub username; for groups: group id; for task servers: <type>/<sanitized_name>; for path completions: full path; else name
+      const replacement = item.isRepo || item.isPerson || item.isGroup || item.isTaskServer ? item.path : (item.isPath && item.path) ? item.path : (item.name || item.path);
       const text = this._inner.innerText;
       const replaced = text.replace(/@([\w./~\\-]*)$/, `@${replacement}`);
       this._inner.innerText = replaced;

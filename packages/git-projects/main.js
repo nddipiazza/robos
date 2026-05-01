@@ -680,9 +680,48 @@ ${context}`;
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
 
+// ── Task-server typeahead helper ──────────────────────────────────────────────
+function gpSanitizeTaskServerName(n) {
+  return (n || '').trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+function gpGetTaskServerSuggestions(prefix) {
+  try {
+    const settingsFile = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+    if (!fs.existsSync(settingsFile)) return [];
+    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const servers = settings.task_servers || [];
+    if (!servers.length) return [];
+    const raw = String(prefix || '').replace(/^~\//, '').replace(/^~/, '');
+    const slashIdx = raw.indexOf('/');
+    const typePart = (slashIdx >= 0 ? raw.slice(0, slashIdx) : raw).toLowerCase();
+    const namePart = slashIdx >= 0 ? raw.slice(slashIdx + 1).toLowerCase() : '';
+    return servers.filter(s => {
+      const sType = (s.type || '').toLowerCase();
+      const sName = (s.name || '').toLowerCase();
+      const sSan  = gpSanitizeTaskServerName(s.name).toLowerCase();
+      if (slashIdx >= 0) {
+        if (sType !== typePart) return false;
+        if (!namePart) return true;
+        return sSan.includes(namePart) || sName.includes(namePart);
+      }
+      if (!typePart) return true;
+      return sType.includes(typePart) || sName.includes(typePart) || sSan.includes(typePart);
+    }).map(s => {
+      const sanitized = gpSanitizeTaskServerName(s.name);
+      const mentionPath = `${s.type}/${sanitized}`;
+      return { name: mentionPath, path: mentionPath, displayName: s.name, taskServerType: s.type, isTaskServer: true };
+    });
+  } catch { return []; }
+}
+
 // ── list-path: @ file mention typeahead ──────────────────────────────────────
 ipcMain.handle('list-path', (_, prefix) => {
   try {
+    const taskServers = gpGetTaskServerSuggestions(prefix);
     const home     = os.homedir();
     const expanded = prefix.replace(/^~/, home);
     const isDir    = expanded.endsWith('/');
@@ -747,11 +786,11 @@ ipcMain.handle('list-path', (_, prefix) => {
           return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
         });
       }
-      return { ok: true, items };
+      return { ok: true, items: [...taskServers, ...items] };
     }
 
-    if (!fs.existsSync(dir)) return { ok: true, items: [] };
-    if (!fs.statSync(dir).isDirectory()) return { ok: true, items: [] };
+    if (!fs.existsSync(dir)) return { ok: true, items: taskServers };
+    if (!fs.statSync(dir).isDirectory()) return { ok: true, items: taskServers };
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     const items = entries
       .filter(e => !partial || e.name.toLowerCase().includes(partial.toLowerCase()))
@@ -763,7 +802,7 @@ ipcMain.handle('list-path', (_, prefix) => {
         isDir: e.isDirectory(),
         isPath: true,
       }));
-    return { ok: true, items };
+    return { ok: true, items: [...taskServers, ...items] };
   } catch { return { ok: true, items: [] }; }
 });
 
