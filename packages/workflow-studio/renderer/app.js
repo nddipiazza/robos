@@ -618,6 +618,8 @@ function renderConfigTypes(ts) {
         t[inp.dataset.field] = inp.value;
         if (inp.dataset.field === 'color')
           card.querySelector('.type-color-dot').style.background = inp.value;
+        if (inp.dataset.field === 'label')
+          card.querySelector('.type-card-label').textContent = inp.value || 'New Type';
         if (_notifyDirty) _notifyDirty();
       };
     });
