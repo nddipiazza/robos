@@ -1,9 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs   = require('fs');
+const os   = require('os');
 const { execSync, exec } = require('child_process');
 
-const SETTINGS_FILE = path.join(process.env.HOME, '.config', 'robos', 'settings.json');
+app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'task-servers'));
+
+const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
 // Debug server (optional) — checks env override, local dev path, then VM install path
 var _debugServer = null;
