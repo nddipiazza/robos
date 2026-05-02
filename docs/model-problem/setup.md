@@ -350,16 +350,15 @@ transitions:
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph LR
-    A[AI Triage]         --> B[AI Investigation]
-    B                    --> C[Workspace Setup]
-    C                    --> D[AI Draft]
-    D                    --> E[AI Testing]
-    E -->|tests fail|       D
-    E -->|tests pass|       F[AI PR Creation]
-    F                    --> G[Code Review]
+    A[AI Triage] --> B[AI Investigation]
+    B --> C[Workspace Setup]
+    C --> D[AI Draft]
+    D --> E[AI Testing]
+    E -->|tests fail| D
+    E -->|tests pass| F[AI PR Creation]
+    F --> G[Code Review]
     G -->|changes asked| D
-    G -->|approved|         H[Done]
-
+    G -->|approved| H[Done]
     style A fill:#BFD4F2,stroke:#7c93b8,color:#0d1117
     style B fill:#C5DEF5,stroke:#7c93b8,color:#0d1117
     style C fill:#F9E2AF,stroke:#b8a073,color:#0d1117
