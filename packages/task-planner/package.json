@@ -1,0 +1,8 @@
+{
+  "name": "robos-task-planner",
+  "version": "0.1.0",
+  "description": "Create tasks on your task server using AI prompts",
+  "main": "main.js",
+  "scripts": { "start": "electron ." },
+  "dependencies": { "electron": "^28.0.0" }
+}

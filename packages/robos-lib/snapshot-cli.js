@@ -66,6 +66,8 @@ const PORT_REGISTRY = {
   'stage-demo':        19131,
   'group-manager':     19132,
   'people-directory':  19133,
+  'task-planner':      19134,
+  'task-implementer':  19135,
 };
 
 function getPort(appId) {

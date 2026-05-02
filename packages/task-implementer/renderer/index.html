@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS Task Implementer</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-left">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <h1>Task Implementer</h1>
+      </div>
+      <div id="server-badge" class="server-badge">Loading…</div>
+    </header>
+
+    <div id="no-server" class="empty-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/>
+        <line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>
+      </svg>
+      <p>No task server configured.</p>
+      <button class="btn btn-accent" id="btn-open-task-servers">Open Task Servers</button>
+    </div>
+
+    <div id="main-layout" class="main-layout" style="display:none">
+      <!-- Left panel: task list -->
+      <aside class="task-panel">
+        <div class="task-panel-header">
+          <span class="panel-title">Tasks</span>
+          <button class="btn btn-sm btn-outline" id="btn-refresh" title="Refresh">↻</button>
+        </div>
+        <div class="filter-row">
+          <select id="filter-state" class="select-sm">
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="all">All</option>
+          </select>
+          <input type="text" id="filter-search" class="input-sm" placeholder="Search…"/>
+        </div>
+        <div id="task-list" class="task-list">
+          <div class="loading-row">Loading tasks…</div>
+        </div>
+      </aside>
+
+      <!-- Right panel: agent workspace -->
+      <main class="workspace-panel">
+        <div id="workspace-empty" class="workspace-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <p>Select a task to implement with AI</p>
+        </div>
+
+        <div id="workspace-active" style="display:none">
+          <div class="workspace-header">
+            <div class="workspace-task-info">
+              <span id="ws-task-key" class="task-key"></span>
+              <span id="ws-task-title" class="workspace-title"></span>
+            </div>
+            <div class="workspace-controls">
+              <a href="#" id="ws-open-url" class="link-btn" style="display:none">↗ Open</a>
+              <button id="btn-start-agent" class="btn btn-accent">
+                <span id="btn-start-text">▶ Start Agent</span>
+                <span id="btn-start-spinner" class="spinner" style="display:none"></span>
+              </button>
+              <button id="btn-stop-agent" class="btn btn-danger" style="display:none">■ Stop</button>
+            </div>
+          </div>
+
+          <div class="context-row">
+            <textarea id="extra-context" class="context-input"
+              placeholder="Optional: add context for the AI agent (e.g. approach hints, file paths, constraints)…" rows="2"></textarea>
+          </div>
+
+          <div class="task-description-box" id="task-description-box" style="display:none">
+            <div class="desc-toggle" id="desc-toggle">▾ Task Description</div>
+            <div id="task-description" class="task-description"></div>
+          </div>
+
+          <div class="agent-output-header">
+            <span>Agent Output</span>
+            <button class="btn btn-sm btn-outline" id="btn-clear-output">Clear</button>
+          </div>
+          <div id="agent-output" class="agent-output"></div>
+          <div id="agent-status" class="agent-status"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
