@@ -1,0 +1,30 @@
+// Bigger RobOS logo in the site header.
+// Just-the-Docs renders the logo as a CSS background on `.site-logo`,
+// inside an `.site-title` link, inside `.site-header`. Default sizing
+// keeps the logo around ~32px tall, which makes our PNG mark unreadable.
+.site-header {
+  // Give the header room to host a larger logo without crowding the menu button.
+  min-height: 4rem;
+}
+
+.site-title {
+  // The anchor wrapping the logo — let it grow vertically.
+  height: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.site-logo {
+  // Was effectively ~32px; bump to a comfortable mark size.
+  height: 3rem;     // ~48px
+  min-height: 3rem;
+  width: 100%;
+  background-size: contain;
+  background-position: left center;
+}
+
+// On wider viewports give it a bit more presence.
+@media (min-width: 50rem) {
+  .site-header { min-height: 4.5rem; }
+  .site-logo   { height: 3.5rem; min-height: 3.5rem; }   // ~56px
+}
