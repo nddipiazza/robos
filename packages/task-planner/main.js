@@ -191,7 +191,9 @@ ipcMain.handle('open-url', (_, url) => {
 });
 
 ipcMain.handle('open-task-servers', () => {
-  const script = '/usr/local/share/robos/task-servers/task-servers.sh';
-  cp.spawn('bash', [script], { detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: ':0' } }).unref();
+  cp.spawn('/usr/bin/electron', [
+    '/usr/local/share/robos/task-servers/main.js',
+    '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
+  ], { detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: ':0' } }).unref();
   return { ok: true };
 });
