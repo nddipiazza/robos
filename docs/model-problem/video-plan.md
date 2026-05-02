@@ -148,6 +148,7 @@ Engineering-specific additions:
 |:-:|:------|:-:|:-:|:-:|:-:|:-----------:|
 | 01 | Dana sets up RobOS              | ✅ | ✅ | ✅ | ✅ | [jB1YQYEA-jA](https://youtu.be/jB1YQYEA-jA) |
 | 01a | Dana — Task Servers (deep-dive) | ✅ | ✅ | ✅ | ✅ | [vygBUoocpbg](https://youtu.be/vygBUoocpbg) |
+| 01b | Dana — Workflow Studio (deep-dive) | ✅ | ✅ | ✅ | ✅ | [FzUQs7tWkOo](https://youtu.be/FzUQs7tWkOo) |
 | 02 | Dana — RobOS Agents             | ✅ | ✅ | ✅ | ✅ | [ZubntVBA6Pw](https://youtu.be/ZubntVBA6Pw) |
 | 03 | Dana — People Manager           | ✅ | ✅ | ✅ | ✅ | [ZdvQwFQwwbg](https://youtu.be/ZdvQwFQwwbg) |
 | 04 | Dana — Group Manager            | ✅ | ✅ | ✅ | ✅ | [mxnPjiJ0G8I](https://youtu.be/mxnPjiJ0G8I) |
