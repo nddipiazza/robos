@@ -2,11 +2,17 @@
 
 **The AI-Native Operating System for Software Teams**
 
-A purpose-built Linux desktop where AI does the heavy lifting — writing code, reviewing PRs, managing tasks, tracking deployments — and the entire OS can be reshaped with a single prompt.
+> A purpose-built Linux desktop where AI picks up tickets, writes the code, opens the PR, and asks you to review it — while you drink your coffee.
+
+[![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/nddipiazza/robos)](https://github.com/nddipiazza/robos/releases)
+[![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)
+[![Issues](https://img.shields.io/github/issues/nddipiazza/robos)](https://github.com/nddipiazza/robos/issues)
+[![Contributing](https://img.shields.io/badge/contributions-welcome-brightgreen)](#contributing)
 
 ![RobOS Desktop](docs/assets/images/screenshots/robos-desktop.png)
 
-**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)** | **[App Suite](https://nddipiazza.github.io/robos/apps/)**
+**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)** | **[App Suite](https://nddipiazza.github.io/robos/apps/)** | **[Contributing](CONTRIBUTING.md)**
 
 ---
 
@@ -166,11 +172,20 @@ We validate every feature against a real project: **buildbarn-forms** — a Reac
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`feat/my-feature`)
-3. Follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`)
-4. Run tests: `cd packages/robos-test && npm run test:unit`
-5. Submit a pull request
+We welcome contributions of all sizes — new apps, bug fixes, docs, and ideas.
+
+- 📖 Read [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide
+- 🐛 [Open an issue](https://github.com/nddipiazza/robos/issues/new) for bugs or feature requests
+- 💬 [Start a Discussion](https://github.com/nddipiazza/robos/discussions) for ideas and questions
+- 🔍 Browse [`good first issue`](https://github.com/nddipiazza/robos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for easy entry points
+
+Quick start:
+
+```bash
+git clone https://github.com/nddipiazza/robos.git
+cd robos/packages/robos-test
+npm install && node harness.js --list-apps
+```
 
 ---
 
