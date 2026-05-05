@@ -278,6 +278,34 @@ module.exports = {
     },
   },
 
+  'task-planner-jira': {
+    name: 'task-planner-jira',
+    description: 'Task planner against a Jira task server with epics support',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    passReady: true,
+    passEntries: { 'robos-acme-inc/jira-token': 'fake-jira-token-for-test' },
+    settings: {
+      task_servers: [{
+        id: 'jira-1',
+        type: 'jira',
+        name: 'Acme Jira',
+        url: 'https://robos-acme.atlassian.net',
+        username: 'dev@robos-acme.com',
+        token_pass_path: 'robos-acme-inc/jira-token',
+        projects: ['KAN'],
+        issue_types: [
+          { id: 'Epic',  label: 'Epic',  color: '#a78bfa' },
+          { id: 'Story', label: 'Story', color: '#3b82f6' },
+          { id: 'Task',  label: 'Task',  color: '#22c55e' },
+          { id: 'Bug',   label: 'Bug',   color: '#ef4444' },
+        ],
+      }],
+      active_task_server: 'jira-1',
+    },
+  },
+
   'task-implementer-no-config': {
     name: 'task-implementer-no-config',
     description: 'Task implementer with no task server configured',

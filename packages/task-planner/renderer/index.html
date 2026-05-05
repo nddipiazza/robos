@@ -28,10 +28,23 @@
     </div>
 
     <main id="main-content" style="display:none">
+      <!-- Parent Epic Selector (Jira only) -->
+      <section id="epic-parent-section" class="card epic-parent-section" style="display:none">
+        <div class="epic-parent-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <h2>Parent Epic</h2>
+          <span id="epic-fetch-status" class="status-text" style="margin-left:8px;font-size:12px;"></span>
+        </div>
+        <p class="epic-parent-hint">Assign all generated tasks under an existing Jira epic, or let the AI create new epics from your plan.</p>
+        <select id="parent-epic-select" class="epic-select"></select>
+      </section>
+
       <section class="prompt-section card">
         <h2>Describe the tasks you want to create</h2>
         <textarea id="prompt-input" class="prompt-textarea"
-          placeholder="e.g. Create a user authentication system with login, logout, and password reset features. Break it into individual GitHub issues."></textarea>
+          placeholder="e.g. Create a user authentication system with login, logout, and password reset features. Break it into epics and stories."></textarea>
         <div class="prompt-actions">
           <button class="btn btn-accent" id="btn-generate">
             <span id="btn-generate-text">✦ Generate with AI</span>
@@ -43,7 +56,10 @@
 
       <section id="preview-section" class="preview-section" style="display:none">
         <div class="preview-header">
-          <h2>Preview Tasks <span id="task-count" class="badge">0</span></h2>
+          <div class="preview-header-left">
+            <h2>Preview Tasks <span id="task-count" class="badge">0</span></h2>
+            <span id="epic-count" class="epic-count-badge" style="display:none"></span>
+          </div>
           <div class="preview-actions">
             <button class="btn btn-sm btn-outline" id="btn-add-task">+ Add Task</button>
             <button class="btn btn-sm btn-danger" id="btn-clear">Clear All</button>

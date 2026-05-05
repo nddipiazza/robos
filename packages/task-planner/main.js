@@ -4,6 +4,7 @@ const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
 const cp   = require('child_process');
+const { execSync } = require('child_process');
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -85,12 +86,58 @@ app.on('window-all-closed', () => app.quit());
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function readPassSecret(passPath) {
+  if (!passPath) return null;
+  try {
+    return execSync(`bash -lc "pass ${passPath} 2>/dev/null | head -1"`, { timeout: 5000 }).toString().trim() || null;
+  } catch { return null; }
+}
+
+async function jiraRequest(method, baseUrl, username, token, apiPath, body) {
+  const url = `${baseUrl.replace(/\/$/, '')}${apiPath}`;
+  const auth = Buffer.from(`${username}:${token}`).toString('base64');
+  const headers = `-H "Authorization: Basic ${auth}" -H "Content-Type: application/json" -H "Accept: application/json"`;
+
+  let cmd;
+  if (body) {
+    const tmpFile = path.join(os.tmpdir(), `robos-jira-${Date.now()}.json`);
+    fs.writeFileSync(tmpFile, JSON.stringify(body));
+    cmd = `curl -sf -X ${method} ${headers} -d @${tmpFile} "${url}"`;
+    try {
+      const result = await new Promise((resolve, reject) => {
+        cp.exec(cmd, { timeout: 20000 }, (err, stdout, stderr) => {
+          fs.unlink(tmpFile, () => {});
+          if (err && !stdout) reject(new Error(stderr || err.message));
+          else resolve(stdout);
+        });
+      });
+      return result ? JSON.parse(result) : null;
+    } catch (e) {
+      fs.unlink(tmpFile, () => {});
+      throw e;
+    }
+  } else {
+    cmd = `curl -sf -X ${method} ${headers} "${url}"`;
+    return new Promise((resolve, reject) => {
+      cp.exec(cmd, { timeout: 15000 }, (err, stdout, stderr) => {
+        if (err && !stdout) reject(new Error(stderr || err.message));
+        else resolve(stdout ? JSON.parse(stdout) : null);
+      });
+    });
+  }
+}
+
+// ── IPC ───────────────────────────────────────────────────────────────────────
+
 ipcMain.handle('read-settings', () => readSettings());
 
 ipcMain.handle('get-server-info', () => {
   const settings = readSettings();
   const server = getActiveServer(settings);
   if (!server) return { ok: false, error: 'No task server configured. Open RobOS Task Servers to add one.' };
+  const jiraProject = server.jira_project || (server.projects && server.projects[0]) || '';
   return {
     ok: true,
     server: {
@@ -100,17 +147,50 @@ ipcMain.handle('get-server-info', () => {
       issueTypes: server.issue_types || [],
       repo: server.type === 'github' ? `${server.gh_org || ''}/${server.gh_repo || ''}` : null,
       jiraUrl: server.type === 'jira' ? server.url : null,
-      jiraProject: server.type === 'jira' ? server.jira_project : null,
+      jiraProject: server.type === 'jira' ? jiraProject : null,
+      jiraUsername: server.type === 'jira' ? (server.username || '') : null,
+      jiraTokenPassPath: server.type === 'jira' ? (server.token_pass_path || '') : null,
     },
   };
 });
 
+ipcMain.handle('fetch-jira-epics', async (_, { jiraUrl, jiraProject, username, tokenPassPath }) => {
+  try {
+    const token = readPassSecret(tokenPassPath);
+    if (!token) return { ok: false, error: 'Could not load Jira API token from pass store.' };
+    const jql = encodeURIComponent(`project=${jiraProject} AND issuetype=Epic ORDER BY created DESC`);
+    const data = await jiraRequest('GET', jiraUrl, username, token,
+      `/rest/api/2/search?jql=${jql}&fields=summary,key,status&maxResults=50`);
+    const epics = (data && data.issues || []).map(issue => ({
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status && issue.fields.status.name,
+    }));
+    return { ok: true, epics };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
 ipcMain.handle('generate-tasks', async (_, { prompt, serverInfo }) => {
   const typeList = (serverInfo.issueTypes || []).map(t => `- ${t.label} (id: ${t.id})`).join('\n') || '(no types configured)';
+  const isJira = serverInfo.type === 'jira';
+
+  const hierarchyInstructions = isJira ? `
+For Jira, organize tasks into a hierarchy of Epics with child issues:
+- Epics have "isEpic": true and "epicName": a short, memorable epic label (e.g. "User Auth")
+- Child issues have "parentEpicIndex": the 0-based array index of their parent Epic
+- Place Epics BEFORE their children in the array
+- If a task doesn't belong under any epic, omit "parentEpicIndex"
+- Each task/story/bug should have "issueType": one of the issue type ids above (e.g. "Story", "Bug", "Task"); Epics use "Epic"
+` : `
+- Each task should have "issueType": one of the issue type ids above if applicable
+`;
+
   const fullPrompt = `You are a software project task planner.
 
 The user has a ${serverInfo.type} task server named "${serverInfo.name}".
-${serverInfo.type === 'github' ? `Repository: ${serverInfo.repo}` : `Jira project: ${serverInfo.jiraProject}`}
+${isJira ? `Jira project: ${serverInfo.jiraProject}` : `Repository: ${serverInfo.repo}`}
 
 Available issue types:
 ${typeList}
@@ -124,7 +204,7 @@ Generate a JSON array of tasks to create. Each task object must have:
 - "title": string (required, the issue/task title)
 - "body": string (required, detailed description in markdown)
 - "labels": array of strings (optional, relevant labels)
-- "issueType": string (optional, one of the issue type ids above if applicable)
+${hierarchyInstructions}
 
 Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
 
@@ -158,12 +238,12 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
   }
 });
 
-ipcMain.handle('create-tasks', async (_, { tasks, serverInfo }) => {
+ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) => {
   const results = [];
-  for (const task of tasks) {
-    try {
-      let result;
-      if (serverInfo.type === 'github') {
+
+  if (serverInfo.type === 'github') {
+    for (const task of tasks) {
+      try {
         const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', task.body || ''];
         if (task.labels && task.labels.length) {
           for (const lbl of task.labels) {
@@ -173,23 +253,111 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo }) => {
           args.push('--label', task.labels.join(','));
         }
         const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 30000 });
-        if (r.status === 0) {
-          const url = r.stdout.trim();
-          result = { ok: true, url, title: task.title };
-        } else {
-          result = { ok: false, error: r.stderr || 'gh issue create failed', title: task.title };
-        }
-      } else if (serverInfo.type === 'jira') {
-        result = { ok: false, error: 'Jira create not yet implemented', title: task.title };
-      } else {
-        result = { ok: false, error: `Unknown server type: ${serverInfo.type}`, title: task.title };
+        if (r.status === 0) results.push({ ok: true, url: r.stdout.trim(), title: task.title });
+        else results.push({ ok: false, error: r.stderr || 'gh issue create failed', title: task.title });
+      } catch (e) {
+        results.push({ ok: false, error: e.message, title: task.title });
       }
-      results.push(result);
-    } catch (e) {
-      results.push({ ok: false, error: e.message, title: task.title });
     }
+    return { ok: true, results };
   }
-  return { ok: true, results };
+
+  if (serverInfo.type === 'jira') {
+    const token = readPassSecret(serverInfo.jiraTokenPassPath);
+    if (!token) return { ok: false, error: 'Could not load Jira API token from pass store.' };
+    const { jiraUrl, jiraProject, jiraUsername } = serverInfo;
+    const baseUrl = jiraUrl.replace(/\/$/, '');
+
+    // Map AI-generated task indices to created Jira issue keys for epic linking
+    const epicKeyByIndex = {};
+
+    // Create all epics first (in order), then children
+    const epics = tasks.map((t, i) => t.isEpic ? i : null).filter(i => i !== null);
+    const children = tasks.map((t, i) => t.isEpic ? null : i).filter(i => i !== null);
+
+    for (const idx of epics) {
+      const task = tasks[idx];
+      try {
+        const fields = {
+          project: { key: jiraProject },
+          summary: task.title,
+          description: task.body || '',
+          issuetype: { name: 'Epic' },
+          customfield_10011: task.epicName || task.title,
+        };
+        const data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
+        if (data && data.key) {
+          epicKeyByIndex[idx] = data.key;
+          const issueUrl = `${baseUrl}/browse/${data.key}`;
+          results[idx] = { ok: true, url: issueUrl, title: task.title, key: data.key, isEpic: true };
+        } else {
+          results[idx] = { ok: false, error: 'Jira did not return an issue key', title: task.title };
+        }
+      } catch (e) {
+        results[idx] = { ok: false, error: e.message, title: task.title };
+      }
+    }
+
+    for (const idx of children) {
+      const task = tasks[idx];
+      try {
+        const issueTypeName = task.issueType || 'Story';
+        const fields = {
+          project: { key: jiraProject },
+          summary: task.title,
+          description: task.body || '',
+          issuetype: { name: issueTypeName },
+        };
+
+        // Determine parent epic key: from inline task.parentEpicIndex, or top-level parentEpicKey
+        let resolvedEpicKey = null;
+        if (typeof task.parentEpicIndex === 'number' && epicKeyByIndex[task.parentEpicIndex]) {
+          resolvedEpicKey = epicKeyByIndex[task.parentEpicIndex];
+        } else if (task.epicKey) {
+          resolvedEpicKey = task.epicKey;
+        } else if (parentEpicKey) {
+          resolvedEpicKey = parentEpicKey;
+        }
+
+        if (resolvedEpicKey) {
+          // Try next-gen parent link first; fall back to classic Epic Link field
+          fields.parent = { key: resolvedEpicKey };
+        }
+
+        let data;
+        try {
+          data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
+        } catch (e) {
+          // If parent link fails, retry with classic customfield_10014 Epic Link
+          if (resolvedEpicKey && fields.parent) {
+            delete fields.parent;
+            fields.customfield_10014 = resolvedEpicKey;
+            data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
+          } else {
+            throw e;
+          }
+        }
+
+        if (data && data.key) {
+          const issueUrl = `${baseUrl}/browse/${data.key}`;
+          results[idx] = { ok: true, url: issueUrl, title: task.title, key: data.key, epicKey: resolvedEpicKey || null };
+        } else {
+          results[idx] = { ok: false, error: 'Jira did not return an issue key', title: task.title };
+        }
+      } catch (e) {
+        results[idx] = { ok: false, error: e.message, title: task.title };
+      }
+    }
+
+    // Fill any gaps (tasks that weren't epic or child — shouldn't happen but be safe)
+    tasks.forEach((task, idx) => {
+      if (!results[idx]) results[idx] = { ok: false, error: 'Task not processed', title: task.title };
+    });
+
+    return { ok: true, results };
+  }
+
+  return { ok: false, error: `Unknown server type: ${serverInfo.type}` };
 });
 
 ipcMain.handle('open-url', (_, url) => {

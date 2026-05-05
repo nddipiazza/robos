@@ -201,4 +201,110 @@ describe('task-planner E2E', () => {
       assert.strictEqual(resultsDisplay, 'block', 'results visible after create');
     });
   });
+
+  // ── Jira server → epic parent section, hierarchy rendering ───────────────
+
+  describe('jira-task-server scenario (epic hierarchy UI)', () => {
+    let app;
+
+    before(async () => {
+      app = await launchApp('task-planner', scenarios['task-planner-jira']);
+      await waitForText(app.port, 'Acme Jira', 10000);
+    });
+    after(() => killApp(app));
+
+    it('shows the connected Jira server badge', async () => {
+      const snap = await getSnapshot(app.port);
+      const text = flatText(snap);
+      assert.ok(text.includes('Acme Jira'), 'Jira server name in badge');
+      assert.ok(text.includes('jira'), 'server type in badge');
+    });
+
+    it('epic parent section is visible for Jira', async () => {
+      const snap = await getSnapshot(app.port);
+      const epicSection = findById(snap, 'epic-parent-section');
+      assert.ok(epicSection, '#epic-parent-section rendered for Jira server');
+    });
+
+    it('parent epic dropdown is present', async () => {
+      const snap = await getSnapshot(app.port);
+      const select = findById(snap, 'parent-epic-select');
+      assert.ok(select, '#parent-epic-select exists');
+    });
+
+    it('parent epic section contains hint text', async () => {
+      const snap = await getSnapshot(app.port);
+      const text = flatText(snap);
+      assert.ok(
+        text.includes('Parent Epic') || text.includes('epic'),
+        'Epic section heading visible'
+      );
+    });
+
+    it('Generate populates tasks with epic hierarchy cards', async () => {
+      // Inject tasks directly to simulate AI-generated hierarchical response
+      // without calling the real AI agent (too slow for unit test).
+      await evalJS(app.port, `
+        (() => {
+          window._injectedTasks = [
+            { title: 'Auth Epic',   body: 'Auth epic description', labels: [], isEpic: true,  epicName: 'Auth', parentEpicIdx: null, issueType: 'Epic', epicKey: null },
+            { title: 'Login page',  body: 'Login story body',      labels: [], isEpic: false, epicName: '',     parentEpicIdx: 0,    issueType: 'Story', epicKey: null },
+            { title: 'Logout flow', body: 'Logout story body',     labels: [], isEpic: false, epicName: '',     parentEpicIdx: 0,    issueType: 'Story', epicKey: null },
+          ];
+          // Simulate what handleGenerate does after receiving AI response
+          window.tasks = window._injectedTasks;
+          renderTasks();
+          updateCount();
+          document.getElementById('preview-section').style.display = 'block';
+        })()
+      `);
+
+      const snap = await getSnapshot(app.port);
+      const cards = findAllNodes(snap, n => n.class && n.class.includes('task-card'));
+      assert.ok(cards.length >= 3, `Expected ≥3 task cards, got ${cards.length}`);
+    });
+
+    it('epic card has task-epic CSS class', async () => {
+      const epicCardCount = await evalJS(app.port,
+        `document.querySelectorAll('.task-card.task-epic').length`);
+      assert.ok(epicCardCount >= 1, `Expected ≥1 epic card, got ${epicCardCount}`);
+    });
+
+    it('child cards have task-child CSS class (indented)', async () => {
+      const childCount = await evalJS(app.port,
+        `document.querySelectorAll('.task-card.task-child').length`);
+      assert.ok(childCount >= 2, `Expected ≥2 child cards, got ${childCount}`);
+    });
+
+    it('epic card shows Epic type badge', async () => {
+      const badgeCount = await evalJS(app.port,
+        `document.querySelectorAll('.issue-type-badge.badge-epic').length`);
+      assert.ok(badgeCount >= 1, `Expected ≥1 epic type badge, got ${badgeCount}`);
+    });
+
+    it('story cards show story type badge', async () => {
+      const storyBadges = await evalJS(app.port,
+        `document.querySelectorAll('.issue-type-badge.badge-story').length`);
+      assert.ok(storyBadges >= 1, `Expected ≥1 story badge, got ${storyBadges}`);
+    });
+
+    it('epic count badge updates', async () => {
+      const epicBadge = await evalJS(app.port,
+        `document.getElementById('epic-count').style.display`);
+      assert.notStrictEqual(epicBadge, 'none', 'Epic count badge is visible');
+    });
+
+    it('task count badge shows total task count', async () => {
+      const count = await evalJS(app.port,
+        `document.getElementById('task-count').textContent`);
+      assert.strictEqual(count, '3', 'Task count shows 3');
+    });
+
+    it('Plan Again button is wired up in results section', async () => {
+      // Check button exists in HTML even if section is hidden
+      const btn = await evalJS(app.port,
+        `!!document.getElementById('btn-plan-again')`);
+      assert.ok(btn, 'btn-plan-again exists');
+    });
+  });
 });

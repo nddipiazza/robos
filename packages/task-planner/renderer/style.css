@@ -35,17 +35,24 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .prompt-textarea:focus { border-color: var(--accent); }
 .prompt-actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 
-/* Preview */
+/* Preview header */
 .preview-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
 .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.preview-header-left { display: flex; align-items: center; gap: 8px; }
 .preview-header h2 { font-size: 15px; font-weight: 600; }
 .preview-actions { display: flex; gap: 8px; }
+
+/* Epic count badge */
+.epic-count-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; background: #a78bfa22; color: #a78bfa; border: 1px solid #a78bfa44; font-size: 11px; font-weight: 600; }
 
 /* Task cards */
 .task-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .task-card { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; padding: 14px; position: relative; }
-.task-card-header { display: flex; align-items: flex-start; gap: 10px; }
+.task-card.task-epic { border-color: #a78bfa55; background: #a78bfa0a; }
+.task-card.task-child { margin-left: 24px; border-left: 3px solid #30363d; }
+.task-card-header { display: flex; align-items: flex-start; gap: 8px; }
 .task-card-header .task-num { color: var(--text-muted); font-size: 12px; padding-top: 2px; flex-shrink: 0; }
+.tree-indent { color: var(--text-muted); font-size: 14px; padding-top: 1px; flex-shrink: 0; user-select: none; }
 .task-title-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text); font-size: 14px; font-weight: 600; outline: none; padding-bottom: 2px; transition: border-color .2s; }
 .task-title-input:focus { border-bottom-color: var(--accent); }
 .task-body-input { width: 100%; background: transparent; border: none; color: var(--text-muted); font-size: 13px; resize: none; outline: none; margin-top: 8px; min-height: 60px; font-family: inherit; }
@@ -56,6 +63,28 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .add-label-btn:hover { border-color: var(--accent); color: var(--accent); }
 .task-remove-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
 .task-remove-btn:hover { color: var(--red); background: #ef444411; }
+
+/* Issue type badges */
+.issue-type-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.badge-epic { background: #a78bfa22; color: #a78bfa; border: 1px solid #a78bfa44; }
+.badge-story { background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f644; }
+
+/* Epic name row */
+.epic-name-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.epic-name-label { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.epic-name-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid #a78bfa33; color: #a78bfa; font-size: 12px; outline: none; padding: 2px 0; font-style: italic; }
+.epic-name-input:focus { border-bottom-color: #a78bfa; }
+
+/* Parent epic section */
+.epic-parent-section { background: var(--bg-card); border: 1px solid #a78bfa33; border-radius: 8px; padding: 16px 20px; }
+.epic-parent-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.epic-parent-header h2 { font-size: 14px; font-weight: 600; color: #a78bfa; margin: 0; }
+.epic-parent-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.epic-select { width: 100%; background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 13px; outline: none; cursor: pointer; }
+.epic-select:focus { border-color: #a78bfa; }
+
+/* Result epic badge */
+.result-epic-badge { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 3px; background: #a78bfa22; color: #a78bfa; border: 1px solid #a78bfa44; font-size: 10px; font-weight: 700; flex-shrink: 0; }
 
 /* Create bar */
 .create-bar { display: flex; align-items: center; gap: 14px; padding-top: 4px; }
