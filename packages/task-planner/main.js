@@ -143,7 +143,14 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
       });
     });
 
-    const parsed = aiJson ? await aiJson.parseAIJson(text) : JSON.parse(text);
+    let parsed;
+    if (aiJson) {
+      const r = aiJson.parseAIJson(text);
+      if (!r.ok) throw new Error(r.error || 'Failed to parse AI response');
+      parsed = r.data;
+    } else {
+      parsed = JSON.parse(text);
+    }
     if (!Array.isArray(parsed)) throw new Error('Expected an array of tasks');
     return { ok: true, tasks: parsed };
   } catch (e) {

@@ -241,6 +241,73 @@ module.exports = {
     },
   },
 
+  // ── Task planner / implementer scenarios ───────────────────────────────────
+
+  'task-planner-no-config': {
+    name: 'task-planner-no-config',
+    description: 'Task planner with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'task-planner-github': {
+    name: 'task-planner-github',
+    description: 'Task planner against a GitHub task server with seeded issue types',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'acme-corp',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'acme-corp', repo: 'buildbarn-forms' }],
+        issue_types: [
+          { id: 'bug', label: 'Bug', color: '#e11d48' },
+          { id: 'feature', label: 'Feature', color: '#2563eb' },
+          { id: 'chore', label: 'Chore', color: '#cfd3d7' },
+        ],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
+
+  'task-implementer-no-config': {
+    name: 'task-implementer-no-config',
+    description: 'Task implementer with no task server configured',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: { task_servers: [] },
+  },
+
+  'task-implementer-github': {
+    name: 'task-implementer-github',
+    description: 'Task implementer against a GitHub task server (issues come from gh stub)',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Dev User', email: 'dev@example.com' },
+    settings: {
+      task_servers: [{
+        id: 'gh-1',
+        type: 'github',
+        name: 'Acme GitHub',
+        gh_api_url: 'https://api.github.com',
+        use_gh_cli: true,
+        gh_org: 'acme-corp',
+        gh_repo: 'buildbarn-forms',
+        repos: [{ org: 'acme-corp', repo: 'buildbarn-forms' }],
+      }],
+      active_task_server: 'gh-1',
+    },
+  },
+
   'issue-manager-github': {
     name: 'issue-manager-github',
     description: 'Issue manager with a GitHub task server',

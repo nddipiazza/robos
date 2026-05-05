@@ -52,6 +52,8 @@ const PORT_MAP = {
   'git-projects': 19138,
   'manager-dashboard': 19134,
   'report-builder': 19135,
+  'task-planner': 19134,
+  'task-implementer': 19135,
 };
 
 // Track all launched apps for process-exit cleanup

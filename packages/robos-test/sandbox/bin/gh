@@ -130,6 +130,43 @@ json.dump(filtered, sys.stdout)
     exit 0
     ;;
 
+  "issue create")
+    # Parse --repo and --title to synthesize a plausible URL.
+    # Real `gh issue create` prints the URL on stdout; task-planner trims this
+    # and shows it as the result link. We use a stable fake number so tests
+    # can assert on it.
+    REPO=""
+    TITLE=""
+    for arg in "$@"; do
+      case "$arg" in
+        --repo)  shift_next=repo  ;;
+        --title) shift_next=title ;;
+        *)
+          if [ "$shift_next" = "repo"  ]; then REPO="$arg";  shift_next=""; fi
+          if [ "$shift_next" = "title" ]; then TITLE="$arg"; shift_next=""; fi
+          ;;
+      esac
+    done
+    for arg in "$@"; do
+      case "$arg" in
+        --repo=*)  REPO="${arg#--repo=}"   ;;
+        --title=*) TITLE="${arg#--title=}" ;;
+      esac
+    done
+    REPO="${REPO:-acme-corp/buildbarn-forms}"
+    # Increment a per-test-run counter file so each call gets a unique number.
+    COUNTER_FILE="${TMPDIR:-/tmp}/robos-test-issue-counter-$$"
+    if [ -f "$COUNTER_FILE" ]; then
+      NUM=$(cat "$COUNTER_FILE")
+      NUM=$((NUM + 1))
+    else
+      NUM=100
+    fi
+    echo "$NUM" > "$COUNTER_FILE"
+    echo "https://github.com/${REPO}/issues/${NUM}"
+    exit 0
+    ;;
+
   "label create")
     echo "label created"
     exit 0
@@ -303,7 +340,23 @@ EOF
   "copilot "*)
     # Simulate AI latency so the "⏳ Asking AI agent…" status is visible
     sleep 2
-    cat "$DATA_DIR/workflows-generated.json"
+    # Inspect the prompt arg to decide what shape to return:
+    #   - task-planner asks for a JSON array of tasks
+    #   - workflow-studio asks for issue types + workflows
+    #   - task-implementer's start-agent runs the agent freely; we just emit
+    #     a couple of progress lines and exit
+    PROMPT_BLOB=""
+    for arg in "$@"; do PROMPT_BLOB="$PROMPT_BLOB $arg"; done
+    if echo "$PROMPT_BLOB" | grep -qiE 'task planner|JSON array of tasks'; then
+      cat "$DATA_DIR/tasks-generated.json"
+    elif echo "$PROMPT_BLOB" | grep -qiE 'TASK:|implementing a task'; then
+      echo "Reading task description and exploring the repo…"
+      echo "Identified the change required."
+      echo "Drafting the patch in src/auth/login.ts."
+      echo "Done. Summary: implemented the login endpoint with rate limiting."
+    else
+      cat "$DATA_DIR/workflows-generated.json"
+    fi
     exit 0
     ;;
 

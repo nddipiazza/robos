@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Add login endpoint with email + password",
+    "body": "## Background\nUsers need a way to authenticate. Implement `POST /api/auth/login` accepting `{ email, password }` and returning a session JWT.\n\n## Acceptance criteria\n- 200 + JWT on valid credentials\n- 401 on invalid credentials\n- Rate-limit to 5 attempts / minute / IP",
+    "labels": ["auth", "backend"],
+    "issueType": "feature"
+  },
+  {
+    "title": "Add logout endpoint that revokes the JWT",
+    "body": "Add `POST /api/auth/logout` that adds the current JWT to the revocation list and clears the session cookie.",
+    "labels": ["auth", "backend"],
+    "issueType": "feature"
+  },
+  {
+    "title": "Password reset flow (forgot password)",
+    "body": "Implement the forgot-password flow:\n- `POST /api/auth/forgot` sends a reset email\n- `POST /api/auth/reset` accepts the token + new password\n\nReset tokens must expire in 1 hour.",
+    "labels": ["auth", "email"],
+    "issueType": "feature"
+  }
+]
