@@ -169,7 +169,7 @@ ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
 
 # Single app update
 scp -P 2224 -r packages/<app-id>/* robos@localhost:/tmp/<app-id>/
-ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && sudo chmod -R a+rX /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo npm install --quiet"
+ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app-id> && sudo cp -r /tmp/<app-id> /usr/local/share/robos/<app-id> && sudo chmod -R a+rX /usr/local/share/robos/<app-id> && cd /usr/local/share/robos/<app-id> && sudo rm -rf node_modules && sudo npm install --quiet"
 ```
 
 VM credentials: `robos` / `robos`
@@ -231,6 +231,7 @@ When adding, renaming, or removing an app, update ALL of these locations. Use th
 
 - **Electron in QEMU**: `--disable-dev-shm-usage` is critical or renderer windows go blank
 - **Deploy permissions**: After `sudo cp -r` to `/usr/local/share/robos/`, always `sudo chmod -R a+rX` or Electron can't read the files
+- **Deploy symlinks**: `scp -r` dereferences symlinks (e.g. `node_modules/.bin/electron`). Always `sudo rm -rf node_modules && sudo npm install` after deploy to regenerate correct symlinks
 - **cloud-init**: `write_files` does NOT create parent dirs — always `mkdir -p` in `runcmd`; only runs once per `instance-id`
 - **Monaco editors**: Call `ed.layout()` when tab becomes visible (initializing while hidden renders at 0×0)
 - **Shell vars in JS**: Escape `$(...)` and `${VAR}` in template literals to avoid JS interpolation
