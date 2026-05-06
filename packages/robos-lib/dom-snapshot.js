@@ -415,6 +415,14 @@ function startDebugServer(win, port, appId) {
     }
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[robos-debug] port ${port} already in use (another user may have this app open); debug server not started`);
+    } else {
+      console.error(`[robos-debug] server error: ${err.message}`);
+    }
+  });
+
   server.listen(port, '0.0.0.0', () => {
     console.log(`[robos-debug] ${appId} debug server on http://0.0.0.0:${port}`);
   });

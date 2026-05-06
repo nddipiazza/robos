@@ -63,13 +63,12 @@ function createWindow() {
 }
 
 app.setName('git-projects');
-app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'git-projects'));
+app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'git-projects'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.on('second-instance', () => {
   const w = require('electron').BrowserWindow.getAllWindows()[0];
   if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
 });
-app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'git-projects'));
 app.whenReady().then(() => { buildGitReposIndex(); createWindow(); });
 app.on('window-all-closed', () => app.quit());
 
