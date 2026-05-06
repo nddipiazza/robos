@@ -442,8 +442,12 @@ async function loadCommits(lp) {
   const list = document.getElementById('commits-list');
   list.innerHTML = '<span class="list-empty">Loading…</span>';
   const r = await gp.getLog(lp);
-  if (!r.ok || !r.commits.length) {
-    list.innerHTML = '<span class="list-empty">Not cloned or no commits</span>';
+  if (!r.ok) {
+    list.innerHTML = '<span class="list-empty">Not cloned</span>';
+    return;
+  }
+  if (!r.commits.length) {
+    list.innerHTML = '<span class="list-empty">Empty repository — no commits yet</span>';
     return;
   }
   list.innerHTML = '';
@@ -461,8 +465,12 @@ async function loadBranches(lp) {
   const list = document.getElementById('branches-list');
   list.innerHTML = '<span class="list-empty">Loading…</span>';
   const r = await gp.getBranches(lp);
-  if (!r.ok || !r.branches.length) {
-    list.innerHTML = '<span class="list-empty">Not cloned or no branches</span>';
+  if (!r.ok) {
+    list.innerHTML = '<span class="list-empty">Not cloned</span>';
+    return;
+  }
+  if (!r.branches.length) {
+    list.innerHTML = '<span class="list-empty">Empty repository — no branches yet</span>';
     return;
   }
   list.innerHTML = '';
