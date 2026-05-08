@@ -109,6 +109,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderTree();
   bindAddModal();
   bindGroupPicker();
+  bindOrgPicker();
+  initAIReposPanel();
   bindSearch();
   bindSort();
 
@@ -441,46 +443,54 @@ function switchTab(tab) {
 async function loadCommits(lp) {
   const list = document.getElementById('commits-list');
   list.innerHTML = '<span class="list-empty">Loading…</span>';
-  const r = await gp.getLog(lp);
-  if (!r.ok) {
-    list.innerHTML = '<span class="list-empty">Not cloned</span>';
-    return;
+  try {
+    const r = await gp.getLog(lp);
+    if (!r || !r.ok) {
+      list.innerHTML = '<span class="list-empty">Not cloned</span>';
+      return;
+    }
+    if (!r.commits.length) {
+      list.innerHTML = '<span class="list-empty">Empty repository — no commits yet</span>';
+      return;
+    }
+    list.innerHTML = '';
+    r.commits.forEach(line => {
+      const sha = line.slice(0, 7);
+      const msg = line.slice(8);
+      const row = document.createElement('div');
+      row.className = 'commit-row';
+      row.innerHTML = `<span class="commit-sha">${sha}</span><span class="commit-msg">${escHtml(msg)}</span>`;
+      list.appendChild(row);
+    });
+  } catch {
+    list.innerHTML = '<span class="list-empty">Failed to load commits</span>';
   }
-  if (!r.commits.length) {
-    list.innerHTML = '<span class="list-empty">Empty repository — no commits yet</span>';
-    return;
-  }
-  list.innerHTML = '';
-  r.commits.forEach(line => {
-    const sha = line.slice(0, 7);
-    const msg = line.slice(8);
-    const row = document.createElement('div');
-    row.className = 'commit-row';
-    row.innerHTML = `<span class="commit-sha">${sha}</span><span class="commit-msg">${escHtml(msg)}</span>`;
-    list.appendChild(row);
-  });
 }
 
 async function loadBranches(lp) {
   const list = document.getElementById('branches-list');
   list.innerHTML = '<span class="list-empty">Loading…</span>';
-  const r = await gp.getBranches(lp);
-  if (!r.ok) {
-    list.innerHTML = '<span class="list-empty">Not cloned</span>';
-    return;
+  try {
+    const r = await gp.getBranches(lp);
+    if (!r || !r.ok) {
+      list.innerHTML = '<span class="list-empty">Not cloned</span>';
+      return;
+    }
+    if (!r.branches.length) {
+      list.innerHTML = '<span class="list-empty">Empty repository — no branches yet</span>';
+      return;
+    }
+    list.innerHTML = '';
+    r.branches.forEach(b => {
+      const isRemote = b.startsWith('remotes/') || b.startsWith('origin/');
+      const row = document.createElement('div');
+      row.className = 'branch-row';
+      row.innerHTML = `<span class="branch-icon ${isRemote ? 'branch-remote' : ''}">${isRemote ? '☁' : '⎇'}</span><span class="branch-name ${isRemote ? 'branch-remote' : ''}">${escHtml(b)}</span>`;
+      list.appendChild(row);
+    });
+  } catch {
+    list.innerHTML = '<span class="list-empty">Failed to load branches</span>';
   }
-  if (!r.branches.length) {
-    list.innerHTML = '<span class="list-empty">Empty repository — no branches yet</span>';
-    return;
-  }
-  list.innerHTML = '';
-  r.branches.forEach(b => {
-    const isRemote = b.startsWith('remotes/') || b.startsWith('origin/');
-    const row = document.createElement('div');
-    row.className = 'branch-row';
-    row.innerHTML = `<span class="branch-icon ${isRemote ? 'branch-remote' : ''}">${isRemote ? '☁' : '⎇'}</span><span class="branch-name ${isRemote ? 'branch-remote' : ''}">${escHtml(b)}</span>`;
-    list.appendChild(row);
-  });
 }
 
 // ── Open in File Explorer ─────────────────────────────────────────────────────
@@ -1330,6 +1340,353 @@ async function bindGroupPicker() {
       modal.classList.add('hidden');
     }
   };
+}
+
+// ── AI Repos Prompt Panel ─────────────────────────────────────────────────────
+function initAIReposPanel() {
+  const toggleBtn    = document.getElementById('btn-ai-prompt');
+  const panel        = document.getElementById('ai-repos-panel');
+  const agentSelect  = document.getElementById('ai-repos-agent-select');
+  const promptEl     = document.getElementById('ai-repos-prompt');
+  const genBtn       = document.getElementById('ai-repos-generate-btn');
+  const statusEl     = document.getElementById('ai-repos-status');
+  const resultSec    = document.getElementById('ai-repos-result-section');
+  const reposList    = document.getElementById('ai-repos-list');
+  const selAll       = document.getElementById('btn-ai-repos-sel-all');
+  const deselAll     = document.getElementById('btn-ai-repos-desel-all');
+  const selCount     = document.getElementById('ai-repos-sel-count');
+  const cloneChk     = document.getElementById('ai-repos-clone-chk');
+  const cloneProgress    = document.getElementById('ai-repos-clone-progress');
+  const cloneProgressHdr = document.getElementById('ai-repos-clone-progress-hdr');
+  const cloneProgressPre = document.getElementById('ai-repos-clone-progress-pre');
+  const addBtn       = document.getElementById('btn-ai-repos-add');
+
+  // Toggle panel visibility
+  toggleBtn.addEventListener('click', () => {
+    panel.classList.toggle('hidden');
+    toggleBtn.textContent = panel.classList.contains('hidden') ? '✨ AI Prompt' : '✨ AI Prompt ▲';
+  });
+
+  // Wire @-mention file typeahead
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      if (promptEl && promptEl.addEventListener) {
+        promptEl.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await gp.listPath(e.detail.query);
+            if (r && r.ok && promptEl._showMentions) promptEl._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
+
+  // Populate agent dropdown
+  gp.listAIProviders().then(({ activeId, activeName, providers }) => {
+    agentSelect.options[0].textContent = `Default (${activeName})`;
+    agentSelect.options[0].value = '';
+    (providers || [])
+      .filter(p => p.id !== activeId)
+      .forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        agentSelect.appendChild(opt);
+      });
+  }).catch(() => {});
+
+  let _statusTimer = null;
+  function showStatus(msg, type) {
+    clearTimeout(_statusTimer);
+    statusEl.textContent = msg;
+    statusEl.className   = `ai-repos-status${type ? ' ' + type : ''}`;
+    statusEl.classList.remove('hidden');
+  }
+
+  function updateSelCount() {
+    const n = reposList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').length;
+    selCount.textContent = `${n} selected`;
+    addBtn.disabled = n === 0;
+  }
+
+  reposList.addEventListener('change', updateSelCount);
+  selAll.addEventListener('click',   () => { reposList.querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(c => c.checked = true);  updateSelCount(); });
+  deselAll.addEventListener('click', () => { reposList.querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(c => c.checked = false); updateSelCount(); });
+
+  genBtn.addEventListener('click', async () => {
+    const rawValue = typeof promptEl.value !== 'undefined' ? promptEl.value : promptEl.innerText || '';
+    const prompt   = rawValue.trim();
+    if (!prompt) { showStatus('Please describe the repositories first.', 'error'); return; }
+
+    genBtn.disabled  = true;
+    genBtn.textContent = '⏳ Generating…';
+    resultSec.classList.add('hidden');
+    cloneProgress.classList.add('hidden');
+    showStatus(`Sending to ${agentSelect.options[agentSelect.selectedIndex].textContent}…`, '');
+
+    try {
+      const r = await gp.aiCreateRepos(prompt, agentSelect.value || null);
+      if (!r || !r.ok) { showStatus(r?.error || 'AI generation failed.', 'error'); return; }
+
+      const existingUrls = new Set((data.projects || []).map(p => (p.url || '').replace(/\.git$/, '')));
+      reposList.innerHTML = '';
+      r.repos.forEach(repo => {
+        const alreadyAdded = existingUrls.has(repo.url.replace(/\.git$/, ''));
+        const item = document.createElement('label');
+        item.className = 'org-repo-item';
+        const badges = alreadyAdded ? '<span class="org-badge">already added</span>' : '';
+        item.innerHTML = `
+          <input type="checkbox" data-url="${escHtml(repo.url)}" data-name="${escHtml(repo.name)}"
+            data-group="${escHtml(repo.group || '')}" data-lp="${escHtml(repo.localPath || '')}"
+            ${alreadyAdded ? 'disabled' : 'checked'} />
+          <div class="org-repo-item-info">
+            <span class="org-repo-name">${escHtml(repo.name)}</span>
+            <span class="org-repo-desc">${escHtml(repo.url)}</span>
+            ${badges ? `<div class="org-repo-badges">${badges}</div>` : ''}
+          </div>`;
+        reposList.appendChild(item);
+      });
+      resultSec.classList.remove('hidden');
+      updateSelCount();
+
+      // Clear status after a moment
+      showStatus(`✅ Found ${r.repos.length} repo${r.repos.length !== 1 ? 's' : ''}`, 'success');
+      clearTimeout(_statusTimer);
+      _statusTimer = setTimeout(() => { statusEl.classList.add('hidden'); }, 5000);
+    } catch (e) {
+      showStatus(e.message || String(e), 'error');
+    } finally {
+      genBtn.disabled = false;
+      genBtn.textContent = 'Generate';
+    }
+  });
+
+  addBtn.addEventListener('click', async () => {
+    const checked = Array.from(reposList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)'));
+    if (!checked.length) return;
+
+    const existingUrls = new Set((data.projects || []).map(p => (p.url || '').replace(/\.git$/, '')));
+    const toAdd = [];
+    for (const c of checked) {
+      const url = c.dataset.url;
+      if (existingUrls.has(url.replace(/\.git$/, ''))) continue;
+      toAdd.push({ url, name: c.dataset.name, group: c.dataset.group, localPath: c.dataset.lp || `~/source/${c.dataset.group}/${c.dataset.name}` });
+    }
+    for (const r of toAdd) data.projects.push(r);
+    await gp.writeProjects(data);
+    renderTree();
+
+    const shouldClone = cloneChk.checked;
+    if (shouldClone && toAdd.length) {
+      addBtn.disabled = true;
+      cloneProgress.classList.remove('hidden');
+      cloneProgressHdr.textContent = `⏳ Cloning 0 / ${toAdd.length}…`;
+      cloneProgressPre.textContent = '';
+      let done = 0, allOk = true;
+      for (const p of toAdd) {
+        const isCloned = await gp.checkCloned(p.localPath);
+        if (isCloned) { done++; continue; }
+        const r = await gp.clone(p.url, p.localPath);
+        done++;
+        cloneProgressHdr.textContent = `⏳ Cloning ${done} / ${toAdd.length}…`;
+        if (r && r.ok) {
+          cloneProgressPre.textContent += `✓ ${p.name}\n`;
+        } else {
+          cloneProgressPre.textContent += `✗ ${p.name}: ${r?.error || 'failed'}\n`;
+          allOk = false;
+        }
+        cloneProgressPre.scrollTop = cloneProgressPre.scrollHeight;
+      }
+      cloneProgressHdr.textContent = allOk ? `✅ Cloned ${done} repos` : `⚠ Finished with errors`;
+      await refreshCloneStatus();
+      renderTree();
+      addBtn.disabled = false;
+    } else {
+      await refreshCloneStatus();
+      renderTree();
+    }
+
+    // Clear prompt for next use
+    try { promptEl.value = ''; } catch {}
+    const inner = promptEl._inner || (promptEl.shadowRoot && promptEl.shadowRoot.querySelector('[contenteditable]'));
+    if (inner) { try { inner.innerText = ''; } catch {} }
+    resultSec.classList.add('hidden');
+    cloneProgress.classList.add('hidden');
+    showStatus(`✅ Added ${toAdd.length} repo${toAdd.length !== 1 ? 's' : ''}`, 'success');
+    clearTimeout(_statusTimer);
+    _statusTimer = setTimeout(() => { statusEl.classList.add('hidden'); }, 6000);
+  });
+}
+
+// ── GitHub Org picker ─────────────────────────────────────────────────────────
+function bindOrgPicker() {
+  const modal        = document.getElementById('modal-org-picker');
+  const orgInput     = document.getElementById('org-name-input');
+  const btnLoad      = document.getElementById('btn-org-load');
+  const loadStatus   = document.getElementById('org-load-status');
+  const repoSection  = document.getElementById('org-repo-section');
+  const repoList     = document.getElementById('org-repo-list');
+  const filterInput  = document.getElementById('org-repo-filter');
+  const btnSelAll    = document.getElementById('btn-org-select-all');
+  const btnDeselAll  = document.getElementById('btn-org-deselect-all');
+  const selCount     = document.getElementById('org-selected-count');
+  const cloneChk     = document.getElementById('org-clone-now-chk');
+  const errEl        = document.getElementById('org-error');
+  const progressBox  = document.getElementById('org-clone-progress');
+  const progressHdr  = document.getElementById('org-clone-progress-hdr');
+  const progressPre  = document.getElementById('org-clone-progress-pre');
+  const btnConfirm   = document.getElementById('btn-org-confirm');
+  const btnCancel    = document.getElementById('btn-org-cancel');
+
+  let allRepos = [];
+
+  document.getElementById('btn-add-org').addEventListener('click', () => {
+    orgInput.value = '';
+    repoSection.classList.add('hidden');
+    loadStatus.classList.add('hidden');
+    errEl.classList.add('hidden');
+    progressBox.classList.add('hidden');
+    btnConfirm.disabled = true;
+    allRepos = [];
+    modal.classList.remove('hidden');
+    setTimeout(() => orgInput.focus(), 50);
+  });
+
+  function renderRepoList(filter) {
+    const q = (filter || '').toLowerCase();
+    repoList.innerHTML = '';
+    const visible = allRepos.filter(r => !q || r.nameWithOwner.toLowerCase().includes(q) || (r.description||'').toLowerCase().includes(q));
+    const existingUrls = new Set((data.projects||[]).map(p => (p.url||'').replace(/\.git$/, '')));
+    if (!visible.length) {
+      repoList.innerHTML = '<div style="padding:10px;color:#7d8590;font-size:13px;text-align:center">No repos match</div>';
+      return;
+    }
+    visible.forEach(repo => {
+      const alreadyAdded = existingUrls.has(repo.url.replace(/\.git$/, ''));
+      const item = document.createElement('label');
+      item.className = 'org-repo-item';
+      const badges = [];
+      if (repo.isPrivate) badges.push('<span class="org-badge org-badge-private">private</span>');
+      if (repo.isFork)    badges.push('<span class="org-badge org-badge-fork">fork</span>');
+      if (alreadyAdded)   badges.push('<span class="org-badge">already added</span>');
+      item.innerHTML = `
+        <input type="checkbox" data-url="${escHtml(repo.url)}" data-nwo="${escHtml(repo.nameWithOwner)}"
+          ${alreadyAdded ? 'disabled' : 'checked'} />
+        <div class="org-repo-item-info">
+          <span class="org-repo-name">${escHtml(repo.nameWithOwner)}</span>
+          ${repo.description ? `<span class="org-repo-desc">${escHtml(repo.description)}</span>` : ''}
+          ${badges.length ? `<div class="org-repo-badges">${badges.join('')}</div>` : ''}
+        </div>`;
+      repoList.appendChild(item);
+    });
+    updateSelCount();
+  }
+
+  function updateSelCount() {
+    const checked = repoList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').length;
+    selCount.textContent = `${checked} selected`;
+    btnConfirm.disabled = checked === 0;
+  }
+
+  repoList.addEventListener('change', updateSelCount);
+
+  filterInput.addEventListener('input', () => renderRepoList(filterInput.value));
+
+  btnSelAll.addEventListener('click', () => {
+    repoList.querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(c => c.checked = true);
+    updateSelCount();
+  });
+  btnDeselAll.addEventListener('click', () => {
+    repoList.querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(c => c.checked = false);
+    updateSelCount();
+  });
+
+  async function doLoad() {
+    const org = orgInput.value.trim();
+    if (!org) return;
+    btnLoad.disabled = true;
+    loadStatus.textContent = `Loading repos for "${org}"…`;
+    loadStatus.classList.remove('hidden');
+    errEl.classList.add('hidden');
+    repoSection.classList.add('hidden');
+    allRepos = [];
+    try {
+      const r = await gp.listOrgRepos(org);
+      if (!r || !r.ok) throw new Error(r?.error || 'Failed to load repos');
+      allRepos = r.repos || [];
+      loadStatus.textContent = `Found ${allRepos.length} repo${allRepos.length !== 1 ? 's' : ''} in ${org}`;
+      filterInput.value = '';
+      repoSection.classList.remove('hidden');
+      renderRepoList('');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove('hidden');
+      loadStatus.classList.add('hidden');
+    } finally {
+      btnLoad.disabled = false;
+    }
+  }
+
+  btnLoad.addEventListener('click', doLoad);
+  orgInput.addEventListener('keydown', e => { if (e.key === 'Enter') doLoad(); });
+
+  btnCancel.addEventListener('click', () => modal.classList.add('hidden'));
+
+  btnConfirm.addEventListener('click', async () => {
+    const checked = Array.from(repoList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)'));
+    if (!checked.length) return;
+    const repos = checked.map(c => ({ nameWithOwner: c.dataset.nwo, url: c.dataset.url }));
+    const shouldClone = cloneChk.checked;
+
+    // Add to data.projects
+    const existingUrls = new Set((data.projects||[]).map(p => (p.url||'').replace(/\.git$/, '')));
+    let added = 0;
+    for (const repo of repos) {
+      if (existingUrls.has(repo.url.replace(/\.git$/, ''))) continue;
+      const parts = repo.nameWithOwner.split('/');
+      const org   = parts[0] || '';
+      const name  = parts[1] || repo.nameWithOwner;
+      const lp    = `~/source/${repo.nameWithOwner}`;
+      data.projects.push({ name, url: repo.url, localPath: lp, group: org });
+      added++;
+    }
+    await gp.writeProjects(data);
+    renderTree();
+
+    if (shouldClone && added > 0) {
+      btnConfirm.disabled = true;
+      btnCancel.disabled  = true;
+      progressBox.classList.remove('hidden');
+      progressHdr.textContent = `⏳ Cloning 0 / ${added}…`;
+      progressPre.textContent = '';
+      let done = 0;
+      const toClone = data.projects.slice(-added);
+      let allOk = true;
+      for (const p of toClone) {
+        const isCloned = await gp.checkCloned(p.localPath);
+        if (isCloned) { done++; continue; }
+        const r = await gp.cloneRepo({ url: p.url, localPath: p.localPath });
+        done++;
+        progressHdr.textContent = `⏳ Cloning ${done} / ${added}…`;
+        if (r && r.ok) {
+          progressPre.textContent += `✓ ${p.name}\n`;
+        } else {
+          progressPre.textContent += `✗ ${p.name}: ${r?.error || 'failed'}\n`;
+          allOk = false;
+        }
+        progressPre.scrollTop = progressPre.scrollHeight;
+      }
+      progressHdr.textContent = allOk ? `✅ Cloned ${done} repos` : `⚠ Finished with errors`;
+      await refreshCloneStatus();
+      renderTree();
+      btnCancel.disabled  = false;
+      if (allOk) setTimeout(() => modal.classList.add('hidden'), 1800);
+    } else {
+      await refreshCloneStatus();
+      renderTree();
+      modal.classList.add('hidden');
+    }
+  });
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────

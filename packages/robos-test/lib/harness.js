@@ -18,7 +18,12 @@ const { spawn, execSync } = require('child_process');
 const http = require('http');
 
 const REPO_ROOT    = path.resolve(__dirname, '../../..');
-const PACKAGES_DIR = path.join(REPO_ROOT, 'packages');
+// On the VM, apps are installed as siblings of robos-test under /usr/local/share/robos/.
+// On the host, they live in <repo>/packages/. Fall back to the sibling dir if packages/ doesn't exist.
+const _computedPkgDir = path.join(REPO_ROOT, 'packages');
+const PACKAGES_DIR = fs.existsSync(_computedPkgDir)
+  ? _computedPkgDir
+  : path.resolve(__dirname, '../..');
 const SANDBOX_BIN  = path.join(__dirname, '..', 'sandbox', 'bin');
 const HOME_TMPL    = path.join(__dirname, '..', 'sandbox', 'home-template');
 const RUN_DIR      = path.join(__dirname, '..', 'run');

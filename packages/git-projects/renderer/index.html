@@ -24,6 +24,8 @@
     </div>
     <div class="topbar-right">
       <button id="btn-add-group" class="btn btn-secondary" disabled title="Add all repos from a Dev Group">＋ Add Dev Group Repos</button>
+      <button id="btn-add-org" class="btn btn-secondary" title="Add all repos from a GitHub org">＋ Add GitHub Org</button>
+      <button id="btn-ai-prompt" class="btn btn-secondary btn-ai-repos" title="Create repositories by AI Prompt">✨ AI Prompt</button>
       <button id="btn-add" class="btn btn-primary">＋ Add Project</button>
     </div>
   </header>
@@ -85,6 +87,89 @@
       <div class="modal-actions">
         <button id="btn-group-picker-cancel" class="btn btn-ghost">Cancel</button>
         <button id="btn-group-picker-confirm" class="btn btn-primary" disabled>Add Repos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Org picker modal -->
+  <div id="modal-org-picker" class="modal hidden">
+    <div class="modal-box modal-box-wide">
+      <h2>Add Repos from GitHub Org</h2>
+      <p class="modal-sub">Enter a GitHub organization name to load all its repositories.</p>
+      <div class="org-input-row">
+        <input id="org-name-input" class="text-input org-name-input" placeholder="e.g. apache, google, microsoft" autocomplete="off" spellcheck="false"/>
+        <button id="btn-org-load" class="btn btn-secondary">Load Repos</button>
+      </div>
+      <div id="org-load-status" class="org-load-status hidden"></div>
+      <div id="org-repo-section" class="hidden">
+        <div class="org-repo-toolbar">
+          <input id="org-repo-filter" class="text-input org-repo-filter" placeholder="🔍 Filter repos…" autocomplete="off"/>
+          <div class="org-select-actions">
+            <button id="btn-org-select-all" class="btn btn-ghost btn-tiny-text">Select all</button>
+            <button id="btn-org-deselect-all" class="btn btn-ghost btn-tiny-text">Deselect all</button>
+            <span id="org-selected-count" class="org-selected-count">0 selected</span>
+          </div>
+        </div>
+        <div id="org-repo-list" class="org-repo-list"></div>
+      </div>
+      <div id="org-error" class="error-msg hidden"></div>
+      <div class="clone-now-row">
+        <label class="clone-now-label">
+          <input type="checkbox" id="org-clone-now-chk"/>
+          Clone all repos now
+        </label>
+        <span class="clone-now-hint">into default local paths (may take a while for large orgs)</span>
+      </div>
+      <div id="org-clone-progress" class="clone-progress hidden">
+        <div class="clone-progress-hdr" id="org-clone-progress-hdr">⏳ Cloning…</div>
+        <pre id="org-clone-progress-pre" class="clone-progress-pre"></pre>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-org-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-org-confirm" class="btn btn-primary" disabled>Add Repos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Repos prompt panel (collapsible, below topbar) -->
+  <div id="ai-repos-panel" class="ai-repos-panel hidden">
+    <div class="ai-repos-panel-inner">
+      <div class="ai-repos-row">
+        <label for="ai-repos-agent-select" class="ai-repos-agent-label">Agent</label>
+        <select id="ai-repos-agent-select" class="ai-repos-agent-select">
+          <option value="">Default (RobOS Agents)</option>
+        </select>
+      </div>
+      <robos-ai-textarea id="ai-repos-prompt" show-submit="false" show-commands="false" min-height="72"
+        placeholder="Describe what repositories to add… e.g. 'Add all the Apache Kafka ecosystem repos — kafka, kafka-streams, kafka-connect' or 'Add the Spring Boot and Spring Security repos from spring-projects'"></robos-ai-textarea>
+      <div class="ai-repos-actions">
+        <button id="ai-repos-generate-btn" class="btn btn-primary">Generate</button>
+        <div id="ai-repos-status" class="ai-repos-status hidden"></div>
+      </div>
+      <div id="ai-repos-result-section" class="hidden">
+        <div class="ai-repos-result-toolbar">
+          <span class="ai-repos-result-title">Repositories to add</span>
+          <div class="org-select-actions">
+            <button id="btn-ai-repos-sel-all" class="btn btn-ghost btn-tiny-text">Select all</button>
+            <button id="btn-ai-repos-desel-all" class="btn btn-ghost btn-tiny-text">Deselect all</button>
+            <span id="ai-repos-sel-count" class="org-selected-count">0 selected</span>
+          </div>
+        </div>
+        <div id="ai-repos-list" class="org-repo-list ai-repos-list"></div>
+        <div class="clone-now-row" style="margin-top:6px">
+          <label class="clone-now-label">
+            <input type="checkbox" id="ai-repos-clone-chk"/>
+            Clone all repos now
+          </label>
+          <span class="clone-now-hint">into suggested local paths</span>
+        </div>
+        <div id="ai-repos-clone-progress" class="clone-progress hidden">
+          <div class="clone-progress-hdr" id="ai-repos-clone-progress-hdr">⏳ Cloning…</div>
+          <pre id="ai-repos-clone-progress-pre" class="clone-progress-pre"></pre>
+        </div>
+        <div class="ai-repos-result-actions">
+          <button id="btn-ai-repos-add" class="btn btn-primary" disabled>Add Selected Repos</button>
+        </div>
       </div>
     </div>
   </div>

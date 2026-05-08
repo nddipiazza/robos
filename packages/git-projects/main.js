@@ -472,6 +472,22 @@ ipcMain.handle('search-gh-repos', (_, { query }) => {
   }
 });
 
+ipcMain.handle('list-org-repos', (_, org) => {
+  if (!org || !org.trim()) return { ok: false, error: 'Org name required' };
+  const r = cp.spawnSync('gh', [
+    'repo', 'list', org.trim(),
+    '--limit', '1000',
+    '--json', 'nameWithOwner,url,description,isPrivate,isFork',
+  ], { encoding: 'utf8', timeout: 30000, env: { ...process.env } });
+  if (r.status !== 0) return { ok: false, error: (r.stderr || 'gh repo list failed').trim() };
+  try {
+    const repos = JSON.parse(r.stdout || '[]');
+    return { ok: true, repos };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
 ipcMain.handle('run-dev-setup', (_, { localPath, script }) => {
   const tmpScript = path.join(os.tmpdir(), `robos-devsetup-${Date.now()}.sh`);
   fs.writeFileSync(tmpScript, script, { mode: 0o755 });
@@ -488,6 +504,89 @@ ipcMain.handle('open-in-explorer', (_, localPath) => {
     detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' },
   }).unref();
   return { ok: true };
+});
+
+// ── AI agent (robos-lib/ai-agent) — for structured JSON generation ────────────
+let aiAgent = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-agent'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+    '/usr/local/share/robos/robos-lib/ai-agent',
+  ].filter(Boolean);
+  for (const p of libPaths) { try { aiAgent = require(p); break; } catch {} }
+} catch { aiAgent = null; }
+
+let aiJson = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-json'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ai-json'),
+    '/usr/local/share/robos/robos-lib/ai-json',
+  ].filter(Boolean);
+  for (const p of libPaths) { try { aiJson = require(p); break; } catch {} }
+} catch { aiJson = null; }
+
+const REPOS_SCHEMA_PROMPT = `You are a RobOS Git Projects assistant. The user will describe a set of repositories they want to track. Generate a JSON array of repository entries to add to their project list.
+
+Output ONLY a valid JSON array — no prose, no markdown fences. Each item must have:
+  "url"       : full GitHub HTTPS URL (required, e.g. "https://github.com/apache/tika")
+  "name"      : short display name (required, e.g. "tika")
+  "group"     : organisation / group label (optional, defaults to GitHub org, e.g. "apache")
+  "localPath" : suggested local clone path using ~/source/<org>/<name> (optional)
+
+Example response:
+[
+  { "url": "https://github.com/apache/tika", "name": "tika", "group": "apache", "localPath": "~/source/apache/tika" },
+  { "url": "https://github.com/spring-projects/spring-boot", "name": "spring-boot", "group": "spring-projects", "localPath": "~/source/spring-projects/spring-boot" }
+]
+
+IMPORTANT: Only include publicly accessible repositories or repositories the user explicitly owns / mentioned. Do not invent private repositories.`;
+
+ipcMain.handle('gp-list-ai-providers', () => {
+  if (aiAgent) return aiAgent.listProviders();
+  return { activeId: 'github-copilot', activeName: 'GitHub Copilot', providers: [] };
+});
+
+ipcMain.handle('gp-ai-create-repos', async (_, { prompt, providerId }) => {
+  if (!aiAgent) return { ok: false, error: 'AI agent library not available. Check your RobOS installation.' };
+  const rulesPrompt = aiJson ? aiJson.JSON_RULES_PROMPT : '';
+  const fullPrompt = `${REPOS_SCHEMA_PROMPT}${rulesPrompt ? '\n\n' + rulesPrompt : ''}\n\nUser request:\n${prompt}`;
+  const result = await aiAgent.ask(fullPrompt, providerId ? { providerId } : {});
+  if (!result.ok) return { ok: false, error: result.error };
+
+  let parsed = null;
+  if (aiJson) {
+    const r = aiJson.parseAIJson(result.text);
+    if (r.ok) parsed = r.data;
+    else return { ok: false, error: `JSON parse error: ${r.error}\n\nRaw:\n${r.raw || ''}` };
+  } else {
+    const stripped = (result.text || '').replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+    try { parsed = JSON.parse(stripped); } catch {}
+    if (!parsed) {
+      const m = stripped.match(/\[[\s\S]*\]/) || stripped.match(/\{[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
+    }
+    if (!parsed) return { ok: false, error: 'AI response did not contain valid JSON.' };
+  }
+
+  const arr = Array.isArray(parsed) ? parsed : [parsed];
+  const repos = arr
+    .filter(r => r && r.url && r.name)
+    .map(r => {
+      const cleanUrl = (r.url || '').replace(/\.git$/, '').trim();
+      const parts    = cleanUrl.replace('https://github.com/', '').split('/');
+      const org      = r.group || parts[0] || '';
+      const name     = r.name || parts[1] || 'repo';
+      return {
+        url:       cleanUrl,
+        name,
+        group:     org,
+        localPath: r.localPath || `~/source/${org}/${name}`,
+      };
+    });
+  if (!repos.length) return { ok: false, error: 'No valid repositories found in AI response.' };
+  return { ok: true, repos };
 });
 
 // ── AI Dev Setup ──────────────────────────────────────────────────────────────

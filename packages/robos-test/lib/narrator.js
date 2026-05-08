@@ -18,7 +18,11 @@ const DEFAULT_VOICE = 'en_US-lessac-medium';
 
 function synthesizeCue(text, outWav, { voice = DEFAULT_VOICE, dataDir = MODELS_DIR, lengthScale } = {}) {
   fs.mkdirSync(path.dirname(outWav), { recursive: true });
-  const args = ['-m', voice, '--data-dir', dataDir, '-f', outWav];
+  // Piper requires a full path to the .onnx file when the model name has no extension.
+  const modelPath = voice.includes('/') || voice.endsWith('.onnx')
+    ? voice
+    : path.join(dataDir, `${voice}.onnx`);
+  const args = ['-m', modelPath, '--data-dir', dataDir, '-f', outWav];
   if (lengthScale != null) args.push('--length-scale', String(lengthScale));
   return new Promise((resolve, reject) => {
     const proc = spawn('piper', args, { stdio: ['pipe', 'pipe', 'pipe'] });
