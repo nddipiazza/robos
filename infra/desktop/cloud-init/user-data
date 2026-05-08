@@ -138,6 +138,16 @@ write_files:
       picture-options='none'
       primary-color='#0d1117'
       color-shading-type='solid'
+      lock-enabled=false
+      idle-activation-enabled=false
+
+      [org/gnome/desktop/session]
+      idle-delay=uint32 0
+
+      [org/gnome/settings-daemon/plugins/power]
+      sleep-inactive-ac-type='nothing'
+      sleep-inactive-battery-type='nothing'
+      idle-dim=false
 
       [org/gnome/nautilus/list-view]
       default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
@@ -248,6 +258,12 @@ write_files:
       /org/gnome/mutter/num-workspaces
       /org/gnome/nautilus/preferences/default-folder-viewer
       /org/gnome/nautilus/preferences/show-hidden-files
+      /org/gnome/desktop/screensaver/lock-enabled
+      /org/gnome/desktop/screensaver/idle-activation-enabled
+      /org/gnome/desktop/session/idle-delay
+      /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type
+      /org/gnome/settings-daemon/plugins/power/sleep-inactive-battery-type
+      /org/gnome/settings-daemon/plugins/power/idle-dim
     permissions: "0644"
 
   # Autostart: RobOS Desktop Dashboard (widget layer behind all windows)
@@ -272,6 +288,19 @@ write_files:
       Exec=/usr/bin/electron /usr/local/share/robos/desktop-manager/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
       X-GNOME-Autostart-enabled=true
       X-GNOME-Autostart-Delay=5
+      Hidden=false
+      NoDisplay=true
+    permissions: "0644"
+
+  # Autostart: disable DPMS + screensaver at X11 level on every login
+  - path: /etc/xdg/autostart/robos-no-screensaver.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=RobOS Disable Screensaver
+      Comment=Prevent display blanking, DPMS, and screen lock on RobOS VM
+      Exec=bash -c "xset -dpms; xset s off; xset s noblank"
+      X-GNOME-Autostart-enabled=true
       Hidden=false
       NoDisplay=true
     permissions: "0644"
@@ -491,6 +520,16 @@ GDMEOF
     picture-options='none'
     primary-color='#0d1117'
     color-shading-type='solid'
+    lock-enabled=false
+    idle-activation-enabled=false
+
+    [org/gnome/desktop/session]
+    idle-delay=uint32 0
+
+    [org/gnome/settings-daemon/plugins/power]
+    sleep-inactive-ac-type='nothing'
+    sleep-inactive-battery-type='nothing'
+    idle-dim=false
 
     [org/gnome/nautilus/list-view]
     default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
