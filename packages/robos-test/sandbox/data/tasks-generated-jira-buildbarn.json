@@ -1,0 +1,130 @@
+[
+  {
+    "title": "Epic: Package Scaffold & Tooling",
+    "body": "## Overview\nInitialise the `@hermetiq/buildbarn-forms` npm package within the existing monorepo, configure TypeScript, Vitest, and CI so every subsequent story has a stable foundation to build on.\n\n## Acceptance criteria\n- `packages/buildbarn-forms/` directory exists with `package.json`, `tsconfig.json`, and `vitest.config.ts`\n- `npm run build` and `npm test` pass from the workspace root\n- GitHub Actions CI runs on every PR",
+    "labels": ["epic", "scaffold"],
+    "isEpic": true,
+    "epicName": "Package Scaffold & Tooling",
+    "issueType": "Epic"
+  },
+  {
+    "title": "Initialize @hermetiq/buildbarn-forms npm package",
+    "body": "## Background\nCreate the package directory and `package.json` inside the existing Turborepo/npm workspace.\n\n## Tasks\n- `mkdir packages/buildbarn-forms && cd packages/buildbarn-forms && npm init -y`\n- Set `name: \"@hermetiq/buildbarn-forms\"`, `version: \"0.1.0\"`, `main: \"dist/index.js\"`, `types: \"dist/index.d.ts\"`\n- Add to root `pnpm-workspace.yaml` (or `workspaces` in root `package.json`)\n\n## Acceptance criteria\n- `npm ls --workspaces` lists the new package\n- `package.json` passes `npm publish --dry-run`",
+    "labels": ["scaffold", "npm"],
+    "isEpic": false,
+    "parentEpicIndex": 0,
+    "issueType": "Story"
+  },
+  {
+    "title": "Configure TypeScript for the forms library",
+    "body": "## Background\nStrict TypeScript is required so consumers get full type inference from proto-generated descriptors.\n\n## Tasks\n- Add `tsconfig.json` extending the repo's base config\n- Set `\"declaration\": true`, `\"declarationMap\": true`, `\"strict\": true`\n- Add `build` script: `tsc --build`\n- Verify `import` from a sibling package resolves cleanly\n\n## Acceptance criteria\n- `npm run build` emits `dist/` with `.d.ts` files\n- No implicit-any errors",
+    "labels": ["typescript", "scaffold"],
+    "isEpic": false,
+    "parentEpicIndex": 0,
+    "issueType": "Story"
+  },
+  {
+    "title": "Set up Vitest and initial smoke test",
+    "body": "## Background\nVitest is the workspace-standard test runner.\n\n## Tasks\n- Add `vitest` as a devDependency\n- Create `vitest.config.ts` with TypeScript support\n- Write a trivial passing test: `expect(true).toBe(true)`\n- Add `test` script to `package.json`\n\n## Acceptance criteria\n- `npm test` passes from the package root\n- Coverage report is generated",
+    "labels": ["testing", "scaffold"],
+    "isEpic": false,
+    "parentEpicIndex": 0,
+    "issueType": "Story"
+  },
+  {
+    "title": "Add GitHub Actions CI for the new package",
+    "body": "## Background\nEvery PR should validate build + tests for the forms package.\n\n## Tasks\n- Add/update `.github/workflows/ci.yml` to include `packages/buildbarn-forms` in the path filter\n- Ensure the matrix runs `npm run build && npm test`\n\n## Acceptance criteria\n- CI passes on a trivial PR that touches `packages/buildbarn-forms/`",
+    "labels": ["ci", "scaffold"],
+    "isEpic": false,
+    "parentEpicIndex": 0,
+    "issueType": "Story"
+  },
+  {
+    "title": "Epic: Core ProtoFormBuilder Components",
+    "body": "## Overview\nExtract and refine the `ProtoFormBuilder` React component from the main app into the new library. This epic covers the field-type renderers, form validation, proto-descriptor parsing, and a Storybook showcase.\n\n## Acceptance criteria\n- Library exports `ProtoFormBuilder`, all field renderers, and the descriptor parser\n- All field types covered by Vitest unit tests\n- Storybook stories render in isolation with no dependency on the main app",
+    "labels": ["epic", "components"],
+    "isEpic": true,
+    "epicName": "Core ProtoFormBuilder Components",
+    "issueType": "Epic"
+  },
+  {
+    "title": "Extract ProtoFormBuilder base component",
+    "body": "## Background\nThe existing `ProtoFormBuilder` lives inside the main app and has implicit dependencies. It needs to be extracted as a pure library component.\n\n## Tasks\n- Copy component to `packages/buildbarn-forms/src/ProtoFormBuilder.tsx`\n- Remove all app-specific imports (router, store, etc.)\n- Accept descriptor and values via props\n- Export from `src/index.ts`\n\n## Acceptance criteria\n- Component renders without importing anything from the main app\n- Existing app still works after swapping to the new import path",
+    "labels": ["components", "refactor"],
+    "isEpic": false,
+    "parentEpicIndex": 5,
+    "issueType": "Story"
+  },
+  {
+    "title": "Implement scalar field type renderers",
+    "body": "## Background\nProto scalars (string, int32/64, bool, float/double, bytes) each need a dedicated renderer.\n\n## Tasks\n- Create `src/renderers/StringField.tsx`\n- Create `src/renderers/NumberField.tsx`\n- Create `src/renderers/BoolField.tsx`\n- Create `src/renderers/BytesField.tsx`\n- Wire them into `ProtoFormBuilder` via a field-type dispatch map\n\n## Acceptance criteria\n- Each renderer tested with Vitest\n- All proto scalar types render correctly in Storybook",
+    "labels": ["components", "renderers"],
+    "isEpic": false,
+    "parentEpicIndex": 5,
+    "issueType": "Story"
+  },
+  {
+    "title": "Implement enum and nested-message field renderers",
+    "body": "## Background\nEnum fields need a `<select>` bound to the proto enum descriptor. Nested messages need recursive rendering.\n\n## Tasks\n- Create `src/renderers/EnumField.tsx` — reads `enumValueDescriptor` for options\n- Create `src/renderers/MessageField.tsx` — recursively renders child fields\n- Handle `oneof` groups (show only the selected variant)\n\n## Acceptance criteria\n- Enum dropdown populated correctly from proto descriptor\n- Nested messages expand inline\n- Vitest coverage ≥ 80 % for both renderers",
+    "labels": ["components", "renderers"],
+    "isEpic": false,
+    "parentEpicIndex": 5,
+    "issueType": "Story"
+  },
+  {
+    "title": "Add proto-descriptor parsing utilities",
+    "body": "## Background\nThe library must convert a binary `FileDescriptorSet` or JSON descriptor into a runtime field map that the renderers consume.\n\n## Tasks\n- Add `google-protobuf` (or `protobufjs`) as a peer dependency\n- Implement `parseDescriptor(fd: Uint8Array | object): FieldMap`\n- Expose `getFieldsForMessage(msgFqn: string, fieldMap): FieldDescriptor[]`\n\n## Acceptance criteria\n- Works with both `google-protobuf` binary format and `protobufjs` JSON format\n- Unit tests cover at least 3 real-world proto definitions",
+    "labels": ["parsing", "proto"],
+    "isEpic": false,
+    "parentEpicIndex": 5,
+    "issueType": "Story"
+  },
+  {
+    "title": "Add form-level validation with error display",
+    "body": "## Background\nForms need to surface proto field constraints (required, range, regex) as inline validation errors.\n\n## Tasks\n- Implement `validateForm(values, descriptor): ValidationErrors`\n- Render per-field error messages below each input\n- Wire submit button to run validation before calling `onSubmit`\n\n## Acceptance criteria\n- Required fields block submit if empty\n- Error messages match the constraint source\n- Vitest snapshot tests for error states",
+    "labels": ["validation", "ux"],
+    "isEpic": false,
+    "parentEpicIndex": 5,
+    "issueType": "Story"
+  },
+  {
+    "title": "Epic: Build, Publish & Consumer Integration",
+    "body": "## Overview\nPrepare the package for npm publication, integrate it back into the main app, and write integration tests and developer documentation so other teams can adopt the library.\n\n## Acceptance criteria\n- Package published to private npm registry (or GitHub Packages)\n- Main app uses the published version (no local symlinks in production)\n- Integration tests pass in CI\n- README documents installation and usage",
+    "labels": ["epic", "publish"],
+    "isEpic": true,
+    "epicName": "Build, Publish & Consumer Integration",
+    "issueType": "Epic"
+  },
+  {
+    "title": "Configure npm publish workflow",
+    "body": "## Background\nAutomate publishing to the private registry on release tags.\n\n## Tasks\n- Add `.github/workflows/publish.yml` triggered by `push: tags: ['v*']`\n- Use `NPM_TOKEN` secret\n- Run `npm publish --access restricted`\n- Add `prepublishOnly` script that runs `build` + `test`\n\n## Acceptance criteria\n- Tagging `v0.1.0` triggers publish\n- Package appears in registry within 2 minutes",
+    "labels": ["ci", "publish"],
+    "isEpic": false,
+    "parentEpicIndex": 10,
+    "issueType": "Story"
+  },
+  {
+    "title": "Migrate main app to consume @hermetiq/buildbarn-forms",
+    "body": "## Background\nReplace the inlined component with the published (or locally-linked) package.\n\n## Tasks\n- `npm install @hermetiq/buildbarn-forms` in the main app\n- Replace all `import ... from '../components/ProtoFormBuilder'` with package imports\n- Remove the old source file\n- Verify app builds and all existing E2E tests still pass\n\n## Acceptance criteria\n- Zero references to the old file path\n- App build succeeds\n- Cypress / Playwright E2E suite green",
+    "labels": ["integration", "refactor"],
+    "isEpic": false,
+    "parentEpicIndex": 10,
+    "issueType": "Story"
+  },
+  {
+    "title": "Write integration tests for the forms library",
+    "body": "## Background\nUnit tests cover individual renderers; integration tests verify that the full form round-trips data through submission.\n\n## Tasks\n- Use React Testing Library to mount `ProtoFormBuilder` with a real `FileDescriptorSet`\n- Fill in each field, submit, and assert the serialized proto matches the expected binary\n- Cover at least 2 proto message types end-to-end\n\n## Acceptance criteria\n- Tests pass in CI without any browser dependency\n- Coverage for `ProtoFormBuilder` ≥ 90 %",
+    "labels": ["testing", "integration"],
+    "isEpic": false,
+    "parentEpicIndex": 10,
+    "issueType": "Story"
+  },
+  {
+    "title": "Write developer README and migration guide",
+    "body": "## Background\nOther Hermetiq teams need onboarding docs to adopt the library.\n\n## Tasks\n- Document: installation, peer dependencies, `ProtoFormBuilder` props API\n- Include a minimal working example (copy-pasteable snippet)\n- Write a migration guide from the old inlined component\n- Add JSDoc comments to all exported symbols\n\n## Acceptance criteria\n- README renders correctly on npmjs.com / GitHub\n- A developer unfamiliar with the library can get a working form in < 15 minutes following the guide",
+    "labels": ["documentation"],
+    "isEpic": false,
+    "parentEpicIndex": 10,
+    "issueType": "Story"
+  }
+]

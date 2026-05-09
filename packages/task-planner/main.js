@@ -1,9 +1,10 @@
 'use strict';
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const path = require('path');
-const fs   = require('fs');
-const os   = require('os');
-const cp   = require('child_process');
+const path  = require('path');
+const fs    = require('fs');
+const os    = require('os');
+const cp    = require('child_process');
+const https = require('https');
 const { execSync } = require('child_process');
 
 app.commandLine.appendSwitch('no-sandbox');
@@ -90,43 +91,82 @@ app.on('window-all-closed', () => app.quit());
 
 function readPassSecret(passPath) {
   if (!passPath) return null;
+  // Try standard pass command first
   try {
-    return execSync(`bash -lc "pass ${passPath} 2>/dev/null | head -1"`, { timeout: 5000 }).toString().trim() || null;
-  } catch { return null; }
+    const val = execSync(
+      `bash -lc "pass ${passPath} 2>/dev/null | head -1"`,
+      { timeout: 5000 }
+    ).toString().trim();
+    if (val) return val;
+  } catch { /* fall through */ }
+  // Fallback: decrypt .gpg file directly (handles no-TTY environments and plain-text seeded stores)
+  try {
+    const passDir = execSync(
+      'bash -lc "echo ${PASSWORD_STORE_DIR:-$HOME/.password-store}"',
+      { timeout: 2000 }
+    ).toString().trim();
+    const filePath = path.join(passDir, passPath + '.gpg');
+    if (!fs.existsSync(filePath)) return null;
+    // Try GPG decrypt (works for keyring-cached keys with loopback pinentry)
+    try {
+      const val = execSync(
+        `gpg --batch --no-tty --quiet --pinentry-mode loopback --passphrase "" --decrypt "${filePath}" 2>/dev/null | head -1`,
+        { timeout: 8000 }
+      ).toString().trim();
+      if (val) return val;
+    } catch { /* ignore */ }
+    // Last resort: if file is plain-text (dev/cloud-init seeded stores)
+    const raw = fs.readFileSync(filePath, 'utf8').trim();
+    if (raw && !raw.startsWith('\x85') && !raw.startsWith('\x99') && !/[\x00-\x08]/.test(raw)) {
+      return raw.split('\n')[0].trim() || null;
+    }
+  } catch { /* ignore */ }
+  return null;
 }
 
 async function jiraRequest(method, baseUrl, username, token, apiPath, body) {
-  const url = `${baseUrl.replace(/\/$/, '')}${apiPath}`;
-  const auth = Buffer.from(`${username}:${token}`).toString('base64');
-  const headers = `-H "Authorization: Basic ${auth}" -H "Content-Type: application/json" -H "Accept: application/json"`;
+  const urlStr = `${baseUrl.replace(/\/$/, '')}${apiPath}`;
+  const parsed = new URL(urlStr);
+  const auth   = Buffer.from(`${username}:${token}`).toString('base64');
+  const bodyStr = body ? JSON.stringify(body) : null;
 
-  let cmd;
-  if (body) {
-    const tmpFile = path.join(os.tmpdir(), `robos-jira-${Date.now()}.json`);
-    fs.writeFileSync(tmpFile, JSON.stringify(body));
-    cmd = `curl -sf -X ${method} ${headers} -d @${tmpFile} "${url}"`;
-    try {
-      const result = await new Promise((resolve, reject) => {
-        cp.exec(cmd, { timeout: 20000 }, (err, stdout, stderr) => {
-          fs.unlink(tmpFile, () => {});
-          if (err && !stdout) reject(new Error(stderr || err.message));
-          else resolve(stdout);
-        });
-      });
-      return result ? JSON.parse(result) : null;
-    } catch (e) {
-      fs.unlink(tmpFile, () => {});
-      throw e;
-    }
-  } else {
-    cmd = `curl -sf -X ${method} ${headers} "${url}"`;
-    return new Promise((resolve, reject) => {
-      cp.exec(cmd, { timeout: 15000 }, (err, stdout, stderr) => {
-        if (err && !stdout) reject(new Error(stderr || err.message));
-        else resolve(stdout ? JSON.parse(stdout) : null);
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: parsed.hostname,
+      port: parsed.port || 443,
+      path: parsed.pathname + (parsed.search || ''),
+      method,
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(bodyStr ? { 'Content-Length': Buffer.byteLength(bodyStr) } : {}),
+      },
+      timeout: 20000,
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 400) {
+          // Safe error — no credentials in message
+          return reject(new Error(`Jira returned HTTP ${res.statusCode} for ${method} ${apiPath}`));
+        }
+        try {
+          resolve(data ? JSON.parse(data) : null);
+        } catch {
+          reject(new Error(`Jira response parse error for ${method} ${apiPath}`));
+        }
       });
     });
-  }
+
+    req.on('error', (e) => reject(new Error(`Jira request failed: ${e.message}`)));
+    req.on('timeout', () => { req.destroy(); reject(new Error('Jira request timed out')); });
+
+    if (bodyStr) req.write(bodyStr);
+    req.end();
+  });
 }
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
@@ -157,18 +197,26 @@ ipcMain.handle('get-server-info', () => {
 ipcMain.handle('fetch-jira-epics', async (_, { jiraUrl, jiraProject, username, tokenPassPath }) => {
   try {
     const token = readPassSecret(tokenPassPath);
-    if (!token) return { ok: false, error: 'Could not load Jira API token from pass store.' };
+    if (!token) return { ok: false, error: 'Could not load Jira API token.' };
     const jql = encodeURIComponent(`project=${jiraProject} AND issuetype=Epic ORDER BY created DESC`);
-    const data = await jiraRequest('GET', jiraUrl, username, token,
-      `/rest/api/2/search?jql=${jql}&fields=summary,key,status&maxResults=50`);
+    // Try v3 first; fall back to v2 if needed
+    let data;
+    try {
+      data = await jiraRequest('GET', jiraUrl, username, token,
+        `/rest/api/3/issue/search?jql=${jql}&fields=summary,key,status&maxResults=50`);
+    } catch {
+      data = await jiraRequest('GET', jiraUrl, username, token,
+        `/rest/api/2/search?jql=${jql}&fields=summary,key,status&maxResults=50`);
+    }
     const epics = (data && data.issues || []).map(issue => ({
       key: issue.key,
-      summary: issue.fields.summary,
+      summary: (issue.fields.summary || ''),
       status: issue.fields.status && issue.fields.status.name,
     }));
     return { ok: true, epics };
   } catch (e) {
-    return { ok: false, error: e.message };
+    // Non-fatal — return empty epic list so UI stays usable
+    return { ok: true, epics: [], warning: e.message };
   }
 });
 
@@ -283,7 +331,6 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
           summary: task.title,
           description: task.body || '',
           issuetype: { name: 'Epic' },
-          customfield_10011: task.epicName || task.title,
         };
         const data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
         if (data && data.key) {

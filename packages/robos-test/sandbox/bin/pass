@@ -12,8 +12,7 @@ case "$1" in
   show)
     ENTRY="$STORE/$2.gpg"
     if [ -f "$ENTRY" ]; then
-      echo "fake-password-for-$2"
-      echo "login: user@example.com"
+      cat "$ENTRY"
     else
       echo "Error: $2 is not in the password store." >&2
       exit 1

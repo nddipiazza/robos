@@ -348,7 +348,11 @@ EOF
     PROMPT_BLOB=""
     for arg in "$@"; do PROMPT_BLOB="$PROMPT_BLOB $arg"; done
     if echo "$PROMPT_BLOB" | grep -qiE 'task planner|JSON array of tasks'; then
-      cat "$DATA_DIR/tasks-generated.json"
+      if [ "$SCENARIO" = "task-planner-jira-live" ]; then
+        cat "$DATA_DIR/tasks-generated-jira-buildbarn.json"
+      else
+        cat "$DATA_DIR/tasks-generated.json"
+      fi
     elif echo "$PROMPT_BLOB" | grep -qiE 'TASK:|implementing a task'; then
       echo "Reading task description and exploring the repo…"
       echo "Identified the change required."

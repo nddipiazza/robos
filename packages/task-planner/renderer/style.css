@@ -55,7 +55,19 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .tree-indent { color: var(--text-muted); font-size: 14px; padding-top: 1px; flex-shrink: 0; user-select: none; }
 .task-title-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text); font-size: 14px; font-weight: 600; outline: none; padding-bottom: 2px; transition: border-color .2s; }
 .task-title-input:focus { border-bottom-color: var(--accent); }
-.task-body-input { width: 100%; background: transparent; border: none; color: var(--text-muted); font-size: 13px; resize: none; outline: none; margin-top: 8px; min-height: 60px; font-family: inherit; }
+.task-body-input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: var(--text-muted); font-size: 13px; resize: vertical; outline: none; margin-top: 8px; min-height: 80px; font-family: inherit; padding: 8px; box-sizing: border-box; }
+.task-body-preview { margin-top: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; line-height: 1.6; }
+.task-body-preview:hover { border-color: #30363d; background: rgba(255,255,255,0.03); }
+.task-body-preview .md-empty { color: #4a5568; font-style: italic; }
+.task-body-preview h1,.task-body-preview h2,.task-body-preview h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 6px 0 2px; }
+.task-body-preview p { margin: 2px 0 4px; }
+.task-body-preview ul,.task-body-preview ol { margin: 2px 0 4px; padding-left: 18px; }
+.task-body-preview li { margin: 1px 0; }
+.task-body-preview code { background: #161b22; border: 1px solid #30363d; border-radius: 3px; padding: 1px 4px; font-family: monospace; font-size: 12px; }
+.task-body-preview pre { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px; overflow-x: auto; margin: 4px 0; }
+.task-body-preview pre code { background: none; border: none; padding: 0; }
+.task-body-preview strong { color: var(--text-primary); }
+.task-body-preview hr { border: none; border-top: 1px solid #30363d; margin: 6px 0; }
 .task-labels { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .label-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background: #22c55e22; color: var(--green); font-size: 11px; border: 1px solid #22c55e44; cursor: pointer; }
 .label-chip:hover { background: #ef444422; color: var(--red); border-color: #ef444444; }

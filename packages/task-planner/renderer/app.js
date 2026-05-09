@@ -41,7 +41,7 @@ async function loadExistingEpics() {
     return;
   }
   existingEpics = result.epics || [];
-  statusEl.textContent = existingEpics.length ? '' : 'No existing epics found.';
+  statusEl.textContent = existingEpics.length ? '' : (result.warning ? '' : 'No existing epics found.');
   renderEpicDropdown();
 }
 
@@ -197,7 +197,8 @@ function buildCard(i, indent) {
       <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…" data-idx="${i}" data-field="title"/>
     </div>
     ${epicNameRow}
-    <textarea class="task-body-input" rows="3" data-idx="${i}" data-field="body" placeholder="Description…">${escHtml(task.body)}</textarea>
+    <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
+    <textarea class="task-body-input" rows="5" data-idx="${i}" data-field="body" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
     <div class="task-labels" data-idx="${i}">
       ${task.labels.map((lbl, li) => `<span class="label-chip" data-li="${li}" data-ti="${i}" title="Click to remove">${escHtml(lbl)} ×</span>`).join('')}
       <button class="add-label-btn" data-ti="${i}">+ label</button>
@@ -208,9 +209,24 @@ function buildCard(i, indent) {
   card.querySelector('.task-title-input').addEventListener('input', e => {
     tasks[i].title = e.target.value;
   });
-  card.querySelector('.task-body-input').addEventListener('input', e => {
+
+  // Toggle between rendered markdown preview and raw textarea on click
+  const preview = card.querySelector('.task-body-preview');
+  const textarea = card.querySelector('.task-body-input');
+  preview.addEventListener('click', () => {
+    preview.style.display = 'none';
+    textarea.style.display = '';
+    textarea.focus();
+  });
+  textarea.addEventListener('input', e => {
     tasks[i].body = e.target.value;
   });
+  textarea.addEventListener('blur', () => {
+    preview.innerHTML = renderMd(tasks[i].body);
+    textarea.style.display = 'none';
+    preview.style.display = '';
+  });
+
   if (task.isEpic) {
     const epicInput = card.querySelector('.epic-name-input');
     if (epicInput) epicInput.addEventListener('input', e => { tasks[i].epicName = e.target.value; });
@@ -309,4 +325,13 @@ function renderResults(results) {
 
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderMd(src) {
+  if (!src) return '<span class="md-empty">No description. Click to add…</span>';
+  try {
+    return marked.parse(src, { breaks: true, gfm: true });
+  } catch {
+    return escHtml(src);
+  }
 }
