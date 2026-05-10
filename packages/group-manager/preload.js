@@ -14,4 +14,6 @@ contextBridge.exposeInMainWorld('api', {
   listAIProviders: ()                  => ipcRenderer.invoke('gm-list-ai-providers'),
   aiCreateGroup:   (prompt, provider)  => ipcRenderer.invoke('gm-ai-create-group', { prompt, providerId: provider || null }),
   listPath:        (prefix)            => ipcRenderer.invoke('gm-list-path', prefix),
+  logsSearch:      (opts)              => ipcRenderer.invoke('logs-search', opts),
+  logsListApps:    ()                  => ipcRenderer.invoke('logs-list-apps'),
 });

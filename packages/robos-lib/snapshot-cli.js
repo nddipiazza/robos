@@ -68,6 +68,7 @@ const PORT_REGISTRY = {
   'people-directory':  19133,
   'task-planner':      19134,
   'task-implementer':  19135,
+  'robos-logs':        19136,
 };
 
 function getPort(appId) {

@@ -71,6 +71,19 @@ try {
   }
 } catch {}
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let log = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'logger'),
+    path.resolve(__dirname, '..', 'robos-lib', 'logger'),
+    '/usr/local/share/robos/robos-lib/logger',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { const m = require(p); log = m.createLogger('group-manager'); m.registerLogsIPC && m.registerLogsIPC(ipcMain); break; } catch {}
+  }
+} catch {}
+
 // ── Window ────────────────────────────────────────────────────────────────────
 let win;
 app.setName('robos-group-manager');
@@ -146,8 +159,15 @@ function listPeople() {
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
 ipcMain.handle('gds-list-groups',   ()         => listGroups());
-ipcMain.handle('gds-save-group',    (_, group) => saveGroup(group));
-ipcMain.handle('gds-delete-group',  (_, gid)   => { deleteGroup(gid); return { ok: true }; });
+ipcMain.handle('gds-save-group',    (_, group) => {
+  saveGroup(group);
+  log.info('group-saved', `Saved group: ${group.name || group.id}`, { gid: group.id, name: group.name, memberCount: (group.members || []).length });
+});
+ipcMain.handle('gds-delete-group',  (_, gid)   => {
+  deleteGroup(gid);
+  log.info('group-deleted', `Deleted group: ${gid}`, { gid });
+  return { ok: true };
+});
 ipcMain.handle('gds-list-people',   ()         => listPeople());
 ipcMain.handle('gds-list-git-projects', ()     => {
   try { return JSON.parse(fs.readFileSync(GIT_PROJECTS_FILE, 'utf8')).projects || []; }
@@ -424,6 +444,7 @@ ipcMain.handle('gm-ai-create-group', async (_, { prompt, providerId }) => {
   const arr = Array.isArray(parsed) ? parsed : [parsed];
   const groups = arr.map(normaliseGroup).filter(g => g.id && g.name);
   if (!groups.length) return { ok: false, error: 'No valid groups found in AI response.' };
+  log.info('ai-groups-generated', `AI generated ${groups.length} group(s) from prompt`, { count: groups.length, names: groups.map(g => g.name) });
   return { ok: true, groups };
 });
 

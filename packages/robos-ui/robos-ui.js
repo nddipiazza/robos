@@ -704,8 +704,8 @@ robos-ai-textarea {
         this._closePalette();
       }
 
-      // @mention trigger — supports @/path, @~/path, @./path, @name
-      const mentionMatch = lineText.match(/@([\w./~\\-]*)$/);
+      // @mention trigger — supports @/path, @~/path, @./path, @name, @logs <query>
+      const mentionMatch = lineText.match(/@(logs\s+\S*|logs|[\w./~\\-]*)$/);
       if (mentionMatch) {
         this._triggerMention(mentionMatch[1]);
         return;
@@ -904,6 +904,14 @@ robos-ai-textarea {
       this._mentionList.classList.add('open');
       requestAnimationFrame(() => this._positionPopup(this._mentionList));
 
+      // @logs alias — search RobOS structured log files
+      const logsMatch = filter.match(/^logs(?:\s+(.*))?$/i);
+      if (logsMatch) {
+        const query = (logsMatch[1] || '').trim();
+        this.dispatchEvent(new CustomEvent('robos-logs-query', { detail: { query }, bubbles: true, cancelable: true }));
+        return;
+      }
+
       if (filter.startsWith('/') || filter.startsWith('~') || filter.startsWith('./')) {
         this.dispatchEvent(new CustomEvent('robos-path-query', { detail: { query: filter }, bubbles: true, cancelable: true }));
         return;
@@ -946,12 +954,14 @@ robos-ai-textarea {
       const hasRepos   = items.some(i => i.isRepo);
       const hasPeople  = items.some(i => i.isPerson);
       const hasGroups  = items.some(i => i.isGroup);
-      const hasFiles   = items.some(i => !i.isRepo && !i.isPerson && !i.isGroup && !i.isTaskServer);
+      const hasLogs    = items.some(i => i.isLog);
+      const hasFiles   = items.some(i => !i.isRepo && !i.isPerson && !i.isGroup && !i.isTaskServer && !i.isLog);
       const parts = [];
       if (hasTaskServers) parts.push('🎫 Task Servers');
       if (hasRepos)       parts.push('🗄 Repos');
       if (hasPeople)      parts.push('👤 People');
       if (hasGroups)      parts.push('👥 Groups');
+      if (hasLogs)        parts.push('📋 Logs');
       if (hasFiles)       parts.push('📂 Files');
       const hdrLabel = parts.join(' &amp; ') || '📂 Files';
       this._mentionList.innerHTML =
@@ -992,6 +1002,16 @@ robos-ai-textarea {
               <span class="robos-mention-item-body">
                 <span class="robos-mention-item-name">${nameHl}</span>
                 <span class="robos-mention-item-dir" style="color:#d29922">${this._esc(item.path || '')}</span>
+              </span>
+            </div>`;
+          }
+          if (item.isLog) {
+            const levelColor = { info: '#58a6ff', warn: '#d29922', error: '#f85149', debug: '#a371f7' }[item.level] || '#8b949e';
+            return `<div class="robos-mention-item${i === 0 ? ' highlighted' : ''}" data-idx="${i}">
+              <span class="robos-mention-item-icon">📋</span>
+              <span class="robos-mention-item-body">
+                <span class="robos-mention-item-name">${nameHl}</span>
+                <span class="robos-mention-item-dir" style="color:${levelColor}">${this._esc(item.app || '')} · ${this._esc(item.level || '')} · ${this._esc(item.event || '')}</span>
               </span>
             </div>`;
           }
@@ -1039,6 +1059,25 @@ robos-ai-textarea {
     _mentionSelect() {
       const item = (this._mentionItems || [])[this._mentionIdx];
       if (!item) return;
+
+      // Log entries: replace @logs... with a formatted snippet of the log entry
+      if (item.isLog) {
+        const logSnippet = `[LOG:${item.app}/${item.event}] ${item.msg}`;
+        const text = this._inner.innerText;
+        const replaced = text.replace(/@(logs\s+\S*|logs|[\w./~\\-]*)$/, logSnippet + ' ');
+        this._inner.innerText = replaced;
+        const range = document.createRange();
+        const sel   = window.getSelection();
+        range.selectNodeContents(this._inner);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        this._addContextChip({ ...item, name: `log:${item.app}/${item.event}`, path: `log:${item.app}/${item.event}` });
+        this._closeMention();
+        this.dispatchEvent(new CustomEvent('robos-mention-selected', { detail: { item }, bubbles: true }));
+        return;
+      }
+
       // For repos: use github.com/org/repo path; for people: GitHub username; for groups: group id; for task servers: <type>/<sanitized_name>; for path completions: full path; else name
       const replacement = item.isRepo || item.isPerson || item.isGroup || item.isTaskServer ? item.path : (item.isPath && item.path) ? item.path : (item.name || item.path);
       const text = this._inner.innerText;

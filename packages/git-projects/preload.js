@@ -32,4 +32,6 @@ contextBridge.exposeInMainWorld('gp', {
   aiCreateRepos:   (prompt, pid) => ipcRenderer.invoke('gp-ai-create-repos', { prompt, providerId: pid || null }),
   onIntellijWait: (cb) => ipcRenderer.on('intellij-wait', (_, info) => cb(info)),
   runInIntellij:   (projectId, projectPath, scripts, scriptKey) => ipcRenderer.invoke('run-in-intellij', { projectId, projectPath, scripts, scriptKey }),
+  logsSearch:      (opts)        => ipcRenderer.invoke('logs-search', opts),
+  logsListApps:    ()            => ipcRenderer.invoke('logs-list-apps'),
 });

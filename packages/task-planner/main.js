@@ -41,6 +41,19 @@ try {
   }
 } catch {}
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let log = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'logger'),
+    path.resolve(__dirname, '..', 'robos-lib', 'logger'),
+    '/usr/local/share/robos/robos-lib/logger',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { const m = require(p); log = m.createLogger('task-planner'); m.registerLogsIPC && m.registerLogsIPC(ipcMain); break; } catch {}
+  }
+} catch {}
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); }
@@ -280,6 +293,7 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
       parsed = JSON.parse(text);
     }
     if (!Array.isArray(parsed)) throw new Error('Expected an array of tasks');
+    log.info('tasks-generated', `Generated ${parsed.length} tasks from AI`, { count: parsed.length, server: serverInfo.name });
     return { ok: true, tasks: parsed };
   } catch (e) {
     return { ok: false, error: e.message };
@@ -301,8 +315,13 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
           args.push('--label', task.labels.join(','));
         }
         const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 30000 });
-        if (r.status === 0) results.push({ ok: true, url: r.stdout.trim(), title: task.title });
-        else results.push({ ok: false, error: r.stderr || 'gh issue create failed', title: task.title });
+        if (r.status === 0) {
+          log.info('issue-created', `Created GitHub issue: ${task.title}`, { url: r.stdout.trim(), title: task.title, repo: serverInfo.repo });
+          results.push({ ok: true, url: r.stdout.trim(), title: task.title });
+        } else {
+          log.warn('issue-create-failed', `GitHub issue create failed: ${task.title}`, { title: task.title, error: r.stderr });
+          results.push({ ok: false, error: r.stderr || 'gh issue create failed', title: task.title });
+        }
       } catch (e) {
         results.push({ ok: false, error: e.message, title: task.title });
       }
@@ -336,11 +355,14 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
         if (data && data.key) {
           epicKeyByIndex[idx] = data.key;
           const issueUrl = `${baseUrl}/browse/${data.key}`;
+          log.info('epic-created', `Created Jira epic ${data.key}: ${task.title}`, { key: data.key, title: task.title, project: jiraProject });
           results[idx] = { ok: true, url: issueUrl, title: task.title, key: data.key, isEpic: true };
         } else {
+          log.warn('epic-create-failed', `Jira did not return key for epic: ${task.title}`, { title: task.title });
           results[idx] = { ok: false, error: 'Jira did not return an issue key', title: task.title };
         }
       } catch (e) {
+        log.error('epic-create-error', `Failed to create epic: ${task.title}`, { title: task.title, error: e.message });
         results[idx] = { ok: false, error: e.message, title: task.title };
       }
     }
@@ -387,11 +409,14 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
 
         if (data && data.key) {
           const issueUrl = `${baseUrl}/browse/${data.key}`;
+          log.info('issue-created', `Created Jira issue ${data.key}: ${task.title}`, { key: data.key, title: task.title, epicKey: resolvedEpicKey || null, project: jiraProject });
           results[idx] = { ok: true, url: issueUrl, title: task.title, key: data.key, epicKey: resolvedEpicKey || null };
         } else {
+          log.warn('issue-create-failed', `Jira did not return key for issue: ${task.title}`, { title: task.title });
           results[idx] = { ok: false, error: 'Jira did not return an issue key', title: task.title };
         }
       } catch (e) {
+        log.error('issue-create-error', `Failed to create issue: ${task.title}`, { title: task.title, error: e.message });
         results[idx] = { ok: false, error: e.message, title: task.title };
       }
     }

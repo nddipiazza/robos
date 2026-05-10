@@ -21,6 +21,19 @@ try {
   }
 } catch {}
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let log = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'logger'),
+    path.resolve(__dirname, '..', 'robos-lib', 'logger'),
+    '/usr/local/share/robos/robos-lib/logger',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { log = require(p).createLogger('task-servers'); break; } catch {}
+  }
+} catch {}
+
 function loadSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); }
   catch { return {}; }
@@ -77,6 +90,8 @@ ipcMain.handle('load-task-servers', () => loadTaskServers());
 
 ipcMain.handle('save-task-servers', (_, servers) => {
   saveTaskServers(servers);
+  const names = (servers || []).map(s => s.name || s.type).join(', ');
+  log.info('servers-saved', `Saved ${servers.length} task server(s): ${names}`, { count: servers.length, servers: (servers || []).map(s => ({ name: s.name, type: s.type })) });
   return { ok: true };
 });
 
@@ -132,8 +147,12 @@ ipcMain.handle('test-jira-connection', async (_, { url, username, token }) => {
         } catch { resolve(null); }
       });
     });
-    if (result) return { ok: true, displayName: result.displayName || result.name };
+    if (result) {
+      log.info('jira-connection-ok', `Jira connection verified for ${username}`, { url, user: result.displayName || result.name });
+      return { ok: true, displayName: result.displayName || result.name };
+    }
   }
+  log.warn('jira-connection-failed', 'Jira authentication failed', { url });
   return { ok: false, error: 'Authentication failed (tried Bearer and Basic auth)' };
 });
 
@@ -154,6 +173,7 @@ ipcMain.handle('test-github-connection', async (_, { apiUrl, token, useGhCli }) 
         if (err) return resolve({ ok: false, error: 'gh CLI not authenticated — run `gh auth login` first' });
         try {
           const data = JSON.parse(stdout);
+          log.info('github-connection-ok', `GitHub connection verified for @${data.login}`, { login: data.login, apiUrl });
           resolve({ ok: true, login: data.login });
         } catch {
           resolve({ ok: false, error: 'Invalid response from gh CLI' });

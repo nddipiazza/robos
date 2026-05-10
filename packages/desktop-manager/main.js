@@ -75,6 +75,7 @@ const APPS = [
   // System / Tools
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },
+  { id: 'robos-logs',              label: 'RobOS Logs',             icon: '📋', desc: 'View all app logs',               category: 'RobOS System' },
 ];
 
 function mkBin(id, opts = {}) {
@@ -118,6 +119,8 @@ const APP_BINS = {
   'claude-console':          mkBin('claude-console'),
   // People
   'people-directory':        mkBin('people-directory'),
+  // System tools
+  'robos-logs':              mkBin('robos-logs'),
 };
 
 const running = {};

@@ -20,6 +20,19 @@ try {
   }
 } catch {}
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let log = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'logger'),
+    path.resolve(__dirname, '..', 'robos-lib', 'logger'),
+    '/usr/local/share/robos/robos-lib/logger',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { log = require(p).createLogger('issue-manager'); break; } catch {}
+  }
+} catch {}
+
 // ── Journal helpers ───────────────────────────────────────────────────────────
 function getJournalDir() {
   try {
@@ -182,6 +195,7 @@ ipcMain.handle('transition-issue', async (event, { repo, num, removeLabel, addLa
     cp.spawnSync('gh', ['label', 'create', addLabel, '--repo', repo, '--color', '5319e7', '--force'], { timeout: 8000 });
     await spawnStream(event, 'gh', ['issue', 'edit', String(num), '--repo', repo, '--add-label', addLabel], {});
   }
+  log.info('issue-transitioned', `Transitioned issue #${num} in ${repo}`, { repo, num, removeLabel, addLabel });
   // persist active-issue
   const af = path.join(os.homedir(), '.config', 'robos', 'active-issue');
   fs.mkdirSync(path.dirname(af), { recursive: true });
@@ -230,6 +244,7 @@ ipcMain.handle('generate-with-ai', async (_, { prompt }) => {
       const types = Array.isArray(parsed) ? parsed.map(t => `- **${t.label || t.id}**`).join('\n') : '';
       if (types) journalAppend('AI Generated Workflow', `Generated ${parsed.length} issue type(s):\n${types}`);
       writeJournalEvent({ source: 'issue-manager', type: 'ai-generate', title: `✦ AI Generated Issue Data`, detail: `${Array.isArray(parsed) ? parsed.length : 1} item(s): ${prompt.slice(0, 100)}`, status: 'completed' });
+      log.info('ai-data-generated', `AI generated issue data`, { count: Array.isArray(parsed) ? parsed.length : 1, prompt: prompt.slice(0, 80) });
       return { ok: true, data: parsed, raw: text };
     }
     catch (e) { return { ok: false, error: 'JSON parse error: ' + e.message + '\nRaw:\n' + text.slice(0, 400) }; }

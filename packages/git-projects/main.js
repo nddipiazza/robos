@@ -21,6 +21,19 @@ try {
   }
 } catch {}
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let log = { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} };
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'logger'),
+    path.resolve(__dirname, '..', 'robos-lib', 'logger'),
+    '/usr/local/share/robos/robos-lib/logger',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { const m = require(p); log = m.createLogger('git-projects'); m.registerLogsIPC && m.registerLogsIPC(ipcMain); break; } catch {}
+  }
+} catch {}
+
 function readProjects() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
   catch { return { projects: [] }; }
@@ -98,7 +111,11 @@ function parseGitUrl(url) {
 // ── IPC ──────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('read-projects', () => readProjects());
-ipcMain.handle('write-projects', (_, data) => writeProjects(data));
+ipcMain.handle('write-projects', (_, data) => {
+  writeProjects(data);
+  const count = (data.projects || []).length;
+  log.info('projects-saved', `Saved ${count} git project(s)`, { count });
+});
 
 ipcMain.handle('parse-url', (_, url) => parseGitUrl(url));
 
@@ -119,8 +136,13 @@ ipcMain.handle('clone', async (event, { url, localPath }) => {
     proc.stdout.on('data', d => { out += d; event.sender.send('clone-output', d.toString()); });
     proc.stderr.on('data', d => { out += d; event.sender.send('clone-output', d.toString()); });
     proc.on('close', code => {
-      if (code === 0) resolve({ ok: true, message: 'Cloned successfully' });
-      else            resolve({ ok: false, error: `git clone failed (exit ${code})\n${out.slice(-300)}` });
+      if (code === 0) {
+        log.info('repo-cloned', `Cloned repository: ${url}`, { url, localPath });
+        resolve({ ok: true, message: 'Cloned successfully' });
+      } else {
+        log.warn('repo-clone-failed', `Failed to clone: ${url}`, { url, localPath, exitCode: code });
+        resolve({ ok: false, error: `git clone failed (exit ${code})\n${out.slice(-300)}` });
+      }
     });
   });
 });

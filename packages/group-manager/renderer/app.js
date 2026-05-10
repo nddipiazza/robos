@@ -679,6 +679,15 @@ function initAIPanel() {
             if (r && r.ok && textarea._showMentions) textarea._showMentions(r.items);
           } catch (_) {}
         });
+        textarea.addEventListener('robos-logs-query', async (e) => {
+          try {
+            const r = await window.api.logsSearch({ search: e.detail.query, limit: 20 });
+            if (r && r.ok && textarea._showMentions) textarea._showMentions(r.entries.map(entry => ({
+              isLog: true, name: entry.msg || entry.event, app: entry.app, level: entry.level,
+              event: entry.event, msg: entry.msg, path: `log:${entry.app}/${entry.event}`,
+            })));
+          } catch (_) {}
+        });
       }
     }).catch(() => {});
   }

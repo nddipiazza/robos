@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=RobOS Logs
+Comment=View structured event logs from all RobOS apps
+Exec=/usr/local/share/robos/robos-logs/node_modules/electron/dist/electron /usr/local/share/robos/robos-logs --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-logs/icon.svg
+Type=Application
+Categories=Development;
+StartupWMClass=robos-robos-logs.robos-robos-logs

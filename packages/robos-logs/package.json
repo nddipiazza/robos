@@ -1,0 +1,12 @@
+{
+  "name": "robos-logs",
+  "version": "1.0.0",
+  "description": "RobOS structured log viewer for all RobOS apps",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

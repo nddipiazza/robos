@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Logs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-icon">📋</span>
+        <span class="sidebar-title">RobOS Logs</span>
+      </div>
+
+      <div class="sidebar-section-label">Apps</div>
+      <ul class="app-list" id="app-list">
+        <li class="app-item active" data-app="__all__">
+          <span class="app-icon">🌐</span>
+          <span class="app-name">All Apps</span>
+          <span class="app-badge" id="badge-all"></span>
+        </li>
+      </ul>
+
+      <div class="sidebar-section-label">Filter</div>
+      <div class="level-filters">
+        <label class="level-btn active" data-level="all"><span>ALL</span></label>
+        <label class="level-btn info"   data-level="info"><span>INFO</span></label>
+        <label class="level-btn warn"   data-level="warn"><span>WARN</span></label>
+        <label class="level-btn error"  data-level="error"><span>ERROR</span></label>
+        <label class="level-btn debug"  data-level="debug"><span>DEBUG</span></label>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-ghost" id="btn-refresh" title="Refresh logs">⟳ Refresh</button>
+        <button class="btn-ghost btn-danger" id="btn-clear-app" title="Clear current app's logs">🗑 Clear</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="search-input" type="text" placeholder="Search logs…" autocomplete="off">
+        </div>
+        <div class="toolbar-right">
+          <label class="toggle-label">
+            <input type="checkbox" id="auto-refresh"> Live tail
+          </label>
+          <span class="entry-count" id="entry-count">0 entries</span>
+        </div>
+      </div>
+
+      <div class="log-table-wrap">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th class="col-time">Time</th>
+              <th class="col-app">App</th>
+              <th class="col-level">Level</th>
+              <th class="col-event">Event</th>
+              <th class="col-msg">Message</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detail-panel" style="display:none">
+        <div class="detail-header">
+          <span class="detail-title" id="detail-title">Event Detail</span>
+          <button class="detail-close" id="detail-close">✕</button>
+        </div>
+        <pre class="detail-body" id="detail-body"></pre>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

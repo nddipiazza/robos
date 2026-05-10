@@ -9,4 +9,6 @@ contextBridge.exposeInMainWorld('robos', {
   fetchJiraEpics:  (p)       => ipcRenderer.invoke('fetch-jira-epics', p),
   openUrl:         (url)     => ipcRenderer.invoke('open-url', url),
   openTaskServers: ()        => ipcRenderer.invoke('open-task-servers'),
+  logsSearch:      (opts)    => ipcRenderer.invoke('logs-search', opts),
+  logsListApps:    ()        => ipcRenderer.invoke('logs-list-apps'),
 });

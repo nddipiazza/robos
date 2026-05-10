@@ -374,4 +374,35 @@ module.exports = {
       active_task_server: 'gh-1',
     },
   },
+
+  'task-planner-jira-live': {
+    name: 'task-planner-jira-live',
+    description: 'Task planner against the real Acme Jira — creates actual tickets in KAN',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Nicholas DiPiazza', email: 'nicholas.dipiazza@gmail.com' },
+    passReady: true,
+    passEntries: {
+      'robos-acme-inc/jira-token': process.env.JIRA_TOKEN || '',
+    },
+    settings: {
+      task_servers: [{
+        id: 'jira-1',
+        type: 'jira',
+        name: 'Acme Jira',
+        url: 'https://robos-acme.atlassian.net',
+        username: process.env.JIRA_USER || 'nicholas.dipiazza@gmail.com',
+        token_pass_path: 'robos-acme-inc/jira-token',
+        projects: ['KAN'],
+        jira_project: 'KAN',
+        issue_types: [
+          { id: 'Epic',  label: 'Epic',  color: '#a78bfa' },
+          { id: 'Story', label: 'Story', color: '#3b82f6' },
+          { id: 'Task',  label: 'Task',  color: '#22c55e' },
+          { id: 'Bug',   label: 'Bug',   color: '#ef4444' },
+        ],
+      }],
+      active_task_server: 'jira-1',
+    },
+  },
 };
