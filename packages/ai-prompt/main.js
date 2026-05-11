@@ -173,15 +173,16 @@ Return ONLY the JSON object. No markdown code fences, no extra text.`;
   try {
     const text = await new Promise((resolve, reject) => {
       let child;
-      const spawnOpts = { stdio: ['ignore', 'pipe', 'pipe'] };
       if (selectedAgent === 'copilot') {
+        const spawnOpts = { stdio: ['ignore', 'pipe', 'pipe'] };
         child = cp.spawn('gh', ['copilot', '--', '-p', systemPrompt, '--allow-all-tools', '--silent'], spawnOpts);
       } else {
-        // Default: claude CLI — pass prompt as positional arg, ignore stdin
-        const claudeArgs = ['--print', '--output-format', 'json'];
-        if (model) { claudeArgs.push('--model', model); }
-        claudeArgs.push('--', systemPrompt);
-        child = cp.spawn('claude', claudeArgs, spawnOpts);
+        // Claude CLI: pass prompt via stdin (write + end = immediate EOF, no wait)
+        child = cp.spawn('claude', ['--print', '--output-format', 'json'].concat(model ? ['--model', model] : []), {
+          stdio: ['pipe', 'pipe', 'pipe']
+        });
+        child.stdin.write(systemPrompt);
+        child.stdin.end();
       }
       let stdout = '', stderr = '';
       child.stdout.on('data', d => { stdout += d; });
