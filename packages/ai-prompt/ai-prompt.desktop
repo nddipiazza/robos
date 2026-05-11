@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS AI Prompt
+Comment=AI-powered OS prompt — type what you want done, AI does it
+Exec=/usr/bin/electron /usr/local/share/robos/ai-prompt/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/ai-prompt/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=AI
+StartupWMClass=robos-ai-prompt

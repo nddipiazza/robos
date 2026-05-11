@@ -1,0 +1,12 @@
+{
+  "name": "robos-ai-prompt",
+  "version": "0.1.0",
+  "description": "AI-powered OS prompt — type what you want done, AI does it",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

@@ -1,0 +1,91 @@
+:root {
+  --bg-primary: #0d1117;
+  --bg-card: #161b22;
+  --bg-card2: #1c2128;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #00bcd4;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --purple: #a78bfa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg-primary); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+
+#app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* Header */
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--bg-card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.app-header h1 { font-size: 18px; font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.count-badge { font-size: 12px; color: var(--text-muted); padding: 3px 10px; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 20px; }
+
+/* Toolbar */
+.toolbar { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+.search-input { width: 100%; padding: 10px 20px; background: var(--bg-primary); color: var(--text); border: none; border-bottom: 1px solid var(--border); font-size: 14px; outline: none; }
+.search-input:focus { border-bottom-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Category tabs */
+.category-tabs { display: flex; gap: 0; overflow-x: auto; padding: 0 12px; scrollbar-width: none; }
+.category-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { padding: 8px 14px; font-size: 12px; font-weight: 500; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; }
+.cat-tab:hover { color: var(--text); }
+.cat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Main */
+#main-content { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* Skills grid */
+.skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+/* Skill card */
+.skill-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: border-color .2s; position: relative; }
+.skill-card:hover { border-color: var(--accent); }
+.skill-card.custom-skill { border-color: #a78bfa44; }
+.skill-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.skill-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+.skill-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; flex-shrink: 0; }
+.skill-badge.builtin { background: #00bcd422; color: var(--accent); border: 1px solid #00bcd444; }
+.skill-badge.custom { background: #a78bfa22; color: var(--purple); border: 1px solid #a78bfa44; }
+.skill-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.skill-command { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: #79c0ff; word-break: break-all; white-space: pre-wrap; max-height: 60px; overflow-y: auto; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-chip { font-size: 10px; padding: 2px 7px; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); }
+.skill-actions { display: flex; gap: 6px; margin-top: 4px; }
+.skill-actions button { flex: 1; font-size: 11px; padding: 5px 8px; }
+
+/* Empty state */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 20px; color: var(--text-muted); text-align: center; grid-column: 1 / -1; }
+.empty-state p { font-size: 14px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: opacity .15s, background .15s; }
+.btn:hover { opacity: 0.85; }
+.btn-accent { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn-outline { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: transparent; color: var(--red); border-color: #ef444444; }
+.btn-danger:hover { background: #ef444411; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.modal-box { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; width: 520px; max-height: 80vh; overflow-y: auto; z-index: 1; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { color: var(--text); background: var(--bg-card2); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.field-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.required { color: var(--accent); }
+.field-input { width: 100%; padding: 8px 12px; background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
+.field-input:focus, .field-textarea:focus, .field-command:focus { border-color: var(--accent); }
+.field-textarea { width: 100%; min-height: 72px; padding: 8px 12px; background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; resize: vertical; outline: none; font-family: inherit; }
+.field-command { width: 100%; min-height: 80px; padding: 8px 12px; background: #0a0f14; color: #79c0ff; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; resize: vertical; outline: none; font-family: 'SF Mono', 'Fira Code', monospace; }

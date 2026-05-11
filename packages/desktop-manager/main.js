@@ -71,7 +71,9 @@ const APPS = [
   { id: 'agent-scheduler',         label: 'Agent Scheduler',        icon: '⏰', desc: 'Schedule AI agent jobs',          category: 'RobOS AI' },
   { id: 'agents-manager',          label: 'Agents Manager',         icon: '🤖', desc: 'Manage agent sessions',           category: 'RobOS AI' },
   { id: 'context-manager',         label: 'Context Manager',        icon: '📚', desc: 'AI context sources',              category: 'RobOS AI' },
-  { id: 'claude-console',          label: 'Claude Console',         icon: '🧬', desc: 'Enhanced Claude Code GUI',       category: 'RobOS AI' },
+  { id: 'claude-console',          label: 'Claude Console',         icon: '🧬', desc: 'Enhanced Claude Code GUI',        category: 'RobOS AI' },
+  { id: 'skills-manager',          label: 'Skills Manager',         icon: '🔮', desc: 'Browse & manage OS skills',       category: 'RobOS AI' },
+  { id: 'ai-prompt',               label: 'AI Prompt',              icon: '✨', desc: 'AI-powered OS prompt',            category: 'RobOS AI' },
   // System / Tools
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },
@@ -117,6 +119,8 @@ const APP_BINS = {
   'agents-manager':          mkBin('agents-manager'),
   'context-manager':         mkBin('context-manager'),
   'claude-console':          mkBin('claude-console'),
+  'skills-manager':          mkBin('skills-manager'),
+  'ai-prompt':               mkBin('ai-prompt'),
   // People
   'people-directory':        mkBin('people-directory'),
   // System tools

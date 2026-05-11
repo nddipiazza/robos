@@ -69,6 +69,8 @@ const PORT_REGISTRY = {
   'task-planner':      19134,
   'task-implementer':  19135,
   'robos-logs':        19136,
+  'skills-manager':    19139,
+  'ai-prompt':         19140,
 };
 
 function getPort(appId) {

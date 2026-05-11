@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS AI Prompt</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-left">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <h1>AI Prompt</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm" id="btn-open-skills">Skills Manager</button>
+        <button class="btn btn-outline btn-sm" id="btn-history-toggle">History</button>
+      </div>
+    </header>
+
+    <div id="main-layout" class="main-layout">
+      <!-- Left: skills sidebar -->
+      <aside id="skills-sidebar" class="skills-sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">Skills</span>
+          <input type="text" id="skill-search" class="skill-search-input" placeholder="Filter…"/>
+        </div>
+        <div id="skills-list" class="skills-list">
+          <div class="sidebar-empty">No custom skills yet.<br/>Open Skills Manager to add some.</div>
+        </div>
+      </aside>
+
+      <!-- Right: prompt + results -->
+      <div class="prompt-panel">
+        <!-- Prompt input -->
+        <section class="prompt-section card">
+          <div class="prompt-header">
+            <h2>What do you want to do?</h2>
+            <div id="skill-chips" class="skill-chips"></div>
+          </div>
+          <textarea id="prompt-input" class="prompt-textarea"
+            placeholder="e.g. Show me the top 10 processes by memory usage&#10;e.g. Find all .log files larger than 50MB in /var&#10;e.g. List all Docker containers and their port mappings"></textarea>
+          <div class="prompt-actions">
+            <button class="btn btn-accent" id="btn-run">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span id="btn-run-text">Run with AI</span>
+              <span id="btn-run-spinner" class="spinner" style="display:none"></span>
+            </button>
+            <button class="btn btn-outline" id="btn-clear-prompt" style="display:none">Clear</button>
+            <span id="run-status" class="status-text"></span>
+          </div>
+        </section>
+
+        <!-- Results -->
+        <section id="results-section" class="results-section" style="display:none">
+          <div class="results-header">
+            <div class="results-title-row">
+              <span id="results-status-icon" class="status-icon">✓</span>
+              <h2 id="results-summary">Summary</h2>
+            </div>
+            <button class="btn btn-sm btn-outline" id="btn-new-prompt">New Prompt</button>
+          </div>
+
+          <div id="steps-list" class="steps-list"></div>
+
+          <div id="result-box" class="result-box">
+            <span class="result-label">Result</span>
+            <p id="result-text"></p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- History panel -->
+    <div id="history-panel" class="history-panel" style="display:none">
+      <div class="history-header">
+        <h2>History</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm btn-danger" id="btn-clear-history">Clear All</button>
+          <button class="btn btn-sm btn-outline" id="btn-history-close">✕</button>
+        </div>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

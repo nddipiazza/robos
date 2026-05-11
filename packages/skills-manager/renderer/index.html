@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS Skills Manager</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-left">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        <h1>Skills Manager</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-accent" id="btn-open-ai-prompt">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+          Open AI Prompt
+        </button>
+        <button class="btn btn-outline" id="btn-add-skill">+ New Skill</button>
+        <span id="skill-count" class="count-badge">0 skills</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <input type="text" id="search-input" class="search-input" placeholder="Search skills by name, description, or tag…"/>
+      <div id="category-tabs" class="category-tabs"></div>
+    </div>
+
+    <main id="main-content">
+      <div id="skills-grid" class="skills-grid"></div>
+    </main>
+
+    <!-- Add/Edit Skill Modal -->
+    <div id="skill-modal" class="modal" style="display:none">
+      <div class="modal-backdrop" id="modal-backdrop"></div>
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modal-title">New Skill</h2>
+          <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <label class="field-label">Name <span class="required">*</span></label>
+          <input type="text" id="field-name" class="field-input" placeholder="e.g. Find Large Files"/>
+
+          <label class="field-label">Category <span class="required">*</span></label>
+          <input type="text" id="field-category" class="field-input" placeholder="e.g. File Operations"/>
+
+          <label class="field-label">Description</label>
+          <textarea id="field-description" class="field-textarea" placeholder="What does this skill do?"></textarea>
+
+          <label class="field-label">Command / Script</label>
+          <textarea id="field-command" class="field-command" placeholder="e.g. find ~ -type f -size +100M | head -20"></textarea>
+
+          <label class="field-label">Tags (comma-separated)</label>
+          <input type="text" id="field-tags" class="field-input" placeholder="e.g. find, disk, storage"/>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" id="btn-modal-cancel">Cancel</button>
+          <button class="btn btn-accent" id="btn-modal-save">Save Skill</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
