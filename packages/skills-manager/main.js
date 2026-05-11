@@ -1,9 +1,12 @@
 'use strict';
 
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const path = require('path');
-const fs   = require('fs');
-const os   = require('os');
+const path    = require('path');
+const fs      = require('fs');
+const os      = require('os');
+const https   = require('https');
+const http    = require('http');
+const { execFile } = require('child_process');
 
 app.setName('robos-skills-manager');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'skills-manager'));
@@ -200,6 +203,207 @@ ipcMain.handle('skills-open-ai-prompt', () => {
     spawn(electronBin, [appBase, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
       { detached: true, stdio: 'ignore' }).unref();
     return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// ── Skill Packs ───────────────────────────────────────────────────────────────
+
+const SKILL_PACKS_DIR = path.join(os.homedir(), '.config', 'robos', 'skill-packs');
+
+const FEATURED_PACKS = [
+  {
+    id: 'danielmiessler/fabric',
+    name: 'Fabric Patterns',
+    owner: 'danielmiessler',
+    repo: 'fabric',
+    description: 'The definitive AI augmentation framework — 255 battle-tested patterns for analysis, writing, summarization, security, coding, and more. Used by thousands of developers worldwide.',
+    stars: '57k+',
+    patternCount: 255,
+    patternsPath: 'data/patterns',
+    branch: 'main',
+    cloneUrl: 'https://github.com/danielmiessler/fabric.git',
+    localPath: path.join(SKILL_PACKS_DIR, 'fabric'),
+    badgeColor: '#7c3aed',
+    tags: ['AI', 'Patterns', 'Analysis', 'Writing', 'Security'],
+  },
+];
+
+function deriveFabricCategory(name) {
+  if (/^analyze_|^ai$/.test(name))                                  return 'Analyze';
+  if (/^write_|essay/.test(name))                                   return 'Write';
+  if (/^create_|^draft/.test(name))                                 return 'Create';
+  if (/^summarize|^extract|^youtube/.test(name))                    return 'Summarize';
+  if (/^explain|^label|^answer/.test(name))                         return 'Explain';
+  if (/^improve|^enhance|^refine|^clean/.test(name))                return 'Improve';
+  if (/^find_|^get_|^rate_|^compare/.test(name))                    return 'Research';
+  if (/^check_|^identify|^review/.test(name))                       return 'Review';
+  if (/^convert|^translate|^transform/.test(name))                  return 'Transform';
+  if (/^recommend|^suggest/.test(name))                             return 'Advise';
+  if (/^generate|^make_/.test(name))                                return 'Generate';
+  if (/^security|^agility|^coding|^tweet|^official|^pattern/.test(name)) return 'Productivity';
+  return 'General';
+}
+
+function patternToLabel(name) {
+  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function fetchUrl(url) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith('https') ? https : http;
+    const req = mod.get(url, { headers: { 'User-Agent': 'RobOS-Skills-Manager/1.0' } }, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchUrl(res.headers.location).then(resolve).catch(reject);
+      }
+      let body = '';
+      res.on('data', d => { body += d; });
+      res.on('end', () => resolve({ status: res.statusCode, body }));
+    });
+    req.on('error', reject);
+    req.setTimeout(15000, () => { req.destroy(new Error('timeout')); });
+  });
+}
+
+ipcMain.handle('skills-packs-list', () => {
+  return {
+    ok: true,
+    packs: FEATURED_PACKS.map(p => ({
+      ...p,
+      isCloned: fs.existsSync(p.localPath),
+    })),
+  };
+});
+
+ipcMain.handle('skills-packs-browse', async (_, packId) => {
+  const pack = FEATURED_PACKS.find(p => p.id === packId);
+  if (!pack) return { ok: false, error: 'Unknown pack' };
+
+  const localPatternsPath = path.join(pack.localPath, pack.patternsPath);
+  const isCloned = fs.existsSync(localPatternsPath);
+
+  if (isCloned) {
+    try {
+      const dirs = fs.readdirSync(localPatternsPath).filter(name => {
+        try { return fs.statSync(path.join(localPatternsPath, name)).isDirectory(); } catch { return false; }
+      }).sort();
+      const { custom } = readSkills();
+      const installedIds = new Set(custom.map(s => s.id));
+      const patterns = dirs.map(name => ({
+        id: name,
+        name: patternToLabel(name),
+        category: deriveFabricCategory(name),
+        localPath: path.join(localPatternsPath, name, 'system.md'),
+        local: true,
+        installed: installedIds.has(`fabric-${name}`),
+      }));
+      return { ok: true, patterns, source: 'local', count: patterns.length };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // GitHub API
+  try {
+    const res = await fetchUrl(
+      `https://api.github.com/repos/${pack.owner}/${pack.repo}/contents/${pack.patternsPath}`
+    );
+    if (res.status !== 200) return { ok: false, error: `GitHub API returned ${res.status}` };
+    const items = JSON.parse(res.body);
+    const { custom } = readSkills();
+    const installedIds = new Set(custom.map(s => s.id));
+    const patterns = items
+      .filter(i => i.type === 'dir')
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(i => ({
+        id: i.name,
+        name: patternToLabel(i.name),
+        category: deriveFabricCategory(i.name),
+        rawUrl: `https://raw.githubusercontent.com/${pack.owner}/${pack.repo}/${pack.branch}/${pack.patternsPath}/${i.name}/system.md`,
+        local: false,
+        installed: installedIds.has(`fabric-${i.name}`),
+      }));
+    return { ok: true, patterns, source: 'github', count: patterns.length };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('skills-packs-preview', async (_, pattern) => {
+  try {
+    if (pattern.local && pattern.localPath) {
+      const content = fs.readFileSync(pattern.localPath, 'utf8');
+      return { ok: true, content };
+    }
+    const res = await fetchUrl(pattern.rawUrl);
+    if (res.status !== 200) return { ok: false, error: `HTTP ${res.status}` };
+    return { ok: true, content: res.body };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('skills-packs-clone', async (_, packId) => {
+  const pack = FEATURED_PACKS.find(p => p.id === packId);
+  if (!pack) return { ok: false, error: 'Unknown pack' };
+
+  return new Promise(resolve => {
+    fs.mkdirSync(SKILL_PACKS_DIR, { recursive: true });
+
+    if (fs.existsSync(pack.localPath)) {
+      execFile('git', ['-C', pack.localPath, 'pull', '--ff-only'], { timeout: 60000 }, (err, stdout, stderr) => {
+        if (err) resolve({ ok: false, error: stderr || err.message });
+        else resolve({ ok: true, action: 'updated', path: pack.localPath });
+      });
+    } else {
+      execFile('git', ['clone', '--depth=1', pack.cloneUrl, pack.localPath], { timeout: 120000 }, (err, stdout, stderr) => {
+        if (err) resolve({ ok: false, error: stderr || err.message });
+        else resolve({ ok: true, action: 'cloned', path: pack.localPath });
+      });
+    }
+  });
+});
+
+ipcMain.handle('skills-packs-import', async (_, { patterns }) => {
+  try {
+    const { custom } = readSkills();
+    const installedIds = new Set(custom.map(s => s.id));
+    let added = 0;
+
+    for (const p of patterns) {
+      const skillId = `fabric-${p.id}`;
+      if (installedIds.has(skillId)) continue;
+
+      let systemMd = p.systemMd || '';
+      if (!systemMd && p.local && p.localPath) {
+        try { systemMd = fs.readFileSync(p.localPath, 'utf8'); } catch {}
+      }
+
+      // First paragraph after headings = description
+      let description = '';
+      if (systemMd) {
+        const lines = systemMd.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+        description = (lines[0] || p.name).slice(0, 150);
+      }
+
+      custom.push({
+        id: skillId,
+        name: p.name,
+        category: `Fabric: ${p.category}`,
+        description,
+        command: '',
+        systemPrompt: systemMd,
+        tags: ['fabric', p.category.toLowerCase(), 'pattern'],
+        source: 'pack',
+        packId: 'danielmiessler/fabric',
+      });
+      installedIds.add(skillId);
+      added++;
+    }
+
+    saveCustomSkills(custom);
+    return { ok: true, added, total: custom.length };
   } catch (e) {
     return { ok: false, error: e.message };
   }
