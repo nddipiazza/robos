@@ -19,6 +19,12 @@
 
 const BUILTIN_APPS = [
   {
+    appId: 'ai-prompt',
+    label: 'AI Prompt',
+    category: 'RobOS AI',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><circle cx="18" cy="18" r="3"/><path d="M18 16v2l1 1"/></svg>'
+  },
+  {
     appId: 'agents-manager',
     label: 'Agents Manager',
     category: 'RobOS AI',
@@ -173,6 +179,12 @@ const BUILTIN_APPS = [
     label: 'Security Setup',
     category: 'Security',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">\n  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>\n  <path d="m9 12 2 2 4-4"/>\n</svg>'
+  },
+  {
+    appId: 'skills-manager',
+    label: 'Skills Manager',
+    category: 'RobOS AI',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="6" x2="10" y2="10.5"/><line x1="18" y1="6" x2="14" y2="10.5"/><line x1="6" y1="18" x2="10" y2="13.5"/><line x1="18" y1="18" x2="14" y2="13.5"/></svg>'
   },
 ];
 
