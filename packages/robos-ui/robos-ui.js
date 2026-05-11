@@ -45,8 +45,8 @@
 
   // ── Agent registry ────────────────────────────────────────────────────────────
   const DEFAULT_AGENTS = [
-    { id: 'claude',  name: 'Claude Code',   short: 'Claude',  icon: '◆', color: '#d2a8ff', borderColor: '#6e40c944' },
     { id: 'copilot', name: 'Copilot CLI',   short: 'Copilot', icon: '⊕', color: '#79c0ff', borderColor: '#1f6feb44' },
+    { id: 'claude',  name: 'Claude Code',   short: 'Claude',  icon: '◆', color: '#d2a8ff', borderColor: '#6e40c944' },
   ];
 
   // ── Styles (injected once) ────────────────────────────────────────────────────

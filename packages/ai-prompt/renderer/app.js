@@ -1,5 +1,6 @@
 'use strict';
 
+let allSkills = [];       // builtin + custom combined
 let customSkills = [];
 let selectedSkillIds = new Set();
 let skillFilter = '';
@@ -11,6 +12,7 @@ async function init() {
   const r = await window.robos.listSkills();
   if (r.ok) {
     customSkills = r.custom || [];
+    allSkills = [...(r.builtin || []), ...customSkills];
     renderSidebar();
   }
 }
@@ -19,21 +21,34 @@ async function init() {
 function renderSidebar() {
   const container = document.getElementById('skills-list');
   const q = skillFilter.toLowerCase();
-  const filtered = customSkills.filter(s =>
-    !q || s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
+  const filtered = allSkills.filter(s =>
+    !q || s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) ||
+    (s.tags || []).some(t => t.includes(q))
   );
 
   if (!filtered.length) {
     container.innerHTML = `<div class="sidebar-empty">${
-      customSkills.length ? 'No skills match filter.' : 'No custom skills yet.<br/>Open Skills Manager to add some.'
+      allSkills.length ? 'No skills match filter.' : 'No skills yet. Open Skills Manager to add some.'
     }</div>`;
     return;
   }
 
-  container.innerHTML = filtered.map(s =>
-    `<div class="sidebar-skill${selectedSkillIds.has(s.id) ? ' selected' : ''}" data-id="${escHtml(s.id)}">
-      <div class="sidebar-skill-name">${escHtml(s.name)}</div>
-      <div class="sidebar-skill-cat">${escHtml(s.category)}</div>
+  // Group by category
+  const groups = {};
+  filtered.forEach(s => {
+    if (!groups[s.category]) groups[s.category] = [];
+    groups[s.category].push(s);
+  });
+
+  container.innerHTML = Object.entries(groups).map(([cat, skills]) =>
+    `<div class="sidebar-category">
+      <div class="sidebar-category-header">${escHtml(cat)}</div>
+      ${skills.map(s =>
+        `<div class="sidebar-skill${selectedSkillIds.has(s.id) ? ' selected' : ''}" data-id="${escHtml(s.id)}">
+          <div class="sidebar-skill-name">${escHtml(s.name)}</div>
+          ${s.source === 'custom' ? '<span class="sidebar-skill-badge">custom</span>' : ''}
+        </div>`
+      ).join('')}
     </div>`
   ).join('');
 
@@ -51,7 +66,7 @@ function toggleSkill(id) {
 
 function renderSkillChips() {
   const container = document.getElementById('skill-chips');
-  const selected = customSkills.filter(s => selectedSkillIds.has(s.id));
+  const selected = allSkills.filter(s => selectedSkillIds.has(s.id));
   if (!selected.length) { container.innerHTML = ''; return; }
   container.innerHTML = selected.map(s =>
     `<span class="skill-chip">
@@ -75,7 +90,7 @@ async function runPrompt() {
   setStatus('Running AI agent…');
   document.getElementById('results-section').style.display = 'none';
 
-  const skillHints = customSkills.filter(s => selectedSkillIds.has(s.id))
+  const skillHints = allSkills.filter(s => selectedSkillIds.has(s.id))
     .map(s => ({ name: s.name, command: s.command }));
 
   const inputEl = document.getElementById('prompt-input');

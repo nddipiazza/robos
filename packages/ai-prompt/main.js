@@ -104,21 +104,22 @@ app.on('window-all-closed', () => app.quit());
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
 
+// Load shared BUILTIN_SKILLS from skills-data.js (co-located in skills-manager)
+let _builtinSkills = [];
+try {
+  const dataPaths = [
+    path.resolve(__dirname, '..', 'skills-manager', 'skills-data.js'),
+    '/usr/local/share/robos/skills-manager/skills-data.js',
+  ];
+  for (const p of dataPaths) {
+    if (fs.existsSync(p)) { _builtinSkills = require(p).BUILTIN_SKILLS; break; }
+  }
+} catch {}
+
 ipcMain.handle('ap-list-skills', () => {
   try {
     const custom = readSkillsFromDisk();
-    // Load builtin skills from skills-manager's main.js BUILTIN_SKILLS
-    // by requiring the skills list directly from that module when available
-    let builtin = [];
-    try {
-      const smPaths = [
-        path.resolve(__dirname, '..', 'skills-manager', 'main.js'),
-        '/usr/local/share/robos/skills-manager/main.js',
-      ];
-      // We can't require main.js (it starts Electron), so just use custom for now.
-      // The full builtin list is inlined below for standalone operation.
-    } catch {}
-    return { ok: true, custom };
+    return { ok: true, builtin: _builtinSkills, custom };
   } catch (e) {
     return { ok: false, error: e.message };
   }
@@ -133,14 +134,20 @@ ipcMain.handle('ap-history-list', () => {
 ipcMain.handle('robos-check-agent-auth', async (_, agentId) => {
   try {
     if (agentId === 'copilot') {
-      const { status } = await new Promise((res) => {
+      // Check Copilot auth: try copilot-specific config first, then gh auth status
+      const copilotCfg = path.join(os.homedir(), '.config', 'github-copilot', 'config.json');
+      if (fs.existsSync(copilotCfg)) {
+        try {
+          const cfg = JSON.parse(fs.readFileSync(copilotCfg, 'utf8'));
+          if (cfg && Object.keys(cfg).length > 0) return { ok: true };
+        } catch {}
+      }
+      // Fall back to gh auth status
+      const { code } = await new Promise((res) => {
         const child = cp.spawn('gh', ['auth', 'status'], { stdio: ['ignore', 'pipe', 'pipe'] });
-        let out = '';
-        child.stdout.on('data', d => { out += d; });
-        child.stderr.on('data', d => { out += d; });
-        child.on('close', code => res({ code, out }));
+        child.on('close', code => res({ code }));
       });
-      return { ok: status === 0 };
+      return { ok: code === 0 };
     } else {
       // Claude: spawn with an empty prompt and check is_error
       const text = await new Promise((resolve, reject) => {

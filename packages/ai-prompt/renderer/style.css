@@ -37,7 +37,9 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .sidebar-skill:hover { background: var(--bg-card2); color: var(--text); }
 .sidebar-skill.selected { background: #00bcd422; color: var(--accent); }
 .sidebar-skill-name { font-weight: 500; }
-.sidebar-skill-cat { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.sidebar-skill-badge { font-size: 9px; background: #1f6feb33; color: #79c0ff; border-radius: 3px; padding: 1px 4px; margin-left: 4px; vertical-align: middle; }
+.sidebar-category { margin-bottom: 4px; }
+.sidebar-category-header { font-size: 10px; font-weight: 600; color: #4b5263; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 10px 3px; }
 .sidebar-empty { padding: 16px 10px; font-size: 12px; color: var(--text-muted); line-height: 1.5; text-align: center; }
 
 /* Prompt panel */
