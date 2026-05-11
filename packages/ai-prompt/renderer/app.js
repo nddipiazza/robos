@@ -3,9 +3,21 @@
 let allSkills = [];       // builtin + custom combined
 let customSkills = [];
 let selectedSkillIds = new Set();
+let skillParams = {};     // { [skillId]: { [paramName]: value } }
 let skillFilter = '';
 let historyVisible = false;
 let running = false;
+
+// ── Parameter parsing ─────────────────────────────────────────────────────────
+function extractParams(command) {
+  const matches = (command || '').match(/\$([A-Z][A-Z0-9_]*)/g);
+  if (!matches) return [];
+  return [...new Set(matches.map(m => m.slice(1)))];
+}
+
+function substituteParams(command, params) {
+  return command.replace(/\$([A-Z][A-Z0-9_]*)/g, (_, name) => params[name] || `$${name}`);
+}
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function init() {
@@ -44,7 +56,7 @@ function renderSidebar() {
     `<div class="sidebar-category">
       <div class="sidebar-category-header">${escHtml(cat)}</div>
       ${skills.map(s =>
-        `<div class="sidebar-skill${selectedSkillIds.has(s.id) ? ' selected' : ''}" data-id="${escHtml(s.id)}">
+        `<div class="sidebar-skill${selectedSkillIds.has(s.id) ? ' selected' : ''}" data-id="${escHtml(s.id)}" title="${escHtml(s.description || '')}">
           <div class="sidebar-skill-name">${escHtml(s.name)}</div>
           ${s.source === 'custom' ? '<span class="sidebar-skill-badge">custom</span>' : ''}
         </div>`
@@ -58,45 +70,104 @@ function renderSidebar() {
 }
 
 function toggleSkill(id) {
-  if (selectedSkillIds.has(id)) selectedSkillIds.delete(id);
-  else selectedSkillIds.add(id);
+  if (selectedSkillIds.has(id)) {
+    selectedSkillIds.delete(id);
+    delete skillParams[id];
+  } else {
+    selectedSkillIds.add(id);
+    const skill = allSkills.find(s => s.id === id);
+    if (skill) {
+      const params = extractParams(skill.command);
+      skillParams[id] = {};
+      params.forEach(p => { skillParams[id][p] = ''; });
+    }
+  }
   renderSidebar();
   renderSkillChips();
+  updateRunButton();
 }
 
 function renderSkillChips() {
   const container = document.getElementById('skill-chips');
   const selected = allSkills.filter(s => selectedSkillIds.has(s.id));
-  if (!selected.length) { container.innerHTML = ''; return; }
-  container.innerHTML = selected.map(s =>
-    `<span class="skill-chip">
-      ${escHtml(s.name)}
-      <span class="skill-chip-remove" data-id="${escHtml(s.id)}">✕</span>
-    </span>`
-  ).join('');
+  if (!selected.length) { container.innerHTML = ''; updateRunButton(); return; }
+
+  container.innerHTML = selected.map(s => {
+    const params = Object.keys(skillParams[s.id] || {});
+    const hasParams = params.length > 0;
+    return `<div class="skill-chip-card${hasParams ? ' has-params' : ''}">
+      <div class="skill-chip-header">
+        <span class="skill-chip-name">${escHtml(s.name)}</span>
+        <button class="skill-chip-remove" data-id="${escHtml(s.id)}" title="Remove skill">✕</button>
+      </div>
+      ${hasParams ? `<div class="skill-chip-params">
+        ${params.map(p => `
+          <div class="skill-param-row">
+            <label class="skill-param-label">${escHtml(p)}</label>
+            <input class="skill-param-input" data-skill="${escHtml(s.id)}" data-param="${escHtml(p)}"
+              placeholder="value for $${escHtml(p)}"
+              value="${escHtml((skillParams[s.id] || {})[p] || '')}"/>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
   container.querySelectorAll('.skill-chip-remove').forEach(el => {
-    el.addEventListener('click', () => { selectedSkillIds.delete(el.dataset.id); renderSidebar(); renderSkillChips(); });
+    el.addEventListener('click', () => {
+      selectedSkillIds.delete(el.dataset.id);
+      delete skillParams[el.dataset.id];
+      renderSidebar();
+      renderSkillChips();
+      updateRunButton();
+    });
   });
+
+  container.querySelectorAll('.skill-param-input').forEach(el => {
+    el.addEventListener('input', () => {
+      if (!skillParams[el.dataset.skill]) skillParams[el.dataset.skill] = {};
+      skillParams[el.dataset.skill][el.dataset.param] = el.value;
+    });
+    // Stop skill sidebar toggling when clicking inside a param input
+    el.addEventListener('click', e => e.stopPropagation());
+  });
+}
+
+function updateRunButton() {
+  const btn = document.getElementById('btn-run');
+  const hint = document.getElementById('run-hint');
+  const hasSkills = selectedSkillIds.size > 0;
+  if (btn) btn.disabled = running;
+  if (hint) hint.style.display = hasSkills ? 'none' : 'inline';
 }
 
 // ── Run prompt ────────────────────────────────────────────────────────────────
 async function runPrompt() {
   if (running) return;
-  const prompt = document.getElementById('prompt-input').value.trim();
-  if (!prompt) { setStatus('Enter a prompt first.', true); return; }
+  const inputEl = document.getElementById('prompt-input');
+  const prompt = (inputEl.value || '').trim();
+  const hasSkills = selectedSkillIds.size > 0;
+
+  if (!prompt && !hasSkills) {
+    setStatus('Enter a prompt or select a skill first.', true);
+    return;
+  }
 
   running = true;
   setRunning(true);
   setStatus('Running AI agent…');
   document.getElementById('results-section').style.display = 'none';
 
-  const skillHints = allSkills.filter(s => selectedSkillIds.has(s.id))
-    .map(s => ({ name: s.name, command: s.command }));
+  const skillHints = allSkills
+    .filter(s => selectedSkillIds.has(s.id))
+    .map(s => {
+      const params = skillParams[s.id] || {};
+      return { name: s.name, command: substituteParams(s.command || '', params) };
+    });
 
-  const inputEl = document.getElementById('prompt-input');
-  const agent = inputEl && inputEl.agent ? inputEl.agent : 'claude';
+  const agent = inputEl && inputEl.agent ? inputEl.agent : 'copilot';
+  const effectivePrompt = prompt || 'Run the selected skills and show me the results.';
 
-  const r = await window.robos.runPrompt({ prompt, skillHints, agent });
+  const r = await window.robos.runPrompt({ prompt: effectivePrompt, skillHints, agent });
 
   setRunning(false);
   running = false;
@@ -238,8 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('btn-clear-prompt').style.display = 'none';
     selectedSkillIds.clear();
+    skillParams = {};
     renderSidebar();
     renderSkillChips();
+    updateRunButton();
     setStatus('');
   });
 

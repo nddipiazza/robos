@@ -52,14 +52,27 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 /* Prompt input */
 .prompt-header { margin-bottom: 12px; }
 .prompt-header h2 { margin-bottom: 8px; }
-.skill-chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 0; }
-.skill-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: #00bcd422; color: var(--accent); border: 1px solid #00bcd444; border-radius: 14px; font-size: 11px; font-weight: 500; }
-.skill-chip-remove { cursor: pointer; opacity: 0.6; font-size: 12px; line-height: 1; }
-.skill-chip-remove:hover { opacity: 1; }
+.skill-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 0; }
+
+/* Skill chip cards (replacing old inline chips) */
+.skill-chip-card { background: #00bcd411; border: 1px solid #00bcd433; border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.skill-chip-card.has-params { padding-bottom: 8px; }
+.skill-chip-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.skill-chip-name { color: var(--accent); font-weight: 500; }
+.skill-chip-remove { cursor: pointer; opacity: 0.5; font-size: 11px; line-height: 1; background: none; border: none; color: var(--text-muted); padding: 0 2px; }
+.skill-chip-remove:hover { opacity: 1; color: var(--red); }
+.skill-chip-params { margin-top: 7px; display: flex; flex-direction: column; gap: 5px; }
+.skill-param-row { display: flex; align-items: center; gap: 6px; }
+.skill-param-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; min-width: 52px; }
+.skill-param-input { flex: 1; background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 7px; font-size: 11px; outline: none; font-family: 'SF Mono', 'Fira Code', monospace; }
+.skill-param-input:focus { border-color: var(--accent); }
+.skill-param-input::placeholder { color: #4b5263; }
+
 .prompt-textarea { width: 100%; min-height: 130px; background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 14px; resize: vertical; outline: none; transition: border-color .2s; line-height: 1.6; }
 .prompt-textarea:focus { border-color: var(--accent); }
 .prompt-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .status-text { font-size: 12px; color: var(--text-muted); }
+.status-text.muted { color: #4b5263; }
 .status-text.error { color: var(--red); }
 
 /* Results */
