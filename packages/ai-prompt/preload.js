@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('robos', {
   historyList:       ()         => ipcRenderer.invoke('ap-history-list'),
   historyClear:      ()         => ipcRenderer.invoke('ap-history-clear'),
   openSkillsManager: ()         => ipcRenderer.invoke('ap-open-skills-manager'),
+  searchIndex:       (prefix)   => ipcRenderer.invoke('ap-list-path', prefix),
 });

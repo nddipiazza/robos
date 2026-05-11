@@ -241,3 +241,48 @@ ipcMain.handle('ap-open-skills-manager', () => {
     return { ok: false, error: e.message };
   }
 });
+
+// ── ap-list-path: @-mention file typeahead for robos-ai-textarea ──────────────
+ipcMain.handle('ap-list-path', (_, prefix) => {
+  try {
+    const home     = os.homedir();
+    const expanded = prefix.replace(/^~/, home);
+    const isDir    = expanded.endsWith('/');
+    const dir      = isDir ? expanded : path.dirname(expanded);
+    const partial  = isDir ? '' : path.basename(expanded);
+    const isRecursive = partial && !expanded.slice(home.length + 1).includes('/');
+    if (isRecursive) {
+      const INDEX_DIR = path.join(home, '.config', 'robos', 'search-index');
+      let items = [];
+      if (fs.existsSync(INDEX_DIR)) {
+        const indexFiles = fs.readdirSync(INDEX_DIR).filter(f => f.endsWith('.txt'));
+        const seen = new Set();
+        for (const indexFile of indexFiles) {
+          const fp = path.join(INDEX_DIR, indexFile);
+          const lines = fs.readFileSync(fp, 'utf8').split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || seen.has(trimmed)) continue;
+            const bn = path.basename(trimmed).toLowerCase();
+            if (!bn.includes(partial.toLowerCase())) continue;
+            seen.add(trimmed);
+            items.push({ name: path.basename(trimmed), path: trimmed });
+            if (items.length >= 12) break;
+          }
+          if (items.length >= 12) break;
+        }
+      }
+      return { ok: true, items };
+    }
+    if (!fs.existsSync(dir)) return { ok: true, items: [] };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 12)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+      }));
+    return { ok: true, items };
+  } catch { return { ok: true, items: [] }; }
+});

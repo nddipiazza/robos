@@ -193,6 +193,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runPrompt();
   });
 
+  // Wire @-mention file typeahead for robos-ai-textarea
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      const promptEl = document.getElementById('prompt-input');
+      if (promptEl && promptEl.addEventListener) {
+        promptEl.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.robos.searchIndex(e.detail.query);
+            if (r && r.ok && promptEl._showMentions) promptEl._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
+
   document.getElementById('btn-clear-prompt').addEventListener('click', () => {
     document.getElementById('prompt-input').value = '';
     document.getElementById('results-section').style.display = 'none';

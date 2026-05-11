@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RobOS AI Prompt</title>
   <link rel="stylesheet" href="style.css"/>
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
 </head>
 <body>
   <div id="app">
@@ -43,8 +44,9 @@
             <h2>What do you want to do?</h2>
             <div id="skill-chips" class="skill-chips"></div>
           </div>
-          <textarea id="prompt-input" class="prompt-textarea"
-            placeholder="e.g. Show me the top 10 processes by memory usage&#10;e.g. Find all .log files larger than 50MB in /var&#10;e.g. List all Docker containers and their port mappings"></textarea>
+          <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
+            placeholder="e.g. Show me the top 10 processes by memory usage — e.g. Find all .log files larger than 50MB in /var — e.g. List all Docker containers and their port mappings"
+            min-height="100"></robos-ai-textarea>
           <div class="prompt-actions">
             <button class="btn btn-accent" id="btn-run">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>

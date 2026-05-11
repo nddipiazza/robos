@@ -450,9 +450,9 @@ robos-ai-textarea {
       this._contextItems = []; // attached @files
       this._streaming = false;
       this._streamText = '';
-      this._maxChars = parseInt(this.getAttribute('max-chars') || '0');
-      this._showSubmit   = this.getAttribute('show-submit') !== 'false';
-      this._showCommands = this.getAttribute('show-commands') !== 'false';
+      this._maxChars = 0;
+      this._showSubmit   = true;
+      this._showCommands = true;
     }
 
     get value() {
@@ -467,6 +467,10 @@ robos-ai-textarea {
 
     connectedCallback() {
       injectStyles();
+      // Read attributes here — not in constructor, per custom elements spec
+      this._maxChars     = parseInt(this.getAttribute('max-chars') || '0');
+      this._showSubmit   = this.getAttribute('show-submit') !== 'false';
+      this._showCommands = this.getAttribute('show-commands') !== 'false';
       this._render();
       this._bind();
     }
@@ -475,6 +479,11 @@ robos-ai-textarea {
     registerCommand(cmd) {
       this._commands = this._commands.filter(c => c.name !== cmd.name);
       this._commands.push(cmd);
+    }
+
+    // ── Focus forwarding ────────────────────────────────────────────────────────
+    focus() {
+      if (this._inner) this._inner.focus();
     }
 
     // ── Stream API ──────────────────────────────────────────────────────────────
