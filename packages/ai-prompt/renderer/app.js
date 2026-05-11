@@ -78,7 +78,10 @@ async function runPrompt() {
   const skillHints = customSkills.filter(s => selectedSkillIds.has(s.id))
     .map(s => ({ name: s.name, command: s.command }));
 
-  const r = await window.robos.runPrompt({ prompt, skillHints });
+  const inputEl = document.getElementById('prompt-input');
+  const agent = inputEl && inputEl.agent ? inputEl.agent : 'claude';
+
+  const r = await window.robos.runPrompt({ prompt, skillHints, agent });
 
   setRunning(false);
   running = false;

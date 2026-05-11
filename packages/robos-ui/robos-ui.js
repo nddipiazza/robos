@@ -43,6 +43,12 @@
     { name: 'translate', icon: '🌐', desc: 'Translate between languages or formats' },
   ];
 
+  // ── Agent registry ────────────────────────────────────────────────────────────
+  const DEFAULT_AGENTS = [
+    { id: 'claude',  name: 'Claude Code',   short: 'Claude',  icon: '◆', color: '#d2a8ff', borderColor: '#6e40c944' },
+    { id: 'copilot', name: 'Copilot CLI',   short: 'Copilot', icon: '⊕', color: '#79c0ff', borderColor: '#1f6feb44' },
+  ];
+
   // ── Styles (injected once) ────────────────────────────────────────────────────
   const STYLES = `
 robos-ai-textarea {
@@ -204,6 +210,46 @@ robos-ai-textarea {
 }
 .robos-cmd-pill:hover { background: #6e40c944; }
 .robos-cmd-pill.active { background: #6e40c966; border-color: #d2a8ff; }
+
+/* Agent selector pill */
+.robos-agent-pill {
+  display: flex; align-items: center; gap: 4px;
+  background: #0d419d22; border: 1px solid #1f6feb44;
+  border-radius: 12px; padding: 2px 8px;
+  font-size: 10px; color: #79c0ff; cursor: pointer;
+  transition: background .12s, border-color .12s;
+  white-space: nowrap; user-select: none;
+}
+.robos-agent-pill:hover { background: #0d419d55; border-color: #1f6feb88; }
+.robos-agent-pill-icon { font-size: 9px; }
+.robos-agent-pill-chevron { font-size: 8px; opacity: .7; margin-left: 1px; }
+
+/* Agent dropdown */
+.robos-agent-dropdown {
+  position: fixed;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.9);
+  z-index: 2147483647;
+  min-width: 190px;
+  padding: 4px;
+  display: none;
+}
+.robos-agent-dropdown.open { display: block; }
+.robos-agent-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-size: 12px; color: #e6edf3;
+  cursor: pointer;
+  transition: background .1s;
+}
+.robos-agent-option:hover { background: #21262d; }
+.robos-agent-option.active { color: #79c0ff; }
+.robos-agent-option-icon { font-size: 13px; }
+.robos-agent-option-name { font-weight: 500; flex: 1; }
+.robos-agent-option-check { font-size: 10px; color: #3fb950; }
 
 .robos-hint {
   font-size: 10px; color: #484f58; flex: 1; text-align: right;
@@ -471,6 +517,9 @@ robos-ai-textarea {
       this._maxChars     = parseInt(this.getAttribute('max-chars') || '0');
       this._showSubmit   = this.getAttribute('show-submit') !== 'false';
       this._showCommands = this.getAttribute('show-commands') !== 'false';
+      this._showAgent    = this.getAttribute('show-agent') !== 'false';
+      this._agents       = [...DEFAULT_AGENTS];
+      this._selectedAgent = this.getAttribute('agent') || this._agents[0].id;
       this._render();
       this._bind();
     }
@@ -484,6 +533,25 @@ robos-ai-textarea {
     // ── Focus forwarding ────────────────────────────────────────────────────────
     focus() {
       if (this._inner) this._inner.focus();
+    }
+
+    // ── Agent selector API ───────────────────────────────────────────────────────
+    get agent() { return this._selectedAgent; }
+
+    set agent(id) {
+      this._selectedAgent = id;
+      this._updateAgentPill();
+    }
+
+    /** Replace the agent list. Each entry: { id, name, short?, icon?, color? } */
+    setAgents(list) {
+      if (!Array.isArray(list) || !list.length) return;
+      this._agents = list;
+      if (!this._agents.find(a => a.id === this._selectedAgent)) {
+        this._selectedAgent = this._agents[0].id;
+      }
+      this._updateAgentPill();
+      this._renderAgentDropdown();
     }
 
     // ── Stream API ──────────────────────────────────────────────────────────────
@@ -607,6 +675,20 @@ robos-ai-textarea {
       this._toolbarRight = document.createElement('div');
       this._toolbarRight.className = 'robos-ai-toolbar-right';
 
+      // Agent selector pill
+      if (this._showAgent) {
+        this._agentPill = document.createElement('div');
+        this._agentPill.className = 'robos-agent-pill';
+        this._agentPill.addEventListener('click', (e) => { e.stopPropagation(); this._toggleAgentDropdown(); });
+        this._toolbarLeft.appendChild(this._agentPill);
+
+        this._agentDropdown = document.createElement('div');
+        this._agentDropdown.className = 'robos-agent-dropdown';
+        document.body.appendChild(this._agentDropdown);
+        this._renderAgentDropdown();
+        this._updateAgentPill();
+      }
+
       // Slash hint pill
       this._hintPill = document.createElement('div');
       this._hintPill.className = 'robos-cmd-pill';
@@ -668,6 +750,7 @@ robos-ai-textarea {
       if (this._palette && this._palette.parentNode === document.body) document.body.removeChild(this._palette);
       if (this._mentionList && this._mentionList.parentNode === document.body) document.body.removeChild(this._mentionList);
       if (this._askDialog && this._askDialog.parentNode === document.body) document.body.removeChild(this._askDialog);
+      if (this._agentDropdown && this._agentDropdown.parentNode === document.body) document.body.removeChild(this._agentDropdown);
     }
 
     // ── Bind events ─────────────────────────────────────────────────────────────
@@ -1293,6 +1376,81 @@ robos-ai-textarea {
         detail: { value, command, text, context: [...this._contextItems] },
         bubbles: true,
       }));
+    }
+
+    // ── Agent pill helpers ───────────────────────────────────────────────────────
+    _getAgentEntry(id) {
+      return this._agents.find(a => a.id === id) || this._agents[0];
+    }
+
+    _updateAgentPill() {
+      if (!this._agentPill) return;
+      const a = this._getAgentEntry(this._selectedAgent);
+      this._agentPill.style.color = a.color || '#79c0ff';
+      this._agentPill.style.borderColor = a.borderColor || '#1f6feb44';
+      this._agentPill.innerHTML =
+        `<span class="robos-agent-pill-icon">${a.icon || '◆'}</span>` +
+        `<span>${a.short || a.name}</span>` +
+        `<span class="robos-agent-pill-chevron">▾</span>`;
+    }
+
+    _renderAgentDropdown() {
+      if (!this._agentDropdown) return;
+      this._agentDropdown.innerHTML = this._agents.map(a => `
+        <div class="robos-agent-option${a.id === this._selectedAgent ? ' active' : ''}" data-agent-id="${a.id}">
+          <span class="robos-agent-option-icon" style="color:${a.color || '#79c0ff'}">${a.icon || '◆'}</span>
+          <span class="robos-agent-option-name">${a.name}</span>
+          ${a.id === this._selectedAgent ? '<span class="robos-agent-option-check">✓</span>' : ''}
+        </div>`).join('');
+      this._agentDropdown.querySelectorAll('.robos-agent-option').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = el.dataset.agentId;
+          this._selectedAgent = id;
+          this._updateAgentPill();
+          this._renderAgentDropdown();
+          this._closeAgentDropdown();
+          this.dispatchEvent(new CustomEvent('robos-agent-change', { detail: { agent: id }, bubbles: true }));
+        });
+      });
+    }
+
+    _toggleAgentDropdown() {
+      if (!this._agentDropdown) return;
+      if (this._agentDropdown.classList.contains('open')) {
+        this._closeAgentDropdown();
+      } else {
+        this._openAgentDropdown();
+      }
+    }
+
+    _openAgentDropdown() {
+      if (!this._agentDropdown || !this._agentPill) return;
+      this._renderAgentDropdown();
+      this._agentDropdown.classList.add('open');
+      // Position above or below the pill
+      const rect = this._agentPill.getBoundingClientRect();
+      const ddH = 200; // estimated max height
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow < ddH && rect.top > ddH) {
+        this._agentDropdown.style.top = (rect.top - ddH - 4) + 'px';
+      } else {
+        this._agentDropdown.style.top = (rect.bottom + 4) + 'px';
+      }
+      this._agentDropdown.style.left = rect.left + 'px';
+      // Close when clicking outside
+      setTimeout(() => {
+        this._agentOutsideHandler = (e) => {
+          if (!this._agentDropdown.contains(e.target) && e.target !== this._agentPill) {
+            this._closeAgentDropdown();
+          }
+        };
+        document.addEventListener('click', this._agentOutsideHandler, { once: true });
+      }, 0);
+    }
+
+    _closeAgentDropdown() {
+      if (this._agentDropdown) this._agentDropdown.classList.remove('open');
     }
 
     // ── Public clear ────────────────────────────────────────────────────────────

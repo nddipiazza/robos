@@ -129,8 +129,10 @@ ipcMain.handle('ap-history-list', () => {
   catch (e) { return { ok: false, error: e.message }; }
 });
 
-ipcMain.handle('ap-run-prompt', async (_, { prompt, skillHints, model }) => {
+ipcMain.handle('ap-run-prompt', async (_, { prompt, skillHints, model, agent }) => {
   if (!prompt || !prompt.trim()) return { ok: false, error: 'Empty prompt' };
+
+  const selectedAgent = agent || 'claude';
 
   const skillContext = skillHints && skillHints.length
     ? `\n\nAvailable skills/tools to use:\n${skillHints.map(s => `- ${s.name}: \`${s.command}\``).join('\n')}`
@@ -170,11 +172,16 @@ Return ONLY the JSON object. No markdown code fences, no extra text.`;
 
   try {
     const text = await new Promise((resolve, reject) => {
-      const child = cp.spawn(
-        'gh',
-        ['copilot', '--', '-p', systemPrompt, '--allow-all-tools', '--silent'],
-        { encoding: 'utf8' }
-      );
+      let child;
+      if (selectedAgent === 'copilot') {
+        child = cp.spawn('gh', ['copilot', '--', '-p', systemPrompt, '--allow-all-tools', '--silent'], { encoding: 'utf8' });
+      } else {
+        // Default: claude CLI
+        const claudeArgs = ['--print', '--output-format', 'stream-json'];
+        if (model) { claudeArgs.push('--model', model); }
+        claudeArgs.push('--', systemPrompt);
+        child = cp.spawn('claude', claudeArgs, { encoding: 'utf8' });
+      }
       let stdout = '', stderr = '';
       child.stdout.on('data', d => { stdout += d; });
       child.stderr.on('data', d => { stderr += d; });
