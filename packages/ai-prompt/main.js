@@ -173,14 +173,15 @@ Return ONLY the JSON object. No markdown code fences, no extra text.`;
   try {
     const text = await new Promise((resolve, reject) => {
       let child;
+      const spawnOpts = { stdio: ['ignore', 'pipe', 'pipe'] };
       if (selectedAgent === 'copilot') {
-        child = cp.spawn('gh', ['copilot', '--', '-p', systemPrompt, '--allow-all-tools', '--silent'], { encoding: 'utf8' });
+        child = cp.spawn('gh', ['copilot', '--', '-p', systemPrompt, '--allow-all-tools', '--silent'], spawnOpts);
       } else {
-        // Default: claude CLI
-        const claudeArgs = ['--print', '--output-format', 'stream-json'];
+        // Default: claude CLI — pass prompt as positional arg, ignore stdin
+        const claudeArgs = ['--print', '--output-format', 'json'];
         if (model) { claudeArgs.push('--model', model); }
         claudeArgs.push('--', systemPrompt);
-        child = cp.spawn('claude', claudeArgs, { encoding: 'utf8' });
+        child = cp.spawn('claude', claudeArgs, spawnOpts);
       }
       let stdout = '', stderr = '';
       child.stdout.on('data', d => { stdout += d; });
@@ -194,13 +195,23 @@ Return ONLY the JSON object. No markdown code fences, no extra text.`;
     });
 
     let parsed;
+    // For claude CLI with --output-format json, response is wrapped:
+    // { "type": "result", "result": "<AI text response>", ... }
+    // Extract the inner AI text before parsing our structured JSON
+    let aiText = text;
+    if (selectedAgent !== 'copilot') {
+      try {
+        const outer = JSON.parse(text.trim());
+        if (outer && typeof outer.result === 'string') aiText = outer.result;
+      } catch { /* not wrapped, use as-is */ }
+    }
+
     if (aiJson) {
-      const r = aiJson.parseAIJson(text);
+      const r = aiJson.parseAIJson(aiText);
       if (!r.ok) throw new Error(r.error || 'Failed to parse AI response');
       parsed = r.data;
     } else {
-      // Try to extract JSON object from response
-      const match = text.match(/\{[\s\S]*\}/);
+      const match = aiText.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('No JSON object found in AI response');
       parsed = JSON.parse(match[0]);
     }
