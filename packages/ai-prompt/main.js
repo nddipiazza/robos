@@ -129,6 +129,51 @@ ipcMain.handle('ap-history-list', () => {
   catch (e) { return { ok: false, error: e.message }; }
 });
 
+// ── Agent auth check ──────────────────────────────────────────────────────────
+ipcMain.handle('robos-check-agent-auth', async (_, agentId) => {
+  try {
+    if (agentId === 'copilot') {
+      const { status } = await new Promise((res) => {
+        const child = cp.spawn('gh', ['auth', 'status'], { stdio: ['ignore', 'pipe', 'pipe'] });
+        let out = '';
+        child.stdout.on('data', d => { out += d; });
+        child.stderr.on('data', d => { out += d; });
+        child.on('close', code => res({ code, out }));
+      });
+      return { ok: status === 0 };
+    } else {
+      // Claude: spawn with an empty prompt and check is_error
+      const text = await new Promise((resolve, reject) => {
+        const child = cp.spawn('claude', ['--print', '--output-format', 'json'], {
+          stdio: ['pipe', 'pipe', 'pipe']
+        });
+        child.stdin.write('ping');
+        child.stdin.end();
+        let out = '';
+        child.stdout.on('data', d => { out += d; });
+        child.stderr.on('data', d => { out += d; });
+        child.on('close', () => resolve(out));
+      });
+      try {
+        const parsed = JSON.parse(text.trim());
+        return { ok: !parsed.is_error };
+      } catch {
+        return { ok: false };
+      }
+    }
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('ap-open-login-terminal', (_, cmd) => {
+  // Open a terminal window with the login command pre-filled
+  const safeCmd = (cmd || 'claude /login').replace(/[;&|`$()]/g, '');
+  cp.spawn('x-terminal-emulator', ['-e', `bash -c "${safeCmd}; read -p 'Press Enter to close…'"`], {
+    stdio: 'ignore', detached: true
+  }).unref();
+});
+
 ipcMain.handle('ap-run-prompt', async (_, { prompt, skillHints, model, agent }) => {
   if (!prompt || !prompt.trim()) return { ok: false, error: 'Empty prompt' };
 

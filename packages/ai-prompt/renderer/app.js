@@ -207,6 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r && r.ok && promptEl._showMentions) promptEl._showMentions(r.items);
           } catch (_) {}
         });
+
+        // Login button in auth banner opens a terminal with the login command
+        promptEl.addEventListener('robos-agent-login', (e) => {
+          const agentId = e.detail && e.detail.agent;
+          const loginCmd = agentId === 'copilot' ? 'gh auth login' : 'claude /login';
+          window.robos.openLoginTerminal && window.robos.openLoginTerminal(loginCmd);
+        });
       }
     }).catch(() => {});
   }

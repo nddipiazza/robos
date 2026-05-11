@@ -471,6 +471,31 @@ robos-ai-textarea {
   cursor: pointer; color: #484f58; font-size: 11px; margin-left: 2px;
 }
 .robos-context-chip-remove:hover { color: #f85149; }
+
+/* Auth error banner */
+.robos-auth-banner {
+  display: none;
+  align-items: center; gap: 8px;
+  background: #2d1b1b;
+  border: 1px solid #f8514944;
+  border-radius: 7px 7px 0 0;
+  padding: 7px 12px;
+  font-size: 11px; color: #ffa198;
+}
+.robos-auth-banner.visible { display: flex; }
+.robos-auth-banner-icon { font-size: 13px; flex-shrink: 0; }
+.robos-auth-banner-msg { flex: 1; }
+.robos-auth-banner-link {
+  color: #79c0ff; text-decoration: underline; cursor: pointer;
+  white-space: nowrap; background: none; border: none;
+  font-size: 11px; font-family: inherit; padding: 0;
+}
+.robos-auth-banner-link:hover { color: #a5d6ff; }
+.robos-auth-banner-dismiss {
+  background: none; border: none; color: #6e7681; cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0 2px; flex-shrink: 0;
+}
+.robos-auth-banner-dismiss:hover { color: #f85149; }
 `;
 
   let stylesInjected = false;
@@ -480,6 +505,28 @@ robos-ai-textarea {
     const style = document.createElement('style');
     style.textContent = STYLES;
     document.head.appendChild(style);
+  }
+
+  // ── Agent auth cache ──────────────────────────────────────────────────────────
+  const AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const _authCache = new Map(); // agentId → { ok: bool, ts: number }
+
+  async function checkAgentAuthCached(agentId) {
+    const cached = _authCache.get(agentId);
+    if (cached && (Date.now() - cached.ts) < AUTH_CACHE_TTL_MS) return cached.ok;
+    // Call into the host app's robos API if available
+    if (typeof window !== 'undefined' && window.robos && typeof window.robos.checkAgentAuth === 'function') {
+      try {
+        const result = await window.robos.checkAgentAuth(agentId);
+        const ok = result && result.ok === true;
+        _authCache.set(agentId, { ok, ts: Date.now() });
+        return ok;
+      } catch {
+        _authCache.set(agentId, { ok: false, ts: Date.now() });
+        return false;
+      }
+    }
+    return null; // can't check — no API available
   }
 
   // ── RobosAITextarea custom element ────────────────────────────────────────────
@@ -522,6 +569,8 @@ robos-ai-textarea {
       this._selectedAgent = this.getAttribute('agent') || this._agents[0].id;
       this._render();
       this._bind();
+      // Async auth check — don't block rendering
+      this._runAuthCheck(this._selectedAgent);
     }
 
     // ── Register custom slash commands ──────────────────────────────────────────
@@ -599,6 +648,34 @@ robos-ai-textarea {
     // ── Build DOM ───────────────────────────────────────────────────────────────
     _render() {
       this.innerHTML = '';
+
+      // Auth error banner (above the textarea wrap)
+      this._authBanner = document.createElement('div');
+      this._authBanner.className = 'robos-auth-banner';
+      const authIcon = document.createElement('span');
+      authIcon.className = 'robos-auth-banner-icon';
+      authIcon.textContent = '⚠';
+      const authMsg = document.createElement('span');
+      authMsg.className = 'robos-auth-banner-msg';
+      const authLink = document.createElement('button');
+      authLink.className = 'robos-auth-banner-link';
+      authLink.textContent = 'Click here to login';
+      authLink.addEventListener('click', () => {
+        this.dispatchEvent(new CustomEvent('robos-agent-login', {
+          detail: { agent: this._selectedAgent },
+          bubbles: true,
+        }));
+      });
+      const authDismiss = document.createElement('button');
+      authDismiss.className = 'robos-auth-banner-dismiss';
+      authDismiss.title = 'Dismiss';
+      authDismiss.textContent = '×';
+      authDismiss.addEventListener('click', () => this._hideAuthBanner());
+      this._authBanner.appendChild(authIcon);
+      this._authBanner.appendChild(authMsg);
+      this._authBanner.appendChild(authLink);
+      this._authBanner.appendChild(authDismiss);
+      this.appendChild(this._authBanner);
 
       // Context chips row
       this._chipsRow = document.createElement('div');
@@ -1378,6 +1455,29 @@ robos-ai-textarea {
       }));
     }
 
+    // ── Agent auth check ─────────────────────────────────────────────────────────
+    async _runAuthCheck(agentId) {
+      const ok = await checkAgentAuthCached(agentId);
+      if (ok === false) {
+        const agent = this._getAgentEntry(agentId);
+        this._showAuthBanner(agent);
+      } else {
+        this._hideAuthBanner();
+      }
+    }
+
+    _showAuthBanner(agent) {
+      if (!this._authBanner) return;
+      const name = agent ? agent.name : 'this agent';
+      this._authBanner.querySelector('.robos-auth-banner-msg').textContent =
+        `Not logged into ${name}.`;
+      this._authBanner.classList.add('visible');
+    }
+
+    _hideAuthBanner() {
+      if (this._authBanner) this._authBanner.classList.remove('visible');
+    }
+
     // ── Agent pill helpers ───────────────────────────────────────────────────────
     _getAgentEntry(id) {
       return this._agents.find(a => a.id === id) || this._agents[0];
@@ -1411,6 +1511,9 @@ robos-ai-textarea {
           this._renderAgentDropdown();
           this._closeAgentDropdown();
           this.dispatchEvent(new CustomEvent('robos-agent-change', { detail: { agent: id }, bubbles: true }));
+          // Re-check auth for newly selected agent
+          this._hideAuthBanner();
+          this._runAuthCheck(id);
         });
       });
     }
