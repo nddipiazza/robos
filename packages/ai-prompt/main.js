@@ -197,28 +197,44 @@ Return ONLY the JSON object. No markdown code fences, no extra text.`;
 
     let parsed;
     // For claude CLI with --output-format json, response is wrapped:
-    // { "type": "result", "result": "<AI text response>", ... }
-    // Extract the inner AI text before parsing our structured JSON
+    // { "type": "result", "result": "<AI text>", "is_error": bool, ... }
     let aiText = text;
     if (selectedAgent !== 'copilot') {
-      try {
-        const outer = JSON.parse(text.trim());
-        if (outer && typeof outer.result === 'string') aiText = outer.result;
-      } catch { /* not wrapped, use as-is */ }
+      let outer = null;
+      try { outer = JSON.parse(text.trim()); } catch { /* raw text fallback */ }
+      if (outer) {
+        if (outer.is_error) throw new Error(outer.result || 'Claude CLI error');
+        if (typeof outer.result === 'string') aiText = outer.result;
+      }
     }
 
+    // Try to parse as structured JSON
+    let parseError = null;
     if (aiJson) {
       const r = aiJson.parseAIJson(aiText);
-      if (!r.ok) throw new Error(r.error || 'Failed to parse AI response');
-      parsed = r.data;
+      if (r.ok) parsed = r.data;
+      else parseError = r.error;
     } else {
       const match = aiText.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('No JSON object found in AI response');
-      parsed = JSON.parse(match[0]);
+      if (match) {
+        try { parsed = JSON.parse(match[0]); } catch (e) { parseError = e.message; }
+      } else {
+        parseError = 'No JSON in response';
+      }
     }
 
-    if (typeof parsed !== 'object' || !parsed.summary) {
-      throw new Error('AI response missing required fields');
+    // If AI returned plain text instead of JSON, wrap it in our schema
+    if (!parsed || typeof parsed !== 'object' || !parsed.summary) {
+      if (aiText && aiText.trim()) {
+        parsed = {
+          summary: aiText.slice(0, 120),
+          success: true,
+          steps: [],
+          result: aiText,
+        };
+      } else {
+        throw new Error(parseError || 'Empty AI response');
+      }
     }
 
     // Persist to history
