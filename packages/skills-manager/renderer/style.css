@@ -170,3 +170,6 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 /* Skill badge: pack */
 .skill-badge.pack { background: #7c3aed22; color: #a78bfa; border: 1px solid #7c3aed44; }
 .empty-state.small { padding: 24px; }
+
+/* Built-in pack badge */
+.pack-builtin-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #00bcd422; color: var(--accent); border: 1px solid #00bcd444; font-weight: 600; white-space: nowrap; }

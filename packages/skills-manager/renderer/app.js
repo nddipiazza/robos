@@ -210,18 +210,22 @@ function renderPacksGrid(packs) {
       <div class="pack-card-body">
         <div class="pack-card-top">
           <span class="pack-name">${escHtml(p.name)}</span>
-          <a class="pack-repo-link" href="#" data-url="https://github.com/${escHtml(p.id)}">${escHtml(p.id)}</a>
+          ${p.cloneUrl
+            ? `<a class="pack-repo-link" href="#" data-url="https://github.com/${escHtml(p.id)}">${escHtml(p.id)}</a>`
+            : `<span class="pack-builtin-badge">Built-in</span>`}
         </div>
         <p class="pack-desc">${escHtml(p.description)}</p>
         <div class="pack-meta">
-          <span class="pack-meta-item">⭐ ${escHtml(p.stars)}</span>
+          <span class="pack-meta-item">${escHtml(p.stars)}</span>
           <span class="pack-meta-item">📋 ${escHtml(String(p.patternCount))} patterns</span>
           ${p.isCloned ? `<span class="pack-meta-item cloned">✓ Cloned locally</span>` : ''}
           ${p.tags.map(t => `<span class="pack-tag">${escHtml(t)}</span>`).join('')}
         </div>
         <div class="pack-actions">
           <button class="btn btn-accent" data-action="browse-pack" data-pack-id="${escHtml(p.id)}">Browse Patterns</button>
-          <button class="btn btn-outline" data-action="clone-pack" data-pack-id="${escHtml(p.id)}">${p.isCloned ? '↻ Update' : '⬇ Clone Repo'}</button>
+          ${p.cloneUrl
+            ? `<button class="btn btn-outline" data-action="clone-pack" data-pack-id="${escHtml(p.id)}">${p.isCloned ? '↻ Update' : '⬇ Clone Repo'}</button>`
+            : `<button class="btn btn-outline" disabled title="Built-in pack — always available">✓ Always Available</button>`}
         </div>
       </div>
     </div>
