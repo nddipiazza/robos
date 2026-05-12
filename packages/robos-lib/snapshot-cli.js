@@ -71,6 +71,7 @@ const PORT_REGISTRY = {
   'robos-logs':        19136,
   'skills-manager':    19139,
   'ai-prompt':         19140,
+  'robos-desktop':     19141,
 };
 
 function getPort(appId) {

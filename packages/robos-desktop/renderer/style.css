@@ -1,0 +1,315 @@
+/* ── RobOS Desktop Shell styles ────────────────────────────────────────────── */
+:root {
+  --bg-primary:    #0d1117;
+  --bg-card:       #161b22;
+  --bg-hover:      #1c2333;
+  --accent:        #00bcd4;
+  --accent-dim:    #007b8a;
+  --text-primary:  #e6edf3;
+  --text-muted:    #8b949e;
+  --border:        #30363d;
+  --taskbar-h:     52px;
+  --taskbar-bg:    rgba(13, 17, 23, 0.95);
+  --green:         #3fb950;
+  --orange:        #f0883e;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Desktop area ─────────────────────────────────────────────────────────── */
+#desktop-area {
+  position: fixed;
+  inset: 0;
+  bottom: var(--taskbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  /* Subtle grid background */
+  background-image:
+    radial-gradient(circle at 50% 50%, #0e1826 0%, #0d1117 70%),
+    linear-gradient(rgba(0,188,212,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,188,212,0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+#desktop-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+#desktop-area:hover #desktop-logo { opacity: 0.55; }
+
+.logo-icon svg {
+  width: 72px;
+  height: 72px;
+}
+
+.logo-text {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--text-primary);
+}
+
+.logo-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ── Taskbar ──────────────────────────────────────────────────────────────── */
+#taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--taskbar-h);
+  background: var(--taskbar-bg);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  gap: 4px;
+  z-index: 9999;
+}
+
+.taskbar-separator {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.taskbar-spacer { flex: 1; }
+
+.taskbar-section {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Taskbar buttons ──────────────────────────────────────────────────────── */
+.taskbar-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.taskbar-btn:hover { background: var(--bg-hover); }
+.taskbar-btn:active { background: var(--border); }
+
+.launcher-btn {
+  width: 40px;
+  height: 40px;
+  color: var(--accent);
+}
+
+.launcher-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.launcher-btn:hover {
+  background: rgba(0, 188, 212, 0.12);
+  color: var(--accent);
+}
+
+/* ── App buttons (pinned + running) ──────────────────────────────────────── */
+.app-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.app-btn:hover { background: var(--bg-hover); }
+
+.app-btn .app-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.app-btn .app-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Running indicator dot */
+.app-btn .running-dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Tooltip */
+.app-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* ── Running apps section ──────────────────────────────────────────────────── */
+.running-app-btn {
+  height: 40px;
+  min-width: 48px;
+  max-width: 160px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: none;
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: background 0.15s;
+  border-bottom: 2px solid var(--accent);
+}
+
+.running-app-btn:hover { background: var(--bg-hover); }
+
+.running-app-btn .app-icon { font-size: 15px; }
+
+.running-app-btn .app-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Tray area ────────────────────────────────────────────────────────────── */
+#tray-area {
+  gap: 8px;
+  padding-right: 8px;
+}
+
+.tray-btn {
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+}
+
+.tray-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--accent);
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Clock ────────────────────────────────────────────────────────────────── */
+#clock-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 0 6px;
+  cursor: default;
+  min-width: 72px;
+}
+
+#clock-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+#clock-date {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Launch toast ─────────────────────────────────────────────────────────── */
+.launch-toast {
+  position: fixed;
+  bottom: calc(var(--taskbar-h) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.launch-toast.visible { opacity: 1; }

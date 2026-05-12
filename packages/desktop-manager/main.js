@@ -78,6 +78,7 @@ const APPS = [
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },
   { id: 'robos-logs',              label: 'RobOS Logs',             icon: '📋', desc: 'View all app logs',               category: 'RobOS System' },
+  { id: 'robos-desktop',          label: 'RobOS Desktop',          icon: '🖥️',  desc: 'Desktop shell (taskbar)',         category: 'RobOS System' },
 ];
 
 function mkBin(id, opts = {}) {
@@ -125,6 +126,7 @@ const APP_BINS = {
   'people-directory':        mkBin('people-directory'),
   // System tools
   'robos-logs':              mkBin('robos-logs'),
+  'robos-desktop':           mkBin('robos-desktop', { keepAlive: true }),
 };
 
 const running = {};

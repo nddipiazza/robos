@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Desktop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Desktop area (click to open launcher) ─────────────────────────────── -->
+  <div id="desktop-area">
+    <div id="desktop-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="48" height="48" rx="8" fill="#161b22" stroke="#00bcd4" stroke-width="2"/>
+          <path d="M20 32 L32 20 L44 32 L32 44 Z" stroke="#00bcd4" stroke-width="2" fill="none" stroke-linejoin="round"/>
+          <circle cx="32" cy="32" r="4" fill="#00bcd4"/>
+        </svg>
+      </div>
+      <div class="logo-text">RobOS</div>
+      <div class="logo-hint">Double-click to open App Launcher</div>
+    </div>
+  </div>
+
+  <!-- ── Taskbar ────────────────────────────────────────────────────────────── -->
+  <div id="taskbar">
+
+    <!-- Launcher button -->
+    <button id="btn-launcher" class="taskbar-btn launcher-btn" title="Open App Launcher">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </button>
+
+    <div class="taskbar-separator"></div>
+
+    <!-- Pinned apps -->
+    <div id="pinned-apps" class="taskbar-section"></div>
+
+    <div class="taskbar-separator"></div>
+
+    <!-- Running apps (populated dynamically) -->
+    <div id="running-apps" class="taskbar-section"></div>
+
+    <!-- Spacer -->
+    <div class="taskbar-spacer"></div>
+
+    <!-- System tray: notifications + clock -->
+    <div id="tray-area" class="taskbar-section">
+      <button id="btn-notifications" class="taskbar-btn tray-btn" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span id="notif-badge" class="badge" style="display:none">0</span>
+      </button>
+      <div id="clock-area">
+        <div id="clock-time">00:00</div>
+        <div id="clock-date">Mon Jan 1</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── App launch feedback toast ─────────────────────────────────────────── -->
+  <div id="launch-toast" class="launch-toast" style="display:none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

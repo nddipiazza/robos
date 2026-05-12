@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=RobOS Desktop
+Comment=RobOS Desktop Shell — full-screen taskbar (replaces GNOME panel)
+Exec=/usr/local/share/robos/robos-desktop/node_modules/electron/dist/electron /usr/local/share/robos/robos-desktop --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-desktop/icon.svg
+Type=Application
+Categories=RobOS;System;
+NoDisplay=true
+StartupNotify=false
+X-RobOS-Category=RobOS System

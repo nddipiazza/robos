@@ -186,6 +186,12 @@ const BUILTIN_APPS = [
     category: 'RobOS AI',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="6" x2="10" y2="10.5"/><line x1="18" y1="6" x2="14" y2="10.5"/><line x1="6" y1="18" x2="10" y2="13.5"/><line x1="18" y1="18" x2="14" y2="13.5"/></svg>'
   },
+  {
+    appId: 'robos-desktop',
+    label: 'RobOS Desktop',
+    category: 'RobOS System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>'
+  },
 ];
 
 function getIcon(appId) {

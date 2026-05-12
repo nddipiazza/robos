@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect x="4" y="4" width="40" height="40" rx="6" fill="#161b22" stroke="#00bcd4" stroke-width="1.5"/>
+  <!-- Desktop grid -->
+  <rect x="10" y="10" width="12" height="12" rx="2" stroke="#00bcd4" stroke-width="1.5" fill="none"/>
+  <rect x="26" y="10" width="12" height="12" rx="2" stroke="#00bcd4" stroke-width="1.5" fill="none"/>
+  <rect x="10" y="26" width="12" height="12" rx="2" stroke="#00bcd4" stroke-width="1.5" fill="none"/>
+  <!-- Taskbar strip -->
+  <rect x="4" y="37" width="40" height="7" rx="0" fill="#00bcd4" opacity="0.15"/>
+  <circle cx="14" cy="40.5" r="2" fill="#00bcd4"/>
+  <circle cx="24" cy="40.5" r="2" fill="#00bcd4" opacity="0.6"/>
+  <circle cx="34" cy="40.5" r="2" fill="#00bcd4" opacity="0.4"/>
+  <!-- Cursor in bottom-right icon -->
+  <path d="M30 30 L30 40 L33.5 36.5 L36 40.5 L37.5 40 L35 36 L39.5 36 Z"
+        stroke="#00bcd4" stroke-width="1.2" fill="#00bcd4" fill-opacity="0.2"
+        stroke-linejoin="round"/>
+</svg>
