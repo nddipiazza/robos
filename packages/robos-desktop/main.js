@@ -170,23 +170,45 @@ function writePinned(list) {
   fs.writeFileSync(PINNED_FILE, JSON.stringify(list, null, 2));
 }
 
-// ── App registry (subset — the ones users would pin / see as running) ─────────
+// ── App registry — all user-visible apps shown in the unified dock ────────────
+// Order determines dock order. System background apps are excluded.
 const APP_META = {
-  'app-launcher':    { label: 'App Launcher',    icon: '🚀', desc: 'Open all apps' },
-  'dev-central':     { label: 'Dev Central',     icon: '🏠', desc: 'Daily dashboard' },
-  'git-projects':    { label: 'Git Projects',    icon: '🌿', desc: 'Git workspaces' },
-  'issue-manager':   { label: 'Issue Manager',   icon: '📋', desc: 'GitHub Issues' },
-  'ai-prompt':       { label: 'AI Prompt',       icon: '✨', desc: 'AI OS prompt' },
-  'agents-manager':  { label: 'Agents Manager',  icon: '🤖', desc: 'AI agents' },
-  'skills-manager':  { label: 'Skills Manager',  icon: '🔮', desc: 'Skills library' },
-  'context-manager': { label: 'Context Manager', icon: '📚', desc: 'AI context' },
-  'work-journal':    { label: 'Work Journal',    icon: '📓', desc: 'Dev journal' },
-  'task-planner':    { label: 'Task Planner',    icon: '🎯', desc: 'Plan tasks' },
-  'workspace-manager':{ label: 'Workspaces',     icon: '🗂️', desc: 'IDE workspaces' },
-  'pass-manager':    { label: 'Pass Manager',    icon: '🔑', desc: 'Passwords' },
-  'robos-preferences':{ label: 'Preferences',    icon: '⚙️', desc: 'Settings' },
-  'claude-console':  { label: 'Claude Console',  icon: '🧬', desc: 'Claude Code GUI' },
-  'notifications':   { label: 'Notifications',   icon: '🔔', desc: 'Notifications' },
+  // ── Core ──────────────────────────────────────────────────────────────────
+  'app-launcher':     { label: 'App Launcher',     icon: '🚀', desc: 'Open all apps',              category: 'core' },
+  'dev-central':      { label: 'Dev Central',      icon: '🏠', desc: 'Daily dashboard',             category: 'core' },
+  // ── Development ───────────────────────────────────────────────────────────
+  'git-projects':     { label: 'Git Projects',     icon: '🌿', desc: 'Git workspaces',              category: 'dev' },
+  'issue-manager':    { label: 'Issue Manager',    icon: '📋', desc: 'GitHub Issues',               category: 'dev' },
+  'task-board':       { label: 'Task Board',       icon: '📌', desc: 'Kanban task board',           category: 'dev' },
+  'pr-review':        { label: 'PR Review',        icon: '🔀', desc: 'Pull request reviews',        category: 'dev' },
+  'ci-monitor':       { label: 'CI Monitor',       icon: '🚦', desc: 'CI/CD status',                category: 'dev' },
+  'task-planner':     { label: 'Task Planner',     icon: '🎯', desc: 'Plan tasks with AI',          category: 'dev' },
+  'task-implementer': { label: 'Implementer',      icon: '⚡', desc: 'Implement tasks with AI',     category: 'dev' },
+  'work-journal':     { label: 'Work Journal',     icon: '📓', desc: 'Developer journal',           category: 'dev' },
+  'workspace-manager':{ label: 'Workspaces',       icon: '🗂️', desc: 'Browse IDE workspaces',       category: 'dev' },
+  'ide-manager':      { label: 'Dev Tools',        icon: '💻', desc: 'IDEs and dev tools',          category: 'dev' },
+  'lang-manager':     { label: 'Languages',        icon: '🌐', desc: 'Dev language runtimes',       category: 'dev' },
+  'workflow-studio':  { label: 'Workflows',        icon: '🔄', desc: 'Workflow management',         category: 'dev' },
+  'tech-workbench':   { label: 'Workbench',        icon: '🛠️', desc: 'Technical problem solver',    category: 'dev' },
+  'automation-studio':{ label: 'Automation',       icon: '⚙', desc: 'Automation workflows',        category: 'dev' },
+  'task-servers':     { label: 'Task Servers',     icon: '🔗', desc: 'Jira/GitHub connections',     category: 'dev' },
+  // ── AI ────────────────────────────────────────────────────────────────────
+  'ai-prompt':        { label: 'AI Prompt',        icon: '✨', desc: 'AI-powered OS prompt',        category: 'ai' },
+  'agents-manager':   { label: 'Agents',           icon: '🤖', desc: 'Manage AI agent sessions',    category: 'ai' },
+  'skills-manager':   { label: 'Skills',           icon: '🔮', desc: 'Browse & manage OS skills',   category: 'ai' },
+  'context-manager':  { label: 'Context',          icon: '📚', desc: 'AI context sources',          category: 'ai' },
+  'claude-console':   { label: 'Claude',           icon: '🧬', desc: 'Enhanced Claude Code GUI',    category: 'ai' },
+  'agent-scheduler':  { label: 'Scheduler',        icon: '⏰', desc: 'Schedule AI agent jobs',      category: 'ai' },
+  // ── People ────────────────────────────────────────────────────────────────
+  'people-directory': { label: 'People',           icon: '👤', desc: 'Team people directory',       category: 'people' },
+  'group-manager':    { label: 'Groups',           icon: '👥', desc: 'GitHub orgs & teams',         category: 'people' },
+  // ── Tools ─────────────────────────────────────────────────────────────────
+  'pass-manager':     { label: 'Passwords',        icon: '🔑', desc: 'GPG password store',          category: 'tools' },
+  'security-setup':   { label: 'Security',         icon: '🛡️', desc: 'GPG & SSH key setup',         category: 'tools' },
+  'robos-preferences':{ label: 'Preferences',      icon: '⚙️', desc: 'System-wide settings',        category: 'tools' },
+  'file-explorer':    { label: 'Files',            icon: '📁', desc: 'File browser',                category: 'tools' },
+  'robos-icons':      { label: 'Icons',            icon: '🎨', desc: 'Manage app icons',            category: 'tools' },
+  'notifications':    { label: 'Notifications',    icon: '🔔', desc: 'Notification history',        category: 'tools' },
 };
 
 // ── Main window ───────────────────────────────────────────────────────────────

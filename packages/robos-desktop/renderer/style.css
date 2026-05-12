@@ -100,7 +100,7 @@ html, body {
   flex-shrink: 0;
 }
 
-.taskbar-spacer { flex: 1; }
+.taskbar-spacer { flex-shrink: 0; width: 4px; }
 
 .taskbar-section {
   display: flex;
@@ -141,56 +141,97 @@ html, body {
   color: var(--accent);
 }
 
-/* ── App buttons (pinned + running) ──────────────────────────────────────── */
-.app-btn {
-  width: 44px;
-  height: 44px;
+/* ── App dock (unified: all apps, running state shown inline) ────────────── */
+.app-dock {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+.app-dock::-webkit-scrollbar { display: none; }
+
+/* ── Individual dock button ─────────────────────────────────────────────── */
+.dock-btn {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
   border-radius: 8px;
   border: none;
+  border-bottom: 3px solid transparent;
   background: transparent;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   position: relative;
-  transition: background 0.15s;
-  padding: 0;
+  padding: 0 0 3px;
+  /* Not running: dimmed */
+  opacity: 0.42;
+  transition: opacity 0.2s, background 0.15s, border-color 0.2s;
 }
 
-.app-btn:hover { background: var(--bg-hover); }
+.dock-btn:hover {
+  background: var(--bg-hover);
+  opacity: 0.85;
+}
 
-.app-btn .app-icon {
+/* Running state: full brightness + accent underline */
+.dock-btn.running {
+  opacity: 1;
+  border-bottom-color: var(--accent);
+}
+
+.dock-btn.running:hover {
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.dock-icon {
   font-size: 18px;
   line-height: 1;
+  transition: transform 0.15s;
 }
 
-.app-btn .app-label {
-  font-size: 9px;
+.dock-btn:active .dock-icon { transform: scale(0.88); }
+
+.dock-label {
+  font-size: 8.5px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 42px;
+  max-width: 44px;
   text-align: center;
   line-height: 1;
 }
 
-/* Running indicator dot */
-.app-btn .running-dot {
+/* Running dot — small cyan circle under the icon */
+.dock-run-dot {
   position: absolute;
-  bottom: 3px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--accent);
+  background: transparent;
+  transition: background 0.2s;
 }
 
-/* Tooltip */
-.app-btn[title]:hover::after {
+.dock-btn.running .dock-run-dot {
+  background: var(--accent);
+  box-shadow: 0 0 5px rgba(0, 188, 212, 0.6);
+}
+
+/* Tooltip above the button */
+.dock-btn[title]:hover::after {
   content: attr(title);
   position: absolute;
   bottom: calc(100% + 6px);
@@ -205,35 +246,6 @@ html, body {
   white-space: nowrap;
   pointer-events: none;
   z-index: 10000;
-}
-
-/* ── Running apps section ──────────────────────────────────────────────────── */
-.running-app-btn {
-  height: 40px;
-  min-width: 48px;
-  max-width: 160px;
-  padding: 0 10px;
-  border-radius: 6px;
-  border: none;
-  background: var(--bg-card);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-primary);
-  font-size: 12px;
-  transition: background 0.15s;
-  border-bottom: 2px solid var(--accent);
-}
-
-.running-app-btn:hover { background: var(--bg-hover); }
-
-.running-app-btn .app-icon { font-size: 15px; }
-
-.running-app-btn .app-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ── Tray area ────────────────────────────────────────────────────────────── */

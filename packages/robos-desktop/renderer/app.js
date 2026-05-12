@@ -4,27 +4,23 @@
  *
  * Responsibilities:
  *  - Live clock (updates every second)
- *  - Pinned apps bar (loaded from config, persisted on change)
- *  - Running apps bar (polled from desktop-manager every 3s)
+ *  - Unified app dock: all registered apps, running state shown inline
+ *    • Running  → full opacity, cyan underline, cyan dot
+ *    • Not running → 45% opacity, no indicator, dimmed
  *  - App launcher button → launches app-launcher
  *  - Desktop double-click → open app launcher
  *  - Launch feedback toast
  */
 
-// ── App metadata (mirrors main.js APP_META) ────────────────────────────────
-let appMeta = {};
-
 // ── State ───────────────────────────────────────────────────────────────────
-let pinnedApps  = [];
-let runningApps = {};
+let appMeta    = {};    // { appId → { label, icon, desc } }
+let runningApps = {};   // { appId → { alive: bool } }
 let lastRunningSnapshot = '';
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function init() {
-  appMeta    = await window.robos.getAppMeta();
-  pinnedApps = await window.robos.getPinnedApps();
-
-  renderPinned();
+  appMeta = await window.robos.getAppMeta();
+  renderDock();
   startClock();
   startRunningPoller();
   wireEvents();
@@ -46,37 +42,48 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
-// ── Pinned apps ──────────────────────────────────────────────────────────────
-function getMeta(appId) {
-  return appMeta[appId] || { label: appId, icon: '📦', desc: appId };
-}
+// ── Unified dock ─────────────────────────────────────────────────────────────
 
-function renderPinned() {
-  const container = document.getElementById('pinned-apps');
-  container.innerHTML = '';
-  for (const appId of pinnedApps) {
-    container.appendChild(makePinnedBtn(appId));
+/**
+ * Build the full dock from appMeta. Each button is rendered once; running state
+ * is applied/removed by updateDockRunningState() without rebuilding the DOM.
+ */
+function renderDock() {
+  const dock = document.getElementById('app-dock');
+  dock.innerHTML = '';
+
+  for (const [appId, meta] of Object.entries(appMeta)) {
+    dock.appendChild(makeDockBtn(appId, meta));
   }
 }
 
-function makePinnedBtn(appId) {
-  const meta = getMeta(appId);
-  const isRunning = !!runningApps[appId];
-
+function makeDockBtn(appId, meta) {
   const btn = document.createElement('button');
-  btn.className = 'app-btn';
-  btn.title = meta.label;
+  btn.className = 'dock-btn';
   btn.dataset.appId = appId;
+  btn.title = meta.label;
   btn.innerHTML = `
-    <span class="app-icon">${meta.icon}</span>
-    <span class="app-label">${meta.label}</span>
-    ${isRunning ? '<span class="running-dot"></span>' : ''}
+    <span class="dock-icon">${meta.icon}</span>
+    <span class="dock-label">${meta.label}</span>
+    <span class="dock-run-dot"></span>
   `;
   btn.addEventListener('click', () => handleLaunch(appId));
   return btn;
 }
 
-// ── Running apps ─────────────────────────────────────────────────────────────
+/**
+ * Update running/not-running CSS state on every dock button without rebuilding.
+ */
+function updateDockRunningState() {
+  document.querySelectorAll('#app-dock .dock-btn').forEach(btn => {
+    const appId    = btn.dataset.appId;
+    const isRunning = !!(runningApps[appId] && runningApps[appId].alive);
+    btn.classList.toggle('running', isRunning);
+    btn.title = isRunning ? `${appMeta[appId]?.label || appId} — Running` : (appMeta[appId]?.label || appId);
+  });
+}
+
+// ── Running poller ───────────────────────────────────────────────────────────
 function startRunningPoller() {
   pollRunning();
   setInterval(pollRunning, 3000);
@@ -89,61 +96,20 @@ async function pollRunning() {
     runningApps = {};
   }
 
-  // Only re-render if something changed
   const snapshot = JSON.stringify(runningApps);
   if (snapshot === lastRunningSnapshot) return;
   lastRunningSnapshot = snapshot;
 
-  renderRunning();
-  updatePinnedDots();
-}
-
-function renderRunning() {
-  const container = document.getElementById('running-apps');
-  container.innerHTML = '';
-
-  for (const [appId, info] of Object.entries(runningApps)) {
-    if (!info || !info.alive) continue;
-    // Skip apps that are in pinned — they already show a dot there
-    if (pinnedApps.includes(appId)) continue;
-    // Skip background/system apps that don't need taskbar presence
-    if (['robos-toast', 'notifications', 'desktop-manager', 'robos-desktop'].includes(appId)) continue;
-
-    const meta = getMeta(appId);
-    const btn  = document.createElement('button');
-    btn.className = 'running-app-btn';
-    btn.title = meta.desc || meta.label;
-    btn.dataset.appId = appId;
-    btn.innerHTML = `
-      <span class="app-icon">${meta.icon}</span>
-      <span class="app-name">${meta.label}</span>
-    `;
-    btn.addEventListener('click', () => handleLaunch(appId));
-    container.appendChild(btn);
-  }
-}
-
-function updatePinnedDots() {
-  document.querySelectorAll('#pinned-apps .app-btn').forEach(btn => {
-    const appId = btn.dataset.appId;
-    const isRunning = runningApps[appId] && runningApps[appId].alive;
-    const existing = btn.querySelector('.running-dot');
-    if (isRunning && !existing) {
-      const dot = document.createElement('span');
-      dot.className = 'running-dot';
-      btn.appendChild(dot);
-    } else if (!isRunning && existing) {
-      existing.remove();
-    }
-  });
+  updateDockRunningState();
 }
 
 // ── Launch ───────────────────────────────────────────────────────────────────
 async function handleLaunch(appId) {
-  showToast(`Launching ${getMeta(appId).label}…`);
+  const label = appMeta[appId]?.label || appId;
+  showToast(`Launching ${label}…`);
   try {
     await window.robos.launchApp(appId);
-  } catch (err) {
+  } catch {
     showToast(`Failed to launch ${appId}`);
   }
 }
@@ -164,17 +130,14 @@ function showToast(msg) {
 
 // ── Events ───────────────────────────────────────────────────────────────────
 function wireEvents() {
-  // Launcher button → open app-launcher
   document.getElementById('btn-launcher').addEventListener('click', () => {
     handleLaunch('app-launcher');
   });
 
-  // Notifications button
   document.getElementById('btn-notifications').addEventListener('click', () => {
     handleLaunch('notifications');
   });
 
-  // Switch to GNOME desktop button
   document.getElementById('btn-switch-gnome').addEventListener('click', async () => {
     const confirmed = confirm('Switch to GNOME Desktop?\n\nThis will restore the GNOME panel and close RobOS Desktop. You can relaunch RobOS Desktop from the GNOME app menu.');
     if (!confirmed) return;
@@ -182,7 +145,6 @@ function wireEvents() {
     await window.robos.switchToGnome();
   });
 
-  // Double-click anywhere on desktop → open app-launcher
   document.getElementById('desktop-area').addEventListener('dblclick', () => {
     handleLaunch('app-launcher');
   });
