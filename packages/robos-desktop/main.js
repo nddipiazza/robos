@@ -63,10 +63,8 @@ const DEFAULT_PINNED = [
 
 // ── GNOME panel management ────────────────────────────────────────────────────
 /**
- * Hide dash-to-panel + ubuntu-dock by writing a dconf system override and
- * running `dconf update` as root via the installed helper script.
- * This works even though the keys are locked (locked keys prevent USER writes
- * but not system-defaults changes made by root).
+ * Hide all GNOME panels: disables dash-to-panel extension and applies
+ * a user-theme CSS that hides the Activities top bar. No gnome-shell restart needed.
  */
 function hideGnomePanel() {
   exec('sudo /usr/local/bin/robos-desktop-panel hide',
@@ -80,24 +78,18 @@ function hideGnomePanel() {
 
 /**
  * Restore the GNOME panel, then quit.
- * The show script restarts gnome-shell in the background; we quit immediately
- * so the user isn't waiting at a blank robos-desktop screen during the restart.
+ * The show script re-enables dash-to-panel and restores the user-theme (no gnome-shell restart).
  */
 function restoreGnomePanelAndQuit() {
-  // Fire the show script — it resets gsettings and restarts gnome-shell.
-  // We don't wait for completion; the child process runs independently.
-  const child = spawn('sudo', ['/usr/local/bin/robos-desktop-panel', 'show'], {
-    detached: true,
-    stdio: 'ignore',
-    shell: false,
-  });
-  child.unref();
-
-  // Quit after a short delay so the script has time to start
-  setTimeout(() => {
-    process.env.ROBOS_DESKTOP_QUIT = '1';
-    app.quit();
-  }, 300);
+  exec('sudo /usr/local/bin/robos-desktop-panel show',
+    { shell: '/bin/bash' },
+    (err, stdout, stderr) => {
+      if (err) console.warn('[robos-desktop] panel show failed:', stderr.trim());
+      else console.log('[robos-desktop] panel shown:', stdout.trim());
+      process.env.ROBOS_DESKTOP_QUIT = '1';
+      app.quit();
+    }
+  );
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────

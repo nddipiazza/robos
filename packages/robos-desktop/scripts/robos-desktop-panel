@@ -1,18 +1,15 @@
 #!/bin/bash
 # robos-desktop-panel hide|show
 #
-# Hides/shows dash-to-panel by writing the user gsettings for
-# org.gnome.shell enabled-extensions.
+# Hides/shows all GNOME taskbars — NO gnome-shell restart.
 #
-# GNOME 42 limitation: extensions load dynamically but do NOT unload
-# dynamically. So "hide" must restart gnome-shell to unload dash-to-panel.
-# "show" works dynamically (extension loads without restart).
-#
-# If the dconf key is locked by a system policy, the lock is removed first.
+# HIDE: disables the dash-to-panel extension (removes bottom bar) and
+#       applies a user-theme CSS that hides the Activities top bar.
+# SHOW: re-enables dash-to-panel and restores the default theme.
 
 ACTION="${1:-hide}"
 
-# Find the user running gnome-shell
+# Detect gnome-shell user and their D-Bus session
 GNOME_USER=$(ps aux | grep '[g]nome-shell' | awk '{print $1}' | head -1)
 GNOME_UID=$(id -u "$GNOME_USER" 2>/dev/null)
 
@@ -23,61 +20,62 @@ fi
 
 DBUS_ADDR="unix:path=/run/user/${GNOME_UID}/bus"
 XDG_RT="/run/user/${GNOME_UID}"
-LOCK_FILE="/etc/dconf/db/local.d/locks/robos.txt"
+USER_THEME_SCHEMA="/usr/share/gnome-shell/extensions/user-theme@gnome-shell-extensions.gcampax.github.com/schemas"
+THEME_DIR="/home/${GNOME_USER}/.themes"
+NO_PANEL_CSS="${THEME_DIR}/robos-no-panel/gnome-shell/gnome-shell.css"
+WITH_PANEL_CSS="${THEME_DIR}/robos-with-panel/gnome-shell/gnome-shell.css"
 
-# Remove the extensions lock if present (one-time setup for fresh VMs)
-if [ -f "$LOCK_FILE" ] && grep -q '/org/gnome/shell/enabled-extensions\|/org/gnome/shell/disabled-extensions' "$LOCK_FILE"; then
-  grep -v '/org/gnome/shell/enabled-extensions\|/org/gnome/shell/disabled-extensions' \
-    "$LOCK_FILE" > "${LOCK_FILE}.tmp"
-  mv "${LOCK_FILE}.tmp" "$LOCK_FILE"
-  dconf update
-fi
-
-gsettings_cmd() {
+run_as_gnome_user() {
   sudo -u "$GNOME_USER" \
     HOME="/home/$GNOME_USER" \
     DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
     XDG_RUNTIME_DIR="$XDG_RT" \
-    gsettings "$@"
+    "$@"
 }
 
-restart_gnome_shell() {
-  local GNOME_PID
-  GNOME_PID=$(pgrep -x gnome-shell 2>/dev/null | head -1)
-  if [ -n "$GNOME_PID" ]; then
-    kill "$GNOME_PID"
-    # Wait for gnome-shell to fully restart (it auto-respawns via systemd/gdm)
-    local i=0
-    while [ $i -lt 20 ]; do
-      sleep 1
-      local NEW_PID
-      NEW_PID=$(pgrep -x gnome-shell 2>/dev/null | head -1)
-      if [ -n "$NEW_PID" ] && [ "$NEW_PID" != "$GNOME_PID" ]; then
-        sleep 2  # Extra settle time
-        echo "gnome-shell restarted (PID $NEW_PID)"
-        return 0
-      fi
-      i=$((i + 1))
-    done
-  fi
+gdbus_ext() {
+  run_as_gnome_user gdbus call --session \
+    --dest org.gnome.Shell --object-path /org/gnome/Shell \
+    --method "org.gnome.Shell.Extensions.${1}" "${2}" > /dev/null 2>&1
+}
+
+set_theme() {
+  run_as_gnome_user env \
+    GSETTINGS_SCHEMA_DIR="$USER_THEME_SCHEMA" \
+    gsettings set org.gnome.shell.extensions.user-theme name "$1"
+}
+
+ensure_css_themes() {
+  sudo -u "$GNOME_USER" mkdir -p "${THEME_DIR}/robos-no-panel/gnome-shell"
+  sudo -u "$GNOME_USER" mkdir -p "${THEME_DIR}/robos-with-panel/gnome-shell"
+
+  # Write hide-panel CSS
+  printf '/* RobOS hide all panels */\n#panel {\n    opacity: 0 !important;\n    height: 0px !important;\n    min-height: 0px !important;\n}\n' \
+    > "$NO_PANEL_CSS"
+  chown "$GNOME_USER" "$NO_PANEL_CSS"
+
+  # Write empty restore CSS
+  printf '/* RobOS restore panels */\n' > "$WITH_PANEL_CSS"
+  chown "$GNOME_USER" "$WITH_PANEL_CSS"
 }
 
 if [ "$ACTION" = "hide" ]; then
-  # Set user gsettings WITHOUT dash-to-panel, then restart gnome-shell.
-  # GNOME 42 does not dynamically unload extensions removed from the list,
-  # so a restart is required to actually hide the panel.
-  EXTS="['ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']"
-  gsettings_cmd set org.gnome.shell enabled-extensions "$EXTS"
-  restart_gnome_shell
-  echo "Panel hidden"
+  ensure_css_themes
+  # Enable user-theme extension (needed for custom CSS)
+  gdbus_ext EnableExtension 'user-theme@gnome-shell-extensions.gcampax.github.com'
+  # Apply CSS that hides the GNOME Activities top bar
+  set_theme 'robos-no-panel'
+  # Disable dash-to-panel to remove the bottom taskbar
+  gdbus_ext DisableExtension 'dash-to-panel@jderose9.github.com'
+  echo "Panels hidden"
 
 elif [ "$ACTION" = "show" ]; then
-  # Reset user override so system default (with dash-to-panel) takes effect,
-  # then restart gnome-shell so it starts cleanly with dash-to-panel loaded.
-  # This mirrors the hide approach and guarantees a consistent clean state.
-  gsettings_cmd reset org.gnome.shell enabled-extensions
-  restart_gnome_shell
-  echo "Panel shown"
+  ensure_css_themes
+  # Re-enable dash-to-panel (restores bottom taskbar)
+  gdbus_ext EnableExtension 'dash-to-panel@jderose9.github.com'
+  # Restore empty CSS theme (removes the Activities bar override)
+  set_theme 'robos-with-panel'
+  echo "Panels shown"
 
 else
   echo "Usage: $0 hide|show" >&2
