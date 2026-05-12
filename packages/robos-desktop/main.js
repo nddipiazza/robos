@@ -62,62 +62,38 @@ const DEFAULT_PINNED = [
 ];
 
 // ── GNOME panel management ────────────────────────────────────────────────────
-const DASH_TO_PANEL = 'dash-to-panel@jderose9.github.com';
-const UBUNTU_DOCK   = 'ubuntu-dock@ubuntu.com';
-
-function gnomeEnv() {
-  return {
-    ...process.env,
-    DISPLAY: process.env.DISPLAY || ':0',
-    DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ||
-      `unix:path=/run/user/${process.getuid()}/bus`,
-  };
-}
-
 /**
- * Disable dash-to-panel + ubuntu-dock so both the top bar and bottom dock
- * disappear, leaving only the RobOS Desktop taskbar visible.
+ * Hide dash-to-panel + ubuntu-dock by writing a dconf system override and
+ * running `dconf update` as root via the installed helper script.
+ * This works even though the keys are locked (locked keys prevent USER writes
+ * but not system-defaults changes made by root).
  */
 function hideGnomePanel() {
-  const env = gnomeEnv();
-  const cmds = [
-    `gnome-extensions disable "${DASH_TO_PANEL}"`,
-    `gnome-extensions disable "${UBUNTU_DOCK}"`,
-  ];
-  for (const cmd of cmds) {
-    exec(`${cmd} 2>/dev/null || true`, { env, shell: '/bin/bash' }, (err, _out, stderr) => {
-      console.log(`[robos-desktop] ${cmd}:`, err ? stderr.trim() : 'ok');
-    });
-  }
+  exec('sudo /usr/local/bin/robos-desktop-panel hide',
+    { shell: '/bin/bash' },
+    (err, stdout, stderr) => {
+      if (err) console.warn('[robos-desktop] panel hide failed:', stderr.trim());
+      else console.log('[robos-desktop] panel hidden:', stdout.trim());
+    }
+  );
 }
 
 /**
- * Re-enable dash-to-panel + ubuntu-dock so the native GNOME UI is restored,
- * then quit so the user is back on the normal GNOME desktop.
+ * Restore the GNOME panel (removes the override file + dconf update), then quit.
  */
 function restoreGnomePanelAndQuit() {
-  const env = gnomeEnv();
-  const cmds = [
-    `gnome-extensions enable "${UBUNTU_DOCK}"`,
-    `gnome-extensions enable "${DASH_TO_PANEL}"`,
-  ];
-  let pending = cmds.length;
-  function done(cmd, err, stderr) {
-    console.log(`[robos-desktop] ${cmd}:`, err ? stderr.trim() : 'ok');
-    pending--;
-    if (pending <= 0) {
-      // Give GNOME Shell a moment to reload extensions before we quit
+  exec('sudo /usr/local/bin/robos-desktop-panel show',
+    { shell: '/bin/bash' },
+    (err, stdout, stderr) => {
+      if (err) console.warn('[robos-desktop] panel restore failed:', stderr.trim());
+      else console.log('[robos-desktop] panel restored:', stdout.trim());
+      // Give GNOME Shell a moment to reload extensions before quitting
       setTimeout(() => {
-        console.log('[robos-desktop] quitting — GNOME desktop restored');
         process.env.ROBOS_DESKTOP_QUIT = '1';
         app.quit();
       }, 1000);
     }
-  }
-  for (const cmd of cmds) {
-    exec(`${cmd} 2>/dev/null || true`, { env, shell: '/bin/bash' },
-      (err, _out, stderr) => done(cmd, err, stderr));
-  }
+  );
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────
