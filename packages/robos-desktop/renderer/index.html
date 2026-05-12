@@ -39,8 +39,14 @@
 
     <div class="taskbar-separator"></div>
 
-    <!-- Unified app dock: all registered apps, running state shown inline -->
-    <div id="app-dock" class="app-dock"></div>
+    <!-- 4 pinned RobOS apps -->
+    <div id="pinned-dock" class="pinned-dock"></div>
+
+    <!-- Separator (hidden when no windows open) -->
+    <div id="win-separator" class="taskbar-separator" style="display:none"></div>
+
+    <!-- X11 window buttons: gnome-terminal, VS Code, etc. -->
+    <div id="window-area" class="window-area"></div>
 
     <!-- Spacer -->
     <div class="taskbar-spacer"></div>

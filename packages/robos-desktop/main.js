@@ -188,46 +188,65 @@ function writePinned(list) {
   fs.writeFileSync(PINNED_FILE, JSON.stringify(list, null, 2));
 }
 
-// ── App registry — all user-visible apps shown in the unified dock ────────────
-// Order determines dock order. System background apps are excluded.
+// ── App registry — 4 pinned apps shown in the dock ────────────────────────────
+// Keep this short. Full app list lives in app-launcher.
 const APP_META = {
-  // ── Core ──────────────────────────────────────────────────────────────────
-  'app-launcher':     { label: 'App Launcher',     icon: '🚀', desc: 'Open all apps',              category: 'core' },
-  'dev-central':      { label: 'Dev Central',      icon: '🏠', desc: 'Daily dashboard',             category: 'core' },
-  // ── Development ───────────────────────────────────────────────────────────
-  'git-projects':     { label: 'Git Projects',     icon: '🌿', desc: 'Git workspaces',              category: 'dev' },
-  'issue-manager':    { label: 'Issue Manager',    icon: '📋', desc: 'GitHub Issues',               category: 'dev' },
-  'task-board':       { label: 'Task Board',       icon: '📌', desc: 'Kanban task board',           category: 'dev' },
-  'pr-review':        { label: 'PR Review',        icon: '🔀', desc: 'Pull request reviews',        category: 'dev' },
-  'ci-monitor':       { label: 'CI Monitor',       icon: '🚦', desc: 'CI/CD status',                category: 'dev' },
-  'task-planner':     { label: 'Task Planner',     icon: '🎯', desc: 'Plan tasks with AI',          category: 'dev' },
-  'task-implementer': { label: 'Implementer',      icon: '⚡', desc: 'Implement tasks with AI',     category: 'dev' },
-  'work-journal':     { label: 'Work Journal',     icon: '📓', desc: 'Developer journal',           category: 'dev' },
-  'workspace-manager':{ label: 'Workspaces',       icon: '🗂️', desc: 'Browse IDE workspaces',       category: 'dev' },
-  'ide-manager':      { label: 'Dev Tools',        icon: '💻', desc: 'IDEs and dev tools',          category: 'dev' },
-  'lang-manager':     { label: 'Languages',        icon: '🌐', desc: 'Dev language runtimes',       category: 'dev' },
-  'workflow-studio':  { label: 'Workflows',        icon: '🔄', desc: 'Workflow management',         category: 'dev' },
-  'tech-workbench':   { label: 'Workbench',        icon: '🛠️', desc: 'Technical problem solver',    category: 'dev' },
-  'automation-studio':{ label: 'Automation',       icon: '⚙', desc: 'Automation workflows',        category: 'dev' },
-  'task-servers':     { label: 'Task Servers',     icon: '🔗', desc: 'Jira/GitHub connections',     category: 'dev' },
-  // ── AI ────────────────────────────────────────────────────────────────────
-  'ai-prompt':        { label: 'AI Prompt',        icon: '✨', desc: 'AI-powered OS prompt',        category: 'ai' },
-  'agents-manager':   { label: 'Agents',           icon: '🤖', desc: 'Manage AI agent sessions',    category: 'ai' },
-  'skills-manager':   { label: 'Skills',           icon: '🔮', desc: 'Browse & manage OS skills',   category: 'ai' },
-  'context-manager':  { label: 'Context',          icon: '📚', desc: 'AI context sources',          category: 'ai' },
-  'claude-console':   { label: 'Claude',           icon: '🧬', desc: 'Enhanced Claude Code GUI',    category: 'ai' },
-  'agent-scheduler':  { label: 'Scheduler',        icon: '⏰', desc: 'Schedule AI agent jobs',      category: 'ai' },
-  // ── People ────────────────────────────────────────────────────────────────
-  'people-directory': { label: 'People',           icon: '👤', desc: 'Team people directory',       category: 'people' },
-  'group-manager':    { label: 'Groups',           icon: '👥', desc: 'GitHub orgs & teams',         category: 'people' },
-  // ── Tools ─────────────────────────────────────────────────────────────────
-  'pass-manager':     { label: 'Passwords',        icon: '🔑', desc: 'GPG password store',          category: 'tools' },
-  'security-setup':   { label: 'Security',         icon: '🛡️', desc: 'GPG & SSH key setup',         category: 'tools' },
-  'robos-preferences':{ label: 'Preferences',      icon: '⚙️', desc: 'System-wide settings',        category: 'tools' },
-  'file-explorer':    { label: 'Files',            icon: '📁', desc: 'File browser',                category: 'tools' },
-  'robos-icons':      { label: 'Icons',            icon: '🎨', desc: 'Manage app icons',            category: 'tools' },
-  'notifications':    { label: 'Notifications',    icon: '🔔', desc: 'Notification history',        category: 'tools' },
+  'app-launcher': { label: 'Apps',        icon: '🚀', desc: 'Open all apps'           },
+  'dev-central':  { label: 'Dev Central', icon: '🏠', desc: 'Daily dashboard'          },
+  'git-projects': { label: 'Git',         icon: '🌿', desc: 'Git workspaces'           },
+  'ai-prompt':    { label: 'AI Prompt',   icon: '✨', desc: 'AI-powered OS prompt'     },
 };
+
+// ── X11 window list ────────────────────────────────────────────────────────────
+// Maps WM_CLASS instance prefix → { label, icon }
+const WM_CLASS_META = {
+  'gnome-terminal-server': { label: 'Terminal',  icon: '🖥️'  },
+  'gnome-terminal':        { label: 'Terminal',  icon: '🖥️'  },
+  tilix:                   { label: 'Tilix',     icon: '🖥️'  },
+  code:                    { label: 'VS Code',   icon: '💻'   },
+  'code-oss':              { label: 'VS Code',   icon: '💻'   },
+  'intellij-idea':         { label: 'IntelliJ',  icon: '🧠'   },
+  'idea':                  { label: 'IntelliJ',  icon: '🧠'   },
+  firefox:                 { label: 'Firefox',   icon: '🦊'   },
+  chromium:                { label: 'Chromium',  icon: '🌐'   },
+  'google-chrome':         { label: 'Chrome',    icon: '🌐'   },
+  nautilus:                { label: 'Files',     icon: '📁'   },
+  gedit:                   { label: 'Text Edit', icon: '📝'   },
+  eog:                     { label: 'Image',     icon: '🖼️'   },
+  evince:                  { label: 'PDF',       icon: '📄'   },
+};
+
+// Ignore these in the window taskbar (our own shell + background daemons)
+const WM_CLASS_IGNORE = new Set([
+  'robos-desktop', 'desktop-widgets', 'robos-toast',
+  'gjs',           // GNOME shell extensions
+]);
+
+function getX11Windows() {
+  return new Promise((resolve) => {
+    exec('wmctrl -lx', { env: { ...process.env, DISPLAY: ':0' } }, (err, stdout) => {
+      if (err) { resolve([]); return; }
+      const windows = [];
+      for (const line of stdout.trim().split('\n')) {
+        if (!line) continue;
+        // Format: <wid> <desktop> <wmclass> <host> <title...>
+        const m = line.match(/^(0x[0-9a-f]+)\s+(-?\d+)\s+(\S+)\s+\S+\s+(.*)/i);
+        if (!m) continue;
+        const [, wid, desktop, wmclass, title] = m;
+        if (parseInt(desktop, 10) < 0) continue; // skip sticky system windows
+        const instance = wmclass.split('.')[0].toLowerCase();
+        if (WM_CLASS_IGNORE.has(instance)) continue;
+        const meta = WM_CLASS_META[instance] || { label: instance, icon: '🪟' };
+        windows.push({ wid, wmclass, instance, title: title.trim(), ...meta });
+      }
+      resolve(windows);
+    });
+  });
+}
+
+function focusWindow(wid) {
+  exec(`wmctrl -ia ${wid}`, { env: { ...process.env, DISPLAY: ':0' } });
+}
 
 // ── Main window ───────────────────────────────────────────────────────────────
 let mainWin = null;
@@ -314,6 +333,13 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('get-app-meta', () => APP_META);
+
+  ipcMain.handle('get-x11-windows', () => getX11Windows());
+
+  ipcMain.handle('focus-window', (_e, wid) => {
+    focusWindow(wid);
+    return { ok: true };
+  });
 
   ipcMain.handle('switch-to-gnome', () => {
     restoreGnomePanelAndQuit();

@@ -141,22 +141,16 @@ html, body {
   color: var(--accent);
 }
 
-/* ── App dock (unified: all apps, running state shown inline) ────────────── */
-.app-dock {
+/* ── Pinned app dock (4 core RobOS apps) ─────────────────────────────────── */
+.pinned-dock {
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
   padding: 0 4px;
 }
 
-.app-dock::-webkit-scrollbar { display: none; }
-
-/* ── Individual dock button ─────────────────────────────────────────────── */
+/* ── Individual pinned dock button ──────────────────────────────────────── */
 .dock-btn {
   flex-shrink: 0;
   width: 46px;
@@ -173,7 +167,6 @@ html, body {
   gap: 2px;
   position: relative;
   padding: 0 0 3px;
-  /* Not running: dimmed */
   opacity: 0.42;
   transition: opacity 0.2s, background 0.15s, border-color 0.2s;
 }
@@ -183,7 +176,6 @@ html, body {
   opacity: 0.85;
 }
 
-/* Running state: full brightness + accent underline */
 .dock-btn.running {
   opacity: 1;
   border-bottom-color: var(--accent);
@@ -212,7 +204,6 @@ html, body {
   line-height: 1;
 }
 
-/* Running dot — small cyan circle under the icon */
 .dock-run-dot {
   position: absolute;
   bottom: 5px;
@@ -232,6 +223,83 @@ html, body {
 
 /* Tooltip above the button */
 .dock-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* ── X11 window area ──────────────────────────────────────────────────────── */
+.window-area {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 0 4px;
+}
+
+.window-area::-webkit-scrollbar { display: none; }
+
+/* ── X11 window button ────────────────────────────────────────────────────── */
+.win-btn {
+  flex-shrink: 0;
+  height: 36px;
+  max-width: 200px;
+  min-width: 80px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--accent);
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.win-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.win-btn:active {
+  background: var(--border);
+}
+
+.win-icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.win-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 11.5px;
+}
+
+/* Tooltip above win-btn */
+.win-btn[title]:hover::after {
   content: attr(title);
   position: absolute;
   bottom: calc(100% + 6px);
