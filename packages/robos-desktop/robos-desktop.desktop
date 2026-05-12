@@ -5,6 +5,6 @@ Exec=/usr/local/share/robos/robos-desktop/node_modules/electron/dist/electron /u
 Icon=/usr/local/share/robos/robos-desktop/icon.svg
 Type=Application
 Categories=RobOS;System;
-NoDisplay=true
+NoDisplay=false
 StartupNotify=false
 X-RobOS-Category=RobOS System
