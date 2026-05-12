@@ -63,49 +63,61 @@ const DEFAULT_PINNED = [
 
 // ── GNOME panel management ────────────────────────────────────────────────────
 const DASH_TO_PANEL = 'dash-to-panel@jderose9.github.com';
+const UBUNTU_DOCK   = 'ubuntu-dock@ubuntu.com';
 
-/**
- * Disable the dash-to-panel extension so the GNOME taskbar disappears.
- * Uses `gnome-extensions disable` which is immediate and reversible.
- */
-function hideGnomePanel() {
-  const env = {
+function gnomeEnv() {
+  return {
     ...process.env,
     DISPLAY: process.env.DISPLAY || ':0',
     DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ||
       `unix:path=/run/user/${process.getuid()}/bus`,
   };
-  exec(`gnome-extensions disable "${DASH_TO_PANEL}" 2>/dev/null || true`,
-    { env, shell: '/bin/bash' },
-    (err, stdout, stderr) => {
-      console.log('[robos-desktop] dash-to-panel disabled:', err ? stderr.trim() : 'ok');
-    }
-  );
 }
 
 /**
- * Re-enable dash-to-panel so the GNOME taskbar reappears, then quit.
- * Called when the user clicks "Switch to GNOME Desktop".
+ * Disable dash-to-panel + ubuntu-dock so both the top bar and bottom dock
+ * disappear, leaving only the RobOS Desktop taskbar visible.
+ */
+function hideGnomePanel() {
+  const env = gnomeEnv();
+  const cmds = [
+    `gnome-extensions disable "${DASH_TO_PANEL}"`,
+    `gnome-extensions disable "${UBUNTU_DOCK}"`,
+  ];
+  for (const cmd of cmds) {
+    exec(`${cmd} 2>/dev/null || true`, { env, shell: '/bin/bash' }, (err, _out, stderr) => {
+      console.log(`[robos-desktop] ${cmd}:`, err ? stderr.trim() : 'ok');
+    });
+  }
+}
+
+/**
+ * Re-enable dash-to-panel + ubuntu-dock so the native GNOME UI is restored,
+ * then quit so the user is back on the normal GNOME desktop.
  */
 function restoreGnomePanelAndQuit() {
-  const env = {
-    ...process.env,
-    DISPLAY: process.env.DISPLAY || ':0',
-    DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ||
-      `unix:path=/run/user/${process.getuid()}/bus`,
-  };
-  exec(`gnome-extensions enable "${DASH_TO_PANEL}" 2>/dev/null || true`,
-    { env, shell: '/bin/bash' },
-    (err, stdout, stderr) => {
-      console.log('[robos-desktop] dash-to-panel re-enabled:', err ? stderr.trim() : 'ok');
-      // Give GNOME Shell a moment to reload the extension before we quit
+  const env = gnomeEnv();
+  const cmds = [
+    `gnome-extensions enable "${UBUNTU_DOCK}"`,
+    `gnome-extensions enable "${DASH_TO_PANEL}"`,
+  ];
+  let pending = cmds.length;
+  function done(cmd, err, stderr) {
+    console.log(`[robos-desktop] ${cmd}:`, err ? stderr.trim() : 'ok');
+    pending--;
+    if (pending <= 0) {
+      // Give GNOME Shell a moment to reload extensions before we quit
       setTimeout(() => {
-        console.log('[robos-desktop] quitting — GNOME panel should be visible again');
+        console.log('[robos-desktop] quitting — GNOME desktop restored');
         process.env.ROBOS_DESKTOP_QUIT = '1';
         app.quit();
-      }, 800);
+      }, 1000);
     }
-  );
+  }
+  for (const cmd of cmds) {
+    exec(`${cmd} 2>/dev/null || true`, { env, shell: '/bin/bash' },
+      (err, _out, stderr) => done(cmd, err, stderr));
+  }
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────
