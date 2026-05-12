@@ -253,6 +253,19 @@ html, body {
   height: 18px;
 }
 
+/* Switch to GNOME button — subtle warning color on hover */
+.gnome-switch-btn {
+  opacity: 0.6;
+}
+.gnome-switch-btn:hover {
+  opacity: 1;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.12);
+}
+.gnome-switch-btn:hover svg {
+  stroke: #ff9800;
+}
+
 .badge {
   position: absolute;
   top: 4px;

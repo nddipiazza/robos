@@ -174,6 +174,14 @@ function wireEvents() {
     handleLaunch('notifications');
   });
 
+  // Switch to GNOME desktop button
+  document.getElementById('btn-switch-gnome').addEventListener('click', async () => {
+    const confirmed = confirm('Switch to GNOME Desktop?\n\nThis will restore the GNOME panel and close RobOS Desktop. You can relaunch RobOS Desktop from the GNOME app menu.');
+    if (!confirmed) return;
+    showToast('Restoring GNOME panel…');
+    await window.robos.switchToGnome();
+  });
+
   // Double-click anywhere on desktop → open app-launcher
   document.getElementById('desktop-area').addEventListener('dblclick', () => {
     handleLaunch('app-launcher');

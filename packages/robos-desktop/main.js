@@ -88,6 +88,35 @@ function hideGnomePanel() {
   console.log('[robos-desktop] GNOME panel hide commands sent');
 }
 
+/**
+ * Restore the GNOME panel to its default visible state, then quit.
+ * Called when the user clicks "Switch to GNOME Desktop".
+ */
+function restoreGnomePanelAndQuit() {
+  const cmds = [
+    // Restore dash-to-panel to default 48px height
+    `gsettings set org.gnome.shell.extensions.dash-to-panel panel-sizes '{"0":48}' 2>/dev/null || true`,
+    `gsettings set org.gnome.shell.extensions.dash-to-panel hide-overview-on-startup false 2>/dev/null || true`,
+    // Restore GNOME dock to fixed visible
+    `gsettings set org.gnome.shell.extensions.dash-to-dock autohide false 2>/dev/null || true`,
+    `gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false 2>/dev/null || true`,
+    `gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true 2>/dev/null || true`,
+  ];
+  const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+  let pending = cmds.length;
+  function done() {
+    pending--;
+    if (pending <= 0) {
+      console.log('[robos-desktop] GNOME panel restored — quitting');
+      process.env.ROBOS_DESKTOP_QUIT = '1';
+      app.quit();
+    }
+  }
+  for (const cmd of cmds) {
+    exec(cmd, { env, shell: '/bin/bash' }, done);
+  }
+}
+
 // ── Desktop-manager socket communication ─────────────────────────────────────
 function dmRequest(payload) {
   return new Promise((resolve, reject) => {
@@ -270,6 +299,11 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('get-app-meta', () => APP_META);
+
+  ipcMain.handle('switch-to-gnome', () => {
+    restoreGnomePanelAndQuit();
+    return { ok: true };
+  });
 
   createWindow();
 });
