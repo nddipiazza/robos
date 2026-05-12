@@ -59,6 +59,8 @@ const PORT_MAP = {
   'report-builder': 19135,
   'task-planner': 19134,
   'task-implementer': 19135,
+  'skills-manager': 19139,
+  'ai-prompt': 19140,
 };
 
 // Track all launched apps for process-exit cleanup

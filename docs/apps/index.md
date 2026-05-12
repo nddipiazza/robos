@@ -8,7 +8,7 @@ has_children: false
 # RobOS App Suite
 {: .no_toc }
 
-30+ purpose-built Electron apps covering the full software delivery lifecycle.
+30+ purpose-built Electron apps covering the full software delivery lifecycle — including **AI Prompt** (natural-language OS control) and **Skills Manager** (reusable shell skill packs).
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -322,6 +322,92 @@ Set up your development environment and manage credentials.
 <img src="{{ '/assets/images/icons/robos-preferences.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> System-wide settings: credentials, AI model preferences, notification config, and theme customization.
 
 ![RobOS Preferences]({{ '/assets/images/screenshots/robos-preferences.png' | relative_url }})
+
+---
+
+## AI Shell & Skills
+
+Natural-language AI control of the operating system — powered by a library of reusable shell skill packs.
+
+### RobOS AI Prompt
+
+<img src="{{ '/assets/images/icons/ai-prompt.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Talk to your OS in plain English. Select pre-built shell skills from the sidebar, fill in any required parameters, type a prompt (or skip it), and let an AI agent run the commands and explain the results in a structured step-by-step report.
+
+**Key features:**
+- **Skills sidebar** — 70+ built-in skills across 10 categories (File Operations, Git, Process Management, Docker, Network, Security, System, Package Management, Text Processing, Development). Filter by search or browse by category.
+- **Skill parameter inputs** — Skills with `$VARIABLE` placeholders expand into inline input cards so you can fill in filenames, ports, search patterns, and more before running.
+- **Skills-only mode** — Select one or more skills and hit Run without entering a prompt; the AI automatically runs all selected skills and returns a unified report.
+- **AI agent selector** — Switch between Claude, GitHub Copilot, Codex, and Gemini via the agent pill in the header. Auth status is checked on load with an inline banner if login is needed.
+- **Structured results** — Every run returns a numbered step list with the command, live output, and a plain-English explanation. Failed steps are highlighted in red.
+- **Run history** — Every prompt+result pair is persisted so you can scroll back through past runs and re-apply them.
+
+**Example prompts:**
+```
+Show me what's eating disk space in my home directory
+Kill all processes listening on port 3000
+Find all TODO comments in the current git repo
+Run a full git status and show me what needs committing
+```
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/PLACEHOLDER_AI_PROMPT"
+    title="RobOS AI Prompt — talk to your OS in plain English"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+### Skills Manager
+
+<img src="{{ '/assets/images/icons/skills-manager.svg' | relative_url }}" alt="" style="width: 32px; height: 32px; vertical-align: middle;"> Browse, install, and manage AI shell skills. Ships with 70+ built-in skills and supports importing community skill packs from popular GitHub repositories.
+
+**Built-in skill categories:**
+
+| Category | Example skills |
+|:---------|:---------------|
+| **File Operations** | disk-usage, find-large-files, json-pretty, csv-summary, count-lines |
+| **Process Management** | list-processes, kill-port, top-cpu, top-memory, port-in-use |
+| **Git** | git-status, git-log, git-branches, git-stash, git-cleanup |
+| **Network** | check-connectivity, open-ports, http-test, dns-lookup, wifi-info |
+| **Docker** | docker-containers, docker-images, docker-logs, docker-cleanup |
+| **System** | system-info, memory-usage, cpu-info, uptime, environment-vars |
+| **Package Management** | npm-outdated, pip-list, apt-upgradable, node-version |
+| **Text Processing** | grep-recursive, word-count, find-duplicates, sort-lines |
+| **Security** | check-permissions, find-suid, ssh-keys, listening-services |
+| **Development** | run-tests, lint-js, find-todos, check-syntax, node-modules-size |
+
+**Community skill packs** — The Skills Manager can clone any GitHub repository of shell skills and register them as a custom pack. Use the **Add Pack** panel to paste a repo URL, preview the skills it contains, and install it with one click.
+
+**Skill structure** — each skill is a JSON object with `id`, `name`, `description`, `category`, `command`, and optional `$VAR` parameters. Custom skills are stored in `~/.config/robos/skills.json`.
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/PLACEHOLDER_SKILLS_MANAGER"
+    title="RobOS Skills Manager — install and manage AI shell skills"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+#### How skills connect to AI Prompt
+
+```
+Skills Manager  ──(stores)──▶  ~/.config/robos/skills.json
+                                         │
+                              skills-data.js (built-ins)
+                                         │
+                                         ▼
+AI Prompt ──── sidebar ────▶  selects skill(s)
+               ▼
+       fills $PARAM values
+               ▼
+       AI agent runs commands + returns structured report
+```
+
+The AI Prompt app loads skills from both `skills-data.js` (built-ins) and `~/.config/robos/skills.json` (custom/community), groups them by category, and substitutes any `$PARAM` values you fill in before constructing the AI prompt.
 
 ---
 
