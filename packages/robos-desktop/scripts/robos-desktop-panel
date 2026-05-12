@@ -1,9 +1,18 @@
 #!/bin/bash
 # robos-desktop-panel hide|show
-# Disables/enables GNOME extensions via D-Bus on the active graphical session.
+#
+# Hides/shows dash-to-panel by writing the user gsettings for
+# org.gnome.shell enabled-extensions.
+#
+# GNOME 42 limitation: extensions load dynamically but do NOT unload
+# dynamically. So "hide" must restart gnome-shell to unload dash-to-panel.
+# "show" works dynamically (extension loads without restart).
+#
+# If the dconf key is locked by a system policy, the lock is removed first.
+
 ACTION="${1:-hide}"
 
-# Find the user running gnome-shell on display :0
+# Find the user running gnome-shell
 GNOME_USER=$(ps aux | grep '[g]nome-shell' | awk '{print $1}' | head -1)
 GNOME_UID=$(id -u "$GNOME_USER" 2>/dev/null)
 
@@ -12,28 +21,63 @@ if [ -z "$GNOME_USER" ] || [ -z "$GNOME_UID" ]; then
   exit 1
 fi
 
-XAUTH_FILE="/run/user/${GNOME_UID}/gdm/Xauthority"
 DBUS_ADDR="unix:path=/run/user/${GNOME_UID}/bus"
+XDG_RT="/run/user/${GNOME_UID}"
+LOCK_FILE="/etc/dconf/db/local.d/locks/robos.txt"
+
+# Remove the extensions lock if present (one-time setup for fresh VMs)
+if [ -f "$LOCK_FILE" ] && grep -q '/org/gnome/shell/enabled-extensions\|/org/gnome/shell/disabled-extensions' "$LOCK_FILE"; then
+  grep -v '/org/gnome/shell/enabled-extensions\|/org/gnome/shell/disabled-extensions' \
+    "$LOCK_FILE" > "${LOCK_FILE}.tmp"
+  mv "${LOCK_FILE}.tmp" "$LOCK_FILE"
+  dconf update
+fi
+
+gsettings_cmd() {
+  sudo -u "$GNOME_USER" \
+    HOME="/home/$GNOME_USER" \
+    DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
+    XDG_RUNTIME_DIR="$XDG_RT" \
+    gsettings "$@"
+}
+
+restart_gnome_shell() {
+  local GNOME_PID
+  GNOME_PID=$(pgrep -x gnome-shell 2>/dev/null | head -1)
+  if [ -n "$GNOME_PID" ]; then
+    kill "$GNOME_PID"
+    # Wait for gnome-shell to fully restart (it auto-respawns via systemd/gdm)
+    local i=0
+    while [ $i -lt 20 ]; do
+      sleep 1
+      local NEW_PID
+      NEW_PID=$(pgrep -x gnome-shell 2>/dev/null | head -1)
+      if [ -n "$NEW_PID" ] && [ "$NEW_PID" != "$GNOME_PID" ]; then
+        sleep 2  # Extra settle time
+        echo "gnome-shell restarted (PID $NEW_PID)"
+        return 0
+      fi
+      i=$((i + 1))
+    done
+  fi
+}
 
 if [ "$ACTION" = "hide" ]; then
-  METHOD="org.gnome.Shell.Extensions.DisableExtension"
+  # Set user gsettings WITHOUT dash-to-panel, then restart gnome-shell.
+  # GNOME 42 does not dynamically unload extensions removed from the list,
+  # so a restart is required to actually hide the panel.
+  EXTS="['ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']"
+  gsettings_cmd set org.gnome.shell enabled-extensions "$EXTS"
+  restart_gnome_shell
+  echo "Panel hidden"
+
 elif [ "$ACTION" = "show" ]; then
-  METHOD="org.gnome.Shell.Extensions.EnableExtension"
+  # Reset user override so system default (with dash-to-panel) takes effect.
+  # GNOME 42 loads extensions dynamically, so no restart needed.
+  gsettings_cmd reset org.gnome.shell enabled-extensions
+  echo "Panel shown"
+
 else
   echo "Usage: $0 hide|show" >&2
   exit 1
 fi
-
-for EXT in "dash-to-panel@jderose9.github.com" "ubuntu-dock@ubuntu.com"; do
-  sudo -u "$GNOME_USER" \
-    DISPLAY=:0 \
-    XAUTHORITY="$XAUTH_FILE" \
-    DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
-    gdbus call --session \
-      --dest org.gnome.Shell \
-      --object-path /org/gnome/Shell \
-      --method "$METHOD" \
-      "$EXT" 2>/dev/null || true
-done
-
-echo "Panel ${ACTION}d"

@@ -238,13 +238,13 @@ write_files:
     permissions: "0644"
 
   # Lock dash-to-panel and key shell config so GNOME first-login doesn't override
+  # NOTE: enabled-extensions and disabled-extensions are intentionally NOT locked
+  # so that robos-desktop-panel can toggle dash-to-panel dynamically at runtime.
   - path: /etc/dconf/db/local.d/locks/robos.txt
     content: |
       /org/gnome/shell/extensions/dash-to-panel/panel-positions
       /org/gnome/shell/extensions/dash-to-panel/panel-sizes
       /org/gnome/shell/extensions/dash-to-panel/panel-element-positions
-      /org/gnome/shell/enabled-extensions
-      /org/gnome/shell/disabled-extensions
       /org/gnome/desktop/interface/gtk-theme
       /org/gnome/desktop/interface/color-scheme
       /org/gnome/desktop/interface/clock-format
