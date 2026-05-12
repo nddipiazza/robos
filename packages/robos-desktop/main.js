@@ -133,14 +133,9 @@ function launchAppDirect(appId) {
   console.log(`[robos-desktop] launched ${appId} pid=${child.pid}`);
 }
 
-async function launchApp(appId) {
-  try {
-    const res = await dmRequest({ cmd: 'launch', appId });
-    if (res && res.ok) return res;
-  } catch {}
-  // Fallback: direct spawn
+function launchApp(appId) {
   launchAppDirect(appId);
-  return { ok: true, fallback: true };
+  return { ok: true };
 }
 
 /**
@@ -317,8 +312,8 @@ app.whenReady().then(() => {
   // Hide GNOME panel so only our taskbar is visible
   hideGnomePanel();
 
-  ipcMain.handle('launch-app', async (_e, appId) => {
-    return await launchApp(appId);
+  ipcMain.handle('launch-app', (_e, appId) => {
+    return launchApp(appId);
   });
 
   ipcMain.handle('get-running-apps', () => {
