@@ -62,38 +62,78 @@ const DEFAULT_PINNED = [
 ];
 
 // ── GNOME panel management ────────────────────────────────────────────────────
-/**
- * Hide dash-to-panel + ubuntu-dock by calling
- * org.gnome.Shell.Extensions.DisableExtension via D-Bus on the active
- * GNOME session. Uses the installed helper script which runs as root
- * and calls sudo -u <gnome-user> gdbus for the correct session bus.
- */
-function hideGnomePanel() {
-  exec('sudo /usr/local/bin/robos-desktop-panel hide',
-    { shell: '/bin/bash' },
-    (err, stdout, stderr) => {
-      if (err) console.warn('[robos-desktop] panel hide failed:', stderr.trim());
-      else console.log('[robos-desktop] panel hidden:', stdout.trim());
-    }
-  );
-}
+const PANEL_EXTENSIONS = [
+  'dash-to-panel@jderose9.github.com',
+  'ubuntu-dock@ubuntu.com',
+];
 
 /**
- * Restore the GNOME panel (re-enables dash-to-panel + ubuntu-dock via D-Bus), then quit.
+ * Call org.gnome.Shell.Extensions.DisableExtension or EnableExtension
+ * directly via gdbus, running as the current user who owns the GNOME session.
+ * No sudo needed — the Electron process already runs as the session owner.
+ */
+function gnomePanelAction(action) {
+  const method = action === 'hide'
+    ? 'org.gnome.Shell.Extensions.DisableExtension'
+    : 'org.gnome.Shell.Extensions.EnableExtension';
+
+  // Ensure the session bus address is available; fall back to the standard path.
+  const uid = process.getuid();
+  const busAddr = process.env.DBUS_SESSION_BUS_ADDRESS ||
+    `unix:path=/run/user/${uid}/bus`;
+
+  const env = {
+    ...process.env,
+    DISPLAY: process.env.DISPLAY || ':0',
+    DBUS_SESSION_BUS_ADDRESS: busAddr,
+  };
+
+  for (const ext of PANEL_EXTENSIONS) {
+    exec(
+      `gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell --method ${method} '${ext}'`,
+      { shell: '/bin/bash', env },
+      (err, stdout, stderr) => {
+        if (err) console.warn(`[robos-desktop] ${action} ${ext} failed:`, stderr.trim());
+        else console.log(`[robos-desktop] ${action} ${ext}:`, stdout.trim());
+      }
+    );
+  }
+}
+
+function hideGnomePanel() { gnomePanelAction('hide'); }
+
+/**
+ * Restore the GNOME panel, then quit.
  */
 function restoreGnomePanelAndQuit() {
-  exec('sudo /usr/local/bin/robos-desktop-panel show',
-    { shell: '/bin/bash' },
-    (err, stdout, stderr) => {
-      if (err) console.warn('[robos-desktop] panel restore failed:', stderr.trim());
-      else console.log('[robos-desktop] panel restored:', stdout.trim());
-      // Give GNOME Shell a moment to reload extensions before quitting
-      setTimeout(() => {
-        process.env.ROBOS_DESKTOP_QUIT = '1';
-        app.quit();
-      }, 1000);
-    }
-  );
+  const method = 'org.gnome.Shell.Extensions.EnableExtension';
+  const uid = process.getuid();
+  const busAddr = process.env.DBUS_SESSION_BUS_ADDRESS ||
+    `unix:path=/run/user/${uid}/bus`;
+  const env = {
+    ...process.env,
+    DISPLAY: process.env.DISPLAY || ':0',
+    DBUS_SESSION_BUS_ADDRESS: busAddr,
+  };
+
+  let done = 0;
+  for (const ext of PANEL_EXTENSIONS) {
+    exec(
+      `gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell --method ${method} '${ext}'`,
+      { shell: '/bin/bash', env },
+      (err, stdout, stderr) => {
+        if (err) console.warn(`[robos-desktop] show ${ext} failed:`, stderr.trim());
+        else console.log(`[robos-desktop] show ${ext}:`, stdout.trim());
+        done++;
+        if (done === PANEL_EXTENSIONS.length) {
+          setTimeout(() => {
+            process.env.ROBOS_DESKTOP_QUIT = '1';
+            app.quit();
+          }, 800);
+        }
+      }
+    );
+  }
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────
@@ -299,3 +339,20 @@ app.on('before-quit', (e) => {
     e.preventDefault();
   }
 });
+
+// Restore the GNOME panel if the process is killed externally (SIGTERM/SIGINT)
+function emergencyRestore() {
+  const uid = process.getuid();
+  const busAddr = process.env.DBUS_SESSION_BUS_ADDRESS || `unix:path=/run/user/${uid}/bus`;
+  const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0', DBUS_SESSION_BUS_ADDRESS: busAddr };
+  for (const ext of PANEL_EXTENSIONS) {
+    try {
+      require('child_process').execSync(
+        `gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell --method org.gnome.Shell.Extensions.EnableExtension '${ext}'`,
+        { shell: '/bin/bash', env, timeout: 3000 }
+      );
+    } catch {}
+  }
+}
+process.on('SIGTERM', () => { emergencyRestore(); process.exit(0); });
+process.on('SIGINT',  () => { emergencyRestore(); process.exit(0); });
