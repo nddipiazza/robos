@@ -61,6 +61,33 @@ Output lands in:
 
 ## Steps
 
+### 0. CRITICAL: Verify selectors and keep demos short
+
+**Before writing any demo script:**
+
+1. Read `packages/<app-id>/renderer/app.html` (or `index.html`) — find actual element IDs/classes
+2. Read `packages/<app-id>/renderer/app.js` — find event listener targets and dynamic elements
+3. Only use selectors that **literally appear** in those files. Grep to confirm:
+   ```bash
+   grep -n 'id=\|class=' packages/<app-id>/renderer/app.html | head -40
+   grep -n "getElementById\|querySelector" packages/<app-id>/renderer/app.js | head -40
+   ```
+
+**Demo length rules (strictly enforced):**
+- Target **2–3 minutes total** (120–180 seconds)
+- Max **12–15 cues** per demo
+- `minHold` per cue: **2000–5000 ms** (never more than 6000ms)
+- **NEVER** set `minHold > 5000` while waiting for a real AI/network call — it will hang
+- If a cue "shows results", **inject mock HTML** with a `js:` field instead of calling the real endpoint:
+  ```js
+  // BAD — hangs for 30-40s waiting for AI that isn't logged in:
+  { narration: 'Hit Run...', js: `document.getElementById('btn-run').click();`, minHold: 35000 }
+
+  // GOOD — inject mock result immediately:
+  { narration: 'The AI returns a structured report...', js: MOCK_RESULTS_JS, minHold: 4000 }
+  ```
+- A demo that takes **> 4 minutes** indicates a hanging cue — abort, fix the script, re-record
+
 ### 1. Check/create the demo script
 
 If `packages/robos-test/demos/<app-id>-demo.js` already exists, use it.
@@ -93,8 +120,19 @@ runDemo({
 **SCRIPT tips:**
 - `narration` — one sentence or two max; Piper speaks at ~150 wpm
 - `js` — evaluated in the renderer via the debug HTTP server; use `null` for observe-only cues
-- `minHold` — set to `Math.max(cue_audio_duration_ms + 500, desired_scene_ms)`
+- `minHold` — **2000–5000 ms only**. Set to narration audio duration + 500ms buffer
 - Helper: `CLICK(selector)` → `(() => { document.querySelector(sel)?.click(); })()`
+- **All selectors** in `js:` fields must be confirmed by grepping the renderer HTML/JS first
+- **For AI/network results**: do NOT click the real Run button and wait — inject mock DOM instead:
+  ```js
+  const MOCK_RESULTS_JS = `
+    (() => {
+      document.getElementById('results-section').style.display = 'block';
+      document.getElementById('results-summary').textContent = 'Mock AI summary here';
+      document.getElementById('steps-list').innerHTML = '<div class="step-item">...</div>';
+    })();
+  `;
+  ```
 
 ### 2. Deploy robos-test to VM
 
