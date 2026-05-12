@@ -145,11 +145,9 @@ async function launchApp(appId) {
 
 async function getRunningApps() {
   try {
-    const res = await dmRequest({ cmd: 'status' });
-    if (res && res.statuses) return res.statuses;
-    // desktop-manager may return differently
-    if (res && typeof res === 'object' && !res.ok) return {};
-    return res || {};
+    const res = await dmRequest({ status: true });
+    if (res && res.status) return res.status;
+    return {};
   } catch {
     return {};
   }
