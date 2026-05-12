@@ -72,9 +72,11 @@ if [ "$ACTION" = "hide" ]; then
   echo "Panel hidden"
 
 elif [ "$ACTION" = "show" ]; then
-  # Reset user override so system default (with dash-to-panel) takes effect.
-  # GNOME 42 loads extensions dynamically, so no restart needed.
+  # Reset user override so system default (with dash-to-panel) takes effect,
+  # then restart gnome-shell so it starts cleanly with dash-to-panel loaded.
+  # This mirrors the hide approach and guarantees a consistent clean state.
   gsettings_cmd reset org.gnome.shell enabled-extensions
+  restart_gnome_shell
   echo "Panel shown"
 
 else

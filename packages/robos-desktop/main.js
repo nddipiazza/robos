@@ -79,21 +79,25 @@ function hideGnomePanel() {
 }
 
 /**
- * Restore the GNOME panel (removes the override file + dconf update), then quit.
+ * Restore the GNOME panel, then quit.
+ * The show script restarts gnome-shell in the background; we quit immediately
+ * so the user isn't waiting at a blank robos-desktop screen during the restart.
  */
 function restoreGnomePanelAndQuit() {
-  exec('sudo /usr/local/bin/robos-desktop-panel show',
-    { shell: '/bin/bash' },
-    (err, stdout, stderr) => {
-      if (err) console.warn('[robos-desktop] panel restore failed:', stderr.trim());
-      else console.log('[robos-desktop] panel restored:', stdout.trim());
-      // Give GNOME Shell a moment to reload extensions before quitting
-      setTimeout(() => {
-        process.env.ROBOS_DESKTOP_QUIT = '1';
-        app.quit();
-      }, 1000);
-    }
-  );
+  // Fire the show script — it resets gsettings and restarts gnome-shell.
+  // We don't wait for completion; the child process runs independently.
+  const child = spawn('sudo', ['/usr/local/bin/robos-desktop-panel', 'show'], {
+    detached: true,
+    stdio: 'ignore',
+    shell: false,
+  });
+  child.unref();
+
+  // Quit after a short delay so the script has time to start
+  setTimeout(() => {
+    process.env.ROBOS_DESKTOP_QUIT = '1';
+    app.quit();
+  }, 300);
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────
