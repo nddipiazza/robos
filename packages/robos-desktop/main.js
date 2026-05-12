@@ -62,59 +62,50 @@ const DEFAULT_PINNED = [
 ];
 
 // ── GNOME panel management ────────────────────────────────────────────────────
+const DASH_TO_PANEL = 'dash-to-panel@jderose9.github.com';
+
 /**
- * Hide the GNOME Shell panel by setting it to 0px height.
- * Works with dash-to-panel extension (standard on Ubuntu RobOS).
- * Also hides the GNOME dock. Changes are stored in dconf so they survive
- * reboots — robos-desktop is intended to be a permanent replacement.
+ * Disable the dash-to-panel extension so the GNOME taskbar disappears.
+ * Uses `gnome-extensions disable` which is immediate and reversible.
  */
 function hideGnomePanel() {
-  const cmds = [
-    // Hide dash-to-panel (main taskbar on Ubuntu with GNOME)
-    `gsettings set org.gnome.shell.extensions.dash-to-panel panel-sizes '{"0":0}' 2>/dev/null || true`,
-    // Hide the top bar autohide via another common extension key
-    `gsettings set org.gnome.shell.extensions.dash-to-panel hide-overview-on-startup true 2>/dev/null || true`,
-    // Disable the GNOME dock (if using vanilla GNOME)
-    `gsettings set org.gnome.shell.extensions.dash-to-dock autohide true 2>/dev/null || true`,
-    `gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false 2>/dev/null || true`,
-    `gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false 2>/dev/null || true`,
-    // Also try to shrink top bar via gsettings (some distros)
-    `gsettings set org.gnome.desktop.interface show-battery-percentage false 2>/dev/null || true`,
-  ];
-  const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
-  for (const cmd of cmds) {
-    exec(cmd, { env, shell: '/bin/bash' }, () => {});
-  }
-  console.log('[robos-desktop] GNOME panel hide commands sent');
+  const env = {
+    ...process.env,
+    DISPLAY: process.env.DISPLAY || ':0',
+    DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ||
+      `unix:path=/run/user/${process.getuid()}/bus`,
+  };
+  exec(`gnome-extensions disable "${DASH_TO_PANEL}" 2>/dev/null || true`,
+    { env, shell: '/bin/bash' },
+    (err, stdout, stderr) => {
+      console.log('[robos-desktop] dash-to-panel disabled:', err ? stderr.trim() : 'ok');
+    }
+  );
 }
 
 /**
- * Restore the GNOME panel to its default visible state, then quit.
+ * Re-enable dash-to-panel so the GNOME taskbar reappears, then quit.
  * Called when the user clicks "Switch to GNOME Desktop".
  */
 function restoreGnomePanelAndQuit() {
-  const cmds = [
-    // Restore dash-to-panel to default 48px height
-    `gsettings set org.gnome.shell.extensions.dash-to-panel panel-sizes '{"0":48}' 2>/dev/null || true`,
-    `gsettings set org.gnome.shell.extensions.dash-to-panel hide-overview-on-startup false 2>/dev/null || true`,
-    // Restore GNOME dock to fixed visible
-    `gsettings set org.gnome.shell.extensions.dash-to-dock autohide false 2>/dev/null || true`,
-    `gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false 2>/dev/null || true`,
-    `gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true 2>/dev/null || true`,
-  ];
-  const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
-  let pending = cmds.length;
-  function done() {
-    pending--;
-    if (pending <= 0) {
-      console.log('[robos-desktop] GNOME panel restored — quitting');
-      process.env.ROBOS_DESKTOP_QUIT = '1';
-      app.quit();
+  const env = {
+    ...process.env,
+    DISPLAY: process.env.DISPLAY || ':0',
+    DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ||
+      `unix:path=/run/user/${process.getuid()}/bus`,
+  };
+  exec(`gnome-extensions enable "${DASH_TO_PANEL}" 2>/dev/null || true`,
+    { env, shell: '/bin/bash' },
+    (err, stdout, stderr) => {
+      console.log('[robos-desktop] dash-to-panel re-enabled:', err ? stderr.trim() : 'ok');
+      // Give GNOME Shell a moment to reload the extension before we quit
+      setTimeout(() => {
+        console.log('[robos-desktop] quitting — GNOME panel should be visible again');
+        process.env.ROBOS_DESKTOP_QUIT = '1';
+        app.quit();
+      }, 800);
     }
-  }
-  for (const cmd of cmds) {
-    exec(cmd, { env, shell: '/bin/bash' }, done);
-  }
+  );
 }
 
 // ── Desktop-manager socket communication ─────────────────────────────────────
