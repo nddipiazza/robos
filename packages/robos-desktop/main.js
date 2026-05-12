@@ -63,10 +63,10 @@ const DEFAULT_PINNED = [
 
 // ── GNOME panel management ────────────────────────────────────────────────────
 /**
- * Hide dash-to-panel + ubuntu-dock by writing a dconf system override and
- * running `dconf update` as root via the installed helper script.
- * This works even though the keys are locked (locked keys prevent USER writes
- * but not system-defaults changes made by root).
+ * Hide dash-to-panel + ubuntu-dock by calling
+ * org.gnome.Shell.Extensions.DisableExtension via D-Bus on the active
+ * GNOME session. Uses the installed helper script which runs as root
+ * and calls sudo -u <gnome-user> gdbus for the correct session bus.
  */
 function hideGnomePanel() {
   exec('sudo /usr/local/bin/robos-desktop-panel hide',
@@ -79,7 +79,7 @@ function hideGnomePanel() {
 }
 
 /**
- * Restore the GNOME panel (removes the override file + dconf update), then quit.
+ * Restore the GNOME panel (re-enables dash-to-panel + ubuntu-dock via D-Bus), then quit.
  */
 function restoreGnomePanelAndQuit() {
   exec('sudo /usr/local/bin/robos-desktop-panel show',

@@ -1,0 +1,39 @@
+#!/bin/bash
+# robos-desktop-panel hide|show
+# Disables/enables GNOME extensions via D-Bus on the active graphical session.
+ACTION="${1:-hide}"
+
+# Find the user running gnome-shell on display :0
+GNOME_USER=$(ps aux | grep '[g]nome-shell' | awk '{print $1}' | head -1)
+GNOME_UID=$(id -u "$GNOME_USER" 2>/dev/null)
+
+if [ -z "$GNOME_USER" ] || [ -z "$GNOME_UID" ]; then
+  echo "ERROR: could not find gnome-shell user" >&2
+  exit 1
+fi
+
+XAUTH_FILE="/run/user/${GNOME_UID}/gdm/Xauthority"
+DBUS_ADDR="unix:path=/run/user/${GNOME_UID}/bus"
+
+if [ "$ACTION" = "hide" ]; then
+  METHOD="org.gnome.Shell.Extensions.DisableExtension"
+elif [ "$ACTION" = "show" ]; then
+  METHOD="org.gnome.Shell.Extensions.EnableExtension"
+else
+  echo "Usage: $0 hide|show" >&2
+  exit 1
+fi
+
+for EXT in "dash-to-panel@jderose9.github.com" "ubuntu-dock@ubuntu.com"; do
+  sudo -u "$GNOME_USER" \
+    DISPLAY=:0 \
+    XAUTHORITY="$XAUTH_FILE" \
+    DBUS_SESSION_BUS_ADDRESS="$DBUS_ADDR" \
+    gdbus call --session \
+      --dest org.gnome.Shell \
+      --object-path /org/gnome/Shell \
+      --method "$METHOD" \
+      "$EXT" 2>/dev/null || true
+done
+
+echo "Panel ${ACTION}d"
