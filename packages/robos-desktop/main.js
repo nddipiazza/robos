@@ -143,14 +143,34 @@ async function launchApp(appId) {
   return { ok: true, fallback: true };
 }
 
-async function getRunningApps() {
+/**
+ * Scan /proc to find running RobOS apps by matching their command-line
+ * against /usr/local/share/robos/<appId>. This works for any app
+ * regardless of how it was launched (DM, direct spawn, or manual).
+ */
+function getRunningApps() {
+  const result = {};
   try {
-    const res = await dmRequest({ status: true });
-    if (res && res.status) return res.status;
-    return {};
-  } catch {
-    return {};
+    const pids = fs.readdirSync('/proc').filter(d => /^\d+$/.test(d));
+    for (const pid of pids) {
+      try {
+        const cmdline = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8');
+        // cmdline is NUL-separated; check if it references a robos app path
+        const m = cmdline.match(/\/usr\/local\/share\/robos\/([^/\0]+)/);
+        if (m) {
+          const appId = m[1];
+          // Skip internal system/infra apps
+          if (appId === 'robos-lib' || appId === 'robos-icons') continue;
+          if (!result[appId]) {
+            result[appId] = { pid: parseInt(pid, 10), alive: true };
+          }
+        }
+      } catch {}
+    }
+  } catch (e) {
+    console.warn('[robos-desktop] proc scan error:', e.message);
   }
+  return result;
 }
 
 // ── Pinned apps ───────────────────────────────────────────────────────────────
@@ -282,8 +302,8 @@ app.whenReady().then(() => {
     return await launchApp(appId);
   });
 
-  ipcMain.handle('get-running-apps', async () => {
-    return await getRunningApps();
+  ipcMain.handle('get-running-apps', () => {
+    return getRunningApps();
   });
 
   ipcMain.handle('get-pinned-apps', () => readPinned());
