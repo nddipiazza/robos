@@ -12,7 +12,8 @@
  * Run:
  *   node packages/robos-test/demos/skills-manager-demo.js
  */
-const { runDemo } = require('../lib/demo-runner');
+const { runDemo }             = require('../lib/demo-runner');
+const { evalWaitFor, findByClass } = require('../lib/snapshot');
 
 function JS_TYPE(selector, text, delayMs = 30) {
   return `
@@ -155,5 +156,17 @@ runDemo({
   appId: 'skills-manager',
   windowTitle: 'RobOS Skills Manager',
   scenario: {},
+  postSettle: 3000,
+  prelaunch: async (app) => {
+    // Wait for skills to render into the grid before cues start.
+    await evalWaitFor(
+      app.port,
+      snap => snap && findByClass(snap, 'skill-card'),
+      10000,
+      500
+    ).catch(() => {
+      // Skills didn't load — safe to proceed; cues will still run (some may no-op).
+    });
+  },
   script: SCRIPT,
 }).catch(err => { console.error(err); process.exit(1); });
