@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path  = require('path');
 const fs    = require('fs');
 const os    = require('os');
@@ -705,4 +705,18 @@ ipcMain.handle('tp-list-path', (_, prefix) => {
       }));
     return { ok: true, items: [...taskServers, ...items] };
   } catch { return { ok: true, items: [] }; }
+});
+
+// ── Native dialog helpers ─────────────────────────────────────────────────────
+ipcMain.handle('dialog-confirm', async (_, { message, title }) => {
+  const win = BrowserWindow.getFocusedWindow() || mainWindow;
+  const { response } = await dialog.showMessageBox(win, {
+    type: 'question',
+    buttons: ['Cancel', 'OK'],
+    defaultId: 1,
+    cancelId: 0,
+    title: title || 'Confirm',
+    message: message || 'Are you sure?',
+  });
+  return { ok: response === 1 };
 });

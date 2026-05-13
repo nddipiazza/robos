@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld('robos', {
   loadProject:     (id)      => ipcRenderer.invoke('load-project', id),
   saveProject:     (p)       => ipcRenderer.invoke('save-project', p),
   deleteProject:   (id)      => ipcRenderer.invoke('delete-project', id),
+  dialogConfirm:   (p)       => ipcRenderer.invoke('dialog-confirm', p),
 });

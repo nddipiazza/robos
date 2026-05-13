@@ -280,3 +280,68 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 
 /* ── Synced card styling ──────────────────────────────────────────────────── */
 .task-card.task-synced { border-left: 3px solid #22c55e55; }
+
+/* ── Project inline new-form ──────────────────────────────────────────────── */
+.project-new-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.project-name-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+  min-width: 0;
+}
+.project-name-input:focus { border-color: var(--accent); }
+.project-new-actions { display: flex; gap: 2px; }
+.btn-icon-ok { color: var(--green) !important; border-color: #22c55e44 !important; }
+.btn-icon-ok:hover { background: #22c55e15 !important; }
+
+/* ── Save / input modal ───────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  min-width: 320px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Label inline input ───────────────────────────────────────────────────── */
+.label-input-wrap {
+  display: flex; align-items: center; gap: 4px; margin-top: 6px;
+}
+.label-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 3px 8px;
+  outline: none;
+  width: 140px;
+}
+.label-input:focus { border-color: var(--accent); }
+.label-input-ok, .label-input-cancel {
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px;
+}
+.label-input-ok:hover { color: var(--green); border-color: #22c55e55; }
+.label-input-cancel:hover { color: var(--red); border-color: #ef444455; }

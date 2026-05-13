@@ -2,13 +2,44 @@
 
 let serverInfo = null;
 let tasks = [];
-let existingEpics = [];   // Epics fetched from Jira
-let parentEpicKey = null; // Selected top-level parent epic key
+let existingEpics = [];
+let parentEpicKey = null;
 
 // Projects state
 let projectsList = [];
 let currentProjectId = null;
 let currentProjectName = null;
+
+// ── Modal helpers (replace native prompt/confirm/alert) ───────────────────────
+let _inputModalResolve = null;
+
+function showInputModal(title, placeholder, defaultValue) {
+  return new Promise(resolve => {
+    _inputModalResolve = resolve;
+    const overlay = document.getElementById('save-modal-overlay');
+    const input   = document.getElementById('save-modal-input');
+    const heading = overlay.querySelector('.modal-title');
+    if (heading) heading.textContent = title || 'Enter value';
+    input.placeholder = placeholder || '';
+    input.value = defaultValue || '';
+    overlay.style.display = 'flex';
+    setTimeout(() => input.focus(), 50);
+  });
+}
+
+function _resolveInputModal(value) {
+  document.getElementById('save-modal-overlay').style.display = 'none';
+  if (_inputModalResolve) { _inputModalResolve(value); _inputModalResolve = null; }
+}
+
+async function nativeConfirm(message) {
+  try {
+    const r = await window.robos.dialogConfirm({ message });
+    return r && r.ok;
+  } catch {
+    return false;
+  }
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -77,7 +108,7 @@ function renderProjectsSidebar() {
   if (!list) return;
 
   if (!projectsList.length) {
-    list.innerHTML = '<div class="project-empty">No projects yet.<br>Generate tasks and save them.</div>';
+    list.innerHTML = '<div class="project-empty">No projects yet.<br>Click + to start one.</div>';
     return;
   }
 
@@ -101,7 +132,8 @@ function renderProjectsSidebar() {
       const id = btn.dataset.id;
       const proj = projectsList.find(p => p.id === id);
       if (!proj) return;
-      if (!confirm(`Delete project "${proj.name}"?`)) return;
+      const ok = await nativeConfirm(`Delete project "${proj.name}"?`);
+      if (!ok) return;
       const result = await window.robos.deleteProject(id);
       if (result.ok) {
         if (currentProjectId === id) {
@@ -111,7 +143,7 @@ function renderProjectsSidebar() {
         }
         await loadProjectsList();
       } else {
-        alert('Failed to delete: ' + (result.error || 'unknown error'));
+        showCreateStatus('Failed to delete: ' + (result.error || 'unknown error'), true);
       }
     });
   });
@@ -120,7 +152,7 @@ function renderProjectsSidebar() {
 async function openProject(id) {
   const result = await window.robos.loadProject(id);
   if (!result.ok) {
-    alert('Could not load project: ' + (result.error || 'unknown error'));
+    showGenerateStatus('Could not load project: ' + (result.error || 'unknown error'), true);
     return;
   }
   const proj = result.project;
@@ -161,30 +193,29 @@ async function openProject(id) {
 
 async function saveToProject() {
   if (!tasks.length) {
-    alert('Nothing to save. Generate some tasks first.');
+    showCreateStatus('Nothing to save. Generate some tasks first.', true);
     return;
   }
 
   let name = currentProjectName;
   if (!name) {
-    name = prompt('Project name:');
+    name = await showInputModal('Save to Project', 'Project name…');
     if (!name || !name.trim()) return;
     name = name.trim();
   }
 
-  const prompt_ = document.getElementById('prompt-input').value || '';
-
+  const promptText = document.getElementById('prompt-input').value || '';
   const result = await window.robos.saveProject({
     id: currentProjectId || undefined,
     name,
-    prompt: prompt_,
+    prompt: promptText,
     parentEpicKey: parentEpicKey || null,
     serverId: serverInfo ? serverInfo.id : null,
     tasks,
   });
 
   if (!result.ok) {
-    alert('Failed to save: ' + (result.error || 'unknown error'));
+    showCreateStatus('Failed to save: ' + (result.error || 'unknown error'), true);
     return;
   }
 
@@ -192,6 +223,7 @@ async function saveToProject() {
   currentProjectName = name;
   updateProjectBadge();
   await loadProjectsList();
+  showCreateStatus(`✓ Saved to project "${name}"`);
 }
 
 function updateProjectBadge() {
@@ -209,13 +241,40 @@ function updateProjectBadge() {
 document.addEventListener('DOMContentLoaded', () => {
   init();
 
+  // Modal wiring
+  document.getElementById('save-modal-ok').addEventListener('click', () => {
+    _resolveInputModal(document.getElementById('save-modal-input').value);
+  });
+  document.getElementById('save-modal-cancel').addEventListener('click', () => _resolveInputModal(null));
+  document.getElementById('save-modal-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') _resolveInputModal(e.target.value);
+    if (e.key === 'Escape') _resolveInputModal(null);
+  });
+
   document.getElementById('btn-open-task-servers').addEventListener('click', () => window.robos.openTaskServers());
   document.getElementById('btn-generate').addEventListener('click', handleGenerate);
-  document.getElementById('btn-new-project').addEventListener('click', () => {
-    const name = prompt('New project name:');
-    if (!name || !name.trim()) return;
+
+  // + New Project: show inline form in sidebar
+  document.getElementById('btn-new-project').addEventListener('click', () => showNewProjectForm());
+
+  function showNewProjectForm() {
+    const form = document.getElementById('project-new-form');
+    const input = document.getElementById('project-name-input');
+    form.style.display = 'flex';
+    input.value = '';
+    input.focus();
+  }
+
+  function hideNewProjectForm() {
+    document.getElementById('project-new-form').style.display = 'none';
+  }
+
+  function applyNewProject(name) {
+    name = (name || '').trim();
+    if (!name) return;
+    hideNewProjectForm();
     currentProjectId = null;
-    currentProjectName = name.trim();
+    currentProjectName = name;
     tasks = [];
     parentEpicKey = null;
     renderTasks();
@@ -226,20 +285,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('prompt-input').value = '';
     showGenerateStatus(`Project "${currentProjectName}" ready — describe your tasks below.`);
-    // Ensure main content is visible and prompt is focused
     document.getElementById('main-content').style.display = 'flex';
     document.getElementById('no-server').style.display = 'none';
     setTimeout(() => {
       const p = document.getElementById('prompt-input');
       if (p && p.focus) p.focus();
     }, 100);
+  }
+
+  document.getElementById('btn-project-confirm').addEventListener('click', () => {
+    applyNewProject(document.getElementById('project-name-input').value);
+  });
+  document.getElementById('btn-project-cancel').addEventListener('click', hideNewProjectForm);
+  document.getElementById('project-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') applyNewProject(e.target.value);
+    if (e.key === 'Escape') hideNewProjectForm();
   });
 
   document.getElementById('prompt-input').addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
   });
 
-  // Wire @-mention file typeahead for robos-ai-textarea
   if (typeof customElements !== 'undefined') {
     customElements.whenDefined('robos-ai-textarea').then(() => {
       const promptEl = document.getElementById('prompt-input');
@@ -332,7 +398,7 @@ function showGenerateStatus(msg, isError = false) {
   el.className = 'status-text' + (isError ? ' error' : '');
 }
 
-// ── Render tasks (tree view for Jira epics) ───────────────────────────────────
+// ── Render tasks ──────────────────────────────────────────────────────────────
 function renderTasks() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
@@ -342,18 +408,14 @@ function renderTasks() {
   if (isJira) {
     const epicIndices = tasks.map((t, i) => t.isEpic ? i : null).filter(i => i !== null);
     const rendered = new Set();
-
     const appendCard = (i, indent) => {
       if (rendered.has(i)) return;
       rendered.add(i);
       list.appendChild(buildCard(i, indent));
     };
-
     for (const epicIdx of epicIndices) {
       appendCard(epicIdx, 0);
-      tasks.forEach((t, i) => {
-        if (!t.isEpic && t.parentEpicIdx === epicIdx) appendCard(i, 1);
-      });
+      tasks.forEach((t, i) => { if (!t.isEpic && t.parentEpicIdx === epicIdx) appendCard(i, 1); });
     }
     tasks.forEach((t, i) => { if (!rendered.has(i)) appendCard(i, 0); });
   } else {
@@ -377,11 +439,10 @@ function buildCard(i, indent) {
   const epicNameRow = (isJira && task.isEpic)
     ? `<div class="epic-name-row">
         <label class="epic-name-label">Epic name:</label>
-        <input class="epic-name-input" type="text" value="${escHtml(task.epicName)}" placeholder="Short epic label…" data-idx="${i}" data-field="epicName"/>
+        <input class="epic-name-input" type="text" value="${escHtml(task.epicName)}" placeholder="Short epic label…" data-idx="${i}"/>
        </div>`
     : '';
 
-  // Sync button / ticket badge
   let syncHtml = '';
   if (serverInfo) {
     if (task.ticketKey) {
@@ -397,36 +458,31 @@ function buildCard(i, indent) {
       ${indent ? '<span class="tree-indent">└</span>' : ''}
       ${epicTypeBadge}
       <span class="task-num">#${i + 1}</span>
-      <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…" data-idx="${i}" data-field="title"/>
+      <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…"/>
       <div class="task-sync-area">${syncHtml}</div>
     </div>
     ${epicNameRow}
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
-    <textarea class="task-body-input" rows="5" data-idx="${i}" data-field="body" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
-    <div class="task-labels" data-idx="${i}">
+    <textarea class="task-body-input" rows="5" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
+    <div class="task-labels">
       ${task.labels.map((lbl, li) => `<span class="label-chip" data-li="${li}" data-ti="${i}" title="Click to remove">${escHtml(lbl)} ×</span>`).join('')}
       <button class="add-label-btn" data-ti="${i}">+ label</button>
     </div>
-    <button class="task-remove-btn" data-idx="${i}" title="Remove task">×</button>
+    <button class="task-remove-btn" title="Remove task">×</button>
+    <div class="label-input-wrap" style="display:none">
+      <input class="label-input" type="text" placeholder="Label name…" maxlength="40"/>
+      <button class="label-input-ok">✓</button>
+      <button class="label-input-cancel">✕</button>
+    </div>
   `;
 
-  card.querySelector('.task-title-input').addEventListener('input', e => {
-    tasks[i].title = e.target.value;
-  });
+  card.querySelector('.task-title-input').addEventListener('input', e => { tasks[i].title = e.target.value; });
 
   const preview = card.querySelector('.task-body-preview');
   const textarea = card.querySelector('.task-body-input');
-  preview.addEventListener('click', () => {
-    preview.style.display = 'none';
-    textarea.style.display = '';
-    textarea.focus();
-  });
+  preview.addEventListener('click', () => { preview.style.display = 'none'; textarea.style.display = ''; textarea.focus(); });
   textarea.addEventListener('input', e => { tasks[i].body = e.target.value; });
-  textarea.addEventListener('blur', () => {
-    preview.innerHTML = renderMd(tasks[i].body);
-    textarea.style.display = 'none';
-    preview.style.display = '';
-  });
+  textarea.addEventListener('blur', () => { preview.innerHTML = renderMd(tasks[i].body); textarea.style.display = 'none'; preview.style.display = ''; });
 
   if (task.isEpic) {
     const epicInput = card.querySelector('.epic-name-input');
@@ -448,25 +504,30 @@ function buildCard(i, indent) {
 
   card.querySelectorAll('.label-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const li = parseInt(chip.dataset.li);
-      tasks[i].labels.splice(li, 1);
+      tasks[i].labels.splice(parseInt(chip.dataset.li), 1);
       renderTasks();
     });
   });
 
+  // Label add — inline input instead of prompt()
+  const labelWrap = card.querySelector('.label-input-wrap');
+  const labelInput = card.querySelector('.label-input');
   card.querySelector('.add-label-btn').addEventListener('click', () => {
-    const lbl = prompt('Label name:');
-    if (lbl && lbl.trim()) {
-      tasks[i].labels.push(lbl.trim());
-      renderTasks();
-    }
+    labelWrap.style.display = 'flex';
+    labelInput.value = '';
+    labelInput.focus();
   });
+  const addLabel = () => {
+    const lbl = labelInput.value.trim();
+    if (lbl) { tasks[i].labels.push(lbl); renderTasks(); }
+    else labelWrap.style.display = 'none';
+  };
+  card.querySelector('.label-input-ok').addEventListener('click', addLabel);
+  card.querySelector('.label-input-cancel').addEventListener('click', () => { labelWrap.style.display = 'none'; });
+  labelInput.addEventListener('keydown', e => { if (e.key === 'Enter') addLabel(); if (e.key === 'Escape') labelWrap.style.display = 'none'; });
 
-  // Sync button
   const syncBtn = card.querySelector('.sync-create-btn, .sync-update-btn');
-  if (syncBtn) {
-    syncBtn.addEventListener('click', () => handleSyncTask(i));
-  }
+  if (syncBtn) syncBtn.addEventListener('click', () => handleSyncTask(i));
 
   return card;
 }
@@ -484,45 +545,25 @@ function updateCount() {
 // ── Per-task sync ──────────────────────────────────────────────────────────────
 async function handleSyncTask(idx) {
   const task = tasks[idx];
-  if (!task || !task.title.trim()) { alert('Task needs a title before syncing.'); return; }
-  if (!serverInfo) { alert('No task server connected.'); return; }
+  if (!task || !task.title.trim()) { showCreateStatus('Task needs a title before syncing.', true); return; }
+  if (!serverInfo) { showCreateStatus('No task server connected.', true); return; }
 
-  // Build epicKeyByIndex map (for linking stories to just-created epics)
   const epicKeyByIndex = {};
   tasks.forEach((t, i) => { if (t.ticketKey) epicKeyByIndex[i] = t.ticketKey; });
 
   showCreateStatus(`Syncing task #${idx + 1}…`);
+  const result = await window.robos.syncTask({ task, taskIndex: idx, serverInfo, parentEpicKey: parentEpicKey || null, epicKeyByIndex });
 
-  const result = await window.robos.syncTask({
-    task,
-    taskIndex: idx,
-    serverInfo,
-    parentEpicKey: parentEpicKey || null,
-    epicKeyByIndex,
-  });
-
-  if (!result.ok) {
-    showCreateStatus('Sync failed: ' + (result.error || 'unknown'), true);
-    return;
-  }
+  if (!result.ok) { showCreateStatus('Sync failed: ' + (result.error || 'unknown'), true); return; }
 
   tasks[idx].ticketKey = result.key;
   tasks[idx].ticketUrl = result.url || null;
   tasks[idx].ticketStatus = 'open';
-
   showCreateStatus(`✓ Synced: ${result.key}`);
   renderTasks();
 
-  // Auto-save to project if one is active
   if (currentProjectId) {
-    await window.robos.saveProject({
-      id: currentProjectId,
-      name: currentProjectName,
-      prompt: document.getElementById('prompt-input').value || '',
-      parentEpicKey: parentEpicKey || null,
-      serverId: serverInfo ? serverInfo.id : null,
-      tasks,
-    });
+    await window.robos.saveProject({ id: currentProjectId, name: currentProjectName, prompt: document.getElementById('prompt-input').value || '', parentEpicKey: parentEpicKey || null, serverId: serverInfo ? serverInfo.id : null, tasks });
   }
 }
 
@@ -535,27 +576,15 @@ async function handleSyncAll() {
   showCreateStatus(`Syncing ${toSync.length} task${toSync.length !== 1 ? 's' : ''}…`);
 
   const epicKeyByIndex = {};
-  let successCount = 0;
-  let failCount = 0;
+  let successCount = 0, failCount = 0;
 
-  // Sync epics first so children can reference them
   const orderedIndices = [];
   tasks.forEach((t, i) => { if (t.isEpic && t.title.trim()) orderedIndices.push(i); });
   tasks.forEach((t, i) => { if (!t.isEpic && t.title.trim()) orderedIndices.push(i); });
 
   for (const idx of orderedIndices) {
-    const task = tasks[idx];
-    // Build epicKeyByIndex with any keys obtained so far in this run
     tasks.forEach((t, i) => { if (t.ticketKey) epicKeyByIndex[i] = t.ticketKey; });
-
-    const result = await window.robos.syncTask({
-      task,
-      taskIndex: idx,
-      serverInfo,
-      parentEpicKey: parentEpicKey || null,
-      epicKeyByIndex,
-    });
-
+    const result = await window.robos.syncTask({ task: tasks[idx], taskIndex: idx, serverInfo, parentEpicKey: parentEpicKey || null, epicKeyByIndex });
     if (result.ok) {
       tasks[idx].ticketKey = result.key;
       tasks[idx].ticketUrl = result.url || null;
@@ -564,30 +593,21 @@ async function handleSyncAll() {
       successCount++;
       showCreateStatus(`Synced ${successCount}/${orderedIndices.length}…`);
       renderTasks();
-    } else {
-      failCount++;
-    }
+    } else { failCount++; }
   }
 
   setCreating(false);
-  const msg = `✓ Synced ${successCount} task${successCount !== 1 ? 's' : ''}` +
-    (failCount ? `, ${failCount} failed` : '');
+  const msg = `✓ Synced ${successCount} task${successCount !== 1 ? 's' : ''}` + (failCount ? `, ${failCount} failed` : '');
   showCreateStatus(msg, failCount > 0);
 
-  // Auto-save to project
   if (currentProjectId) {
-    await window.robos.saveProject({
-      id: currentProjectId,
-      name: currentProjectName,
-      prompt: document.getElementById('prompt-input').value || '',
-      parentEpicKey: parentEpicKey || null,
-      serverId: serverInfo ? serverInfo.id : null,
-      tasks,
-    });
+    await window.robos.saveProject({ id: currentProjectId, name: currentProjectName, prompt: document.getElementById('prompt-input').value || '', parentEpicKey: parentEpicKey || null, serverId: serverInfo ? serverInfo.id : null, tasks });
   } else if (successCount > 0) {
-    // Prompt to save as new project
-    const save = confirm(`${successCount} tasks synced! Save this plan to a project?`);
-    if (save) await saveToProject();
+    const name = await showInputModal('Save Plan to Project', 'Project name…');
+    if (name && name.trim()) {
+      currentProjectName = name.trim();
+      await saveToProject();
+    }
   }
 }
 
@@ -615,7 +635,6 @@ function renderResults(results) {
       ${!r.ok ? `<span class="result-error">${escHtml(r.error)}</span>` : ''}
     </div>
   `).join('');
-
   results.filter(r => r.ok && r.url).forEach(r => {
     const a = list.querySelector(`[id="link-${encodeURIComponent(r.url)}"]`);
     if (a) a.addEventListener('click', e => { e.preventDefault(); window.robos.openUrl(r.url); });
@@ -628,9 +647,6 @@ function escHtml(s) {
 
 function renderMd(src) {
   if (!src) return '<span class="md-empty">No description. Click to add…</span>';
-  try {
-    return marked.parse(src, { breaks: true, gfm: true });
-  } catch {
-    return escHtml(src);
-  }
+  try { return marked.parse(src, { breaks: true, gfm: true }); }
+  catch { return escHtml(src); }
 }
