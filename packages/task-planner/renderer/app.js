@@ -212,9 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-open-task-servers').addEventListener('click', () => window.robos.openTaskServers());
   document.getElementById('btn-generate').addEventListener('click', handleGenerate);
   document.getElementById('btn-new-project').addEventListener('click', () => {
+    const name = prompt('New project name:');
+    if (!name || !name.trim()) return;
     currentProjectId = null;
-    currentProjectName = null;
+    currentProjectName = name.trim();
     tasks = [];
+    parentEpicKey = null;
     renderTasks();
     updateCount();
     updateProjectBadge();
@@ -222,6 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('preview-section').style.display = 'none';
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('prompt-input').value = '';
+    showGenerateStatus(`Project "${currentProjectName}" ready — describe your tasks below.`);
+    // Ensure main content is visible and prompt is focused
+    document.getElementById('main-content').style.display = 'flex';
+    document.getElementById('no-server').style.display = 'none';
+    setTimeout(() => {
+      const p = document.getElementById('prompt-input');
+      if (p && p.focus) p.focus();
+    }, 100);
   });
 
   document.getElementById('prompt-input').addEventListener('keydown', e => {
