@@ -16,6 +16,6 @@ contextBridge.exposeInMainWorld('robos', {
   switchToGnome:  ()      => ipcRenderer.invoke('switch-to-gnome'),
   setDockZone:    (h)     => ipcRenderer.invoke('set-dock-zone', h),
   setDragLock:    (v)     => ipcRenderer.invoke('set-drag-lock', v),
-  setMenuOpen:    (v)     => ipcRenderer.invoke('set-menu-open', v),
+  setMenuOpen:    (v)     => ipcRenderer.sendSync('set-menu-open-sync', v),
   debugLog:       (msg)   => ipcRenderer.send('debug-log', msg),
 });

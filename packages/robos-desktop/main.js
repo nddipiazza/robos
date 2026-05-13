@@ -776,6 +776,13 @@ app.whenReady().then(() => {
   ipcMain.handle('set-dock-zone', (_e, h) => { dockZone = Math.ceil(h); });
   ipcMain.handle('set-drag-lock', (_e, v) => { dragLock = !!v; });
   ipcMain.handle('set-menu-open', (_e, v) => { menuOpen = !!v; });
+  // Synchronous version — used by renderer to guarantee click-through is
+  // disabled BEFORE the menu is visible (avoids the 50ms polling race).
+  ipcMain.on('set-menu-open-sync', (e, v) => {
+    menuOpen = !!v;
+    if (menuOpen && mainWin && !mainWin.isDestroyed()) mainWin.setIgnoreMouseEvents(false);
+    e.returnValue = null;
+  });
   ipcMain.on('debug-log', (_e, msg) => { process.stderr.write(`[RENDERER] ${msg}\n`); });
 
   createWindow();
