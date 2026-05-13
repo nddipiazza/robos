@@ -254,6 +254,8 @@ function getRobosIconDataUri(appId) {
 
 // Maps instance/wmclass key → icon name (from .desktop files)
 let desktopIconNameMap = null;
+// Maps instance/wmclass key → [{name, exec}] (desktop actions like "New Window")
+let desktopActionsMap = null;
 // Maps icon name (lowercase) → best file path (SVG > large PNG > small PNG)
 let systemIconIndex = null;
 // Maps icon name → data URI (lazy-loaded)
@@ -424,6 +426,97 @@ function getSystemIconDataUri(iconName) {
   return systemIconDataUriCache[cacheKey];
 }
 
+/**
+ * Build a one-time map of WM_CLASS/exec-name → desktop actions array.
+ * Each action: { name: string, exec: string }
+ * Reads Actions= and [Desktop Action X] sections from all .desktop files.
+ */
+function ensureDesktopActionsMap() {
+  if (desktopActionsMap !== null) return;
+  desktopActionsMap = {};
+  const home = process.env.HOME || '/home/robos';
+  const dirs = [
+    '/usr/share/applications',
+    '/usr/local/share/applications',
+    '/var/lib/snapd/desktop/applications',
+    path.join(home, '.local/share/applications'),
+  ];
+
+  for (const dir of dirs) {
+    let files;
+    try { files = fs.readdirSync(dir).filter(f => f.endsWith('.desktop')); } catch { continue; }
+    for (const file of files) {
+      try {
+        const content = fs.readFileSync(path.join(dir, file), 'utf-8');
+
+        // Parse Actions= from [Desktop Entry] section
+        const actionsMatch = content.match(/^Actions=(.+)$/m);
+        if (!actionsMatch) continue;
+        const actionIds = actionsMatch[1].split(';').map(s => s.trim()).filter(Boolean);
+        if (!actionIds.length) continue;
+
+        // Parse each [Desktop Action X] section
+        const actions = [];
+        for (const id of actionIds) {
+          const sectionRe = new RegExp(`^\\[Desktop Action ${id}\\]([\\s\\S]*?)(?=^\\[|$)`, 'm');
+          const section = content.match(sectionRe);
+          if (!section) continue;
+          const nameMatch = section[1].match(/^Name=(.+)$/m);
+          const execMatch = section[1].match(/^Exec=(.+)$/m);
+          if (!nameMatch || !execMatch) continue;
+          // Strip .desktop field codes (%f, %u, %F, %U, etc.) from exec
+          const exec = execMatch[1].trim().replace(/%[a-zA-Z]/g, '').trim();
+          actions.push({ name: nameMatch[1].trim(), exec });
+        }
+        if (!actions.length) continue;
+
+        // Build the same key set as ensureDesktopIconMap for consistent lookup
+        const keys = new Set();
+        const wmMatch   = content.match(/^StartupWMClass=(.+)$/m);
+        const execMatch = content.match(/^Exec=(.+)$/m);
+        if (wmMatch) {
+          const wmc = wmMatch[1].trim().toLowerCase();
+          keys.add(wmc);
+          keys.add(wmc.split('_')[0]);
+        }
+        if (execMatch) {
+          const parts = execMatch[1].trim().split(/\s+/);
+          const binIdx = parts.findIndex(p => p.startsWith('/') || (!p.includes('=') && !p.startsWith('%')));
+          const bin = (binIdx >= 0 ? parts[binIdx] : parts[0]).replace(/^.*\//, '').toLowerCase();
+          if (bin && !bin.startsWith('%') && bin !== 'env') keys.add(bin);
+          const stripped = bin.replace(/-(stable|bin|browser|nightly|beta|esr)$/, '');
+          if (stripped !== bin) keys.add(stripped);
+        }
+        const fileKey = file.replace(/\.desktop$/, '').toLowerCase();
+        keys.add(fileKey);
+        keys.add(fileKey.split('_')[0]);
+
+        for (const key of keys) {
+          if (key && !desktopActionsMap[key]) desktopActionsMap[key] = actions;
+        }
+      } catch {}
+    }
+  }
+}
+
+/**
+ * Return desktop actions (like "New Window") for a given WM_CLASS instance.
+ * Returns [] if no actions found.
+ */
+function getDesktopActionsForInstance(instance, wmclassSecond) {
+  ensureDesktopActionsMap();
+  const candidates = [
+    instance,
+    wmclassSecond?.toLowerCase(),
+    wmclassSecond?.toLowerCase()?.split('_')[0],
+    instance?.replace(/-(stable|bin|browser|nightly|beta|esr)$/, ''),
+  ].filter(Boolean);
+  for (const key of candidates) {
+    if (desktopActionsMap[key]) return desktopActionsMap[key];
+  }
+  return [];
+}
+
 function getX11Windows() {
   return new Promise((resolve) => {
     exec('wmctrl -lx', { env: { ...process.env, DISPLAY: ':0' } }, (err, stdout) => {
@@ -452,7 +545,8 @@ function getX11Windows() {
           const iconName = resolveIconNameForInstance(instance, wmclass.split('.')[1]);
           if (iconName) iconSvg = getSystemIconDataUri(iconName);
         }
-        windows.push({ wid, wmclass, instance, title: title.trim(), label, iconSvg });
+        const actions = getDesktopActionsForInstance(instance, wmclass.split('.')[1]);
+        windows.push({ wid, wmclass, instance, title: title.trim(), label, iconSvg, actions });
       }
       resolve(windows);
     });
@@ -601,6 +695,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle('close-window', (_e, wid) => {
     exec(`wmctrl -ic ${wid}`, { env: { ...process.env, DISPLAY: ':0' } });
+    return { ok: true };
+  });
+
+  ipcMain.handle('exec-desktop-action', (_e, execStr) => {
+    // Strip any remaining field codes and run the action
+    const safe = execStr.replace(/%[a-zA-Z]/g, '').trim();
+    if (!safe) return { ok: false };
+    exec(safe, { env: { ...process.env, DISPLAY: ':0' }, shell: '/bin/bash' });
     return { ok: true };
   });
 

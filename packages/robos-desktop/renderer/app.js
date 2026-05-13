@@ -122,7 +122,7 @@ function renderX11Windows(windows) {
     btn.addEventListener('click', () => window.robos.focusWindow(win.wid));
     btn.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      showContextMenu(e.clientX, e.clientY, win.wid);
+      showContextMenu(e.clientX, e.clientY, win);
     });
     area.appendChild(btn);
   }
@@ -138,22 +138,35 @@ function makeEmojiIcon(emoji) {
 // ── Context menu ───────────────────────────────────────────────────────────────
 let activeMenu = null;
 
-function showContextMenu(x, y, wid) {
+function showContextMenu(x, y, win) {
   removeContextMenu();
+  const wid = typeof win === 'object' ? win.wid : win;
+  const actions = (typeof win === 'object' && win.actions) ? win.actions : [];
 
   const menu = document.createElement('div');
   menu.className = 'ctx-menu';
 
   const btnPx = Math.round(BASE_BTN_PX * dockScale);
   const DOCK_BOTTOM = btnPx + 20 + 10;
-  const menuH = 130;
+  const extraH = actions.length ? (actions.length * 30 + 8) : 0;
+  const menuH = 130 + extraH;
   const menuW = 190;
   const top  = Math.max(4, window.innerHeight - DOCK_BOTTOM - menuH);
   const left = Math.min(Math.max(4, x - menuW / 2), window.innerWidth - menuW - 4);
   menu.style.top  = top  + 'px';
   menu.style.left = left + 'px';
 
+  // Desktop actions (e.g. "New Window") go at the top with a divider
+  let actionsHtml = '';
+  if (actions.length) {
+    for (const a of actions) {
+      actionsHtml += `<div class="ctx-item ctx-action" data-exec="${a.exec.replace(/"/g, '&quot;')}">🪟 ${a.name}</div>`;
+    }
+    actionsHtml += '<div class="ctx-divider"></div>';
+  }
+
   menu.innerHTML = `
+    ${actionsHtml}
     <div class="ctx-item" data-action="focus">🔍 Bring to Front</div>
     <div class="ctx-item" data-action="maximize">⬜ Maximize / Restore</div>
     <div class="ctx-item" data-action="minimize">➖ Minimize</div>
@@ -161,8 +174,11 @@ function showContextMenu(x, y, wid) {
     <div class="ctx-item ctx-close" data-action="close">✕ Close</div>
   `;
   menu.addEventListener('click', (e) => {
-    const action = e.target.dataset.action;
-    if (!action) return;
+    const item = e.target.closest('.ctx-item');
+    if (!item) return;
+    const action = item.dataset.action;
+    const execStr = item.dataset.exec;
+    if (execStr)           window.robos.execDesktopAction(execStr);
     if (action === 'focus')    window.robos.focusWindow(wid);
     if (action === 'minimize') window.robos.minimizeWindow(wid);
     if (action === 'maximize') window.robos.maximizeWindow(wid);

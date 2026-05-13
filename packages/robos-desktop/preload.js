@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('robos', {
   minimizeWindow: (wid)   => ipcRenderer.invoke('minimize-window', wid),
   maximizeWindow: (wid)   => ipcRenderer.invoke('maximize-window', wid),
   closeWindow:    (wid)   => ipcRenderer.invoke('close-window', wid),
+  execDesktopAction: (execStr) => ipcRenderer.invoke('exec-desktop-action', execStr),
   switchToGnome:  ()      => ipcRenderer.invoke('switch-to-gnome'),
   setDockZone:    (h)     => ipcRenderer.invoke('set-dock-zone', h),
   setDragLock:    (v)     => ipcRenderer.invoke('set-drag-lock', v),
