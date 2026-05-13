@@ -11,77 +11,98 @@
     <header class="app-header">
       <div class="header-left">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2h11"/>
         </svg>
         <h1>Task Planner</h1>
       </div>
-      <div id="server-badge" class="server-badge">Loading…</div>
+      <div class="header-right">
+        <div id="server-badge" class="server-badge">Loading…</div>
+      </div>
     </header>
 
-    <div id="no-server" class="empty-state" style="display:none">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/>
-        <line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>
-      </svg>
-      <p>No task server configured.</p>
-      <button class="btn btn-accent" id="btn-open-task-servers">Open Task Servers</button>
-    </div>
+    <div id="body-layout">
+      <!-- Projects Sidebar -->
+      <aside id="projects-sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">Projects</span>
+          <button class="btn-icon" id="btn-new-project" title="New Project">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div id="project-list" class="project-list"></div>
+      </aside>
 
-    <main id="main-content" style="display:none">
-      <!-- Parent Epic Selector (Jira only) -->
-      <section id="epic-parent-section" class="card epic-parent-section" style="display:none">
-        <div class="epic-parent-header">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      <!-- Main content -->
+      <div id="main-wrapper">
+        <div id="no-server" class="empty-state" style="display:none">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/>
+            <line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>
           </svg>
-          <h2>Parent Epic</h2>
-          <span id="epic-fetch-status" class="status-text" style="margin-left:8px;font-size:12px;"></span>
+          <p>No task server configured.</p>
+          <button class="btn btn-accent" id="btn-open-task-servers">Open Task Servers</button>
         </div>
-        <p class="epic-parent-hint">Assign all generated tasks under an existing Jira epic, or let the AI create new epics from your plan.</p>
-        <select id="parent-epic-select" class="epic-select"></select>
-      </section>
 
-      <section class="prompt-section card">
-        <h2>Describe the tasks you want to create</h2>
-        <textarea id="prompt-input" class="prompt-textarea"
-          placeholder="e.g. Create a user authentication system with login, logout, and password reset features. Break it into epics and stories."></textarea>
-        <div class="prompt-actions">
-          <button class="btn btn-accent" id="btn-generate">
-            <span id="btn-generate-text">✦ Generate with AI</span>
-            <span id="btn-generate-spinner" class="spinner" style="display:none"></span>
-          </button>
-          <span id="generate-status" class="status-text"></span>
-        </div>
-      </section>
+        <main id="main-content" style="display:none">
+          <!-- Parent Epic Selector (Jira only) -->
+          <section id="epic-parent-section" class="card epic-parent-section" style="display:none">
+            <div class="epic-parent-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <h2>Parent Epic</h2>
+              <span id="epic-fetch-status" class="status-text" style="margin-left:8px;font-size:12px;"></span>
+            </div>
+            <p class="epic-parent-hint">Assign all generated tasks under an existing Jira epic, or let the AI create new epics from your plan.</p>
+            <select id="parent-epic-select" class="epic-select"></select>
+          </section>
 
-      <section id="preview-section" class="preview-section" style="display:none">
-        <div class="preview-header">
-          <div class="preview-header-left">
-            <h2>Preview Tasks <span id="task-count" class="badge">0</span></h2>
-            <span id="epic-count" class="epic-count-badge" style="display:none"></span>
-          </div>
-          <div class="preview-actions">
-            <button class="btn btn-sm btn-outline" id="btn-add-task">+ Add Task</button>
-            <button class="btn btn-sm btn-danger" id="btn-clear">Clear All</button>
-          </div>
-        </div>
-        <div id="task-list" class="task-list"></div>
-        <div class="create-bar">
-          <button class="btn btn-success btn-lg" id="btn-create-all">
-            <span id="btn-create-text">Create All Tasks</span>
-            <span id="btn-create-spinner" class="spinner" style="display:none"></span>
-          </button>
-          <span id="create-status" class="status-text"></span>
-        </div>
-      </section>
+          <section class="prompt-section card">
+            <h2>Describe the tasks you want to create</h2>
+            <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
+              placeholder="e.g. Create a user authentication system with login, logout, and password reset features. Break it into epics and stories." min-height="100"></robos-ai-textarea>
+            <div class="prompt-actions">
+              <button class="btn btn-accent" id="btn-generate">
+                <span id="btn-generate-text">✦ Generate with AI</span>
+                <span id="btn-generate-spinner" class="spinner" style="display:none"></span>
+              </button>
+              <span id="generate-status" class="status-text"></span>
+            </div>
+          </section>
 
-      <section id="results-section" class="results-section" style="display:none">
-        <h2>Results</h2>
-        <div id="results-list" class="results-list"></div>
-        <button class="btn btn-outline" id="btn-plan-again">Plan More Tasks</button>
-      </section>
-    </main>
+          <section id="preview-section" class="preview-section" style="display:none">
+            <div class="preview-header">
+              <div class="preview-header-left">
+                <h2>Plan <span id="task-count" class="badge">0</span></h2>
+                <span id="epic-count" class="epic-count-badge" style="display:none"></span>
+                <span id="current-project-badge" class="project-name-badge" style="display:none"></span>
+              </div>
+              <div class="preview-actions">
+                <button class="btn btn-sm btn-project" id="btn-save-project">💾 Save to Project</button>
+                <button class="btn btn-sm btn-outline" id="btn-add-task">+ Add Task</button>
+                <button class="btn btn-sm btn-danger" id="btn-clear">Clear All</button>
+              </div>
+            </div>
+            <div id="task-list" class="task-list"></div>
+            <div class="create-bar">
+              <button class="btn btn-success btn-lg" id="btn-create-all">
+                <span id="btn-create-text">⚡ Sync All to Server</span>
+                <span id="btn-create-spinner" class="spinner" style="display:none"></span>
+              </button>
+              <span id="create-status" class="status-text"></span>
+            </div>
+          </section>
+
+          <section id="results-section" class="results-section" style="display:none">
+            <h2>Results</h2>
+            <div id="results-list" class="results-list"></div>
+            <button class="btn btn-outline" id="btn-plan-again">Plan More Tasks</button>
+          </section>
+        </main>
+      </div>
+    </div>
   </div>
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="../node_modules/marked/lib/marked.umd.js"></script>
   <script src="app.js"></script>
 </body>

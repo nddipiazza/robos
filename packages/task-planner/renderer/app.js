@@ -5,6 +5,11 @@ let tasks = [];
 let existingEpics = [];   // Epics fetched from Jira
 let parentEpicKey = null; // Selected top-level parent epic key
 
+// Projects state
+let projectsList = [];
+let currentProjectId = null;
+let currentProjectName = null;
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 async function init() {
   const result = await window.robos.getServerInfo();
@@ -12,19 +17,21 @@ async function init() {
     document.getElementById('server-badge').textContent = 'No server';
     document.getElementById('no-server').style.display = 'flex';
     document.getElementById('main-content').style.display = 'none';
-    return;
-  }
-  serverInfo = result.server;
-  const badge = document.getElementById('server-badge');
-  badge.textContent = `${serverInfo.name} (${serverInfo.type})`;
-  badge.classList.add('connected');
-  document.getElementById('no-server').style.display = 'none';
-  document.getElementById('main-content').style.display = 'flex';
+  } else {
+    serverInfo = result.server;
+    const badge = document.getElementById('server-badge');
+    badge.textContent = `${serverInfo.name} (${serverInfo.type})`;
+    badge.classList.add('connected');
+    document.getElementById('no-server').style.display = 'none';
+    document.getElementById('main-content').style.display = 'flex';
 
-  if (serverInfo.type === 'jira') {
-    document.getElementById('epic-parent-section').style.display = 'block';
-    loadExistingEpics();
+    if (serverInfo.type === 'jira') {
+      document.getElementById('epic-parent-section').style.display = 'block';
+      loadExistingEpics();
+    }
   }
+
+  await loadProjectsList();
 }
 
 async function loadExistingEpics() {
@@ -54,19 +61,190 @@ function renderEpicDropdown() {
   sel.value = parentEpicKey || '';
 }
 
+// ── Projects ──────────────────────────────────────────────────────────────────
+async function loadProjectsList() {
+  try {
+    const result = await window.robos.listProjects();
+    projectsList = result.ok ? (result.projects || []) : [];
+  } catch (_) {
+    projectsList = [];
+  }
+  renderProjectsSidebar();
+}
+
+function renderProjectsSidebar() {
+  const list = document.getElementById('project-list');
+  if (!list) return;
+
+  if (!projectsList.length) {
+    list.innerHTML = '<div class="project-empty">No projects yet.<br>Generate tasks and save them.</div>';
+    return;
+  }
+
+  list.innerHTML = projectsList.map(p => `
+    <div class="project-item ${p.id === currentProjectId ? 'active' : ''}" data-id="${escHtml(p.id)}">
+      <span class="project-item-name">${escHtml(p.name)}</span>
+      <button class="project-delete-btn" data-id="${escHtml(p.id)}" title="Delete project">×</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.project-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('project-delete-btn')) return;
+      openProject(el.dataset.id);
+    });
+  });
+
+  list.querySelectorAll('.project-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const proj = projectsList.find(p => p.id === id);
+      if (!proj) return;
+      if (!confirm(`Delete project "${proj.name}"?`)) return;
+      const result = await window.robos.deleteProject(id);
+      if (result.ok) {
+        if (currentProjectId === id) {
+          currentProjectId = null;
+          currentProjectName = null;
+          updateProjectBadge();
+        }
+        await loadProjectsList();
+      } else {
+        alert('Failed to delete: ' + (result.error || 'unknown error'));
+      }
+    });
+  });
+}
+
+async function openProject(id) {
+  const result = await window.robos.loadProject(id);
+  if (!result.ok) {
+    alert('Could not load project: ' + (result.error || 'unknown error'));
+    return;
+  }
+  const proj = result.project;
+  currentProjectId = proj.id;
+  currentProjectName = proj.name;
+
+  tasks = (proj.tasks || []).map(t => ({
+    title:         t.title || '',
+    body:          t.body || t.description || '',
+    labels:        Array.isArray(t.labels) ? t.labels : [],
+    isEpic:        !!t.isEpic,
+    epicName:      t.epicName || '',
+    parentEpicIdx: typeof t.parentEpicIdx === 'number' ? t.parentEpicIdx : null,
+    issueType:     t.issueType || '',
+    epicKey:       t.epicKey || null,
+    ticketKey:     t.ticketKey || null,
+    ticketUrl:     t.ticketUrl || null,
+    ticketStatus:  t.ticketStatus || null,
+  }));
+
+  if (proj.prompt) document.getElementById('prompt-input').value = proj.prompt;
+  if (proj.parentEpicKey) {
+    parentEpicKey = proj.parentEpicKey;
+    const sel = document.getElementById('parent-epic-select');
+    if (sel) sel.value = parentEpicKey;
+  }
+
+  renderTasks();
+  updateCount();
+  updateProjectBadge();
+  renderProjectsSidebar();
+
+  if (tasks.length) {
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+  }
+}
+
+async function saveToProject() {
+  if (!tasks.length) {
+    alert('Nothing to save. Generate some tasks first.');
+    return;
+  }
+
+  let name = currentProjectName;
+  if (!name) {
+    name = prompt('Project name:');
+    if (!name || !name.trim()) return;
+    name = name.trim();
+  }
+
+  const prompt_ = document.getElementById('prompt-input').value || '';
+
+  const result = await window.robos.saveProject({
+    id: currentProjectId || undefined,
+    name,
+    prompt: prompt_,
+    parentEpicKey: parentEpicKey || null,
+    serverId: serverInfo ? serverInfo.id : null,
+    tasks,
+  });
+
+  if (!result.ok) {
+    alert('Failed to save: ' + (result.error || 'unknown error'));
+    return;
+  }
+
+  currentProjectId = result.id;
+  currentProjectName = name;
+  updateProjectBadge();
+  await loadProjectsList();
+}
+
+function updateProjectBadge() {
+  const badge = document.getElementById('current-project-badge');
+  if (!badge) return;
+  if (currentProjectName) {
+    badge.textContent = `📁 ${currentProjectName}`;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── DOMContentLoaded ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   init();
 
   document.getElementById('btn-open-task-servers').addEventListener('click', () => window.robos.openTaskServers());
-
   document.getElementById('btn-generate').addEventListener('click', handleGenerate);
+  document.getElementById('btn-new-project').addEventListener('click', () => {
+    currentProjectId = null;
+    currentProjectName = null;
+    tasks = [];
+    renderTasks();
+    updateCount();
+    updateProjectBadge();
+    renderProjectsSidebar();
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('prompt-input').value = '';
+  });
 
   document.getElementById('prompt-input').addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
   });
 
+  // Wire @-mention file typeahead for robos-ai-textarea
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      const promptEl = document.getElementById('prompt-input');
+      if (promptEl && promptEl.addEventListener) {
+        promptEl.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.robos.searchIndex(e.detail.query);
+            if (r && r.ok && promptEl._showMentions) promptEl._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
+
   document.getElementById('btn-add-task').addEventListener('click', () => {
-    tasks.push({ title: '', body: '', labels: [], isEpic: false, epicName: '', parentEpicIdx: null, issueType: '' });
+    tasks.push({ title: '', body: '', labels: [], isEpic: false, epicName: '', parentEpicIdx: null, issueType: '', ticketKey: null, ticketUrl: null, ticketStatus: null });
     renderTasks();
     document.getElementById('preview-section').style.display = 'block';
     updateCount();
@@ -79,11 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tasks.length) document.getElementById('preview-section').style.display = 'none';
   });
 
+  document.getElementById('btn-save-project').addEventListener('click', saveToProject);
+
   document.getElementById('parent-epic-select').addEventListener('change', e => {
     parentEpicKey = e.target.value || null;
   });
 
-  document.getElementById('btn-create-all').addEventListener('click', handleCreateAll);
+  document.getElementById('btn-create-all').addEventListener('click', handleSyncAll);
   document.getElementById('btn-plan-again').addEventListener('click', () => {
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('preview-section').style.display = tasks.length ? 'block' : 'none';
@@ -116,6 +296,9 @@ async function handleGenerate() {
     parentEpicIdx:  typeof t.parentEpicIndex === 'number' ? t.parentEpicIndex : null,
     issueType:      t.issueType || '',
     epicKey:        t.epicKey || null,
+    ticketKey:      null,
+    ticketUrl:      null,
+    ticketStatus:   null,
   }));
 
   renderTasks();
@@ -146,7 +329,6 @@ function renderTasks() {
   const isJira = serverInfo && serverInfo.type === 'jira';
 
   if (isJira) {
-    // Build tree: epics at root, children grouped under their epic
     const epicIndices = tasks.map((t, i) => t.isEpic ? i : null).filter(i => i !== null);
     const rendered = new Set();
 
@@ -162,10 +344,7 @@ function renderTasks() {
         if (!t.isEpic && t.parentEpicIdx === epicIdx) appendCard(i, 1);
       });
     }
-    // Orphan non-epic tasks (no epic parent)
-    tasks.forEach((t, i) => {
-      if (!rendered.has(i)) appendCard(i, 0);
-    });
+    tasks.forEach((t, i) => { if (!rendered.has(i)) appendCard(i, 0); });
   } else {
     tasks.forEach((_, i) => list.appendChild(buildCard(i, 0)));
   }
@@ -176,7 +355,9 @@ function buildCard(i, indent) {
   const isJira = serverInfo && serverInfo.type === 'jira';
 
   const card = document.createElement('div');
-  card.className = 'task-card' + (task.isEpic ? ' task-epic' : '') + (indent ? ' task-child' : '');
+  let cardClass = 'task-card' + (task.isEpic ? ' task-epic' : '') + (indent ? ' task-child' : '');
+  if (task.ticketKey) cardClass += ' task-synced';
+  card.className = cardClass;
 
   const epicTypeBadge = isJira
     ? `<span class="issue-type-badge ${task.isEpic ? 'badge-epic' : 'badge-story'}">${task.isEpic ? '⬡ Epic' : (task.issueType || 'Story')}</span>`
@@ -189,12 +370,24 @@ function buildCard(i, indent) {
        </div>`
     : '';
 
+  // Sync button / ticket badge
+  let syncHtml = '';
+  if (serverInfo) {
+    if (task.ticketKey) {
+      syncHtml = `<span class="ticket-badge" title="${escHtml(task.ticketUrl || '')}">${escHtml(task.ticketKey)}</span>
+                  <button class="sync-btn sync-update-btn" data-idx="${i}" title="Re-sync to server">↺</button>`;
+    } else {
+      syncHtml = `<button class="sync-btn sync-create-btn" data-idx="${i}" title="Create on server">🔗 Sync</button>`;
+    }
+  }
+
   card.innerHTML = `
     <div class="task-card-header">
       ${indent ? '<span class="tree-indent">└</span>' : ''}
       ${epicTypeBadge}
       <span class="task-num">#${i + 1}</span>
       <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…" data-idx="${i}" data-field="title"/>
+      <div class="task-sync-area">${syncHtml}</div>
     </div>
     ${epicNameRow}
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
@@ -210,7 +403,6 @@ function buildCard(i, indent) {
     tasks[i].title = e.target.value;
   });
 
-  // Toggle between rendered markdown preview and raw textarea on click
   const preview = card.querySelector('.task-body-preview');
   const textarea = card.querySelector('.task-body-input');
   preview.addEventListener('click', () => {
@@ -218,9 +410,7 @@ function buildCard(i, indent) {
     textarea.style.display = '';
     textarea.focus();
   });
-  textarea.addEventListener('input', e => {
-    tasks[i].body = e.target.value;
-  });
+  textarea.addEventListener('input', e => { tasks[i].body = e.target.value; });
   textarea.addEventListener('blur', () => {
     preview.innerHTML = renderMd(tasks[i].body);
     textarea.style.display = 'none';
@@ -231,9 +421,9 @@ function buildCard(i, indent) {
     const epicInput = card.querySelector('.epic-name-input');
     if (epicInput) epicInput.addEventListener('input', e => { tasks[i].epicName = e.target.value; });
   }
+
   card.querySelector('.task-remove-btn').addEventListener('click', () => {
     tasks.splice(i, 1);
-    // Remap parentEpicIdx references
     tasks.forEach(t => {
       if (t.parentEpicIdx !== null) {
         if (t.parentEpicIdx === i) t.parentEpicIdx = null;
@@ -244,6 +434,7 @@ function buildCard(i, indent) {
     updateCount();
     if (!tasks.length) document.getElementById('preview-section').style.display = 'none';
   });
+
   card.querySelectorAll('.label-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const li = parseInt(chip.dataset.li);
@@ -251,6 +442,7 @@ function buildCard(i, indent) {
       renderTasks();
     });
   });
+
   card.querySelector('.add-label-btn').addEventListener('click', () => {
     const lbl = prompt('Label name:');
     if (lbl && lbl.trim()) {
@@ -258,6 +450,12 @@ function buildCard(i, indent) {
       renderTasks();
     }
   });
+
+  // Sync button
+  const syncBtn = card.querySelector('.sync-create-btn, .sync-update-btn');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', () => handleSyncTask(i));
+  }
 
   return card;
 }
@@ -272,24 +470,114 @@ function updateCount() {
   }
 }
 
-// ── Create ────────────────────────────────────────────────────────────────────
-async function handleCreateAll() {
-  const toCreate = tasks.filter(t => t.title.trim());
-  if (!toCreate.length) { showCreateStatus('No tasks with titles to create.', true); return; }
+// ── Per-task sync ──────────────────────────────────────────────────────────────
+async function handleSyncTask(idx) {
+  const task = tasks[idx];
+  if (!task || !task.title.trim()) { alert('Task needs a title before syncing.'); return; }
+  if (!serverInfo) { alert('No task server connected.'); return; }
+
+  // Build epicKeyByIndex map (for linking stories to just-created epics)
+  const epicKeyByIndex = {};
+  tasks.forEach((t, i) => { if (t.ticketKey) epicKeyByIndex[i] = t.ticketKey; });
+
+  showCreateStatus(`Syncing task #${idx + 1}…`);
+
+  const result = await window.robos.syncTask({
+    task,
+    taskIndex: idx,
+    serverInfo,
+    parentEpicKey: parentEpicKey || null,
+    epicKeyByIndex,
+  });
+
+  if (!result.ok) {
+    showCreateStatus('Sync failed: ' + (result.error || 'unknown'), true);
+    return;
+  }
+
+  tasks[idx].ticketKey = result.key;
+  tasks[idx].ticketUrl = result.url || null;
+  tasks[idx].ticketStatus = 'open';
+
+  showCreateStatus(`✓ Synced: ${result.key}`);
+  renderTasks();
+
+  // Auto-save to project if one is active
+  if (currentProjectId) {
+    await window.robos.saveProject({
+      id: currentProjectId,
+      name: currentProjectName,
+      prompt: document.getElementById('prompt-input').value || '',
+      parentEpicKey: parentEpicKey || null,
+      serverId: serverInfo ? serverInfo.id : null,
+      tasks,
+    });
+  }
+}
+
+// ── Sync All ──────────────────────────────────────────────────────────────────
+async function handleSyncAll() {
+  const toSync = tasks.filter(t => t.title.trim());
+  if (!toSync.length) { showCreateStatus('No tasks with titles to sync.', true); return; }
 
   setCreating(true);
-  showCreateStatus(`Creating ${toCreate.length} task${toCreate.length !== 1 ? 's' : ''}…`);
+  showCreateStatus(`Syncing ${toSync.length} task${toSync.length !== 1 ? 's' : ''}…`);
 
-  const result = await window.robos.createTasks({ tasks: toCreate, serverInfo, parentEpicKey });
+  const epicKeyByIndex = {};
+  let successCount = 0;
+  let failCount = 0;
+
+  // Sync epics first so children can reference them
+  const orderedIndices = [];
+  tasks.forEach((t, i) => { if (t.isEpic && t.title.trim()) orderedIndices.push(i); });
+  tasks.forEach((t, i) => { if (!t.isEpic && t.title.trim()) orderedIndices.push(i); });
+
+  for (const idx of orderedIndices) {
+    const task = tasks[idx];
+    // Build epicKeyByIndex with any keys obtained so far in this run
+    tasks.forEach((t, i) => { if (t.ticketKey) epicKeyByIndex[i] = t.ticketKey; });
+
+    const result = await window.robos.syncTask({
+      task,
+      taskIndex: idx,
+      serverInfo,
+      parentEpicKey: parentEpicKey || null,
+      epicKeyByIndex,
+    });
+
+    if (result.ok) {
+      tasks[idx].ticketKey = result.key;
+      tasks[idx].ticketUrl = result.url || null;
+      tasks[idx].ticketStatus = 'open';
+      epicKeyByIndex[idx] = result.key;
+      successCount++;
+      showCreateStatus(`Synced ${successCount}/${orderedIndices.length}…`);
+      renderTasks();
+    } else {
+      failCount++;
+    }
+  }
+
   setCreating(false);
+  const msg = `✓ Synced ${successCount} task${successCount !== 1 ? 's' : ''}` +
+    (failCount ? `, ${failCount} failed` : '');
+  showCreateStatus(msg, failCount > 0);
 
-  if (!result.ok) { showCreateStatus('Error: ' + result.error, true); return; }
-
-  renderResults(result.results);
-  document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('results-section').style.display = 'block';
-  tasks = [];
-  updateCount();
+  // Auto-save to project
+  if (currentProjectId) {
+    await window.robos.saveProject({
+      id: currentProjectId,
+      name: currentProjectName,
+      prompt: document.getElementById('prompt-input').value || '',
+      parentEpicKey: parentEpicKey || null,
+      serverId: serverInfo ? serverInfo.id : null,
+      tasks,
+    });
+  } else if (successCount > 0) {
+    // Prompt to save as new project
+    const save = confirm(`${successCount} tasks synced! Save this plan to a project?`);
+    if (save) await saveToProject();
+  }
 }
 
 function setCreating(busy) {

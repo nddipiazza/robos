@@ -11,7 +11,28 @@ app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
-const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+const SETTINGS_FILE   = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+const PROJECTS_DIR    = path.join(os.homedir(), '.config', 'robos', 'task-planner', 'projects');
+
+function ensureProjectsDir() {
+  fs.mkdirSync(PROJECTS_DIR, { recursive: true });
+}
+
+function projectFile(id) {
+  return path.join(PROJECTS_DIR, `${id}.json`);
+}
+
+function listProjectFiles() {
+  ensureProjectsDir();
+  return fs.readdirSync(PROJECTS_DIR)
+    .filter(f => f.endsWith('.json'))
+    .map(f => {
+      try { return JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf8')); }
+      catch { return null; }
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
 
 // ── robos-lib: ai-json ────────────────────────────────────────────────────────
 let aiJson = null;
@@ -443,4 +464,245 @@ ipcMain.handle('open-task-servers', () => {
     '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
   ], { detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: ':0' } }).unref();
   return { ok: true };
+});
+
+// ── Projects CRUD ─────────────────────────────────────────────────────────────
+
+ipcMain.handle('list-projects', () => {
+  try { return { ok: true, projects: listProjectFiles() }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('load-project', (_, id) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(projectFile(id), 'utf8'));
+    return { ok: true, project: data };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('save-project', (_, project) => {
+  try {
+    ensureProjectsDir();
+    const now = Date.now();
+    const existing = (() => {
+      try { return JSON.parse(fs.readFileSync(projectFile(project.id), 'utf8')); } catch { return null; }
+    })();
+    const saved = {
+      id: project.id,
+      name: project.name || 'Untitled Project',
+      description: project.description || '',
+      serverId: project.serverId || null,
+      tasks: project.tasks || [],
+      prompt: project.prompt || '',
+      parentEpicKey: project.parentEpicKey || null,
+      createdAt: existing ? existing.createdAt : now,
+      updatedAt: now,
+    };
+    fs.writeFileSync(projectFile(project.id), JSON.stringify(saved, null, 2), 'utf8');
+    return { ok: true, project: saved };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('delete-project', (_, id) => {
+  try {
+    const fp = projectFile(id);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+// ── Sync a single task to the task server ─────────────────────────────────────
+ipcMain.handle('sync-task', async (_, { task, serverInfo, parentEpicKey, epicKeyByIndex }) => {
+  if (serverInfo.type === 'github') {
+    try {
+      if (task.ticketKey) {
+        // Update existing issue — close and reopen isn't easy; update body/title via API
+        const args = ['issue', 'edit', task.ticketKey, '--repo', serverInfo.repo,
+          '--title', task.title, '--body', task.body || ''];
+        const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 20000 });
+        if (r.status !== 0) return { ok: false, error: r.stderr || 'gh issue edit failed' };
+        return { ok: true, key: task.ticketKey, url: task.ticketUrl };
+      } else {
+        const args = ['issue', 'create', '--repo', serverInfo.repo,
+          '--title', task.title, '--body', task.body || ''];
+        if (task.labels && task.labels.length) {
+          for (const lbl of task.labels) {
+            cp.spawnSync('gh', ['label', 'create', lbl, '--repo', serverInfo.repo,
+              '--color', '5319e7', '--force'], { timeout: 8000 });
+          }
+          args.push('--label', task.labels.join(','));
+        }
+        const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 30000 });
+        if (r.status !== 0) return { ok: false, error: r.stderr || 'gh issue create failed' };
+        const url = (r.stdout || '').trim();
+        const numMatch = url.match(/\/issues\/(\d+)$/);
+        const key = numMatch ? `#${numMatch[1]}` : url;
+        return { ok: true, key, url };
+      }
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  if (serverInfo.type === 'jira') {
+    try {
+      const token = readPassSecret(serverInfo.jiraTokenPassPath);
+      if (!token) return { ok: false, error: 'Could not load Jira API token.' };
+      const { jiraUrl, jiraProject, jiraUsername } = serverInfo;
+      const baseUrl = jiraUrl.replace(/\/$/, '');
+
+      if (task.ticketKey) {
+        // Update existing ticket
+        const fields = { summary: task.title, description: task.body || '' };
+        await jiraRequest('PUT', baseUrl, jiraUsername, token,
+          `/rest/api/2/issue/${task.ticketKey}`, { fields });
+        return { ok: true, key: task.ticketKey, url: task.ticketUrl };
+      } else {
+        // Create new ticket
+        const issuetypeName = task.isEpic ? 'Epic' : (task.issueType || 'Story');
+        const fields = {
+          project: { key: jiraProject },
+          summary: task.title,
+          description: task.body || '',
+          issuetype: { name: issuetypeName },
+        };
+        if (task.isEpic && task.epicName) fields['customfield_10011'] = task.epicName;
+
+        // Resolve epic parent
+        let resolvedEpicKey = null;
+        if (!task.isEpic) {
+          if (typeof task.parentEpicIdx === 'number' && epicKeyByIndex && epicKeyByIndex[task.parentEpicIdx]) {
+            resolvedEpicKey = epicKeyByIndex[task.parentEpicIdx];
+          } else if (task.epicKey) {
+            resolvedEpicKey = task.epicKey;
+          } else if (parentEpicKey) {
+            resolvedEpicKey = parentEpicKey;
+          }
+          if (resolvedEpicKey) fields.parent = { key: resolvedEpicKey };
+        }
+
+        let data;
+        try {
+          data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
+        } catch {
+          if (resolvedEpicKey && fields.parent) {
+            delete fields.parent;
+            fields.customfield_10014 = resolvedEpicKey;
+            data = await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/2/issue', { fields });
+          } else { throw new Error('Failed to create Jira issue'); }
+        }
+        if (!data || !data.key) return { ok: false, error: 'Jira did not return an issue key' };
+        const url = `${baseUrl}/browse/${data.key}`;
+        return { ok: true, key: data.key, url };
+      }
+    } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  return { ok: false, error: `Unknown server type: ${serverInfo.type}` };
+});
+
+// ── tp-list-path: @-mention file typeahead for robos-ai-textarea ──────────────
+function tpSanitizeName(n) {
+  return (n || '').trim().replace(/\s+/g, '_').replace(/[^\w-]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+}
+
+function tpGetTaskServerSuggestions(prefix) {
+  try {
+    const settingsFile = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+    if (!fs.existsSync(settingsFile)) return [];
+    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
+    const servers = settings.task_servers || [];
+    if (!servers.length) return [];
+    const raw = String(prefix || '').replace(/^~\//, '').replace(/^~/, '');
+    const slashIdx = raw.indexOf('/');
+    const typePart = (slashIdx >= 0 ? raw.slice(0, slashIdx) : raw).toLowerCase();
+    const namePart = slashIdx >= 0 ? raw.slice(slashIdx + 1).toLowerCase() : '';
+    return servers.filter(s => {
+      const sType = (s.type || '').toLowerCase();
+      const sName = (s.name || '').toLowerCase();
+      const sSan  = tpSanitizeName(s.name).toLowerCase();
+      if (slashIdx >= 0) {
+        if (sType !== typePart) return false;
+        if (!namePart) return true;
+        return sSan.includes(namePart) || sName.includes(namePart);
+      }
+      if (!typePart) return true;
+      return sType.includes(typePart) || sName.includes(typePart) || sSan.includes(typePart);
+    }).map(s => {
+      const sanitized = tpSanitizeName(s.name);
+      const mentionPath = `${s.type}/${sanitized}`;
+      return { name: mentionPath, path: mentionPath, displayName: s.name, taskServerType: s.type, isTaskServer: true };
+    });
+  } catch { return []; }
+}
+
+ipcMain.handle('tp-list-path', (_, prefix) => {
+  try {
+    const taskServers = tpGetTaskServerSuggestions(prefix);
+    const home     = os.homedir();
+    const expanded = prefix.replace(/^~/, home);
+    const isDir    = expanded.endsWith('/');
+    const dir      = isDir ? expanded : path.dirname(expanded);
+    const partial  = isDir ? '' : path.basename(expanded);
+
+    const isRecursive = partial && !expanded.slice(home.length + 1).includes('/');
+    if (isRecursive) {
+      const INDEX_DIR = path.join(home, '.config', 'robos', 'search-index');
+      let items = [];
+      if (fs.existsSync(INDEX_DIR)) {
+        const indexFiles = fs.readdirSync(INDEX_DIR).filter(f => f.endsWith('.txt'));
+        const seen = new Set();
+        for (const indexFile of indexFiles) {
+          const fp = path.join(INDEX_DIR, indexFile);
+          const r = cp.spawnSync('grep', ['-i', '-m', '30', partial, fp], { encoding: 'utf8', timeout: 2000 });
+          for (const p of (r.stdout || '').split('\n').filter(Boolean)) {
+            if (seen.has(p)) continue;
+            seen.add(p);
+            if (p.startsWith('github.com/')) {
+              const parts = p.replace('github.com/', '').split('/');
+              if (parts.length === 2) {
+                const [org, repo] = parts;
+                if (!repo.toLowerCase().includes(partial.toLowerCase()) && !org.toLowerCase().includes(partial.toLowerCase())) continue;
+                items.push({ name: `${org}/${repo}`, path: p, isRepo: true });
+              }
+              continue;
+            }
+            if (!path.basename(p).toLowerCase().includes(partial.toLowerCase())) continue;
+            let isDirectory = false;
+            try { isDirectory = fs.statSync(p).isDirectory(); } catch {}
+            items.push({ name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true });
+            if (items.length >= 30) break;
+          }
+          if (items.length >= 30) break;
+        }
+      }
+      if (!items.length) {
+        const result = cp.spawnSync('find', [
+          home, '-maxdepth', '6',
+          '-not', '-path', '*/node_modules/*', '-not', '-path', '*/.git/*',
+          '-not', '-path', '*/dist/*', '-not', '-path', '*/.cache/*',
+          '-not', '-name', '.*', '-iname', `*${partial}*`,
+        ], { encoding: 'utf8', timeout: 4000 });
+        items = (result.stdout || '').split('\n').filter(Boolean).slice(0, 30).map(p => {
+          let isDirectory = false;
+          try { isDirectory = fs.statSync(p).isDirectory(); } catch {}
+          return { name: path.basename(p) + (isDirectory ? '/' : ''), path: p + (isDirectory ? '/' : ''), isDir: isDirectory, isPath: true };
+        });
+      }
+      return { ok: true, items: [...taskServers, ...items] };
+    }
+
+    if (!fs.existsSync(dir)) return { ok: true, items: taskServers };
+    if (!fs.statSync(dir).isDirectory()) return { ok: true, items: taskServers };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().includes(partial.toLowerCase()))
+      .filter(e => partial.startsWith('.') || !e.name.startsWith('.'))
+      .slice(0, 30)
+      .map(e => ({
+        name:  e.name + (e.isDirectory() ? '/' : ''),
+        path:  path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+        isDir: e.isDirectory(),
+        isPath: true,
+      }));
+    return { ok: true, items: [...taskServers, ...items] };
+  } catch { return { ok: true, items: [] }; }
 });
