@@ -308,7 +308,7 @@ html, body {
 .dock-btn::after {
   content: '';
   position: absolute;
-  bottom: 3px;
+  bottom: -3px;
   left: 50%;
   transform: translateX(-50%);
   width: 4px;
@@ -320,6 +320,19 @@ html, body {
 
 .win-btn::after {
   background: rgba(255,255,255,0.5);
+}
+
+/* Pinned + running — cyan dot */
+.win-btn.pinned-btn::after {
+  background: var(--accent);
+}
+
+/* Pinned but not running — dimmed */
+.win-btn.pinned-not-running {
+  opacity: 0.5;
+}
+.win-btn.pinned-not-running::after {
+  background: transparent;
 }
 
 /* ── Dock tooltip ─────────────────────────────────────────────────────────── */

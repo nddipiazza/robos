@@ -14,6 +14,28 @@
 let x11Windows  = [];
 let lastWinSnap = '';
 
+// ── Pinned apps (persist across sessions via localStorage) ─────────────────────
+let pinnedApps = JSON.parse(localStorage.getItem('robos-pinned-apps') || '[]');
+
+function savePinnedApps() {
+  localStorage.setItem('robos-pinned-apps', JSON.stringify(pinnedApps));
+}
+function isPinned(instance) {
+  return pinnedApps.some(p => p.instance === instance);
+}
+function pinApp(win) {
+  if (win && !isPinned(win.instance)) {
+    pinnedApps.push({ instance: win.instance, label: win.label, exec: win.exec || win.instance, iconSvg: win.iconSvg });
+    savePinnedApps();
+    lastWinSnap = '';
+  }
+}
+function unpinApp(instance) {
+  pinnedApps = pinnedApps.filter(p => p.instance !== instance);
+  savePinnedApps();
+  lastWinSnap = '';
+}
+
 // ── Dock scale ─────────────────────────────────────────────────────────────────
 const BASE_BTN_PX   = 52;    // default dock button size in px
 const SCALE_MIN     = 0.55;
@@ -97,14 +119,41 @@ function wireDockResize() {
 // ── Dock window buttons ────────────────────────────────────────────────────────
 function renderX11Windows(windows) {
   const area = document.getElementById('window-area');
-  const snap = JSON.stringify(windows.map(w => w.wid + w.title));
+  const runningInstances = new Set(windows.map(w => w.instance));
+  const snap = JSON.stringify(windows.map(w => w.wid + w.title)) + JSON.stringify(pinnedApps.map(p => p.instance));
   if (snap === lastWinSnap) return;
   lastWinSnap = snap;
 
   area.innerHTML = '';
+
+  // Pinned but not running — shown as launcher stubs
+  for (const pinned of pinnedApps) {
+    if (runningInstances.has(pinned.instance)) continue;
+    const btn = document.createElement('button');
+    btn.className = 'dock-btn win-btn pinned-not-running';
+    btn.dataset.tooltip = pinned.label + ' (not running)';
+    if (pinned.iconSvg) {
+      const img = document.createElement('img');
+      img.className = 'win-icon-img';
+      img.src = pinned.iconSvg;
+      img.alt = '';
+      img.onerror = () => img.replaceWith(makeEmojiIcon('🪟'));
+      btn.appendChild(img);
+    } else {
+      btn.appendChild(makeEmojiIcon('🪟'));
+    }
+    btn.addEventListener('click', () => window.robos.execDesktopAction(pinned.exec));
+    btn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showPinnedContextMenu(e.clientX, e.clientY, pinned);
+    });
+    area.appendChild(btn);
+  }
+
+  // Running X11 windows
   for (const win of windows) {
     const btn = document.createElement('button');
-    btn.className = 'dock-btn win-btn';
+    btn.className = 'dock-btn win-btn' + (isPinned(win.instance) ? ' pinned-btn' : '');
     btn.dataset.wid = win.wid;
     btn.dataset.tooltip = win.title.length > 40 ? win.title.slice(0, 38) + '…' : win.title;
 
@@ -140,8 +189,10 @@ let activeMenu = null;
 
 function showContextMenu(x, y, win) {
   removeContextMenu();
+  try { window.robos.setMenuOpen(true); } catch(_) {}
   const wid = typeof win === 'object' ? win.wid : win;
   const actions = (typeof win === 'object' && win.actions) ? win.actions : [];
+  const pinned = typeof win === 'object' ? isPinned(win.instance) : false;
 
   const menu = document.createElement('div');
   menu.className = 'ctx-menu';
@@ -149,8 +200,8 @@ function showContextMenu(x, y, win) {
   const btnPx = Math.round(BASE_BTN_PX * dockScale);
   const DOCK_BOTTOM = btnPx + 20 + 10;
   const extraH = actions.length ? (actions.length * 30 + 8) : 0;
-  const menuH = 130 + extraH;
-  const menuW = 190;
+  const menuH = 160 + extraH;
+  const menuW = 210;
   const top  = Math.max(4, window.innerHeight - DOCK_BOTTOM - menuH);
   const left = Math.min(Math.max(4, x - menuW / 2), window.innerWidth - menuW - 4);
   menu.style.top  = top  + 'px';
@@ -165,11 +216,15 @@ function showContextMenu(x, y, win) {
     actionsHtml += '<div class="ctx-divider"></div>';
   }
 
+  const pinLabel = pinned ? '📌 Unpin from Dock' : '📌 Pin to Dock';
+
   menu.innerHTML = `
     ${actionsHtml}
     <div class="ctx-item" data-action="focus">🔍 Bring to Front</div>
     <div class="ctx-item" data-action="maximize">⬜ Maximize / Restore</div>
     <div class="ctx-item" data-action="minimize">➖ Minimize</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="pin">${pinLabel}</div>
     <div class="ctx-divider"></div>
     <div class="ctx-item ctx-close" data-action="close">✕ Close</div>
   `;
@@ -183,6 +238,11 @@ function showContextMenu(x, y, win) {
     if (action === 'minimize') window.robos.minimizeWindow(wid);
     if (action === 'maximize') window.robos.maximizeWindow(wid);
     if (action === 'close')    window.robos.closeWindow(wid);
+    if (action === 'pin') {
+      if (typeof win === 'object') {
+        isPinned(win.instance) ? unpinApp(win.instance) : pinApp(win);
+      }
+    }
     removeContextMenu();
   });
   document.body.appendChild(menu);
@@ -192,6 +252,39 @@ function showContextMenu(x, y, win) {
 
 function removeContextMenu() {
   if (activeMenu) { activeMenu.remove(); activeMenu = null; }
+  try { window.robos.setMenuOpen(false); } catch(_) {}
+}
+
+function showPinnedContextMenu(x, y, pinned) {
+  removeContextMenu();
+  try { window.robos.setMenuOpen(true); } catch(_) {}
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+
+  const btnPx = Math.round(BASE_BTN_PX * dockScale);
+  const DOCK_BOTTOM = btnPx + 20 + 10;
+  const menuH = 100, menuW = 210;
+  const top  = Math.max(4, window.innerHeight - DOCK_BOTTOM - menuH);
+  const left = Math.min(Math.max(4, x - menuW / 2), window.innerWidth - menuW - 4);
+  menu.style.top  = top  + 'px';
+  menu.style.left = left + 'px';
+
+  menu.innerHTML = `
+    <div class="ctx-item" data-action="launch">▶ Launch</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="unpin">📌 Unpin from Dock</div>
+  `;
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.ctx-item');
+    if (!item) return;
+    const action = item.dataset.action;
+    if (action === 'launch') window.robos.execDesktopAction(pinned.exec);
+    if (action === 'unpin')  unpinApp(pinned.instance);
+    removeContextMenu();
+  });
+  document.body.appendChild(menu);
+  activeMenu = menu;
+  setTimeout(() => document.addEventListener('click', removeContextMenu, { once: true }), 0);
 }
 
 // ── RobOS System Settings menu ─────────────────────────────────────────────────
@@ -204,6 +297,7 @@ function openSysMenu() {
   sysMenuOpen = true;
   menu.style.display = 'block';
   btn.classList.add('active');
+  try { window.robos.setMenuOpen(true); } catch(_) {}
   setTimeout(() => document.addEventListener('click', closeSysMenuOutside, { once: true }), 0);
 }
 
@@ -213,6 +307,7 @@ function closeSysMenu() {
   sysMenuOpen = false;
   menu.style.display = 'none';
   btn.classList.remove('active');
+  try { window.robos.setMenuOpen(false); } catch(_) {}
 }
 
 function closeSysMenuOutside(e) {

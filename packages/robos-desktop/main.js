@@ -60,6 +60,7 @@ const DOCK_H    = 72;   // bottom dock height
 const BASE_DOCK_ZONE = DOCK_H + 16;
 let dockZone = BASE_DOCK_ZONE;
 let dragLock = false;
+let menuOpen = false;  // true while any popup menu is visible — disables click-through
 
 const DEFAULT_PINNED = [
   'dev-central',
@@ -256,6 +257,8 @@ function getRobosIconDataUri(appId) {
 let desktopIconNameMap = null;
 // Maps instance/wmclass key → [{name, exec}] (desktop actions like "New Window")
 let desktopActionsMap = null;
+// Maps instance/wmclass key → exec command string (for launching pinned apps)
+let desktopExecMap = null;
 // Maps icon name (lowercase) → best file path (SVG > large PNG > small PNG)
 let systemIconIndex = null;
 // Maps icon name → data URI (lazy-loaded)
@@ -518,6 +521,63 @@ function getDesktopActionsForInstance(instance, wmclassSecond) {
   return [];
 }
 
+/**
+ * Build a one-time map of WM_CLASS/exec-name → exec command string.
+ * Used to relaunch pinned apps that aren't currently running.
+ */
+function ensureDesktopExecMap() {
+  if (desktopExecMap !== null) return;
+  desktopExecMap = {};
+  const home = process.env.HOME || '/home/robos';
+  const dirs = [
+    '/usr/share/applications',
+    '/usr/local/share/applications',
+    '/var/lib/snapd/desktop/applications',
+    path.join(home, '.local/share/applications'),
+  ];
+  for (const dir of dirs) {
+    let files;
+    try { files = fs.readdirSync(dir).filter(f => f.endsWith('.desktop')); } catch { continue; }
+    for (const file of files) {
+      try {
+        const content = fs.readFileSync(path.join(dir, file), 'utf-8');
+        const execMatch = content.match(/^Exec=(.+)$/m);
+        if (!execMatch) continue;
+        const exec = execMatch[1].trim().replace(/%[a-zA-Z]/g, '').trim();
+        const keys = new Set();
+        const wmMatch = content.match(/^StartupWMClass=(.+)$/m);
+        if (wmMatch) {
+          const wmc = wmMatch[1].trim().toLowerCase();
+          keys.add(wmc); keys.add(wmc.split('_')[0]);
+        }
+        const parts = execMatch[1].trim().split(/\s+/);
+        const binIdx = parts.findIndex(p => p.startsWith('/') || (!p.includes('=') && !p.startsWith('%')));
+        const bin = (binIdx >= 0 ? parts[binIdx] : parts[0]).replace(/^.*\//, '').toLowerCase();
+        if (bin && !bin.startsWith('%') && bin !== 'env') keys.add(bin);
+        const stripped = bin.replace(/-(stable|bin|browser|nightly|beta|esr)$/, '');
+        if (stripped !== bin) keys.add(stripped);
+        const fileKey = file.replace(/\.desktop$/, '').toLowerCase();
+        keys.add(fileKey); keys.add(fileKey.split('_')[0]);
+        for (const key of keys) { if (key && !desktopExecMap[key]) desktopExecMap[key] = exec; }
+      } catch {}
+    }
+  }
+}
+
+function getExecForInstance(instance, wmclassSecond) {
+  ensureDesktopExecMap();
+  const candidates = [
+    instance,
+    wmclassSecond?.toLowerCase(),
+    wmclassSecond?.toLowerCase()?.split('_')[0],
+    instance?.replace(/-(stable|bin|browser|nightly|beta|esr)$/, ''),
+  ].filter(Boolean);
+  for (const key of candidates) {
+    if (desktopExecMap[key]) return desktopExecMap[key];
+  }
+  return instance; // fallback: try running the instance name directly
+}
+
 function getX11Windows() {
   return new Promise((resolve) => {
     exec('wmctrl -lx', { env: { ...process.env, DISPLAY: ':0' } }, (err, stdout) => {
@@ -547,7 +607,8 @@ function getX11Windows() {
           if (iconName) iconSvg = getSystemIconDataUri(iconName);
         }
         const actions = getDesktopActionsForInstance(instance, wmclass.split('.')[1]);
-        windows.push({ wid, wmclass, instance, title: title.trim(), label, iconSvg, actions });
+        const exec    = getExecForInstance(instance, wmclass.split('.')[1]);
+        windows.push({ wid, wmclass, instance, title: title.trim(), label, iconSvg, actions, exec });
       }
       resolve(windows);
     });
@@ -615,7 +676,7 @@ function createWindow() {
       }
       const { bounds: b } = screen.getPrimaryDisplay();
       const { x, y } = screen.getCursorScreenPoint();
-      const inBar = y - b.y <= MENUBAR_H || y - b.y >= b.height - dockZone;
+      const inBar = menuOpen || y - b.y <= MENUBAR_H || y - b.y >= b.height - dockZone;
       if (inBar && ignoring) {
         ignoring = false;
         mainWin.setIgnoreMouseEvents(false);
@@ -714,6 +775,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('set-dock-zone', (_e, h) => { dockZone = Math.ceil(h); });
   ipcMain.handle('set-drag-lock', (_e, v) => { dragLock = !!v; });
+  ipcMain.handle('set-menu-open', (_e, v) => { menuOpen = !!v; });
   ipcMain.on('debug-log', (_e, msg) => { process.stderr.write(`[RENDERER] ${msg}\n`); });
 
   createWindow();
