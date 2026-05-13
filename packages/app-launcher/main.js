@@ -129,18 +129,29 @@ function parseDesktopFile(filePath) {
 
 function getDesktopEntries() {
   const entries = [];
-  const seen = new Set();
+  const seenFile = new Set();
+  const seenExec = new Set(); // deduplicate by resolved binary
 
   for (const dir of DESKTOP_DIRS) {
     if (!fs.existsSync(dir)) continue;
     for (const file of fs.readdirSync(dir)) {
-      if (!file.endsWith('.desktop') || seen.has(file)) continue;
-      seen.add(file);
+      if (!file.endsWith('.desktop') || seenFile.has(file)) continue;
+      seenFile.add(file);
 
       const entry = parseDesktopFile(path.join(dir, file));
       if (!entry || !entry.name || !entry.exec) continue;
       if (entry.type && entry.type !== 'Application') continue;
       if (entry.noDisplay || entry.hidden) continue;
+
+      // Deduplicate: avoid two .desktop files launching the same app.
+      // For generic launchers (electron, python, java, snap), use the full cleaned exec as the key
+      // so we don't accidentally collapse all Electron apps into one.
+      const cleaned = cleanExec(entry.exec);
+      const bin = cleaned.split(/\s+/)[0].replace(/^.*\//, '').toLowerCase();
+      const GENERIC_LAUNCHERS = new Set(['electron', 'python', 'python3', 'java', 'node', 'ruby', 'perl', 'snap']);
+      const dedupeKey = GENERIC_LAUNCHERS.has(bin) ? cleaned.toLowerCase() : bin;
+      if (dedupeKey && seenExec.has(dedupeKey)) continue;
+      if (dedupeKey) seenExec.add(dedupeKey);
 
       entry.iconPath = resolveIcon(entry.icon);
       entries.push(entry);
@@ -204,10 +215,19 @@ app.whenReady().then(() => {
 
   ipcMain.handle('launch-app', (_event, exec) => {
     const cmd = cleanExec(exec);
+    const uid = process.getuid ? process.getuid() : null;
+    const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+    if (!env.DBUS_SESSION_BUS_ADDRESS && uid !== null) {
+      env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
+    }
+    if (!env.XDG_RUNTIME_DIR && uid !== null) {
+      env.XDG_RUNTIME_DIR = `/run/user/${uid}`;
+    }
     const child = spawn(cmd, {
       shell: true,
       detached: true,
-      stdio: 'ignore'
+      stdio: 'ignore',
+      env,
     });
     child.unref();
     if (mainWindow && !mainWindow.isDestroyed()) {

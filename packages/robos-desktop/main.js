@@ -219,6 +219,7 @@ const WM_CLASS_META = {
   'intellij-idea':         { label: 'IntelliJ',  icon: '🧠'   },
   'idea':                  { label: 'IntelliJ',  icon: '🧠'   },
   firefox:                 { label: 'Firefox',   icon: '🦊'   },
+  navigator:               { label: 'Firefox',   icon: '🦊'   }, // Firefox snap WM_CLASS
   chromium:                { label: 'Chromium',  icon: '🌐'   },
   'google-chrome':         { label: 'Chrome',    icon: '🌐'   },
   nautilus:                { label: 'Files',     icon: '📁'   },
@@ -764,7 +765,15 @@ app.whenReady().then(() => {
     // Strip any remaining field codes and run the action
     const safe = execStr.replace(/%[a-zA-Z]/g, '').trim();
     if (!safe) return { ok: false };
-    exec(safe, { env: { ...process.env, DISPLAY: ':0' }, shell: '/bin/bash' });
+    const uid = process.getuid ? process.getuid() : null;
+    const env = { ...process.env, DISPLAY: ':0' };
+    if (!env.DBUS_SESSION_BUS_ADDRESS && uid !== null) {
+      env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
+    }
+    if (!env.XDG_RUNTIME_DIR && uid !== null) {
+      env.XDG_RUNTIME_DIR = `/run/user/${uid}`;
+    }
+    exec(safe, { env, shell: '/bin/bash' });
     return { ok: true };
   });
 
