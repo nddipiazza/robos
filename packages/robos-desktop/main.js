@@ -458,7 +458,8 @@ function ensureDesktopActionsMap() {
         // Parse each [Desktop Action X] section
         const actions = [];
         for (const id of actionIds) {
-          const sectionRe = new RegExp(`^\\[Desktop Action ${id}\\]([\\s\\S]*?)(?=^\\[|$)`, 'm');
+          // No 'm' flag: $ = end of string. \n\[ detects next section header.
+          const sectionRe = new RegExp(`\\[Desktop Action ${id}\\]([\\s\\S]*?)(?=\\n\\[|$)`);
           const section = content.match(sectionRe);
           if (!section) continue;
           const nameMatch = section[1].match(/^Name=(.+)$/m);
