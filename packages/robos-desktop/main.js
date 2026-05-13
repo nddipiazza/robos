@@ -22,6 +22,7 @@ const fs     = require('fs');
 const net    = require('net');
 const { spawn, exec } = require('child_process');
 
+
 // ── Single instance + app identity ───────────────────────────────────────────
 app.setName('robos-desktop');
 app.setPath('userData', path.join(
@@ -51,6 +52,14 @@ const APP_BASE      = '/usr/local/share/robos';
 const CONFIG_DIR    = path.join(process.env.HOME || '/home/robos', '.config', 'robos');
 const PINNED_FILE   = path.join(CONFIG_DIR, 'desktop-pinned.json');
 const SOCKET_PATH   = `/run/user/${process.getuid()}/robos-dm.sock`;
+
+const MENUBAR_H = 28;   // thin top menu bar (macOS menu bar style)
+const DOCK_H    = 72;   // bottom dock height
+
+// ── Module-level state for dock (must be accessible from IPC handlers before ready-to-show) ──
+const BASE_DOCK_ZONE = DOCK_H + 16;
+let dockZone = BASE_DOCK_ZONE;
+let dragLock = false;
 
 const DEFAULT_PINNED = [
   'dev-central',
@@ -124,10 +133,17 @@ function launchAppDirect(appId) {
     console.warn(`[robos-desktop] binary not found: ${cfg.bin}`);
     return;
   }
+  // Ensure dbus session bus is available — it may be missing if robos-desktop
+  // was started outside a full GNOME session (e.g. restarted from SSH).
+  const uid = process.getuid ? process.getuid() : null;
+  const env = { ...process.env };
+  if (!env.DBUS_SESSION_BUS_ADDRESS && uid !== null) {
+    env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
+  }
   const child = spawn(cfg.bin, cfg.args, {
     detached: true,
     stdio: 'ignore',
-    env: process.env,
+    env,
   });
   child.unref();
   console.log(`[robos-desktop] launched ${appId} pid=${child.pid}`);
@@ -186,14 +202,13 @@ function writePinned(list) {
 // ── App registry — 4 pinned apps shown in the dock ────────────────────────────
 // Keep this short. Full app list lives in app-launcher.
 const APP_META = {
-  'app-launcher': { label: 'Apps',        icon: '🚀', desc: 'Open all apps'           },
   'dev-central':  { label: 'Dev Central', icon: '🏠', desc: 'Daily dashboard'          },
   'git-projects': { label: 'Git',         icon: '🌿', desc: 'Git workspaces'           },
   'ai-prompt':    { label: 'AI Prompt',   icon: '✨', desc: 'AI-powered OS prompt'     },
 };
 
 // ── X11 window list ────────────────────────────────────────────────────────────
-// Maps WM_CLASS instance prefix → { label, icon }
+// Maps WM_CLASS instance prefix → { label, icon } for non-RobOS apps
 const WM_CLASS_META = {
   'gnome-terminal-server': { label: 'Terminal',  icon: '🖥️'  },
   'gnome-terminal':        { label: 'Terminal',  icon: '🖥️'  },
@@ -213,9 +228,201 @@ const WM_CLASS_META = {
 
 // Ignore these in the window taskbar (our own shell + background daemons)
 const WM_CLASS_IGNORE = new Set([
-  'robos-desktop', 'desktop-widgets', 'robos-toast',
-  'gjs',           // GNOME shell extensions
+  'robos-desktop',              // taskbar shell itself
+  'robos-desktop-dashboard',    // legacy desktop-dashboard alias
+  'robos-app-launcher',         // app launcher (opened via taskbar button)
+  'desktop-widgets', 'robos-toast',
+  'gjs',                        // GNOME shell extensions
 ]);
+
+// ── Icon helpers ──────────────────────────────────────────────────────────────
+
+// Cache of appId → SVG data URI (RobOS apps)
+const iconCache = {};
+
+function getRobosIconDataUri(appId) {
+  if (iconCache[appId] !== undefined) return iconCache[appId];
+  const iconPath = `/usr/local/share/robos/${appId}/icon.svg`;
+  try {
+    const svg = fs.readFileSync(iconPath, 'utf-8');
+    iconCache[appId] = 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
+  } catch {
+    iconCache[appId] = null;
+  }
+  return iconCache[appId];
+}
+
+// Maps instance/wmclass key → icon name (from .desktop files)
+let desktopIconNameMap = null;
+// Maps icon name (lowercase) → best file path (SVG > large PNG > small PNG)
+let systemIconIndex = null;
+// Maps icon name → data URI (lazy-loaded)
+const systemIconDataUriCache = {};
+
+/**
+ * Pre-scan ALL icon directories into a name→path index.
+ * Priority: SVG (scalable) > 256px PNG > 128px > 96px > 64px > 48px > 32px.
+ * Covers every installed theme automatically.
+ */
+function buildSystemIconIndex() {
+  if (systemIconIndex !== null) return;
+  systemIconIndex = {};
+  const SIZE_ORDER = [
+    'scalable', '256x256', '192x192', '128x128', '96x96', '64x64', '48x48', '32x32', '24x24', '16x16',
+  ];
+  // Preferred themes first — their icons win over accessibility/fallback themes
+  const PREFERRED = ['Yaru', 'hicolor', 'Adwaita', 'gnome', 'Papirus', 'breeze', 'elementary'];
+  const DEPRIORITIZED = new Set(['HighContrast', 'HighContrastInverse', 'locolor', 'Mono', 'Humanity']);
+  const iconBaseDirs = ['/usr/share/icons', '/usr/local/share/icons'];
+  // Collect all theme dirs sorted: preferred first, deprioritized last
+  const allThemes = [];
+  for (const base of iconBaseDirs) {
+    try { for (const t of fs.readdirSync(base)) allThemes.push({ base, name: t }); } catch {}
+  }
+  const preferred = allThemes.filter(t => PREFERRED.includes(t.name));
+  const normal    = allThemes.filter(t => !PREFERRED.includes(t.name) && !DEPRIORITIZED.has(t.name));
+  const low       = allThemes.filter(t => DEPRIORITIZED.has(t.name));
+  const themeDirs = [...preferred, ...normal, ...low].map(t => path.join(t.base, t.name));
+  // Iterate sizes first so SVG wins over PNG regardless of theme
+  for (const size of SIZE_ORDER) {
+    const isSvg = size === 'scalable';
+    for (const themeDir of themeDirs) {
+      const appsDir = path.join(themeDir, size, 'apps');
+      let files;
+      try { files = fs.readdirSync(appsDir); } catch { continue; }
+      for (const file of files) {
+        const isSvgFile = file.endsWith('.svg');
+        const isPngFile = file.endsWith('.png');
+        if (!isSvgFile && !isPngFile) continue;
+        if (isSvg && !isSvgFile) continue; // scalable pass: SVG only
+        const name = file.replace(/\.(svg|png)$/, '').toLowerCase();
+        if (!systemIconIndex[name]) systemIconIndex[name] = path.join(appsDir, file);
+      }
+    }
+  }
+  // Pixmaps as final fallback
+  try {
+    for (const file of fs.readdirSync('/usr/share/pixmaps')) {
+      if (!file.endsWith('.svg') && !file.endsWith('.png')) continue;
+      const name = file.replace(/\.(svg|png)$/, '').toLowerCase();
+      if (!systemIconIndex[name]) systemIconIndex[name] = path.join('/usr/share/pixmaps', file);
+    }
+  } catch {}
+}
+
+/**
+ * Build a one-time map of WM_CLASS/exec-name → Icon= value from all .desktop files.
+ * Scans system, snap, and user application dirs.
+ */
+function ensureDesktopIconMap() {
+  if (desktopIconNameMap !== null) return;
+  desktopIconNameMap = {};
+  const home = process.env.HOME || '/home/robos';
+  const dirs = [
+    '/usr/share/applications',
+    '/usr/local/share/applications',
+    '/var/lib/snapd/desktop/applications',
+    path.join(home, '.local/share/applications'),
+  ];
+  for (const dir of dirs) {
+    let files;
+    try { files = fs.readdirSync(dir).filter(f => f.endsWith('.desktop')); } catch { continue; }
+    for (const file of files) {
+      try {
+        const content = fs.readFileSync(path.join(dir, file), 'utf-8');
+        const iconMatch = content.match(/^Icon=(.+)$/m);
+        if (!iconMatch) continue;
+        const iconName = iconMatch[1].trim();
+        const keys = new Set();
+        const wmMatch  = content.match(/^StartupWMClass=(.+)$/m);
+        const execMatch = content.match(/^Exec=(.+)$/m);
+        if (wmMatch) {
+          const wmc = wmMatch[1].trim().toLowerCase();
+          keys.add(wmc);
+          keys.add(wmc.split('_')[0]); // snap variant: "firefox_firefox" → "firefox"
+        }
+        if (execMatch) {
+          // Strip env wrappers (e.g. "env VAR=x /usr/bin/foo arg") to get the real binary
+          const parts = execMatch[1].trim().split(/\s+/);
+          const binIdx = parts.findIndex(p => p.startsWith('/') || (!p.includes('=') && !p.startsWith('%')));
+          const bin = (binIdx >= 0 ? parts[binIdx] : parts[0]).replace(/^.*\//, '').toLowerCase();
+          if (bin && !bin.startsWith('%') && bin !== 'env') keys.add(bin);
+          // Also strip common packaging suffixes: foo-stable → foo, foo-bin → foo
+          const stripped = bin.replace(/-(stable|bin|browser|nightly|beta|esr)$/, '');
+          if (stripped !== bin) keys.add(stripped);
+        }
+        // Filename key (e.g. "google-chrome.desktop" → "google-chrome")
+        const fileKey = file.replace(/\.desktop$/, '').toLowerCase();
+        keys.add(fileKey);
+        // Snap filename variant: "firefox_firefox.desktop" → "firefox"
+        keys.add(fileKey.split('_')[0]);
+        for (const key of keys) {
+          if (key && !desktopIconNameMap[key]) desktopIconNameMap[key] = iconName;
+        }
+      } catch {}
+    }
+  }
+}
+
+/**
+ * Given a WM_CLASS instance string, find the best icon name by trying multiple key variants.
+ * Tries desktop map first (most accurate), then falls back to direct icon index lookup.
+ */
+function resolveIconNameForInstance(instance, wmclassSecond) {
+  ensureDesktopIconMap();
+  buildSystemIconIndex();
+
+  // Generate key candidates from most specific to most general
+  const candidates = [];
+  const add = (k) => { if (k && !candidates.includes(k)) candidates.push(k); };
+  add(instance);
+  add(wmclassSecond?.toLowerCase());
+  add(wmclassSecond?.toLowerCase().split('_')[0]);
+  // Strip common packaging suffixes
+  const SUFFIXES = /-(stable|bin|browser|nightly|beta|esr)$/;
+  for (const k of [instance, wmclassSecond?.toLowerCase()]) {
+    if (k) add(k.replace(SUFFIXES, ''));
+  }
+
+  // 1. Try desktop icon map (maps to declared Icon= value)
+  for (const key of candidates) {
+    if (key && desktopIconNameMap[key]) return desktopIconNameMap[key];
+  }
+
+  // 2. Try candidates directly as icon names in the icon index
+  for (const key of candidates) {
+    if (key && systemIconIndex[key.toLowerCase()]) return key;
+  }
+
+  return null;
+}
+
+/** Resolve an icon name or absolute path to a data URI. */
+function getSystemIconDataUri(iconName) {
+  if (!iconName) return null;
+  const cacheKey = iconName.toLowerCase();
+  if (systemIconDataUriCache[cacheKey] !== undefined) return systemIconDataUriCache[cacheKey];
+
+  buildSystemIconIndex();
+
+  let iconPath = null;
+  if (iconName.startsWith('/')) {
+    // Absolute path (common with snap apps)
+    iconPath = fs.existsSync(iconName) ? iconName : null;
+  } else {
+    iconPath = systemIconIndex[cacheKey] || null;
+  }
+
+  if (!iconPath) { systemIconDataUriCache[cacheKey] = null; return null; }
+  try {
+    const data = fs.readFileSync(iconPath);
+    const mime = iconPath.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    systemIconDataUriCache[cacheKey] = `data:${mime};base64,${data.toString('base64')}`;
+  } catch {
+    systemIconDataUriCache[cacheKey] = null;
+  }
+  return systemIconDataUriCache[cacheKey];
+}
 
 function getX11Windows() {
   return new Promise((resolve) => {
@@ -227,12 +434,25 @@ function getX11Windows() {
         // Format: <wid> <desktop> <wmclass> <host> <title...>
         const m = line.match(/^(0x[0-9a-f]+)\s+(-?\d+)\s+(\S+)\s+\S+\s+(.*)/i);
         if (!m) continue;
-        const [, wid, desktop, wmclass, title] = m;
-        if (parseInt(desktop, 10) < 0) continue; // skip sticky system windows
+        const [, wid, , wmclass, title] = m;
+        // instance is the part before the dot, lowercase
         const instance = wmclass.split('.')[0].toLowerCase();
         if (WM_CLASS_IGNORE.has(instance)) continue;
-        const meta = WM_CLASS_META[instance] || { label: instance, icon: '🪟' };
-        windows.push({ wid, wmclass, instance, title: title.trim(), ...meta });
+
+        // RobOS apps have WM_CLASS like "robos-app-launcher.robos-app-launcher"
+        let label, iconSvg = null;
+        if (instance.startsWith('robos-')) {
+          const appId = instance.replace(/^robos-/, '');
+          label = appId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          iconSvg = getRobosIconDataUri(appId);
+        } else {
+          const meta = WM_CLASS_META[instance] || { label: instance, icon: '🪟' };
+          label = meta.label;
+          // Resolve icon from system .desktop files + icon index
+          const iconName = resolveIconNameForInstance(instance, wmclass.split('.')[1]);
+          if (iconName) iconSvg = getSystemIconDataUri(iconName);
+        }
+        windows.push({ wid, wmclass, instance, title: title.trim(), label, iconSvg });
       }
       resolve(windows);
     });
@@ -240,17 +460,21 @@ function getX11Windows() {
 }
 
 function focusWindow(wid) {
-  exec(`wmctrl -ia ${wid}`, { env: { ...process.env, DISPLAY: ':0' } });
+  // Remove minimized/hidden state first, then activate — works even if window is minimized
+  exec(
+    `wmctrl -ir ${wid} -b remove,hidden; wmctrl -ia ${wid}`,
+    { env: { ...process.env, DISPLAY: ':0' }, shell: '/bin/bash' }
+  );
 }
 
 // ── Main window ───────────────────────────────────────────────────────────────
 let mainWin = null;
 
 function createWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  // Use the full bounds, not work area, to cover everything
   const { bounds } = screen.getPrimaryDisplay();
 
+  // Full-screen transparent overlay — renders top menu bar + bottom dock.
+  // The transparent area in the middle is click-through (setIgnoreMouseEvents).
   mainWin = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
@@ -261,13 +485,12 @@ function createWindow() {
     movable: false,
     minimizable: false,
     maximizable: false,
-    closable: false,     // never close — this is the desktop shell
+    closable: false,
     skipTaskbar: true,
     focusable: true,
-    // 'desktop' type sets _NET_WM_WINDOW_TYPE_DESKTOP on X11 — sits behind all windows
-    type: 'desktop',
+    alwaysOnTop: true,
+    transparent: true,
     title: 'RobOS Desktop',
-    backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -277,26 +500,55 @@ function createWindow() {
 
   mainWin.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // Ensure it covers the full screen on X11
   mainWin.once('ready-to-show', () => {
-    mainWin.setFullScreen(false);
-    mainWin.setBounds(bounds);
+    mainWin.setAlwaysOnTop(true, 'dock');
+    mainWin.setIgnoreMouseEvents(true); // default: click-through everywhere
     mainWin.show();
-    mainWin.setAlwaysOnTop(false);
-    // Lower it below all normal windows
-    try {
-      exec(
-        `WID=$(xdotool search --name "RobOS Desktop" 2>/dev/null | head -1);` +
-        `[ -n "$WID" ] && xdotool windowlower "$WID" 2>/dev/null || true`,
-        { env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }, shell: '/bin/bash' },
-        () => {}
-      );
-    } catch {}
-  });
+    // Force position to (0,0) — WM may offset due to other windows' struts
+    mainWin.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height });
+    // Don't steal keyboard focus from whatever the user was using
+    mainWin.blur();
 
-  // Re-lower when another window takes focus (keep desktop behind)
-  mainWin.on('focus', () => {
-    if (mainWin && !mainWin.isDestroyed()) mainWin.setAlwaysOnTop(false);
+    // Poll cursor position at 20fps and toggle click-through.
+    // setIgnoreMouseEvents({forward:true}) is Windows-only — on Linux we poll instead.
+    let ignoring = true;
+    setInterval(() => {
+      if (!mainWin || mainWin.isDestroyed()) return;
+      if (dragLock) {
+        if (ignoring) { ignoring = false; mainWin.setIgnoreMouseEvents(false); }
+        return;
+      }
+      const { bounds: b } = screen.getPrimaryDisplay();
+      const { x, y } = screen.getCursorScreenPoint();
+      const inBar = y - b.y <= MENUBAR_H || y - b.y >= b.height - dockZone;
+      if (inBar && ignoring) {
+        ignoring = false;
+        mainWin.setIgnoreMouseEvents(false);
+      } else if (!inBar && !ignoring) {
+        ignoring = true;
+        mainWin.setIgnoreMouseEvents(true);
+      }
+    }, 50);
+
+    const env = { ...process.env, DISPLAY: ':0' };
+    setTimeout(() => {
+      const screenW = bounds.width;
+      const screenH = bounds.height;
+      // Reserve top space for menu bar only. Dock floats over windows (no bottom strut)
+      // so apps can use the full screen height — just like macOS/Windows 11.
+      exec(
+        // Get our specific window by PID (not just name, to avoid matching desktop-dashboard)
+        `WID=$(wmctrl -lp 2>/dev/null | awk -v pid=${process.pid} '$3==pid{print $1; exit}'); ` +
+        `if [ -n "$WID" ]; then ` +
+          `wmctrl -ir $WID -b add,sticky,skip_taskbar,skip_pager 2>/dev/null; ` +
+          `xdotool windowmove $WID 0 0 2>/dev/null; ` +
+          `xdotool windowsize $WID ${screenW} ${screenH} 2>/dev/null; ` +
+          `xprop -id $WID -f _NET_WM_STRUT 32c -set _NET_WM_STRUT "0,0,${MENUBAR_H},0" 2>/dev/null; ` +
+          `xprop -id $WID -f _NET_WM_STRUT_PARTIAL 32c -set _NET_WM_STRUT_PARTIAL "0,0,${MENUBAR_H},0,0,0,0,0,0,${screenW - 1},0,0" 2>/dev/null; ` +
+        `fi`,
+        { env, shell: '/bin/bash', timeout: 5000 }, () => {}
+      );
+    }, 1000);
   });
 
   mainWin.on('closed', () => { mainWin = null; });
@@ -336,10 +588,30 @@ app.whenReady().then(() => {
     return { ok: true };
   });
 
+  ipcMain.handle('minimize-window', (_e, wid) => {
+    exec(`xdotool windowminimize ${wid}`, { env: { ...process.env, DISPLAY: ':0' } });
+    return { ok: true };
+  });
+
+  ipcMain.handle('maximize-window', (_e, wid) => {
+    exec(`wmctrl -ir ${wid} -b toggle,maximized_vert,maximized_horz`,
+      { env: { ...process.env, DISPLAY: ':0' } });
+    return { ok: true };
+  });
+
+  ipcMain.handle('close-window', (_e, wid) => {
+    exec(`wmctrl -ic ${wid}`, { env: { ...process.env, DISPLAY: ':0' } });
+    return { ok: true };
+  });
+
   ipcMain.handle('switch-to-gnome', () => {
     restoreGnomePanelAndQuit();
     return { ok: true };
   });
+
+  ipcMain.handle('set-dock-zone', (_e, h) => { dockZone = Math.ceil(h); });
+  ipcMain.handle('set-drag-lock', (_e, v) => { dragLock = !!v; });
+  ipcMain.on('debug-log', (_e, msg) => { process.stderr.write(`[RENDERER] ${msg}\n`); });
 
   createWindow();
 });
