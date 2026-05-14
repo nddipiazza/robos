@@ -44,6 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
     desc.style.display = visible ? 'none' : 'block';
     toggle.textContent = (visible ? '▸' : '▾') + ' Task Description';
   });
+
+  // Wire @-mention file typeahead for robos-ai-textarea
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      const ctxEl = document.getElementById('extra-context');
+      if (ctxEl && ctxEl.addEventListener) {
+        ctxEl.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.robos.searchIndex(e.detail.query);
+            if (r && r.ok && ctxEl._showMentions) ctxEl._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
 });
 
 // ── Load tasks ────────────────────────────────────────────────────────────────
@@ -97,8 +112,12 @@ function selectTask(task) {
   renderTaskList();
 
   document.getElementById('workspace-empty').style.display = 'none';
-  document.getElementById('workspace-active').style.display = 'flex';
-  document.getElementById('workspace-active').style.flexDirection = 'column';
+  const wa = document.getElementById('workspace-active');
+  wa.style.display = 'flex';
+  wa.style.flex = '1';
+  wa.style.minHeight = '0';
+  wa.style.flexDirection = 'column';
+  wa.style.overflow = 'hidden';
 
   document.getElementById('ws-task-key').textContent = task.key;
   document.getElementById('ws-task-title').textContent = task.title;
@@ -197,3 +216,35 @@ function appendOutput(text, stream) {
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Demo helpers — called via evalJS from the demo runner ─────────────────────
+window._demoSetServer = function(name, type) {
+  const badge = document.getElementById('server-badge');
+  badge.textContent = `${name} (${type})`;
+  badge.classList.add('connected');
+  document.getElementById('no-server').style.display = 'none';
+  document.getElementById('main-layout').style.display = 'flex';
+};
+
+window._demoInjectTasks = function(tasks) {
+  allTasks = tasks;
+  renderTaskList();
+};
+
+window._demoSelectTask = function(key) {
+  const task = allTasks.find(t => t.key === key);
+  if (task) selectTask(task);
+};
+
+window._demoAppendOutput = function(text, isStderr) {
+  appendOutput(text, isStderr ? 'stderr' : 'stdout');
+};
+
+window._demoSetAgentBusy = function(busy) {
+  agentRunning = busy;
+  setAgentBusy(busy);
+};
+
+window._demoSetAgentStatus = function(msg, cls) {
+  setAgentStatus(msg, cls);
+};

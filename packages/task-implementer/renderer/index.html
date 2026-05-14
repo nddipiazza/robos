@@ -56,7 +56,7 @@
           <p>Select a task to implement with AI</p>
         </div>
 
-        <div id="workspace-active" style="display:none">
+        <div id="workspace-active" style="display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;">
           <div class="workspace-header">
             <div class="workspace-task-info">
               <span id="ws-task-key" class="task-key"></span>
@@ -73,8 +73,8 @@
           </div>
 
           <div class="context-row">
-            <textarea id="extra-context" class="context-input"
-              placeholder="Optional: add context for the AI agent (e.g. approach hints, file paths, constraints)…" rows="2"></textarea>
+            <robos-ai-textarea id="extra-context" show-submit="false" show-commands="false"
+              placeholder="Optional: add context for the AI agent (e.g. approach hints, file paths, constraints)…" min-height="56"></robos-ai-textarea>
           </div>
 
           <div class="task-description-box" id="task-description-box" style="display:none">
@@ -92,6 +92,7 @@
       </main>
     </div>
   </div>
+  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

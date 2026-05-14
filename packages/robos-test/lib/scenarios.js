@@ -315,6 +315,30 @@ module.exports = {
     settings: { task_servers: [] },
   },
 
+  'task-implementer-jira': {
+    name: 'task-implementer-jira',
+    description: 'Task implementer against real Acme Inc Jira — KAN project',
+    ghAuth: true,
+    sshKey: { public: FAKE_PUBKEY, private: FAKE_PRIVKEY },
+    gitConfig: { name: 'Nicholas DiPiazza', email: 'nicholas.dipiazza@gmail.com' },
+    passReady: true,
+    passEntries: {
+      'robos-acme-inc/jira-token': process.env.JIRA_TOKEN || '',
+    },
+    settings: {
+      task_servers: [{
+        id: 'jira-acme-1',
+        type: 'jira',
+        name: 'Acme Inc Jira',
+        url: 'https://robos-acme.atlassian.net',
+        username: process.env.JIRA_USER || 'nicholas.dipiazza@gmail.com',
+        token_pass_path: 'robos-acme-inc/jira-token',
+        projects: ['KAN'],
+      }],
+      active_task_server: 'jira-acme-1',
+    },
+  },
+
   'task-implementer-github': {
     name: 'task-implementer-github',
     description: 'Task implementer against a GitHub task server (issues come from gh stub)',

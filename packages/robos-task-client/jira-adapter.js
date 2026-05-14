@@ -1,9 +1,9 @@
 /**
- * Jira Adapter — wraps Jira REST API v2 for both Cloud and Data Center.
+ * Jira Adapter — wraps Jira REST API v3 for both Cloud and Data Center.
  *
  * Auth: Bearer token (Data Center/Server) or Basic auth (Cloud: email + API token).
- * The adapter tries Bearer first, then falls back to Basic — matching the pattern
- * in task-servers' connection test.
+ * Descriptions use Atlassian Document Format (ADF) in v3; _adfToText() extracts
+ * plain text for display.
  */
 'use strict';
 
@@ -29,68 +29,26 @@ class JiraAdapter {
 
   // ── HTTP helper ──────────────────────────────────────────────────────────
 
-  _request(method, apiPath, body = null) {
-    return new Promise((resolve, reject) => {
-      const fullPath = `${this._basePath}/rest/api/2${apiPath}`;
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-
-      // Try Bearer first (Server/DC), then Basic (Cloud)
-      if (this.token && !this.username) {
-        headers['Authorization'] = `Bearer ${this.token}`;
-      } else if (this.username && this.token) {
-        headers['Authorization'] = 'Basic ' + Buffer.from(`${this.username}:${this.token}`).toString('base64');
-      }
-
-      const opts = {
-        hostname: this._hostname,
-        port: this._port,
-        path: fullPath,
-        method,
-        headers,
-        timeout: 15000,
-      };
-
-      if (body) {
-        const payload = JSON.stringify(body);
-        opts.headers['Content-Length'] = Buffer.byteLength(payload);
-      }
-
-      const transport = this._isHttps ? https : http;
-      const req = transport.request(opts, (res) => {
-        let data = '';
-        res.on('data', c => data += c);
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try { resolve(data ? JSON.parse(data) : {}); }
-            catch { resolve(data); }
-          } else if (res.statusCode === 401 && headers['Authorization'].startsWith('Bearer')) {
-            // Retry with Basic auth
-            this._requestBasic(method, apiPath, body).then(resolve).catch(reject);
-          } else {
-            let msg = `Jira API ${res.statusCode}: ${apiPath}`;
-            try { const err = JSON.parse(data); msg = err.errorMessages?.[0] || err.message || msg; } catch {}
-            reject(new Error(msg));
-          }
-        });
-      });
-      req.on('error', reject);
-      req.on('timeout', () => { req.destroy(); reject(new Error('Jira request timeout')); });
-      if (body) req.write(JSON.stringify(body));
-      req.end();
-    });
+  _authHeaders() {
+    if (this.token && !this.username) {
+      return { 'Authorization': `Bearer ${this.token}` };
+    } else if (this.username && this.token) {
+      return { 'Authorization': 'Basic ' + Buffer.from(`${this.username}:${this.token}`).toString('base64') };
+    }
+    return {};
   }
 
-  _requestBasic(method, apiPath, body = null) {
+  _request(method, apiPath, body = null) {
     return new Promise((resolve, reject) => {
-      const fullPath = `${this._basePath}/rest/api/2${apiPath}`;
+      const fullPath = `${this._basePath}/rest/api/3${apiPath}`;
       const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Basic ' + Buffer.from(`${this.username}:${this.token}`).toString('base64'),
+        ...this._authHeaders(),
       };
+
+      const payload = body ? JSON.stringify(body) : null;
+      if (payload) headers['Content-Length'] = Buffer.byteLength(payload);
 
       const opts = {
         hostname: this._hostname,
@@ -100,11 +58,6 @@ class JiraAdapter {
         headers,
         timeout: 15000,
       };
-
-      if (body) {
-        const payload = JSON.stringify(body);
-        opts.headers['Content-Length'] = Buffer.byteLength(payload);
-      }
 
       const transport = this._isHttps ? https : http;
       const req = transport.request(opts, (res) => {
@@ -116,14 +69,17 @@ class JiraAdapter {
             catch { resolve(data); }
           } else {
             let msg = `Jira API ${res.statusCode}: ${apiPath}`;
-            try { const err = JSON.parse(data); msg = err.errorMessages?.[0] || err.message || msg; } catch {}
+            try {
+              const err = JSON.parse(data);
+              msg = err.errorMessages?.[0] || err.message || msg;
+            } catch {}
             reject(new Error(msg));
           }
         });
       });
       req.on('error', reject);
       req.on('timeout', () => { req.destroy(); reject(new Error('Jira request timeout')); });
-      if (body) req.write(JSON.stringify(body));
+      if (payload) req.write(payload);
       req.end();
     });
   }
@@ -139,17 +95,17 @@ class JiraAdapter {
     }
   }
 
-  // ── Search ───────────────────────────────────────────────────────────────
+  // ── Search — POST /rest/api/3/search/jql ─────────────────────────────────
 
   async searchIssues({ jql, maxResults = 50, startAt = 0, fields } = {}) {
-    const defaultFields = 'summary,status,assignee,priority,issuetype,created,updated,labels,parent';
-    const params = new URLSearchParams({
+    const defaultFields = ['summary', 'description', 'status', 'assignee', 'priority', 'issuetype', 'created', 'updated', 'labels', 'parent'];
+    const body = {
       jql: jql || (this.projects.length ? `project IN (${this.projects.join(',')})` : ''),
-      maxResults: String(maxResults),
-      startAt: String(startAt),
-      fields: fields || defaultFields,
-    });
-    const result = await this._request('GET', `/search?${params}`);
+      maxResults,
+      startAt,
+      fields: fields ? (Array.isArray(fields) ? fields : fields.split(',').map(f => f.trim())) : defaultFields,
+    };
+    const result = await this._request('POST', '/search/jql', body);
     return {
       issues: (result.issues || []).map(i => this._mapIssue(i)),
       total: result.total || 0,
@@ -173,8 +129,9 @@ class JiraAdapter {
       summary,
       issuetype: { name: issueType },
     };
-    if (description) fields.description = description;
-    if (assignee) fields.assignee = { name: assignee };
+    // v3 requires ADF for description
+    if (description) fields.description = this._textToAdf(description);
+    if (assignee) fields.assignee = { id: assignee };
     if (labels) fields.labels = labels;
     if (priority) fields.priority = { name: priority };
 
@@ -187,8 +144,8 @@ class JiraAdapter {
   async updateIssue(issueKey, { summary, description, assignee, labels, priority }) {
     const fields = {};
     if (summary !== undefined) fields.summary = summary;
-    if (description !== undefined) fields.description = description;
-    if (assignee !== undefined) fields.assignee = assignee ? { name: assignee } : null;
+    if (description !== undefined) fields.description = this._textToAdf(description);
+    if (assignee !== undefined) fields.assignee = assignee ? { id: assignee } : null;
     if (labels !== undefined) fields.labels = labels;
     if (priority !== undefined) fields.priority = { name: priority };
 
@@ -229,7 +186,10 @@ class JiraAdapter {
   // ── Comments ─────────────────────────────────────────────────────────────
 
   async addComment(issueKey, body) {
-    await this._request('POST', `/issue/${issueKey}/comment`, { body });
+    // v3 requires ADF for comment body
+    await this._request('POST', `/issue/${issueKey}/comment`, {
+      body: this._textToAdf(body),
+    });
     return { ok: true };
   }
 
@@ -238,7 +198,7 @@ class JiraAdapter {
     return (result.comments || []).map(c => ({
       id: c.id,
       author: c.author?.displayName || c.author?.name || 'unknown',
-      body: c.body,
+      body: this._adfToText(c.body),
       created: c.created,
       updated: c.updated,
     }));
@@ -248,7 +208,7 @@ class JiraAdapter {
 
   async logWork(issueKey, timeSpentSeconds, comment) {
     const worklog = { timeSpentSeconds };
-    if (comment) worklog.comment = comment;
+    if (comment) worklog.comment = this._textToAdf(comment);
     await this._request('POST', `/issue/${issueKey}/worklog`, worklog);
     return { ok: true };
   }
@@ -279,6 +239,34 @@ class JiraAdapter {
     return statuses;
   }
 
+  // ── ADF helpers ──────────────────────────────────────────────────────────
+
+  /** Convert Atlassian Document Format (v3) to plain text. */
+  _adfToText(adf) {
+    if (!adf || typeof adf !== 'object') return String(adf || '');
+    const parts = [];
+    const walk = (node) => {
+      if (!node) return;
+      if (node.type === 'text') { parts.push(node.text || ''); return; }
+      if (node.type === 'hardBreak' || node.type === 'rule') { parts.push('\n'); return; }
+      const isBlock = ['paragraph', 'heading', 'listItem', 'blockquote', 'codeBlock', 'panel'].includes(node.type);
+      if (node.content) node.content.forEach(walk);
+      if (isBlock) parts.push('\n');
+    };
+    walk(adf);
+    return parts.join('').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  /** Wrap plain text as a minimal ADF document (v3). */
+  _textToAdf(text) {
+    if (text && typeof text === 'object' && text.type === 'doc') return text;
+    const paragraphs = String(text || '').split(/\n\n+/).map(para => ({
+      type: 'paragraph',
+      content: [{ type: 'text', text: para.replace(/\n/g, ' ') }],
+    }));
+    return { type: 'doc', version: 1, content: paragraphs.length ? paragraphs : [{ type: 'paragraph', content: [] }] };
+  }
+
   // ── Map Jira issue to RobOS work item ────────────────────────────────────
 
   _mapIssue(raw) {
@@ -287,7 +275,7 @@ class JiraAdapter {
       key: raw.key,
       id: raw.id,
       summary: f.summary || '',
-      description: f.description || '',
+      description: this._adfToText(f.description),
       status: f.status?.name || 'Unknown',
       statusCategory: f.status?.statusCategory?.key || 'undefined',
       issueType: f.issuetype?.name || 'Task',
