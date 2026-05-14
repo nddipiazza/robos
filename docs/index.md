@@ -1,5 +1,5 @@
 ---
-title: RobOS — The AI-Native Operating System
+title: RobOS — The Developer's AI Operating System
 layout: home
 nav_order: 1
 nav_exclude: false
@@ -7,10 +7,12 @@ nav_exclude: false
 
 # RobOS
 
-## The AI-Native Operating System for Software Teams
+## You're Still at the Wheel. The AI Just Does the Driving.
 {: .fs-9 }
 
-A purpose-built Linux desktop where AI does the heavy lifting — writing code, reviewing PRs, managing tasks, tracking deployments — and the entire OS can be reshaped with a single prompt. Drop expensive hardware and proprietary licenses. Ship software faster on a $700 ThinkPad.
+RobOS is an **Electron-based desktop that can be customized by AI on the fly** — rearrange your taskbar, change the clock format, swap themes, install apps — all by typing a prompt. No config files. No scripts. Just ask.
+
+Beyond the desktop, RobOS puts AI agents to work across every phase of software delivery while keeping you in command. You coordinate the agents, review their output, and approve the plan. The AI does the grunt work. You ship faster without losing control.
 {: .fs-6 .fw-300 }
 
 {: .note }
@@ -23,6 +25,16 @@ A purpose-built Linux desktop where AI does the heavy lifting — writing code, 
 ---
 
 ![RobOS Desktop]({{ '/assets/images/screenshots/robos-desktop.png' | relative_url }})
+
+<p style="text-align: center; color: #8b9dc3; font-size: 0.85rem; margin-top: -0.5rem;">RobOS Desktop — the programmable 52px taskbar shell over a clean GNOME workspace</p>
+
+<div style="margin: 2rem 0;">
+<p style="font-size: 0.95rem; color: #8b9dc3; margin-bottom: 0.75rem;">
+  <strong style="color: #e6edf3;">Before → After:</strong> The default Ubuntu/GNOME desktop, reshaped into a Mac-style dark environment — slim bottom taskbar, floating dock, consistent dark navy theme — entirely through RobOS AI Prompt and Skills. No config files edited by hand.
+</p>
+<img src="{{ '/assets/images/screenshots/robos-desktop-custom.png' | relative_url }}" alt="RobOS Desktop customized to Mac/OS look and feel" style="width: 100%; border-radius: 8px; border: 1px solid #30363d;">
+<p style="text-align: center; color: #8b9dc3; font-size: 0.85rem; margin-top: 0.5rem;">Stock GNOME → RobOS-customized desktop — same hardware, completely different feel</p>
+</div>
 
 ---
 
@@ -51,18 +63,52 @@ Individual walkthroughs of every RobOS app are landing weekly on the [channel](h
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
-<h3 style="margin-top: 0;">1. AI-First Software Delivery</h3>
-<p>30+ purpose-built apps cover every phase of the SDLC — from picking up a ticket to deploying code. AI agents write code, review PRs, manage tasks, and track deployments. Every status transition, notification, and dashboard update happens automatically. The developer reviews and approves; the AI does the grunt work.</p>
+<h3 style="margin-top: 0;">1. You Command. AI Delivers.</h3>
+<p>30+ purpose-built apps cover every phase of the SDLC — from picking up a ticket to merging code. AI agents investigate bugs, propose fixes, draft PRs, review code, and track deployments. <strong>You stay at the wheel</strong> — reviewing the plan, approving changes, and steering the agents. The AI does the grunt work. You ship without burning out.</p>
 </div>
 
 <div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
-<h3 style="margin-top: 0;">2. Prompt-Shaped Desktop</h3>
-<p>The <strong>Desktop Customizer</strong> reshapes the entire GNOME experience through natural language. Move the clock, resize the taskbar, add widgets, build entirely new apps from a sentence, mix UI languages — just describe what you want. Every change is git-snapshotted with one-click rollback. Your desktop, your rules.</p>
+<h3 style="margin-top: 0;">2. A Desktop Built for Developers Who Own It</h3>
+<p>The <strong>RobOS Desktop</strong> is a fully programmable taskbar and shell — not a locked-down OS panel. Pair it with <strong>RobOS Skills</strong> (70+ shell skill packs) and <strong>RobOS AI Prompt</strong> to reshape the entire desktop through plain English: move the taskbar, reformat the clock, pin custom Electron apps, inject widgets, create shortcuts. Every change is git-snapshotted with instant rollback. <em>Your desktop, your rules.</em></p>
 </div>
 
 </div>
 
-### Desktop Customizer in Action
+### Pillar 2: RobOS Desktop + Skills + AI Prompt
+
+The three pieces of RobOS's customizable desktop work together as a unified layer:
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0;">
+
+<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #8b5cf6;">
+<h4 style="margin-top: 0; color: #8b5cf6;">🖥️ RobOS Desktop</h4>
+<p style="margin: 0; font-size: 0.9rem;">A 52px slim taskbar shell that owns the bottom of the screen — showing all open app windows with their icons, a launcher button, clock, and tray. Unlike GNOME's locked panel, every aspect of the RobOS Desktop is programmable through prompts and skills.</p>
+</div>
+
+<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #00bcd4;">
+<h4 style="margin-top: 0; color: #00bcd4;">⚡ RobOS Skills</h4>
+<p style="margin: 0; font-size: 0.9rem;">A library of 70+ reusable shell skill packs — including a dedicated <strong>Desktop</strong> category with skills for moving the taskbar, reformatting the clock, pinning apps, creating startup entries, injecting widgets, and more. Import community skill packs from any GitHub repo.</p>
+</div>
+
+<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #f59e0b;">
+<h4 style="margin-top: 0; color: #f59e0b;">💬 RobOS AI Prompt</h4>
+<p style="margin: 0; font-size: 0.9rem;">A plain-English AI terminal. Describe what you want, select the right skills from the sidebar, and an AI agent runs the commands and returns a structured step-by-step report. No memorizing <code>gsettings</code> keys or digging through config files.</p>
+</div>
+
+</div>
+
+**What you can do with a single prompt:**
+
+```
+"Move the taskbar to the top of the screen"
+"Switch the clock to 24-hour format and show the date"
+"Add my new Pomodoro timer app to the taskbar as a pinned item"
+"Create a keyboard shortcut Super+T to open Tilix"
+"Show me all running processes sorted by memory and kill anything over 2 GB"
+"Build me a CPU usage widget and add it to the desktop"
+```
+
+Each prompt selects the matching desktop skills, fills in parameters, runs the commands, and shows you exactly what changed — with a snapshot taken before each destructive operation so you can roll back instantly.
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
   <iframe
@@ -74,57 +120,21 @@ Individual walkthroughs of every RobOS app are landing weekly on the [channel](h
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
+[Explore RobOS Desktop →]({{ site.baseurl }}{% link desktop-customizer.md %}){: .btn .btn-outline .fs-5 }
+
 ---
 
-## The Case for RobOS
-{: .text-center }
+## What Makes RobOS Different
 
-### Why your next dev machine should be a Linux laptop running RobOS
-{: .text-center .fw-300 }
+**You're the Commander, Not the Typist** — AI agents investigate bugs, propose fixes, draft PRs, review code, and track deployments. You review the plan, steer the agents, and approve what ships. The AI does the grunt work. You stay sharp on what matters.
 
-The economics of software development have inverted. AI is doing more of the actual work — writing code, running reviews, diagnosing CI failures — while developers are shifting to oversight, architecture, and approval. The expensive part is no longer the human typing speed or the build-time compilation. It's the AI API calls, the context windows, and the orchestration layer. So why are companies still spending $3,000+ per developer on hardware and proprietary OS licenses designed for a pre-AI world?
+**Prompt-Driven Desktop** — The RobOS Desktop is a fully programmable shell. Pair it with Skills and AI Prompt to reshape your environment in plain English — move the taskbar, reformat the clock, pin custom Electron apps, inject widgets. Every change snapshots automatically so you can roll back instantly.
 
-### The Traditional Stack — What It Actually Costs
+**Task-Driven Workspaces** — Each task maps to its own IDE workspace provisioned automatically: branch checked out, dev environment started, breakpoint set at the issue reproduction point. You walk in, see the bug reproducing, and review the AI's proposed fix.
 
-| Line Item | MacBook Pro | Windows Surface | RobOS + ThinkPad |
-|:----------|:------------|:----------------|:-----------------|
-| **Hardware** | $2,499 (M3 Pro 14") | $1,999 (Surface Laptop) | **$699** (ThinkPad E14 Gen 6) |
-| **OS License** | $0 (bundled) | $200 (Windows 11 Pro) | **$0** (Ubuntu LTS, free) |
-| **Enterprise Support** | $299/yr (AppleCare) | $150/yr (MS Extended) | **$25/yr** (Ubuntu Pro, free for 5 seats) |
-| **IDE** | $249/yr (IntelliJ) | $249/yr (IntelliJ) | **$249/yr** (IntelliJ) or **$0** (VS Code) |
-| **Jira/Project Mgmt** | $77/yr per user (Standard) | $77/yr per user | **$0** (RobOS Task Manager + GitHub Issues) |
-| **CI Dashboard** | $0-500/yr (third-party) | $0-500/yr | **$0** (RobOS CI Monitor) |
-| **3-Year Total** | **$3,400 - $4,100** | **$2,900 - $3,600** | **$950 - $1,700** |
+**Automatic Everything** — Status transitions, notifications, PR descriptions, reviewer checklists, and deployment tracking happen automatically through an event-driven architecture. You focus on decisions, not bookkeeping.
 
-### That's $2,000+ per developer, per refresh cycle — saved.
-
-For a 50-person engineering org refreshing every 3 years, that's **$100,000+ in savings per cycle** — and that's before you count the productivity gains from AI-native tooling.
-
-### But Isn't Mac/Windows Better for Development?
-
-That was true in 2020. Here's what changed:
-
-**AI doesn't care about your OS.** Claude, GPT-4, Copilot — they run in the cloud. Your laptop is a terminal to the API. A $700 ThinkPad with 16GB RAM and an SSD runs VS Code, Docker, and the Anthropic SDK identically to a $2,500 MacBook.
-
-**Linux is where production runs.** Your CI, your servers, your containers — all Linux. Developing on the same OS you deploy to eliminates "works on my machine" issues. No more Rosetta translation layers, no more WSL2 indirection.
-
-**GNOME is now beautiful.** Ubuntu 22.04+ with GNOME 42+ has smooth animations, fractional scaling, HiDPI support, Wayland, and dark mode. RobOS adds a custom dark navy/cyan theme on top. It looks as polished as macOS and more customizable than both.
-
-**The hardware caught up.** Lenovo ThinkPad E14 Gen 6: AMD Ryzen 7, 16 GB RAM, 512 GB SSD, 14" 1080p IPS, all-day battery, legendary keyboard, $699. Run QEMU/KVM for anything you'd need a VM for. USB-C docking for monitors. That's it. That's the whole dev machine.
-
-### The Canonical Partnership Angle
-
-For enterprises that need vendor support:
-
-| | macOS | Windows | Ubuntu + Canonical |
-|:--|:------|:--------|:-------------------|
-| **Support tier** | AppleCare ($299/yr) | MS Premier ($500+/yr) | Ubuntu Pro ($25/yr per machine, free for 5) |
-| **Security patches** | Apple's timeline | Patch Tuesday | Livepatch (zero-downtime kernel patches) |
-| **Compliance** | Limited certifications | FIPS, Common Criteria | FIPS 140-2, CIS benchmarks, DISA STIGs |
-| **MDM** | Apple MDM ($5-10/device/mo) | Intune ($8/device/mo) | Landscape ($5/device/mo, free for 5) |
-| **CVE response** | Closed source, trust Apple | Closed source, trust MS | Open source, verify yourself |
-
-Ubuntu Pro is free for up to 5 machines and $25/machine/year after that — with 10-year LTS support, FIPS compliance, and Livepatch. That's enterprise support for the price of a Starbucks order.
+**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 22.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
 
 ---
 
@@ -183,7 +193,9 @@ A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take 
 ```
 RobOS Desktop (Ubuntu 22.04 + GNOME)
 ├── 30+ Electron Apps ──── dark theme, contextBridge IPC
-├── Desktop Customizer ─── prompt-driven GNOME customization
+├── RobOS Desktop ──────── programmable 52px taskbar shell
+├── RobOS Skills ───────── 70+ shell skill packs
+├── RobOS AI Prompt ────── plain-English AI agent terminal
 ├── Event Bus ──────────── automatic status transitions
 ├── Rule Engine ────────── event → condition → action
 ├── Agent Scheduler ────── background AI agent jobs
@@ -192,3 +204,19 @@ RobOS Desktop (Ubuntu 22.04 + GNOME)
 ```
 
 [Architecture Deep Dive]({{ site.baseurl }}{% link architecture.md %}){: .btn .btn-outline .fs-5 }
+
+---
+
+## The Cost Case
+{: #the-cost-case }
+
+RobOS runs on commodity Linux hardware. A $700 ThinkPad running Ubuntu runs VS Code, Docker, and every AI SDK identically to a $2,500 MacBook — because AI doesn't care about your OS, it runs in the cloud.
+
+| Line Item | MacBook Pro | RobOS + ThinkPad |
+|:----------|:------------|:-----------------|
+| **Hardware** | $2,499 (M3 Pro 14") | **$699** (ThinkPad E14 Gen 6) |
+| **OS License** | $0 (bundled) | **$0** (Ubuntu LTS) |
+| **Project Mgmt** | $77/yr (Jira Standard) | **$0** (RobOS + GitHub Issues) |
+| **3-Year Total** | **$3,400+** | **~$950** |
+
+For a 50-person org refreshing every 3 years, that's **$100,000+ saved per cycle** — before counting the productivity gains from AI-native tooling. Linux is also where your CI and containers run, eliminating "works on my machine" for good.
