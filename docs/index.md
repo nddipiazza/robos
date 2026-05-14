@@ -12,6 +12,8 @@ nav_exclude: false
 
 RobOS is an **AI-first development desktop built for software delivery** — every surface, app, and workflow is optimized to keep you shipping. Pick up a ticket, understand a bug, review a fix, merge and deploy — all with AI agents doing the heavy lifting while you stay in command.
 
+The entire desktop shell and its 30+ apps are built on **Electron**, running natively on Linux over a GNOME base — giving every tool a consistent, hackable web-tech foundation.
+
 The desktop itself is also **fully customizable by AI on the fly**: rearrange your taskbar, swap themes, change the clock format — just by typing a prompt.
 {: .fs-6 .fw-300 }
 
