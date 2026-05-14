@@ -5,8 +5,8 @@ const { spawn, execSync } = require('child_process');
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
-app.setName('robos-dev-tools');
-app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'dev-tools'));
+app.setName('robos-software-center');
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'software-center'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.on('second-instance', () => {
   const w = require('electron').BrowserWindow.getAllWindows()[0];
@@ -67,10 +67,26 @@ const TOOLS = [
     name: 'IntelliJ IDEA Community',
     description: 'JetBrains Java/Kotlin IDE (free)',
     category: 'IDE',
-    source: 'snap (intellij-idea-community)',
-    checkCmd: 'ls /opt/idea-IC-*/bin/idea.sh 2>/dev/null || ls /snap/intellij-idea-community/current 2>/dev/null',
-    installCmd: 'sudo snap install intellij-idea-community --classic && sudo cp /var/lib/snapd/desktop/applications/intellij-idea-community_intellij-idea-community.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=IntelliJ IDEA Community\nExec=intellij-idea-community %f\nIcon=/snap/intellij-idea-community/current/bin/idea.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-idea-ce\nTerminal=false" > /usr/share/applications/intellij-idea-community.desktop\'',
-    uninstallCmd: 'sudo snap remove intellij-idea-community && sudo rm -f /usr/share/applications/intellij-idea-community*.desktop',
+    source: 'jetbrains.com (tar.gz)',
+    checkCmd: 'ls /opt/idea-IC-*/bin/idea.sh 2>/dev/null | grep -q .',
+    // Install via tarball so the IDE launches directly as Community Edition without a Trial/activation prompt.
+    // The snap package triggers JetBrains' new licensing wizard even for the free tier.
+    // JetBrains merged Community+Ultimate into a single tarball in 2025.x (code=IIC API now returns idea-IU).
+    // Use the last version that ships a dedicated Community (idea-IC) tarball to avoid the Trial/activation prompt.
+    installCmd: [
+      'curl -L --retry 3 -o /tmp/ideaIC.tar.gz "https://download-cdn.jetbrains.com/idea/ideaIC-2024.3.tar.gz"',
+      '&& sudo tar -xzf /tmp/ideaIC.tar.gz -C /opt',
+      '&& IDEA_DIR=$(ls -d /opt/idea-IC-* | tail -1)',
+      '&& sudo ln -sf "$IDEA_DIR/bin/idea.sh" /usr/local/bin/idea',
+      '&& ICON="$IDEA_DIR/bin/idea.svg"',
+      // Use echo+tee to avoid printf treating %f as a format specifier
+      '&& { echo "[Desktop Entry]"; echo "Type=Application"; echo "Name=IntelliJ IDEA Community"; echo "Exec=idea %f"; echo "Icon=$ICON"; echo "Categories=Development;IDE;"; echo "StartupWMClass=jetbrains-idea-ce"; echo "Terminal=false"; } | sudo tee /usr/share/applications/intellij-idea-community.desktop > /dev/null',
+      // Pre-seed config so first-run wizard (Trial nag) is suppressed
+      '&& mkdir -p "$HOME/.config/JetBrains/IdeaIC2024.3/options"',
+      '&& [ -f "$HOME/.config/JetBrains/IdeaIC2024.3/options/other.xml" ] || printf \'<?xml version="1.0" encoding="UTF-8"?>\\n<application>\\n  <component name="GeneralSettings"><option name="confirmExit" value="false" /></component>\\n  <component name="WelcomeScreen"><option name="showOnStartup" value="false" /></component>\\n</application>\\n\' > "$HOME/.config/JetBrains/IdeaIC2024.3/options/other.xml"',
+      '&& rm -f /tmp/ideaIC.tar.gz',
+    ].join(' '),
+    uninstallCmd: 'sudo rm -rf /opt/idea-IC-* /usr/local/bin/idea /usr/share/applications/intellij-idea-community.desktop',
   },
   {
     id: 'pycharm-community',
@@ -165,7 +181,7 @@ const TOOLS = [
     uninstallCmd: 'sudo apt-get remove -y google-chrome-stable',
   },
 
-  // ── Dev Tools ──
+  // ── Dev Tools ──  (Software Center)
   {
     id: 'gh-cli',
     name: 'GitHub CLI',
@@ -432,7 +448,7 @@ app.whenReady().then(() => {
   if (_debug) {
     try {
       _debug.registerSnapshotIPC(mainWindow);
-      _debug.startDebugServer(mainWindow, 19137, 'dev-tools');
+      _debug.startDebugServer(mainWindow, 19137, 'software-center');
     } catch {}
   }
 });

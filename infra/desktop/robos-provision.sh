@@ -1,6 +1,6 @@
 #!/bin/bash
 # RobOS Post-Install Provisioner
-# Transforms a base Ubuntu 22.04 installation into a fully configured RobOS desktop.
+# Transforms a base Ubuntu 24.04 installation into a fully configured RobOS desktop.
 # Called by Ubuntu autoinstall late-commands or manually after a fresh Ubuntu install.
 #
 # Expects:

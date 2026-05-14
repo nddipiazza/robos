@@ -52,7 +52,7 @@ Beyond the desktop, RobOS puts AI agents to work across every phase of software 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
-The full RobOS install captured end-to-end — `build.sh` packs the image and cloud-init seed, `run.sh --firstboot` provisions Ubuntu 22.04 + GNOME + LightDM + Node.js + Electron + 40+ RobOS apps, reboots into the new desktop. Lightly trimmed so you can see it finish without sitting through the real install waits. [Watch on YouTube](https://youtu.be/J4SMH4bskeo).
+The full RobOS install captured end-to-end — `build.sh` packs the image and cloud-init seed, `run.sh --firstboot` provisions Ubuntu 24.04 + GNOME + LightDM + Node.js + Electron + 40+ RobOS apps, reboots into the new desktop. Lightly trimmed so you can see it finish without sitting through the real install waits. [Watch on YouTube](https://youtu.be/J4SMH4bskeo).
 
 Individual walkthroughs of every RobOS app are landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
 
@@ -134,7 +134,7 @@ Each prompt selects the matching desktop skills, fills in parameters, runs the c
 
 **Automatic Everything** — Status transitions, notifications, PR descriptions, reviewer checklists, and deployment tracking happen automatically through an event-driven architecture. You focus on decisions, not bookkeeping.
 
-**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 22.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
+**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 24.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
 
 ---
 
@@ -191,7 +191,7 @@ A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take 
 ## Architecture at a Glance
 
 ```
-RobOS Desktop (Ubuntu 22.04 + GNOME)
+RobOS Desktop (Ubuntu 24.04 + GNOME)
 ├── 30+ Electron Apps ──── dark theme, contextBridge IPC
 ├── RobOS Desktop ──────── programmable 52px taskbar shell
 ├── RobOS Skills ───────── 70+ shell skill packs

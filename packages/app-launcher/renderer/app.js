@@ -246,6 +246,7 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'Enter':
       if (document.activeElement && document.activeElement.classList.contains('app-card')) {
+        e.preventDefault(); // prevent native button click (we handle it explicitly)
         document.activeElement.click();
       } else if (document.activeElement === searchInput) {
         const filtered = getFilteredApps();

@@ -6,7 +6,7 @@
 
 ## Description
 
-Create build.sh that downloads Ubuntu 22.04 cloud image, creates 200G sparse qcow2 disk, and generates cloud-init seed ISO. Create run.sh with GTK/VNC/SPICE/headless display modes, KVM acceleration, and SSH port forwarding (localhost:2224).
+Create build.sh that downloads Ubuntu 24.04 cloud image, creates 200G sparse qcow2 disk, and generates cloud-init seed ISO. Create run.sh with GTK/VNC/SPICE/headless display modes, KVM acceleration, and SSH port forwarding (localhost:2224).
 
 ## Acceptance Criteria
 

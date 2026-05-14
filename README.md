@@ -96,7 +96,7 @@ infra/desktop/run.sh             # Subsequent boots
 ## Architecture
 
 ```
-RobOS Desktop (Ubuntu 22.04 + GNOME)
+RobOS Desktop (Ubuntu 24.04 + GNOME)
 ├── 30+ Electron Apps ──── dark theme, contextBridge IPC
 ├── Desktop Customizer ─── prompt-driven GNOME customization
 ├── Event Bus ──────────── automatic status transitions
@@ -106,7 +106,7 @@ RobOS Desktop (Ubuntu 22.04 + GNOME)
 └── Shared Libraries ───── robos-lib, robos-icons, robos-ui
 ```
 
-- **OS**: Ubuntu 22.04 LTS, GNOME desktop, custom dark navy/cyan theme
+- **OS**: Ubuntu 24.04 LTS, GNOME desktop, custom dark navy/cyan theme
 - **Apps**: Electron + vanilla JS, no framework lock-in
 - **IPC**: `contextBridge` + `ipcRenderer.invoke` (never `nodeIntegration: true`)
 - **Events**: Event Bus + Rule Engine for automatic status transitions

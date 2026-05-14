@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a RobOS installer ISO from Ubuntu Server 22.04.
+# Build a RobOS installer ISO from Ubuntu Server 24.04.
 #
 # Clones the Ubuntu Server ISO and injects autoinstall config + RobOS packages.
 # The resulting ISO is a bootable installer that installs RobOS unattended.
@@ -14,8 +14,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 OUTPUT_DIR="$SCRIPT_DIR/output"
 VERSION=$(cat "$REPO_ROOT/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "dev")
 
-UBUNTU_ISO_URL="https://releases.ubuntu.com/22.04.5/ubuntu-22.04.5-live-server-amd64.iso"
-UBUNTU_ISO="$OUTPUT_DIR/ubuntu-22.04.5-server-amd64.iso"
+UBUNTU_ISO_URL="https://releases.ubuntu.com/24.04.2/ubuntu-24.04.2-live-server-amd64.iso"
+UBUNTU_ISO="$OUTPUT_DIR/ubuntu-24.04.2-server-amd64.iso"
 ROBOS_ISO="$OUTPUT_DIR/robos.iso"
 
 for cmd in xorriso wget; do
@@ -37,7 +37,7 @@ echo ""
 if [ -f "$UBUNTU_ISO" ]; then
   echo "[1/4] Using cached Ubuntu Server ISO: $(du -sh "$UBUNTU_ISO" | cut -f1)"
 else
-  echo "[1/4] Downloading Ubuntu Server 22.04.5 LTS (~1.8 GB)..."
+  echo "[1/4] Downloading Ubuntu Server 24.04.2 LTS (~1.8 GB)..."
   wget -q --show-progress -O "$UBUNTU_ISO" "$UBUNTU_ISO_URL"
 fi
 

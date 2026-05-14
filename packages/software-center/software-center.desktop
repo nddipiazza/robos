@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Software Center
+Comment=Install and manage developer tools
+Exec=/usr/bin/electron /usr/local/share/robos/software-center/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/software-center/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=Dev
+StartupWMClass=robos-software-center

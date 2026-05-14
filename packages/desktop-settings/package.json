@@ -1,0 +1,12 @@
+{
+  "name": "desktop-settings",
+  "version": "1.0.0",
+  "description": "RobOS Desktop Settings — configure the Electron desktop shell, pinned apps, appearance, and startup",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

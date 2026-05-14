@@ -34,7 +34,7 @@ const SCRIPT = [
   },
   {
     atSec: 9.09,
-    narration: 'Cloud-init kicks off — pulling down Ubuntu 22.04 and the GNOME desktop.',
+    narration: 'Cloud-init kicks off — pulling down Ubuntu 24.04 and the GNOME desktop.',
   },
   {
     atSec: 13.23,

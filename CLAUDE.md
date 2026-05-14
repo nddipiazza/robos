@@ -17,7 +17,7 @@ Every developer interaction — picking up a ticket, understanding a bug, review
 A purpose-built Ubuntu-based Linux desktop environment where every app, panel, and widget serves the SDLC.
 
 **OS Stack:**
-- Ubuntu 22.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
+- Ubuntu 24.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
 - GNOME desktop environment
 - LightDM auto-login, Tilix terminal, zsh + oh-my-zsh
 - Custom dark navy/cyan theme throughout
@@ -80,7 +80,7 @@ All apps are Electron + vanilla JavaScript. They require `--no-sandbox --disable
 ### Supporting Apps
 | App | Purpose |
 |-----|---------|
-| **Dev Tools** | Install and manage IDEs, CLI tools, and cloud SDKs |
+| **Software Center** | Install and manage IDEs, CLI tools, and cloud SDKs |
 | **Workspace Manager** | Discover and open local workspaces in any IDE |
 | **Lang Manager** | Language runtime management (Node, Python, Java, Go, Rust) |
 | **Context Manager** | Curate AI context sources (files, URLs, repos, tickets) |

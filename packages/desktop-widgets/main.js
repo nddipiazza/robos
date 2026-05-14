@@ -182,6 +182,7 @@ app.whenReady().then(() => {
 
   win = new BrowserWindow({
     ...b,
+    // 'desktop' type keeps widgets behind all normal windows
     type: 'desktop',
     title: WIDGET_WINDOW_TITLE,
     frame: false,

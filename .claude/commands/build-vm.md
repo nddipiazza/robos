@@ -40,7 +40,7 @@ cd infra/desktop && bash build.sh 2>&1
 ```
 
 This will:
-- Download Ubuntu 22.04 cloud image (if not cached)
+- Download Ubuntu 24.04 cloud image (if not cached)
 - Create 200GB sparse qcow2 disk
 - Generate cloud-init seed ISO
 

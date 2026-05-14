@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('robos', {
   stopAgent:       (p)   => ipcRenderer.invoke('stop-agent', p),
   openUrl:         (url) => ipcRenderer.invoke('open-url', url),
   openTaskServers: ()    => ipcRenderer.invoke('open-task-servers'),
+  searchIndex:     (prefix) => ipcRenderer.invoke('ti-list-path', prefix),
 
   onAgentStream: (cb) => ipcRenderer.on('agent-stream', (_, data) => cb(data)),
   onAgentDone:   (cb) => ipcRenderer.on('agent-done',   (_, data) => cb(data)),
