@@ -10,9 +10,9 @@ nav_exclude: false
 ## You're Still at the Wheel. The AI Just Does the Driving.
 {: .fs-9 }
 
-RobOS is an **Electron-based desktop that can be customized by AI on the fly** — rearrange your taskbar, change the clock format, swap themes, install apps — all by typing a prompt. No config files. No scripts. Just ask.
+RobOS is an **AI-first development desktop built for software delivery** — every surface, app, and workflow is optimized to keep you shipping. Pick up a ticket, understand a bug, review a fix, merge and deploy — all with AI agents doing the heavy lifting while you stay in command.
 
-Beyond the desktop, RobOS puts AI agents to work across every phase of software delivery while keeping you in command. You coordinate the agents, review their output, and approve the plan. The AI does the grunt work. You ship faster without losing control.
+The desktop itself is also **fully customizable by AI on the fly**: rearrange your taskbar, swap themes, change the clock format — just by typing a prompt.
 {: .fs-6 .fw-300 }
 
 {: .note }
