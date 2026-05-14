@@ -40,21 +40,21 @@ The desktop itself is also **fully customizable by AI on the fly**: rearrange yo
 
 ## See It in Action
 
-### Install RobOS from Scratch — Ubuntu + GNOME + 40 Apps on a Fresh QEMU VM
+### The Full SDLC in RobOS — Pick Up a Ticket, Ship the Fix, Track the Deploy
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
   <iframe
     src="https://www.youtube-nocookie.com/embed/J4SMH4bskeo"
-    title="Installing RobOS from scratch — Ubuntu + GNOME + 40 Electron apps on a fresh QEMU VM"
+    title="RobOS SDLC Tour — Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
-The full RobOS install captured end-to-end — `build.sh` packs the image and cloud-init seed, `run.sh --firstboot` provisions Ubuntu 24.04 + GNOME + LightDM + Node.js + Electron + 40+ RobOS apps, reboots into the new desktop. Lightly trimmed so you can see it finish without sitting through the real install waits. [Watch on YouTube](https://youtu.be/J4SMH4bskeo).
+A rapid-fire walkthrough of every RobOS app in software delivery order — **Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker**. Each app gets a quick smoke-test demo, narrated. Start to finish in under four minutes. [Watch on YouTube](https://www.youtube.com/@RobOS-e5i).
 
-Individual walkthroughs of every RobOS app are landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
+Individual deep-dive walkthroughs of every RobOS app are landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
 
 ---
 
