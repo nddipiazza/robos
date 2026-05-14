@@ -40,11 +40,25 @@ The desktop itself is also **fully customizable by AI on the fly**: rearrange yo
 
 ## See It in Action
 
-### The Full SDLC in RobOS — Pick Up a Ticket, Ship the Fix, Track the Deploy
+### Task Planner + Task Implementer — Plan a Sprint, Ship the Code
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
   <iframe
-    src="https://www.youtube-nocookie.com/embed/J4SMH4bskeo"
+    src="https://www.youtube-nocookie.com/embed/Ed4kddr9iyE"
+    title="RobOS Task Planner + Task Implementer — Plan to Code in Under 2 Minutes"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
+</div>
+
+Type a plain-English sprint description → Task Planner generates a structured GitHub backlog in seconds → Task Implementer picks up an issue and runs the AI agent to completion. [Watch on YouTube](https://youtu.be/Ed4kddr9iyE).
+
+### The Full SDLC in RobOS — Every App, Start to Deploy
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/SfXUT25HaU4"
     title="RobOS SDLC Tour — Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker"
     frameborder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -52,9 +66,9 @@ The desktop itself is also **fully customizable by AI on the fly**: rearrange yo
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
 </div>
 
-A rapid-fire walkthrough of every RobOS app in software delivery order — **Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker**. Each app gets a quick smoke-test demo, narrated. Start to finish in under four minutes. [Watch on YouTube](https://www.youtube.com/@RobOS-e5i).
+A rapid-fire walkthrough of every RobOS app in software delivery order — **Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker**. Start to finish in under four minutes. [Watch on YouTube](https://youtu.be/SfXUT25HaU4).
 
-Individual deep-dive walkthroughs of every RobOS app are landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
+Individual deep-dive walkthroughs landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
 
 ---
 
@@ -138,25 +152,11 @@ Each prompt selects the matching desktop skills, fills in parameters, runs the c
 
 ---
 
-## Install in 3 Clicks
+## Install RobOS
 
-The **RobOS Installer** runs on Linux, macOS, and Windows. Pick your USB drive, click Flash, boot from USB. That's it.
+Flash a USB, boot, and walk into a fully provisioned AI development desktop in under 20 minutes.
 
-![RobOS Installer]({{ '/assets/images/screenshots/robos-installer.png' | relative_url }})
-
-Download the installer from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases).
-
----
-
-## What Makes RobOS Different
-
-**Task-Driven Workspaces** — Each task maps to its own IDE workspace. When a developer picks up a task, the workspace is automatically provisioned: branch checked out, dev environment started, breakpoint set at the issue reproduction point.
-
-**AI Investigates, Developer Reviews** — Instead of "developer investigates, then codes", RobOS inverts the flow: AI investigates and proposes, the developer reviews and approves.
-
-**Prompt-Driven Desktop** — No more searching StackOverflow for `gsettings` commands. Type "move the clock to the left and make the taskbar bigger" and it happens. Build entirely new Electron apps from a sentence. Every change is snapshotted with instant rollback.
-
-**Automatic Everything** — Status transitions, notifications, time logging, PR descriptions, reviewer checklists, and deployment tracking all happen automatically through an event-driven architecture.
+[Install →]({{ site.baseurl }}{% link install.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 }
 
 ---
 
