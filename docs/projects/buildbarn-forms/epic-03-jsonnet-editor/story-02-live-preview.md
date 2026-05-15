@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-02: Live JSON Preview Panel
 
 **Epic:** [Jsonnet Editor](epic.md)

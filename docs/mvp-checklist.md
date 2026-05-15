@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS MVP Manual Test Checklist
 
 Prove the Model Problem works: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.

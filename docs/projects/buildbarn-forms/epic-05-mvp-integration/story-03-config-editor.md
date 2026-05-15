@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-03: Config Editor Page (Editor View)
 
 **Epic:** [MVP Integration](epic.md)

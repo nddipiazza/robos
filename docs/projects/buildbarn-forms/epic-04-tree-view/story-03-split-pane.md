@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-03: Split-Pane Layout (Tree + Form)
 
 **Epic:** [Tree View Navigation](epic.md)

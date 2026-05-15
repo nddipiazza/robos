@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-04: Proto Comment Tooltip System
 
 **Epic:** [buildbarn-forms Core Library](epic.md)

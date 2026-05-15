@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-05: AuthorizerField Custom Component
 
 **Epic:** [buildbarn-forms Core Library](epic.md)

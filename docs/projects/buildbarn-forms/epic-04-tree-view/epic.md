@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 04: Tree View Navigation
 
 **Status:** Core complete; MCP stubs present (v0.2.6)

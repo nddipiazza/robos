@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Buildbarn Forms — Stories Index
 
 Quick-reference index of all epics and stories across the `@hermetiq/buildbarn-forms` and `@hermetiq/buildbarn-forms-proto` project.

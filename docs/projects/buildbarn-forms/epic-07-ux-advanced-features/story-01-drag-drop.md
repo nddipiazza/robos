@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-01: Drag-and-Drop Object Palette
 
 **Epic:** [UX & Advanced Features](epic.md)

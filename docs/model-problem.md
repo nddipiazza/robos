@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS Model Problem: Acme Inc Builds Buildbarn Forms
 
 This document walks through RobOS end-to-end using a concrete scenario. A company called **Acme Inc** adopts RobOS to build the [buildbarn-forms](https://github.com/acme-corp/buildbarn-forms) project — a React component library for editing Buildbarn remote build execution configurations. The companion repo [buildbarn-forms-proto](https://github.com/acme-corp/buildbarn-forms-proto) holds the protobuf definitions.

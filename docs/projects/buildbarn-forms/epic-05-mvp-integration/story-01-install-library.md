@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-01: Install Library & Configure .npmrc
 
 **Epic:** [MVP Integration](epic.md)

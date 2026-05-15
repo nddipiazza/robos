@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-05: Config Templates (Starter Configs)
 
 **Epic:** [Production Config Types](epic.md)

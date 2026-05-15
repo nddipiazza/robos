@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS Model Flow
 
 This document provides a comprehensive visual reference for the RobOS model flow — the end-to-end system that automates the Software Delivery Lifecycle using event-driven workflows, AI agents, and role-based dashboards.

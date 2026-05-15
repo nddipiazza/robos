@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 07: UX & Advanced Features
 
 **Status:** Not started

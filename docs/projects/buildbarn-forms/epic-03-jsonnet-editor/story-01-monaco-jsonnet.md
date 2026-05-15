@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-01: Monaco Editor with Jsonnet Syntax Highlighting
 
 **Epic:** [Jsonnet Editor](epic.md)

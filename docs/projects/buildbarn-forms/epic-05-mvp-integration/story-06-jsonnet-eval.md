@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-06: Jsonnet Evaluation Endpoint
 
 **Epic:** [MVP Integration](epic.md)

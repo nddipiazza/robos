@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-03: Package Structure & Public API
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

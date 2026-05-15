@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-04: CI/CD Publish Pipeline
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

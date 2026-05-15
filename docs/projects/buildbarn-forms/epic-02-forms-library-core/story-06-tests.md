@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-06: Test Suite (>50% Coverage)
 
 **Epic:** [buildbarn-forms Core Library](epic.md)

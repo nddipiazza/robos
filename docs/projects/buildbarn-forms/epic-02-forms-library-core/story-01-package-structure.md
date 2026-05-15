@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-01: Package Structure & Build Toolchain
 
 **Epic:** [buildbarn-forms Core Library](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-05: Version Check & Branch Protection
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

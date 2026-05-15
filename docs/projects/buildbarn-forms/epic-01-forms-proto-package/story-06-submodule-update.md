@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-06: Submodule Update Automation
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 01: buildbarn-forms-proto Package
 
 **Status:** Complete (v0.2.4 published)

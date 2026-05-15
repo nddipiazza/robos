@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-01: TreeView & TreeNode Components
 
 **Epic:** [Tree View Navigation](epic.md)

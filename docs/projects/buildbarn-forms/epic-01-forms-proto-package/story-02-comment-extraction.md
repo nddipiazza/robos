@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-02: Proto Comment Extraction
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

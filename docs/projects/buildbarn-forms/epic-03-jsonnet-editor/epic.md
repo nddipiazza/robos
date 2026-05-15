@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 03: Jsonnet Editor
 
 **Status:** Complete (v0.2.6)

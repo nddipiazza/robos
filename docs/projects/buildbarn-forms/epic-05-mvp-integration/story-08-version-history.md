@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-08: Version History Panel
 
 **Epic:** [MVP Integration](epic.md)

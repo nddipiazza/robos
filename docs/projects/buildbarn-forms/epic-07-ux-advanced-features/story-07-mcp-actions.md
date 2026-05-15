@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-07: MCP Action Integration (TreeView Stubs)
 
 **Epic:** [UX & Advanced Features](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-02: ProtoFormBuilder Engine
 
 **Epic:** [buildbarn-forms Core Library](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-02: Config Set Browser (List View)
 
 **Epic:** [MVP Integration](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Project: buildbarn-forms & buildbarn-forms-proto
 
 **Project Name:** `buildbarn-forms`

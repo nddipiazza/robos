@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 05: MVP Integration
 
 **Status:** Not started

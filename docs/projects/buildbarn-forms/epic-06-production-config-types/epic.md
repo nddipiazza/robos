@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 06: Production Config Types
 
 **Status:** Not started

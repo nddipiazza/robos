@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-06: ConfigMap YAML Export
 
 **Epic:** [Production Config Types](epic.md)

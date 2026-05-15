@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 02: buildbarn-forms Core Library
 
 **Status:** Substantially complete (v0.2.6 published)

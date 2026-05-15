@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-01: Proto Generation Pipeline
 
 **Epic:** [buildbarn-forms-proto Package](epic.md)

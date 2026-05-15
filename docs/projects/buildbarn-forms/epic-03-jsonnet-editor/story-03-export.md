@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-03: JSON & YAML Export
 
 **Epic:** [Jsonnet Editor](epic.md)
