@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-02: Snapshot and Rollback System (Git-Backed)
 
 **Epic:** [Desktop Customizer](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-11: Dev Tools MCP Server
 
 **Epic:** [First-Class MCP Server Support](epic.md)

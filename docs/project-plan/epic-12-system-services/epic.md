@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 12: System Services & Desktop Integration
 
 **Status:** Not started

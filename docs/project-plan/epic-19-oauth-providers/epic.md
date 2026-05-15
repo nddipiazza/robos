@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 19: OAuth Provider Integration
 
 **Status:** Not started

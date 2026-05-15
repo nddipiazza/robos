@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-08: Language Mixing and App Menu Customization
 
 **Epic:** [Desktop Customizer](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 11-05: Release CI/CD Pipeline
 
 **Epic:** [Release & Packaging](epic.md)

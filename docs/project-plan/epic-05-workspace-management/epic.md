@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 05: Workspace Management
 
 **Status:** Not started

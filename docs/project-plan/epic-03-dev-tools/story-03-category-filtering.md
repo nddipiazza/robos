@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-03: Category Filtering
 
 **Epic:** [Dev Tools](epic.md)

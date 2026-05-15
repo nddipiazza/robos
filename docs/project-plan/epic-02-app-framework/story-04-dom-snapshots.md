@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-04: DOM Snapshot Debugging System
 
 **Epic:** [App Framework](epic.md)

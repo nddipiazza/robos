@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 19-02: OAuth PKCE Flow Execution
 
 **Epic:** [OAuth Provider Integration](epic.md)

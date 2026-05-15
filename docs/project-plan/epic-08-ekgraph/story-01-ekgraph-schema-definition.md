@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-01: EKGraph Schema Definition
 
 **Epic:** [EKGraph](epic.md)

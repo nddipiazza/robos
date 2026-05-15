@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-07: Automatic Status/Hours/Comment Sync
 
 **Epic:** [Task Management](epic.md)

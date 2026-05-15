@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-06: Blocking Items Tracker
 
 **Epic:** [RobOS Work Journal](epic.md)

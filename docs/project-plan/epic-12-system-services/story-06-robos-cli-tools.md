@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-06: robos-cli Tools — Notify, Active Task, Journal, Events
 
 **Epic:** [System Services & Desktop Integration](epic.md)

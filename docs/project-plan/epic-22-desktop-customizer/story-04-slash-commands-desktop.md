@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-04: Slash Commands — Clock, Taskbar, Theme, Shortcuts
 
 **Epic:** [Desktop Customizer](epic.md)

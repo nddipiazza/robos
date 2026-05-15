@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-05: Workspace State Sync
 
 **Epic:** [Workspace Management](epic.md)

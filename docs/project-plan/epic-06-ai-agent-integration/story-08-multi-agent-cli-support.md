@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-08: Multi-Agent CLI Support
 
 **Epic:** [AI Agent Integration](epic.md)

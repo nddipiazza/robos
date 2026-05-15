@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-05: Widget System — Add/Remove/Configure Desktop Widgets
 
 **Epic:** [Desktop Customizer](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-02: MCP Server Manager App
 
 **Epic:** [First-Class MCP Server Support](epic.md)

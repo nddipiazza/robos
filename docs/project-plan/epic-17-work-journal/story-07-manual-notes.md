@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-07: Manual Notes and Voice Dictation Entries
 
 **Epic:** [RobOS Work Journal](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-06: Workspace Resume and Cleanup
 
 **Epic:** [Workspace Management](epic.md)

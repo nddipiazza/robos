@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-04: Deep E2E Tests for task-board
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

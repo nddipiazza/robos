@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-02: Claude Code Integration
 
 **Epic:** [AI Agent Integration](epic.md)

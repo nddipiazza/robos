@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 21: GitHub Pages Documentation Site
 
 **Status:** Not started

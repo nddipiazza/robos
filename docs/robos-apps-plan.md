@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS Apps Plan — AI-Assisted Engineering Workflow
 
 Based on the RobOS Requirements wiki, this document maps each requirement area to concrete RobOS Electron apps that need to be built.

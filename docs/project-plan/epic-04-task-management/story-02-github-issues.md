@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-02: GitHub Issues Integration
 
 **Epic:** [Task Management](epic.md)

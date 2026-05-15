@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-04: AI Questionnaire Stage
 
 **Epic:** [AI Agent Integration](epic.md)

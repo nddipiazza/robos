@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 19-01: OAuth Provider Configuration UI
 
 **Epic:** [OAuth Provider Integration](epic.md)

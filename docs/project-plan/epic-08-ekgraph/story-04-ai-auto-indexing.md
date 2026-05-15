@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-04: AI Auto-Indexing
 
 **Epic:** [EKGraph](epic.md)

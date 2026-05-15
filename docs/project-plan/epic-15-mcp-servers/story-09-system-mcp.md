@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-09: System MCP Server (Prefs, Notifications, Search)
 
 **Epic:** [First-Class MCP Server Support](epic.md)

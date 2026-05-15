@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-02: robos-lib Shared Utilities
 
 **Epic:** [App Framework](epic.md)

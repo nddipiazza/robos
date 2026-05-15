@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-01: Journal Data Collector Daemon
 
 **Epic:** [RobOS Work Journal](epic.md)

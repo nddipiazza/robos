@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-06: Stage Demo Viewer
 
 **Epic:** [Code Review & CI/CD](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-07: Regression Test Template and /create-test Command
 
 **Epic:** [RobOS App Test Framework](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 18: Event Engine & Agent Scheduler
 
 **Status:** Not started

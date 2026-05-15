@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-01: VM Build System
 
 **Epic:** [Desktop Foundation](epic.md)

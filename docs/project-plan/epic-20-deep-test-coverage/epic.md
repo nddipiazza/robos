@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 20: Deep Test Coverage & Autonomous Verification
 
 **Status:** Not started

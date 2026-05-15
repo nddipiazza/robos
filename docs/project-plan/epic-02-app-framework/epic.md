@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 02: App Framework
 
 **Status:** Done

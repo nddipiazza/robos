@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-10: Claude Code Auto-Configuration
 
 **Epic:** [First-Class MCP Server Support](epic.md)

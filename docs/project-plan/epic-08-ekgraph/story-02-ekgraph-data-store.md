@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-02: EKGraph Data Store
 
 **Epic:** [EKGraph](epic.md)

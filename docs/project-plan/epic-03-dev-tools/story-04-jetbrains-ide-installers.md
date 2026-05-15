@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-04: JetBrains IDE Installers
 
 **Epic:** [Dev Tools](epic.md)

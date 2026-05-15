@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-02: Test Assertion DSL (DOM Matchers, Text Snapshots)
 
 **Epic:** [RobOS App Test Framework](epic.md)

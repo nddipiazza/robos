@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 13-04: Git Credential Management
 
 **Epic:** [Security & Authentication](epic.md)

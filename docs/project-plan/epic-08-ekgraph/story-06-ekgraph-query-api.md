@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-06: EKGraph Query API
 
 **Epic:** [EKGraph](epic.md)

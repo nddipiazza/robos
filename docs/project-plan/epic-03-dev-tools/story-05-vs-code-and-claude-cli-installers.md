@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-05: VS Code and Claude CLI Installers
 
 **Epic:** [Dev Tools](epic.md)

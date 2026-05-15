@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-04: CI Monitor
 
 **Epic:** [Code Review & CI/CD](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-02: Cloud-Init Provisioning with ASCII Splash
 
 **Epic:** [Desktop Foundation](epic.md)

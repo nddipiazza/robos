@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-05: Agent Scheduler — Event Triggers
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

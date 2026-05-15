@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 14-02: robos-ui Shared Component Library
 
 **Epic:** [Developer Experience & Testing](epic.md)

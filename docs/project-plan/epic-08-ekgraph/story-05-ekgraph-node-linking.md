@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-05: EKGraph Node Linking
 
 **Epic:** [EKGraph](epic.md)

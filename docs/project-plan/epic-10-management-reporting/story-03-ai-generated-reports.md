@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 10-03: AI-Generated Reports
 
 **Epic:** [Management & Reporting](epic.md)

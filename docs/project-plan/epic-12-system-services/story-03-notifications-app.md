@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-03: Notifications App — Category-Filtered History Viewer
 
 **Epic:** [System Services & Desktop Integration](epic.md)

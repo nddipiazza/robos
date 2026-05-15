@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 03: Dev Tools
 
 **Status:** Done

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-02: Journal Storage (Git-Backed Daily Entries)
 
 **Epic:** [RobOS Work Journal](epic.md)

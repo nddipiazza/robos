@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-05: Deep E2E Tests for issue-manager
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

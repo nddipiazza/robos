@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-07: App Deployment Pipeline
 
 **Epic:** [App Framework](epic.md)

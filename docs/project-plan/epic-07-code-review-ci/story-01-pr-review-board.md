@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-01: PR Review Board
 
 **Epic:** [Code Review & CI/CD](epic.md)

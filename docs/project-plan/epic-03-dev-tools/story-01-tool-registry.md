@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-01: Tool Registry
 
 **Epic:** [Dev Tools](epic.md)

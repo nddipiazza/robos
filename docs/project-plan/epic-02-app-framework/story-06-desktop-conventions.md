@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-06: .desktop File Conventions and X-RobOS Fields
 
 **Epic:** [App Framework](epic.md)

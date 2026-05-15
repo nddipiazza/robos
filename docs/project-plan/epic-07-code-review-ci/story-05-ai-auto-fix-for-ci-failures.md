@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-05: AI Auto-Fix for CI Failures
 
 **Epic:** [Code Review & CI/CD](epic.md)

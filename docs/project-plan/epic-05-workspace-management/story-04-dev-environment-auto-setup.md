@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-04: Dev Environment Auto-Setup
 
 **Epic:** [Workspace Management](epic.md)

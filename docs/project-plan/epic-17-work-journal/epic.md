@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 17: RobOS Work Journal
 
 **Status:** Not started

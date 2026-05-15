@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 08: Engineering Knowledge Graph (EKGraph)
 
 **Status:** Not started

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-04: Dev Tools Smoke Tests (Install/Uninstall Flow)
 
 **Epic:** [RobOS App Test Framework](epic.md)

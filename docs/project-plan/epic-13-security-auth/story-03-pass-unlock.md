@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 13-03: Pass Unlock
 
 **Epic:** [Security & Authentication](epic.md)

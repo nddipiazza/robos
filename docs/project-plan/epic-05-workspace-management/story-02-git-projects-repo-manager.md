@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-02: Git Projects Repo Manager
 
 **Epic:** [Workspace Management](epic.md)

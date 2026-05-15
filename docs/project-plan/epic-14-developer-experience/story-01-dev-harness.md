@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 14-01: Dev Harness
 
 **Epic:** [Developer Experience & Testing](epic.md)

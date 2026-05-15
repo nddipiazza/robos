@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 23: Release Pipeline & Versioning
 
 **Status:** Not started

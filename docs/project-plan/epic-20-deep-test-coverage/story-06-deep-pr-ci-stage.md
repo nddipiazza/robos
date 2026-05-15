@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-06: Deep E2E Tests for pr-review, ci-monitor, and stage-demo
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

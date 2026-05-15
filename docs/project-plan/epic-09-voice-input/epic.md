@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 09: Voice & Input
 
 **Status:** Not started

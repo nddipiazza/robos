@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 01: Desktop Foundation
 
 **Status:** Done

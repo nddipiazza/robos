@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-07: Search Index
 
 **Epic:** [System Services & Desktop Integration](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-02: AI Review Assistant
 
 **Epic:** [Code Review & CI/CD](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-08: Deep E2E Tests for Remaining Apps and Cross-App Verification
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

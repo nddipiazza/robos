@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 11-03: RobOS Update Mechanism
 
 **Epic:** [Release & Packaging](epic.md)

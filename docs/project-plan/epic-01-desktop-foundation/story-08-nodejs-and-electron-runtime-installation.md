@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-08: Node.js and Electron Runtime Installation
 
 **Epic:** [Desktop Foundation](epic.md)

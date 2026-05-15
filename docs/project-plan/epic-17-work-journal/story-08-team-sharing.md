@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-08: Journal Sharing and Team Feed
 
 **Epic:** [RobOS Work Journal](epic.md)

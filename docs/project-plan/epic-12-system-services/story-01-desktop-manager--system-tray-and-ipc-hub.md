@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-01: Desktop Manager — System Tray and IPC Hub
 
 **Epic:** [System Services & Desktop Integration](epic.md)

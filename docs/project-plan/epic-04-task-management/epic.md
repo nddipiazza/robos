@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 04: Task Management
 
 **Status:** Not started

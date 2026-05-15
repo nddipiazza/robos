@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-07: Deep E2E Tests for dev-central and manager-dashboard
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

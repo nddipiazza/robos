@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-08: IDE Bridge MCP Server
 
 **Epic:** [First-Class MCP Server Support](epic.md)

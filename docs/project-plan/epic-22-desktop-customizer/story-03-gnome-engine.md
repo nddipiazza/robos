@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-03: GNOME Settings Engine (gsettings, dconf, Extensions)
 
 **Epic:** [Desktop Customizer](epic.md)

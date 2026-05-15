@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-05: AI Draft Stage
 
 **Epic:** [AI Agent Integration](epic.md)

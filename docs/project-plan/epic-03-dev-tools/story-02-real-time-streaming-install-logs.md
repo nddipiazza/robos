@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 03-02: Real-Time Streaming Install Logs
 
 **Epic:** [Dev Tools](epic.md)

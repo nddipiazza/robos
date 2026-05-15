@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 09-03: Voice-to-EKGraph Conversion
 
 **Epic:** [Voice & Input](epic.md)

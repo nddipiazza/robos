@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-06: AI Quiz Stage
 
 **Epic:** [AI Agent Integration](epic.md)

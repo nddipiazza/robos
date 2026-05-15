@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-04: Agent Scheduler — Cron Jobs
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-03: Context Manager
 
 **Epic:** [AI Agent Integration](epic.md)

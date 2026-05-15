@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-01: Expand gh CLI Stub with Issue/PR/Run Data
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

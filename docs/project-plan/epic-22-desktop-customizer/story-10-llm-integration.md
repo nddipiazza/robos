@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-10: LLM Integration — Claude-Powered Conversational Customization
 
 **Epic:** [Desktop Customizer](epic.md)

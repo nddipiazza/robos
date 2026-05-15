@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-04: Journal Viewer App (Timeline + Detail Views)
 
 **Epic:** [RobOS Work Journal](epic.md)

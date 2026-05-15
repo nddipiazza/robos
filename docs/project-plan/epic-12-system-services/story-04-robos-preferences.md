@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-04: RobOS Preferences
 
 **Epic:** [System Services & Desktop Integration](epic.md)

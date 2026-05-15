@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-06: On-the-Fly App Builder (Scaffold + Register Electron Apps)
 
 **Epic:** [Desktop Customizer](epic.md)

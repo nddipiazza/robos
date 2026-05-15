@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-01: AI Agent Session Manager
 
 **Epic:** [AI Agent Integration](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-01: Event Bus Service
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

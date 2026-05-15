@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 24: AI Agent Orchestration — Multi-Agent Teams with Human Oversight
 
 **Status:** Not started

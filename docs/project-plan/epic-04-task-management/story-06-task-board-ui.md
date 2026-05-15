@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-06: Task Board UI (Kanban + List Views)
 
 **Epic:** [Task Management](epic.md)

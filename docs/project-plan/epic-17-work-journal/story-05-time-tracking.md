@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-05: Task-Linked Time Tracking (Automatic Hours)
 
 **Epic:** [RobOS Work Journal](epic.md)

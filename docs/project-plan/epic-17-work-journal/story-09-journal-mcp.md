@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-09: Journal MCP Server
 
 **Epic:** [RobOS Work Journal](epic.md)

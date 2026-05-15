@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 09-04: Microphone Indicator and Push-to-Talk
 
 **Epic:** [Voice & Input](epic.md)

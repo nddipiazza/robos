@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-03: GNOME Dark Theme and Desktop Customization
 
 **Epic:** [Desktop Foundation](epic.md)

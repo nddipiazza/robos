@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 11-04: First-Run Setup Wizard
 
 **Epic:** [Release & Packaging](epic.md)

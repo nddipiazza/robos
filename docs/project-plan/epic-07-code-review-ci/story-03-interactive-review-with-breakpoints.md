@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 07-03: Interactive Review with Breakpoints
 
 **Epic:** [Code Review & CI/CD](epic.md)

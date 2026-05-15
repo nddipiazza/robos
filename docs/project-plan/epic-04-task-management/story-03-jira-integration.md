@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-03: Jira Integration
 
 **Epic:** [Task Management](epic.md)

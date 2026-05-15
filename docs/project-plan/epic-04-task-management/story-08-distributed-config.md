@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-08: RobOS Distributed Config Store (Git-Backed)
 
 **Epic:** [Task Management](epic.md)

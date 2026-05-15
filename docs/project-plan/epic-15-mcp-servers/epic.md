@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 15: First-Class MCP Server Support
 
 **Status:** Not started

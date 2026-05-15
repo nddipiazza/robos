@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 13: Security & Authentication
 
 **Status:** Done

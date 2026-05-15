@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 11-01: Automated Full VM Build
 
 **Epic:** [Release & Packaging](epic.md)

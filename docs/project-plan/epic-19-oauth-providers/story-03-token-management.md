@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 19-03: Token Storage and Auto-Refresh
 
 **Epic:** [OAuth Provider Integration](epic.md)

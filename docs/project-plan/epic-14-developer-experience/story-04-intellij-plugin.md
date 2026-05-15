@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 14-04: IntelliJ Plugin
 
 **Epic:** [Developer Experience & Testing](epic.md)

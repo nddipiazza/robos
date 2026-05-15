@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS Workflow Examples
 
 This document walks through the complete RobOS workflow for each work item type, using a real example project:

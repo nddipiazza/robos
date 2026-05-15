@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-03: robos-icons SVG Registry
 
 **Epic:** [App Framework](epic.md)

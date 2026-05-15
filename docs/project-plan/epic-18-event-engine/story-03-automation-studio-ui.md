@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-03: Automation Studio UI
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

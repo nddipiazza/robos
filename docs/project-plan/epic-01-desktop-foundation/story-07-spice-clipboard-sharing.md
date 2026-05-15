@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-07: SPICE Clipboard Sharing
 
 **Epic:** [Desktop Foundation](epic.md)

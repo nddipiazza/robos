@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-01: Workspace Provisioning from Task
 
 **Epic:** [Workspace Management](epic.md)

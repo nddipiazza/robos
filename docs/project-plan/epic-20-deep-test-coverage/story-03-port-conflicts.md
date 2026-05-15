@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-03: Fix Port Conflicts and Add Missing Harness Entries
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

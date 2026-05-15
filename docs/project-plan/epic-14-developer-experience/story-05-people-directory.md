@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 14-05: People Directory
 
 **Epic:** [Developer Experience & Testing](epic.md)

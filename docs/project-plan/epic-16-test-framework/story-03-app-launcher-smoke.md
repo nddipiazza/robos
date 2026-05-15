@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-03: App Launcher Smoke Tests
 
 **Epic:** [RobOS App Test Framework](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 10-05: Deployment Tracking and MTTR
 
 **Epic:** [Management & Reporting](epic.md)

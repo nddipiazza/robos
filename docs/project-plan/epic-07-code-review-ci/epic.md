@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 07: Code Review & CI/CD
 
 **Status:** Not started

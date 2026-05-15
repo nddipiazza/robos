@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-06: CI Integration — Run Tests in Headless VM
 
 **Epic:** [RobOS App Test Framework](epic.md)

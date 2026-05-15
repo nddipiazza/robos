@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-07: Taskbar Widget Builder (Custom Panel Applets)
 
 **Epic:** [Desktop Customizer](epic.md)

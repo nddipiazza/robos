@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 13-02: Pass Manager
 
 **Epic:** [Security & Authentication](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 05-03: IDE Bridge (Open, Navigate, Breakpoints)
 
 **Epic:** [Workspace Management](epic.md)

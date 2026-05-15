@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 17-03: AI Daily Summary Generator
 
 **Epic:** [RobOS Work Journal](epic.md)

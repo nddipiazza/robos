@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 20-02: Add /eval Interaction Helpers to snapshot.js
 
 **Epic:** [Deep Test Coverage & Autonomous Verification](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 12-05: Desktop Widgets
 
 **Epic:** [System Services & Desktop Integration](epic.md)

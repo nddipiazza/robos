@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 11-02: OVA/QCOW2 Export
 
 **Epic:** [Release & Packaging](epic.md)

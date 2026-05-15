@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-05: Nautilus File Manager Customization
 
 **Epic:** [Desktop Foundation](epic.md)

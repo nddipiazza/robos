@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 09-01: Local STT Engine
 
 **Epic:** [Voice & Input](epic.md)

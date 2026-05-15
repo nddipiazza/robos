@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 10-02: Manager Dashboard
 
 **Epic:** [Management & Reporting](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 10-01: Dev Central Daily Dashboard
 
 **Epic:** [Management & Reporting](epic.md)

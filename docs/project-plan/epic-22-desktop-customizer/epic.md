@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 22: RobOS Desktop Customizer — Prompt-Driven Desktop Experience
 
 **Status:** Not started

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-03: MCP Router — Unified Endpoint
 
 **Epic:** [First-Class MCP Server Support](epic.md)

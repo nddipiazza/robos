@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 16-05: Screenshot-on-Failure and HTML Test Report
 
 **Epic:** [RobOS App Test Framework](epic.md)

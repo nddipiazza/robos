@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 08-03: EKGraph Browser and Search UI
 
 **Epic:** [EKGraph](epic.md)

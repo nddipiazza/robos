@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-04: Work Item Hierarchy (Release → Epic → Story → Bug)
 
 **Epic:** [Task Management](epic.md)

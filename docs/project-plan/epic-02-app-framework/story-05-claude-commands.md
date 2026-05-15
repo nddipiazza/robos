@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-05: Claude Commands for App Lifecycle
 
 **Epic:** [App Framework](epic.md)

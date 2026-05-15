@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 11: Release & Packaging
 
 **Status:** Not started

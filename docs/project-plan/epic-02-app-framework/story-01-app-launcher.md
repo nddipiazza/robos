@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 02-01: App Launcher with Search and Categories
 
 **Epic:** [App Framework](epic.md)

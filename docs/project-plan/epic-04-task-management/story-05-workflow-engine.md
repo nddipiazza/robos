@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-05: Configurable Task Workflow Engine
 
 **Epic:** [Task Management](epic.md)

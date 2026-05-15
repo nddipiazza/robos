@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 04-01: Task Server Connection Manager
 
 **Epic:** [Task Management](epic.md)

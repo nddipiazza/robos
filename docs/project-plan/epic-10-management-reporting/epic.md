@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Epic 10: Management & Reporting
 
 **Status:** Not started

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 09-02: Voice Input Integration
 
 **Epic:** [Voice & Input](epic.md)

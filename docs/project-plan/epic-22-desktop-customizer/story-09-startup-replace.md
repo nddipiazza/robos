@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-09: Startup Manager and Desktop Replacement Mode
 
 **Epic:** [Desktop Customizer](epic.md)

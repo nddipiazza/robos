@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-06: Pluggable Action Registry
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

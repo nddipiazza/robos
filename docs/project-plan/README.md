@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # RobOS Project Plan
 
 ## Release: v1.0 — RobOS AI-Assisted Engineering OS

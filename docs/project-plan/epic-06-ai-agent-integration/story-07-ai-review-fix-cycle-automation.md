@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 06-07: AI Review-Fix Cycle Automation
 
 **Epic:** [AI Agent Integration](epic.md)

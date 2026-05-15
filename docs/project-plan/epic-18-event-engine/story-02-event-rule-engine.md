@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 18-02: Event Rule Engine
 
 **Epic:** [Event Engine & Agent Scheduler](epic.md)

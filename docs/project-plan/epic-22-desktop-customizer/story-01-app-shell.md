@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 22-01: Desktop Customizer App Shell and Prompt Interface
 
 **Epic:** [Desktop Customizer](epic.md)

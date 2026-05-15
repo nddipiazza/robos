@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 13-01: Security Setup
 
 **Epic:** [Security & Authentication](epic.md)

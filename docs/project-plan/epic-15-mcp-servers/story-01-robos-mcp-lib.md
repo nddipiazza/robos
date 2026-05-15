@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-01: robos-mcp-lib — Shared MCP Server Framework
 
 **Epic:** [First-Class MCP Server Support](epic.md)

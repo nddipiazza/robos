@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-06: GDM Auto-Login and Display Configuration
 
 **Epic:** [Desktop Foundation](epic.md)

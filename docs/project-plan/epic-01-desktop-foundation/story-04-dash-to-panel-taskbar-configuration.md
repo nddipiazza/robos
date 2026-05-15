@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 01-04: Dash-to-Panel Taskbar Configuration
 
 **Epic:** [Desktop Foundation](epic.md)

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Story 15-06: EKGraph MCP Server
 
 **Epic:** [First-Class MCP Server Support](epic.md)
