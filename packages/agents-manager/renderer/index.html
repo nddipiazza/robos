@@ -21,7 +21,7 @@
     <div id="active-provider-indicator"></div>
   </aside>
 
-  <!-- Resizer -->
+  <!-- Resizer (sidebar | main) -->
   <div id="resizer"></div>
 
   <!-- Main panel -->
@@ -40,8 +40,75 @@
       <div id="empty-detecting" class="text-muted">Detecting installed providers...</div>
     </div>
 
-    <!-- Provider detail pane (populated dynamically) -->
-    <div id="provider-detail" class="hidden"></div>
+    <!-- Provider content: sessions panel + chat panel -->
+    <div id="provider-content" class="hidden">
+
+      <!-- Sessions panel -->
+      <div id="sessions-panel">
+        <div class="sessions-panel-header">
+          <div class="sessions-panel-title-row">
+            <span id="sessions-panel-title" class="sessions-panel-title-text"></span>
+            <div class="sessions-panel-btns">
+              <button id="btn-new-session" class="btn btn-ai btn-sm">+ New</button>
+              <button id="btn-provider-settings" class="btn btn-sm" title="Provider settings">⚙</button>
+            </div>
+          </div>
+          <div id="provider-status-strip" class="provider-status-strip"></div>
+        </div>
+        <div id="sessions-list" class="sessions-list-compact"></div>
+      </div>
+
+      <!-- Resizer (sessions | chat) -->
+      <div id="resizer-2"></div>
+
+      <!-- Chat panel -->
+      <div id="chat-panel">
+        <div id="chat-empty" class="chat-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#30363d" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <p>Select a session to view the conversation</p>
+          <p class="text-muted" style="font-size:11px">or click + New to start one</p>
+        </div>
+
+        <div id="chat-view" class="hidden">
+          <div class="chat-header">
+            <div class="chat-header-left">
+              <span id="chat-session-name" class="chat-session-name"></span>
+              <span id="chat-session-cwd" class="chat-session-cwd mono text-muted"></span>
+            </div>
+            <div class="chat-header-right">
+              <button id="btn-chat-refresh" class="btn btn-sm" title="Reload conversation">↻</button>
+              <button id="btn-chat-terminal" class="btn btn-ai btn-sm" title="Open in terminal">⌐ Terminal</button>
+            </div>
+          </div>
+          <div id="chat-messages" class="chat-messages"></div>
+          <div class="chat-input-wrap">
+            <textarea id="chat-input" class="chat-input"
+              placeholder="Type a message…  Ctrl+Enter to send" rows="3"></textarea>
+            <div class="chat-input-btns">
+              <button id="btn-stop" class="btn btn-danger btn-sm hidden">■ Stop</button>
+              <button id="btn-send" class="btn btn-ai btn-send">Send</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- #chat-panel -->
+
+    </div><!-- #provider-content -->
+
+    <!-- Provider settings overlay (modal over main) -->
+    <div id="settings-overlay" class="settings-overlay hidden">
+      <div class="settings-panel">
+        <div class="settings-panel-hdr">
+          <span id="settings-panel-title" class="settings-panel-title-text"></span>
+          <button id="btn-close-settings" class="btn btn-sm">✕ Close</button>
+        </div>
+        <!-- Existing render*Detail functions render into this div -->
+        <div id="provider-detail" class="detail-scroll settings-panel-body"></div>
+      </div>
+    </div>
+
   </main>
 
 </div>

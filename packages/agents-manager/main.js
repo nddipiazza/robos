@@ -571,3 +571,137 @@ ipcMain.handle('open-dir-dialog', async () => {
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
   return result.canceled ? null : result.filePaths[0];
 });
+
+// ── Session Events + Streaming ───────────────────────────────────────────────
+
+const _runningProcs = new Map();
+
+ipcMain.handle('copilot-session-events', (_, sessionId) => {
+  const events = [];
+  try {
+    const eventsPath = path.join(COPILOT_SESSION_DIR, sessionId, 'events.jsonl');
+    const lines = fs.readFileSync(eventsPath, 'utf8').split('\n').filter(Boolean);
+    for (const line of lines.slice(-500)) {
+      try { events.push(JSON.parse(line)); } catch {}
+    }
+  } catch {}
+  return events;
+});
+
+ipcMain.handle('claude-session-events', (_, sessionId) => {
+  const events = [];
+  try {
+    const projectsDir = path.join(CLAUDE_DIR, 'projects');
+    const dirs = fs.readdirSync(projectsDir);
+    for (const dir of dirs) {
+      const filePath = path.join(projectsDir, dir, `${sessionId}.jsonl`);
+      if (fs.existsSync(filePath)) {
+        const lines = fs.readFileSync(filePath, 'utf8').split('\n').filter(Boolean);
+        for (const line of lines.slice(-500)) {
+          try { events.push(JSON.parse(line)); } catch {}
+        }
+        break;
+      }
+    }
+  } catch {}
+  return events;
+});
+
+ipcMain.handle('session-send', (event, { provider, sessionId, prompt, cwd }) => {
+  const wc = event.sender;
+
+  if (_runningProcs.has(sessionId)) {
+    try { _runningProcs.get(sessionId).kill('SIGTERM'); } catch {}
+    _runningProcs.delete(sessionId);
+  }
+
+  const cwdDir = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : os.homedir();
+  let proc;
+
+  if (provider === 'claude-code') {
+    // Safe spawn: prompt passed via env var, never interpolated into shell string
+    proc = cp.spawn(
+      'bash',
+      ['-lc', 'exec claude --resume "$ROBOS_SESSION_ID" -p "$ROBOS_PROMPT" --output-format stream-json'],
+      {
+        cwd: cwdDir,
+        env: { ...process.env, ROBOS_SESSION_ID: sessionId, ROBOS_PROMPT: prompt },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+  } else if (provider === 'github-copilot') {
+    proc = cp.spawn(
+      '/usr/bin/copilot',
+      ['--resume', sessionId, '--no-auto-update', '--no-color'],
+      {
+        cwd: cwdDir,
+        env: { ...process.env, TERM: 'dumb', NO_COLOR: '1', COLORTERM: '' },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
+    if (proc.stdin) {
+      try { proc.stdin.write(prompt + '\n'); proc.stdin.end(); } catch {}
+    }
+  } else {
+    wc.send('session-done', { sessionId, error: `Provider "${provider}" does not support in-app chat` });
+    return;
+  }
+
+  _runningProcs.set(sessionId, proc);
+  let lineBuf = '';
+
+  proc.stdout.on('data', chunk => {
+    const raw = chunk.toString();
+    if (provider === 'claude-code') {
+      lineBuf += raw;
+      const lines = lineBuf.split('\n');
+      lineBuf = lines.pop() || '';
+      for (const line of lines) {
+        if (line.trim()) try { wc.send('session-chunk', { sessionId, line }); } catch {}
+      }
+    } else {
+      const clean = raw
+        .replace(/\x1b\][^\x07\x1b]*(\x07|\x1b\\)/g, '')
+        .replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, '')
+        .replace(/\x1b[A-Z\\^_]/g, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
+      if (clean) try { wc.send('session-chunk', { sessionId, text: clean }); } catch {}
+    }
+  });
+
+  proc.stderr.on('data', chunk => {
+    const text = chunk.toString().replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, '');
+    if (text.trim()) try { wc.send('session-stderr', { sessionId, text }); } catch {}
+  });
+
+  proc.on('close', code => {
+    if (provider === 'claude-code' && lineBuf.trim()) {
+      try { wc.send('session-chunk', { sessionId, line: lineBuf }); } catch {}
+    }
+    _runningProcs.delete(sessionId);
+    try { wc.send('session-done', { sessionId, code }); } catch {}
+    if (provider === 'github-copilot') {
+      setTimeout(() => {
+        try {
+          const evPath = path.join(COPILOT_SESSION_DIR, sessionId, 'events.jsonl');
+          const lines = fs.readFileSync(evPath, 'utf8').split('\n').filter(Boolean).slice(-500);
+          const events = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+          try { wc.send('session-events-refresh', { sessionId, events }); } catch {}
+        } catch {}
+      }, 800);
+    }
+  });
+
+  proc.on('error', err => {
+    _runningProcs.delete(sessionId);
+    try { wc.send('session-done', { sessionId, error: err.message }); } catch {}
+  });
+});
+
+ipcMain.handle('session-kill', (_, sessionId) => {
+  if (_runningProcs.has(sessionId)) {
+    try { _runningProcs.get(sessionId).kill('SIGTERM'); } catch {}
+    _runningProcs.delete(sessionId);
+  }
+});

@@ -3,6 +3,12 @@
 let providers = [];
 let activeProviderId = null;
 let selectedProviderId = null;
+let selectedSession = null;     // currently open session object
+let isStreaming = false;         // true while a session-send is in progress
+let streamingBubble = null;     // DOM element for the active streaming bubble
+let _claudeTextAcc = '';        // accumulated text for current Claude text run
+let _claudeTextEl = null;       // DOM element for current Claude text run
+let _claudeToolBlocks = {};     // toolId -> DOM element for Claude tool calls
 
 // ── Copilot CLI flag definitions ─────────────────────────────────────────────
 // type: 'bool' | 'text' | 'number' | 'select'
@@ -231,29 +237,26 @@ async function init() {
   const firstInstalled = providers.find(p => p.installed);
   if (firstInstalled) selectProvider(firstInstalled.id);
 
-  // Handle --check-provider mode
   window.agents.onOpenProvider((id) => selectProvider(id));
 
-  // Auto-refresh: sessions every 5s, auth status every 5s (lightweight DOM patch)
+  setupStreamingHandlers();
+
   setInterval(() => refreshCurrentSessions(), 5000);
   setInterval(() => refreshProviderStatus(), 5000);
 
-  // Init resizer
   initResizer();
+  initResizer2();
 }
 
 async function refreshCurrentSessions() {
   if (!selectedProviderId) return;
-  if (selectedProviderId === 'github-copilot') {
-    const sessions = await window.agents.copilotSessions();
-    renderCopilotSessions(sessions);
-  } else if (selectedProviderId === 'claude-code') {
-    const sessions = await window.agents.claudeSessions();
-    renderClaudeSessions(sessions);
-  } else if (selectedProviderId === 'codex') {
-    const sessions = await window.agents.codexSessions();
-    renderCodexSessions(sessions);
-  }
+  if (isStreaming) return;   // don't disrupt active streaming
+
+  let sessions = [];
+  if (selectedProviderId === 'github-copilot') sessions = await window.agents.copilotSessions();
+  else if (selectedProviderId === 'claude-code') sessions = await window.agents.claudeSessions();
+  else if (selectedProviderId === 'codex') sessions = await window.agents.codexSessions();
+  renderSessionsList(sessions);
 }
 
 let _lastAuthState = {};
@@ -310,20 +313,35 @@ function renderSidebar() {
 
 async function selectProvider(id) {
   selectedProviderId = id;
+  selectedSession = null;
   renderSidebar();
 
   document.getElementById('empty-state').classList.add('hidden');
-  const detail = document.getElementById('provider-detail');
-  detail.classList.remove('hidden');
+  document.getElementById('settings-overlay').classList.add('hidden');
+  document.getElementById('provider-content').classList.remove('hidden');
+  document.getElementById('chat-empty').classList.remove('hidden');
+  document.getElementById('chat-view').classList.add('hidden');
 
-  const provider = providers.find(p => p.id === id);
-  if (id === 'github-copilot') {
-    await renderCopilotDetail(provider);
-  } else if (id === 'claude-code') {
-    await renderClaudeDetail(provider);
-  } else if (id === 'codex') {
-    await renderCodexDetail(provider);
-  }
+  const provider = providers.find(p => p.id === id) || { id, name: id, installed: false, authenticated: false };
+
+  // Sessions panel title + status strip
+  document.getElementById('sessions-panel-title').textContent = provider.name;
+  const strip = document.getElementById('provider-status-strip');
+  const dotCls = provider.authenticated ? 'green' : provider.installed ? 'yellow' : 'red';
+  const statusLabel = provider.authenticated
+    ? (provider.user ? `Connected · ${provider.user}` : 'Connected')
+    : provider.installed ? 'Not authenticated' : 'Not installed';
+  strip.innerHTML = `<span class="status-dot ${dotCls}"></span><span class="status-strip-label">${esc(statusLabel)}</span>`;
+
+  document.getElementById('btn-new-session').onclick = () => startNewSession(id);
+  document.getElementById('btn-provider-settings').onclick = () => showProviderSettings(id);
+
+  // Load sessions
+  let sessions = [];
+  if (id === 'github-copilot') sessions = await window.agents.copilotSessions();
+  else if (id === 'claude-code') sessions = await window.agents.claudeSessions();
+  else if (id === 'codex') sessions = await window.agents.codexSessions();
+  renderSessionsList(sessions);
 }
 
 // ── GitHub Copilot Detail ───────────────────────────────────────────────────
@@ -1237,7 +1255,539 @@ function renderCodexSessions(sessions) {
   }
 }
 
-// ── Resizable sidebar ───────────────────────────────────────────────────────
+// ── Sessions panel ───────────────────────────────────────────────────────────
+
+function renderSessionsList(sessions) {
+  const container = document.getElementById('sessions-list');
+  if (!sessions || !sessions.length) {
+    container.innerHTML = `<div class="sessions-empty">No sessions found.<br><small>Click + New to start one.</small></div>`;
+    return;
+  }
+  container.innerHTML = '';
+  for (const s of sessions) {
+    const item = document.createElement('div');
+    const isActive = selectedSession && selectedSession.session_id === s.session_id;
+    item.className = 'session-item' + (isActive ? ' active' : '');
+    item.dataset.sessionId = s.session_id;
+    const shortCwd = s.cwd ? (s.cwd.split('/').filter(Boolean).pop() || s.cwd) : '';
+    item.innerHTML = `
+      <div class="session-item-name">${esc(s.name || s.session_id.slice(0, 8))}</div>
+      <div class="session-item-sub">${esc(s.first_message || '')}${s.first_message && shortCwd ? ' · ' : ''}${esc(shortCwd)}</div>
+      <div class="session-item-time">${formatDate(s.updated_at || s.started_at || s.created_at || '')}</div>`;
+    item.onclick = () => openSession(s);
+    container.appendChild(item);
+  }
+}
+
+// ── Chat panel ──────────────────────────────────────────────────────────────
+
+async function openSession(session) {
+  if (isStreaming) return;
+  selectedSession = session;
+
+  document.querySelectorAll('.session-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.sessionId === session.session_id));
+
+  document.getElementById('chat-empty').classList.add('hidden');
+  const view = document.getElementById('chat-view');
+  view.classList.remove('hidden');
+
+  document.getElementById('chat-session-name').textContent = session.name || session.session_id.slice(0, 8);
+  document.getElementById('chat-session-cwd').textContent = session.cwd || '';
+
+  document.getElementById('btn-chat-refresh').onclick = () => loadConversationHistory();
+  document.getElementById('btn-chat-terminal').onclick = () => openSessionInTerminal();
+
+  if (selectedProviderId === 'codex') {
+    renderCodexSessionView(session);
+    return;
+  }
+
+  const sendBtn = document.getElementById('btn-send');
+  const stopBtn = document.getElementById('btn-stop');
+  const inputEl = document.getElementById('chat-input');
+  sendBtn.onclick = sendMessage;
+  stopBtn.onclick = stopStreaming;
+  inputEl.onkeydown = (e) => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sendMessage(); } };
+
+  await loadConversationHistory();
+}
+
+function renderCodexSessionView(session) {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = `
+    <div class="codex-notice">
+      <div class="codex-notice-icon">◈</div>
+      <div class="codex-notice-body">
+        <strong>Codex CLI</strong> sessions don't support in-app chat.
+        <p class="text-muted" style="margin-top:6px;font-size:12px">Codex is a full TUI — use the Terminal button to resume this session.</p>
+        ${session.first_message ? `<div class="codex-first-msg">${esc(session.first_message)}</div>` : ''}
+      </div>
+    </div>`;
+  document.querySelector('.chat-input-wrap').classList.add('hidden');
+}
+
+async function loadConversationHistory() {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = '<div class="loading-history"><span>Loading history…</span></div>';
+
+  let events = [];
+  if (selectedProviderId === 'github-copilot') {
+    events = await window.agents.copilotSessionEvents(selectedSession.session_id);
+  } else if (selectedProviderId === 'claude-code') {
+    events = await window.agents.claudeSessionEvents(selectedSession.session_id);
+  }
+
+  msgs.innerHTML = '';
+  if (!events.length) {
+    msgs.innerHTML = '<div class="chat-no-history">No conversation history found yet.</div>';
+    return;
+  }
+
+  if (selectedProviderId === 'github-copilot') {
+    renderCopilotEvents(events, msgs);
+  } else if (selectedProviderId === 'claude-code') {
+    renderClaudeEvents(events, msgs);
+  }
+  scrollToBottom();
+}
+
+function renderCopilotEvents(events, container) {
+  for (const ev of events) {
+    const t = ev.type || '';
+    if (t === 'user.message' || t === 'human') {
+      const content = ev.data?.content || ev.message?.content || ev.content || '';
+      if (content) appendBubble(container, 'user', renderMarkdown(String(content)));
+    } else if (t === 'assistant.message' || t === 'assistant') {
+      const content = ev.data?.content || ev.message?.content || ev.content || '';
+      if (content) appendBubble(container, 'assistant', renderMarkdown(String(content)));
+    } else if (t === 'tool.call' || t === 'tool_use') {
+      const name = ev.data?.name || ev.name || '?';
+      const input = ev.data?.input || ev.input || {};
+      appendToolBlock(container, name, input, null);
+    }
+  }
+}
+
+function renderClaudeEvents(events, container) {
+  const toolMap = {};
+  for (const ev of events) {
+    const t = ev.type || '';
+    if (t === 'human' && ev.message) {
+      const c = ev.message.content;
+      const text = typeof c === 'string' ? c : (Array.isArray(c) ? c.map(b => b.text || b.content || '').join('') : String(c || ''));
+      if (text.trim()) appendBubble(container, 'user', renderMarkdown(text));
+    } else if (t === 'assistant' && ev.message) {
+      const content = Array.isArray(ev.message.content) ? ev.message.content : [];
+      let textAcc = '';
+      const blocks = [];
+      for (const b of content) {
+        if (b.type === 'text' && b.text) {
+          textAcc += b.text;
+        } else if (b.type === 'thinking' && b.thinking) {
+          if (textAcc) { blocks.push({ kind: 'text', text: textAcc }); textAcc = ''; }
+          blocks.push({ kind: 'thinking', text: b.thinking });
+        } else if (b.type === 'tool_use') {
+          if (textAcc) { blocks.push({ kind: 'text', text: textAcc }); textAcc = ''; }
+          blocks.push({ kind: 'tool', name: b.name, input: b.input, id: b.id });
+        }
+      }
+      if (textAcc) blocks.push({ kind: 'text', text: textAcc });
+
+      // Group all blocks under one assistant bubble
+      const bubbleContent = document.createElement('div');
+      bubbleContent.className = 'bubble-content-multi';
+      for (const bl of blocks) {
+        if (bl.kind === 'text') {
+          const d = document.createElement('div');
+          d.className = 'stream-md';
+          d.innerHTML = renderMarkdown(bl.text);
+          bubbleContent.appendChild(d);
+        } else if (bl.kind === 'thinking') {
+          bubbleContent.appendChild(createThinkingBlock(bl.text));
+        } else if (bl.kind === 'tool') {
+          const toolEl = createToolBlock(bl.name, bl.input, null);
+          if (bl.id) { toolEl.dataset.toolId = bl.id; toolMap[bl.id] = toolEl; }
+          bubbleContent.appendChild(toolEl);
+        }
+      }
+      if (blocks.length) appendBubbleEl(container, 'assistant', bubbleContent);
+    } else if (t === 'tool' && ev.message) {
+      const content = Array.isArray(ev.message.content) ? ev.message.content : [];
+      for (const b of content) {
+        if (b.type === 'tool_result' && b.tool_use_id && toolMap[b.tool_use_id]) {
+          const resultText = Array.isArray(b.content)
+            ? b.content.map(c => c.text || '').join('\n')
+            : (typeof b.content === 'string' ? b.content : '');
+          updateToolBlockResult(toolMap[b.tool_use_id], resultText, !!b.is_error);
+        }
+      }
+    }
+  }
+}
+
+// ── Chat message helpers ─────────────────────────────────────────────────────
+
+function appendBubble(container, role, htmlContent) {
+  const el = document.createElement('div');
+  el.className = `bubble bubble-${role}`;
+  const avatar = role === 'user'
+    ? `<div class="bubble-avatar user-avatar">▲</div>`
+    : `<div class="bubble-avatar assistant-avatar">◆</div>`;
+  el.innerHTML = `${avatar}<div class="bubble-body"><div class="bubble-content">${htmlContent}</div></div>`;
+  container.appendChild(el);
+  return el;
+}
+
+function appendBubbleEl(container, role, contentEl) {
+  const el = document.createElement('div');
+  el.className = `bubble bubble-${role}`;
+  const avatar = `<div class="bubble-avatar assistant-avatar">◆</div>`;
+  const body = document.createElement('div');
+  body.className = 'bubble-body';
+  body.appendChild(contentEl);
+  el.innerHTML = avatar;
+  el.appendChild(body);
+  container.appendChild(el);
+  return el;
+}
+
+function createStreamingBubble(container) {
+  const el = document.createElement('div');
+  el.className = 'bubble bubble-assistant bubble-streaming';
+  el.innerHTML = `
+    <div class="bubble-avatar assistant-avatar">◆</div>
+    <div class="bubble-body">
+      <div class="bubble-content"></div>
+      <span class="streaming-cursor">▊</span>
+    </div>`;
+  container.appendChild(el);
+  scrollToBottom();
+  return el;
+}
+
+function finishStreamingBubble() {
+  if (!streamingBubble) return;
+  streamingBubble.classList.remove('bubble-streaming');
+  const cursor = streamingBubble.querySelector('.streaming-cursor');
+  if (cursor) cursor.remove();
+  streamingBubble = null;
+}
+
+function appendToolBlock(container, name, input, output) {
+  const el = createToolBlock(name, input, output);
+  container.appendChild(el);
+  return el;
+}
+
+function createToolBlock(name, input, output) {
+  const el = document.createElement('div');
+  el.className = 'tool-block';
+  const inputStr = input ? JSON.stringify(input, null, 2) : '';
+  el.innerHTML = `
+    <div class="tool-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="tool-chevron">▶</span>
+      <span class="tool-name">${esc(name || 'tool')}</span>
+    </div>
+    <div class="tool-body">
+      ${inputStr ? `<div class="tool-input"><pre>${esc(inputStr.slice(0, 1000))}</pre></div>` : ''}
+      <div class="tool-output">${output ? esc(String(output).slice(0, 2000)) : ''}</div>
+    </div>`;
+  return el;
+}
+
+function updateToolBlockResult(el, resultText, isError) {
+  const outputEl = el.querySelector('.tool-output');
+  if (outputEl) outputEl.textContent = (resultText || '').slice(0, 2000);
+  el.classList.toggle('tool-error', !!isError);
+  el.classList.add('open');
+}
+
+function createThinkingBlock(text) {
+  const el = document.createElement('div');
+  el.className = 'thinking-block';
+  el.innerHTML = `
+    <div class="thinking-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="tool-chevron">▶</span>
+      <span class="thinking-label">Thinking…</span>
+    </div>
+    <div class="thinking-body"><div class="thinking-text">${esc((text || '').slice(0, 4000))}</div></div>`;
+  return el;
+}
+
+// ── Streaming ────────────────────────────────────────────────────────────────
+
+function setupStreamingHandlers() {
+  // Called once in init() — no listener stacking
+  window.agents.onSessionChunk(handleSessionChunk);
+  window.agents.onSessionDone(handleSessionDone);
+  window.agents.onSessionStderr(handleSessionStderr);
+  window.agents.onSessionEventsRefresh(handleSessionEventsRefresh);
+}
+
+function handleSessionChunk(data) {
+  if (!selectedSession || data.sessionId !== selectedSession.session_id) return;
+  if (!streamingBubble) return;
+  if (data.line) {
+    handleClaudeChunkLine(data.line);
+  } else if (data.text) {
+    handlePlainTextChunk(data.text);
+  }
+}
+
+function handleClaudeChunkLine(line) {
+  let parsed;
+  try { parsed = JSON.parse(line); } catch { return; }
+  if (!parsed || !streamingBubble) return;
+  const bContent = streamingBubble.querySelector('.bubble-content');
+
+  if (parsed.type === 'assistant' && parsed.message && bContent) {
+    const blocks = Array.isArray(parsed.message.content) ? parsed.message.content : [];
+    for (const b of blocks) {
+      if (b.type === 'text' && b.text) {
+        if (!_claudeTextEl) {
+          _claudeTextEl = document.createElement('div');
+          _claudeTextEl.className = 'stream-md';
+          bContent.appendChild(_claudeTextEl);
+          _claudeTextAcc = '';
+        }
+        _claudeTextAcc += b.text;
+        _claudeTextEl.innerHTML = renderMarkdown(_claudeTextAcc);
+        scrollToBottom();
+      } else if (b.type === 'thinking' && b.thinking) {
+        _claudeTextEl = null; _claudeTextAcc = '';
+        bContent.appendChild(createThinkingBlock(b.thinking));
+        scrollToBottom();
+      } else if (b.type === 'tool_use') {
+        _claudeTextEl = null; _claudeTextAcc = '';
+        const toolEl = createToolBlock(b.name, b.input, null);
+        if (b.id) { toolEl.dataset.toolId = b.id; _claudeToolBlocks[b.id] = toolEl; }
+        bContent.appendChild(toolEl);
+        scrollToBottom();
+      }
+    }
+  } else if (parsed.type === 'tool' && parsed.message && bContent) {
+    const blocks = Array.isArray(parsed.message.content) ? parsed.message.content : [];
+    for (const b of blocks) {
+      if (b.type === 'tool_result' && b.tool_use_id && _claudeToolBlocks[b.tool_use_id]) {
+        const resultText = Array.isArray(b.content)
+          ? b.content.map(c => c.text || '').join('\n')
+          : (typeof b.content === 'string' ? b.content : '');
+        updateToolBlockResult(_claudeToolBlocks[b.tool_use_id], resultText, !!b.is_error);
+      }
+    }
+  }
+}
+
+function handlePlainTextChunk(text) {
+  if (!streamingBubble) return;
+  const bContent = streamingBubble.querySelector('.bubble-content');
+  if (!_claudeTextEl) {
+    _claudeTextEl = document.createElement('div');
+    _claudeTextEl.className = 'stream-md stream-plain';
+    bContent.appendChild(_claudeTextEl);
+    _claudeTextAcc = '';
+  }
+  _claudeTextAcc += text;
+  _claudeTextEl.textContent = _claudeTextAcc;
+  scrollToBottom();
+}
+
+function handleSessionStderr(data) {
+  if (!selectedSession || data.sessionId !== selectedSession.session_id) return;
+  if (!streamingBubble) return;
+  const bContent = streamingBubble.querySelector('.bubble-content');
+  const errEl = document.createElement('div');
+  errEl.className = 'stream-stderr';
+  errEl.textContent = data.text || '';
+  bContent.appendChild(errEl);
+  scrollToBottom();
+}
+
+function handleSessionDone(data) {
+  if (!selectedSession || data.sessionId !== selectedSession.session_id) return;
+  if (data.error) {
+    const msgs = document.getElementById('chat-messages');
+    const errEl = document.createElement('div');
+    errEl.className = 'stream-stderr';
+    errEl.textContent = `Error: ${data.error}`;
+    msgs.appendChild(errEl);
+    scrollToBottom();
+  }
+  finishStreamingBubble();
+  _claudeTextEl = null; _claudeTextAcc = ''; _claudeToolBlocks = {};
+  setStreaming(false);
+}
+
+function handleSessionEventsRefresh(data) {
+  if (!selectedSession || data.sessionId !== selectedSession.session_id) return;
+  // Copilot: silently update history after send completes (don't disrupt current view)
+  // Only refresh if the messages area exists and isn't actively streaming
+  if (isStreaming) return;
+  const msgs = document.getElementById('chat-messages');
+  if (msgs && data.events) {
+    msgs.innerHTML = '';
+    renderCopilotEvents(data.events, msgs);
+    scrollToBottom();
+  }
+}
+
+// ── Send / Stop ──────────────────────────────────────────────────────────────
+
+async function sendMessage() {
+  if (isStreaming || !selectedSession) return;
+  const input = document.getElementById('chat-input');
+  const prompt = (input.value || '').trim();
+  if (!prompt) return;
+
+  input.value = '';
+  setStreaming(true);
+  _claudeTextEl = null; _claudeTextAcc = ''; _claudeToolBlocks = {};
+
+  const msgs = document.getElementById('chat-messages');
+  appendBubble(msgs, 'user', renderMarkdown(prompt));
+  streamingBubble = createStreamingBubble(msgs);
+  scrollToBottom();
+
+  window.agents.sessionSend({
+    provider: selectedProviderId,
+    sessionId: selectedSession.session_id,
+    prompt,
+    cwd: selectedSession.cwd || '',
+  });
+}
+
+function stopStreaming() {
+  if (selectedSession) window.agents.sessionKill(selectedSession.session_id);
+  finishStreamingBubble();
+  _claudeTextEl = null; _claudeTextAcc = ''; _claudeToolBlocks = {};
+  setStreaming(false);
+}
+
+function setStreaming(val) {
+  isStreaming = val;
+  const sendBtn = document.getElementById('btn-send');
+  const stopBtn = document.getElementById('btn-stop');
+  const input = document.getElementById('chat-input');
+  if (sendBtn) sendBtn.disabled = val;
+  if (stopBtn) stopBtn.classList.toggle('hidden', !val);
+  if (input) input.disabled = val;
+}
+
+// ── Settings overlay ─────────────────────────────────────────────────────────
+
+async function showProviderSettings(id) {
+  const provider = providers.find(p => p.id === id);
+  if (!provider) return;
+
+  document.getElementById('provider-content').classList.add('hidden');
+  const overlay = document.getElementById('settings-overlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('settings-panel-title').textContent = `${provider.name} Settings`;
+
+  document.getElementById('btn-close-settings').onclick = () => {
+    overlay.classList.add('hidden');
+    document.getElementById('provider-content').classList.remove('hidden');
+  };
+
+  // Delegate to existing render functions (they target #provider-detail inside the overlay)
+  if (id === 'github-copilot') await renderCopilotDetail(provider);
+  else if (id === 'claude-code') await renderClaudeDetail(provider);
+  else if (id === 'codex') await renderCodexDetail(provider);
+}
+
+// ── Terminal launch ──────────────────────────────────────────────────────────
+
+function openSessionInTerminal() {
+  if (!selectedSession) return;
+  if (selectedProviderId === 'github-copilot') {
+    window.agents.copilotLaunchTerminal(selectedSession.session_id, [], selectedSession.cwd || null);
+  } else if (selectedProviderId === 'claude-code') {
+    window.agents.claudeLaunchTerminal(selectedSession.session_id, [], selectedSession.cwd || null);
+  } else if (selectedProviderId === 'codex') {
+    window.agents.codexLaunchTerminal(selectedSession.session_id, []);
+  }
+}
+
+function startNewSession(providerId) {
+  if (providerId === 'github-copilot') {
+    window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
+  } else if (providerId === 'claude-code') {
+    window.agents.claudeLaunchTerminal(null, buildClaudeArgs(), claudeFlagValues['cwd'] || null);
+  } else if (providerId === 'codex') {
+    window.agents.codexLaunchTerminal(null, buildCodexArgs());
+  }
+}
+
+// ── Markdown renderer (safe) ─────────────────────────────────────────────────
+
+function renderMarkdown(raw) {
+  if (!raw) return '';
+  const codeBlocks = [];
+  let text = String(raw).replace(/```([\w]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const i = codeBlocks.length;
+    codeBlocks.push({ lang: (lang || '').trim(), code: code.replace(/\n$/, '') });
+    return `\x00CB${i}\x00`;
+  });
+
+  // Escape HTML in non-code text first
+  text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // Apply inline markdown (safe: operating on already-escaped text)
+  text = text
+    .replace(/`([^`\n]+)`/g, '<code class="ic">$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+    .replace(/^#{1,3} (.+)$/gm, '<h4 class="md-h">$1</h4>')
+    .replace(/\n/g, '<br>');
+
+  // Reinsert code blocks
+  for (let i = 0; i < codeBlocks.length; i++) {
+    const { lang, code } = codeBlocks[i];
+    const safe = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    text = text.replace(
+      `\x00CB${i}\x00`,
+      `<div class="cb">${lang ? `<div class="cb-lang">${esc(lang)}</div>` : ''}<pre class="cb-pre">${safe}</pre></div>`
+    );
+  }
+  return text;
+}
+
+// ── Scroll ───────────────────────────────────────────────────────────────────
+
+function scrollToBottom() {
+  const msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── Second resizer (sessions | chat) ─────────────────────────────────────────
+
+function initResizer2() {
+  const sessionsPanel = document.getElementById('sessions-panel');
+  const resizer2 = document.getElementById('resizer-2');
+  let startX, startW;
+
+  resizer2.addEventListener('mousedown', (e) => {
+    startX = e.clientX;
+    startW = sessionsPanel.offsetWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = (e) => {
+      const w = startW + (e.clientX - startX);
+      sessionsPanel.style.width = Math.max(180, Math.min(420, w)) + 'px';
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+
 
 function initResizer() {
   const sidebar = document.getElementById('sidebar');
@@ -1299,7 +1849,7 @@ function formatDate(iso) {
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Close flags dropdown when clicking outside
+  // Close flags dropdowns when clicking outside
   document.addEventListener('click', () => {
     document.getElementById('cop-flags-dropdown')?.classList.add('hidden');
   });
