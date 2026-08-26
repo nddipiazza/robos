@@ -155,11 +155,15 @@ These epics add capabilities that enrich the platform but aren't required for th
 | 14 | [Developer Experience & Testing](epic-14-developer-experience/epic.md) | 4 | Dev harness improvements, DX polish |
 | 11 | [Release & Packaging](epic-11-release-packaging/epic.md) | 5 | Package RobOS for distribution |
 | 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | OAuth PKCE flows, token storage, provider config UI |
+| 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Sub-agent Linux user sessions, socket tunneling, desktop streaming, Proof of Work verification |
+| 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Dual-context Prod vs Proposed knowledge, eLearning generator, RobOS Reviewer app with "Teach Me" and "Show Me" DevTools MCP presentation |
 
 Post-MVP epics can be prioritized in any order once the MVP ships. Suggested first picks:
 - **Epic 17 (Work Journal)** — auto-capture is low effort and high visibility
 - **Epic 08 (EKGraph)** — makes AI agents significantly smarter with company context
 - **Epic 15 (MCP Servers)** — unlocks extensible AI tool integration
+- **Epic 25 (RobOS Desktop Agents)** — full visual sub-user Linux sessions & Proof of Work
+- **Epic 26 (Interactive Reviewer)** — dual-context eLearning and live browser demos
 
 ---
 
@@ -186,6 +190,8 @@ Post-MVP epics can be prioritized in any order once the MVP ships. Suggested fir
 | 17 | [Work Journal](epic-17-work-journal/epic.md) | 9 | Not started | | Post |
 | 18 | [Event Engine & Agent Scheduler](epic-18-event-engine/epic.md) | 6 | Not started | ✅ | 2 |
 | 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | Not started | | Post |
+| 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Not started | | Post |
+| 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Not started | | Post |
 
 ## Story Status Key
 

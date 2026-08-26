@@ -1,0 +1,15 @@
+Dump a new idea: robos desktop agents
+
+full fludged linux users with their own /home and their own desktop session.
+
+RobOS electron desktop lets you navigate your host desktop, but also lets you view the agent desktops as they work. 
+
+RobOS apps should be able to use a shared library that can launch agent desktop sessions to achieve tasks. For example - "work ticket JIRA-1234".
+
+The big sell here is the Agents will now try to prove to you they are done with the task. 
+
+This starts a UI workflow that can be viewed in the RobOS desktop session similar to the task GUI in copilot app, chatgpt app, antigravity app, or claude app where it shows the workflow currently in proress. So RobOS Desktop Agent App is likely what we need. each agent desktop will have that app running which shows on the screen a right hand column that locks in place. the rest of the screen is the desktop with whatever apps the agent wants to run while working the task, and what it wants to present to the user when proving this works.
+
+RobOS has many apps in its suite that can be updated/added to achieve this goal.
+
+There are various complicated things we need to overcome to get this working. one is: RobOS , when you log in as the user, it runs in host session... but additional linux users won't have the host user's settings. so when the agent users are created and used, RobOS should have some plumbing that allows many things from the host session to tunnel over. i'm sure this is something that is becoming more common with the rise of agents so we don't probably have to reinvent the wheel here. this idea that host session has spawned linux sub-agent users that act as full fledged developers on the machine with their own desktop sessions.

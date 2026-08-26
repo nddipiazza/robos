@@ -1,0 +1,18 @@
+follow-up idea dump:
+
+RobOS has knowledge context kinda app we started to get into that. it's not super mature yet. let's advance this. we need to be able to create reusable elearning materials from git projects. We need special features in this so tha we can get an idea of "what is in production" which is the apps as they are deployed/installed via main branch today... and then also "what is not yet reality" so these would be features in development, ideas, etc. 
+
+normally these context repositories plop those two together and it gets really hairy with prod and non-prod shit all the time.
+
+So here would be a sample workflow:
+
+a robos desktop agent finishes a task and has done its best to test this change, and has drafted a PR. they are now ready for human review. 
+this now fires off a very official RobOS flow. the RobOS Agent Host app or something like that will run on the RobOS host session and will now ping that the "agent jira-1234 brief description" has a review ready.
+
+So at this point we could use a new RobOS Reviewer app. This provies a link to view the change in chrome. Buttons will allow the RobOS agents to provide various assistance: 
+
+* teach me how this change works
+* show me this change in action
+
+This would then pop over to the agent and it would "present" to you the change... by using the RobOS Agent Desktop viewer (which has a column with the agent tasks, progress, etc) which will now start dumping out what you need.
+also in the "show me this change in action" it would perhaps run chrome with devtools mcp... then go to the part of the app that is relevant, and prompt you to try it out.

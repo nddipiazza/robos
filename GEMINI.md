@@ -168,7 +168,9 @@ Custom operations available via `.gemini/commands/`:
 - `/deploy-to-vm` — Deploy packages to running VM
 - `/add-install-step` — Add cloud-init provisioning steps
 - `/add-ai-text-area-to-app` — Add `<robos-ai-textarea>` widget to a RobOS app
+- `/create-feature-spec` — Convert a raw idea note or prompt into a structured feature specification in `docs/ideas/specs/`
 - `/record-demo` — Record video demo script
+- `/install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 
 ## Conventions
 
