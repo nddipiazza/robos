@@ -61,6 +61,7 @@ const PORT_MAP = {
   'task-implementer': 19135,
   'skills-manager': 19139,
   'ai-prompt': 19140,
+  'robos-onboarding': 19142,
 };
 
 // Track all launched apps for process-exit cleanup
@@ -86,8 +87,14 @@ function findElectron() {
   const candidates = [
     path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron'),
     path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
+    '/usr/bin/electron',
+    '/usr/local/bin/electron',
   ];
   for (const c of candidates) if (fs.existsSync(c)) return c;
+  try {
+    const which = execSync('which electron 2>/dev/null', { encoding: 'utf8' }).trim();
+    if (which && fs.existsSync(which)) return which;
+  } catch {}
   throw new Error('electron binary not found. Run: cd packages/robos-test && npm install');
 }
 

@@ -127,8 +127,9 @@ node packages/robos-test/lib/harness.js --list-scenarios
 ```
 Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-missing`, `git-config-missing`, `all-broken`
 
-### Building the VM
+### Building & Resetting the VM
 ```bash
+infra/desktop/clean.sh        # Stops VM & removes previous build artifacts
 infra/desktop/build.sh        # Creates disk image + cloud-init ISO
 infra/desktop/run.sh --firstboot  # First boot with cloud-init provisioning
 infra/desktop/run.sh           # Subsequent runs

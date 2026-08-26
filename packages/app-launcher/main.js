@@ -1,8 +1,18 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const cp = require('child_process');
 const { spawn } = cp;
+
+try {
+  const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+  setupGlobalErrorHandlers('app-launcher', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+    setupGlobalErrorHandlers('app-launcher', dialog);
+  } catch {}
+}
 
 const WINDOW_TITLE = 'RobOS App Launcher';
 

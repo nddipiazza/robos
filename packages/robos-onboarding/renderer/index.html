@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Setup Wizard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">RobOS</div>
+          <div class="brand-sub">Setup Assistant</div>
+        </div>
+      </div>
+
+      <nav class="nav-steps">
+        <div class="step-nav-item active" data-step="1">
+          <div class="step-num">1</div>
+          <div class="step-label">Security & Secrets</div>
+        </div>
+        <div class="step-nav-item" data-step="2">
+          <div class="step-num">2</div>
+          <div class="step-label">SSH & Git Auth</div>
+        </div>
+        <div class="step-nav-item" data-step="3">
+          <div class="step-num">3</div>
+          <div class="step-label">AI Agents</div>
+        </div>
+        <div class="step-nav-item" data-step="4">
+          <div class="step-num">4</div>
+          <div class="step-label">Dev Apps (Optional)</div>
+        </div>
+        <div class="step-nav-item" data-step="5">
+          <div class="step-num">5</div>
+          <div class="step-label">Git Projects (Optional)</div>
+        </div>
+        <div class="step-nav-item" data-step="6">
+          <div class="step-num">6</div>
+          <div class="step-label">Complete & Provision</div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        RobOS 1.0 — AI-First SDLC
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="content-body">
+
+        <!-- Step 1: Security Setup -->
+        <div class="step-panel active" id="step-1">
+          <div class="step-header">
+            <h2>Security Keys & Secret Storage</h2>
+            <p>RobOS uses GPG encryption and <code>pass</code> to keep AI agent tokens and developer credentials secure.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>GPG Master Key & Password Store Status</span>
+              <span id="badge-security-status" class="badge badge-warning">Checking...</span>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
+              A GPG key secures your encrypted password store (<code>~/.password-store</code>).
+            </p>
+            <div id="gpg-key-details" style="margin-bottom: 12px;"></div>
+            <div class="form-row">
+              <button id="btn-create-gpg" class="btn btn-secondary btn-sm">Create GPG Key</button>
+              <button id="btn-init-pass" class="btn btn-secondary btn-sm">Initialize Password Store</button>
+              <button id="btn-config-pinentry" class="btn btn-outline btn-sm">Configure GUI Pinentry</button>
+            </div>
+          </div>
+
+          <!-- GPG Key Creation Modal/Inline Form -->
+          <div class="card" id="card-gpg-form" style="display: none;">
+            <div class="card-title">Generate New GPG Master Key</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Real Name</label>
+                <input type="text" id="gpg-name" class="form-control" value="RobOS User">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="gpg-email" class="form-control" value="robos@localhost">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Passphrase (Optional)</label>
+              <input type="password" id="gpg-passphrase" class="form-control" placeholder="Leave empty for auto-login cache">
+            </div>
+            <button id="btn-submit-gpg" class="btn btn-primary btn-sm">Generate Key</button>
+          </div>
+
+          <div class="status-output" id="output-step-1"></div>
+        </div>
+
+        <!-- Step 2: SSH Key Manager & Git Credentials -->
+        <div class="step-panel" id="step-2">
+          <div class="step-header">
+            <h2>SSH Key Manager & Git Login</h2>
+            <p>Configure your Git identity and SSH public key for cloning repositories and committing code.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Git Identity</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>git user.name</label>
+                <input type="text" id="git-username" class="form-control" placeholder="Jane Doe">
+              </div>
+              <div class="form-group">
+                <label>git user.email</label>
+                <input type="email" id="git-useremail" class="form-control" placeholder="jane@example.com">
+              </div>
+            </div>
+            <button id="btn-save-git-config" class="btn btn-secondary btn-sm">Save Git Config</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>SSH Keypair</span>
+              <span id="badge-ssh-status" class="badge badge-warning">Checking...</span>
+            </div>
+            <div class="form-group">
+              <label>SSH Public Key (<code>~/.ssh/id_ed25519.pub</code>)</label>
+              <textarea id="ssh-pubkey" class="form-control" rows="3" readonly placeholder="No SSH key generated yet"></textarea>
+            </div>
+            <div class="form-row">
+              <button id="btn-gen-ssh-key" class="btn btn-primary btn-sm">Generate Ed25519 SSH Key</button>
+              <button id="btn-copy-ssh-key" class="btn btn-secondary btn-sm">Copy Public Key</button>
+              <button id="btn-upload-github-ssh" class="btn btn-outline btn-sm">Upload to GitHub (gh)</button>
+              <button id="btn-test-ssh" class="btn btn-outline btn-sm">Test GitHub SSH Connection</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>GitHub Authentication (gh CLI)</span>
+              <span id="badge-gh-status" class="badge badge-warning">Not Authenticated</span>
+            </div>
+            <p id="gh-auth-detail" style="color: var(--text-secondary); margin-bottom: 12px; font-size: 13px;">
+              Connect your GitHub account to enable repository creation and issue management.
+            </p>
+            <button id="btn-gh-login" class="btn btn-secondary btn-sm">Login with GitHub</button>
+          </div>
+
+          <div class="status-output" id="output-step-2"></div>
+        </div>
+
+        <!-- Step 3: AI Agents Configuration -->
+        <div class="step-panel" id="step-3">
+          <div class="step-header">
+            <h2>RobOS AI Agents Configuration</h2>
+            <p>Connect your preferred AI CLI tools and API keys to enable autonomous coding capabilities.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Default Active AI Model</div>
+            <div class="form-group">
+              <label>Preferred LLM Engine</label>
+              <select id="select-default-model" class="form-control">
+                <option value="gemini-3.6-flash">Google Gemini 3.6 Flash (Recommended - High Speed & Reasoner)</option>
+                <option value="claude-3-5-sonnet">Anthropic Claude 3.5 Sonnet</option>
+                <option value="gpt-4o">OpenAI GPT-4o</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Agent CLI Tool Status & Credentials</div>
+
+            <!-- Copilot -->
+            <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong>GitHub Copilot CLI</strong>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="copilot">Test Connection</button>
+              </div>
+              <span class="checkbox-card-desc">Integrates gh copilot CLI execution.</span>
+            </div>
+
+            <!-- Claude Code -->
+            <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong>Claude Code / Anthropic API</strong>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="claude">Test Connection</button>
+              </div>
+              <div class="form-group" style="margin-top: 8px;">
+                <label>Anthropic API Key (Optional override)</label>
+                <input type="password" id="key-anthropic" class="form-control" placeholder="sk-ant-...">
+              </div>
+            </div>
+
+            <!-- Gemini CLI -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong>Google Gemini CLI / API</strong>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="gemini">Test Connection</button>
+              </div>
+              <div class="form-group" style="margin-top: 8px;">
+                <label>Gemini API Key (Optional override)</label>
+                <input type="password" id="key-gemini" class="form-control" placeholder="AIzaSy...">
+              </div>
+            </div>
+          </div>
+
+          <div class="status-output" id="output-step-3"></div>
+        </div>
+
+        <!-- Step 4: Dev Apps Selection (Optional) -->
+        <div class="step-panel" id="step-4">
+          <div class="step-header">
+            <h2>Development Tools & Runtimes (Optional)</h2>
+            <p>Select which development applications and language runtimes you want ready in your RobOS environment.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Pre-Configured RobOS Tooling</div>
+            <div class="checkbox-grid" id="dev-apps-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Git Projects Setup (Optional) -->
+        <div class="step-panel" id="step-5">
+          <div class="step-header">
+            <h2>Git Projects Upfront Setup (Optional)</h2>
+            <p>Specify initial GitHub repositories you want RobOS to clone and configure upon setup completion.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Initial Repositories</div>
+            <div id="projects-list-container">
+              <!-- Dynamically populated -->
+            </div>
+            <div style="margin-top: 12px; display: flex; gap: 8px;">
+              <input type="text" id="input-new-repo" class="form-control" placeholder="https://github.com/org/repo.git">
+              <button id="btn-add-repo" class="btn btn-secondary btn-sm">Add Repo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6: Complete & Provision -->
+        <div class="step-panel" id="step-6">
+          <div class="step-header">
+            <h2>Setup Complete!</h2>
+            <p>Your RobOS AI-First SDLC Environment is configured and ready.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Summary of Configured System</div>
+            <ul style="padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.8;">
+              <li>🔒 GPG Encryption & Password Store (<code>pass</code>) Initialized</li>
+              <li>🔑 SSH Ed25519 Keypair generated & GitHub authenticated</li>
+              <li>🤖 RobOS AI Agent platform & models connected</li>
+              <li>🌿 Development environment ready for workspace setup</li>
+            </ul>
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-top: 24px;">
+            <button id="btn-finish-onboarding" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px;">
+              🚀 Finish Setup & Launch RobOS
+            </button>
+            <button id="btn-launch-dev-central" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
+              📊 Open Dev Central Dashboard
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Action Navigation -->
+      <footer class="content-footer">
+        <div class="footer-left">
+          <button id="btn-back" class="btn btn-secondary" style="display: none;">Back</button>
+        </div>
+        <div class="footer-right">
+          <button id="btn-skip" class="btn btn-outline">Skip</button>
+          <button id="btn-next" class="btn btn-primary">Next Step →</button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

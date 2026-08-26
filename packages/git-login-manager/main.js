@@ -1,8 +1,28 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path  = require('path');
 const os    = require('os');
 const fs    = require('fs');
 const { execSync, spawn } = require('child_process');
+
+// Onboarding state module
+let onboardingState = null;
+try {
+  onboardingState = require('/usr/local/share/robos/robos-lib/onboarding-state');
+} catch {
+  try {
+    onboardingState = require('../robos-lib/onboarding-state');
+  } catch {}
+}
+
+try {
+  const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+  setupGlobalErrorHandlers('git-login-manager', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+    setupGlobalErrorHandlers('git-login-manager', dialog);
+  } catch {}
+}
 
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'git-login-manager'));
 const gotLock = app.requestSingleInstanceLock();
@@ -215,8 +235,11 @@ function fetchAndCacheRepos() {
 function poll() {
   const result = runAllChecks();
   if (win && !win.isDestroyed()) win.webContents.send('check-results', result);
-  // Pop window on first detection of any failure
-  if (!result.overallOk && lastOverallOk !== false) showWindow();
+  // Pop window on first detection of any failure, UNLESS onboarding is still in progress
+  const onboardingPending = onboardingState && !onboardingState.isOnboardingCompleted();
+  if (!result.overallOk && lastOverallOk !== false && !onboardingPending) {
+    showWindow();
+  }
   lastOverallOk = result.overallOk;
   // Refresh repo cache whenever credentials are healthy
   if (result.overallOk) fetchAndCacheRepos();

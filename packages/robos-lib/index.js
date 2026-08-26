@@ -112,6 +112,8 @@ function displayName(name) {
   return name.replace(/^RobOS\s+/i, '');
 }
 
+const onboardingState = require('./onboarding-state');
+
 module.exports = {
   CATEGORIES,
   CATEGORY_IDS,
@@ -119,4 +121,6 @@ module.exports = {
   loadRobOSApps,
   groupByCategory,
   displayName,
+  ...onboardingState,
 };
+

@@ -1,0 +1,14 @@
+RobOS Unified Onboarding & Setup Assistant Flow
+
+Problem:
+Currently, when a user boots RobOS for the first time, multiple isolated popups spawn for missing credentials (such as git-login-manager when SSH/GitHub auth is missing, or security-setup when GPG pass store is uninitialized). These popups disrupt the first-run experience and trigger background notifications prematurely.
+
+Solution:
+Replace piecemeal credential popups with a unified First-Boot Onboarding & Setup Assistant (`robos-onboarding`). 
+1. Suppress all standalone missing-credential popups and notification toasts until the setup flow is marked complete (`~/.config/robos/onboarding-completed.json`).
+2. Guide the user through a single, streamlined initial setup:
+   - Security Setup: GPG Master Key & Password Store initialization (`pass`).
+   - Git & VCS Setup: GitHub authentication (OAuth/PAT) + SSH key generation & auto-upload to GitHub.
+   - AI Agent Setup: Connect favorite agent tools & model credentials (Copilot CLI, Claude Code, Gemini, Anthropic/OpenAI keys).
+3. AI Agent Project Setup:
+   - Once credentials and agent configurations are saved, invoke a RobOS AI agent that uses skill automation to clone, set up dependencies, generate IDE run configurations, and configure the developer's initial workspace completely upfront.

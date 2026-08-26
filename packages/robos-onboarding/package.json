@@ -1,0 +1,12 @@
+{
+  "name": "robos-onboarding",
+  "version": "1.0.0",
+  "description": "Unified RobOS Setup Assistant & AI Project Provisioner",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

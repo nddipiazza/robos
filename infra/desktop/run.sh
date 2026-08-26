@@ -8,7 +8,13 @@ SEED_ISO="$OUTPUT_DIR/seed.iso"
 SERIAL_LOG="/tmp/robos-gnome-serial.log"
 
 RAM="16G"
-CPUS="$(nproc)"
+NPROC="$(nproc)"
+# Cap vCPUs to physical cores (half logical cores if >4) to prevent host thread starvation
+if [ "$NPROC" -gt 4 ]; then
+    CPUS=4
+else
+    CPUS="$NPROC"
+fi
 SSH_PORT="2224"
 VNC_PORT="5912"
 SPICE_PORT="5932"
@@ -60,14 +66,9 @@ QEMU_ARGS=(
     qemu-system-x86_64
     -m "$RAM"
     -smp "$CPUS"
-    -drive "file=$DISK_IMAGE,format=qcow2,if=virtio"
+    -drive "file=$DISK_IMAGE,format=qcow2,if=virtio,cache=writeback,discard=unmap"
     -netdev "user,id=net0,hostfwd=tcp::${SSH_PORT}-:22"
     -device "virtio-net-pci,netdev=net0"
-    -vga none
-    -device "virtio-vga,xres=1920,yres=1080"
-    -device virtio-serial-pci
-    -chardev spicevmc,id=vdagent,debug=0,name=vdagent
-    -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
     -serial "file:$SERIAL_LOG"
 )
 
@@ -88,20 +89,47 @@ fi
 # Display configuration
 case "$DISPLAY_MODE" in
     gtk)
-        QEMU_ARGS+=(-display gtk,show-menubar=off -spice port=${SPICE_PORT},disable-ticketing=on)
-        echo "Clipboard sharing enabled via SPICE agent"
+        QEMU_ARGS+=(
+            -vga none
+            -device "virtio-vga-gl,xres=1920,yres=1080"
+            -display gtk,gl=on,show-menubar=off
+            -device virtio-serial-pci
+            -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on
+            -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
+        )
+        echo "Clipboard sharing enabled via qemu-vdagent (3D VirGL acceleration enabled)"
         ;;
     vnc)
         VNC_DISPLAY=$((VNC_PORT - 5900))
-        QEMU_ARGS+=(-display none -vnc ":${VNC_DISPLAY}")
+        QEMU_ARGS+=(
+            -vga none
+            -device "virtio-vga,xres=1920,yres=1080"
+            -display none
+            -vnc ":${VNC_DISPLAY}"
+            -device virtio-serial-pci
+            -chardev spicevmc,id=vdagent,debug=0,name=vdagent
+            -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
+        )
         echo "VNC available on port $VNC_PORT"
         ;;
     spice)
-        QEMU_ARGS+=(-display none -spice "port=${SPICE_PORT},disable-ticketing=on")
+        QEMU_ARGS+=(
+            -vga none
+            -device "virtio-vga-gl,xres=1920,yres=1080"
+            -display none
+            -spice "port=${SPICE_PORT},disable-ticketing=on,gl=on"
+            -device virtio-serial-pci
+            -chardev spicevmc,id=vdagent,debug=0,name=vdagent
+            -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
+        )
         echo "SPICE available on port $SPICE_PORT (use remote-viewer spice://localhost:$SPICE_PORT)"
         ;;
     none)
-        QEMU_ARGS+=(-display none)
+        QEMU_ARGS+=(
+            -vga none
+            -device "virtio-vga,xres=1920,yres=1080"
+            -display none
+        )
         ;;
 esac
 

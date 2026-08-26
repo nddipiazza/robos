@@ -450,8 +450,9 @@ runcmd:
     # Set graphical boot target
     systemctl set-default graphical.target
     # Disable GNOME initial setup so it doesn't reset our config on first login
-    mkdir -p /home/robos/.config
+    mkdir -p /home/robos/.config/robos
     echo yes > /home/robos/.config/gnome-initial-setup-done
+    echo '{"completed": false}' > /home/robos/.config/robos/onboarding-completed.json
     chown -R robos:robos /home/robos/.config
   - /usr/local/bin/robos-splash 4
 

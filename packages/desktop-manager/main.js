@@ -1,11 +1,32 @@
 // Force GtkStatusIcon instead of AppIndicator so tray click events fire on Linux
 if (process.env.XDG_CURRENT_DESKTOP) process.env.XDG_CURRENT_DESKTOP = 'GNOME';
 
-const { app, Tray, Menu, BrowserWindow, ipcMain, nativeImage } = require('electron');
+const { app, Tray, Menu, BrowserWindow, ipcMain, nativeImage, dialog } = require('electron');
 const net  = require('net');
 const path = require('path');
 const fs   = require('fs');
 const { spawn } = require('child_process');
+
+// Onboarding state module
+let onboardingState = null;
+try {
+  onboardingState = require('/usr/local/share/robos/robos-lib/onboarding-state');
+} catch {
+  try {
+    onboardingState = require('../robos-lib/onboarding-state');
+  } catch {}
+}
+
+// Install global failure logging & error dialog tracking
+try {
+  const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+  setupGlobalErrorHandlers('desktop-manager', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+    setupGlobalErrorHandlers('desktop-manager', dialog);
+  } catch {}
+}
 
 // Debug server (optional)
 var _debugServer = null;
@@ -55,6 +76,7 @@ const APPS = [
   { id: 'pass-manager',            label: 'Pass Manager',           icon: '🔑', desc: 'Password store',                  category: 'RobOS Security' },
   { id: 'pass-unlock',             label: 'Pass Unlock',            icon: '🔓', desc: 'Unlock password store',           category: 'RobOS Security' },
   { id: 'security-setup',          label: 'Security Setup',         icon: '🛡️', desc: 'GPG & pass initializer',          category: 'RobOS Security' },
+  { id: 'robos-onboarding',        label: 'RobOS Setup Wizard',     icon: '⚡', desc: 'Unified Setup Assistant',          category: 'RobOS Security' },
   { id: 'git-login-manager',       label: 'Git Login Manager',      icon: '🐙', desc: 'Monitor GitHub auth (keepAlive)', category: 'RobOS Security' },
   // Development
   { id: 'ide-manager',             label: 'Development Apps and IDEs', icon: '💻', desc: 'Manage development apps and IDEs', category: 'RobOS Dev' },
@@ -105,6 +127,7 @@ const APP_BINS = {
   'pass-manager':            mkBin('pass-manager'),
   'pass-unlock':             mkBin('pass-unlock'),
   'security-setup':          mkBin('security-setup'),
+  'robos-onboarding':        mkBin('robos-onboarding'),
   'git-login-manager':       mkBin('git-login-manager', { keepAlive: true }),
   // Development
   'ide-manager':             mkBin('ide-manager'),
@@ -375,6 +398,13 @@ app.whenReady().then(() => {
       if (cfg.keepAlive) launchApp(id);
     });
     startWatchdog();
+
+    // First boot check: Launch setup wizard if onboarding incomplete
+    try {
+      if (onboardingState && !onboardingState.isOnboardingCompleted()) {
+        launchApp('robos-onboarding');
+      }
+    } catch {}
   }, 2000);
 });
 
@@ -387,25 +417,47 @@ ipcMain.handle('launch-app', (_, appId) => {
 ipcMain.handle('kill-app', (_, appId) => killApp(appId));
 ipcMain.handle('get-status', () => getStatus());
 
+ipcMain.handle('get-onboarding-status', () => {
+  return onboardingState ? onboardingState.getOnboardingState() : { completed: false };
+});
+
+ipcMain.handle('complete-onboarding', (_, details) => {
+  return onboardingState ? onboardingState.setOnboardingCompleted(details) : { ok: true };
+});
+
 // ── Unix socket server ──────────────────────────────────────────────────────
 
 function startSocketServer() {
   if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
   const server = net.createServer((sock) => {
     let data = '';
+    sock.on('error', (err) => {
+      // Ignore broken client pipe / connection reset
+      if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
+    });
     sock.on('data', c => { data += c; });
     sock.on('end', () => {
       try {
+        if (!data.trim()) { sock.end(); return; }
         const msg = JSON.parse(data.trim());
-        if (msg.launch)          sock.write(JSON.stringify(launchApp(msg.launch)));
-        if (msg.kill)            sock.write(JSON.stringify(killApp(msg.kill)));
-        if (msg.notify)          sock.write(JSON.stringify(handleNotify(msg.notify)));
-        if (msg.status)          sock.write(JSON.stringify({ status: getStatus() }));
-        if (msg.listDesktops)    sock.write(JSON.stringify({ desktops: listDesktops() }));
-        if (msg.pauseKeepAlive)  { pausedKeepAlive.add(msg.pauseKeepAlive); sock.write(JSON.stringify({ ok: true, paused: msg.pauseKeepAlive })); }
-        if (msg.resumeKeepAlive) { pausedKeepAlive.delete(msg.resumeKeepAlive); sock.write(JSON.stringify({ ok: true, resumed: msg.resumeKeepAlive })); }
-      } catch (e) { sock.write(JSON.stringify({ error: e.message })); }
-      sock.end();
+        let res = null;
+        if (msg.launch)          res = launchApp(msg.launch);
+        else if (msg.kill)            res = killApp(msg.kill);
+        else if (msg.notify)          res = handleNotify(msg.notify);
+        else if (msg.status)          res = { status: getStatus() };
+        else if (msg.listDesktops)    res = { desktops: listDesktops() };
+        else if (msg.pauseKeepAlive)  { pausedKeepAlive.add(msg.pauseKeepAlive); res = { ok: true, paused: msg.pauseKeepAlive }; }
+        else if (msg.resumeKeepAlive) { pausedKeepAlive.delete(msg.resumeKeepAlive); res = { ok: true, resumed: msg.resumeKeepAlive }; }
+
+        if (res && !sock.destroyed && sock.writable) {
+          sock.write(JSON.stringify(res));
+        }
+      } catch (e) {
+        if (!sock.destroyed && sock.writable) {
+          try { sock.write(JSON.stringify({ error: e.message })); } catch {}
+        }
+      }
+      try { sock.end(); } catch {}
     });
   });
   server.listen(SOCKET_PATH, () => {

@@ -16,11 +16,21 @@
  *     reading/writing the pinned-apps config.
  */
 
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path   = require('path');
 const fs     = require('fs');
 const net    = require('net');
 const { spawn, exec } = require('child_process');
+
+try {
+  const { setupGlobalErrorHandlers } = require('/usr/local/share/robos/robos-lib/logger');
+  setupGlobalErrorHandlers('robos-desktop', dialog);
+} catch {
+  try {
+    const { setupGlobalErrorHandlers } = require('../robos-lib/logger');
+    setupGlobalErrorHandlers('robos-desktop', dialog);
+  } catch {}
+}
 
 
 // ── Single instance + app identity ───────────────────────────────────────────

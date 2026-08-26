@@ -49,6 +49,13 @@ function rotateLogs(filePath) {
 function writeEntry(filePath, entry) {
   rotateLogs(filePath);
   fs.appendFileSync(filePath, JSON.stringify(entry) + '\n', 'utf8');
+
+  // If entry level is 'error', also write to central errors.ndjson
+  if (entry.level === 'error') {
+    const errorFilePath = path.join(LOG_DIR, 'errors.ndjson');
+    rotateLogs(errorFilePath);
+    fs.appendFileSync(errorFilePath, JSON.stringify(entry) + '\n', 'utf8');
+  }
 }
 
 function createLogger(appId) {
@@ -84,33 +91,79 @@ function createLogger(appId) {
 }
 
 /**
+ * Installs global handlers for uncaught exceptions, unhandled promise rejections,
+ * and Electron native error dialogs (dialog.showErrorBox) for an application.
+ *
+ * @param {string} appId - The ID of the application (e.g. 'desktop-manager')
+ * @param {object} [dialog] - Optional Electron dialog module
+ */
+function setupGlobalErrorHandlers(appId, dialog) {
+  const log = createLogger(appId);
+
+  process.on('uncaughtException', (err) => {
+    log.error('uncaught-exception', err ? err.message : 'Unknown uncaught exception', {
+      stack: err ? err.stack : null,
+      name: err ? err.name : null,
+    });
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    const msg = reason instanceof Error ? reason.message : String(reason);
+    const stack = reason instanceof Error ? reason.stack : null;
+    log.error('unhandled-rejection', msg, { stack });
+  });
+
+  if (dialog && typeof dialog.showErrorBox === 'function') {
+    const originalShowErrorBox = dialog.showErrorBox.bind(dialog);
+    dialog.showErrorBox = (title, content) => {
+      log.error('error-dialog', title || 'Electron Error Dialog', {
+        content: content || '',
+        stack: new Error().stack,
+      });
+      return originalShowErrorBox(title, content);
+    };
+  }
+
+  log.info('error-handlers-installed', 'Global error handlers installed');
+  return log;
+}
+
+/**
  * Read recent log entries across all apps or a specific app.
  * Returns array of parsed JSON entries, newest last.
- * @param {object} opts - { appId?, limit?, level?, event?, since? (ISO string) }
+ * @param {object} opts - { appId?, limit?, level?, event?, since? (ISO string), errorsOnly? }
  */
 function readLogs(opts = {}) {
-  const { appId, limit = 200, level, event: eventFilter, since, search } = opts;
+  const { appId, limit = 200, level, event: eventFilter, since, search, errorsOnly } = opts;
   const entries = [];
 
   try {
     ensureDir(LOG_DIR);
-    const files = fs.readdirSync(LOG_DIR)
-      .filter(f => f.endsWith('.ndjson') && !f.match(/\.\d+\.ndjson$/))
-      .filter(f => !appId || f === `${appId}.ndjson`)
-      .sort();
+    let files = [];
+    if (errorsOnly) {
+      files = ['errors.ndjson'];
+    } else {
+      files = fs.readdirSync(LOG_DIR)
+        .filter(f => f.endsWith('.ndjson') && !f.match(/\.\d+\.ndjson$/))
+        .filter(f => !appId || f === `${appId}.ndjson`)
+        .sort();
+    }
 
     for (const file of files) {
       try {
-        const raw = fs.readFileSync(path.join(LOG_DIR, file), 'utf8');
+        const fullPath = path.join(LOG_DIR, file);
+        if (!fs.existsSync(fullPath)) continue;
+        const raw = fs.readFileSync(fullPath, 'utf8');
         for (const line of raw.split('\n')) {
           if (!line.trim()) continue;
           try {
             const entry = JSON.parse(line);
+            if (appId && entry.app !== appId) continue;
             if (level && entry.level !== level) continue;
             if (eventFilter && entry.event !== eventFilter) continue;
             if (since && entry.ts < since) continue;
             if (search) {
-              const hay = (entry.msg + ' ' + entry.event + ' ' + (entry.app || '')).toLowerCase();
+              const hay = (entry.msg + ' ' + entry.event + ' ' + (entry.app || '') + ' ' + (entry.content || '')).toLowerCase();
               if (!hay.includes(search.toLowerCase())) continue;
             }
             entries.push(entry);
@@ -138,7 +191,7 @@ function listLogApps() {
   } catch { return []; }
 }
 
-module.exports = { createLogger, readLogs, listLogApps, LOG_DIR, registerLogsIPC };
+module.exports = { createLogger, setupGlobalErrorHandlers, readLogs, listLogApps, LOG_DIR, registerLogsIPC };
 
 /**
  * Register IPC handlers for log search in any Electron app's main.js.
