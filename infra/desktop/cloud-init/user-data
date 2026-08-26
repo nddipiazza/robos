@@ -40,6 +40,57 @@ users:
 
 bootcmd:
   - systemctl mask getty@tty1
+  - systemctl stop getty@tty1
+  - pkill -9 -f "getty.*tty1" || true
+  - |
+    cat > /usr/local/bin/robos-splash << 'SPLASHEOF'
+    #!/bin/bash
+    # Usage: robos-splash <current_step> [done]
+    # Draws RobOS branded progress screen on /dev/tty1
+    systemctl stop getty@tty1 2>/dev/null || true
+    pkill -9 -f "getty.*tty1" 2>/dev/null || true
+    STEP=${1:-0}
+    DONE=${2:-""}
+    TOTAL=7
+    STEPS=("Configuring base system" "Installing GNOME desktop" "Installing dash-to-panel" "Configuring display manager" "Installing Node.js and Electron" "Deploying RobOS App Launcher" "Finalising installation")
+    TTY=/dev/tty1
+    # Clear screen and hide cursor
+    printf '\033[2J\033[H\033[?25l' > "$TTY"
+    # Logo
+    cat > "$TTY" << 'LOGO'
+
+        ██████╗  ██████╗ ██████╗  ██████╗ ███████╗
+        ██╔══██╗██╔═══██╗██╔══██╗██╔═══██╗██╔════╝
+        ██████╔╝██║   ██║██████╔╝██║   ██║███████╗
+        ██╔══██╗██║   ██║██╔══██╗██║   ██║╚════██║
+        ██║  ██║╚██████╔╝██████╔╝╚██████╔╝███████║
+        ╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝
+
+           AI-First Software Development OS
+
+    LOGO
+    # Steps
+    for i in $(seq 0 $((TOTAL-1))); do
+      n=$((i+1))
+      if [ -n "$DONE" ]; then
+        printf '       \033[32m✓\033[0m  Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+      elif [ $i -lt $STEP ]; then
+        printf '       \033[32m✓\033[0m  Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+      elif [ $i -eq $STEP ]; then
+        printf '       \033[36m▶\033[0m  Step %d/%d: \033[1m%s\033[0m ...\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+      else
+        printf '          Step %d/%d: %s\n' "$n" "$TOTAL" "${STEPS[$i]}" > "$TTY"
+      fi
+    done
+    printf '\n' > "$TTY"
+    if [ -n "$DONE" ]; then
+      printf '       \033[32m✓ Installation complete! Rebooting...\033[0m\n\n' > "$TTY"
+    else
+      printf '       Progress: %d / %d\n\n' "$STEP" "$TOTAL" > "$TTY"
+    fi
+    SPLASHEOF
+  - chmod +x /usr/local/bin/robos-splash
+  - /usr/local/bin/robos-splash 0
 
 packages:
   - curl
@@ -67,6 +118,8 @@ write_files:
       #!/bin/bash
       # Usage: robos-splash <current_step> [done]
       # Draws RobOS branded progress screen on /dev/tty1
+      systemctl stop getty@tty1 2>/dev/null || true
+      pkill -9 -f "getty.*tty1" 2>/dev/null || true
       STEP=${1:-0}
       DONE=${2:-""}
       TOTAL=7
@@ -364,26 +417,26 @@ runcmd:
     printf '%s\n' '[daemon]' 'AutomaticLoginEnable=true' 'AutomaticLogin=robos' 'WaylandEnable=false' '' '[security]' '' '[xdmcp]' '' '[chooser]' '' '[debug]' > /etc/gdm3/custom.conf
     # GDM3 greeter: RobOS dark theme, enable user switching
     cat > /usr/share/gdm/dconf/95-robos-greeter << 'GDMEOF'
-[org/gnome/desktop/interface]
-gtk-theme="Yaru-dark"
-icon-theme="Yaru"
-cursor-theme="Yaru"
-color-scheme="prefer-dark"
+    [org/gnome/desktop/interface]
+    gtk-theme="Yaru-dark"
+    icon-theme="Yaru"
+    cursor-theme="Yaru"
+    color-scheme="prefer-dark"
 
-[org/gnome/desktop/background]
-picture-uri="none"
-picture-options="none"
-primary-color="#0d1117"
-secondary-color="#0d1117"
-color-shading-type="solid"
+    [org/gnome/desktop/background]
+    picture-uri="none"
+    picture-options="none"
+    primary-color="#0d1117"
+    secondary-color="#0d1117"
+    color-shading-type="solid"
 
-[org/gnome/desktop/lockdown]
-disable-user-switching=false
+    [org/gnome/desktop/lockdown]
+    disable-user-switching=false
 
-[org/gnome/login-screen]
-disable-user-list=false
-logo=""
-GDMEOF
+    [org/gnome/login-screen]
+    disable-user-list=false
+    logo=""
+    GDMEOF
     dconf update
     # Set graphical boot target
     systemctl set-default graphical.target
