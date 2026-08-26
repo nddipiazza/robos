@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const cp = require('child_process');
@@ -167,17 +167,22 @@ function cleanExec(exec) {
 }
 
 function createWindow() {
+  const winW = 800;
+  const winH = 600;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenW, height: screenH, x: screenX, y: screenY } = primaryDisplay.bounds;
+  const posX = Math.round(screenX + (screenW - winW) / 2);
+  const posY = Math.round(screenY + (screenH - winH) / 2);
+
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: posX,
+    y: posY,
+    width: winW,
+    height: winH,
     center: true,
     frame: false,
     resizable: false,
     skipTaskbar: true,
-    // type:'utility' tells the WM "this is a transient tool window" — Mutter
-    // and dash-to-panel skip it in taskbar/pager, and it doesn't get an
-    // app-shaped icon group. Doesn't force override-redirect (unlike type:
-    // 'desktop'), so the WM stays in charge of stacking.
     type: 'utility',
     title: WINDOW_TITLE,
     backgroundColor: '#0d1117',
@@ -190,13 +195,24 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // Re-assert skip-taskbar at the X11 state level after the window appears,
-  // and once more shortly after — Electron's setSkipTaskbar via X11 hint can
-  // be overridden by Mutter's first activation event.
+  // Re-assert skip-taskbar at the X11 state level after the window appears
   mainWindow.once('ready-to-show', () => {
     setTimeout(pinSkipTaskbar, 200);
     setTimeout(pinSkipTaskbar, 1500);
   });
+
+  // Reposition on screen resize
+  const onDisplayChange = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const { width: sw, height: sh, x: sx, y: sy } = screen.getPrimaryDisplay().bounds;
+    mainWindow.setBounds({
+      x: Math.round(sx + (sw - winW) / 2),
+      y: Math.round(sy + (sh - winH) / 2),
+      width: winW,
+      height: winH,
+    });
+  };
+  screen.on('display-metrics-changed', onDisplayChange);
 
   // Close on blur (click outside)
   mainWindow.on('blur', () => {
@@ -206,6 +222,7 @@ function createWindow() {
   });
 
   mainWindow.on('closed', () => {
+    screen.removeListener('display-metrics-changed', onDisplayChange);
     mainWindow = null;
   });
 }

@@ -17,7 +17,7 @@ Every developer interaction — picking up a ticket, understanding a bug, review
 A purpose-built Ubuntu-based Linux desktop environment where every app, panel, and widget serves the SDLC.
 
 **OS Stack:**
-- Ubuntu 24.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
+- Ubuntu 26.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)
 - GNOME desktop environment
 - LightDM auto-login, Tilix terminal, zsh + oh-my-zsh
 - Custom dark navy/cyan theme throughout
@@ -121,9 +121,9 @@ Always wrap these requires in try/catch for dev-harness compatibility (libs may 
 ### Testing Apps (Dev Harness)
 Primary testing method — run apps outside the VM:
 ```bash
-node packages/dev-harness/harness.js --app <app-id> --scenario <scenario>
-node packages/dev-harness/harness.js --list-apps
-node packages/dev-harness/harness.js --list-scenarios
+node packages/robos-test/lib/harness.js --app <app-id> --scenario <scenario>
+node packages/robos-test/lib/harness.js --list-apps
+node packages/robos-test/lib/harness.js --list-scenarios
 ```
 Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-missing`, `git-config-missing`, `all-broken`
 
@@ -169,6 +169,7 @@ Custom operations available via `.gemini/commands/`:
 - `/add-install-step` — Add cloud-init provisioning steps
 - `/add-ai-text-area-to-app` — Add `<robos-ai-textarea>` widget to a RobOS app
 - `/create-feature-spec` — Convert a raw idea note or prompt into a structured feature specification in `docs/ideas/specs/`
+- `/report-issue` — Convert raw issue reports or prompts into structured issue specifications in `docs/issues/reported/`
 - `/record-demo` — Record video demo script
 - `/install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 

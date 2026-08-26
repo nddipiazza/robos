@@ -1,6 +1,6 @@
 #!/bin/bash
 # RobOS Post-Install Provisioner
-# Transforms a base Ubuntu 24.04 installation into a fully configured RobOS desktop.
+# Transforms a base Ubuntu 26.04 installation into a fully configured RobOS desktop.
 # Called by Ubuntu autoinstall late-commands or manually after a fresh Ubuntu install.
 #
 # Expects:
@@ -185,10 +185,17 @@ show-hidden-files=true
 dynamic-workspaces=false
 overlay-key=''
 
+[org/gnome/initial-setup]
+show-welcome-dialog=false
+
+[org/gnome/desktop/privacy]
+report-technical-problems=false
+
 [org/gnome/shell]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
 disabled-extensions=['ubuntu-dock@ubuntu.com']
 favorite-apps=['robos-app-launcher.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+welcome-dialog-last-shown-version='99999'
 
 [org/gnome/shell/extensions/dash-to-panel]
 panel-positions='{"0":"BOTTOM"}'
@@ -220,6 +227,9 @@ cat > /etc/dconf/db/local.d/locks/robos.txt << 'EOF'
 /org/gnome/desktop/background/picture-uri-dark
 /org/gnome/desktop/background/primary-color
 /org/gnome/mutter/dynamic-workspaces
+/org/gnome/initial-setup/show-welcome-dialog
+/org/gnome/desktop/privacy/report-technical-problems
+/org/gnome/shell/welcome-dialog-last-shown-version
 EOF
 
 dconf update

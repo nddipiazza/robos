@@ -1,0 +1,7 @@
+Idea Dump: RobOS Contract-Driven Project Knowledge Graph & Autonomous Deployment Engine
+
+Concept:
+- Take any project (e.g. rebuild Dragon Warrior 1 in Godot) or git repository and dump it into a standardized knowledge graph format (.robos/project-graph.json-ld).
+- Features and tasks should be defined with strict input/output contracts, signals, state machines, and BDD acceptance criteria.
+- Create a new RobOS application (Project Graph Studio / packages/project-graph) and shared library (packages/robos-graph).
+- Enable RobOS agents to consume the task graph DAG, provision workspaces, write code diffs, run verification test gates, and deploy working code as tasks pass.

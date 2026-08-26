@@ -78,7 +78,7 @@ On **macOS** use [balenaEtcher](https://etcher.balena.io/). On **Windows** use [
 
 1. Insert the USB drive and boot from it (F12 or F2 at BIOS splash for boot menu)
 2. The RobOS installer starts automatically — **no interaction needed**
-3. Ubuntu 24.04, GNOME, Node.js, Electron, and all 30+ RobOS apps install and configure themselves
+3. Ubuntu 26.04, GNOME, Node.js, Electron, and all 30+ RobOS apps install and configure themselves
 4. After ~15–20 minutes you'll see the RobOS desktop
 
 **Default credentials:** username `robos`, password `robos`

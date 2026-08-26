@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="$SCRIPT_DIR/output"
 CLOUD_INIT_DIR="$SCRIPT_DIR/cloud-init"
 
-UBUNTU_IMAGE_URL="https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
-BASE_IMAGE="$OUTPUT_DIR/jammy-server-cloudimg-amd64.img"
+UBUNTU_IMAGE_URL="https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img"
+BASE_IMAGE="$OUTPUT_DIR/resolute-server-cloudimg-amd64.img"
 DISK_IMAGE="$OUTPUT_DIR/robos.qcow2"
 SEED_ISO="$OUTPUT_DIR/seed.iso"
 DISK_SIZE="200G"
@@ -34,7 +34,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # --- Download Ubuntu cloud image (cached) ---
 if [ ! -f "$BASE_IMAGE" ]; then
-    echo "Downloading Ubuntu 24.04 cloud image..."
+    echo "Downloading Ubuntu 26.04 cloud image..."
     wget -q --show-progress -O "$BASE_IMAGE" "$UBUNTU_IMAGE_URL"
 else
     echo "Using cached Ubuntu cloud image: $BASE_IMAGE"
@@ -105,5 +105,5 @@ echo "  Disk image: $DISK_IMAGE"
 echo "  Seed ISO:   $SEED_ISO"
 echo ""
 echo "Next steps:"
-echo "  ./run.sh --firstboot    # First boot with cloud-init"
-echo "  ./run.sh                # Subsequent boots"
+echo "  infra/desktop/run.sh --firstboot    # First boot with cloud-init"
+echo "  infra/desktop/run.sh                # Subsequent boots"

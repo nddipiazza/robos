@@ -199,11 +199,13 @@ function findPidByBin(bin) {
   return null;
 }
 
+const pausedKeepAlive = new Set();
+
 function startWatchdog() {
   setInterval(() => {
     try {
       Object.entries(APP_BINS).forEach(([appId, cfg]) => {
-        if (!cfg.keepAlive) return;
+        if (!cfg.keepAlive || pausedKeepAlive.has(appId)) return;
         let pid = running[appId];
         let alive = false;
 
@@ -395,11 +397,13 @@ function startSocketServer() {
     sock.on('end', () => {
       try {
         const msg = JSON.parse(data.trim());
-        if (msg.launch)       sock.write(JSON.stringify(launchApp(msg.launch)));
-        if (msg.kill)         sock.write(JSON.stringify(killApp(msg.kill)));
-        if (msg.notify)       sock.write(JSON.stringify(handleNotify(msg.notify)));
-        if (msg.status)       sock.write(JSON.stringify({ status: getStatus() }));
-        if (msg.listDesktops) sock.write(JSON.stringify({ desktops: listDesktops() }));
+        if (msg.launch)          sock.write(JSON.stringify(launchApp(msg.launch)));
+        if (msg.kill)            sock.write(JSON.stringify(killApp(msg.kill)));
+        if (msg.notify)          sock.write(JSON.stringify(handleNotify(msg.notify)));
+        if (msg.status)          sock.write(JSON.stringify({ status: getStatus() }));
+        if (msg.listDesktops)    sock.write(JSON.stringify({ desktops: listDesktops() }));
+        if (msg.pauseKeepAlive)  { pausedKeepAlive.add(msg.pauseKeepAlive); sock.write(JSON.stringify({ ok: true, paused: msg.pauseKeepAlive })); }
+        if (msg.resumeKeepAlive) { pausedKeepAlive.delete(msg.resumeKeepAlive); sock.write(JSON.stringify({ ok: true, resumed: msg.resumeKeepAlive })); }
       } catch (e) { sock.write(JSON.stringify({ error: e.message })); }
       sock.end();
     });

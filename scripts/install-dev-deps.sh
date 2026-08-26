@@ -42,7 +42,7 @@ echo "        RobOS Dev Machine Dependency Setup           "
 echo "====================================================="
 echo ""
 
-# Function: Resolve package name (handles t64 transition on Ubuntu 24.04+)
+# Function: Resolve package name (handles t64 transition on Ubuntu 24.04+ / 26.04+)
 resolve_pkg() {
     local base_pkg="$1"
     if dpkg -s "$base_pkg" &>/dev/null; then
@@ -228,4 +228,4 @@ echo ""
 echo "Next steps:"
 echo "  1. Build QEMU VM disk image:  infra/desktop/build.sh"
 echo "  2. Launch first-boot VM:      infra/desktop/run.sh --firstboot"
-echo "  3. Test apps in dev-harness:  node packages/dev-harness/harness.js --list-apps"
+echo "  3. Test apps in dev-harness:  node packages/robos-test/lib/harness.js --list-apps"

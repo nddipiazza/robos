@@ -23,7 +23,7 @@ Technical design of the RobOS platform.
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph TB
-    subgraph Desktop["RobOS Desktop (Ubuntu 24.04 + GNOME)"]
+    subgraph Desktop["RobOS Desktop (Ubuntu 26.04 + GNOME)"]
         subgraph Apps["Electron Apps (30+)"]
             TB[Task Board]
             IM[Issue Manager]
@@ -78,7 +78,7 @@ graph TB
 
 | Layer | Technology | Purpose |
 |:------|:-----------|:--------|
-| Base OS | Ubuntu 24.04 LTS | Stable, well-supported desktop Linux |
+| Base OS | Ubuntu 26.04 LTS | Stable, well-supported desktop Linux |
 | Virtualization | QEMU/KVM | Host-isolated VM with `/dev/kvm` passthrough |
 | Desktop | GNOME | Panel, systray, window management |
 | Auto-login | LightDM | Passwordless desktop access |

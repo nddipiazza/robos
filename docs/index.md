@@ -150,7 +150,7 @@ Each prompt selects the matching desktop skills, fills in parameters, runs the c
 
 **Automatic Everything** — Status transitions, notifications, PR descriptions, reviewer checklists, and deployment tracking happen automatically through an event-driven architecture. You focus on decisions, not bookkeeping.
 
-**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 24.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
+**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 26.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
 
 ---
 
@@ -193,7 +193,7 @@ A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take 
 ## Architecture at a Glance
 
 ```
-RobOS Desktop (Ubuntu 24.04 + GNOME)
+RobOS Desktop (Ubuntu 26.04 + GNOME)
 ├── 30+ Electron Apps ──── dark theme, contextBridge IPC
 ├── RobOS Desktop ──────── programmable 52px taskbar shell
 ├── RobOS Skills ───────── 70+ shell skill packs

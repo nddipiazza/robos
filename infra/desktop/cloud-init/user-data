@@ -202,6 +202,12 @@ write_files:
       sleep-inactive-battery-type='nothing'
       idle-dim=false
 
+      [org/gnome/initial-setup]
+      show-welcome-dialog=false
+
+      [org/gnome/desktop/privacy]
+      report-technical-problems=false
+
       [org/gnome/nautilus/list-view]
       default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
       use-tree-view=true
@@ -317,6 +323,9 @@ write_files:
       /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type
       /org/gnome/settings-daemon/plugins/power/sleep-inactive-battery-type
       /org/gnome/settings-daemon/plugins/power/idle-dim
+      /org/gnome/initial-setup/show-welcome-dialog
+      /org/gnome/desktop/privacy/report-technical-problems
+      /org/gnome/shell/welcome-dialog-last-shown-version
     permissions: "0644"
 
   # Autostart: RobOS Desktop Dashboard (widget layer behind all windows)
@@ -583,6 +592,12 @@ runcmd:
     sleep-inactive-ac-type='nothing'
     sleep-inactive-battery-type='nothing'
     idle-dim=false
+
+    [org/gnome/initial-setup]
+    show-welcome-dialog=false
+
+    [org/gnome/desktop/privacy]
+    report-technical-problems=false
 
     [org/gnome/nautilus/list-view]
     default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']

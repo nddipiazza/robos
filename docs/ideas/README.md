@@ -27,6 +27,7 @@ graph LR
 |------------|----------|--------------|--------|-------------------|
 | **RobOS Desktop Agents** | [raw note](inbox/robos-desktop-agents.txt) | [feature spec](specs/robos-desktop-agents.md) | Draft | Linux OS Base, `robos-agent-session`, `desktop-agents`, `agent-sidebar` |
 | **Dual-Context eLearning & Interactive Reviewer** | [raw note](inbox/robos-elearning-and-interactive-reviewer.txt) | [feature spec](specs/robos-elearning-and-interactive-reviewer.md) | Draft | `context-manager`, `robos-reviewer`, `desktop-agents`, Chrome DevTools MCP |
+| **Contract-Driven Project Graph & Agent Deployment Engine** | [raw note](inbox/robos-contract-driven-project-graph.txt) | [feature spec](specs/robos-contract-driven-project-graph.md) | Draft | `project-graph`, `robos-graph`, `desktop-agents`, `dev-central` |
 
 ## Working with AI Agents
 

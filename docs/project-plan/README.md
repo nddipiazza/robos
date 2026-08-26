@@ -157,6 +157,7 @@ These epics add capabilities that enrich the platform but aren't required for th
 | 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | OAuth PKCE flows, token storage, provider config UI |
 | 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Sub-agent Linux user sessions, socket tunneling, desktop streaming, Proof of Work verification |
 | 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Dual-context Prod vs Proposed knowledge, eLearning generator, RobOS Reviewer app with "Teach Me" and "Show Me" DevTools MCP presentation |
+| 27 | [Contract-Driven Project Graph & Agent Deployment Engine](epic-27-contract-driven-project-graph/epic.md) | 5 | Git-tracked `.robos/project-graph.json-ld`, Project Graph Studio app (`packages/project-graph`), universal repo dumper CLI, contract-driven agent loop & test gates |
 
 Post-MVP epics can be prioritized in any order once the MVP ships. Suggested first picks:
 - **Epic 17 (Work Journal)** — auto-capture is low effort and high visibility
@@ -164,6 +165,7 @@ Post-MVP epics can be prioritized in any order once the MVP ships. Suggested fir
 - **Epic 15 (MCP Servers)** — unlocks extensible AI tool integration
 - **Epic 25 (RobOS Desktop Agents)** — full visual sub-user Linux sessions & Proof of Work
 - **Epic 26 (Interactive Reviewer)** — dual-context eLearning and live browser demos
+- **Epic 27 (Contract-Driven Project Graph)** — contract-driven project knowledge graphs & test gates
 
 ---
 
@@ -192,6 +194,7 @@ Post-MVP epics can be prioritized in any order once the MVP ships. Suggested fir
 | 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | Not started | | Post |
 | 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Not started | | Post |
 | 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Not started | | Post |
+| 27 | [Contract-Driven Project Graph & Agent Deployment Engine](epic-27-contract-driven-project-graph/epic.md) | 5 | Not started | | Post |
 
 ## Story Status Key
 

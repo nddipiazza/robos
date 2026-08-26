@@ -90,7 +90,13 @@ function hideGnomePanel() {
  * Restore the GNOME panel, then quit.
  * The show script re-enables dash-to-panel and restores the user-theme (no gnome-shell restart).
  */
-function restoreGnomePanelAndQuit() {
+async function restoreGnomePanelAndQuit() {
+  try {
+    await dmRequest({ pauseKeepAlive: 'robos-desktop' });
+    console.log('[robos-desktop] paused DM watchdog for robos-desktop');
+  } catch (e) {
+    console.warn('[robos-desktop] failed to pause DM watchdog:', e.message);
+  }
   exec('sudo /usr/local/bin/robos-desktop-panel show',
     { shell: '/bin/bash' },
     (err, stdout, stderr) => {
@@ -627,6 +633,26 @@ function focusWindow(wid) {
 // ── Main window ───────────────────────────────────────────────────────────────
 let mainWin = null;
 
+function applyWindowStrutsAndBounds() {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  const { bounds } = screen.getPrimaryDisplay();
+  mainWin.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height });
+  const env = { ...process.env, DISPLAY: ':0' };
+  const screenW = bounds.width;
+  const screenH = bounds.height;
+  exec(
+    `WID=$(wmctrl -lp 2>/dev/null | awk -v pid=${process.pid} '$3==pid{print $1; exit}'); ` +
+    `if [ -n "$WID" ]; then ` +
+      `wmctrl -ir $WID -b add,sticky,skip_taskbar,skip_pager 2>/dev/null; ` +
+      `xdotool windowmove $WID ${bounds.x} ${bounds.y} 2>/dev/null; ` +
+      `xdotool windowsize $WID ${screenW} ${screenH} 2>/dev/null; ` +
+      `xprop -id $WID -f _NET_WM_STRUT 32c -set _NET_WM_STRUT "0,0,${MENUBAR_H},0" 2>/dev/null; ` +
+      `xprop -id $WID -f _NET_WM_STRUT_PARTIAL 32c -set _NET_WM_STRUT_PARTIAL "0,0,${MENUBAR_H},0,0,0,0,0,0,${screenW - 1},0,0" 2>/dev/null; ` +
+    `fi`,
+    { env, shell: '/bin/bash', timeout: 5000 }, () => {}
+  );
+}
+
 function createWindow() {
   const { bounds } = screen.getPrimaryDisplay();
 
@@ -661,13 +687,14 @@ function createWindow() {
     mainWin.setAlwaysOnTop(true, 'dock');
     mainWin.setIgnoreMouseEvents(true); // default: click-through everywhere
     mainWin.show();
-    // Force position to (0,0) — WM may offset due to other windows' struts
+    // Force position to primary display bounds
     mainWin.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height });
     // Don't steal keyboard focus from whatever the user was using
     mainWin.blur();
 
     // Poll cursor position at 20fps and toggle click-through.
     // setIgnoreMouseEvents({forward:true}) is Windows-only — on Linux we poll instead.
+    const MENUBAR_HIT_H = 36;
     let ignoring = true;
     setInterval(() => {
       if (!mainWin || mainWin.isDestroyed()) return;
@@ -677,7 +704,14 @@ function createWindow() {
       }
       const { bounds: b } = screen.getPrimaryDisplay();
       const { x, y } = screen.getCursorScreenPoint();
-      const inBar = menuOpen || y - b.y <= MENUBAR_H || y - b.y >= b.height - dockZone;
+      const relX = x - b.x;
+      const relY = y - b.y;
+
+      const inTopBar = relY >= 0 && relY <= MENUBAR_HIT_H;
+      const inDock   = relY >= b.height - dockZone;
+      const inSysMenuArea = menuOpen && relX >= 0 && relX <= 260 && relY >= 0 && relY <= 240;
+      const inBar = menuOpen || inTopBar || inDock || inSysMenuArea;
+
       if (inBar && ignoring) {
         ignoring = false;
         mainWin.setIgnoreMouseEvents(false);
@@ -687,26 +721,12 @@ function createWindow() {
       }
     }, 50);
 
-    const env = { ...process.env, DISPLAY: ':0' };
-    setTimeout(() => {
-      const screenW = bounds.width;
-      const screenH = bounds.height;
-      // Reserve top space for menu bar only. Dock floats over windows (no bottom strut)
-      // so apps can use the full screen height — just like macOS/Windows 11.
-      exec(
-        // Get our specific window by PID (not just name, to avoid matching desktop-dashboard)
-        `WID=$(wmctrl -lp 2>/dev/null | awk -v pid=${process.pid} '$3==pid{print $1; exit}'); ` +
-        `if [ -n "$WID" ]; then ` +
-          `wmctrl -ir $WID -b add,sticky,skip_taskbar,skip_pager 2>/dev/null; ` +
-          `xdotool windowmove $WID 0 0 2>/dev/null; ` +
-          `xdotool windowsize $WID ${screenW} ${screenH} 2>/dev/null; ` +
-          `xprop -id $WID -f _NET_WM_STRUT 32c -set _NET_WM_STRUT "0,0,${MENUBAR_H},0" 2>/dev/null; ` +
-          `xprop -id $WID -f _NET_WM_STRUT_PARTIAL 32c -set _NET_WM_STRUT_PARTIAL "0,0,${MENUBAR_H},0,0,0,0,0,0,${screenW - 1},0,0" 2>/dev/null; ` +
-        `fi`,
-        { env, shell: '/bin/bash', timeout: 5000 }, () => {}
-      );
-    }, 1000);
+    setTimeout(applyWindowStrutsAndBounds, 1000);
   });
+
+  screen.on('display-metrics-changed', applyWindowStrutsAndBounds);
+  screen.on('display-added', applyWindowStrutsAndBounds);
+  screen.on('display-removed', applyWindowStrutsAndBounds);
 
   mainWin.on('closed', () => { mainWin = null; });
 
@@ -720,6 +740,7 @@ function createWindow() {
 app.whenReady().then(() => {
   // Hide GNOME panel so only our taskbar is visible
   hideGnomePanel();
+  dmRequest({ resumeKeepAlive: 'robos-desktop' }).catch(() => {});
 
   ipcMain.handle('launch-app', (_e, appId) => {
     return launchApp(appId);

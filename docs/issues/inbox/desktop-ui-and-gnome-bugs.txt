@@ -1,0 +1,7 @@
+report issues:
+
+- After installing ubuntu gnome 26, we need to bypass the ubuntu popups. 
+- Switch to Gnome desktop - automatically goes back to the electron desktop after 1 minute.
+- Resize display does not properly resize the top taskbar. 
+- Resize display does not properly reposition the App Menu with the launcher etc
+- i cannot seem to click on the app menu. does nothing.

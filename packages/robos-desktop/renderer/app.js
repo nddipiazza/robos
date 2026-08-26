@@ -362,6 +362,13 @@ function wireEvents() {
   document.getElementById('btn-launcher').addEventListener('click', () => {
     window.robos.launchApp('app-launcher');
   });
+
+  window.addEventListener('resize', () => {
+    removeContextMenu();
+    closeSysMenu();
+    lastWinSnap = '';
+    poll();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
