@@ -30,6 +30,13 @@ else
     exit 1
 fi
 
+# Stop any running RobOS QEMU instances so disk image lock is released
+if pgrep -f "qemu-system-x86_64.*robos.qcow2" >/dev/null 2>&1; then
+    echo "Stopping active RobOS VM process to release disk lock..."
+    pkill -f "qemu-system-x86_64.*robos.qcow2" || true
+    sleep 1
+fi
+
 mkdir -p "$OUTPUT_DIR"
 
 # --- Download Ubuntu cloud image (cached) ---
@@ -44,6 +51,7 @@ fi
 echo "Creating ${DISK_SIZE} qcow2 disk..."
 cp "$BASE_IMAGE" "$DISK_IMAGE"
 qemu-img resize "$DISK_IMAGE" "$DISK_SIZE"
+touch "$OUTPUT_DIR/.firstboot_pending"
 
 # --- Generate cloud-init files ---
 python3 "$SCRIPT_DIR/gen-userdata.py"
@@ -105,5 +113,4 @@ echo "  Disk image: $DISK_IMAGE"
 echo "  Seed ISO:   $SEED_ISO"
 echo ""
 echo "Next steps:"
-echo "  infra/desktop/run.sh --firstboot    # First boot with cloud-init"
-echo "  infra/desktop/run.sh                # Subsequent boots"
+echo "  infra/desktop/run.sh    # Boots VM (auto-detects unprovisioned disk & attaches cloud-init ISO)"

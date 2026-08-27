@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('onboardingAPI', {
   saveStep: (stepId, data) => ipcRenderer.invoke('save-onboarding-step', { stepId, data }),
   
   // Security / GPG / Pass
+  checkPassPrerequisite: () => ipcRenderer.invoke('check-pass-prerequisite'),
   getSecurityStatus: () => ipcRenderer.invoke('get-security-status'),
   createGpgKey: (opts) => ipcRenderer.invoke('create-gpg-key', opts),
   initPass: (opts) => ipcRenderer.invoke('init-pass', opts),
@@ -19,6 +20,7 @@ contextBridge.exposeInMainWorld('onboardingAPI', {
   saveGitConfig: (opts) => ipcRenderer.invoke('save-git-config', opts),
   getGhAuthStatus: () => ipcRenderer.invoke('get-gh-auth-status'),
   startGhLogin: () => ipcRenderer.invoke('start-gh-login'),
+  loginGhWithToken: (token) => ipcRenderer.invoke('login-gh-with-token', token),
 
   // AI Agents
   getAiAgentConfig: () => ipcRenderer.invoke('get-ai-agent-config'),

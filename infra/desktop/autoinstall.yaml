@@ -29,6 +29,11 @@ autoinstall:
     - python3
     - unzip
     - spice-vdagent
+    - pass
+    - gnome-session-xsession
+    - x11-xserver-utils
+    - xclip
+    - xsel
 
   late-commands:
     # Copy RobOS provisioner and packages from the ISO into the installed system

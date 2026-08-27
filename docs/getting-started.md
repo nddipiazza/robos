@@ -114,10 +114,7 @@ cd robos
 # Build the disk image and cloud-init ISO
 infra/desktop/build.sh
 
-# First boot with cloud-init provisioning
-infra/desktop/run.sh --firstboot
-
-# Subsequent boots
+# Launch the VM (auto-detects unprovisioned disk & attaches seed ISO on first boot)
 infra/desktop/run.sh
 ```
 

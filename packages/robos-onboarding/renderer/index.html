@@ -18,29 +18,37 @@
         </div>
       </div>
 
-      <nav class="nav-steps">
-        <div class="step-nav-item active" data-step="1">
+      <nav class="nav-steps" role="tablist">
+        <div class="step-nav-item active" data-step="1" tabindex="0" role="tab" aria-label="Step 1: GPG Master Key">
           <div class="step-num">1</div>
-          <div class="step-label">Security & Secrets</div>
+          <div class="step-label">GPG Master Key</div>
         </div>
-        <div class="step-nav-item" data-step="2">
+        <div class="step-nav-item" data-step="2" tabindex="0" role="tab" aria-label="Step 2: Password Store">
           <div class="step-num">2</div>
+          <div class="step-label">Password Store (pass)</div>
+        </div>
+        <div class="step-nav-item" data-step="3" tabindex="0" role="tab" aria-label="Step 3: GUI Pinentry">
+          <div class="step-num">3</div>
+          <div class="step-label">GUI Pinentry</div>
+        </div>
+        <div class="step-nav-item" data-step="4" tabindex="0" role="tab" aria-label="Step 4: SSH & Git Auth">
+          <div class="step-num">4</div>
           <div class="step-label">SSH & Git Auth</div>
         </div>
-        <div class="step-nav-item" data-step="3">
-          <div class="step-num">3</div>
+        <div class="step-nav-item" data-step="5" tabindex="0" role="tab" aria-label="Step 5: AI Agents">
+          <div class="step-num">5</div>
           <div class="step-label">AI Agents</div>
         </div>
-        <div class="step-nav-item" data-step="4">
-          <div class="step-num">4</div>
+        <div class="step-nav-item" data-step="6" tabindex="0" role="tab" aria-label="Step 6: Dev Apps">
+          <div class="step-num">6</div>
           <div class="step-label">Dev Apps (Optional)</div>
         </div>
-        <div class="step-nav-item" data-step="5">
-          <div class="step-num">5</div>
+        <div class="step-nav-item" data-step="7" tabindex="0" role="tab" aria-label="Step 7: Git Projects">
+          <div class="step-num">7</div>
           <div class="step-label">Git Projects (Optional)</div>
         </div>
-        <div class="step-nav-item" data-step="6">
-          <div class="step-num">6</div>
+        <div class="step-nav-item" data-step="8" tabindex="0" role="tab" aria-label="Step 8: Complete">
+          <div class="step-num">8</div>
           <div class="step-label">Complete & Provision</div>
         </div>
       </nav>
@@ -54,26 +62,37 @@
     <main class="main-content">
       <div class="content-body">
 
-        <!-- Step 1: Security Setup -->
+        <!-- Prerequisite Missing Warning Banner -->
+        <div id="pass-prerequisite-alert" class="card" style="display: none; border-color: #f85149; background: rgba(248,81,73,0.12); margin-bottom: 20px;">
+          <div class="card-title" style="color: #f85149; display: flex; align-items: center; gap: 8px;">
+            <span>⚠️ Critical Prerequisite Missing: Standard UNIX Password Store (<code>pass</code>)</span>
+          </div>
+          <p style="color: #f0f6fc; margin-top: 8px; font-size: 13px;">
+            <code>pass</code> is required software that must be installed on your system before the RobOS setup wizard can run.
+          </p>
+          <p style="color: var(--text-secondary); margin-top: 6px; font-size: 12px;">
+            Please run <code>sudo apt-get install -y pass</code> in your system terminal to install <code>pass</code> before continuing.
+          </p>
+        </div>
+
+        <!-- Step 1: GPG Master Key -->
         <div class="step-panel active" id="step-1">
           <div class="step-header">
-            <h2>Security Keys & Secret Storage</h2>
-            <p>RobOS uses GPG encryption and <code>pass</code> to keep AI agent tokens and developer credentials secure.</p>
+            <h2>Step 1: GPG Master Key</h2>
+            <p>RobOS uses 4096-bit RSA GPG encryption to secure local API keys and credentials.</p>
           </div>
 
           <div class="card">
             <div class="card-title">
-              <span>GPG Master Key & Password Store Status</span>
-              <span id="badge-security-status" class="badge badge-warning">Checking...</span>
+              <span>GPG Master Key Status</span>
+              <span id="badge-gpg-status" class="badge badge-warning">Checking...</span>
             </div>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
-              A GPG key secures your encrypted password store (<code>~/.password-store</code>).
+              A master GPG key is required to encrypt local credential storage (<code>~/.password-store</code>).
             </p>
             <div id="gpg-key-details" style="margin-bottom: 12px;"></div>
             <div class="form-row">
-              <button id="btn-create-gpg" class="btn btn-secondary btn-sm">Create GPG Key</button>
-              <button id="btn-init-pass" class="btn btn-secondary btn-sm">Initialize Password Store</button>
-              <button id="btn-config-pinentry" class="btn btn-outline btn-sm">Configure GUI Pinentry</button>
+              <button id="btn-create-gpg" class="btn btn-secondary btn-sm" tabindex="0">Create / Show GPG Form</button>
             </div>
           </div>
 
@@ -83,27 +102,73 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Real Name</label>
-                <input type="text" id="gpg-name" class="form-control" value="RobOS User">
+                <input type="text" id="gpg-name" class="form-control" value="RobOS Developer" tabindex="0">
               </div>
               <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" id="gpg-email" class="form-control" value="robos@localhost">
+                <input type="email" id="gpg-email" class="form-control" value="robos@localhost" tabindex="0">
               </div>
             </div>
             <div class="form-group">
               <label>Passphrase (Optional)</label>
-              <input type="password" id="gpg-passphrase" class="form-control" placeholder="Leave empty for auto-login cache">
+              <input type="password" id="gpg-passphrase" class="form-control" placeholder="Leave empty for auto-login cache" tabindex="0">
             </div>
-            <button id="btn-submit-gpg" class="btn btn-primary btn-sm">Generate Key</button>
+            <button id="btn-submit-gpg" class="btn btn-primary btn-sm" tabindex="0">Generate Key</button>
           </div>
 
           <div class="status-output" id="output-step-1"></div>
         </div>
 
-        <!-- Step 2: SSH Key Manager & Git Credentials -->
-        <div class="step-panel" id="step-2">
+        <!-- Step 2: Password Store (pass) -->
+        <div class="step-panel" id="step-2" inert aria-hidden="true">
           <div class="step-header">
-            <h2>SSH Key Manager & Git Login</h2>
+            <h2>Step 2: Password Store Initialization</h2>
+            <p>Initialize standard UNIX password store (<code>pass</code>) backed by GPG encryption.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Password Store (pass) Status</span>
+              <span id="badge-pass-status" class="badge badge-warning">Checking...</span>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
+              The password store creates <code>~/.password-store</code> and links your GPG key ID for transparent secret management.
+            </p>
+            <div class="form-row">
+              <button id="btn-init-pass" class="btn btn-primary btn-sm" tabindex="0">Initialize Password Store</button>
+            </div>
+          </div>
+
+          <div class="status-output" id="output-step-2"></div>
+        </div>
+
+        <!-- Step 3: GUI Pinentry Configuration -->
+        <div class="step-panel" id="step-3" inert aria-hidden="true">
+          <div class="step-header">
+            <h2>Step 3: GUI Pinentry Configuration</h2>
+            <p>Configure <code>gpg-agent</code> to present clean desktop dialogs for passphrase entries.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Pinentry GTK Configuration</span>
+              <span id="badge-pinentry-status" class="badge badge-neutral">Unconfigured</span>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
+              Configures <code>pinentry-program /usr/bin/pinentry-gnome3</code> in <code>~/.gnupg/gpg-agent.conf</code> and restarts gpg-agent daemon.
+            </p>
+            <div class="form-row">
+              <button id="btn-config-pinentry" class="btn btn-primary btn-sm" tabindex="0">Configure GUI Pinentry</button>
+            </div>
+          </div>
+
+          <div class="status-output" id="output-step-3"></div>
+        </div>
+
+        <!-- Step 4: SSH Key Manager & Git Credentials -->
+        <div class="step-panel" id="step-4" inert aria-hidden="true">
+          <div class="step-header">
+            <h2>Step 4: SSH Key Manager & Git Login</h2>
             <p>Configure your Git identity and SSH public key for cloning repositories and committing code.</p>
           </div>
 
@@ -114,14 +179,14 @@
             <div class="form-row">
               <div class="form-group">
                 <label>git user.name</label>
-                <input type="text" id="git-username" class="form-control" placeholder="Jane Doe">
+                <input type="text" id="git-username" class="form-control" placeholder="Jane Doe" tabindex="0">
               </div>
               <div class="form-group">
                 <label>git user.email</label>
-                <input type="email" id="git-useremail" class="form-control" placeholder="jane@example.com">
+                <input type="email" id="git-useremail" class="form-control" placeholder="jane@example.com" tabindex="0">
               </div>
             </div>
-            <button id="btn-save-git-config" class="btn btn-secondary btn-sm">Save Git Config</button>
+            <button id="btn-save-git-config" class="btn btn-secondary btn-sm" tabindex="0">Save Git Config</button>
           </div>
 
           <div class="card">
@@ -131,13 +196,13 @@
             </div>
             <div class="form-group">
               <label>SSH Public Key (<code>~/.ssh/id_ed25519.pub</code>)</label>
-              <textarea id="ssh-pubkey" class="form-control" rows="3" readonly placeholder="No SSH key generated yet"></textarea>
+              <textarea id="ssh-pubkey" class="form-control" rows="3" readonly placeholder="No SSH key generated yet" tabindex="0"></textarea>
             </div>
             <div class="form-row">
-              <button id="btn-gen-ssh-key" class="btn btn-primary btn-sm">Generate Ed25519 SSH Key</button>
-              <button id="btn-copy-ssh-key" class="btn btn-secondary btn-sm">Copy Public Key</button>
-              <button id="btn-upload-github-ssh" class="btn btn-outline btn-sm">Upload to GitHub (gh)</button>
-              <button id="btn-test-ssh" class="btn btn-outline btn-sm">Test GitHub SSH Connection</button>
+              <button id="btn-gen-ssh-key" class="btn btn-primary btn-sm" tabindex="0">Generate Ed25519 SSH Key</button>
+              <button id="btn-copy-ssh-key" class="btn btn-secondary btn-sm" tabindex="0">Copy Public Key</button>
+              <button id="btn-upload-github-ssh" class="btn btn-outline btn-sm" tabindex="0">Upload to GitHub (gh)</button>
+              <button id="btn-test-ssh" class="btn btn-outline btn-sm" tabindex="0">Test GitHub SSH Connection</button>
             </div>
           </div>
 
@@ -149,16 +214,31 @@
             <p id="gh-auth-detail" style="color: var(--text-secondary); margin-bottom: 12px; font-size: 13px;">
               Connect your GitHub account to enable repository creation and issue management.
             </p>
-            <button id="btn-gh-login" class="btn btn-secondary btn-sm">Login with GitHub</button>
+            <div class="form-row" style="margin-bottom: 12px;">
+              <button id="btn-gh-login" class="btn btn-secondary btn-sm" tabindex="0">🌐 Login via Web Browser (gh CLI)</button>
+            </div>
+            <div style="padding-top: 10px; border-top: 1px dashed var(--border);">
+              <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Or Authenticate with GitHub Personal Access Token (PAT):</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="password" id="gh-token-input" class="form-control" placeholder="ghp_..." tabindex="0">
+                <button id="btn-gh-token-login" class="btn btn-outline btn-sm" tabindex="0">Save Token</button>
+              </div>
+            </div>
           </div>
 
-          <div class="status-output" id="output-step-2"></div>
+          <div class="output-container" id="container-step-4" style="display: none; margin-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Status & Output Log</span>
+              <button class="btn btn-outline btn-sm clear-log-btn" data-target="output-step-4">Clear Log</button>
+            </div>
+            <div class="status-output" id="output-step-4"></div>
+          </div>
         </div>
 
-        <!-- Step 3: AI Agents Configuration -->
-        <div class="step-panel" id="step-3">
+        <!-- Step 5: AI Agents Configuration -->
+        <div class="step-panel" id="step-5" inert aria-hidden="true">
           <div class="step-header">
-            <h2>RobOS AI Agents Configuration</h2>
+            <h2>Step 5: RobOS AI Agents Configuration</h2>
             <p>Connect your preferred AI CLI tools and API keys to enable autonomous coding capabilities.</p>
           </div>
 
@@ -166,7 +246,7 @@
             <div class="card-title">Default Active AI Model</div>
             <div class="form-group">
               <label>Preferred LLM Engine</label>
-              <select id="select-default-model" class="form-control">
+              <select id="select-default-model" class="form-control" tabindex="0">
                 <option value="gemini-3.6-flash">Google Gemini 3.6 Flash (Recommended - High Speed & Reasoner)</option>
                 <option value="claude-3-5-sonnet">Anthropic Claude 3.5 Sonnet</option>
                 <option value="gpt-4o">OpenAI GPT-4o</option>
@@ -181,7 +261,7 @@
             <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <strong>GitHub Copilot CLI</strong>
-                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="copilot">Test Connection</button>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="copilot" tabindex="0">Test Connection</button>
               </div>
               <span class="checkbox-card-desc">Integrates gh copilot CLI execution.</span>
             </div>
@@ -190,11 +270,11 @@
             <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <strong>Claude Code / Anthropic API</strong>
-                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="claude">Test Connection</button>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="claude" tabindex="0">Test Connection</button>
               </div>
               <div class="form-group" style="margin-top: 8px;">
                 <label>Anthropic API Key (Optional override)</label>
-                <input type="password" id="key-anthropic" class="form-control" placeholder="sk-ant-...">
+                <input type="password" id="key-anthropic" class="form-control" placeholder="sk-ant-..." tabindex="0">
               </div>
             </div>
 
@@ -202,22 +282,22 @@
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <strong>Google Gemini CLI / API</strong>
-                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="gemini">Test Connection</button>
+                <button class="btn btn-outline btn-sm test-conn-btn" data-agent="gemini" tabindex="0">Test Connection</button>
               </div>
               <div class="form-group" style="margin-top: 8px;">
                 <label>Gemini API Key (Optional override)</label>
-                <input type="password" id="key-gemini" class="form-control" placeholder="AIzaSy...">
+                <input type="password" id="key-gemini" class="form-control" placeholder="AIzaSy..." tabindex="0">
               </div>
             </div>
           </div>
 
-          <div class="status-output" id="output-step-3"></div>
+          <div class="status-output" id="output-step-5"></div>
         </div>
 
-        <!-- Step 4: Dev Apps Selection (Optional) -->
-        <div class="step-panel" id="step-4">
+        <!-- Step 6: Dev Apps Selection (Optional) -->
+        <div class="step-panel" id="step-6" inert aria-hidden="true">
           <div class="step-header">
-            <h2>Development Tools & Runtimes (Optional)</h2>
+            <h2>Step 6: Development Tools & Runtimes (Optional)</h2>
             <p>Select which development applications and language runtimes you want ready in your RobOS environment.</p>
           </div>
 
@@ -229,10 +309,10 @@
           </div>
         </div>
 
-        <!-- Step 5: Git Projects Setup (Optional) -->
-        <div class="step-panel" id="step-5">
+        <!-- Step 7: Git Projects Setup (Optional) -->
+        <div class="step-panel" id="step-7" inert aria-hidden="true">
           <div class="step-header">
-            <h2>Git Projects Upfront Setup (Optional)</h2>
+            <h2>Step 7: Git Projects Upfront Setup (Optional)</h2>
             <p>Specify initial GitHub repositories you want RobOS to clone and configure upon setup completion.</p>
           </div>
 
@@ -242,16 +322,16 @@
               <!-- Dynamically populated -->
             </div>
             <div style="margin-top: 12px; display: flex; gap: 8px;">
-              <input type="text" id="input-new-repo" class="form-control" placeholder="https://github.com/org/repo.git">
-              <button id="btn-add-repo" class="btn btn-secondary btn-sm">Add Repo</button>
+              <input type="text" id="input-new-repo" class="form-control" placeholder="https://github.com/org/repo.git" tabindex="0">
+              <button id="btn-add-repo" class="btn btn-secondary btn-sm" tabindex="0">Add Repo</button>
             </div>
           </div>
         </div>
 
-        <!-- Step 6: Complete & Provision -->
-        <div class="step-panel" id="step-6">
+        <!-- Step 8: Complete & Provision -->
+        <div class="step-panel" id="step-8" inert aria-hidden="true">
           <div class="step-header">
-            <h2>Setup Complete!</h2>
+            <h2>Step 8: Setup Complete!</h2>
             <p>Your RobOS AI-First SDLC Environment is configured and ready.</p>
           </div>
 
@@ -266,10 +346,10 @@
           </div>
 
           <div style="display: flex; gap: 16px; margin-top: 24px;">
-            <button id="btn-finish-onboarding" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px;">
+            <button id="btn-finish-onboarding" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px;" tabindex="0">
               🚀 Finish Setup & Launch RobOS
             </button>
-            <button id="btn-launch-dev-central" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
+            <button id="btn-launch-dev-central" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;" tabindex="0">
               📊 Open Dev Central Dashboard
             </button>
           </div>
@@ -280,11 +360,11 @@
       <!-- Footer Action Navigation -->
       <footer class="content-footer">
         <div class="footer-left">
-          <button id="btn-back" class="btn btn-secondary" style="display: none;">Back</button>
+          <button id="btn-back" class="btn btn-secondary" style="display: none;" tabindex="0">Back</button>
         </div>
         <div class="footer-right">
-          <button id="btn-skip" class="btn btn-outline">Skip</button>
-          <button id="btn-next" class="btn btn-primary">Next Step →</button>
+          <button id="btn-skip" class="btn btn-outline" tabindex="0">Skip</button>
+          <button id="btn-next" class="btn btn-primary" tabindex="0">Next Step →</button>
         </div>
       </footer>
     </main>

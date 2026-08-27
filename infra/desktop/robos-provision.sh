@@ -41,13 +41,44 @@ apt-get update -qq
 apt-get install -y -qq \
   ubuntu-desktop-minimal \
   gdm3 \
+  gnome-session-xsession \
   gnome-tweaks \
   dconf-cli \
   gnome-shell-extensions \
   gnome-shell-extension-manager \
-  curl wget gnupg python3 unzip spice-vdagent \
-  xdotool wmctrl x11-utils \
+  curl wget gnupg python3 unzip spice-vdagent pass \
+  xdotool wmctrl x11-utils x11-xserver-utils xclip xsel \
   2>&1 | tail -5
+apt-get purge -y gnome-initial-setup gnome-tour yelp ubuntu-docs gnome-user-docs ubuntu-welcome ubuntu-desktop-provision ubuntu-desktop-bootstrap ubuntu-report canonical-livepatch ubuntu-release-upgrader-gtk update-notifier update-notifier-common apport apport-gtk 2>/dev/null || true
+snap remove ubuntu-desktop-provision 2>/dev/null || true
+apt-get autoremove -y 2>/dev/null || true
+
+# Hard binary deletion & override to prevent gnome-initial-setup from launching under --upgrade-user
+rm -rf /usr/libexec/gnome-initial-setup /usr/bin/gnome-initial-setup /usr/bin/ubuntu-welcome /usr/lib/ubuntu-release-upgrader/check-new-release-gtk /usr/bin/check-new-release
+mkdir -p /usr/libexec /usr/bin
+ln -sf /bin/true /usr/libexec/gnome-initial-setup 2>/dev/null || true
+ln -sf /bin/true /usr/bin/gnome-initial-setup 2>/dev/null || true
+
+# Systemd user service masking
+systemctl --global mask gnome-initial-setup.service gnome-initial-setup-first-login.service gnome-initial-setup-copy-worker.service 2>/dev/null || true
+
+# Disable dynamic MOTD, motd-news, issue banners, and pam_motd
+chmod -x /etc/update-motd.d/* 2>/dev/null || true
+mkdir -p /etc/default
+echo 'ENABLED=0' > /etc/default/motd-news
+mkdir -p /etc/skel /home/robos /root
+touch /etc/skel/.hushlogin /home/robos/.hushlogin /root/.hushlogin
+chown robos:robos /home/robos/.hushlogin 2>/dev/null || true
+echo "RobOS 26.04 LTS \n \l" > /etc/issue
+echo "RobOS 26.04 LTS" > /etc/issue.net
+> /etc/motd
+> /etc/legal
+sed -i 's/.*pam_motd\.so.*/# &/' /etc/pam.d/sshd /etc/pam.d/login /etc/pam.d/gdm-autologin /etc/pam.d/gdm-password 2>/dev/null || true
+
+mkdir -p /etc/update-manager /etc/default
+printf '[DEFAULT]\nPrompt=never\n' > /etc/update-manager/release-upgrades
+echo 'enabled=0' > /etc/default/apport
+chmod -x /usr/bin/yelp 2>/dev/null || true
 
 # ── Step 3: Install dash-to-panel v56 ────────────────────────────────────────
 log "Step 3/7: Installing dash-to-panel extension..."
@@ -63,6 +94,10 @@ if [ -f "$EXTENSION_DIR/panel.js" ]; then
   sed -i 's/this\._panel\._centerBox\.get_children/this._panel._centerBox?.get_children/g' "$EXTENSION_DIR/panel.js"
   sed -i 's/this\._panel\._rightBox\.get_children/this._panel._rightBox?.get_children/g' "$EXTENSION_DIR/panel.js"
 fi
+# Silence update & welcome notifications in dash-to-panel
+find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/.*has been updated.*/ /g' {} + 2>/dev/null || true
+find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showUpdateNotification/function(){}/g' {} + 2>/dev/null || true
+find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showWelcomeDialog/function(){}/g' {} + 2>/dev/null || true
 chmod -R 755 "$EXTENSION_DIR"
 mkdir -p /etc/skel/.local/share/gnome-shell/extensions/
 cp -r "$EXTENSION_DIR" /etc/skel/.local/share/gnome-shell/extensions/
@@ -74,18 +109,40 @@ log "Step 4/7: Configuring display manager..."
 mkdir -p /etc/gdm3
 printf '%s\n' '[daemon]' 'AutomaticLoginEnable=true' 'AutomaticLogin=robos' 'WaylandEnable=false' '' '[security]' '' '[xdmcp]' '' '[chooser]' '' '[debug]' > /etc/gdm3/custom.conf
 systemctl set-default graphical.target
-mkdir -p /home/robos/.config
+
+mkdir -p /home/robos/.config/robos
 echo yes > /home/robos/.config/gnome-initial-setup-done
+echo yes > /home/robos/.config/ubuntu-desktop-provision-done
+touch /etc/gnome-initial-setup-done /etc/ubuntu-desktop-provision-done 2>/dev/null || true
+echo '{"completed": false}' > /home/robos/.config/robos/onboarding-completed.json
 chown -R robos:robos /home/robos/.config
 
-# Disable GNOME initial setup wizard
-mkdir -p /etc/xdg/autostart
-cat > /etc/xdg/autostart/gnome-initial-setup-first-login.desktop << 'EOF'
-[Desktop Entry]
-Type=Application
-Name=Disabled
-Hidden=true
-EOF
+# Configure AccountsService for user robos
+mkdir -p /var/lib/AccountsService/users
+cat > /var/lib/AccountsService/users/robos << 'ACCEOF'
+[User]
+SystemAccount=false
+InitialSetupDone=true
+Session=ubuntu-xorg
+ACCEOF
+
+# Disable GNOME initial setup & welcome autostarts
+mkdir -p /etc/xdg/autostart /home/robos/.config/autostart /etc/skel/.config/autostart
+rm -rf /etc/xdg/autostart/gnome-initial-setup*.desktop
+rm -rf /etc/xdg/autostart/ubuntu-welcome*.desktop
+rm -rf /etc/xdg/autostart/ubuntu-desktop-provision*.desktop
+rm -rf /etc/xdg/autostart/ubuntu-desktop-bootstrap*.desktop
+rm -rf /etc/xdg/autostart/ubuntu-report*.desktop
+rm -rf /etc/xdg/autostart/canonical-livepatch*.desktop
+rm -rf /etc/xdg/autostart/org.gnome.Tour*.desktop
+rm -rf /etc/xdg/autostart/ubuntu-release-upgrader*.desktop
+rm -rf /etc/xdg/autostart/update-notifier*.desktop
+
+for app in gnome-initial-setup-first-login gnome-initial-setup-copy-worker ubuntu-welcome ubuntu-desktop-provision ubuntu-desktop-bootstrap ubuntu-report canonical-livepatch org.gnome.Tour yelp-getting-started ubuntu-release-upgrader-gtk update-notifier; do
+  printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/etc/xdg/autostart/${app}.desktop"
+  printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/home/robos/.config/autostart/${app}.desktop"
+  printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/etc/skel/.config/autostart/${app}.desktop"
+done
 
 # ── Step 5: Install Node.js 24 and Electron runtime deps ────────────────────
 log "Step 5/7: Installing Node.js and Electron..."
@@ -191,6 +248,9 @@ show-welcome-dialog=false
 [org/gnome/desktop/privacy]
 report-technical-problems=false
 
+[org/gnome/desktop/notifications]
+show-banners=false
+
 [org/gnome/shell]
 enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
 disabled-extensions=['ubuntu-dock@ubuntu.com']
@@ -246,6 +306,61 @@ gtk-cursor-theme-name=Yaru
 gtk-font-name=Ubuntu 11
 EOF
 done
+
+# 1920x1080 X11 & GNOME display resolution configs
+mkdir -p /etc/X11/xorg.conf.d /etc/skel/.config
+cat > /etc/X11/xorg.conf.d/10-monitor.conf << 'EOF'
+Section "Monitor"
+    Identifier "Virtual-1"
+    Modeline "1920x1080" 173.00 1920 2048 2248 2576 1080 1083 1088 1120 -hsync +vsync
+    Option "PreferredMode" "1920x1080"
+EndSection
+
+Section "Screen"
+    Identifier "Screen0"
+    Monitor "Virtual-1"
+    DefaultDepth 24
+    SubSection "Display"
+        Modes "1920x1080"
+    EndSubSection
+EndSection
+EOF
+
+cat > /etc/skel/.config/monitors.xml << 'EOF'
+<monitors version="2">
+  <configuration>
+    <logicalmonitor>
+      <x>0</x>
+      <y>0</y>
+      <scale>1</scale>
+      <primary>yes</primary>
+      <monitor>
+        <monitorspec>
+          <connector>Virtual-1</connector>
+          <vendor>unknown</vendor>
+          <product>unknown</product>
+          <serial>unknown</serial>
+        </monitorspec>
+        <mode>
+          <width>1920</width>
+          <height>1080</height>
+          <rate>60.000</rate>
+        </mode>
+      </monitor>
+    </logicalmonitor>
+  </configuration>
+</monitors>
+EOF
+
+cat > /etc/xdg/autostart/robos-resolution.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=RobOS Resolution Config
+Exec=bash -c "xrandr --output Virtual-1 --mode 1920x1080 2>/dev/null || xrandr -s 1920x1080 2>/dev/null"
+X-GNOME-Autostart-enabled=true
+Hidden=false
+NoDisplay=true
+EOF
 
 # Autostart apps
 cat > /etc/xdg/autostart/robos-desktop-dashboard.desktop << 'EOF'

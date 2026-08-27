@@ -46,13 +46,29 @@ const SCALE_PER_PX  = 0.007; // scale change per pixel dragged
 let dockScale = parseFloat(localStorage.getItem('dockScale') || SCALE_DEFAULT);
 dockScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, dockScale));
 
+function updateDockRect() {
+  const dock = document.getElementById('dock');
+  if (!dock) return;
+  const rect = dock.getBoundingClientRect();
+  try {
+    window.robos.setDockRect({
+      left: Math.round(rect.left),
+      right: Math.round(rect.right),
+      top: Math.round(rect.top),
+      bottom: Math.round(rect.bottom),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height)
+    });
+  } catch (_) {}
+}
+
 function applyDockScale(scale) {
   dockScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale));
   const btnPx = Math.round(BASE_BTN_PX * dockScale);
   document.documentElement.style.setProperty('--dock-btn-size', btnPx + 'px');
-  // Keep cursor-polling zone in sync: dock height = btnPx+20, bottom margin 10px, buffer 16px
   const visibleDockH = btnPx + 20 + 26;
   try { window.robos.setDockZone(visibleDockH); } catch (_) {}
+  setTimeout(updateDockRect, 10);
 }
 
 async function init() {
@@ -175,6 +191,7 @@ function renderX11Windows(windows) {
     });
     area.appendChild(btn);
   }
+  setTimeout(updateDockRect, 10);
 }
 
 function makeEmojiIcon(emoji) {

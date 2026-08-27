@@ -122,7 +122,7 @@ tar xzf robos-v${VERSION}-packages.tar.gz -C packages/
 
 # Build the VM (requires QEMU/KVM)
 infra/desktop/build.sh
-infra/desktop/run.sh --firstboot
+infra/desktop/run.sh
 \`\`\`
 
 ## What's New

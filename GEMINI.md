@@ -131,8 +131,7 @@ Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-m
 ```bash
 infra/desktop/clean.sh        # Stops VM & removes previous build artifacts
 infra/desktop/build.sh        # Creates disk image + cloud-init ISO
-infra/desktop/run.sh --firstboot  # First boot with cloud-init provisioning
-infra/desktop/run.sh           # Subsequent runs
+infra/desktop/run.sh           # Starts VM (automatically detects first boot & attaches cloud-init ISO)
 ```
 
 ### Deploying to VM

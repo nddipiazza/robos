@@ -78,10 +78,10 @@ Whenever you touch an app, check the **registration checklist** in [`CLAUDE.md`]
 ## 4. VM lifecycle
 
 ```bash
-# Start the VM (uses the existing qcow2 — won't re-provision)
+# Start the VM (auto-detects unprovisioned disk and attaches cloud-init ISO if needed)
 infra/desktop/run.sh > /tmp/robos-vm-run.log 2>&1 &
 
-# First boot only (runs cloud-init, takes 5–15 min)
+# (Optional) Force cloud-init re-attach explicitly
 infra/desktop/run.sh --firstboot > /tmp/robos-vm-run.log 2>&1 &
 
 # Stop

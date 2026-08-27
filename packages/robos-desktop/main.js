@@ -69,6 +69,7 @@ const DOCK_H    = 72;   // bottom dock height
 // ── Module-level state for dock (must be accessible from IPC handlers before ready-to-show) ──
 const BASE_DOCK_ZONE = DOCK_H + 16;
 let dockZone = BASE_DOCK_ZONE;
+let dockRect = null;
 let dragLock = false;
 let menuOpen = false;  // true while any popup menu is visible — disables click-through
 
@@ -718,7 +719,11 @@ function createWindow() {
       const relY = y - b.y;
 
       const inTopBar = relY >= 0 && relY <= MENUBAR_HIT_H;
-      const inDock   = relY >= b.height - dockZone;
+      const inDock   = (dockRect && dockRect.width > 0) ? (
+        relX >= (dockRect.left - 15) &&
+        relX <= (dockRect.right + 15) &&
+        relY >= (dockRect.top - 15)
+      ) : (relY >= b.height - dockZone);
       const inSysMenuArea = menuOpen && relX >= 0 && relX <= 260 && relY >= 0 && relY <= 240;
       const inBar = menuOpen || inTopBar || inDock || inSysMenuArea;
 
@@ -814,6 +819,7 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('set-dock-zone', (_e, h) => { dockZone = Math.ceil(h); });
+  ipcMain.handle('set-dock-rect', (_e, r) => { dockRect = r; return { ok: true }; });
   ipcMain.handle('set-drag-lock', (_e, v) => { dragLock = !!v; });
   ipcMain.handle('set-menu-open', (_e, v) => { menuOpen = !!v; });
   // Synchronous version — used by renderer to guarantee click-through is

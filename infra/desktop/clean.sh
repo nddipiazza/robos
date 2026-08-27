@@ -17,6 +17,7 @@ fi
 if [ -d "$OUTPUT_DIR" ]; then
     rm -f "$OUTPUT_DIR/robos.qcow2"
     rm -f "$OUTPUT_DIR/seed.iso"
+    rm -f "$OUTPUT_DIR/.firstboot_pending"
     rm -f "$OUTPUT_DIR/user-data"
     rm -f "$OUTPUT_DIR/user-data.expanded"
     rm -f "$OUTPUT_DIR/meta-data"
@@ -35,4 +36,4 @@ echo "✓ VM cleanup complete."
 echo ""
 echo "To build and run a fresh VM:"
 echo "  infra/desktop/build.sh"
-echo "  infra/desktop/run.sh --firstboot"
+echo "  infra/desktop/run.sh"

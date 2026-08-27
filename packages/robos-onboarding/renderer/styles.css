@@ -292,13 +292,21 @@ textarea.form-control {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.25);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
+  cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
 .btn-primary:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #00d8f6 0%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 188, 212, 0.3);
 }
 
 .btn-secondary {
@@ -400,6 +408,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 100;
 }
 
 .footer-left {
@@ -410,6 +420,11 @@ textarea.form-control {
 .footer-right {
   display: flex;
   gap: 12px;
+}
+
+.footer-right button, .footer-left button {
+  cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
 .status-output {

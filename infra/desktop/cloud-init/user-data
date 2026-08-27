@@ -92,14 +92,7 @@ bootcmd:
   - chmod +x /usr/local/bin/robos-splash
   - /usr/local/bin/robos-splash 0
 
-packages:
-  - curl
-  - wget
-  - gnupg
-  - python3
-  - python3-pip
-  - unzip
-  - spice-vdagent
+
 
 write_files:
   # SSH hardening
@@ -238,6 +231,11 @@ write_files:
       enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
       disabled-extensions=['ubuntu-dock@ubuntu.com']
       favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+      welcome-dialog-last-shown-version='9999'
+
+      [org/gnome/shell/extensions/dash-to-panel]
+      show-welcome-dialog=false
+      show-update-dialog=false
     permissions: "0644"
 
   # GTK 3 dark theme for skel
@@ -249,6 +247,65 @@ write_files:
       gtk-icon-theme-name=Yaru
       gtk-cursor-theme-name=Yaru
       gtk-font-name=Ubuntu 11
+    permissions: "0644"
+
+  # Force 1920x1080 resolution in X11
+  - path: /etc/X11/xorg.conf.d/10-monitor.conf
+    content: |
+      Section "Monitor"
+          Identifier "Virtual-1"
+          Modeline "1920x1080" 173.00 1920 2048 2248 2576 1080 1083 1088 1120 -hsync +vsync
+          Option "PreferredMode" "1920x1080"
+      EndSection
+
+      Section "Screen"
+          Identifier "Screen0"
+          Monitor "Virtual-1"
+          DefaultDepth 24
+          SubSection "Display"
+              Modes "1920x1080"
+          EndSubSection
+      EndSection
+    permissions: "0644"
+
+  # Default 1920x1080 GNOME display configuration for skel
+  - path: /etc/skel/.config/monitors.xml
+    content: |
+      <monitors version="2">
+        <configuration>
+          <logicalmonitor>
+            <x>0</x>
+            <y>0</y>
+            <scale>1</scale>
+            <primary>yes</primary>
+            <monitor>
+              <monitorspec>
+                <connector>Virtual-1</connector>
+                <vendor>unknown</vendor>
+                <product>unknown</product>
+                <serial>unknown</serial>
+              </monitorspec>
+              <mode>
+                <width>1920</width>
+                <height>1080</height>
+                <rate>60.000</rate>
+              </mode>
+            </monitor>
+          </logicalmonitor>
+        </configuration>
+      </monitors>
+    permissions: "0644"
+
+  # Autostart: enforce 1920x1080 resolution on login
+  - path: /etc/xdg/autostart/robos-resolution.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=RobOS Resolution Config
+      Exec=bash -c "xrandr --output Virtual-1 --mode 1920x1080 2>/dev/null || xrandr -s 1920x1080 2>/dev/null"
+      X-GNOME-Autostart-enabled=true
+      Hidden=false
+      NoDisplay=true
     permissions: "0644"
 
   # GTK 4 dark theme for skel
@@ -367,13 +424,97 @@ write_files:
       NoDisplay=true
     permissions: "0644"
 
-  # Disable GNOME initial-setup (first-login wizard that resets settings)
-  - path: /etc/xdg/autostart/gnome-initial-setup-first-login.desktop.bak
+  # Disable GNOME initial-setup and Ubuntu welcome autostart apps
+  - path: /etc/xdg/autostart/gnome-initial-setup-first-login.desktop
     content: |
       [Desktop Entry]
       Type=Application
       Name=Disabled
+      Exec=true
       Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/gnome-initial-setup-copy-worker.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/ubuntu-welcome.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/ubuntu-desktop-provision.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/ubuntu-desktop-bootstrap.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/ubuntu-report.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/canonical-livepatch.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/xdg/autostart/org.gnome.Tour.desktop
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Disabled
+      Exec=true
+      Hidden=true
+      NoDisplay=true
+      X-GNOME-Autostart-enabled=false
+    permissions: "0644"
+
+  - path: /etc/skel/.hushlogin
+    content: ""
     permissions: "0644"
 
 runcmd:
@@ -387,15 +528,60 @@ runcmd:
   # ── Step 2: Install GNOME desktop ──
   - |
     export DEBIAN_FRONTEND=noninteractive
+    sed -i 's/Components: main.*/Components: main restricted universe multiverse/' /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+    add-apt-repository -y universe 2>/dev/null || true
+    add-apt-repository -y multiverse 2>/dev/null || true
     apt-get update -qq
     apt-get install -y -qq \
       ubuntu-desktop-minimal \
       gdm3 \
+      gnome-session \
       gnome-tweaks \
       dconf-cli \
       gnome-shell-extensions \
       gnome-shell-extension-manager \
+      pass \
+      x11-xserver-utils \
+      xclip \
+      xsel \
+      curl \
+      wget \
+      gnupg \
+      python3 \
+      python3-pip \
+      unzip \
+      spice-vdagent \
       2>&1 | tee /var/log/robos-gnome-install.log
+    apt-get purge -y gnome-initial-setup gnome-tour yelp ubuntu-docs gnome-user-docs ubuntu-welcome ubuntu-desktop-provision ubuntu-desktop-bootstrap ubuntu-report canonical-livepatch ubuntu-release-upgrader-gtk update-notifier update-notifier-common apport apport-gtk 2>/dev/null || true
+    snap remove ubuntu-desktop-provision 2>/dev/null || true
+    apt-get autoremove -y 2>/dev/null || true
+
+    # Hard binary deletion & override to prevent gnome-initial-setup from launching under --upgrade-user
+    rm -rf /usr/libexec/gnome-initial-setup /usr/bin/gnome-initial-setup /usr/bin/ubuntu-welcome /usr/lib/ubuntu-release-upgrader/check-new-release-gtk /usr/bin/check-new-release
+    mkdir -p /usr/libexec /usr/bin
+    ln -sf /bin/true /usr/libexec/gnome-initial-setup 2>/dev/null || true
+    ln -sf /bin/true /usr/bin/gnome-initial-setup 2>/dev/null || true
+
+    # Systemd user service masking
+    systemctl --global mask gnome-initial-setup.service gnome-initial-setup-first-login.service gnome-initial-setup-copy-worker.service 2>/dev/null || true
+
+    # Disable dynamic MOTD, motd-news, issue banners, and pam_motd
+    chmod -x /etc/update-motd.d/* 2>/dev/null || true
+    mkdir -p /etc/default
+    echo 'ENABLED=0' > /etc/default/motd-news
+    mkdir -p /etc/skel /home/robos /root
+    touch /etc/skel/.hushlogin /home/robos/.hushlogin /root/.hushlogin
+    chown robos:robos /home/robos/.hushlogin 2>/dev/null || true
+    echo "RobOS 26.04 LTS \n \l" > /etc/issue
+    echo "RobOS 26.04 LTS" > /etc/issue.net
+    > /etc/motd
+    > /etc/legal
+    sed -i 's/.*pam_motd\.so.*/# &/' /etc/pam.d/sshd /etc/pam.d/login /etc/pam.d/gdm-autologin /etc/pam.d/gdm-password 2>/dev/null || true
+
+    mkdir -p /etc/update-manager /etc/default
+    printf '[DEFAULT]\nPrompt=never\n' > /etc/update-manager/release-upgrades
+    echo 'enabled=0' > /etc/default/apport
+    chmod -x /usr/bin/yelp 2>/dev/null || true
   - /usr/local/bin/robos-splash 2
 
   # ── Step 3: Install dash-to-panel v56 ──
@@ -411,7 +597,10 @@ runcmd:
       sed -i 's/this\._panel\._centerBox\.get_children/this._panel._centerBox?.get_children/g' "$EXTENSION_DIR/panel.js"
       sed -i 's/this\._panel\._rightBox\.get_children/this._panel._rightBox?.get_children/g' "$EXTENSION_DIR/panel.js"
     fi
-    # Note: _initialized patch removed — it broke module-level enable() function
+    # Patch 2: silence "Dash to panel has been updated" and welcome dialog notifications
+    find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/.*has been updated.*/ /g' {} + 2>/dev/null || true
+    find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showUpdateNotification/function(){}/g' {} + 2>/dev/null || true
+    find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showWelcomeDialog/function(){}/g' {} + 2>/dev/null || true
     chmod -R 755 "$EXTENSION_DIR"
     # Copy to skel so new users get it too
     mkdir -p /etc/skel/.local/share/gnome-shell/extensions/
@@ -449,10 +638,30 @@ runcmd:
     dconf update
     # Set graphical boot target
     systemctl set-default graphical.target
-    # Disable GNOME initial setup so it doesn't reset our config on first login
+    # Disable GNOME initial setup and Welcome Tour so they don't reset our config on first login
     mkdir -p /home/robos/.config/robos
     echo yes > /home/robos/.config/gnome-initial-setup-done
+    echo yes > /home/robos/.config/ubuntu-desktop-provision-done
+    touch /etc/gnome-initial-setup-done /etc/ubuntu-desktop-provision-done 2>/dev/null || true
     echo '{"completed": false}' > /home/robos/.config/robos/onboarding-completed.json
+
+    # Configure AccountsService for user robos
+    mkdir -p /var/lib/AccountsService/users
+    cat > /var/lib/AccountsService/users/robos << 'ACCEOF'
+    [User]
+    SystemAccount=false
+    InitialSetupDone=true
+    Session=ubuntu-xorg
+    ACCEOF
+
+    rm -f /etc/xdg/autostart/gnome-initial-setup-*.desktop
+    rm -f /etc/xdg/autostart/ubuntu-welcome*.desktop
+    rm -f /etc/xdg/autostart/ubuntu-desktop-provision*.desktop
+    rm -f /etc/xdg/autostart/ubuntu-desktop-bootstrap*.desktop
+    rm -f /etc/xdg/autostart/ubuntu-report*.desktop
+    rm -f /etc/xdg/autostart/canonical-livepatch*.desktop
+    rm -f /etc/xdg/autostart/org.gnome.Tour*.desktop
+    rm -f /etc/xdg/autostart/yelp*.desktop
     chown -R robos:robos /home/robos/.config
   - /usr/local/bin/robos-splash 4
 
@@ -464,9 +673,8 @@ runcmd:
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
     apt-get update -qq
     apt-get install -y -qq nodejs
-    # Electron runtime dependencies for QEMU
     apt-get install -y -qq libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
-      xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2
+      xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2t64 || true
     # Ensure node binary and AI CLI native binaries are executable by all users.
     # The copilot CLI bundles a native binary that must be world-executable, and
     # node itself must be executable for the copilot npm-loader to spawn it.
@@ -548,6 +756,30 @@ runcmd:
     mkdir -p /home/robos/.local/share/gnome-shell/extensions/
     cp -r "/usr/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com" \
           /home/robos/.local/share/gnome-shell/extensions/
+
+    # Ensure all Ubuntu initial-setup, tour, and welcome autostart entries are completely disabled
+    mkdir -p /etc/xdg/autostart /home/robos/.config/autostart /etc/skel/.config/autostart
+    rm -rf /etc/xdg/autostart/gnome-initial-setup*.desktop
+    rm -rf /etc/xdg/autostart/ubuntu-welcome*.desktop
+    rm -rf /etc/xdg/autostart/ubuntu-desktop-provision*.desktop
+    rm -rf /etc/xdg/autostart/ubuntu-desktop-bootstrap*.desktop
+    rm -rf /etc/xdg/autostart/ubuntu-report*.desktop
+    rm -rf /etc/xdg/autostart/canonical-livepatch*.desktop
+    rm -rf /etc/xdg/autostart/org.gnome.Tour*.desktop
+    rm -rf /etc/xdg/autostart/ubuntu-release-upgrader*.desktop
+    rm -rf /etc/xdg/autostart/update-notifier*.desktop
+
+    for app in gnome-initial-setup-first-login gnome-initial-setup-copy-worker ubuntu-welcome ubuntu-desktop-provision ubuntu-desktop-bootstrap ubuntu-report canonical-livepatch org.gnome.Tour yelp-getting-started ubuntu-release-upgrader-gtk update-notifier; do
+      printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/etc/xdg/autostart/${app}.desktop"
+      printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/home/robos/.config/autostart/${app}.desktop"
+      printf '[Desktop Entry]\nType=Application\nName=Disabled\nExec=true\nHidden=true\nNoDisplay=true\nX-GNOME-Autostart-enabled=false\n' > "/etc/skel/.config/autostart/${app}.desktop"
+    done
+
+    echo yes > /home/robos/.config/gnome-initial-setup-done
+    echo yes > /home/robos/.config/ubuntu-desktop-provision-done
+    touch /etc/gnome-initial-setup-done /etc/ubuntu-desktop-provision-done 2>/dev/null || true
+    chmod 644 /home/robos/.config/gnome-initial-setup-done /home/robos/.config/ubuntu-desktop-provision-done
+
     chown -R robos:robos /home/robos/
     # Fix SSH directory permissions
     mkdir -p /home/robos/.ssh
@@ -600,6 +832,21 @@ runcmd:
     [org/gnome/desktop/privacy]
     report-technical-problems=false
 
+    [org/gnome/desktop/notifications]
+    show-banners=false
+
+    [org/gnome/software]
+    download-updates=false
+    download-updates-notify=false
+
+    [org/gnome/desktop/notifications/application/snap-store]
+    enable=false
+    show-banners=false
+
+    [org/gnome/desktop/notifications/application/ubuntu-welcome]
+    enable=false
+    show-banners=false
+
     [org/gnome/nautilus/list-view]
     default-visible-columns=['name', 'size', 'type', 'date_modified_with_time', 'date_created']
     use-tree-view=true
@@ -619,6 +866,7 @@ runcmd:
     enabled-extensions=['dash-to-panel@jderose9.github.com', 'ubuntu-appindicators@ubuntu.com', 'ding@rastersoft.com', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
     disabled-extensions=['ubuntu-dock@ubuntu.com']
     favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']
+    welcome-dialog-last-shown-version='9999'
 
     [org/gnome/shell/extensions/dash-to-panel]
     panel-positions='{"0":"BOTTOM"}'
@@ -628,6 +876,8 @@ runcmd:
     stockgs-keep-dash=false
     appicon-margin=2
     appicon-padding=4
+    show-welcome-dialog=false
+    show-update-dialog=false
 
     [org/gnome/mutter]
     overlay-key=''
@@ -660,6 +910,6 @@ runcmd:
   - /usr/local/bin/robos-splash 7 done
 
 power_state:
-  mode: reboot
-  delay: "+1"
-  message: "RobOS provisioning complete. Rebooting..."
+  mode: poweroff
+  delay: "now"
+  message: "RobOS provisioning complete. Shutting down for first-boot transition..."

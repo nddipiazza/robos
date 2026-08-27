@@ -20,13 +20,13 @@ VNC_PORT="5912"
 SPICE_PORT="5932"
 
 # --- Parse arguments ---
-FIRSTBOOT=false
+FIRSTBOOT="auto"
 DISPLAY_MODE="gtk"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --firstboot)
-            FIRSTBOOT=true
+            FIRSTBOOT="true"
             shift
             ;;
         --vnc)
@@ -48,6 +48,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+FIRSTBOOT_MARKER="$OUTPUT_DIR/.firstboot_pending"
+IS_FIRSTBOOT=false
+
+if [ "$FIRSTBOOT" = "true" ] || [ -f "$FIRSTBOOT_MARKER" ]; then
+    IS_FIRSTBOOT=true
+    rm -f "$FIRSTBOOT_MARKER" 2>/dev/null || true
+fi
+
 # --- Preflight ---
 if [ ! -f "$DISK_IMAGE" ]; then
     echo "ERROR: Disk image not found: $DISK_IMAGE" >&2
@@ -55,10 +63,13 @@ if [ ! -f "$DISK_IMAGE" ]; then
     exit 1
 fi
 
-if [ "$FIRSTBOOT" = true ] && [ ! -f "$SEED_ISO" ]; then
-    echo "ERROR: Seed ISO not found: $SEED_ISO" >&2
-    echo "Run build.sh first." >&2
-    exit 1
+if [ "$IS_FIRSTBOOT" = true ]; then
+    if [ ! -f "$SEED_ISO" ]; then
+        echo "ERROR: Seed ISO not found for first boot: $SEED_ISO" >&2
+        echo "Run build.sh first." >&2
+        exit 1
+    fi
+    echo "⚡ First boot auto-detected: provisioning RobOS via cloud-init..."
 fi
 
 # --- Build QEMU command ---
@@ -80,10 +91,10 @@ else
     QEMU_ARGS+=(-cpu qemu64)
 fi
 
-# Cloud-init ISO for first boot
-if [ "$FIRSTBOOT" = true ]; then
+# Attach cloud-init seed ISO ONLY during first-boot provisioning
+if [ "$IS_FIRSTBOOT" = true ]; then
     QEMU_ARGS+=(-drive "file=$SEED_ISO,format=raw,if=virtio,media=cdrom")
-    echo "First boot mode: cloud-init ISO attached"
+    echo "Cloud-init ISO attached ($SEED_ISO)"
 fi
 
 # Display configuration
@@ -92,12 +103,14 @@ case "$DISPLAY_MODE" in
         QEMU_ARGS+=(
             -vga none
             -device "virtio-vga-gl,xres=1920,yres=1080"
-            -display gtk,gl=on,show-menubar=off
+            -global virtio-vga-gl.xres=1920
+            -global virtio-vga-gl.yres=1080
+            -display gtk,gl=on,show-menubar=off,zoom-to-fit=on
             -device virtio-serial-pci
             -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on
             -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
         )
-        echo "Clipboard sharing enabled via qemu-vdagent (3D VirGL acceleration enabled)"
+        echo "Clipboard sharing enabled via qemu-vdagent (3D VirGL acceleration active)"
         ;;
     vnc)
         VNC_DISPLAY=$((VNC_PORT - 5900))
@@ -107,10 +120,10 @@ case "$DISPLAY_MODE" in
             -display none
             -vnc ":${VNC_DISPLAY}"
             -device virtio-serial-pci
-            -chardev spicevmc,id=vdagent,debug=0,name=vdagent
+            -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on
             -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
         )
-        echo "VNC available on port $VNC_PORT"
+        echo "VNC available on port $VNC_PORT (qemu-vdagent clipboard enabled)"
         ;;
     spice)
         QEMU_ARGS+=(
@@ -129,6 +142,9 @@ case "$DISPLAY_MODE" in
             -vga none
             -device "virtio-vga,xres=1920,yres=1080"
             -display none
+            -device virtio-serial-pci
+            -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on
+            -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
         )
         ;;
 esac
@@ -138,4 +154,11 @@ echo "  SSH:    ssh -p $SSH_PORT robos@localhost"
 echo "  Serial: tail -f $SERIAL_LOG"
 echo ""
 
-exec "${QEMU_ARGS[@]}"
+if [ "$IS_FIRSTBOOT" = true ]; then
+    "${QEMU_ARGS[@]}"
+    echo ""
+    echo "✓ First-boot provisioning complete! Booting into RobOS Desktop..."
+    exec "$0" "$@"
+else
+    exec "${QEMU_ARGS[@]}"
+fi

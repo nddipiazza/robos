@@ -85,8 +85,7 @@ qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 infra/desktop/build.sh           # Build disk image + seed ISO
-infra/desktop/run.sh --firstboot # First boot with provisioning
-infra/desktop/run.sh             # Subsequent boots
+infra/desktop/run.sh             # Starts VM (auto-detects unprovisioned disk & attaches seed ISO)
 ```
 
 **SSH**: `ssh -p 2224 robos@localhost` (password: `robos`) | **VNC**: port 5910 | **SPICE**: port 5932

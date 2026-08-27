@@ -63,14 +63,15 @@ app.on('second-instance', () => {
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
-    width: 980,
-    height: 720,
+    width: 1280,
+    height: 800,
     minWidth: 800,
     minHeight: 600,
     title: 'RobOS Setup Wizard',
     backgroundColor: '#0d1117',
     resizable: true,
     center: true,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -78,8 +79,14 @@ app.whenReady().then(() => {
     },
   });
 
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  win.once('ready-to-show', () => {
+    win.maximize();
+    win.show();
+    win.focus();
+  });
 
   if (_debugServer) {
     _debugServer.startDebugServer(win, 19142);
@@ -136,8 +143,29 @@ ipcMain.handle('save-onboarding-step', async (_, { stepId, data }) => {
   }
 });
 
+// Helper check if pass CLI binary is installed
+function checkPassInstalled() {
+  try {
+    execSync('command -v pass 2>/dev/null', { timeout: 3000 });
+    return true;
+  } catch {
+    return fs.existsSync('/usr/bin/pass') || fs.existsSync('/usr/local/bin/pass');
+  }
+}
+
 // ── Step 1: Security & Pass ──
+ipcMain.handle('check-pass-prerequisite', async () => {
+  const installed = checkPassInstalled();
+  return {
+    installed,
+    message: installed
+      ? "'pass' password store utility is installed."
+      : "'pass' is required software that needs to be installed before the RobOS wizard can run."
+  };
+});
+
 ipcMain.handle('get-security-status', async () => {
+  const passInstalled = checkPassInstalled();
   let gpgKeys = [];
   try {
     const out = execSync('gpg --list-keys --with-colons 2>/dev/null', { encoding: 'utf8' });
@@ -160,20 +188,24 @@ ipcMain.handle('get-security-status', async () => {
     pinentryConfigured = conf.includes('pinentry-program');
   } catch {}
 
-  return { gpgKeys, passReady, passGpgId, pinentryConfigured };
+  return { passInstalled, gpgKeys, passReady, passGpgId, pinentryConfigured };
 });
 
 ipcMain.handle('create-gpg-key', async (_, { name, email, passphrase }) => {
+  const realName = (name && name.trim()) ? name.trim() : 'RobOS Developer';
+  const realEmail = (email && email.trim()) ? email.trim() : 'robos@localhost';
+  const passLine = (passphrase && passphrase.trim()) ? `Passphrase: ${passphrase.trim()}` : '%no-protection';
+
   const batch = `
 %echo Generating RobOS GPG key
 Key-Type: RSA
 Key-Length: 4096
 Subkey-Type: RSA
 Subkey-Length: 4096
-Name-Real: ${name}
-Name-Email: ${email}
+Name-Real: ${realName}
+Name-Email: ${realEmail}
 Expire-Date: 0
-Passphrase: ${passphrase || ''}
+${passLine}
 %commit
 %echo done
 `.trim();
@@ -193,6 +225,9 @@ Passphrase: ${passphrase || ''}
 });
 
 ipcMain.handle('init-pass', async (_, { gpgId }) => {
+  if (!checkPassInstalled()) {
+    return { ok: false, error: "pass is required software that needs to be installed on the system before the RobOS wizard can run." };
+  }
   try {
     await runCmd(`pass init "${gpgId}"`);
     return { ok: true };
@@ -310,13 +345,66 @@ ipcMain.handle('get-gh-auth-status', async () => {
 
 ipcMain.handle('start-gh-login', async () => {
   return new Promise((resolve) => {
-    const proc = spawn('gh', ['auth', 'login', '--web', '--hostname', 'github.com', '--scopes', 'admin:public_key'], {
-      env: { ...process.env, GH_PROMPT_DISABLED: '0' },
-    });
-    proc.on('close', code => {
-      resolve({ ok: code === 0 });
-    });
+    const cmd = 'gh auth login --web --hostname github.com --scopes admin:public_key,repo,workflow; echo ""; echo "Authentication complete. Press Enter to close window..."; read _';
+    
+    let spawned = false;
+    try {
+      const proc = spawn('tilix', ['-e', 'bash', '-c', cmd], { detached: true, stdio: 'ignore', env: process.env });
+      proc.unref();
+      spawned = true;
+    } catch {}
+
+    if (!spawned) {
+      try {
+        const proc = spawn('x-terminal-emulator', ['-e', 'bash', '-c', cmd], { detached: true, stdio: 'ignore', env: process.env });
+        proc.unref();
+        spawned = true;
+      } catch {}
+    }
+
+    if (!spawned) {
+      try {
+        const proc = spawn('xterm', ['-e', 'bash', '-c', cmd], { detached: true, stdio: 'ignore', env: process.env });
+        proc.unref();
+        spawned = true;
+      } catch {}
+    }
+
+    if (!spawned) {
+      return resolve({ ok: false, error: 'Could not find a terminal emulator (tilix, x-terminal-emulator, xterm) to launch GitHub login.' });
+    }
+
+    // Poll gh auth status for up to 90 seconds
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      const statusOut = runSync('gh auth status 2>&1') || '';
+      if (statusOut.toLowerCase().includes('logged in')) {
+        clearInterval(interval);
+        const match = statusOut.match(/account\s+(\S+)/i) || statusOut.match(/logged in to \S+ account (\S+)/i);
+        resolve({ ok: true, user: match ? match[1] : null });
+        return;
+      }
+      if (attempts >= 45) {
+        clearInterval(interval);
+        resolve({ ok: false, error: 'GitHub login session timed out or closed.' });
+      }
+    }, 2000);
   });
+});
+
+ipcMain.handle('login-gh-with-token', async (_, token) => {
+  if (!token || !token.trim()) return { ok: false, error: 'Token is empty' };
+  try {
+    const cleanToken = token.trim();
+    const proc = spawn('bash', ['-c', `echo ${JSON.stringify(cleanToken)} | gh auth login --with-token`], { encoding: 'utf8', env: process.env });
+    await new Promise((resolve) => proc.on('close', resolve));
+    const statusOut = runSync('gh auth status 2>&1') || '';
+    const ok = statusOut.toLowerCase().includes('logged in');
+    return { ok, error: ok ? null : 'Failed to authenticate with token' };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 });
 
 // ── Step 3: AI Agents ──
@@ -424,6 +512,11 @@ ipcMain.handle('complete-onboarding', async (_, details) => {
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify({ completed: true, completedAt: new Date().toISOString(), config: details || {} }, null, 2));
     }
+
+    // Re-enable GNOME notification banners now that onboarding setup wizard is complete
+    try {
+      execSync('gsettings set org.gnome.desktop.notifications show-banners true 2>/dev/null || dconf write /org/gnome/desktop/notifications/show-banners true 2>/dev/null', { timeout: 3000 });
+    } catch {}
 
     // Spawn background AI agent dev-setup skill if selected
     try {

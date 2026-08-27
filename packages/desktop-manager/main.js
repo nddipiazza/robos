@@ -104,8 +104,10 @@ const APPS = [
 ];
 
 function mkBin(id, opts = {}) {
+  const localBin = path.join(APP_BASE, `${id}/node_modules/electron/dist/electron`);
+  const bin = fs.existsSync(localBin) ? localBin : '/usr/bin/electron';
   return {
-    bin:  path.join(APP_BASE, `${id}/node_modules/electron/dist/electron`),
+    bin,
     args: [path.join(APP_BASE, id), '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
     ...opts,
   };
@@ -331,6 +333,7 @@ function dismissPassLockedNotification() {
 }
 
 function checkPassLockTransition() {
+  if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
   const locked = !isGpgCacheActive();
   if (passLockLastState === false && locked && !passLockNotificationPending()) {
     firePassLockedNotification();
@@ -343,10 +346,12 @@ function checkPassLockTransition() {
 
 function startPassLockMonitor() {
   setTimeout(() => {
+    if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
     const locked = !isGpgCacheActive();
     passLockLastState = locked;
     if (locked && !passLockNotificationPending()) {
       setTimeout(() => {
+        if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
         if (!isGpgCacheActive() && !passLockNotificationPending()) {
           firePassLockedNotification();
         }
