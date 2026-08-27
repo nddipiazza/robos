@@ -15,5 +15,5 @@ Install dash-to-panel v56 from extensions.gnome.org. Configure: bottom position,
 ## Acceptance Criteria
 
 - [ ] Implementation complete and tested in QEMU VM
-- [ ] Survives full delete/rebuild cycle (build.sh → run.sh --firstboot → reboot)
+- [ ] Survives full delete/rebuild cycle (build.sh → run.sh → reboot)
 - [ ] Settings persist across reboots

@@ -15,5 +15,5 @@ Configure GDM3: automatic login for robos user, disable Wayland (X11 only), grap
 ## Acceptance Criteria
 
 - [ ] Implementation complete and tested in QEMU VM
-- [ ] Survives full delete/rebuild cycle (build.sh → run.sh --firstboot → reboot)
+- [ ] Survives full delete/rebuild cycle (build.sh → run.sh → reboot)
 - [ ] Settings persist across reboots

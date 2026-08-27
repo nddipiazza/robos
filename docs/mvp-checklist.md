@@ -16,7 +16,7 @@ Uses GitHub Issues against [acme-corp/buildbarn-forms](https://github.com/acme-c
 
 - [ ] Stop VM if running
 - [ ] Rebuild: `infra/desktop/build.sh`
-- [ ] First boot: `infra/desktop/run.sh --firstboot`
+- [ ] First boot: `infra/desktop/run.sh`
 - [ ] Wait for 7-step splash to complete + reboot
 - [ ] SSH works: `ssh -p 2224 robos@localhost` (password: `robos`)
 - [ ] `ls /usr/local/share/robos/ | wc -l` → 29+

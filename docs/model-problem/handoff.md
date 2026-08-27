@@ -62,7 +62,7 @@ Before recording the first video, run these once. Each links to its full procedu
 | 1 | Patch `infra/desktop/cloud-init/user-data` to add the four users | [F1](fixtures.md#f1-acme-fresh-vm-snapshot) |
 | 2 | Confirm the two real GitHub repos exist + push base commit | [F2](fixtures.md#f2-github-repos) |
 | 3 | Confirm the Jira project `KAN` exists at `https://robos-acme.atlassian.net/` and the API token is in your local pass | [F3](fixtures.md#f3-jira-project) |
-| 4 | Build the fresh `acme-fresh` qcow2 (`build.sh && run.sh --firstboot`) and let cloud-init finish | [F1](fixtures.md#f1-acme-fresh-vm-snapshot) |
+| 4 | Build the fresh `acme-fresh` qcow2 (`build.sh && run.sh`) and let cloud-init finish | [F1](fixtures.md#f1-acme-fresh-vm-snapshot) |
 | 5 | SSH in once and verify the four users + their pass stores + Security Setup completion | [F1 verify](fixtures.md#f1-verify) |
 | 6 | Snapshot the qcow2 with `qemu-img convert` so every video can revert to a known-clean baseline | [F1 snapshot](fixtures.md#f1-snapshot) |
 

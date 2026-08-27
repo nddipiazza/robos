@@ -100,7 +100,7 @@ Then make sure `envsubst` is available (`sudo apt install gettext-base`).
 ```bash
 cd ~/source/github/nddipiazza/robos
 infra/desktop/build.sh
-infra/desktop/run.sh --firstboot &
+infra/desktop/run.sh &
 ```
 
 Cloud-init will run for 5–15 minutes. Tail `tail -f /tmp/robos-gnome-serial.log` to watch progress.

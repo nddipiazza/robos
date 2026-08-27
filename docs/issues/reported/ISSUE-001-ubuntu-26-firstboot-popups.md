@@ -21,7 +21,7 @@ Upon booting into Ubuntu GNOME 26.04 for the first time, interactive welcome pop
 ## 3. Steps to Reproduce
 
 1. Run `infra/desktop/build.sh` to generate the Ubuntu 26 image.
-2. Boot VM with `infra/desktop/run.sh --firstboot`.
+2. Boot VM with `infra/desktop/run.sh`.
 3. Log in to desktop; observe Ubuntu initial setup popup window displayed on screen.
 
 ## 4. Technical Analysis & Root Cause
@@ -37,5 +37,5 @@ Upon booting into Ubuntu GNOME 26.04 for the first time, interactive welcome pop
 
 ## 6. Acceptance Criteria & Verification
 
-- [ ] First boot with `--firstboot` reaches desktop without displaying any setup modal popups.
+- [ ] First boot reaches desktop without displaying any setup modal popups.
 - [ ] Automated VNC snapshot confirms desktop app launcher is immediately visible.

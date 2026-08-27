@@ -81,9 +81,6 @@ Whenever you touch an app, check the **registration checklist** in [`CLAUDE.md`]
 # Start the VM (auto-detects unprovisioned disk and attaches cloud-init ISO if needed)
 infra/desktop/run.sh > /tmp/robos-vm-run.log 2>&1 &
 
-# (Optional) Force cloud-init re-attach explicitly
-infra/desktop/run.sh --firstboot > /tmp/robos-vm-run.log 2>&1 &
-
 # Stop
 pkill -f 'qemu-system.*robos.qcow2'
 

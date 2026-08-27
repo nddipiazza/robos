@@ -10,7 +10,7 @@ nav_exclude: true
 
 ## Description
 
-build.sh bundles ALL RobOS apps into the seed ISO and cloud-init installs everything on first boot. End result: run build.sh + run.sh --firstboot → wait → reboot → fully configured RobOS desktop with all apps installed, all .desktop files in place, all dconf settings applied. No manual deployment needed.
+build.sh bundles ALL RobOS apps into the seed ISO and cloud-init installs everything on first boot. End result: run build.sh + run.sh → wait → reboot → fully configured RobOS desktop with all apps installed, all .desktop files in place, all dconf settings applied. No manual deployment needed.
 
 ## Acceptance Criteria
 

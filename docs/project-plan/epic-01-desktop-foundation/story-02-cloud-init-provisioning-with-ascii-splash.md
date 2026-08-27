@@ -15,5 +15,5 @@ Create cloud-init user-data with: user creation (robos/robos), SSH key injection
 ## Acceptance Criteria
 
 - [ ] Implementation complete and tested in QEMU VM
-- [ ] Survives full delete/rebuild cycle (build.sh → run.sh --firstboot → reboot)
+- [ ] Survives full delete/rebuild cycle (build.sh → run.sh → reboot)
 - [ ] Settings persist across reboots

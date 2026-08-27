@@ -122,7 +122,7 @@ robos/
 ├── infra/
 │   └── desktop/
 │       ├── build.sh             # Build QEMU disk image + cloud-init ISO
-│       ├── run.sh               # Launch VM (--firstboot, --vnc, --spice)
+│       ├── run.sh               # Launch VM (--vnc, --spice, --headless)
 │       ├── gen-userdata.py      # Cloud-init user-data generator
 │       └── cloud-init/          # user-data and meta-data templates
 └── docs/                        # Jekyll documentation site

@@ -23,7 +23,7 @@ jobs:
       - name: Build VM
         run: ./infra/desktop/build.sh
       - name: First boot (headless)
-        run: ./infra/desktop/run.sh --firstboot --headless &
+        run: ./infra/desktop/run.sh --headless &
       - name: Wait for cloud-init
         run: |
           until ssh -p 2224 robos@localhost "cloud-init status" 2>/dev/null | grep -q done; do sleep 30; done

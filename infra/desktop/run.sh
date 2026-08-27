@@ -20,15 +20,10 @@ VNC_PORT="5912"
 SPICE_PORT="5932"
 
 # --- Parse arguments ---
-FIRSTBOOT="auto"
 DISPLAY_MODE="gtk"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --firstboot)
-            FIRSTBOOT="true"
-            shift
-            ;;
         --vnc)
             DISPLAY_MODE="vnc"
             shift
@@ -42,7 +37,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            echo "Usage: $0 [--firstboot] [--vnc|--spice|--headless]"
+            echo "Usage: $0 [--vnc|--spice|--headless]"
             exit 1
             ;;
     esac
@@ -51,7 +46,7 @@ done
 FIRSTBOOT_MARKER="$OUTPUT_DIR/.firstboot_pending"
 IS_FIRSTBOOT=false
 
-if [ "$FIRSTBOOT" = "true" ] || [ -f "$FIRSTBOOT_MARKER" ]; then
+if [ -f "$FIRSTBOOT_MARKER" ]; then
     IS_FIRSTBOOT=true
     rm -f "$FIRSTBOOT_MARKER" 2>/dev/null || true
 fi

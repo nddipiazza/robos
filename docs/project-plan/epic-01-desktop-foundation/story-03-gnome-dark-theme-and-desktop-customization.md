@@ -15,5 +15,5 @@ Configure system-wide dconf settings: Yaru-dark theme, prefer-dark color scheme,
 ## Acceptance Criteria
 
 - [ ] Implementation complete and tested in QEMU VM
-- [ ] Survives full delete/rebuild cycle (build.sh → run.sh --firstboot → reboot)
+- [ ] Survives full delete/rebuild cycle (build.sh → run.sh → reboot)
 - [ ] Settings persist across reboots
