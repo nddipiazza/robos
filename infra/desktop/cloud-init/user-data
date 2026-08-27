@@ -601,6 +601,29 @@ runcmd:
     find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/.*has been updated.*/ /g' {} + 2>/dev/null || true
     find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showUpdateNotification/function(){}/g' {} + 2>/dev/null || true
     find "$EXTENSION_DIR" -type f -name "*.js" -exec sed -i 's/showWelcomeDialog/function(){}/g' {} + 2>/dev/null || true
+    # Patch 3: Suppress GNOME Shell "App is ready" popup notification banner
+    if [ -f "$EXTENSION_DIR/extension.js" ]; then
+      sed -i '/enable()/a \    if (typeof Main !== "undefined" \&\& Main.windowAttentionHandler) { try { global.display.disconnectObject(Main.windowAttentionHandler); } catch(e){} Main.windowAttentionHandler._onWindowDemandsAttention = function() {}; }' "$EXTENSION_DIR/extension.js"
+    fi
+    # Patch 4: Inject taskbar app bouncer animation CSS for urgent/demands-attention icons
+    cat >> "$EXTENSION_DIR/stylesheet.css" << 'CSSEOF'
+
+/* RobOS Taskbar App Bouncer Animation */
+@keyframes robos-app-bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+  60% { transform: translateY(-4px); }
+}
+
+.dash-item-container.urgent,
+.dash-item-container.demands-attention,
+.dash-item-container.urgent .app-well-app,
+.dash-item-container.demands-attention .app-well-app,
+.app-well-app.urgent,
+.app-well-app.demands-attention {
+  animation: robos-app-bounce 0.8s infinite ease-in-out !important;
+}
+CSSEOF
     chmod -R 755 "$EXTENSION_DIR"
     # Copy to skel so new users get it too
     mkdir -p /etc/skel/.local/share/gnome-shell/extensions/

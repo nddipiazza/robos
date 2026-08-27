@@ -22,3 +22,5 @@ Build the base Ubuntu VM with GNOME desktop, customized for RobOS development wo
 | 06 | [GDM auto-login and display configuration](story-06-gdm-autologin.md) | Done | 2 |
 | 07 | [SPICE clipboard sharing](story-07-spice-clipboard.md) | Done | 2 |
 | 08 | [Node.js and Electron runtime installation](story-08-nodejs-electron.md) | Done | 3 |
+| 09 | [Disable "App is Ready" notification popup](story-09-disable-app-is-ready-popup.md) | Done | 3 |
+| 10 | [Taskbar app bouncer animation](story-10-taskbar-app-bouncer-animation.md) | Done | 3 |
