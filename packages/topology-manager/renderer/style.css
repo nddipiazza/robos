@@ -186,6 +186,55 @@ body {
   width: 100%;
 }
 
+.ai-conversation-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.chat-user {
+  align-self: flex-end;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f3f4f6;
+  max-width: 85%;
+}
+
+.chat-agent {
+  align-self: flex-start;
+  background: rgba(0, 188, 212, 0.06);
+  border: 1px solid rgba(0, 188, 212, 0.25);
+  color: var(--text-bright);
+  width: 100%;
+}
+
+.chat-sender {
+  font-weight: 700;
+  font-size: 10px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chat-user .chat-sender {
+  color: #9ca3af;
+}
+
+.chat-agent .chat-sender {
+  color: var(--accent);
+}
+
 .ai-textarea-wrapper robos-ai-textarea {
   display: block;
   width: 100%;

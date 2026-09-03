@@ -69,6 +69,31 @@ async function init() {
 }
 
 window.promptQuestions = function() {
+  const promptEl = document.getElementById('topology-ai-prompt');
+  let promptText = '';
+  if (promptEl) {
+    const inner = promptEl.querySelector('.robos-ai-inner') || promptEl;
+    promptText = inner.innerText || inner.value || promptEl.value || '';
+    inner.innerText = '';
+    if (promptEl.value !== undefined) promptEl.value = '';
+    promptEl.setAttribute('placeholder', 'Ask follow-up or refine topology...');
+  }
+
+  const threadEl = document.getElementById('ai-conversation-thread');
+  if (threadEl) {
+    threadEl.style.display = 'flex';
+    threadEl.innerHTML = `
+      <div class="chat-bubble chat-user">
+        <div class="chat-sender">👤 You</div>
+        <div>${promptText.replace(/\n/g, '<br/>') || 'Synthesizing Acme Petshop architecture topology...'}</div>
+      </div>
+      <div class="chat-bubble chat-agent" id="chat-agent-bubble">
+        <div class="chat-sender">✨ RobOS Architecture Agent</div>
+        <div>Analyzing epics & stories from <code>urn:robos:project:acme-petshop-platform</code>...<br/>To refine service boundaries and messaging topology, please answer the 2 architectural questions below:</div>
+      </div>
+    `;
+  }
+
   const wizard = document.getElementById('topology-question-wizard');
   if (wizard) {
     wizard.style.display = 'block';
@@ -91,6 +116,18 @@ window.applyTopologyAnswers = async function(answers) {
     try {
       await window.topologyManager.saveTopology(topology);
     } catch (_) {}
+  }
+
+  const threadEl = document.getElementById('ai-conversation-thread');
+  if (threadEl) {
+    threadEl.innerHTML += `
+      <div class="chat-bubble chat-agent">
+        <div class="chat-sender">✨ RobOS Architecture Agent</div>
+        <div style="color: var(--success); font-weight: 600; margin-bottom: 4px;">✓ Decisions Applied: Apache Kafka 3.7 & Dedicated Fastify Compliance Gateway</div>
+        <div>Synthesized 6 container nodes for Acme Petshop Platform and saved topology to <code>.robos/topology.yaml</code>. <em>Target API contracts registered for Step 3 (Contract & Schema Studio).</em></div>
+      </div>
+    `;
+    threadEl.scrollTop = threadEl.scrollHeight;
   }
 
   const schemaStatusEl = document.getElementById('stat-schema-status');
@@ -282,51 +319,23 @@ async function renderInspector() {
   const downstream = node.downstream || [];
 
   let contractDetailsHtml = '';
-  if (node.contracts && node.contracts.length > 0 && window.topologyManager?.readContract) {
-    try {
-      const res = await window.topologyManager.readContract(node.contracts[0]);
-      if (res && res.ok) {
-        contractDetailsHtml = `
-          <div style="margin-top: 6px; padding: 6px 8px; background: var(--bg-hover); border-radius: 4px; border: 1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-weight:600; color:var(--text-bright);">📄 <code>${node.contracts[0]}</code></span>
-              <span class="status-tag-pass">VALID OPENAPI 3.1</span>
-            </div>
-            <div style="font-size: 10px; color: var(--accent); margin-top: 3px;">${res.info.title || ''} (v${res.info.version || '1.0.0'})</div>
-            
-            ${res.endpoints && res.endpoints.length > 0 ? `
-              <div style="margin-top: 6px; border-top: 1px solid var(--border); padding-top: 4px;">
-                <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px;">Real Endpoints (${res.endpoints.length})</div>
-                ${res.endpoints.slice(0, 5).map(ep => `
-                  <div style="font-family: monospace; font-size: 9px; margin-bottom: 2px;">
-                    <span style="color: ${ep.method === 'GET' ? '#79c0ff' : '#7ee787'}; font-weight: 700;">${ep.method}</span> ${ep.path}
-                    <span style="color: var(--text-muted); font-size: 8px;">— ${ep.summary}</span>
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
-
-            ${res.schemas && res.schemas.length > 0 ? `
-              <div style="margin-top: 4px; font-size: 9px; color: var(--text-muted);">
-                Schemas (${res.schemas.length}): <code>${res.schemas.join(', ')}</code>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-    } catch (_) {}
-  }
-
-  if (!contractDetailsHtml) {
-    if (node.contracts && node.contracts.length > 0) {
-      contractDetailsHtml = node.contracts.map(c => `
-        <div style="margin-top: 4px; padding: 4px 6px; background: var(--bg-hover); border-radius: 4px;">
-          📄 <code>${c}</code> <span class="status-tag-pass" style="float:right;">VALID</span>
+  if (node.contracts && node.contracts.length > 0) {
+    contractDetailsHtml = node.contracts.map(c => `
+      <div style="margin-top: 6px; padding: 6px 8px; background: var(--bg-hover); border-radius: 4px; border: 1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:600; color:var(--text-bright);">📄 <code>${c}</code></span>
+          <span style="background: rgba(210, 153, 34, 0.15); color: var(--amber); border: 1px solid rgba(210, 153, 34, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">⏳ TARGET FOR STEP 3</span>
         </div>
-      `).join('');
-    } else {
-      contractDetailsHtml = `<div class="field-val" style="color: var(--text-muted);">No direct contract published</div>`;
-    }
+        <div style="font-size: 10px; color: var(--accent); margin-top: 4px;">
+          ${node.type === 'streaming' ? 'Expected Protocol: AsyncAPI 3.0 (Apache Kafka)' : 'Expected Protocol: OpenAPI 3.1 REST API / TypeSpec'}
+        </div>
+        <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">
+          Specification and schemas will be authored, compiled, and validated in <strong>Step 3 (Contract & Schema Studio)</strong>.
+        </div>
+      </div>
+    `).join('');
+  } else {
+    contractDetailsHtml = `<div class="field-val" style="color: var(--text-muted); padding: 4px 0;">No direct contract published</div>`;
   }
 
   container.innerHTML = `
@@ -353,7 +362,7 @@ async function renderInspector() {
     </div>
 
     <div class="inspector-card" id="inspector-card-contracts">
-      <div class="field-label">Real Disk API Contract & Endpoints</div>
+      <div class="field-label">Target API Contract & Step 3 Specification</div>
       ${contractDetailsHtml}
     </div>
 

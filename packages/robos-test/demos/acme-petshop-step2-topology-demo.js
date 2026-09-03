@@ -51,10 +51,10 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: 'We submit the prompt. The AI responds by launching an interactive architecture survey.',
+    narration: 'We submit the prompt. It moves into the AI conversation thread while the agent presents the architecture survey.',
     target: '.robos-submit-btn',
     action: 'click',
-    callout: 'AI Questions Survey Triggered',
+    callout: 'AI Conversation Mode & Survey',
     js: `(() => {
       const host = document.getElementById('topology-ai-prompt');
       if (host && host._doSubmit) {
@@ -63,7 +63,7 @@ const SCRIPT = [
         window.promptQuestions();
       }
     })()`,
-    minHold: 4000,
+    minHold: 4500,
   },
   {
     narration: 'We answer Question 1: selecting Apache Kafka 3.7 partitioned event bus for event decoupling.',
@@ -116,7 +116,7 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: 'The Backstage catalog and canvas are populated, and the topology is saved to .robos/topology.yaml on disk.',
+    narration: 'The 6 container nodes are generated on canvas and the topology definition is saved to .robos/topology.yaml.',
     target: '#catalog-tree',
     action: 'click',
     callout: 'Backstage Catalog (6 Entities)',
@@ -133,24 +133,24 @@ const SCRIPT = [
     minHold: 4000,
   },
   {
-    narration: 'The inspector reads the real OpenAPI 3.1 contract from disk, parsing live endpoints and schemas.',
+    narration: 'The inspector displays the target contract path (petstore-api.openapi.yaml) to be authored in Step 3.',
     target: '#inspector-card-contracts',
     action: 'click',
-    callout: 'Real OpenAPI Endpoints & Schemas',
+    callout: 'Target Contract (Step 3 Pending)',
     js: `(() => {
       if (window.selectNode) window.selectNode('petstore-api');
     })()`,
-    minHold: 5000,
+    minHold: 4500,
   },
   {
-    narration: 'We select the Rabies Vaccine Certification Gateway, reading its real mTLS verification contract.',
+    narration: 'We select the Rabies Vaccine Gateway node, linking its compliance boundary and Step 3 contract target.',
     target: '#node-card-vaccine-gateway',
     action: 'click',
-    callout: 'Inspect Vaccine Gateway & mTLS Contract',
+    callout: 'Inspect Vaccine Gateway & Boundary',
     js: `(() => {
       if (window.selectNode) window.selectNode('vaccine-gateway');
     })()`,
-    minHold: 4500,
+    minHold: 4000,
   },
   {
     narration: 'We switch to C4 Level 1 Context view showing external pet adopters and system boundaries.',
@@ -173,10 +173,10 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: 'The system topology and disk contracts are 100% conforming and ready for TypeSpec compilation.',
+    narration: 'The system topology definition is 100% conforming and ready for Step 3: Contract & Schema Studio.',
     target: '#stat-schema-status',
     action: 'click',
-    callout: '100% Conforming Topology & Contracts',
+    callout: 'Topology Ready for Step 3 Contracts',
     minHold: 4000,
   },
 ];
