@@ -116,7 +116,7 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: 'The Backstage catalog and canvas are populated with all 6 polyglot nodes and protocol links.',
+    narration: 'The Backstage catalog and canvas are populated, and the topology is saved to .robos/topology.yaml on disk.',
     target: '#catalog-tree',
     action: 'click',
     callout: 'Backstage Catalog (6 Entities)',
@@ -133,21 +133,24 @@ const SCRIPT = [
     minHold: 4000,
   },
   {
-    narration: 'The inspector displays responsible team, OpenAPI 3.1 contract, Devcontainer, and blast radius.',
-    target: '#inspector-card-details',
+    narration: 'The inspector reads the real OpenAPI 3.1 contract from disk, parsing live endpoints and schemas.',
+    target: '#inspector-card-contracts',
     action: 'click',
-    callout: 'Node & Contract Inspector',
-    minHold: 3500,
+    callout: 'Real OpenAPI Endpoints & Schemas',
+    js: `(() => {
+      if (window.selectNode) window.selectNode('petstore-api');
+    })()`,
+    minHold: 5000,
   },
   {
-    narration: 'We select the Rabies Vaccine Certification Gateway verifying compliance and veterinary records.',
+    narration: 'We select the Rabies Vaccine Certification Gateway, reading its real mTLS verification contract.',
     target: '#node-card-vaccine-gateway',
     action: 'click',
-    callout: 'Inspect Vaccine Gateway',
+    callout: 'Inspect Vaccine Gateway & mTLS Contract',
     js: `(() => {
       if (window.selectNode) window.selectNode('vaccine-gateway');
     })()`,
-    minHold: 3500,
+    minHold: 4500,
   },
   {
     narration: 'We switch to C4 Level 1 Context view showing external pet adopters and system boundaries.',
@@ -170,10 +173,10 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: 'The system topology is fully conforming and ready for TypeSpec multi-repo contract definition.',
+    narration: 'The system topology and disk contracts are 100% conforming and ready for TypeSpec compilation.',
     target: '#stat-schema-status',
     action: 'click',
-    callout: '100% Conforming Topology',
+    callout: '100% Conforming Topology & Contracts',
     minHold: 4000,
   },
 ];
@@ -204,11 +207,11 @@ async function main() {
     execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-empty_clean_frame.png`, { stdio: 'ignore' });
     execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-prompt_typing_frame.png`, { stdio: 'ignore' });
     execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-question1_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:20 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-question2_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:26 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-synthesized_canvas_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:32 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:38 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-vaccine_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:43 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:24 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-question2_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:30 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-synthesized_canvas_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:38 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:44 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-vaccine_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:49 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step2-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step2.vtt`);
 

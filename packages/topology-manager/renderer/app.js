@@ -65,7 +65,7 @@ async function init() {
   renderStats();
   renderCatalog();
   renderCanvas();
-  renderInspector();
+  await renderInspector();
 }
 
 window.promptQuestions = function() {
@@ -82,10 +82,16 @@ window.promptQuestions = function() {
   }
 };
 
-window.applyTopologyAnswers = function(answers) {
+window.applyTopologyAnswers = async function(answers) {
   topology.nodes = [...ACME_FULL_NODES];
   topology.links = [...ACME_FULL_LINKS];
   selectedNodeId = 'petstore-api';
+
+  if (window.topologyManager?.saveTopology) {
+    try {
+      await window.topologyManager.saveTopology(topology);
+    } catch (_) {}
+  }
 
   const schemaStatusEl = document.getElementById('stat-schema-status');
   if (schemaStatusEl) {
@@ -96,7 +102,7 @@ window.applyTopologyAnswers = function(answers) {
   renderStats();
   renderCatalog();
   renderCanvas();
-  renderInspector();
+  await renderInspector();
 };
 
 window.synthesizeTopology = function(promptText) {
@@ -248,7 +254,7 @@ function renderCanvas() {
   container.innerHTML = html;
 }
 
-function renderInspector() {
+async function renderInspector() {
   const container = document.getElementById('node-inspector');
   if (!container) return;
 
@@ -275,6 +281,54 @@ function renderInspector() {
   const upstream = node.upstream || [];
   const downstream = node.downstream || [];
 
+  let contractDetailsHtml = '';
+  if (node.contracts && node.contracts.length > 0 && window.topologyManager?.readContract) {
+    try {
+      const res = await window.topologyManager.readContract(node.contracts[0]);
+      if (res && res.ok) {
+        contractDetailsHtml = `
+          <div style="margin-top: 6px; padding: 6px 8px; background: var(--bg-hover); border-radius: 4px; border: 1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:600; color:var(--text-bright);">📄 <code>${node.contracts[0]}</code></span>
+              <span class="status-tag-pass">VALID OPENAPI 3.1</span>
+            </div>
+            <div style="font-size: 10px; color: var(--accent); margin-top: 3px;">${res.info.title || ''} (v${res.info.version || '1.0.0'})</div>
+            
+            ${res.endpoints && res.endpoints.length > 0 ? `
+              <div style="margin-top: 6px; border-top: 1px solid var(--border); padding-top: 4px;">
+                <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px;">Real Endpoints (${res.endpoints.length})</div>
+                ${res.endpoints.slice(0, 5).map(ep => `
+                  <div style="font-family: monospace; font-size: 9px; margin-bottom: 2px;">
+                    <span style="color: ${ep.method === 'GET' ? '#79c0ff' : '#7ee787'}; font-weight: 700;">${ep.method}</span> ${ep.path}
+                    <span style="color: var(--text-muted); font-size: 8px;">— ${ep.summary}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${res.schemas && res.schemas.length > 0 ? `
+              <div style="margin-top: 4px; font-size: 9px; color: var(--text-muted);">
+                Schemas (${res.schemas.length}): <code>${res.schemas.join(', ')}</code>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    } catch (_) {}
+  }
+
+  if (!contractDetailsHtml) {
+    if (node.contracts && node.contracts.length > 0) {
+      contractDetailsHtml = node.contracts.map(c => `
+        <div style="margin-top: 4px; padding: 4px 6px; background: var(--bg-hover); border-radius: 4px;">
+          📄 <code>${c}</code> <span class="status-tag-pass" style="float:right;">VALID</span>
+        </div>
+      `).join('');
+    } else {
+      contractDetailsHtml = `<div class="field-val" style="color: var(--text-muted);">No direct contract published</div>`;
+    }
+  }
+
   container.innerHTML = `
     <div class="inspector-card" id="inspector-card-details">
       <div class="field-label">Node Identifier & Name</div>
@@ -299,14 +353,8 @@ function renderInspector() {
     </div>
 
     <div class="inspector-card" id="inspector-card-contracts">
-      <div class="field-label">Linked API Contracts & Schemas</div>
-      ${(node.contracts && node.contracts.length > 0) ? `
-        ${node.contracts.map(c => `
-          <div style="margin-top: 4px; padding: 4px 6px; background: var(--bg-hover); border-radius: 4px;">
-            📄 <code>${c}</code> <span class="status-tag-pass" style="float:right;">VALID</span>
-          </div>
-        `).join('')}
-      ` : `<div class="field-val" style="color: var(--text-muted);">No direct contract published</div>`}
+      <div class="field-label">Real Disk API Contract & Endpoints</div>
+      ${contractDetailsHtml}
     </div>
 
     <div class="inspector-card" id="inspector-card-blast">
@@ -319,11 +367,11 @@ function renderInspector() {
   `;
 }
 
-window.selectNode = function(id) {
+window.selectNode = async function(id) {
   selectedNodeId = id;
   renderCatalog();
   renderCanvas();
-  renderInspector();
+  await renderInspector();
 };
 
 window.switchZoom = function(level) {

@@ -14,91 +14,76 @@ try {
 
 let mainWindow;
 
-const DEFAULT_TOPOLOGY = {
-  version: '1.0',
-  kind: 'Topology',
-  system: {
-    id: 'acme-petshop',
-    name: 'Acme Petshop Platform',
-    description: 'Enterprise distributed e-commerce pet store & clinic management platform',
-  },
-  nodes: [
-    {
-      id: 'petstore-web',
-      name: 'React Web Client',
-      type: 'frontend',
-      technology: 'Node.js 20 / React 18 / Vite',
-      repo: 'http://127.0.0.1:3000/acme-org/petstore-web.git',
-      ownerTeam: 'Frontend Engineering',
-      contracts: [],
-    },
-    {
-      id: 'petstore-api',
-      name: 'Java Spring Boot REST API',
-      type: 'service',
-      technology: 'Java 21 / Spring Boot 3.3',
-      repo: 'http://127.0.0.1:3000/acme-org/petstore-api.git',
-      ownerTeam: 'Core Backend Platform',
-      contracts: ['contracts/petstore-api.openapi.yaml'],
-      entities: ['entities/pet.typespec'],
-      devcontainer: '.devcontainer/devcontainer.json',
-      upstream: ['petstore-web'],
-      downstream: ['petstore-db', 'event-bus'],
-    },
-    {
-      id: 'petstore-common',
-      name: 'Reusable TypeSpec & Pact Library',
-      type: 'library',
-      technology: 'TypeSpec / Pact / Protobuf',
-      repo: 'http://127.0.0.1:3000/acme-org/petstore-common.git',
-      ownerTeam: 'Platform Enabling Team',
-      contracts: ['contracts/petstore-api.openapi.yaml'],
-      upstream: ['petstore-web', 'petstore-api'],
-      downstream: [],
-    },
-    {
-      id: 'vaccine-gateway',
-      name: 'Rabies Vaccine Certification Gateway',
-      type: 'service',
-      technology: 'Node.js 20 / Fastify / TypeSpec',
-      repo: 'http://127.0.0.1:3000/robos/vaccine-gateway.git',
-      ownerTeam: 'Security & Compliance',
-      contracts: ['contracts/vaccine-gateway.openapi.yaml'],
-      upstream: ['petstore-api'],
-      downstream: [],
-    },
-    {
-      id: 'event-bus',
-      name: 'Apache Kafka Event Bus',
-      type: 'streaming',
-      technology: 'Apache Kafka 3.7',
-      repo: 'infra/kafka',
-      ownerTeam: 'Data Platform',
-      contracts: ['contracts/events.asyncapi.yml'],
-      upstream: ['petstore-api'],
-      downstream: [],
-    },
-    {
-      id: 'petstore-db',
-      name: 'PostgreSQL 16 Primary DB',
-      type: 'database',
-      technology: 'PostgreSQL 16',
-      repo: 'infra/postgres',
-      ownerTeam: 'Data Platform',
-      contracts: [],
-      upstream: ['petstore-api'],
-      downstream: [],
-    },
-  ],
-  links: [
-    { from: 'petstore-web', to: 'petstore-api', protocol: 'HTTPS/JSON (OpenAPI 3.1)' },
-    { from: 'petstore-api', to: 'petstore-db', protocol: 'TCP/SQL (JDBC)' },
-    { from: 'petstore-api', to: 'event-bus', protocol: 'TCP/Kafka (Protobuf)' },
-    { from: 'petstore-api', to: 'vaccine-gateway', protocol: 'HTTPS/mTLS (OpenAPI 3.1)' },
-    { from: 'petstore-web', to: 'petstore-common', protocol: 'npm (@acme/petstore-common)' },
-    { from: 'petstore-api', to: 'petstore-common', protocol: 'Maven DTO Jar' },
-  ],
-};
+const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || '/home/ndipiazza';
+const PROJECT_DIR = path.join(REAL_HOME, '.robos', 'projects', 'acme-petshop-platform');
+const TOPOLOGY_FILE = path.join(PROJECT_DIR, '.robos', 'topology.yaml');
+
+function parseOpenApiYaml(rawYaml) {
+  const info = {};
+  const endpoints = [];
+  const schemas = [];
+
+  const titleMatch = rawYaml.match(/title:\s*([^\n\r]+)/);
+  if (titleMatch) info.title = titleMatch[1].trim().replace(/^['"]|['"]$/g, '');
+
+  const versionMatch = rawYaml.match(/version:\s*([^\n\r]+)/);
+  if (versionMatch) info.version = versionMatch[1].trim().replace(/^['"]|['"]$/g, '');
+
+  // Extract paths and operations
+  const lines = rawYaml.split('\n');
+  let currentPath = null;
+  let currentMethod = null;
+  let currentSummary = '';
+  let inPaths = false;
+  let inSchemas = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed === 'paths:') {
+      inPaths = true;
+      inSchemas = false;
+      continue;
+    }
+    if (trimmed === 'components:' || trimmed === 'schemas:') {
+      if (trimmed === 'schemas:') inSchemas = true;
+      inPaths = false;
+      continue;
+    }
+
+    if (inPaths) {
+      if (/^\s{2}\/[\w/{}-]+:/.test(line)) {
+        currentPath = trimmed.replace(/:$/, '');
+      } else if (currentPath && /^\s{4}(get|post|put|delete|patch):/.test(line)) {
+        currentMethod = trimmed.replace(/:$/, '').toUpperCase();
+        currentSummary = '';
+        // Look ahead for summary or operationId
+        for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+          const sub = lines[j].trim();
+          if (sub.startsWith('summary:')) {
+            currentSummary = sub.replace(/^summary:\s*/, '').replace(/^['"]|['"]$/g, '');
+            break;
+          }
+          if (sub.startsWith('operationId:')) {
+            currentSummary = sub.replace(/^operationId:\s*/, '').replace(/^['"]|['"]$/g, '');
+          }
+        }
+        endpoints.push({
+          path: currentPath,
+          method: currentMethod,
+          summary: currentSummary || currentMethod,
+        });
+      }
+    } else if (inSchemas) {
+      if (/^\s{4}[A-Za-z0-9_]+:/.test(line)) {
+        schemas.push(trimmed.replace(/:$/, ''));
+      }
+    }
+  }
+
+  return { info, endpoints, schemas };
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -122,7 +107,52 @@ function createWindow() {
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('top-get-topology', async () => {
-  return DEFAULT_TOPOLOGY;
+  if (fs.existsSync(TOPOLOGY_FILE)) {
+    try {
+      const raw = fs.readFileSync(TOPOLOGY_FILE, 'utf8');
+      return { ok: true, rawYaml: raw, source: TOPOLOGY_FILE };
+    } catch (err) {
+      console.error('Failed reading topology file from disk:', err);
+    }
+  }
+
+  return {
+    ok: true,
+    source: 'empty',
+  };
+});
+
+ipcMain.handle('top-save-topology', async (_evt, topologyData) => {
+  try {
+    fs.mkdirSync(path.dirname(TOPOLOGY_FILE), { recursive: true });
+    fs.writeFileSync(TOPOLOGY_FILE, JSON.stringify(topologyData, null, 2), 'utf8');
+    return { ok: true, path: TOPOLOGY_FILE };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('top-read-contract', async (_evt, relativeContractPath) => {
+  try {
+    const fullPath = path.join(PROJECT_DIR, relativeContractPath);
+    if (!fs.existsSync(fullPath)) {
+      return { ok: false, error: `Contract file not found at ${fullPath}` };
+    }
+
+    const rawYaml = fs.readFileSync(fullPath, 'utf8');
+    const { info, endpoints, schemas } = parseOpenApiYaml(rawYaml);
+
+    return {
+      ok: true,
+      fullPath,
+      rawYaml,
+      info,
+      endpoints,
+      schemas,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
 
 ipcMain.handle('top-import-backstage', async (_evt, backstageYaml) => {
