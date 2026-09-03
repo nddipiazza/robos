@@ -143,6 +143,89 @@ body {
   text-transform: uppercase;
 }
 
+/* ── AI Planner Bar ───────────────────────────────────────────────────────── */
+.ai-planner-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-planner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-planner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-bright);
+}
+
+.badge-kgraph {
+  font-size: 9px;
+  background: rgba(188, 140, 255, 0.15);
+  border: 1px solid rgba(188, 140, 255, 0.4);
+  color: #d2a8ff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: monospace;
+}
+
+.ai-planner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-textarea-wrapper {
+  width: 100%;
+}
+
+.ai-textarea-wrapper robos-ai-textarea {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+}
+
+.ai-textarea-wrapper .robos-ai-inner {
+  min-height: 44px !important;
+  max-height: 110px !important;
+  overflow-y: auto !important;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.btn-accent {
+  background: rgba(0, 188, 212, 0.2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.btn-accent:hover {
+  background: var(--accent);
+  color: #0d1117;
+}
+
+.empty-topology-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  margin: 20px;
+}
+
 /* ── Workspace 3-Column Layout ────────────────────────────────────────────── */
 .main-content {
   flex: 1;

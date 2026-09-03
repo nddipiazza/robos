@@ -40,7 +40,7 @@
         <div class="stat-label">System Architecture ID</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-nodes-count">6 System Nodes</div>
+        <div class="stat-num" id="stat-nodes-count">0 System Nodes</div>
         <div class="stat-label">Deployable Containers & DBs</div>
       </div>
       <div class="stat-card">
@@ -48,8 +48,26 @@
         <div class="stat-label">Active Architecture View</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-schema-status" style="color: var(--success);">100% CONFORMING</div>
+        <div class="stat-num" id="stat-schema-status" style="color: var(--accent);">READY TO SYNTHESIZE</div>
         <div class="stat-label">.robos/topology.yaml</div>
+      </div>
+    </div>
+
+    <!-- AI Architecture Input Bar -->
+    <div id="ai-planner-bar" class="ai-planner-bar">
+      <div class="ai-planner-header">
+        <div class="ai-planner-title">
+          <span class="ai-sparkle">✨</span>
+          <strong>AI Architecture & C4 Topology Synthesis</strong>
+          <span class="badge-kgraph">Knowledge Graph: urn:robos:project:acme-petshop-platform</span>
+        </div>
+        <div class="ai-planner-actions">
+          <button class="btn btn-secondary" id="btn-import-task-plan" onclick="window.importFromTaskPlanner()">📥 Import from Task Planner</button>
+          <button class="btn btn-accent" id="btn-synthesize-topology" onclick="window.synthesizeTopology()">✨ Synthesize Topology from Prompt</button>
+        </div>
+      </div>
+      <div class="ai-textarea-wrapper">
+        <robos-ai-textarea id="topology-ai-prompt" placeholder="Describe the polyglot microservices, databases, Kafka topics, and gateways to synthesize the C4 topology..."></robos-ai-textarea>
       </div>
     </div>
 
@@ -95,6 +113,7 @@
     </main>
   </div>
 
+  <script src="../../robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

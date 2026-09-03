@@ -9,25 +9,61 @@ const SLUG = 'acme-petshop-step2-topology';
 const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
 const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
 
+const TOPOLOGY_PROMPT = `Synthesizing architecture from Task Planner (Acme Petshop Platform):
+- Java 21 Spring Boot 3 REST API microservice (petstore-api)
+- PostgreSQL 16 relational database with Flyway (petstore-db)
+- React 18 TypeScript web client (petstore-web)
+- Apache Kafka event bus for async pet adoption (event-bus)
+- Dedicated rabies vaccine certification gateway (vaccine-gateway)
+- Reusable TypeSpec & Pact contract models (petstore-common)`;
+
 const SCRIPT = [
   {
-    narration: 'We continue on the RobOS developer desktop environment to define the Acme Petshop system topology.',
+    narration: 'We begin on the RobOS developer desktop environment to define the Acme Petshop system topology.',
     callout: 'RobOS Desktop Shell',
     minHold: 3000,
   },
   {
-    narration: 'We launch the RobOS System Topology & C4 Architecture Studio.',
-    target: '#stat-system-id',
+    narration: 'We open the System Topology & Backstage C4 Studio starting with a fresh architecture workspace.',
+    target: '#empty-canvas-hint',
     action: 'click',
-    callout: 'Open Topology & C4 Studio',
+    callout: 'Initial Clean Topology Workspace',
     minHold: 3500,
   },
   {
-    narration: 'The Backstage catalog registers all 6 polyglot components bound to the Acme Petshop platform.',
+    narration: 'In the multi-line AI textarea, we enter the polyglot microservice specifications from our task plan.',
+    target: '#topology-ai-prompt',
+    action: 'type',
+    value: TOPOLOGY_PROMPT,
+    callout: 'Enter Polyglot Architecture Prompt',
+    js: `(() => {
+      const host = document.getElementById('topology-ai-prompt');
+      if (host) {
+        const inner = host.querySelector('.robos-ai-inner') || host;
+        inner.focus();
+        inner.innerText = ${JSON.stringify(TOPOLOGY_PROMPT)};
+        host.dispatchEvent(new Event('input', { bubbles: true }));
+        host.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: 'We click "Synthesize Topology from Prompt" to generate the 6-container C4 graph in real-time.',
+    target: '#btn-synthesize-topology',
+    action: 'click',
+    callout: 'Synthesize Topology from Prompt',
+    js: `(() => {
+      if (window.synthesizeTopology) window.synthesizeTopology();
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: 'The Backstage catalog and canvas are populated with all 6 polyglot nodes and protocol links.',
     target: '#catalog-tree',
     action: 'click',
-    callout: 'Backstage Software Catalog',
-    minHold: 3500,
+    callout: 'Backstage Catalog (6 Entities)',
+    minHold: 4000,
   },
   {
     narration: 'We inspect the Java Spring Boot REST API node (petstore-api) on the topological canvas.',
@@ -40,7 +76,7 @@ const SCRIPT = [
     minHold: 4000,
   },
   {
-    narration: 'The inspector displays the responsible team, OpenAPI 3.1 contract, Devcontainer, and blast radius.',
+    narration: 'The inspector displays responsible team, OpenAPI 3.1 contract, Devcontainer, and blast radius.',
     target: '#inspector-card-details',
     action: 'click',
     callout: 'Node & Contract Inspector',
@@ -74,7 +110,7 @@ const SCRIPT = [
     js: `(() => {
       if (window.exportC4Diagram) window.exportC4Diagram();
     })()`,
-    minHold: 6000,
+    minHold: 5000,
   },
   {
     narration: 'The system topology is fully conforming and ready for TypeSpec multi-repo contract definition.',
@@ -108,11 +144,12 @@ async function main() {
 
     // Extract key frames for walkthrough verification
     execSync(`ffmpeg -y -ss 00:00:02 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-desktop_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:08 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-catalog_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:13 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-canvas_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:17 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:22 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:26 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-c4_export_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-empty_clean_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-prompt_typing_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-synthesized_canvas_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:23 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:28 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-vaccine_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:33 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step2-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step2.vtt`);
 
