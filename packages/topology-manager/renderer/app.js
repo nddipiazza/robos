@@ -28,6 +28,18 @@ const ACME_FULL_LINKS = [
 ];
 
 async function init() {
+  const promptEl = document.getElementById('topology-ai-prompt');
+  if (promptEl) {
+    promptEl.addEventListener('robos-submit', (e) => {
+      const text = e.detail?.value || promptEl.value || '';
+      window.synthesizeTopology(text);
+    });
+    promptEl.addEventListener('submit', (e) => {
+      const text = e.detail?.text || promptEl.value || '';
+      window.synthesizeTopology(text);
+    });
+  }
+
   renderStats();
   renderCatalog();
   renderCanvas();

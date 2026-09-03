@@ -49,12 +49,17 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: 'We click "Synthesize Topology from Prompt" to generate the 6-container C4 graph in real-time.',
-    target: '#btn-synthesize-topology',
+    narration: 'We submit the AI prompt to synthesize the 6-container C4 architecture graph in real-time.',
+    target: '.robos-submit-btn',
     action: 'click',
-    callout: 'Synthesize Topology from Prompt',
+    callout: 'Submit AI Architecture Prompt',
     js: `(() => {
-      if (window.synthesizeTopology) window.synthesizeTopology();
+      const host = document.getElementById('topology-ai-prompt');
+      if (host && host._doSubmit) {
+        host._doSubmit();
+      } else if (window.synthesizeTopology) {
+        window.synthesizeTopology();
+      }
     })()`,
     minHold: 4000,
   },
