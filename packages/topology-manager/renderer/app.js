@@ -1,7 +1,7 @@
 'use strict';
 
 let topology = null;
-let selectedNodeId = 'forms-api';
+let selectedNodeId = 'petstore-api';
 let currentZoom = 'l2'; // 'l1' | 'l2' | 'l3' | 'otel'
 let searchQuery = '';
 
@@ -10,20 +10,22 @@ async function init() {
     topology = await window.topologyManager.getTopology();
   } else {
     topology = {
-      system: { id: 'buildbarn-platform', name: 'BuildBarn Platform' },
+      system: { id: 'acme-petshop', name: 'Acme Petshop Platform' },
       nodes: [
-        { id: 'web-client', name: 'Web Portal', type: 'frontend', technology: 'React / Vite', repo: 'github.com/acme/buildbarn-web', ownerTeam: 'Core UI Team' },
-        { id: 'forms-api', name: 'Forms API Service', type: 'service', technology: 'Node.js 20 / Express', repo: 'github.com/acme/buildbarn-forms', ownerTeam: 'Core Platform Engineering', contracts: ['contracts/forms-api.openapi.yaml'], devcontainer: '.devcontainer/devcontainer.json', upstream: ['web-client'], downstream: ['db-primary', 'event-bus'] },
-        { id: 'workflow-svc', name: 'Workflow Orchestrator', type: 'service', technology: 'Go 1.22 / Temporal', repo: 'github.com/acme/buildbarn-workflows', ownerTeam: 'Core Platform Engineering', contracts: ['contracts/workflows.asyncapi.yml'], upstream: ['event-bus'], downstream: ['db-primary'] },
-        { id: 'event-bus', name: 'RabbitMQ Event Broker', type: 'broker', technology: 'RabbitMQ 3.13 / AMQP', ownerTeam: 'Infra Platform Team' },
-        { id: 'db-primary', name: 'PostgreSQL Database', type: 'database', technology: 'PostgreSQL 16 / TimescaleDB', ownerTeam: 'Data Platform Team' },
+        { id: 'petstore-web', name: 'React Web Client', type: 'frontend', technology: 'Node.js 20 / React 18 / Vite', repo: 'http://127.0.0.1:3000/acme-org/petstore-web.git', ownerTeam: 'Frontend Engineering' },
+        { id: 'petstore-api', name: 'Java Spring Boot REST API', type: 'service', technology: 'Java 21 / Spring Boot 3.3', repo: 'http://127.0.0.1:3000/acme-org/petstore-api.git', ownerTeam: 'Core Backend Platform', contracts: ['contracts/petstore-api.openapi.yaml'], devcontainer: '.devcontainer/devcontainer.json', upstream: ['petstore-web'], downstream: ['petstore-db', 'event-bus', 'vaccine-gateway'] },
+        { id: 'petstore-common', name: 'Reusable TypeSpec & Pact Library', type: 'library', technology: 'TypeSpec / Pact / Protobuf', repo: 'http://127.0.0.1:3000/acme-org/petstore-common.git', ownerTeam: 'Platform Enabling Team', contracts: ['contracts/petstore-api.openapi.yaml'], upstream: ['petstore-web', 'petstore-api'], downstream: [] },
+        { id: 'vaccine-gateway', name: 'Rabies Vaccine Certification Gateway', type: 'service', technology: 'Node.js 20 / Fastify / TypeSpec', repo: 'http://127.0.0.1:3000/robos/vaccine-gateway.git', ownerTeam: 'Security & Compliance', contracts: ['contracts/vaccine-gateway.openapi.yaml'], upstream: ['petstore-api'], downstream: [] },
+        { id: 'event-bus', name: 'Apache Kafka Event Bus', type: 'streaming', technology: 'Apache Kafka 3.7', repo: 'infra/kafka', ownerTeam: 'Data Platform', contracts: ['contracts/events.asyncapi.yml'], upstream: ['petstore-api'], downstream: [] },
+        { id: 'petstore-db', name: 'PostgreSQL 16 Primary DB', type: 'database', technology: 'PostgreSQL 16', repo: 'infra/postgres', ownerTeam: 'Data Platform', upstream: ['petstore-api'], downstream: [] },
       ],
       links: [
-        { from: 'web-client', to: 'forms-api', protocol: 'HTTPS / REST', contract: 'contracts/forms-api.openapi.yaml' },
-        { from: 'forms-api', to: 'db-primary', protocol: 'TCP / SQL' },
-        { from: 'forms-api', to: 'event-bus', protocol: 'AMQP / Events' },
-        { from: 'event-bus', to: 'workflow-svc', protocol: 'AMQP / Subscribe' },
-        { from: 'workflow-svc', to: 'db-primary', protocol: 'TCP / SQL' },
+        { from: 'petstore-web', to: 'petstore-api', protocol: 'HTTPS/JSON (OpenAPI 3.1)' },
+        { from: 'petstore-api', to: 'petstore-db', protocol: 'TCP/SQL (JDBC)' },
+        { from: 'petstore-api', to: 'event-bus', protocol: 'TCP/Kafka (Protobuf)' },
+        { from: 'petstore-api', to: 'vaccine-gateway', protocol: 'HTTPS/mTLS (OpenAPI 3.1)' },
+        { from: 'petstore-web', to: 'petstore-common', protocol: 'npm (@acme/petstore-common)' },
+        { from: 'petstore-api', to: 'petstore-common', protocol: 'Maven DTO Jar' },
       ],
     };
   }
@@ -58,9 +60,10 @@ function renderCatalog() {
 
   const categories = {
     frontend: { label: '🌐 Frontends', items: [] },
-    service: { label: '⚙️ Microservices', items: [] },
-    database: { label: '🗄️ Databases', items: [] },
-    broker: { label: '📬 Message Brokers', items: [] },
+    service: { label: '⚙️ Microservices & Gateways', items: [] },
+    library: { label: '📚 Shared Libraries & TypeSpec', items: [] },
+    streaming: { label: '📬 Streaming & Event Bus', items: [] },
+    database: { label: '🗄️ Relational Databases', items: [] },
   };
 
   filtered.forEach(node => {
@@ -95,14 +98,14 @@ function renderCanvas() {
     html = `
       <div class="inspector-card" style="margin-bottom: 8px;">
         <div class="card-title"><span>C4 Level 1: System Context Diagram</span></div>
-        <div class="node-tech">High-level view of external user actors interacting with the BuildBarn Platform.</div>
+        <div class="node-tech">High-level view of external user actors interacting with the Acme Petshop Platform.</div>
       </div>
       <div class="node-card active" id="node-card-system-boundary">
         <div class="node-header">
-          <span class="node-title">🏢 BuildBarn Platform System Boundary</span>
-          <span class="type-badge type-service">Enterprise System</span>
+          <span class="node-title">🏢 Acme Petshop Platform System Boundary</span>
+          <span class="type-badge type-service">Enterprise Polyglot System</span>
         </div>
-        <div class="node-tech">Encompasses 5 internal deployable containers (React Web Portal, Forms API, Workflow Svc, Postgres DB, RabbitMQ).</div>
+        <div class="node-tech">Encompasses 6 deployable containers (React Web Client, Java Spring Boot REST API, Rabies Vaccine Gateway, PostgreSQL 16 DB, Apache Kafka, TypeSpec Common Lib) bound to <code>urn:robos:project:acme-petshop-platform</code>.</div>
       </div>
     `;
   } else {

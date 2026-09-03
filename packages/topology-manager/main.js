@@ -57,6 +57,17 @@ const DEFAULT_TOPOLOGY = {
       downstream: [],
     },
     {
+      id: 'vaccine-gateway',
+      name: 'Rabies Vaccine Certification Gateway',
+      type: 'service',
+      technology: 'Node.js 20 / Fastify / TypeSpec',
+      repo: 'http://127.0.0.1:3000/robos/vaccine-gateway.git',
+      ownerTeam: 'Security & Compliance',
+      contracts: ['contracts/vaccine-gateway.openapi.yaml'],
+      upstream: ['petstore-api'],
+      downstream: [],
+    },
+    {
       id: 'event-bus',
       name: 'Apache Kafka Event Bus',
       type: 'streaming',
@@ -83,6 +94,7 @@ const DEFAULT_TOPOLOGY = {
     { from: 'petstore-web', to: 'petstore-api', protocol: 'HTTPS/JSON (OpenAPI 3.1)' },
     { from: 'petstore-api', to: 'petstore-db', protocol: 'TCP/SQL (JDBC)' },
     { from: 'petstore-api', to: 'event-bus', protocol: 'TCP/Kafka (Protobuf)' },
+    { from: 'petstore-api', to: 'vaccine-gateway', protocol: 'HTTPS/mTLS (OpenAPI 3.1)' },
     { from: 'petstore-web', to: 'petstore-common', protocol: 'npm (@acme/petstore-common)' },
     { from: 'petstore-api', to: 'petstore-common', protocol: 'Maven DTO Jar' },
   ],
@@ -136,21 +148,23 @@ ipcMain.handle('top-export-c4', async () => {
   const c4Markup = `@startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-Person(user, "Customer / Vendor", "Interacts via Web Portal")
-System_Boundary(c1, "BuildBarn Platform") {
-    Container(web, "Web Portal", "React / Vite", "Interactive client UI")
-    Container(api, "Forms API Service", "Node.js 20 / Express", "Processes multi-step dynamic forms")
-    Container(wf, "Workflow Orchestrator", "Go 1.22", "Executes long-running business workflows")
-    ContainerDb(db, "PostgreSQL Database", "PostgreSQL 16", "Stores verified forms and audit logs")
-    ContainerQueue(broker, "RabbitMQ Event Broker", "AMQP", "Event bus for async form events")
+Person(user, "Pet Adopter / Clinic Staff", "Browses catalog, adopts pets, registers vet vaccine certificates")
+System_Boundary(c1, "Acme Petshop Distributed Platform (urn:robos:project:acme-petshop-platform)") {
+    Container(web, "React Web Portal", "React 18 / TypeScript / Vite", "Single-page application for pet adoption & checkout")
+    Container(api, "Java Spring Boot REST API", "Java 21 / Spring Boot 3.3", "Microservice processing pet catalog, adoption orders, and vet health validation")
+    Container(vaccine, "Rabies Vaccine Gateway", "Node.js 20 / Fastify / TypeSpec", "Compliance service verifying vaccine certificates with state vet health registries")
+    ContainerDb(db, "PostgreSQL 16 Database", "PostgreSQL 16 / Flyway", "Stores relational entities for pets, inventory, orders, and certificates")
+    ContainerQueue(broker, "Apache Kafka Event Bus", "Kafka 3.7", "Publishes async pet adoption events, inventory delta events, and telemetry")
+    Container(common, "TypeSpec Schema Library", "TypeSpec / OpenAPI 3.1", "Shared cross-service domain models and DTO definitions")
 }
 
 Rel(user, web, "Uses", "HTTPS")
-Rel(web, api, "Submits form data", "HTTPS / REST (OpenAPI 3.1)")
-Rel(api, db, "Reads/Writes forms", "TCP / SQL")
-Rel(api, broker, "Publishes form events", "AMQP")
-Rel(broker, wf, "Consumes events", "AMQP")
-Rel(wf, db, "Updates state", "TCP / SQL")
+Rel(web, api, "Adopts pets, checkout", "HTTPS / REST (OpenAPI 3.1)")
+Rel(api, db, "Reads/Writes pet records & inventory", "TCP / JDBC")
+Rel(api, broker, "Publishes pet.adopted & inventory.sync events", "TCP / Kafka")
+Rel(api, vaccine, "Validates health & rabies certificates", "HTTPS / mTLS")
+Rel(web, common, "Consumes TypeScript models", "npm")
+Rel(api, common, "Consumes Java DTOs", "Maven")
 @enduml`;
 
   return {
