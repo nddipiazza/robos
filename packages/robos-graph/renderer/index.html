@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS SDLC Knowledge Graph Explorer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="../../robos-ui/robos-ui.js"></script>
+  <script>
+    if (!customElements.get('robos-ai-textarea')) {
+      const s = document.createElement('script');
+      s.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+      document.head.appendChild(s);
+    }
+  </script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🌐</div>
+        <div>
+          <h1>SDLC Knowledge Graph Explorer</h1>
+          <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; GitOps SDLC Engine</div>
+        </div>
+      </div>
+      <div class="header-center">
+        <div class="branch-selector-container">
+          <label class="branch-label">Branch:</label>
+          <select id="branch-select" class="branch-select"></select>
+          <span class="branch-badge badge-prod" id="branch-badge">PROD</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-run-diff">⚖️ Semantic Diff</button>
+        <button class="btn btn-primary" id="btn-validate-shacl">🛡️ Validate SHACL</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-branch-name">main</div>
+        <div class="stat-label" id="stat-branch-type">Production Reality</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-nodes">5 SDLC Nodes</div>
+        <div class="stat-label">Active Resource Entities</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-bdd-scenarios">2 BDD Scenarios</div>
+        <div class="stat-label">Executable Features</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-traceability-status">100% VERIFIED</div>
+        <div class="stat-label">Requirement Traceability</div>
+      </div>
+    </div>
+
+    <!-- AI Co-Pilot Multiline Textarea Bar -->
+    <div class="copilot-bar">
+      <div class="copilot-input-wrapper">
+        <robos-ai-textarea id="copilot-prompt"
+          show-submit="false"
+          show-commands="false"
+          show-agent="false"
+          min-height="60"
+          placeholder="Describe architectural additions or changes… e.g. 'Add an asynchronous email notification worker subscribed to order events with RabbitMQ'">
+        </robos-ai-textarea>
+      </div>
+      <div class="copilot-btn-group">
+        <button class="btn btn-copilot" id="btn-copilot-generate">⚡ AI Co-Pilot Generate</button>
+        <button class="btn btn-apply" id="btn-copilot-apply" disabled>✅ Apply to Graph</button>
+      </div>
+    </div>
+
+    <!-- Main Workspace Split -->
+    <main class="main-content">
+      <div class="workspace-grid">
+        <!-- Left Panel: SDLC Resource Nodes List with Clean Search & Filter Container -->
+        <section class="panel nodes-panel">
+          <div class="panel-header">
+            <span class="panel-title">SDLC Resource Nodes</span>
+            <span class="nodes-count-badge" id="nodes-count-badge">5 of 5 Nodes</span>
+          </div>
+          <div class="filter-container">
+            <div class="filter-search-row">
+              <input type="text" id="node-search-input" class="node-search-input" placeholder="🔍 Search nodes..." />
+              <select id="node-type-filter" class="filter-type-select">
+                <option value="all">All Types</option>
+                <option value="bdd">🥒 BDD</option>
+                <option value="service">Services</option>
+                <option value="contract">Contracts</option>
+                <option value="requirement">Requirements</option>
+              </select>
+            </div>
+            <div class="filter-pills-wrap">
+              <button class="filter-pill active" data-filter="all">All</button>
+              <button class="filter-pill" data-filter="bdd">🥒 BDD</button>
+              <button class="filter-pill" data-filter="service">Services</button>
+              <button class="filter-pill" data-filter="contract">Contracts</button>
+              <button class="filter-pill" data-filter="requirement">Reqs</button>
+            </div>
+          </div>
+          <div class="panel-body node-list" id="nodes-list"></div>
+        </section>
+
+        <!-- Right Panel: Resource Inspector with Tabbed Views -->
+        <section class="panel inspector-panel">
+          <div class="inspector-tabs">
+            <button class="tab-btn active" id="tab-btn-visual">📋 Visual Inspector & BDD</button>
+            <button class="tab-btn" id="tab-btn-gitops">📁 .robos/ GitOps SDLC</button>
+            <button class="tab-btn" id="tab-btn-edd">🤖 Autonomous EDD Loop</button>
+            <button class="tab-btn" id="tab-btn-video">🎬 Video Walkthrough</button>
+            <button class="tab-btn" id="tab-btn-fabric">🧪 Local Test Fabric</button>
+            <button class="tab-btn" id="tab-btn-traceability">📊 Traceability Matrix</button>
+            <button class="tab-btn" id="tab-btn-rdf">🌐 RDF Triples (JSON-LD)</button>
+          </div>
+
+          <div class="inspector-content" id="inspector-content">
+            <!-- Dynamic Content rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

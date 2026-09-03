@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Agent Workflow Sidebar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sidebar-container">
+    <!-- Header -->
+    <header class="sidebar-header">
+      <div class="header-top">
+        <div class="agent-avatar">🤖</div>
+        <div class="agent-info">
+          <div class="agent-role" id="agent-role">Senior Code Reviewer</div>
+          <div class="agent-id" id="agent-id">agent-task-101</div>
+        </div>
+        <div class="status-pill" id="agent-status-pill">RUNNING</div>
+      </div>
+      <div class="task-badge" id="task-badge">TASK-101: Refactor Auth Pipeline</div>
+    </header>
+
+    <!-- Plan & Step Progress -->
+    <section class="section-container">
+      <div class="section-title">Workflow Execution Plan</div>
+      <div class="step-list" id="step-list">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- Tool Invocation Stream -->
+    <section class="section-container flex-fill">
+      <div class="section-title">
+        <span>Live Tool Invocation Feed</span>
+        <span class="live-dot">●</span>
+      </div>
+      <div class="tool-stream" id="tool-stream">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- Human Approval & Verification Action Bar -->
+    <footer class="action-bar" id="action-bar">
+      <div class="action-title">Human-in-the-Loop Verification</div>
+      <div class="action-buttons">
+        <button class="btn btn-secondary" id="btn-request-change">Refine</button>
+        <button class="btn btn-primary" id="btn-approve-step">Approve Step</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

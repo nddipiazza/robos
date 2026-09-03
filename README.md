@@ -169,11 +169,22 @@ We validate every feature against a real project: **buildbarn-forms** — a Reac
 
 ---
 
+## AI Agent Plugin Marketplace & Skills
+
+RobOS features a standardized cross-agent plugin marketplace supporting **Claude Code**, **OpenAI Codex**, **Google Antigravity**, **GitHub Copilot**, and **Gemini CLI**.
+
+- 📚 **Agent Instructions**: See [`AGENTS.md`](AGENTS.md) for universal agent guidance and coding conventions.
+- 🧩 **Plugin Marketplace**: See [`plugins/README.md`](plugins/README.md) for instructions on installing and configuring the 22 built-in RobOS skills and slash commands.
+- ⚡ **Quick Install**: Run `./plugins/install.sh` to install and sync skills across all AI agent tools.
+
+---
+
 ## Contributing
 
 We welcome contributions of all sizes — new apps, bug fixes, docs, and ideas.
 
 - 📖 Read [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide
+- 🤖 Read [AGENTS.md](AGENTS.md) for AI pair programming instructions
 - 🐛 [Open an issue](https://github.com/nddipiazza/robos/issues/new) for bugs or feature requests
 - 💬 [Start a Discussion](https://github.com/nddipiazza/robos/discussions) for ideas and questions
 - 🔍 Browse [`good first issue`](https://github.com/nddipiazza/robos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for easy entry points

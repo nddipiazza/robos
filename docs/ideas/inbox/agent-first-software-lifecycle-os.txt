@@ -1,0 +1,15 @@
+Idea: RobOS — The Agent-First Software Lifecycle Operating System
+
+Generative AI software development is fundamentally about managing:
+1. Topology (services, microservices, boundaries, infrastructure graphs)
+2. Human Resources & Agent Personnel (teams, roles, agent personas, MCP skills, permissions)
+3. Entity Schemas (JSON Schema, TypeSpec, JSON-LD, Protocol Buffers, entity relationships)
+4. Contracts (OpenAPI 3.1, AsyncAPI, Pact consumer contract testing, gRPC, breaking change drift detection)
+5. Apps & Packages (Electron desktop apps, daemons, backend services, containers, runtime manifests)
+6. Development Projects (Multi-repo workspaces, Git worktree isolation, devcontainer orchestrations)
+7. Work Items & Tasks (Task graphs / DAGs, Planning mode, implementation plan review with /grill-me, auto state transitions)
+8. Git-backed Storage (Everything stored as declarative version-controlled files in .robos/, zero proprietary lock-in)
+
+The entire mission of RobOS is to make a desktop OS and app suite centered upon this modern development design.
+Core directive: Re-invent nothing! Steal/adapt from proven open-source solutions (Backstage, TypeSpec, Pact, Buf, Devcontainers, C4 Model, Team Topologies, MCP).
+The user primarily acts as the Lead Architect and Code Reviewer, while configured RobOS Agents handle execution.

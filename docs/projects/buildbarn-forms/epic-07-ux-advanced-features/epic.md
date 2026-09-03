@@ -2,7 +2,7 @@
 nav_exclude: true
 ---
 
-# Epic 07: UX & Advanced Features
+# UX & Advanced Features
 
 **Status:** Not started
 **Priority:** Low-Medium — polish and power-user features after core flows are stable

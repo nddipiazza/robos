@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS MCP Server Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🎛️</div>
+        <div>
+          <h1>RobOS MCP Server Manager</h1>
+          <div class="subtitle">Discover, Configure, Test, and Authorize Model Context Protocol Servers</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-refresh">⚡ Refresh Cluster</button>
+        <button class="btn btn-primary" id="btn-open-tester">🛠️ Interactive Tester</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-servers">3</div>
+        <div class="stat-label">Discovered Servers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">7</div>
+        <div class="stat-label">Total Tools Exposed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-resources">4</div>
+        <div class="stat-label">Total Resources Exposed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-agent-coverage">100%</div>
+        <div class="stat-label">AI Agent Coverage</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tab-servers">Registered Servers</button>
+      <button class="tab-btn" id="tab-tester">Tool & Resource Tester</button>
+      <button class="tab-btn" id="tab-access">Agent Access Matrix</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Tab 1: Server Grid -->
+      <div id="view-servers" class="tab-view">
+        <div class="server-grid" id="server-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Tab 2: Interactive Tester -->
+      <div id="view-tester" class="tab-view hidden">
+        <div class="tester-layout">
+          <div class="tester-sidebar">
+            <div class="section-title">Select Tool to Execute</div>
+            <div class="tool-picker-list" id="tool-picker-list"></div>
+          </div>
+          <div class="tester-main">
+            <div class="tester-form">
+              <div class="form-header">
+                <span id="selected-tool-name" class="tool-title">robos_task_manager_get_task</span>
+                <button class="btn btn-primary btn-sm" id="btn-exec-tool">Execute Tool</button>
+              </div>
+              <div class="form-group">
+                <label>Input Parameters (JSON):</label>
+                <textarea id="tool-params-input" class="code-textarea" placeholder="{}"></textarea>
+              </div>
+            </div>
+            <div class="tester-output">
+              <div class="output-header">Live Output</div>
+              <pre id="tool-output-box" class="output-box">// Execution results will appear here...</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Agent Access Matrix -->
+      <div id="view-access" class="tab-view hidden">
+        <div class="access-container">
+          <div class="section-title">AI Agent MCP Server Authorization</div>
+          <div class="matrix-table-wrapper">
+            <table class="matrix-table" id="access-matrix-table">
+              <thead>
+                <tr>
+                  <th>MCP Server</th>
+                  <th>Claude Code</th>
+                  <th>Gemini CLI</th>
+                  <th>Copilot CLI</th>
+                </tr>
+              </thead>
+              <tbody id="access-matrix-body">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="matrix-footer">
+            <button class="btn btn-primary" id="btn-save-access">Save Access Configuration</button>
+            <span id="save-status" class="save-status-msg"></span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

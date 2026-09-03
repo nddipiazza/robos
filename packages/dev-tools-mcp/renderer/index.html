@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Dev Tools MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🧰</div>
+        <div>
+          <h1>Dev Tools MCP Server Console</h1>
+          <div class="subtitle">AI-Driven CLI Tooling, Cloud SDKs & Package Provisioning</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-check-docker">🐳 Check Docker</button>
+        <button class="btn btn-primary" id="btn-install-terraform">📦 Install Terraform</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-installed">4 Installed</div>
+        <div class="stat-label">Active CLI / SDK Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">6 Catalog</div>
+        <div class="stat-label">Total Tool Offerings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">4 MCP Tools</div>
+        <div class="stat-label">Exposed Protocol Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-provisioning">0 Pending</div>
+        <div class="stat-label">Active Provisioning</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="tools-grid-layout">
+        <!-- Tools Catalog -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Dev Tool Registry (robos_devtools_list & robos_devtools_check)</span>
+          </div>
+          <div class="panel-body" id="tools-catalog"></div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live Dev Tools MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Dispatched Dev Tools operations will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

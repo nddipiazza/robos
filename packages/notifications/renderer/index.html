@@ -13,8 +13,8 @@
     </div>
     <div id="topbar-actions">
       <div class="tab-bar">
-        <button class="tab active" data-tab="list">Notifications</button>
-        <button class="tab" data-tab="prefs">Preferences</button>
+        <button class="tab active" id="tab-btn-list" data-tab="list">Notifications</button>
+        <button class="tab" id="tab-btn-prefs" data-tab="prefs">Preferences</button>
       </div>
     </div>
   </div>
@@ -23,16 +23,16 @@
   <div id="tab-list" class="tab-content active">
     <div id="filter-bar">
       <div id="category-filters">
-        <label class="filter-check"><input type="checkbox" data-cat="pr_review" checked> PR Review <span class="badge" id="badge-pr_review">0</span></label>
-        <label class="filter-check"><input type="checkbox" data-cat="ci_cd" checked> CI/CD <span class="badge" id="badge-ci_cd">0</span></label>
-        <label class="filter-check"><input type="checkbox" data-cat="task" checked> Task <span class="badge" id="badge-task">0</span></label>
-        <label class="filter-check"><input type="checkbox" data-cat="agent" checked> Agent <span class="badge" id="badge-agent">0</span></label>
-        <label class="filter-check"><input type="checkbox" data-cat="system" checked> System <span class="badge" id="badge-system">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="pr_review" checked id="filter-pr_review"> PR Review <span class="badge" id="badge-pr_review">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="ci_cd" checked id="filter-ci_cd"> CI/CD <span class="badge" id="badge-ci_cd">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="task" checked id="filter-task"> Task <span class="badge" id="badge-task">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="agent" checked id="filter-agent"> Agent <span class="badge" id="badge-agent">0</span></label>
+        <label class="filter-check"><input type="checkbox" data-cat="system" checked id="filter-system"> System <span class="badge" id="badge-system">0</span></label>
       </div>
       <div id="tier-filters">
-        <label class="filter-check"><input type="checkbox" data-tier="critical" checked> Critical</label>
-        <label class="filter-check"><input type="checkbox" data-tier="warning" checked> Warning</label>
-        <label class="filter-check"><input type="checkbox" data-tier="info" checked> Info</label>
+        <label class="filter-check"><input type="checkbox" data-tier="critical" checked id="filter-tier-critical"> Critical</label>
+        <label class="filter-check"><input type="checkbox" data-tier="warning" checked id="filter-tier-warning"> Warning</label>
+        <label class="filter-check"><input type="checkbox" data-tier="info" checked id="filter-tier-info"> Info</label>
       </div>
       <div id="filter-actions">
         <select id="filter-date" class="filter-sel">
@@ -75,20 +75,21 @@
           <input type="checkbox" id="pref-quiet-enabled" />
           <span>Enable quiet hours</span>
         </label>
-        <div class="pref-row">
+        <div class="pref-row" style="margin-top:8px;">
           <label>Start: <input type="time" id="pref-quiet-start" value="22:00" class="time-input" /></label>
-          <label>End: <input type="time" id="pref-quiet-end" value="07:00" class="time-input" /></label>
+          <label style="margin-left:14px;">End: <input type="time" id="pref-quiet-end" value="07:00" class="time-input" /></label>
         </div>
       </div>
       <div class="prefs-section">
-        <h4>Do Not Disturb</h4>
+        <h4>Do Not Disturb (DND)</h4>
         <label class="pref-row">
           <input type="checkbox" id="pref-dnd" />
-          <span>Enable DND mode (suppress all toasts)</span>
+          <span>Enable DND mode (suppress all toasts; queue critical alerts)</span>
         </label>
       </div>
-      <div class="prefs-section">
-        <button id="btn-save-prefs" class="btn btn-primary">Save Preferences</button>
+      <div class="prefs-section" style="display:flex; align-items:center; gap:12px;">
+        <button id="btn-save-prefs" class="btn btn-primary" style="background:#00bcd4; border-color:#00bcd4; color:#0d1117; font-weight:600;">Save Preferences</button>
+        <span id="pref-status-msg" style="font-size:12px; color:#3fb950; display:none;">✓ Preferences saved successfully.</span>
       </div>
     </div>
   </div>

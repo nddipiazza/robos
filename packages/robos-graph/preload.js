@@ -1,0 +1,25 @@
+'use strict';
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('sdlcGraph', {
+  getAllNodes: () => ipcRenderer.invoke('graph-get-all'),
+  query: (filter) => ipcRenderer.invoke('graph-query', filter),
+  getNode: (id) => ipcRenderer.invoke('graph-get-node', id),
+  findDependents: (id) => ipcRenderer.invoke('graph-find-dependents', id),
+  validate: () => ipcRenderer.invoke('graph-validate'),
+  listBranches: () => ipcRenderer.invoke('graph-list-branches'),
+  getActiveBranch: () => ipcRenderer.invoke('graph-get-active-branch'),
+  switchBranch: (branchName) => ipcRenderer.invoke('graph-switch-branch', branchName),
+  diffBranches: (base, target) => ipcRenderer.invoke('graph-diff-branches', { base, target }),
+  copilotGenerate: (prompt) => ipcRenderer.invoke('graph-copilot-generate', prompt),
+  copilotApply: (mutation) => ipcRenderer.invoke('graph-copilot-apply', mutation),
+  scanRepo: (dirPath) => ipcRenderer.invoke('graph-repo-scan', dirPath),
+  parseGherkin: (text, filePath) => ipcRenderer.invoke('graph-gherkin-parse', { text, filePath }),
+  getTraceability: () => ipcRenderer.invoke('graph-gherkin-traceability'),
+  generateStepDefs: (scenario) => ipcRenderer.invoke('graph-gherkin-codegen', scenario),
+  getFabricHealth: () => ipcRenderer.invoke('graph-fabric-health'),
+  resetFabric: () => ipcRenderer.invoke('graph-fabric-reset'),
+  dispatchFabric: (method, path, body) => ipcRenderer.invoke('graph-fabric-dispatch', { method, path, body }),
+  runEDD: (config) => ipcRenderer.invoke('graph-edd-run', config),
+  getEDDStatus: () => ipcRenderer.invoke('graph-edd-status'),
+});

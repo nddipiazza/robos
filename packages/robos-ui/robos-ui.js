@@ -549,7 +549,7 @@ robos-ai-textarea {
     }
 
     get value() {
-      return this._inner ? this._inner.innerText.trim() : '';
+      return this._inner ? this._inner.innerText : '';
     }
 
     set value(v) {

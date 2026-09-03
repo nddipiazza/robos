@@ -1,0 +1,26 @@
+version: "1.0"
+kind: TeamRoster
+teams:
+  - id: petstore-core
+    name: Core Backend & Platform Team
+    topology: stream-aligned
+    lead: jordan
+    members:
+      - id: jordan
+        name: Jordan (Dev Lead)
+        type: human
+        role: Approver
+      - id: alex
+        name: Alex (Senior Dev)
+        type: human
+        role: Developer
+      - id: claude-planner
+        name: Claude 3.7 Agent
+        type: agent
+        role: Planner
+        model: claude-3.7-sonnet
+      - id: gemini-coder
+        name: Gemini 2.5 Pro Agent
+        type: agent
+        role: Implementer
+        model: gemini-2.5-pro

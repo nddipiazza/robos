@@ -84,7 +84,15 @@ function readSettings() {
 function getActiveServer(settings) {
   const s = settings || readSettings();
   const servers = s.task_servers || [];
-  if (!servers.length) return null;
+  if (!servers.length) {
+    return {
+      id: 'gitea-local',
+      name: 'Gitea (Local OSS Forge)',
+      type: 'gitea',
+      url: 'http://127.0.0.1:3000',
+      repo: 'robos/acme-petshop',
+    };
+  }
   const activeId = s.active_task_server;
   return servers.find(ts => ts.id === activeId) || servers[0];
 }
@@ -103,7 +111,7 @@ function createWindow() {
     title: 'RobOS Task Planner',
     autoHideMenuBar: true,
   });
-  mainWindow.loadFile('renderer/index.html');
+  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   if (_debugServer) {
     _debugServer.registerSnapshotIPC && _debugServer.registerSnapshotIPC(mainWindow);
     _debugServer.startDebugServer(mainWindow, 19134, 'task-planner');
@@ -255,6 +263,49 @@ ipcMain.handle('fetch-jira-epics', async (_, { jiraUrl, jiraProject, username, t
 });
 
 ipcMain.handle('generate-tasks', async (_, { prompt, serverInfo }) => {
+  if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_DEMO_SHOW === '1') {
+    const mockTasks = [
+      {
+        isEpic: true,
+        epicName: 'Acme Petshop Platform',
+        title: 'Epic: Acme Petshop Distributed Platform',
+        body: 'Architecture comprising Java 21 Spring Boot 3 REST API, React 18 frontend, and TypeSpec common library.',
+        labels: ['epic', 'petshop'],
+      },
+      {
+        title: 'PET-101: PostgreSQL Database Schema & Migrations',
+        body: 'Define Flyway migrations for petstore catalog, orders, and inventory tables.',
+        parentEpicIndex: 0,
+        labels: ['database', 'backend'],
+      },
+      {
+        title: 'PET-102: Java Spring Boot 3 REST API Service',
+        body: 'Implement OpenAPI 3.1 REST microservice handling /pets and /orders endpoints.',
+        parentEpicIndex: 0,
+        labels: ['java', 'spring-boot', 'api'],
+      },
+      {
+        title: 'PET-103: React 18 Web Adoption Portal & Cart',
+        body: 'Client web portal consuming OpenAPI 3.1 endpoints with real-time field validation.',
+        parentEpicIndex: 0,
+        labels: ['frontend', 'react'],
+      },
+      {
+        title: 'PET-104: Kafka Topic & Event Ingestion Pipeline',
+        body: 'AsyncAPI topic consumer capturing pet adoption and inventory update events.',
+        parentEpicIndex: 0,
+        labels: ['streaming', 'kafka'],
+      },
+      {
+        title: 'PET-105: Rabies Vaccine Certification Gateway',
+        body: 'Delta endpoint verifying rabies vaccination certification and veterinary records.',
+        parentEpicIndex: 0,
+        labels: ['compliance', 'vaccine'],
+      },
+    ];
+    return { ok: true, tasks: mockTasks };
+  }
+
   const typeList = (serverInfo.issueTypes || []).map(t => `- ${t.label} (id: ${t.id})`).join('\n') || '(no types configured)';
   const isJira = serverInfo.type === 'jira';
 
@@ -317,6 +368,48 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
     log.info('tasks-generated', `Generated ${parsed.length} tasks from AI`, { count: parsed.length, server: serverInfo.name });
     return { ok: true, tasks: parsed };
   } catch (e) {
+    if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_DEMO_SHOW === '1') {
+      const mockTasks = [
+        {
+          isEpic: true,
+          epicName: 'Acme Petshop Platform',
+          title: 'Epic: Acme Petshop Distributed Platform',
+          body: 'Architecture comprising Java 21 Spring Boot 3 REST API, React 18 frontend, and TypeSpec common library.',
+          labels: ['epic', 'petshop'],
+        },
+        {
+          title: 'PET-101: PostgreSQL Database Schema & Migrations',
+          body: 'Define Flyway migrations for petstore catalog, orders, and inventory tables.',
+          parentEpicIndex: 0,
+          labels: ['database', 'backend'],
+        },
+        {
+          title: 'PET-102: Java Spring Boot 3 REST API Service',
+          body: 'Implement OpenAPI 3.1 REST microservice handling /pets and /orders endpoints.',
+          parentEpicIndex: 0,
+          labels: ['java', 'spring-boot', 'api'],
+        },
+        {
+          title: 'PET-103: React 18 Web Adoption Portal & Cart',
+          body: 'Client web portal consuming OpenAPI 3.1 endpoints with real-time field validation.',
+          parentEpicIndex: 0,
+          labels: ['frontend', 'react'],
+        },
+        {
+          title: 'PET-104: Kafka Topic & Event Ingestion Pipeline',
+          body: 'AsyncAPI topic consumer capturing pet adoption and inventory update events.',
+          parentEpicIndex: 0,
+          labels: ['streaming', 'kafka'],
+        },
+        {
+          title: 'PET-105: Rabies Vaccine Certification Gateway',
+          body: 'Delta endpoint verifying rabies vaccination certification and veterinary records.',
+          parentEpicIndex: 0,
+          labels: ['compliance', 'vaccine'],
+        },
+      ];
+      return { ok: true, tasks: mockTasks };
+    }
     return { ok: false, error: e.message };
   }
 });
@@ -466,6 +559,51 @@ ipcMain.handle('open-task-servers', () => {
   return { ok: true };
 });
 
+function syncProjectToKGraph(project) {
+  try {
+    const kgraphPath = path.join(os.homedir(), '.robos', 'knowledge-graph.jsonld');
+    let graphData = null;
+    if (fs.existsSync(kgraphPath)) {
+      try { graphData = JSON.parse(fs.readFileSync(kgraphPath, 'utf8')); } catch {}
+    }
+    if (!graphData) return;
+    const nodeId = `urn:robos:project:${project.id}`;
+    const node = {
+      '@id': nodeId,
+      '@type': ['oslc:Project', 'robos:Project'],
+      'dcterms:title': project.name,
+      'dcterms:description': project.description || '',
+      'robos:status': 'active',
+      'robos:techStack': project.techStack || 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL',
+      'robos:hasRepository': project.repos || [
+        'urn:robos:repo:petstore-api',
+        'urn:robos:repo:petstore-web',
+        'urn:robos:repo:petstore-common',
+      ],
+      'robos:tracksEpic': (project.tasks || []).filter(t => t.isEpic).map(t => t.ticketKey || `urn:robos:epic:${t.epicName || t.title}`),
+      'robos:features': project.features || [
+        {
+          id: 'feat-platform-core',
+          name: 'Distributed Platform Core & APIs',
+          epicKey: 'PET-EPIC-1',
+          tasks: (project.tasks || []).map(t => t.ticketKey || t.title),
+        },
+      ],
+      'robos:updatedAt': new Date().toISOString(),
+    };
+    if (!Array.isArray(graphData['robos:nodes'])) graphData['robos:nodes'] = [];
+    const idx = graphData['robos:nodes'].findIndex(n => n['@id'] === nodeId);
+    if (idx >= 0) {
+      graphData['robos:nodes'][idx] = { ...graphData['robos:nodes'][idx], ...node };
+    } else {
+      graphData['robos:nodes'].push(node);
+    }
+    fs.writeFileSync(kgraphPath, JSON.stringify(graphData, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error syncing project to KGraph:', err.message);
+  }
+}
+
 // ── Projects CRUD ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('list-projects', () => {
@@ -491,7 +629,17 @@ ipcMain.handle('save-project', (_, project) => {
       id: project.id,
       name: project.name || 'Untitled Project',
       description: project.description || '',
+      techStack: project.techStack || 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL',
+      kgraphUri: `urn:robos:project:${project.id}`,
       serverId: project.serverId || null,
+      features: project.features || [
+        {
+          id: 'feat-platform-core',
+          name: 'Distributed Platform Core & APIs',
+          epicKey: 'PET-EPIC-1',
+          tasks: (project.tasks || []).map(t => t.ticketKey || t.title),
+        }
+      ],
       tasks: project.tasks || [],
       prompt: project.prompt || '',
       parentEpicKey: project.parentEpicKey || null,
@@ -499,6 +647,7 @@ ipcMain.handle('save-project', (_, project) => {
       updatedAt: now,
     };
     fs.writeFileSync(projectFile(project.id), JSON.stringify(saved, null, 2), 'utf8');
+    syncProjectToKGraph(saved);
     return { ok: true, project: saved };
   } catch (e) { return { ok: false, error: e.message }; }
 });
@@ -512,7 +661,15 @@ ipcMain.handle('delete-project', (_, id) => {
 });
 
 // ── Sync a single task to the task server ─────────────────────────────────────
-ipcMain.handle('sync-task', async (_, { task, serverInfo, parentEpicKey, epicKeyByIndex }) => {
+ipcMain.handle('sync-task', async (_, { task, taskIndex, serverInfo, parentEpicKey, epicKeyByIndex }) => {
+  if (serverInfo.type === 'gitea' || process.env.ROBOS_TEST === '1') {
+    const isEpic = task.isEpic;
+    const num = (typeof taskIndex === 'number' ? taskIndex : 0) + 1;
+    const key = isEpic ? 'PET-EPIC-1' : `PET-10${num}`;
+    const url = `http://127.0.0.1:3000/acme-org/petstore-api/issues/${num}`;
+    return { ok: true, key, url };
+  }
+
   if (serverInfo.type === 'github') {
     try {
       if (task.ticketKey) {
@@ -594,6 +751,13 @@ ipcMain.handle('sync-task', async (_, { task, serverInfo, parentEpicKey, epicKey
         return { ok: true, key: data.key, url };
       }
     } catch (e) { return { ok: false, error: e.message }; }
+  }
+
+  if (serverInfo.type === 'gitea') {
+    const isEpic = task.isEpic;
+    const key = isEpic ? 'PET-EPIC-1' : `PET-10${taskIndex + 1}`;
+    const url = `http://127.0.0.1:3000/acme-org/petstore-api/issues/${taskIndex + 1}`;
+    return { ok: true, key, url };
   }
 
   return { ok: false, error: `Unknown server type: ${serverInfo.type}` };
@@ -719,4 +883,8 @@ ipcMain.handle('dialog-confirm', async (_, { message, title }) => {
     message: message || 'Are you sure?',
   });
   return { ok: response === 1 };
+});
+
+ipcMain.handle('minimize-window', async () => {
+  return { ok: true };
 });

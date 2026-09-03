@@ -1,4 +1,5 @@
 // ── State ────────────────────────────────────────────────────────────────────
+window.gp = window.gp || (window.parent && window.parent.gp);
 let data         = { projects: [] };
 let selectedId   = null;
 let filterText   = '';

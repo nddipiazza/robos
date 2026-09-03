@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS CLI Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div class="header-left">
+        <div class="header-icon">💻</div>
+        <div>
+          <h1>RobOS CLI Console & Test Runner</h1>
+          <div class="subtitle">Execute and verify robos-notify, robos-active-task, robos-journal-append, and robos-event</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="status-pill">4 CLI Utilities Active</span>
+      </div>
+    </header>
+
+    <div id="nav-tabs">
+      <button class="nav-tab active" id="tab-btn-notify" data-tab="notify">🔔 robos-notify</button>
+      <button class="nav-tab" id="tab-btn-task" data-tab="task">📋 robos-active-task</button>
+      <button class="nav-tab" id="tab-btn-journal" data-tab="journal">📓 robos-journal-append</button>
+      <button class="nav-tab" id="tab-btn-event" data-tab="event">⚡ robos-event</button>
+    </div>
+
+    <div id="workspace">
+      <!-- Control Panel Pane -->
+      <section id="control-pane">
+        <!-- 1. robos-notify controls -->
+        <div class="tab-panel active" id="panel-notify">
+          <h3>Send Categorized Toast Notification</h3>
+          <div class="form-row">
+            <label>Title</label>
+            <input type="text" id="notify-title" value="CI Failure" class="input-text" />
+          </div>
+          <div class="form-row">
+            <label>Message Body</label>
+            <input type="text" id="notify-msg" value="Pipeline stopped on test step" class="input-text" />
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label>Category</label>
+              <select id="notify-cat" class="input-select">
+                <option value="ci_cd" selected>ci_cd</option>
+                <option value="pr_review">pr_review</option>
+                <option value="task">task</option>
+                <option value="agent">agent</option>
+                <option value="system">system</option>
+              </select>
+            </div>
+            <div>
+              <label>Tier</label>
+              <select id="notify-tier" class="input-select">
+                <option value="critical" selected>critical</option>
+                <option value="warning">warning</option>
+                <option value="info">info</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="btn-run-notify">▶ Run robos-notify</button>
+            <button class="btn btn-secondary" id="btn-run-notify-json">📦 Run via JSON stdin</button>
+          </div>
+        </div>
+
+        <!-- 2. robos-active-task controls -->
+        <div class="tab-panel" id="panel-task">
+          <h3>Session Active Task Tracker</h3>
+          <div class="form-row">
+            <label>Task Identifier</label>
+            <input type="text" id="task-input" value="TASK-701: Implement CLI Suite" class="input-text" />
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="btn-run-task-set">▶ robos-active-task set</button>
+            <button class="btn btn-secondary" id="btn-run-task-get">🔍 robos-active-task get</button>
+            <button class="btn btn-danger" id="btn-run-task-clear">✕ robos-active-task clear</button>
+          </div>
+        </div>
+
+        <!-- 3. robos-journal-append controls -->
+        <div class="tab-panel" id="panel-journal">
+          <h3>Git Work Journal Logger</h3>
+          <div class="form-row">
+            <label>Entry Content</label>
+            <input type="text" id="journal-text" value="Architected CLI utilities for RobOS automation" class="input-text" />
+          </div>
+          <div class="form-row-2">
+            <div>
+              <label>Section</label>
+              <select id="journal-section" class="input-select">
+                <option value="Tasks">Tasks</option>
+                <option value="Notes" selected>Notes</option>
+                <option value="Decisions">Decisions</option>
+              </select>
+            </div>
+            <div>
+              <label>Type Tag</label>
+              <input type="text" id="journal-type" value="decision" class="input-text" />
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="btn-run-journal">▶ Append Journal Entry</button>
+          </div>
+        </div>
+
+        <!-- 4. robos-event controls -->
+        <div class="tab-panel" id="panel-event">
+          <h3>RobOS Event Bus CLI</h3>
+          <div class="form-row">
+            <label>Event Type</label>
+            <input type="text" id="event-type" value="ci_completed" class="input-text" />
+          </div>
+          <div class="form-row">
+            <label>JSON Payload</label>
+            <input type="text" id="event-payload" value='{"runId":789,"status":"failure","repo":"robos"}' class="input-text" />
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="btn-run-event-emit">▶ robos-event emit</button>
+            <button class="btn btn-secondary" id="btn-run-event-history">📜 robos-event history</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Terminal Output Pane -->
+      <section id="terminal-pane">
+        <div class="terminal-header">
+          <span>🖥 Terminal Output</span>
+          <button id="btn-clear-term" class="term-btn">Clear</button>
+        </div>
+        <div class="terminal-body" id="term-output">
+          <div class="term-line prompt">$ robos-cli --version</div>
+          <div class="term-line success">RobOS CLI Suite v0.0.5 ready.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

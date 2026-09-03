@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "robos-marketplace",
+  "version": "1.0.0",
+  "description": "RobOS Plugin Marketplace for AI Coding Agents (Claude, OpenAI Codex, Antigravity, GitHub Copilot, Gemini)",
+  "plugins": [
+    {
+      "id": "robos",
+      "name": "RobOS Developer Tools & Skills",
+      "version": "1.0.0",
+      "description": "Official SDLC toolchain, VM lifecycle management, Electron app scaffolding, DOM snapshot inspection, and testing skills for RobOS",
+      "author": {
+        "name": "RobOS Team",
+        "url": "https://github.com/nddipiazza/robos"
+      },
+      "source": "./robos",
+      "manifest": "./robos/plugin.json",
+      "skillsDir": "./robos/skills",
+      "commandsDir": "./robos/commands",
+      "supportedAgents": [
+        "claude",
+        "codex",
+        "antigravity",
+        "copilot",
+        "gemini",
+        "cursor"
+      ],
+      "tags": [
+        "robos",
+        "sdlc",
+        "desktop",
+        "electron",
+        "vm",
+        "qemu",
+        "skills"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+Idea: Dual-State SDLC Knowledge Graph & E2E-Driven Verification Engine
+
+1. Open Source Knowledge Graph Standard:
+   - Use OASIS OSLC (Open Services for Lifecycle Collaboration) Core 3.0 and W3C JSON-LD + SHACL shapes.
+   - Models the entire engineering universe: systems, topologies, microservices, entities, contracts, teams, features, scenarios (Gherkin BDD), and tasks.
+
+2. Multi-Branch World State Versioning (Prod vs Future):
+   - `main` branch = Current Production Reality.
+   - `feature/*`, `poc/*`, `pilot/*`, `spike/*` branches = Proposed Future States.
+   - Semantic & visual graph diffing shows added/modified nodes, broken contracts, and downstream blast radiuses before code changes.
+
+3. Agent-Assisted Authoring:
+   - AI agents assist developers, PMs, and architects as they define entity schemas, API contracts, apps, features, Gherkin scenarios, and step definitions.
+
+4. Self-Contained Local Test Fabric:
+   - All E2E verification runs in isolated local dev/test containers with mocked external dependencies and seeded database state.
+
+5. Automated Narrated Video Walkthroughs (E2E-Driven Development):
+   - Agents run E2E tests, record full 1080p demo videos with neural TTS audio narration (Piper) and WebVTT captions.
+   - Human reviewers watch the video walkthrough, inspect step definitions and diffs, and perform 1-click merge approvals in Dev Central.

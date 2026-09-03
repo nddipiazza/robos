@@ -1,0 +1,13 @@
+{
+  "name": "robos-agentd",
+  "version": "1.0.0",
+  "description": "RobOS Sub-Agent System Daemon and Management Interface",
+  "main": "main.js",
+  "bin": {
+    "robos-agent": "./robos-agent"
+  },
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {}
+}

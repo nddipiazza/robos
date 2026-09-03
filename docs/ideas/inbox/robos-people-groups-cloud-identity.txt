@@ -1,0 +1,3 @@
+RobOS People/Groups apps probably need love and better integration with cloud account providers office365, github, google accounts, slack, amazon, many more try to really get it integrated, securely with oauth setup built into the app to tell user what to do. 
+
+a user can have multiple cloud account associations like a google account, a slack account, linear account, zulip account, a github account(s) etc. that would be great to get this fully supported here and integrated with those various providers.

@@ -103,7 +103,8 @@ body {
   letter-spacing: .04em;
   flex-shrink: 0;
 }
-.type-badge.jira    { background: #1a3a5c; color: #2d9cff; }
+.type-badge.gitea  { background: rgba(96, 153, 38, 0.2); color: #87d039; border: 1px solid rgba(135, 208, 57, 0.4); }
+.type-badge.jira   { background: rgba(0, 82, 204, 0.25); color: #4c9aff; }
 .type-badge.github  { background: #1a2e1a; color: #4caf50; }
 
 /* ── Main panel ───────────────────────────────────────────────────────────── */

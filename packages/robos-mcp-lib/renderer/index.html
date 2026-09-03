@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS MCP Server Inspector & Framework</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🔌</div>
+        <div>
+          <h1>RobOS Model Context Protocol (MCP) Inspector</h1>
+          <div class="subtitle">Shared Framework, Tool Dispatcher & JSON-RPC Protocol Debugger</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" id="btn-call-demo-tool">⚡ Call calculate_metrics</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">2</div>
+        <div class="stat-label">Registered Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-resources">1</div>
+        <div class="stat-label">Exposed Resources</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">JSON-RPC 2.0</div>
+        <div class="stat-label">Protocol Standard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-last-status">Active</div>
+        <div class="stat-label">Server State</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="mcp-panels">
+        <!-- Tools Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Registered MCP Tools (tools/list)</span>
+          </div>
+          <div class="panel-body" id="tools-list"></div>
+        </div>
+
+        <!-- Resources Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Exposed MCP Resources (resources/list)</span>
+          </div>
+          <div class="panel-body" id="resources-list"></div>
+        </div>
+      </div>
+
+      <!-- JSON-RPC Trace Stream -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live JSON-RPC 2.0 Protocol Trace</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <div class="trace-log" id="trace-log"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

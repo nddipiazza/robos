@@ -4,10 +4,10 @@ const fs   = require('fs');
 const os   = require('os');
 const { exec, execSync, execFileSync } = require('child_process');
 
-const GNUPG_DIR  = path.join(process.env.HOME, '.gnupg');
+const GNUPG_DIR  = process.env.GNUPGHOME || path.join(process.env.HOME, '.gnupg');
 const AGENT_CONF = path.join(GNUPG_DIR, 'gpg-agent.conf');
-const PASS_STORE = path.join(process.env.HOME, '.password-store');
-const SSH_DIR    = path.join(os.homedir(), '.ssh');
+const PASS_STORE = process.env.PASSWORD_STORE_DIR || path.join(process.env.HOME, '.password-store');
+const SSH_DIR    = path.join(process.env.HOME || os.homedir(), '.ssh');
 
 // ── Debug server (optional) ──────────────────────────────────────────────────
 // Debug server (optional) — checks env override, local dev path, then VM install path
@@ -54,7 +54,7 @@ app.on('window-all-closed', () => app.quit());
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function run(cmd, opts = {}) {
   return new Promise((resolve, reject) => {
-    exec(cmd, { timeout: 30000, env: { ...process.env, DISPLAY: ':0' }, ...opts },
+    exec(cmd, { timeout: 30000, env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }, ...opts },
       (err, stdout, stderr) => {
         if (err) reject(new Error(stderr || err.message));
         else resolve(stdout.trim());
@@ -130,9 +130,8 @@ Passphrase: ${passphrase}
   fs.writeFileSync(batchFile, batch, { mode: 0o600 });
 
   try {
-    await run(`gpg --batch --gen-key "${batchFile}"`);
-    fs.unlinkSync(batchFile);
-    return { ok: true };
+    const genRes = execSync(`gpg --pinentry-mode loopback --batch --generate-key "${batchFile}" 2>&1`, { timeout: 30000 });
+    try { fs.unlinkSync(batchFile); } catch {}  return { ok: true };
   } catch (e) {
     try { fs.unlinkSync(batchFile); } catch {}
     return { ok: false, error: e.message };

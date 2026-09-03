@@ -1,0 +1,15 @@
+Dump a new idea: RobOS Dev Central - Rebranding for RobOS AI Agent Review Development
+
+Look online how Antigravity IDE works where it has AI agent review-based development. 
+
+This RobOS Dev Central app will provide the driving force to create software using AI agents review-based development:
+
+Lead developers using agent prompt or navigate the functions needed for AI agent review-based development:
+
+* Organization management - your organization, company, team spaces, shared policies and agent rules
+* Project management - the different apps, repositories, project graph, and architecture boundaries
+* Agent Prompt & Goal Dispatcher - issuing goals and prompts to initiate agent work with Planning Mode
+* Implementation Plan Review Hub - reviewing, grilling, approving, or requesting revisions on AI plans before execution
+* Agent Swarm & Subagent Monitoring - overseeing active agent tasks, tool calls, and background executions
+* Proof-of-Work & Walkthrough Verification - inspecting test results, visual DOM snapshots, and approving merges
+* Blocker Radar & Human-in-the-Loop Escalation - unblocking agents when they require clarification or architectural decisions

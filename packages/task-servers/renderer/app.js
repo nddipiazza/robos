@@ -8,6 +8,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 const TYPE_META = {
+  gitea:  { badge: 'Gitea', cls: 'gitea',  label: 'Gitea (Local OSS Forge)' },
   jira:   { badge: 'Jira',  cls: 'jira',   label: 'Jira / Atlassian'  },
   github: { badge: 'GH',    cls: 'github',  label: 'GitHub Issues'     },
   gitlab: { badge: 'GL',    cls: 'gitlab',  label: 'GitLab Issues'     },
@@ -63,7 +64,9 @@ function renderList() {
 // ── Add / Delete ──────────────────────────────────────────────────────────────
 function addServer(type) {
   const meta = TYPE_META[type] || { label: type };
-  const defaults = type === 'jira' ? {
+  const defaults = type === 'gitea' ? {
+    url: 'http://127.0.0.1:3000', username: 'robos-tester', repos: ['acme-org/petstore-api', 'acme-org/petstore-web', 'acme-org/petstore-common'], workflow_states: ['backlog', 'in_planning', 'in_review', 'executing', 'deployed'], issue_types: ['Epic', 'Story', 'Bug', 'Task']
+  } : type === 'jira' ? {
     url: '', username: '', projects: [], workflow_states: [], issue_types: []
   } : type === 'github' ? {
     gh_api_url: '', use_gh_cli: true, repos: [], gh_labels: [], workflow_states: [], issue_types: []

@@ -1,0 +1,13 @@
+{
+  "name": "robos-mcp-lib",
+  "version": "0.1.0",
+  "description": "Shared Model Context Protocol (MCP) Server Framework for RobOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

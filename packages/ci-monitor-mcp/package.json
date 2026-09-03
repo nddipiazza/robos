@@ -1,0 +1,13 @@
+{
+  "name": "ci-monitor-mcp",
+  "version": "0.1.0",
+  "description": "CI/CD Monitor Model Context Protocol (MCP) Server for RobOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

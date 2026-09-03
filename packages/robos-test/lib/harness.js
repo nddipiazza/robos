@@ -61,7 +61,34 @@ const PORT_MAP = {
   'task-implementer': 19135,
   'skills-manager': 19139,
   'ai-prompt': 19140,
+  'robos-desktop': 19141,
   'robos-onboarding': 19142,
+  'robos-cli': 19143,
+  'robos-profiled': 19144,
+  'robos-agentd': 19145,
+  'agent-sidebar': 19146,
+  'desktop-agents': 19147,
+  'robos-agent-session': 19148,
+  'robos-mcp-lib': 19149,
+  'mcp-manager': 19150,
+  'robos-mcp-router': 19151,
+  'task-manager-mcp': 19152,
+  'workspace-manager-mcp': 19153,
+  'ekgraph-mcp': 19154,
+  'ci-monitor-mcp': 19155,
+  'ide-bridge-mcp': 19156,
+  'intellij-idea': 19157,
+  'system-mcp': 19158,
+  'agent-autoconfig': 19159,
+  'dev-tools-mcp': 19160,
+  'robos-graph': 19161,
+  'topology-manager': 19162,
+  'people-manager': 19163,
+  'schema-studio': 19164,
+  'contract-studio': 19165,
+  'package-manager': 19166,
+  'adapter-studio': 19167,
+  'gitea-browser': 19175,
 };
 
 // Track all launched apps for process-exit cleanup
@@ -218,21 +245,31 @@ async function launchApp(appId, scenarioConfig) {
   const sandboxHome = path.join(RUN_DIR, `test-${appId}-${Date.now()}`);
   setupHome(sandboxHome, scenarioConfig);
 
+  const display = process.env.ROBOS_DISPLAY || process.env.XVFB_DISPLAY || (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1' ? ':99' : (process.env.DISPLAY || ':99'));
   const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'];
-  const display = process.env.DISPLAY || ':0';
+
+  const useRealBinaries = scenarioConfig.useRealBinaries || process.env.ROBOS_REAL_BINARIES === '1';
+  const pathEnv = useRealBinaries ? process.env.PATH : `${SANDBOX_BIN}:${process.env.PATH}`;
 
   const proc = spawn(electronBin, electronArgs, {
     env: {
       ...process.env,
       HOME: sandboxHome,
-      PATH: `${SANDBOX_BIN}:${process.env.PATH}`,
+      PATH: pathEnv,
       ROBOS_SCENARIO: scenarioConfig.name || 'test',
+      ROBOS_REAL_BINARIES: useRealBinaries ? '1' : '0',
+      ROBOS_HEADLESS: process.env.ROBOS_DEMO_SHOW ? '0' : '1',
+      ROBOS_TEST_MODE: process.env.ROBOS_DEMO_SHOW ? '0' : '1',
+      ROBOS_DM_SOCKET: `/tmp/robos-dm-${Date.now()}-${Math.floor(Math.random() * 1000)}.sock`,
       DISPLAY: display,
       GH_CONFIG_DIR: path.join(sandboxHome, '.config', 'gh'),
       GIT_CONFIG_GLOBAL: path.join(sandboxHome, '.gitconfig'),
       ROBOS_LIB_PATH: path.join(PACKAGES_DIR, 'robos-lib'),
       GNUPGHOME: path.join(sandboxHome, '.gnupg'),
       PASSWORD_STORE_DIR: path.join(sandboxHome, '.password-store'),
+      REAL_HOME: process.env.HOME || '/home/ndipiazza',
+      ROBOS_HOST_HOME: process.env.HOME || '/home/ndipiazza',
+      ...(scenarioConfig.env || {}),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

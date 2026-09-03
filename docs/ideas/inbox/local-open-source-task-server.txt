@@ -1,0 +1,5 @@
+create a local task server (open source one with no licensing restrictions, e.g., MIT/Apache-2.0 compliant) and add support to it from RobOS Task Servers:
+- Built-in zero-config local task server that runs completely on-device without cloud subscriptions or external network requirements
+- Permissive open-source foundation / embedded SQLite engine exposing REST & MCP APIs
+- First-class provider in RobOS Task Servers and robos-task-client alongside Jira, GitHub, and Linear
+- Offline task management, sprint planning, ticket lifecycles, and AI agent dispatching

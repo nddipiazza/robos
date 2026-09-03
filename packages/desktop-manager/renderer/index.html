@@ -6,57 +6,594 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
   <title>RobOS Desktop Manager</title>
   <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-card: #161b22;
+      --bg-input: #090d12;
+      --border: #30363d;
+      --accent: #00bcd4;
+      --accent-dim: rgba(0, 188, 212, 0.15);
+      --accent-glow: rgba(0, 188, 212, 0.35);
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0d1117;
+      background: var(--bg-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #c9d1d9;
+      color: var(--text-main);
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
+      user-select: none;
     }
+
+    /* Header */
     #header {
-      padding: 12px 16px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .title-group h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-group .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .header-right {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    #header .title { font-size: 15px; font-weight: 600; color: #e6edf3; }
-    #header .sub { font-size: 12px; color: #8b949e; margin-left: auto; }
-    #app-list { padding: 8px; flex: 1; overflow-y: auto; }
-    .app-item {
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      color: var(--success);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Navigation Bar */
+    #nav-tabs {
+      display: flex;
+      background: #11161d;
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(0, 188, 212, 0.06);
+    }
+    .tab-count {
+      background: var(--border);
+      color: var(--text-muted);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .tab-btn.active .tab-count {
+      background: var(--accent);
+      color: #0d1117;
+    }
+
+    /* Content Panes */
+    #main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: var(--bg-primary);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; animation: fadeIn 0.15s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* App Registry Tab */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-dim);
+    }
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+    }
+    .chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover, .chip.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .app-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 14px;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.1s;
+      transition: all 0.15s;
     }
-    .app-item:hover { background: #21262d; }
+    .app-card:hover {
+      border-color: #484f58;
+      background: #1c2129;
+      transform: translateY(-1px);
+    }
     .app-icon {
-      font-size: 20px;
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
+      width: 38px;
+      height: 38px;
       background: #21262d;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      border: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
       flex-shrink: 0;
     }
-    .app-info { flex: 1; min-width: 0; }
-    .app-name { font-size: 13px; font-weight: 500; color: #e6edf3; }
-    .app-desc { font-size: 11px; color: #8b949e; margin-top: 1px; }
-    .app-arrow { color: #484f58; font-size: 12px; }
+    .app-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .app-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .app-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .app-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background: #33c9dc;
+      border-color: #33c9dc;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.4);
+      color: var(--danger);
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* Socket Console Tab */
+    .socket-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .console-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .console-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #7ee787;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .event-log {
+      background: #090d12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .log-item {
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #161b22;
+      border-left: 3px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      animation: fadeIn 0.15s ease;
+    }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    .log-body {
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Notifications Tab */
+    .notif-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .notif-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .notif-card.unread {
+      border-left: 3px solid var(--accent);
+      background: rgba(0, 188, 212, 0.04);
+    }
+    .notif-badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* Watchdog Tab */
+    .watchdog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .watchdog-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .watchdog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      display: inline-block;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #30363d;
+      transition: .2s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(16px);
+      background-color: #0d1117;
+    }
+
+    /* Demo target highlights & click ripples */
+    .demo-highlight {
+      outline: 2px solid var(--accent) !important;
+      box-shadow: 0 0 16px var(--accent-glow) !important;
+    }
+    .click-feedback {
+      animation: clickEffect 0.3s ease-out;
+    }
+    @keyframes clickEffect {
+      0% { transform: scale(0.96); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
-  <div id="header">
-    <span class="title">RobOS Desktop Manager</span>
-    <span class="sub">System Tray &amp; IPC Hub</span>
-  </div>
-  <div id="app-list"></div>
+
+  <header id="header">
+    <div class="header-left">
+      <div class="logo-badge">R</div>
+      <div class="title-group">
+        <h1>RobOS Desktop Manager</h1>
+        <div class="sub" id="socket-path-display">Socket: Initializing...</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="daemon-status-text">IPC Hub Active</span>
+      </div>
+    </div>
+  </header>
+
+  <nav id="nav-tabs">
+    <button class="tab-btn active" id="tab-btn-apps" data-tab="tab-apps">
+      <span>📦 Apps &amp; Services</span>
+      <span class="tab-count" id="apps-count">0</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-socket" data-tab="tab-socket">
+      <span>⚡ Socket IPC Console</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-notif" data-tab="tab-notif">
+      <span>🔔 Notifications</span>
+      <span class="tab-count" id="notif-count">0</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-watchdog" data-tab="tab-watchdog">
+      <span>🛡️ Watchdog Supervisor</span>
+      <span class="tab-count" id="watchdog-count">0</span>
+    </button>
+  </nav>
+
+  <main id="main-content">
+    <!-- 1. Apps Tab -->
+    <section class="tab-pane active" id="tab-apps">
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" class="search-input" id="app-search" placeholder="Search applications, services, or tools (e.g., Task Servers, Pass Manager)...">
+        </div>
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="System">System</button>
+          <button class="chip" data-filter="Dev">Dev</button>
+          <button class="chip" data-filter="Security">Security</button>
+        </div>
+      </div>
+      <div class="app-grid" id="app-grid"></div>
+    </section>
+
+    <!-- 2. Socket Console Tab -->
+    <section class="tab-pane" id="tab-socket">
+      <div class="socket-layout">
+        <div class="card">
+          <div class="card-title">
+            <span>⚡ Interactive Socket Request Dispatcher</span>
+            <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">Unix Domain Socket IPC</span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn btn-primary" id="btn-ping-socket">⚡ Ping Socket</button>
+            <button class="btn" id="btn-query-apps">📋 Query App Registry</button>
+            <button class="btn" id="btn-query-status">📊 Query Process Status</button>
+            <button class="btn" id="btn-send-test-notif">🔔 Dispatch Test Notification</button>
+          </div>
+          <div class="console-input-row">
+            <input type="text" class="console-input" id="custom-socket-input" value='{"ping": true}'>
+            <button class="btn btn-primary" id="btn-send-custom-socket">Send Request</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📜 Live Socket Event Stream</span>
+            <button class="btn" id="btn-clear-logs" style="padding: 2px 8px; font-size:10px;">Clear Stream</button>
+          </div>
+          <div class="event-log" id="socket-event-log">
+            <div class="log-item">
+              <div class="log-header">
+                <span>[SYSTEM READY]</span>
+                <span>0.0ms</span>
+              </div>
+              <div class="log-body">Connected to Unix domain socket hub. Awaiting IPC commands.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Notifications Tab -->
+    <section class="tab-pane" id="tab-notif">
+      <div class="card">
+        <div class="card-title">
+          <span>🔔 System Notification Stream</span>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" id="btn-emit-urgent-notif">+ Emit Urgent Toast</button>
+            <button class="btn btn-danger" id="btn-clear-all-notif">Clear All</button>
+          </div>
+        </div>
+        <div class="notif-list" id="notif-container"></div>
+      </div>
+    </section>
+
+    <!-- 4. Watchdog Tab -->
+    <section class="tab-pane" id="tab-watchdog">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">
+          <span>🛡️ Keep-Alive Daemon Supervision Grid</span>
+          <span style="font-size:11px; color:var(--text-muted);">Policy: Automatic crash recovery &amp; restart</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          The Desktop Manager watchdog continuously monitors critical background daemons. If a keep-alive process terminates unexpectedly, it is revived within 2500ms.
+        </p>
+        <div class="watchdog-grid" id="watchdog-grid"></div>
+      </div>
+    </section>
+  </main>
+
   <script src="app.js"></script>
 </body>
 </html>

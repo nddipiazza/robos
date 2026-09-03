@@ -1,0 +1,6 @@
+{
+  "name": "intellij-idea",
+  "version": "2026.1.0",
+  "description": "IntelliJ IDEA Ultimate with RobOS IPC Bridge",
+  "main": "main.js"
+}

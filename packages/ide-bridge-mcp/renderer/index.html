@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS IDE Bridge MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">💻</div>
+        <div>
+          <h1>IDE Bridge MCP Server Console</h1>
+          <div class="subtitle">JetBrains Port 63343 IPC Automation, Breakpoint Injection & Debug Sessions</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-open-file">📄 Open HelloWorld.java</button>
+        <button class="btn btn-secondary" id="btn-set-bp">🔴 Set Breakpoint (Line 6)</button>
+        <button class="btn btn-primary" id="btn-run-debug">▶ Start Debug Session</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-ide-name">IntelliJ IDEA Ultimate (Port 63343)</div>
+        <div class="stat-label">Connected IDE Instance</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-open-files">2 Files Open</div>
+        <div class="stat-label">Active Editor Tabs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">6 MCP Tools</div>
+        <div class="stat-label">Exposed Protocol Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-breakpoints">1 Active</div>
+        <div class="stat-label">Reproduction Breakpoints</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="ide-layout">
+        <!-- Open Files List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Open Editor Tabs (robos_ide_get_open_files)</span>
+          </div>
+          <div class="panel-body" id="files-list"></div>
+        </div>
+
+        <!-- Run Configurations List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Run / Debug Configurations (robos_ide_run_config)</span>
+          </div>
+          <div class="panel-body" id="configs-list"></div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live IDE Bridge MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Initializing IDE Bridge...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

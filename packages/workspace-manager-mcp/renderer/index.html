@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Workspace Manager MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🗂️</div>
+        <div>
+          <h1>Workspace Manager MCP Server Console</h1>
+          <div class="subtitle">Multi-Repo Git Worktrees, Dev Server Orchestrator & IDE Bridge</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-open-ide">💻 Open IDE Bridge</button>
+        <button class="btn btn-primary" id="btn-create-ws">+ Provision Task Worktree</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total-ws">2</div>
+        <div class="stat-label">Provisioned Workspaces</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-ws">robos-core</div>
+        <div class="stat-label">Active Workspace</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">6</div>
+        <div class="stat-label">Exposed MCP Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-devserver">Port 3000 (Live)</div>
+        <div class="stat-label">Dev Server Status</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Workspaces Grid -->
+      <div class="section-title">Discovered & Active Git Workspaces</div>
+      <div class="ws-grid" id="ws-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live Workspace MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Workspace MCP tool dispatches will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

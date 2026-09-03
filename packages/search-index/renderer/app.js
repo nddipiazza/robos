@@ -186,4 +186,24 @@ function timeAgo(iso) {
   return days + 'd ago';
 }
 
+window.searchQuery = async function(query) {
+  const input = document.getElementById('search-input');
+  if (input) input.value = query;
+  await doSearch(query);
+};
+
+window.selectIndex = function(id) {
+  selectedId = id;
+  renderList();
+  showDetail(id);
+};
+
+window.rebuildCurrent = async function() {
+  if (selectedId) await doRebuild(selectedId);
+};
+
+window.rebuildAll = async function() {
+  await doRebuildAll();
+};
+
 load();

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS App, Package & Runtime Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with GitOps Branch Switcher -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📦</div>
+        <div>
+          <h1>App, Package & Runtime Manager</h1>
+          <div class="subtitle">Development Containers (.devcontainer) &middot; Mise Runtimes &middot; .robos/packages.yaml</div>
+        </div>
+      </div>
+
+      <!-- GitOps Branch Selector -->
+      <div class="gitops-branch-wrap">
+        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+          <option value="main">🌿 main (Production / GitOps HEAD)</option>
+          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+        </select>
+        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-rebuild-all" onclick="window.rebuildAll()">🔄 Rebuild Devcontainers</button>
+        <button class="btn btn-primary" id="btn-start-all" onclick="window.startAll()">⚡ Start All Services</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-packages-count">4 Packages & Daemons</div>
+        <div class="stat-label">Registered in .robos/packages.yaml</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-spec">Devcontainer Specification</div>
+        <div class="stat-label">Environment Standard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-running-status" style="color: var(--success);">4/4 Services Running</div>
+        <div class="stat-label">Supervised Processes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-health-status" style="color: var(--accent);">100% HEALTHY</div>
+        <div class="stat-label">Live /healthz Probing</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="pkg-grid">
+        <!-- Left: Package Browser -->
+        <section class="panel packages-panel">
+          <div class="panel-header">
+            <span>📁 Apps & Daemons</span>
+            <span class="count-badge" id="packages-count-badge">4 Items</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="pkg-search-input" class="search-input" placeholder="🔍 Search packages & services..." />
+          </div>
+          <div class="packages-tree-body" id="packages-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Runtime Inspector & Process Controls -->
+        <section class="panel inspector-panel">
+          <div class="panel-header">
+            <span>⚙️ Devcontainer Runtime & Process Supervisor</span>
+            <span class="status-tag-pass" id="package-status-badge">🟢 Running (PID 18490)</span>
+          </div>
+          <div class="inspector-body" id="package-workspace">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

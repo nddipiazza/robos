@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS CI Monitor MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🚦</div>
+        <div>
+          <h1>CI Monitor MCP Server Console</h1>
+          <div class="subtitle">Continuous Integration, Test Failure Diagnostics & Deployment Telemetry</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-inspect-failures">🔍 Inspect Failed Tests</button>
+        <button class="btn btn-primary" id="btn-retry-failed">🔄 Retry Failed Pipeline</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total-runs">2</div>
+        <div class="stat-label">Total Pipeline Runs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pass-rate">50%</div>
+        <div class="stat-label">Pipeline Pass Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">6</div>
+        <div class="stat-label">Exposed MCP Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-deployments">2</div>
+        <div class="stat-label">Live Deployments</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="ci-layout">
+        <!-- Runs List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Recent Pipeline Runs (robos_ci_list_runs)</span>
+          </div>
+          <div class="panel-body" id="runs-list"></div>
+        </div>
+
+        <!-- Run Diagnostics View -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Build & Test Logs (robos_ci_get_logs)</span>
+          </div>
+          <div class="panel-body run-logs-body">
+            <pre class="logs-pre" id="run-logs-text">// Click a run to view build and test output...</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live CI MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Dispatched CI tool operations will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

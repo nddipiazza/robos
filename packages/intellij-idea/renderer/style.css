@@ -1,0 +1,229 @@
+:root {
+  --ij-bg: #1e1f22;
+  --ij-header: #2b2d30;
+  --ij-border: #393b40;
+  --ij-gutter: #1e1f22;
+  --ij-line-num: #606366;
+  --ij-active-line: #2e3c43;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+}
+
+body {
+  background-color: var(--ij-bg);
+  color: #c9d1d9;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.intellij-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--ij-bg);
+}
+
+.ij-titlebar {
+  background: var(--ij-header);
+  border-bottom: 1px solid var(--ij-border);
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ij-titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ij-logo {
+  font-size: 16px;
+}
+
+.ij-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dfdfe0;
+}
+
+.ij-port-tag {
+  font-size: 11px;
+  color: #3fb950;
+  font-weight: 600;
+}
+
+.ij-tabbar {
+  background: #25272a;
+  border-bottom: 1px solid var(--ij-border);
+  display: flex;
+  padding: 2px 8px 0 8px;
+  gap: 4px;
+}
+
+.ij-tab {
+  background: transparent;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  cursor: pointer;
+}
+
+.ij-tab.active {
+  background: var(--ij-bg);
+  color: #ffffff;
+  border-top: 2px solid #3574f0;
+}
+
+.ij-tab-close {
+  font-size: 10px;
+  color: #606060;
+}
+
+.ij-editor {
+  flex: 1;
+  display: flex;
+  background: var(--ij-bg);
+  overflow: hidden;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ij-gutter {
+  background: var(--ij-gutter);
+  border-right: 1px solid var(--ij-border);
+  padding: 12px 0;
+  width: 50px;
+  text-align: right;
+  color: var(--ij-line-num);
+}
+
+.ij-line-num {
+  padding-right: 10px;
+  height: 24px;
+  position: relative;
+}
+
+.ij-bp-line {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.ij-bp-dot {
+  position: absolute;
+  left: 6px;
+  font-size: 11px;
+}
+
+.ij-code {
+  flex: 1;
+  padding: 12px 16px;
+  color: #bcbec4;
+  overflow-y: auto;
+}
+
+.ij-code-line {
+  height: 24px;
+  white-space: pre;
+}
+
+.ij-code-line.ij-suspended-line {
+  background: #2e436e;
+  border-left: 3px solid #f2c55c;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.kwd { color: #cf8e6d; font-weight: bold; }
+.cls { color: #56a8f5; font-weight: bold; }
+.fn { color: #56a8f5; }
+.this { color: #94558d; }
+.str { color: #6aab73; }
+.comment { color: #7a7e85; font-style: italic; }
+
+.ij-debugger {
+  height: 180px;
+  background: #18191b;
+  border-top: 1px solid var(--ij-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.ij-debug-header {
+  background: var(--ij-header);
+  border-bottom: 1px solid var(--ij-border);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ij-debug-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.ij-debug-tab {
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.ij-debug-tab.active {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.ij-debug-status {
+  font-size: 11px;
+  color: #f2c55c;
+  font-weight: 600;
+}
+
+.ij-debug-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  padding: 8px 12px;
+  gap: 12px;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.ij-section-title {
+  color: #8b949e;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.ij-frame-item {
+  color: #bcbec4;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.ij-frame-item.active {
+  background: #2a3a4c;
+  color: #ffffff;
+}
+
+.ij-var-item {
+  color: #bcbec4;
+  padding: 2px 0;
+}
+
+.var-name {
+  color: #cf8e6d;
+}

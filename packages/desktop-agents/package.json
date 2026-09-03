@@ -1,0 +1,12 @@
+{
+  "name": "desktop-agents",
+  "version": "0.1.0",
+  "description": "Multi-Agent Desktop Stream Viewer for RobOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

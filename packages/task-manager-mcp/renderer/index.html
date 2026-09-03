@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Task Manager MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📋</div>
+        <div>
+          <h1>Task Manager MCP Server Console</h1>
+          <div class="subtitle">Real-Time Task Operations, Workflow State Machine & MCP Tool Dispatcher</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-advance-active">⏩ Advance Active Workflow</button>
+        <button class="btn btn-primary" id="btn-create-task">+ Create MCP Task</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total-tasks">3</div>
+        <div class="stat-label">Total Backlog Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-tasks">1</div>
+        <div class="stat-label">In-Progress Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">7</div>
+        <div class="stat-label">Exposed MCP Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-last-op">READY</div>
+        <div class="stat-label">Last MCP Operation</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area: Kanban + Protocol Trace -->
+    <main class="main-content">
+      <!-- Kanban Columns -->
+      <div class="kanban-board">
+        <div class="kanban-col" id="col-todo">
+          <div class="col-header">
+            <span>TODO</span>
+            <span class="count-badge" id="count-todo">0</span>
+          </div>
+          <div class="col-body" id="list-todo"></div>
+        </div>
+
+        <div class="kanban-col" id="col-in-progress">
+          <div class="col-header">
+            <span>IN PROGRESS</span>
+            <span class="count-badge" id="count-in-progress">0</span>
+          </div>
+          <div class="col-body" id="list-in-progress"></div>
+        </div>
+
+        <div class="kanban-col" id="col-review">
+          <div class="col-header">
+            <span>REVIEW</span>
+            <span class="count-badge" id="count-review">0</span>
+          </div>
+          <div class="col-body" id="list-review"></div>
+        </div>
+
+        <div class="kanban-col" id="col-done">
+          <div class="col-header">
+            <span>DONE</span>
+            <span class="count-badge" id="count-done">0</span>
+          </div>
+          <div class="col-body" id="list-done"></div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live Task MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Dispatched MCP tool operations will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

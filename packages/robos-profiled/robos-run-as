@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# robos-run-as — execute command inside an ephemeral agent user profile
+#
+# Usage:
+#   robos-run-as --agent <name> [--autoclean] [--role <role>] <command...>
+
+set -euo pipefail
+
+HOME="${HOME:-/home/robos}"
+SOCKET_PATH="$HOME/.config/robos/profiled/profiled.sock"
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-run-as --agent NAME [OPTIONS] COMMAND...
+
+Execute commands inside an ephemeral isolated Linux agent profile with host display bridging.
+
+Options:
+  --agent NAME       Agent identifier (e.g. worker-1, reviewer) (Required)
+  --autoclean        Automatically terminate and purge the profile when the command exits
+  --role ROLE        Agent role if provisioning anew (default: Autonomous Review Agent)
+  --help, -h         Show this help
+
+Examples:
+  robos-run-as --agent worker-1 echo "Hello from agent"
+  robos-run-as --agent tester --autoclean npm test
+  robos-run-as --agent reviewer --autoclean code /home/robos/source/project
+EOF
+  exit 0
+}
+
+AGENT_NAME=""
+AUTOCLEAN=0
+ROLE="Autonomous Review Agent"
+
+if [ $# -eq 0 ]; then
+  show_help
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --agent)
+      AGENT_NAME="$2"
+      shift 2
+      ;;
+    --autoclean)
+      AUTOCLEAN=1
+      shift
+      ;;
+    --role)
+      ROLE="$2"
+      shift 2
+      ;;
+    --help|-h)
+      show_help
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "$AGENT_NAME" ]; then
+  echo "Error: --agent NAME is required" >&2
+  exit 1
+fi
+
+if [ $# -eq 0 ]; then
+  echo "Error: Command to execute is required" >&2
+  exit 1
+fi
+
+COMMAND=("$@")
+
+# 1. Ensure Profile is Provisioned via robos-profile
+"$BIN_DIR/robos-profile" create "$AGENT_NAME" --role "$ROLE" >/dev/null 2>&1 || true
+
+CLEANUP() {
+  if [ "$AUTOCLEAN" -eq 1 ]; then
+    "$BIN_DIR/robos-profile" terminate "$AGENT_NAME" >/dev/null 2>&1 || true
+  fi
+}
+trap CLEANUP EXIT
+
+# 2. Resolve Agent Home & Dotfiles
+USERNAME="my-agent-${AGENT_NAME#my-agent-}"
+HOMES_DIR="$HOME/.config/robos/profiled/homes/$USERNAME"
+if [ ! -d "$HOMES_DIR" ]; then
+  HOMES_DIR="/home/$USERNAME"
+fi
+
+# 3. Execute Command in Subshell with Agent Environment
+(
+  export ROBOS_AGENT=1
+  export ROBOS_AGENT_NAME="$AGENT_NAME"
+  export HOME="$HOMES_DIR"
+  export DISPLAY="${DISPLAY:-:0}"
+  export SSH_AUTH_SOCK="$HOMES_DIR/.ssh-auth-sock"
+  
+  if [ -f "$HOMES_DIR/.bashrc" ]; then
+    # Source bridged environment
+    # shellcheck disable=SC1090
+    source "$HOMES_DIR/.bashrc" 2>/dev/null || true
+  fi
+
+  exec "${COMMAND[@]}"
+)

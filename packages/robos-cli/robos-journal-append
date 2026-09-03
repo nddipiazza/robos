@@ -51,7 +51,7 @@ if [ -z "$TEXT" ]; then
   exit 1
 fi
 
-# Read journal repo dir from settings
+# Read journal repo dir from settings, with fallback to $HOME/.config/robos/journal
 JOURNAL_REPO=$(python3 -c "
 import json, sys, os
 try:
@@ -60,15 +60,16 @@ try:
   if not repo: sys.exit(1)
   repo = repo.replace('https://github.com/','').replace('git@github.com:','').replace('.git','')
   parts = repo.split('/')
-  print(os.path.join(os.path.expanduser('~'), 'source', 'github.com', parts[0], parts[1]))
+  p = os.path.join(os.path.expanduser('~'), 'source', 'github.com', parts[0], parts[1])
+  if os.path.exists(p): print(p); sys.exit(0)
+  sys.exit(1)
 except: sys.exit(1)
-" 2>/dev/null) || { echo "ERROR: Work Journal repo not configured. Open RobOS Work Journal app and configure it first." >&2; exit 1; }
+" 2>/dev/null || echo "$HOME/.config/robos/journal")
 
 JOURNAL_DIR="$JOURNAL_REPO"
-
+mkdir -p "$JOURNAL_DIR"
 if [ ! -d "$JOURNAL_DIR/.git" ]; then
-  echo "ERROR: Journal repo not cloned at $JOURNAL_DIR" >&2
-  exit 1
+  git -C "$JOURNAL_DIR" init --quiet 2>/dev/null || true
 fi
 
 DAILY_DIR="$JOURNAL_DIR/daily"

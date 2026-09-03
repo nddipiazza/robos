@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS System Topology & Backstage C4 Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🌐</div>
+        <div>
+          <h1>System Topology & Catalog Manager</h1>
+          <div class="subtitle">Spotify Backstage &middot; C4 Architecture &middot; .robos/topology.yaml</div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="zoom-btn-group">
+          <button class="zoom-btn" id="btn-zoom-l1" onclick="window.switchZoom('l1')">L1 Context</button>
+          <button class="zoom-btn active" id="btn-zoom-l2" onclick="window.switchZoom('l2')">L2 Containers</button>
+          <button class="zoom-btn" id="btn-zoom-l3" onclick="window.switchZoom('l3')">L3 Components</button>
+          <button class="zoom-btn" id="btn-zoom-otel" onclick="window.switchZoom('otel')">⚡ Live OTel</button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-import-backstage" onclick="window.importBackstageCatalog()">📥 Import Backstage</button>
+        <button class="btn btn-primary" id="btn-export-c4" onclick="window.exportC4Diagram()">📐 Export C4</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-system-id">buildbarn-platform</div>
+        <div class="stat-label">System Architecture ID</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-nodes-count">5 System Nodes</div>
+        <div class="stat-label">Deployable Containers & DBs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-c4-level">C4 Level 2 (Containers)</div>
+        <div class="stat-label">Active Architecture View</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-schema-status" style="color: var(--success);">100% CONFORMING</div>
+        <div class="stat-label">.robos/topology.yaml</div>
+      </div>
+    </div>
+
+    <!-- Main 3-Column Workspace -->
+    <main class="main-content">
+      <div class="topology-grid">
+        <!-- Left: Backstage Software Catalog Tree -->
+        <section class="panel catalog-panel">
+          <div class="panel-header">
+            <span>📦 Backstage Catalog</span>
+            <span class="count-badge" id="catalog-count-badge">5 Entities</span>
+          </div>
+          <div class="catalog-search-wrap">
+            <input type="text" id="catalog-search-input" class="search-input" placeholder="🔍 Search catalog..." />
+          </div>
+          <div class="catalog-tree-body" id="catalog-tree">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Center: Interactive Topological Canvas -->
+        <section class="panel canvas-panel">
+          <div class="panel-header">
+            <span>🗺️ Interactive Topological Architecture Canvas</span>
+            <span class="status-tag-pass" id="canvas-status-badge">🟢 LIVE GRAPH</span>
+          </div>
+          <div class="canvas-container" id="topology-canvas">
+            <!-- Node cards and C4 links rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Node & Contract Inspector -->
+        <section class="panel inspector-panel">
+          <div class="panel-header">
+            <span>📋 Node & Contract Inspector</span>
+            <span class="type-badge type-service" id="inspector-type-badge">Microservice</span>
+          </div>
+          <div class="inspector-body" id="node-inspector">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

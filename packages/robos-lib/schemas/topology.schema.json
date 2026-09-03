@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS Topology Schema",
+  "type": "object",
+  "required": ["version", "kind", "system", "nodes", "links"],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.0"] },
+    "kind": { "type": "string", "enum": ["Topology"] },
+    "system": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["frontend", "service", "database", "broker", "gateway", "worker"] },
+          "technology": { "type": "string" },
+          "repo": { "type": "string" },
+          "contracts": { "type": "array", "items": { "type": "string" } },
+          "entities": { "type": "array", "items": { "type": "string" } },
+          "ownerTeam": { "type": "string" }
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "protocol"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "protocol": { "type": "string" },
+          "contract": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+use gitea support in e2e tests
+- Hermetic, offline git forge for E2E container tests and local dev
+- Spin up ephemeral or containerized Gitea instance to test git cloning, push/pull, branch creation, webhooks, PR lifecycles, and issue synchronization
+- Validate Git Projects, Issue Manager, and Git Login Manager against a live Git forge without hitting GitHub rate limits or needing network access in sandboxed E2E runs
+- Seed test organizations, repositories, issues, pull requests, and OAuth applications automatically

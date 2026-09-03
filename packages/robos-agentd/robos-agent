@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# robos-agent — CLI tool for managing RobOS Sub-Agent accounts
+#
+# Usage:
+#   robos-agent spawn <task-id> [--role <role>] [--memory <mb>]
+#   robos-agent list
+#   robos-agent inspect <task-id>
+#   robos-agent kill <task-id>
+#   robos-agent logs <task-id>
+
+set -euo pipefail
+
+HOME="${HOME:-/home/robos}"
+SOCKET_PATH="$HOME/.config/robos/agentd/agentd.sock"
+
+send_sock_cmd() {
+  local json="$1"
+  if [ ! -S "$SOCKET_PATH" ]; then
+    echo "Error: robos-agentd socket not active at $SOCKET_PATH" >&2
+    return 1
+  fi
+  python3 -c "
+import socket, sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect('$SOCKET_PATH')
+s.sendall('''$json'''.encode('utf-8') + b'\n')
+data = s.recv(65536)
+s.close()
+print(data.decode('utf-8'))
+"
+}
+
+show_help() {
+  cat <<'EOF'
+Usage: robos-agent COMMAND [ARGS...]
+
+Commands:
+  spawn <task-id> [--role ROLE] [--memory MB]   Provision a new sub-agent Linux user account
+  list                                          List all active and terminated sub-agent sessions
+  inspect <task-id>                             Inspect telemetry and cgroup details for an agent
+  kill <task-id>                                Terminate sub-agent, archive logs, and clean home
+  logs <task-id>                                View stdout/stderr logs for a sub-agent session
+  help, -h                                      Show this help
+EOF
+  exit 0
+}
+
+if [ $# -eq 0 ]; then
+  show_help
+fi
+
+CMD="$1"
+shift
+
+case "$CMD" in
+  spawn)
+    if [ $# -lt 1 ]; then
+      echo "Error: task-id required. Usage: robos-agent spawn <task-id>" >&2
+      exit 1
+    fi
+    TASK_ID="$1"
+    shift
+    ROLE="Autonomous Developer Agent"
+    MEMORY="2048"
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --role)
+          ROLE="$2"
+          shift 2
+          ;;
+        --memory)
+          MEMORY="$2"
+          shift 2
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
+
+    PAYLOAD="{\"command\":\"spawn\",\"taskId\":\"$TASK_ID\",\"options\":{\"role\":\"$ROLE\",\"memoryMb\":$MEMORY}}"
+    send_sock_cmd "$PAYLOAD"
+    ;;
+
+  list)
+    PAYLOAD="{\"command\":\"list\"}"
+    send_sock_cmd "$PAYLOAD"
+    ;;
+
+  inspect)
+    if [ $# -lt 1 ]; then
+      echo "Error: task-id required. Usage: robos-agent inspect <task-id>" >&2
+      exit 1
+    fi
+    PAYLOAD="{\"command\":\"inspect\",\"taskId\":\"$1\"}"
+    send_sock_cmd "$PAYLOAD"
+    ;;
+
+  kill)
+    if [ $# -lt 1 ]; then
+      echo "Error: task-id required. Usage: robos-agent kill <task-id>" >&2
+      exit 1
+    fi
+    PAYLOAD="{\"command\":\"terminate\",\"taskId\":\"$1\"}"
+    send_sock_cmd "$PAYLOAD"
+    ;;
+
+  logs)
+    if [ $# -lt 1 ]; then
+      echo "Error: task-id required. Usage: robos-agent logs <task-id>" >&2
+      exit 1
+    fi
+    PAYLOAD="{\"command\":\"inspect\",\"taskId\":\"$1\"}"
+    send_sock_cmd "$PAYLOAD" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    if data.get('ok') and 'agent' in data:
+        for log in data['agent'].get('logs', []):
+            print(log)
+    else:
+        print(data)
+except Exception as e:
+    print('Failed to parse logs:', e)
+"
+    ;;
+
+  help|-h|--help)
+    show_help
+    ;;
+
+  *)
+    echo "Unknown command: $CMD" >&2
+    exit 1
+    ;;
+esac

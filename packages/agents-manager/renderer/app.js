@@ -1,5 +1,7 @@
 'use strict';
 
+window.agents = window.agents || (window.parent && window.parent.agents);
+
 let providers = [];
 let activeProviderId = null;
 let selectedProviderId = null;

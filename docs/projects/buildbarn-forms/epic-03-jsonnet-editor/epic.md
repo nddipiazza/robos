@@ -2,13 +2,13 @@
 nav_exclude: true
 ---
 
-# Epic 03: Jsonnet Editor
+# Jsonnet Editor
 
 **Status:** Complete (v0.2.6)
 **Priority:** High
 **Repository:** `Hermetiq/buildbarn-forms`
 **Package:** `@hermetiq/buildbarn-forms`
-**Dependencies:** Epic 01 (forms-proto), Epic 02 (core library)
+**Dependencies:** forms-proto, core library
 
 The `JsonnetEditor` component provides a Monaco-based two-panel Jsonnet editing experience: the left panel is a full Monaco code editor with custom Jsonnet syntax highlighting; the right panel is a live preview that evaluates the Jsonnet as you type and displays the result as formatted JSON. A third tab in the preview panel shows the `TreeView` navigation over the evaluated JSON structure.
 

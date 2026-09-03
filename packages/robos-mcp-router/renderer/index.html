@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Unified MCP Router Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🔀</div>
+        <div>
+          <h1>RobOS Unified MCP Router Console</h1>
+          <div class="subtitle">AI Agent Single Endpoint Multiplexer & Protocol Gateway</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-claude-config">⚙️ Claude Config</button>
+        <button class="btn btn-primary" id="btn-dispatch-test">⚡ Test Task Manager Route</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-servers">2</div>
+        <div class="stat-label">Multiplexed Servers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">3</div>
+        <div class="stat-label">Aggregated Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-resources">2</div>
+        <div class="stat-label">Aggregated Resources</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-endpoint">stdio &bull; HTTP</div>
+        <div class="stat-label">Transport Modes</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="router-columns">
+        <!-- Tools Column -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Aggregated Tools (tools/list)</span>
+          </div>
+          <div class="panel-body" id="tools-list"></div>
+        </div>
+
+        <!-- Resources Column -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Aggregated Resources (resources/list)</span>
+          </div>
+          <div class="panel-body" id="resources-list"></div>
+        </div>
+      </div>
+
+      <!-- Live Routing Dispatch Stream -->
+      <div class="dispatch-box">
+        <div class="dispatch-header">
+          <span>Live Router Dispatch & Execution Log</span>
+          <button class="btn-clear" id="btn-clear-log">Clear Log</button>
+        </div>
+        <pre class="dispatch-log" id="dispatch-log">// Multiplexer ready. Dispatched calls will trace here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

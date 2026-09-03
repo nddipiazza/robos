@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Entity Schema Studio & Code Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with GitOps Branch Selector -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📐</div>
+        <div>
+          <h1>Entity Schema Studio & Code Generator</h1>
+          <div class="subtitle">Microsoft TypeSpec &middot; Buf Protobuf &middot; JSON Schema 2020-12 &middot; .robos/entities/</div>
+        </div>
+      </div>
+
+      <!-- GitOps Branch Selector -->
+      <div class="gitops-branch-wrap">
+        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+          <option value="main">🌿 main (Production / GitOps HEAD)</option>
+          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+        </select>
+        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-detect-breaking" onclick="window.detectBreakingChanges()">🛡️ Detect Breaking Changes</button>
+        <button class="btn btn-primary" id="btn-compile-targets" onclick="window.compileAllTargets()">⚡ Compile All Targets</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-entities-count">2 Domain Models</div>
+        <div class="stat-label">Registered Schemas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-format">Microsoft TypeSpec</div>
+        <div class="stat-label">Schema Standard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-targets-count">6 Multi-Lang Targets</div>
+        <div class="stat-label">TS &middot; Java &middot; Py &middot; Go &middot; Prisma</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-conformance" style="color: var(--success);">100% VALID</div>
+        <div class="stat-label">0 Drift Violations</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="schema-grid">
+        <!-- Left Sidebar: Entity Schemas Tree -->
+        <section class="panel schemas-panel">
+          <div class="panel-header">
+            <span>📂 Entity Schemas</span>
+            <span class="count-badge" id="schemas-count-badge">2 Models</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="schema-search-input" class="search-input" placeholder="🔍 Search domain schemas..." />
+          </div>
+          <div class="schemas-tree-body" id="schemas-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right Workspace: Schema Editor & Compiled Target Generators -->
+        <section class="panel editor-panel">
+          <div class="panel-header">
+            <span>📝 Schema Authoring & Cross-Compilation Inspector</span>
+            <span class="status-tag-pass" id="compiler-status-badge">⚡ TypeSpec 0.61 Compiler Online</span>
+          </div>
+          <div class="editor-body" id="schema-workspace">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

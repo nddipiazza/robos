@@ -128,7 +128,7 @@ Or manually:
 3. Add a debug port to `packages/robos-lib/snapshot-cli.js`
 4. Add the `.desktop` file to `/usr/share/applications/` on the VM
 
-See [CLAUDE.md](CLAUDE.md) for the full app registration checklist.
+See [AGENTS.md](AGENTS.md) for the full app registration checklist.
 
 ### Icon style
 

@@ -7,11 +7,11 @@ let _filterDate = '';
 let _searchQuery = '';
 
 const CATEGORY_ICONS = {
-  pr_review: '\uD83D\uDD0D',
-  ci_cd:     '\u2699\uFE0F',
-  task:      '\uD83D\uDCCB',
-  agent:     '\uD83E\uDD16',
-  system:    '\uD83D\uDD14',
+  pr_review: '🔍',
+  ci_cd:     '⚙️',
+  task:      '📋',
+  agent:     '🤖',
+  system:    '🔔',
 };
 
 const TIER_COLORS = {
@@ -27,14 +27,14 @@ function fmt(ts) {
     const now = new Date();
     const diff = (now - d) / 1000;
     if (diff < 60)  return 'just now';
-    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-    return d.toLocaleDateString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   } catch { return ts; }
 }
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function matchesDateFilter(ts) {
@@ -99,7 +99,7 @@ function renderList() {
     const readClass = n.read ? 'read' : 'unread';
     const tierColor = TIER_COLORS[tier] || TIER_COLORS.info;
     const source = n.source || 'system';
-    const markReadBtn = n.read ? '' : '<button class="notif-act-btn" onclick="markRead(\'' + n.id + '\')">Mark Read</button>';
+    const markReadBtn = n.read ? '' : '<button class="notif-act-btn btn-mark-read" onclick="markRead(\'' + n.id + '\')">Mark Read</button>';
     return '<div class="notif-card ' + readClass + '" style="border-left-color: ' + tierColor + '" id="nc-' + n.id + '">' +
       '<div class="notif-icon">' + icon + '</div>' +
       '<div class="notif-body">' +
@@ -116,7 +116,7 @@ function renderList() {
       '</div>' +
       '<div class="notif-actions">' +
         markReadBtn +
-        '<button class="notif-act-btn danger" onclick="deleteNotif(\'' + n.id + '\')">Delete</button>' +
+        '<button class="notif-act-btn danger btn-delete-notif" onclick="deleteNotif(\'' + n.id + '\')">Delete</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -127,18 +127,18 @@ async function load() {
   renderList();
 }
 
-async function markRead(id) {
+window.markRead = async function(id) {
   await window.notifs.markRead(id);
   const n = _all.find(x => x.id === id);
   if (n) n.read = true;
   renderList();
-}
+};
 
-async function deleteNotif(id) {
+window.deleteNotif = async function(id) {
   await window.notifs.deleteNotification(id);
   _all = _all.filter(x => x.id !== id);
   renderList();
-}
+};
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
@@ -174,10 +174,36 @@ document.getElementById('filter-date').addEventListener('change', e => {
   renderList();
 });
 
-// Search
-document.getElementById('search-input').addEventListener('input', e => {
-  _searchQuery = e.target.value.trim();
+// Search & Filter programmatic helpers
+window.setSearch = function(val) {
+  _searchQuery = (val || '').trim();
+  const el = document.getElementById('search-input');
+  if (el) el.value = val || '';
   renderList();
+};
+
+window.setCategoryFilter = function(cat, checked) {
+  if (checked) _selectedCategories.add(cat);
+  else _selectedCategories.delete(cat);
+  const el = document.getElementById('filter-' + cat);
+  if (el) el.checked = !!checked;
+  renderList();
+};
+
+window.setTierFilter = function(tier, checked) {
+  if (checked) _selectedTiers.add(tier);
+  else _selectedTiers.delete(tier);
+  const el = document.getElementById('filter-tier-' + tier);
+  if (el) el.checked = !!checked;
+  renderList();
+};
+
+// Search event listeners
+['input', 'change'].forEach(evt => {
+  document.getElementById('search-input').addEventListener(evt, function(e) {
+    _searchQuery = (this.value || (e.target && e.target.value) || '').trim();
+    renderList();
+  });
 });
 
 // Bulk actions
@@ -194,7 +220,6 @@ document.getElementById('btn-clear-read').addEventListener('click', async () => 
 });
 
 document.getElementById('btn-clear-all').addEventListener('click', async () => {
-  if (!confirm('Delete all notifications?')) return;
   await window.notifs.clearAll();
   _all = [];
   renderList();
@@ -220,9 +245,13 @@ document.getElementById('btn-save-prefs').addEventListener('click', async () => 
     dnd: document.getElementById('pref-dnd').checked,
   };
   await window.notifs.savePrefs(prefs);
-  alert('Preferences saved.');
+  const msg = document.getElementById('pref-status-msg');
+  if (msg) {
+    msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  }
 });
 
 load();
 loadPrefs();
-setInterval(load, 10000);
+setInterval(load, 5000);

@@ -19,4 +19,12 @@ contextBridge.exposeInMainWorld('robos', {
   saveProject:     (p)       => ipcRenderer.invoke('save-project', p),
   deleteProject:   (id)      => ipcRenderer.invoke('delete-project', id),
   dialogConfirm:   (p)       => ipcRenderer.invoke('dialog-confirm', p),
+
+  // Story 31.08 DAG & Planning Mode
+  getTaskGraph:     ()       => ipcRenderer.invoke('dag-get-task-graph'),
+  dispatchPlanning: (id)     => ipcRenderer.invoke('dag-dispatch-planning', id),
+  grillTurn:        (p)      => ipcRenderer.invoke('dag-grill-turn', p),
+  approvePlan:      (id)     => ipcRenderer.invoke('dag-approve-plan', id),
+  switchBranch:     (b)      => ipcRenderer.invoke('dag-switch-branch', b),
+  minimize:         ()       => ipcRenderer.invoke('minimize-window'),
 });

@@ -33,10 +33,14 @@ let loginProc = null;
 let pollTimer = null;
 let lastOverallOk = null;
 
-const CHECK_INTERVAL_MS = 60_000;
+const CHECK_INTERVAL_MS = 300_000; // 5 minutes
 const SSH_DIR  = path.join(os.homedir(), '.ssh');
 const KEY_FILES = ['id_ed25519', 'id_ecdsa', 'id_rsa'];
 
+let lastSshCheckOk = null;
+let lastSshCheckTime = 0;
+
+// ── debug server ─────────────────────────────────────────────────────────────
 // Debug server (optional) — checks env override, local dev path, then VM install path
 var _debugServer = null;
 try {
@@ -119,18 +123,24 @@ function checkSshKey() {
   };
 }
 
-function checkSshConnection() {
+function checkSshConnection(force = false) {
   if (!checkSshKey().ok) {
     return { ok: false, label: 'SSH → github.com', detail: 'No key — generate one first', skipped: true };
   }
-  // GitHub SSH always exits with code 1 even on success, so we can't use run().
-  // Capture both stdout+stderr from the error object instead.
+  // Cache successful SSH check for 10 minutes to avoid constant network connection attempts
+  if (!force && lastSshCheckOk && (Date.now() - lastSshCheckTime < 600000)) {
+    return { ok: true, label: 'SSH → github.com', detail: 'Connected ✓' };
+  }
   try {
     execSync('ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com', { timeout: 12_000 });
+    lastSshCheckTime = Date.now();
+    lastSshCheckOk = true;
     return { ok: true, label: 'SSH → github.com', detail: 'Connected ✓' };
   } catch (e) {
     const out = [e.stderr, e.stdout].map(b => b ? b.toString() : '').join('').trim();
     const ok  = out.includes('successfully authenticated');
+    lastSshCheckTime = Date.now();
+    lastSshCheckOk = ok;
     return { ok, label: 'SSH → github.com', detail: ok ? 'Connected ✓' : (out || 'Connection failed — key not on GitHub?') };
   }
 }
@@ -172,10 +182,10 @@ function checkGitConfig() {
   };
 }
 
-function runAllChecks() {
+function runAllChecks(force = false) {
   const ghAuth  = checkGhAuth();
   const sshKey  = checkSshKey();
-  const sshConn = checkSshConnection();
+  const sshConn = checkSshConnection(force);
   const gitCfg  = checkGitConfig();
   const overallOk = ghAuth.ok && sshKey.ok && sshConn.ok && gitCfg.ok;
   return { overallOk, checks: { ghAuth, sshKey, sshConn, gitCfg } };
@@ -185,7 +195,17 @@ function runAllChecks() {
 
 const REPO_CACHE_FILE = path.join(os.homedir(), '.config', 'robos', 'gh-repos-cache.json');
 
-function fetchAndCacheRepos() {
+function fetchAndCacheRepos(force = false) {
+  // Only fetch if cache doesn't exist, is older than 1 hour (3600s), or force=true
+  try {
+    if (!force && fs.existsSync(REPO_CACHE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(REPO_CACHE_FILE, 'utf8'));
+      if (data.fetchedAt && (Date.now() - data.fetchedAt < 3600000)) {
+        return; // Cache is still fresh
+      }
+    }
+  } catch {}
+
   // Run in background — don't block startup
   setImmediate(() => {
     try {
@@ -232,8 +252,8 @@ function fetchAndCacheRepos() {
 
 // ── poller ────────────────────────────────────────────────────────────────────
 
-function poll() {
-  const result = runAllChecks();
+function poll(force = false) {
+  const result = runAllChecks(force);
   if (win && !win.isDestroyed()) win.webContents.send('check-results', result);
   // Pop window on first detection of any failure, UNLESS onboarding is still in progress
   const onboardingPending = onboardingState && !onboardingState.isOnboardingCompleted();
@@ -241,8 +261,8 @@ function poll() {
     showWindow();
   }
   lastOverallOk = result.overallOk;
-  // Refresh repo cache whenever credentials are healthy
-  if (result.overallOk) fetchAndCacheRepos();
+  // Refresh repo cache whenever credentials are healthy (throttled inside fetchAndCacheRepos)
+  if (result.overallOk) fetchAndCacheRepos(force);
   return result;
 }
 
@@ -254,7 +274,7 @@ function startPoller() {
 // ── IPC ────────────────────────────────────────────────────────────────────────────────
 
 ipcMain.handle("get-results",  () => runAllChecks());
-ipcMain.handle("force-check",  () => poll());
+ipcMain.handle("force-check",  () => poll(true));
 ipcMain.handle("hide-window",  () => { if (win && !win.isDestroyed()) win.hide(); return { ok: true }; });
 ipcMain.handle("open-url",     (_, url) => { shell.openExternal(url); return { ok: true }; });
 

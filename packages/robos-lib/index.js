@@ -113,6 +113,7 @@ function displayName(name) {
 }
 
 const onboardingState = require('./onboarding-state');
+const { GitOpsSDLCParser } = require('./gitops-parser');
 
 module.exports = {
   CATEGORIES,
@@ -121,6 +122,8 @@ module.exports = {
   loadRobOSApps,
   groupByCategory,
   displayName,
+  GitOpsSDLCParser,
   ...onboardingState,
 };
+
 

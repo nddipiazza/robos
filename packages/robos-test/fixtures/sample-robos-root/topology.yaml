@@ -1,0 +1,41 @@
+version: "1.0"
+kind: Topology
+system:
+  id: acme-petshop
+  name: Acme Petshop Platform
+  description: Enterprise distributed e-commerce pet store & clinic management platform
+nodes:
+  - id: petstore-web
+    name: React Web Portal
+    type: service
+    tier: frontend
+    runtime: node20
+    repo: packages/petstore-web
+  - id: petstore-api
+    name: Java Spring Boot REST API
+    type: service
+    tier: backend
+    runtime: java21
+    repo: services/petstore-api
+  - id: petstore-common
+    name: Reusable TypeSpec & Pact Library
+    type: library
+    tier: shared
+    repo: libs/petstore-common
+  - id: petstore-db
+    name: PostgreSQL 16 Database
+    type: database
+    tier: storage
+links:
+  - from: petstore-web
+    to: petstore-api
+    protocol: HTTPS/JSON (OpenAPI 3.1)
+  - from: petstore-api
+    to: petstore-db
+    protocol: TCP/SQL (JDBC)
+  - from: petstore-web
+    to: petstore-common
+    protocol: npm package (@acme/petstore-common)
+  - from: petstore-api
+    to: petstore-common
+    protocol: Maven DTO jar

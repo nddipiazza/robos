@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS Open-Source Ecosystem Adapter Suite</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header with GitOps Branch Selector -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🔌</div>
+        <div>
+          <h1>Open-Source Ecosystem Adapter Suite ("Reinvent Nothing")</h1>
+          <div class="subtitle">Backstage &middot; TypeSpec &middot; Buf Protobuf &middot; Pact Foundation &middot; Devcontainers &middot; GitOps Sync</div>
+        </div>
+      </div>
+
+      <!-- GitOps Branch Selector -->
+      <div class="gitops-branch-wrap">
+        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+          <option value="main">🌿 main (Production / GitOps HEAD)</option>
+          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+        </select>
+        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-export-backstage" onclick="window.exportBackstage()">📤 Export Backstage YAML</button>
+        <button class="btn btn-primary" id="btn-sync-all" onclick="window.syncAllAdapters()">⚡ Run Adapter Suite (All 5 OSS Standards)</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-adapters-count">5 OSS Adapters Active</div>
+        <div class="stat-label">Bi-Directional Translation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-adapter">Backstage (14 Entities)</div>
+        <div class="stat-label">Active Adapter Focus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-roundtrip" style="color: var(--success);">100% Lossless Roundtrip</div>
+        <div class="stat-label">Semantic Fidelity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pact-score" style="color: var(--accent);">14/14 Pact Matrix Pass</div>
+        <div class="stat-label">Contract Governance</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="adapter-grid">
+        <!-- Left: Open-Source Standards List -->
+        <section class="panel adapter-nav-panel">
+          <div class="panel-header">
+            <span>🌐 Open-Source Standards</span>
+            <span class="count-badge" id="adapter-count-badge">5 Adapters</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="adapter-search-input" class="search-input" placeholder="🔍 Search adapters..." />
+          </div>
+          <div class="adapter-list-body" id="adapters-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Bi-Directional Adapter Bridge Studio -->
+        <section class="panel translation-panel">
+          <div class="panel-header">
+            <span>🔄 Bi-Directional Zero-Loss Translation Bridge</span>
+            <span class="status-tag-pass" id="adapter-status-badge">🟢 Synchronized</span>
+          </div>
+          <div class="translation-body" id="adapter-workspace">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -100,7 +100,13 @@ async function showLog(tool) {
   logOutput.scrollTop = logOutput.scrollHeight;
 }
 
+function getRobosApi() {
+  return window.robos || (window.parent && window.parent.robos);
+}
+
 async function doInstall(toolId, action) {
+  const api = getRobosApi();
+  if (!api) return;
   const tool = tools.find(t => t.id === toolId);
   if (!tool) return;
   tool.installing = true;
@@ -112,29 +118,40 @@ async function doInstall(toolId, action) {
   activeLogTool = toolId;
 
   if (action === 'uninstall') {
-    await window.robos.uninstallTool(toolId);
+    await api.uninstallTool(toolId);
   } else {
-    await window.robos.installTool(toolId);
+    await api.installTool(toolId);
   }
 }
 
-window.robos.onInstallProgress(({ toolId, text, done, success, action }) => {
-  if (activeLogTool === toolId) {
-    logOutput.textContent += text;
-    logOutput.scrollTop = logOutput.scrollHeight;
+function initSoftwareCenter() {
+  const api = getRobosApi();
+  if (!api || !api.getTools) {
+    setTimeout(initSoftwareCenter, 100);
+    return;
   }
-  if (done) {
-    window.robos.getTools().then(t => {
-      tools = t;
-      renderCategoryBar();
-      renderTools();
+
+  if (api.onInstallProgress) {
+    api.onInstallProgress(({ toolId, text, done, success, action }) => {
+      if (activeLogTool === toolId) {
+        logOutput.textContent += text;
+        logOutput.scrollTop = logOutput.scrollHeight;
+      }
+      if (done) {
+        api.getTools().then(t => {
+          tools = t;
+          renderCategoryBar();
+          renderTools();
+        });
+      }
     });
   }
-});
 
-// Initial load
-window.robos.getTools().then(t => {
-  tools = t;
-  renderCategoryBar();
-  renderTools();
-});
+  api.getTools().then(t => {
+    tools = t;
+    renderCategoryBar();
+    renderTools();
+  });
+}
+
+initSoftwareCenter();

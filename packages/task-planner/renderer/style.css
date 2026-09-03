@@ -37,10 +37,10 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 
 /* Preview header */
 .preview-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
-.preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.preview-header-left { display: flex; align-items: center; gap: 8px; }
-.preview-header h2 { font-size: 15px; font-weight: 600; }
-.preview-actions { display: flex; gap: 8px; }
+.preview-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.preview-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.preview-header h2 { font-size: 15px; font-weight: 600; margin: 0; }
+.preview-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 /* Epic count badge */
 .epic-count-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; background: #a78bfa22; color: #a78bfa; border: 1px solid #a78bfa44; font-size: 11px; font-weight: 600; }
@@ -50,11 +50,12 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .task-card { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; padding: 14px; position: relative; }
 .task-card.task-epic { border-color: #a78bfa55; background: #a78bfa0a; }
 .task-card.task-child { margin-left: 24px; border-left: 3px solid #30363d; }
-.task-card-header { display: flex; align-items: flex-start; gap: 8px; }
-.task-card-header .task-num { color: var(--text-muted); font-size: 12px; padding-top: 2px; flex-shrink: 0; }
-.tree-indent { color: var(--text-muted); font-size: 14px; padding-top: 1px; flex-shrink: 0; user-select: none; }
+.task-card-header { display: flex; align-items: center; gap: 8px; }
+.task-card-header .task-num { color: var(--text-muted); font-size: 12px; flex-shrink: 0; }
+.tree-indent { color: var(--text-muted); font-size: 14px; flex-shrink: 0; user-select: none; }
 .task-title-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text); font-size: 14px; font-weight: 600; outline: none; padding-bottom: 2px; transition: border-color .2s; }
 .task-title-input:focus { border-bottom-color: var(--accent); }
+.task-actions-area { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 8px; }
 .task-body-input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: var(--text-muted); font-size: 13px; resize: vertical; outline: none; margin-top: 8px; min-height: 80px; font-family: inherit; padding: 8px; box-sizing: border-box; }
 .task-body-preview { margin-top: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; line-height: 1.6; }
 .task-body-preview:hover { border-color: #30363d; background: rgba(255,255,255,0.03); }
@@ -73,8 +74,8 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .label-chip:hover { background: #ef444422; color: var(--red); border-color: #ef444444; }
 .add-label-btn { background: none; border: 1px dashed var(--border); color: var(--text-muted); border-radius: 12px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
 .add-label-btn:hover { border-color: var(--accent); color: var(--accent); }
-.task-remove-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
-.task-remove-btn:hover { color: var(--red); background: #ef444411; }
+.task-remove-btn { background: none; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 3px 6px; border-radius: 4px; transition: all .12s; }
+.task-remove-btn:hover { color: var(--red); background: #ef444415; border-color: #ef444444; }
 
 /* Issue type badges */
 .issue-type-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
@@ -284,25 +285,32 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 /* ── Project inline new-form ──────────────────────────────────────────────── */
 .project-new-form {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  background: var(--bg-card);
+  border-radius: 6px;
+  margin: 4px 6px 8px 6px;
 }
 .project-name-input {
-  flex: 1;
+  width: 100%;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text);
   font-size: 12px;
-  padding: 4px 8px;
+  line-height: 1.4;
+  padding: 6px 8px;
   outline: none;
-  min-width: 0;
+  min-height: 48px;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 .project-name-input:focus { border-color: var(--accent); }
-.project-new-actions { display: flex; gap: 2px; }
+.project-new-actions { display: flex; justify-content: flex-end; gap: 4px; }
 .btn-icon-ok { color: var(--green) !important; border-color: #22c55e44 !important; }
 .btn-icon-ok:hover { background: #22c55e15 !important; }
 
@@ -345,3 +353,331 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 }
 .label-input-ok:hover { color: var(--green); border-color: #22c55e55; }
 .label-input-cancel:hover { color: var(--red); border-color: #ef444455; }
+
+/* ── Interactive AI Dialogue Thread ───────────────────────────────────────── */
+.ai-dialogue-thread {
+  margin-top: 14px;
+  background: var(--bg-darker, #06090e);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialogue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Form-Based AI Architecture Clarification Cards ──────────────────────── */
+.ai-questions-card {
+  background: var(--bg-card2, #161b22);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.questions-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.questions-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.questions-icon {
+  font-size: 15px;
+}
+
+.questions-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-bright, #f0f6fc);
+}
+
+.questions-badge {
+  font-size: 10px;
+  background: rgba(0, 188, 212, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.question-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.question-prompt-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.question-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.option-tile:hover {
+  border-color: rgba(0, 188, 212, 0.5);
+  background: rgba(0, 188, 212, 0.04);
+}
+
+.option-tile.selected {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.12);
+}
+
+.option-tile input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.option-tile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-tile-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-bright, #f0f6fc);
+}
+
+.option-tile-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.question-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+/* ── Project Knowledge Graph Metadata Card ───────────────────────────────── */
+.project-metadata-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.project-meta-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-meta-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-meta-title-row h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-bright, #f0f6fc);
+  margin: 0;
+}
+
+.kgraph-badge {
+  font-size: 11px;
+  font-family: monospace;
+  background: rgba(167, 139, 250, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status-badge {
+  font-size: 10px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.project-features-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.feature-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.feature-tab.active {
+  background: rgba(0, 188, 212, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+}
+
+.feature-tab-add {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.feature-tab-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.project-meta-body {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.meta-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 8px;
+}
+.meta-input:focus { border-color: var(--accent); }
+
+.repo-tags-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.repo-tags-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.repo-tag {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #e6edf3;
+  font-family: monospace;
+}
+
+.repo-tag-input {
+  background: var(--bg-primary);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 11px;
+  padding: 3px 8px;
+  min-width: 180px;
+}
+.repo-tag-input:focus {
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.prompt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+robos-ai-textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+}
+
+.empty-plan-placeholder {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin-top: 10px;
+}

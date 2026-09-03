@@ -1,0 +1,22 @@
+version: "1.0"
+kind: ProjectConfig
+projects:
+  - id: acme-petshop
+    name: Acme Petshop Platform
+    description: Polyglot multi-repo pet store & veterinary clinic application
+    repos:
+      - id: petstore-api
+        name: Java Spring Boot API
+        path: services/petstore-api
+        branch: main
+        devServer: http://localhost:8080
+      - id: petstore-web
+        name: React Web Client
+        path: packages/petstore-web
+        branch: main
+        devServer: http://localhost:5173
+      - id: petstore-common
+        name: Reusable TypeSpec & Pact Library
+        path: libs/petstore-common
+        branch: main
+        devServer: N/A (Schema Library)

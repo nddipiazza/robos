@@ -41,14 +41,24 @@ try {
   }
 } catch {}
 
-// Ensure only one Desktop Manager tray ever exists
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); process.exit(0); }
+// Ensure only one Desktop Manager tray ever exists (except during test runs)
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) { app.quit(); process.exit(0); }
+}
 
-const SOCKET_PATH  = `/run/user/${process.getuid()}/robos-dm.sock`;
-const APP_BASE     = '/usr/local/share/robos';
-const NOTIF_FILE   = path.join(process.env.HOME, '.config', 'robos', 'notifications.json');
-const DESKTOPS_DIR = path.join(process.env.HOME, '.config', 'robos', 'desktops');
+function getSocketPath() {
+  if (process.env.ROBOS_DM_SOCKET) return process.env.ROBOS_DM_SOCKET;
+  const runtimeDir = process.env.XDG_RUNTIME_DIR || (process.getuid ? `/run/user/${process.getuid()}` : '/run/user/1000');
+  if (fs.existsSync(runtimeDir)) return path.join(runtimeDir, 'robos-dm.sock');
+  const uid = process.getuid ? process.getuid() : 1000;
+  return `/tmp/robos-dm-${uid}.sock`;
+}
+
+const SOCKET_PATH  = getSocketPath();
+const APP_BASE     = process.env.ROBOS_APP_BASE || '/usr/local/share/robos';
+const NOTIF_FILE   = path.join(process.env.HOME || '/tmp', '.config', 'robos', 'notifications.json');
+const DESKTOPS_DIR = path.join(process.env.HOME || '/tmp', '.config', 'robos', 'desktops');
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -163,25 +173,32 @@ function launchApp(appId) {
   const cfg = APP_BINS[appId];
   if (!cfg) return { error: `unknown app: ${appId}` };
 
+  const childEnv = { ...process.env };
+  if (!childEnv.DISPLAY) childEnv.DISPLAY = ':0';
+  if (!childEnv.WAYLAND_DISPLAY && fs.existsSync('/run/user/1000/wayland-0')) {
+    childEnv.WAYLAND_DISPLAY = 'wayland-0';
+  }
+  if (!childEnv.XDG_RUNTIME_DIR) {
+    childEnv.XDG_RUNTIME_DIR = '/run/user/1000';
+  }
+  if (!childEnv.XAUTHORITY) {
+    try {
+      const glob = fs.readdirSync('/run/user/1000/').find(f => f.startsWith('.mutter-Xwaylandauth'));
+      if (glob) childEnv.XAUTHORITY = `/run/user/1000/${glob}`;
+    } catch {}
+  }
+
   if (running[appId]) {
     try {
       process.kill(running[appId], 0);
-      if (cfg.keepAlive) {
-        const probe = spawn(cfg.bin, cfg.args, { detached: true, stdio: 'ignore', env: process.env });
-        probe.unref();
-      } else {
-        try {
-          spawn('bash', ['-c',
-            `DISPLAY=:0 wmctrl -l -p | awk '$3=="${running[appId]}"{print $1}' | head -1 | xargs -r wmctrl -i -a`
-          ], { detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: ':0' } }).unref();
-        } catch {}
-      }
+      const probe = spawn(cfg.bin, cfg.args, { detached: true, stdio: 'ignore', env: childEnv });
+      probe.unref();
       return { ok: true, pid: running[appId], alreadyRunning: true };
     }
     catch { delete running[appId]; }
   }
 
-  const child = spawn(cfg.bin, cfg.args, { detached: true, stdio: 'ignore', env: process.env });
+  const child = spawn(cfg.bin, cfg.args, { detached: true, stdio: 'ignore', env: childEnv });
   child.unref();
   running[appId] = child.pid;
   console.log(`[dm] launched ${appId} pid=${child.pid}`);
@@ -269,9 +286,12 @@ function getUnreadCount() {
 }
 
 function rebuildMenu() {
+  if (!tray) return;
   const unread = getUnreadCount();
-  tray.setToolTip(unread > 0 ? `RobOS — ${unread} unread notification${unread === 1 ? '' : 's'}` : 'RobOS');
-  updateTrayIcon(unread);
+  try {
+    tray.setToolTip(unread > 0 ? `RobOS — ${unread} unread notification${unread === 1 ? '' : 's'}` : 'RobOS');
+    updateTrayIcon(unread);
+  } catch {}
 }
 
 function watchNotifications() {
@@ -287,14 +307,17 @@ function watchNotifications() {
 let passLockLastState = null;
 
 function isGpgCacheActive() {
-  try {
-    const { execSync } = require('child_process');
-    const out = execSync('gpg-connect-agent "keyinfo --list" /bye 2>/dev/null', { encoding: 'utf8', timeout: 8000 });
-    return out.split('\n').some(l => {
-      const parts = l.trim().split(/\s+/);
-      return parts[0] === 'S' && parts[1] === 'KEYINFO' && parts[6] === '1';
+  return new Promise((resolve) => {
+    const { exec } = require('child_process');
+    exec('gpg-connect-agent "keyinfo --list" /bye 2>/dev/null', { timeout: 8000 }, (err, stdout) => {
+      if (err || !stdout) return resolve(false);
+      const active = stdout.split('\n').some(l => {
+        const parts = l.trim().split(/\s+/);
+        return parts[0] === 'S' && parts[1] === 'KEYINFO' && parts[6] === '1';
+      });
+      resolve(active);
     });
-  } catch { return false; }
+  });
 }
 
 function passLockNotificationPending() {
@@ -332,9 +355,10 @@ function dismissPassLockedNotification() {
   } catch {}
 }
 
-function checkPassLockTransition() {
+async function checkPassLockTransition() {
   if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
-  const locked = !isGpgCacheActive();
+  const active = await isGpgCacheActive();
+  const locked = !active;
   if (passLockLastState === false && locked && !passLockNotificationPending()) {
     firePassLockedNotification();
   }
@@ -345,19 +369,21 @@ function checkPassLockTransition() {
 }
 
 function startPassLockMonitor() {
-  setTimeout(() => {
+  setTimeout(async () => {
     if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
-    const locked = !isGpgCacheActive();
+    const active = await isGpgCacheActive();
+    const locked = !active;
     passLockLastState = locked;
     if (locked && !passLockNotificationPending()) {
-      setTimeout(() => {
+      setTimeout(async () => {
         if (onboardingState && !onboardingState.isOnboardingCompleted()) return;
-        if (!isGpgCacheActive() && !passLockNotificationPending()) {
+        const recheckActive = await isGpgCacheActive();
+        if (!recheckActive && !passLockNotificationPending()) {
           firePassLockedNotification();
         }
       }, 15000);
     }
-    setInterval(checkPassLockTransition, 5000);
+    setInterval(checkPassLockTransition, 15000);
   }, 15000);
 }
 
@@ -369,20 +395,24 @@ let statusWin = null;
 app.whenReady().then(() => {
   app.setName('RobOS');
 
-  const iconPath = path.join(__dirname, 'tray-icon.png');
-  const icon = fs.existsSync(iconPath)
-    ? nativeImage.createFromPath(iconPath)
-    : nativeImage.createFromDataURL(makeTrayIconDataURL());
+  try {
+    const iconPath = path.join(__dirname, 'tray-icon.png');
+    const icon = fs.existsSync(iconPath)
+      ? nativeImage.createFromPath(iconPath)
+      : nativeImage.createFromDataURL(makeTrayIconDataURL());
 
-  tray = new Tray(icon);
-  tray.on('click',        () => launchApp('notifications'));
-  tray.on('right-click',  () => launchApp('notifications'));
-  tray.on('double-click', () => launchApp('notifications'));
+    tray = new Tray(icon);
+    tray.on('click',        () => launchApp('notifications'));
+    tray.on('right-click',  () => launchApp('notifications'));
+    tray.on('double-click', () => launchApp('notifications'));
+  } catch (err) {
+    console.warn('[dm] Warning: Tray could not be initialized:', err.message);
+  }
 
-  // Create a hidden status window for debug server
+  // Create status window for debug server & testing
   statusWin = new BrowserWindow({
-    width: 640, height: 480,
-    show: false,
+    width: 900, height: 620,
+    show: process.env.ROBOS_DEMO_SHOW === '1' || process.env.ROBOS_TEST === '1',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -416,11 +446,67 @@ app.whenReady().then(() => {
 app.on('window-all-closed', (e) => e.preventDefault());
 
 ipcMain.handle('get-apps', () => APPS);
-ipcMain.handle('launch-app', (_, appId) => {
-  return launchApp(appId);
-});
+ipcMain.handle('launch-app', (_, appId) => launchApp(appId));
 ipcMain.handle('kill-app', (_, appId) => killApp(appId));
 ipcMain.handle('get-status', () => getStatus());
+ipcMain.handle('get-socket-path', () => SOCKET_PATH);
+
+ipcMain.handle('send-socket-message', async (_, payload) => {
+  return new Promise((resolve) => {
+    try {
+      const client = net.createConnection(SOCKET_PATH, () => {
+        client.write(JSON.stringify(payload));
+        client.end();
+      });
+      let raw = '';
+      client.on('data', chunk => { raw += chunk; });
+      client.on('end', () => {
+        try { resolve(JSON.parse(raw)); } catch { resolve({ result: raw }); }
+      });
+      client.on('error', (err) => resolve({ error: err.message }));
+    } catch (e) {
+      resolve({ error: e.message });
+    }
+  });
+});
+
+ipcMain.handle('get-notifications', () => {
+  try {
+    return fs.existsSync(NOTIF_FILE) ? JSON.parse(fs.readFileSync(NOTIF_FILE, 'utf8')) : [];
+  } catch { return []; }
+});
+
+ipcMain.handle('send-notification', (_, payload) => {
+  return handleNotify(payload);
+});
+
+ipcMain.handle('clear-notifications', () => {
+  try {
+    fs.writeFileSync(NOTIF_FILE, '[]');
+    rebuildMenu();
+    return { ok: true };
+  } catch (e) { return { error: e.message }; }
+});
+
+ipcMain.handle('get-keepalive-state', () => {
+  const keepAliveApps = Object.entries(APP_BINS)
+    .filter(([_, cfg]) => cfg.keepAlive)
+    .map(([id]) => id);
+  return {
+    keepAliveApps,
+    paused: Array.from(pausedKeepAlive),
+    running: getStatus(),
+  };
+});
+
+ipcMain.handle('toggle-keepalive', (_, appId, paused) => {
+  if (paused) {
+    pausedKeepAlive.add(appId);
+  } else {
+    pausedKeepAlive.delete(appId);
+  }
+  return { ok: true, appId, paused: pausedKeepAlive.has(appId) };
+});
 
 ipcMain.handle('get-onboarding-status', () => {
   return onboardingState ? onboardingState.getOnboardingState() : { completed: false };
@@ -433,7 +519,11 @@ ipcMain.handle('complete-onboarding', (_, details) => {
 // ── Unix socket server ──────────────────────────────────────────────────────
 
 function startSocketServer() {
-  if (fs.existsSync(SOCKET_PATH)) fs.unlinkSync(SOCKET_PATH);
+  const dir = path.dirname(SOCKET_PATH);
+  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+  if (fs.existsSync(SOCKET_PATH)) {
+    try { fs.unlinkSync(SOCKET_PATH); } catch {}
+  }
   const server = net.createServer((sock) => {
     let data = '';
     sock.on('error', (err) => {
@@ -446,7 +536,10 @@ function startSocketServer() {
         if (!data.trim()) { sock.end(); return; }
         const msg = JSON.parse(data.trim());
         let res = null;
-        if (msg.launch)          res = launchApp(msg.launch);
+        if (msg.ping)                 res = { pong: true, time: Date.now() };
+        else if (msg.getApps)         res = { apps: APPS };
+        else if (msg.getUnread)       res = { unread: getUnreadCount() };
+        else if (msg.launch)          res = launchApp(msg.launch);
         else if (msg.kill)            res = killApp(msg.kill);
         else if (msg.notify)          res = handleNotify(msg.notify);
         else if (msg.status)          res = { status: getStatus() };
@@ -465,8 +558,11 @@ function startSocketServer() {
       try { sock.end(); } catch {}
     });
   });
+  server.on('error', (err) => {
+    console.error(`[dm] socket server error: ${err.message}`);
+  });
   server.listen(SOCKET_PATH, () => {
-    fs.chmodSync(SOCKET_PATH, 0o600);
+    try { fs.chmodSync(SOCKET_PATH, 0o600); } catch {}
     console.log(`[dm] socket ready: ${SOCKET_PATH}`);
   });
 }

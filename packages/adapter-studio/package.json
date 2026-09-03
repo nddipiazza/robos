@@ -1,0 +1,12 @@
+{
+  "name": "adapter-studio",
+  "version": "1.0.0",
+  "description": "RobOS Open-Source Ecosystem Adapter Studio (Backstage, TypeSpec, Buf, Pact, Devcontainers)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

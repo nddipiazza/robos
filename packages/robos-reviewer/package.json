@@ -1,0 +1,9 @@
+{
+  "name": "robos-reviewer",
+  "version": "1.0.0",
+  "description": "RobOS Proof-of-Work Review & Narrated Video Walkthrough Engine",
+  "main": "index.js",
+  "keywords": ["robos", "video", "tts", "webvtt", "review"],
+  "author": "RobOS Team",
+  "license": "MIT"
+}

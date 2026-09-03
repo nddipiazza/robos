@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Desktop Agents Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🖥️</div>
+        <div>
+          <h1>RobOS Desktop Agents Viewer</h1>
+          <div class="subtitle">Multi-Session Live Desktop Stream & Human Interactivity Console</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="view-toggle">
+          <button class="btn-toggle active" id="btn-view-grid">Grid View</button>
+          <button class="btn-toggle" id="btn-view-single">Single Stream</button>
+        </div>
+        <button class="btn btn-control" id="btn-manual-control">🎮 Take Manual Control</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-streams">3</div>
+        <div class="stat-label">Active Desktop Streams</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-framerate">60 FPS</div>
+        <div class="stat-label">Stream Framerate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-latency">&lt; 15 ms</div>
+        <div class="stat-label">Input Latency</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-control-status">Observing</div>
+        <div class="stat-label">Interactivity Mode</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Grid View -->
+      <div id="view-grid-container" class="grid-container">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Focused Single Stream View -->
+      <div id="view-single-container" class="single-stream-container hidden">
+        <div class="single-stream-header">
+          <div class="stream-info">
+            <span class="stream-user" id="focused-user">agent-task-101</span>
+            <span class="stream-role" id="focused-role">Senior Code Reviewer</span>
+            <span class="stream-display" id="focused-display">:10</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-back-grid">✕ Exit Focus</button>
+        </div>
+        <div class="stream-canvas-wrapper">
+          <canvas id="focused-canvas" width="880" height="495"></canvas>
+          <div class="control-banner hidden" id="control-banner">
+            ⚡ LIVE DEVELOPER CONTROL ACTIVE &mdash; Keyboard and Mouse Forwarding Enabled
+          </div>
+          <!-- Proof of Work Verification Overlay -->
+          <div class="pow-overlay-bar" id="pow-overlay-bar">
+            <div class="pow-overlay-text">
+              <strong>🤖 Proof of Work Verification Ready:</strong> Automated tests passed (42/42). PR generated.
+            </div>
+            <div class="pow-overlay-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-pow-reject">Request Refinements</button>
+              <button class="btn btn-primary btn-sm" id="btn-pow-approve" style="background:#238636;">✓ Approve Proof & Create PR</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

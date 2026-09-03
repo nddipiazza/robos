@@ -153,14 +153,20 @@ async function doInitPass() {
   const status = document.getElementById('pass-status');
 
   const res = await window.api.initPass({ gpgId: selectedGpgId });
-  btn.disabled = false; btn.textContent = 'Initialize Pass Store';
+  btn.disabled = false;
 
   if (res.ok) {
+    btn.textContent = '✓ Pass Store Initialized';
+    btn.className = 'btn-secondary';
     status.className = 'status-block ok';
-    status.textContent = '✓ Pass store initialized successfully.';
-    goStep(4);
-    await refreshSshStep();
+    status.textContent = '✓ Pass store initialized successfully. Step complete!';
+    setTimeout(() => {
+      goStep(4);
+      refreshSshStep();
+    }, 600);
   } else {
+    btn.textContent = 'Initialize Pass Store';
+    btn.className = 'btn-primary';
     status.className = 'status-block warn';
     status.textContent = 'Error: ' + (res.error || 'Failed to initialize pass store.');
   }

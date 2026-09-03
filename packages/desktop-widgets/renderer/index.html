@@ -7,22 +7,73 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="widgets">
-    <div class="widget" id="widget-active-task">
-      <div class="widget-header">Active Task</div>
-      <div class="widget-body" id="active-task-content">No active task</div>
+  <div id="container">
+    <header id="header">
+      <div class="header-left">
+        <div class="header-badge">📊</div>
+        <div>
+          <h1>RobOS Desktop Widgets</h1>
+          <div class="sub">System Resource, SDLC Task & AI Agent Overlays</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="action-btn" id="btn-refresh-data">⚡ Refresh Data</button>
+      </div>
+    </header>
+
+    <div id="toolbar">
+      <span class="toolbar-label">Widget Toggles:</span>
+      <div class="toggle-chips" id="toggle-chips"></div>
     </div>
 
-    <div class="widget" id="widget-system-stats">
-      <div class="widget-header">System</div>
-      <div class="widget-body" id="system-stats-content">Loading...</div>
-    </div>
+    <main id="widgets" class="widget-grid">
+      <!-- Active Task Widget -->
+      <div class="widget" id="widget-active-task">
+        <div class="widget-header">
+          <span>📋 Active Task</span>
+          <span class="widget-badge active" id="task-badge">In Progress</span>
+        </div>
+        <div class="widget-body" id="active-task-content">No active task</div>
+      </div>
 
-    <div class="widget" id="widget-journal-summary">
-      <div class="widget-header">Journal Today</div>
-      <div class="widget-body" id="journal-content">No entries today</div>
-    </div>
+      <!-- System Stats Widget -->
+      <div class="widget" id="widget-system-stats">
+        <div class="widget-header">
+          <span>⚡ System Resources</span>
+          <span class="widget-badge live">Live Telemetry</span>
+        </div>
+        <div class="widget-body" id="system-stats-content">Loading...</div>
+      </div>
+
+      <!-- AI Agent & Quota Widget -->
+      <div class="widget" id="widget-ai-agent">
+        <div class="widget-header">
+          <span>🤖 AI Agent & Quota</span>
+          <span class="widget-badge ai">Claude 3.7</span>
+        </div>
+        <div class="widget-body" id="ai-agent-content">Loading...</div>
+      </div>
+
+      <!-- Work Journal Widget -->
+      <div class="widget" id="widget-journal-summary">
+        <div class="widget-header">
+          <span>📓 Work Journal & Knowledge Graph</span>
+          <span class="widget-badge git" id="journal-branch">main</span>
+        </div>
+        <div class="widget-body" id="journal-content">Loading...</div>
+      </div>
+
+      <!-- Security Status Widget -->
+      <div class="widget" id="widget-security-status">
+        <div class="widget-header">
+          <span>🔐 Security & Pass</span>
+          <span class="widget-badge sec" id="sec-badge">Encrypted</span>
+        </div>
+        <div class="widget-body" id="security-content">Loading...</div>
+      </div>
+    </main>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>

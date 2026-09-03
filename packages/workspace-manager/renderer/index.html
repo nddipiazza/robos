@@ -2,48 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RobOS Workspace Manager</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="toolbar">
-    <span class="app-title">RobOS Workspace Manager</span>
-    <input id="search-input" class="search-input" type="text" placeholder="Filter workspaces..." spellcheck="false"/>
-    <select id="filter-type" class="filter-select">
-      <option value="">All types</option>
-      <option value="vscode">VS Code / Cursor</option>
-      <option value="idea">JetBrains</option>
-    </select>
-    <span id="ws-count" class="ws-count"></span>
-    <button id="btn-scan" class="tb-btn primary">Scan</button>
-    <button id="btn-scan-opts" class="tb-btn" title="Scan options">Settings</button>
-  </div>
-
-  <!-- Scan options bar (collapsed by default) -->
-  <div id="scan-opts-bar" class="scan-opts-bar hidden">
-    <label class="scan-opts-label">Scan roots (one per line):</label>
-    <textarea id="scan-roots" class="scan-roots-input" rows="3" spellcheck="false"></textarea>
-    <button id="btn-apply-roots" class="tb-btn">Apply &amp; Scan</button>
-  </div>
-
-  <div class="body-layout">
-    <!-- Workspace list -->
-    <div class="ws-list-panel">
-      <div id="ws-list" class="ws-list">
-        <div class="empty-state">
-          <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg></div>
-          <div>Click <strong>Scan</strong> to find workspaces</div>
+  <div class="app-container">
+    <!-- Top Header Toolbar with GitOps Branch Selector -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🗂️</div>
+        <div>
+          <h1>Multi-Repo Project Workspace Orchestrator</h1>
+          <div class="subtitle">Git Worktrees &middot; Multi-Root IDE Bridge &middot; .robos/projects.yaml</div>
         </div>
       </div>
-    </div>
 
-    <!-- Detail panel -->
-    <div id="detail-panel" class="detail-panel">
-      <div class="detail-empty">
-        <div class="detail-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg></div>
-        <div class="detail-empty-text">Select a workspace</div>
+      <!-- GitOps Branch Selector -->
+      <div class="gitops-branch-wrap">
+        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+          <option value="main">🌿 main (Production / GitOps HEAD)</option>
+          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+        </select>
+        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-teardown-ws" onclick="window.teardownWorkspace()">🗑️ Teardown Workspace</button>
+        <button class="btn btn-secondary" id="btn-open-ide" onclick="window.openInIDE()">💻 Open in IDE</button>
+        <button class="btn btn-primary" id="btn-sync-worktrees" onclick="window.syncWorktrees()">⚡ Sync Worktrees</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-projects-count">1 Multi-Repo Project</div>
+        <div class="stat-label">Defined in .robos/projects.yaml</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-ws">TASK-102-order-sync</div>
+        <div class="stat-label">Active Task Workspace</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-repos-count">3 Repositories Linked</div>
+        <div class="stat-label">Zero-Disk Worktree Links</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-worktree-status" style="color: var(--success);">100% SYNCHRONIZED</div>
+        <div class="stat-label">Coordinated Git Branches</div>
       </div>
     </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="ws-grid">
+        <!-- Left: Multi-Repo Project Graph Tree -->
+        <section class="panel project-panel">
+          <div class="panel-header">
+            <span>🌐 Multi-Repo Projects</span>
+            <span class="count-badge" id="projects-count-badge">1 Project</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="ws-search-input" class="search-input" placeholder="🔍 Search multi-repo projects..." />
+          </div>
+          <div class="projects-tree-body" id="projects-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Active Task Workspace Status & Multi-Root IDE -->
+        <section class="panel workspace-panel">
+          <div class="panel-header">
+            <span>🛠️ Task Worktree Environment & Multi-Root IDE Bridge</span>
+            <span class="status-tag-pass" id="worktree-status-badge">🟢 Active Worktree Session</span>
+          </div>
+          <div class="workspace-body" id="workspace-details">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
 
   <script src="app.js"></script>

@@ -1,0 +1,13 @@
+{
+  "name": "system-mcp",
+  "version": "0.1.0",
+  "description": "RobOS System Telemetry, Preferences, Notifications & File Search MCP Server",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

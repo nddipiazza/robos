@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntelliJ IDEA Ultimate 2026.1 - robos-java-service</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="intellij-window">
+    <!-- IntelliJ Titlebar -->
+    <div class="ij-titlebar">
+      <div class="ij-titlebar-left">
+        <span class="ij-logo">🔷</span>
+        <span class="ij-title">robos-java-service — src/main/java/com/robos/HelloWorld.java [IntelliJ IDEA Ultimate 2026.1]</span>
+      </div>
+      <div class="ij-titlebar-right">
+        <span class="ij-port-tag">🟢 IPC HTTP Listening :63343</span>
+      </div>
+    </div>
+
+    <!-- IntelliJ Tab Bar -->
+    <div class="ij-tabbar">
+      <div class="ij-tab active" id="ij-tab-hello">
+        <span class="ij-tab-icon">☕</span>
+        <span class="ij-tab-title">HelloWorld.java</span>
+        <span class="ij-tab-close">✕</span>
+      </div>
+      <div class="ij-tab" id="ij-tab-pom">
+        <span class="ij-tab-icon">📄</span>
+        <span class="ij-tab-title">pom.xml</span>
+        <span class="ij-tab-close">✕</span>
+      </div>
+    </div>
+
+    <!-- IntelliJ Code Editor -->
+    <div class="ij-editor">
+      <div class="ij-gutter" id="ij-gutter">
+        <div class="ij-line-num">1</div>
+        <div class="ij-line-num">2</div>
+        <div class="ij-line-num">3</div>
+        <div class="ij-line-num">4</div>
+        <div class="ij-line-num">5</div>
+        <div class="ij-line-num ij-bp-line" id="gutter-line-6"><span class="ij-bp-dot" id="bp-dot-6">🔴</span> 6</div>
+        <div class="ij-line-num">7</div>
+        <div class="ij-line-num">8</div>
+        <div class="ij-line-num">9</div>
+      </div>
+      <div class="ij-code" id="ij-code">
+        <div class="ij-code-line"><span class="kwd">package</span> com.robos;</div>
+        <div class="ij-code-line"></div>
+        <div class="ij-code-line"><span class="kwd">public class</span> <span class="cls">HelloWorld</span> {</div>
+        <div class="ij-code-line">  <span class="kwd">public static void</span> <span class="fn">main</span>(<span class="cls">String</span>[] args) {</div>
+        <div class="ij-code-line">    <span class="cls">String</span> greeting = <span class="str">"Hello from RobOS & MCP!"</span>;</div>
+        <div class="ij-code-line ij-suspended-line" id="code-line-6">    <span class="cls">System</span>.out.<span class="fn">println</span>(greeting); <span class="comment">// ⏸️ BREAKPOINT TRIGGERED (Thread: main)</span></div>
+        <div class="ij-code-line">    <span class="cls">System</span>.out.<span class="fn">println</span>(<span class="str">"Execution completed."</span>);</div>
+        <div class="ij-code-line">  }</div>
+        <div class="ij-code-line">}</div>
+      </div>
+    </div>
+
+    <!-- IntelliJ Debug Tool Window -->
+    <div class="ij-debugger" id="ij-debugger">
+      <div class="ij-debug-header">
+        <div class="ij-debug-tabs">
+          <span class="ij-debug-tab active">🐛 Debug: HelloWorld.main()</span>
+          <span class="ij-debug-tab">Console</span>
+        </div>
+        <span class="ij-debug-status" id="ij-debug-status">⏸️ SUSPENDED AT BREAKPOINT: HelloWorld.java:6</span>
+      </div>
+      <div class="ij-debug-body">
+        <div class="ij-frames">
+          <div class="ij-section-title">Frames (Thread: main)</div>
+          <div class="ij-frame-item active">main:6, HelloWorld (com.robos)</div>
+          <div class="ij-frame-item">invoke:12, NativeMethodAccessorImpl</div>
+        </div>
+        <div class="ij-variables">
+          <div class="ij-section-title">Variables & State</div>
+          <div class="ij-var-item"><span class="var-name">greeting</span> = <span class="str">"Hello from RobOS & MCP!"</span></div>
+          <div class="ij-var-item"><span class="var-name">args</span> = {String[0]@824} []</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

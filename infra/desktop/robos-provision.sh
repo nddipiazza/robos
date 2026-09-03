@@ -181,6 +181,52 @@ apt-get install -y -qq libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
   xdg-utils libatspi2.0-0 libdrm2 libgbm1 libasound2
 npm install -g electron@28 --unsafe-perm 2>&1 | tail -3
 
+# Install Google Chrome browser if not already present
+log "Installing Google Chrome..."
+if [ ! -x /opt/google/chrome/chrome ] && [ ! -x /opt/google/chrome/google-chrome ] && [ ! -x /usr/bin/google-chrome-stable ]; then
+  wget -qO /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || true
+  if [ -f /tmp/google-chrome.deb ]; then
+    dpkg -i /tmp/google-chrome.deb || apt-get install -f -y -qq || true
+    rm -f /tmp/google-chrome.deb
+  fi
+fi
+
+# Google Chrome wrapper script for QEMU VM compatibility
+cat << 'CHROMEEOF' > /usr/local/bin/google-chrome
+#!/bin/bash
+REAL_CHROME=""
+for candidate in \
+  "/opt/google/chrome/google-chrome" \
+  "/opt/google/chrome/chrome" \
+  "/usr/bin/google-chrome-stable" \
+  "/usr/bin/google-chrome"; do
+  if [ -x "$candidate" ] && [ "$(realpath "$candidate" 2>/dev/null)" != "$(realpath "$0" 2>/dev/null)" ]; then
+    REAL_CHROME="$candidate"
+    break
+  fi
+done
+
+if [ -z "$REAL_CHROME" ]; then
+  CLEAN_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '^/usr/local/' | tr '\n' ':')
+  FOUND=$(PATH="$CLEAN_PATH" which google-chrome-stable 2>/dev/null || PATH="$CLEAN_PATH" which google-chrome 2>/dev/null || true)
+  if [ -n "$FOUND" ] && [ "$(realpath "$FOUND" 2>/dev/null)" != "$(realpath "$0" 2>/dev/null)" ]; then
+    REAL_CHROME="$FOUND"
+  fi
+fi
+
+if [ -z "$REAL_CHROME" ]; then
+  echo "[RobOS] Error: Google Chrome binary not found." >&2
+  exit 1
+fi
+
+exec "$REAL_CHROME" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"
+CHROMEEOF
+chmod +x /usr/local/bin/google-chrome
+ln -sf /usr/local/bin/google-chrome /usr/local/bin/google-chrome-stable
+if [ -f /usr/share/applications/google-chrome.desktop ]; then
+  sed -i "s|/usr/bin/google-chrome-stable|/usr/local/bin/google-chrome|g" /usr/share/applications/google-chrome.desktop 2>/dev/null || true
+fi
+
 # Ensure node binary and AI CLI native binaries are executable by all users.
 # The copilot CLI bundles a native binary that must be world-executable, and
 # node itself must be executable for the copilot npm-loader to spawn it.
@@ -297,7 +343,7 @@ custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybin
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 name='RobOS App Launcher'
-command='/usr/bin/electron /usr/local/share/robos/app-launcher/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage'
+command='/usr/bin/electron /usr/local/share/robos/app-launcher/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage --ozone-platform=wayland'
 binding='Super_L'
 EOF
 

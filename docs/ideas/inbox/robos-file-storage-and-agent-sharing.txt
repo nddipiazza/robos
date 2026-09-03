@@ -1,0 +1,1 @@
+create a RobOS File Storage app that creates a wrapper around a cloud provider's storage via SDK keys and such. The RobOS People/Groups app via MCP agents have the power to share files/folders to RobOS Users.

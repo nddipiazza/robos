@@ -2,9 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
+const net  = require('net');
 
 // Debug server (optional)
-var _debugServer = null;
+let _debugServer = null;
 try {
   const libPaths = [
     process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
@@ -16,8 +17,11 @@ try {
   }
 } catch {}
 
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); process.exit(0); }
+// Single-instance lock (bypassed in test mode)
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) { app.quit(); process.exit(0); }
+}
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -25,8 +29,10 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let win = null;
 
-const NOTIF_FILE = path.join(os.homedir(), '.config', 'robos', 'notifications.json');
-const PREFS_FILE = path.join(os.homedir(), '.config', 'robos', 'notification-prefs.json');
+const HOME_DIR   = process.env.HOME || os.homedir();
+const CONFIG_DIR = path.join(HOME_DIR, '.config', 'robos');
+const NOTIF_FILE = path.join(CONFIG_DIR, 'notifications.json');
+const PREFS_FILE = path.join(CONFIG_DIR, 'notification-prefs.json');
 
 function loadNotifications() {
   try {
@@ -36,7 +42,7 @@ function loadNotifications() {
 }
 
 function saveNotifications(data) {
-  fs.mkdirSync(path.dirname(NOTIF_FILE), { recursive: true });
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
   fs.writeFileSync(NOTIF_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -44,21 +50,27 @@ function loadPrefs() {
   try {
     if (fs.existsSync(PREFS_FILE)) return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
   } catch {}
-  return { categoryOverrides: {}, quietHours: { enabled: false, start: '22:00', end: '07:00' }, dnd: false };
+  return {
+    categoryOverrides: {},
+    quietHours: { enabled: false, start: '22:00', end: '07:00' },
+    dnd: false,
+  };
 }
 
 function savePrefs(prefs) {
-  fs.mkdirSync(path.dirname(PREFS_FILE), { recursive: true });
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
   fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2), 'utf8');
 }
 
 function createWindow() {
   win = new BrowserWindow({
-    skipTaskbar: true,
-    show: false,
-    width: 900, height: 680, minWidth: 600, minHeight: 400,
     title: 'RobOS Notifications',
+    width: 900,
+    height: 620,
+    minWidth: 600,
+    minHeight: 400,
     backgroundColor: '#0d1117',
+    show: true,
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
@@ -68,13 +80,13 @@ function createWindow() {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
-  win.on('close', () => { app.quit(); });
+
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
+  });
 
   if (_debugServer) _debugServer.startDebugServer(win, 19115);
-
-  if (process.env.ROBOS_DEMO_SHOW === '1') {
-    win.once('ready-to-show', () => { win.show(); win.focus(); });
-  }
 }
 
 function showWindow() {
@@ -85,12 +97,10 @@ function showWindow() {
 }
 
 app.on('second-instance', () => showWindow());
-
 app.setName('notifications');
 app.whenReady().then(createWindow);
 
-
-// ── IPC ─────────────────────────────────────────────────────────────────────
+// ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('get-notifications', () => loadNotifications());
 
@@ -148,5 +158,17 @@ ipcMain.handle('save-prefs', (_, prefs) => {
   return { ok: true };
 });
 
-// Export for testing
+ipcMain.handle('open-app-context', (_, action) => {
+  if (action && action.app) {
+    const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
+    try {
+      const client = net.connect(sockPath, () => {
+        client.write(JSON.stringify({ launch: action.app }));
+        client.end();
+      });
+    } catch {}
+  }
+  return { ok: true };
+});
+
 module.exports = { loadNotifications, saveNotifications, loadPrefs, savePrefs };

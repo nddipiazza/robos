@@ -5,7 +5,7 @@ const os   = require('os');
 const cp   = require('child_process');
 
 // Debug server (optional)
-var _debugServer = null;
+let _debugServer = null;
 try {
   const libPaths = [
     process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
@@ -17,16 +17,20 @@ try {
   }
 } catch {}
 
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); process.exit(0); }
+const HOME_DIR    = process.env.HOME || os.homedir();
+const CONFIG_DIR  = path.join(HOME_DIR, '.config', 'robos');
+const INDEXES_CFG = path.join(CONFIG_DIR, 'search-indexes.json');
+const INDEX_DIR   = path.join(CONFIG_DIR, 'search-index');
+
+// Single-instance lock (bypassed in test mode)
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) { app.quit(); process.exit(0); }
+}
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
-
-const CONFIG_DIR  = path.join(os.homedir(), '.config', 'robos');
-const INDEXES_CFG = path.join(CONFIG_DIR, 'search-indexes.json');
-const INDEX_DIR   = path.join(CONFIG_DIR, 'search-index');
 
 // ── Defaults ────────────────────────────────────────────────────────────────
 
@@ -35,7 +39,7 @@ const DEFAULT_INDEXES = [
     id: 'source',
     name: 'Source Projects',
     system: true,
-    paths: [path.join(os.homedir(), 'source')],
+    paths: [path.join(HOME_DIR, 'source')],
     exclude: ['node_modules', '.git', 'dist', '.cache', 'target', '__pycache__', '.tox'],
     lastIndexed: null,
     fileCount: 0,
@@ -44,7 +48,7 @@ const DEFAULT_INDEXES = [
     id: 'robos-config',
     name: 'RobOS Config',
     system: true,
-    paths: [path.join(os.homedir(), '.config', 'robos')],
+    paths: [path.join(HOME_DIR, '.config', 'robos')],
     exclude: ['search-index'],
     lastIndexed: null,
     fileCount: 0,
@@ -56,10 +60,15 @@ function ensureConfig() {
   if (!fs.existsSync(INDEXES_CFG)) {
     fs.writeFileSync(INDEXES_CFG, JSON.stringify(DEFAULT_INDEXES, null, 2));
   }
-  return JSON.parse(fs.readFileSync(INDEXES_CFG, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(INDEXES_CFG, 'utf8'));
+  } catch {
+    return DEFAULT_INDEXES;
+  }
 }
 
 function saveConfig(indexes) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
   fs.writeFileSync(INDEXES_CFG, JSON.stringify(indexes, null, 2));
 }
 
@@ -69,36 +78,67 @@ function indexFile(id) {
 
 // ── Window ──────────────────────────────────────────────────────────────────
 
-let win;
+let win = null;
 app.setName('search-index');
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
-    width: 800, height: 620,
-    minWidth: 600, minHeight: 400,
     title: 'RobOS Search Index',
-    autoHideMenuBar: true,
+    width: 900,
+    height: 620,
+    minWidth: 600,
+    minHeight: 400,
     backgroundColor: '#0d1117',
+    show: true,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
+
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
+  });
+
   if (_debugServer) _debugServer.startDebugServer(win, 19119);
 });
 
 app.on('window-all-closed', () => app.quit());
 
-// ── IPC ─────────────────────────────────────────────────────────────────────
+// ── Indexing Helper ─────────────────────────────────────────────────────────
+
+function scanDirectory(dir, excludeList = [], collected = []) {
+  if (!fs.existsSync(dir)) return collected;
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const ent of entries) {
+      if (ent.name.startsWith('.')) continue;
+      if (excludeList.includes(ent.name)) continue;
+
+      const fullPath = path.join(dir, ent.name);
+      collected.push(fullPath);
+
+      if (ent.isDirectory()) {
+        scanDirectory(fullPath, excludeList, collected);
+      }
+    }
+  } catch {}
+  return collected;
+}
+
+// ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('list-indexes', () => {
   const indexes = ensureConfig();
   return indexes.map(idx => {
     const fp = indexFile(idx.id);
-    let fileCount = 0;
+    let fileCount = idx.fileCount || 0;
     let lastIndexed = idx.lastIndexed || null;
     if (fs.existsSync(fp)) {
       const content = fs.readFileSync(fp, 'utf8');
@@ -109,50 +149,26 @@ ipcMain.handle('list-indexes', () => {
   });
 });
 
-ipcMain.handle('rebuild-index', async (event, id) => {
+ipcMain.handle('rebuild-index', async (_, id) => {
   const indexes = ensureConfig();
   const idx = indexes.find(i => i.id === id);
   if (!idx) return { ok: false, error: 'Index not found' };
 
-  const excludeArgs = [];
-  for (const ex of (idx.exclude || [])) {
-    excludeArgs.push('-not', '-path', `*/${ex}/*`);
-    excludeArgs.push('-not', '-name', ex);
-  }
-
-  const allPaths = idx.paths.map(p => p.replace(/^~/, os.homedir()));
   const fp = indexFile(id);
-  const tmpFp = fp + '.tmp';
-  const ws = fs.createWriteStream(tmpFp);
+  const collected = [];
 
-  let fileCount = 0;
-  let errors = [];
-
-  for (const searchPath of allPaths) {
-    if (!fs.existsSync(searchPath)) { errors.push(`Path not found: ${searchPath}`); continue; }
-    await new Promise((resolve) => {
-      const proc = cp.spawn('find', [
-        searchPath,
-        '-not', '-name', '.*',
-        ...excludeArgs,
-      ], { encoding: 'utf8' });
-
-      proc.stdout.on('data', chunk => {
-        ws.write(chunk);
-        fileCount += chunk.split('\n').filter(Boolean).length;
-        if (win && !win.isDestroyed()) {
-          win.webContents.send('index-progress', { id, fileCount });
-        }
-      });
-      proc.stderr.on('data', () => {}); // ignore permission errors
-      proc.on('close', resolve);
-    });
+  for (const searchPath of idx.paths) {
+    const p = searchPath.replace(/^~/, HOME_DIR);
+    scanDirectory(p, idx.exclude || [], collected);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('index-progress', { id, fileCount: collected.length });
+    }
   }
 
-  ws.end();
-  await new Promise(r => ws.on('finish', r));
-  fs.renameSync(tmpFp, fp);
+  fs.mkdirSync(INDEX_DIR, { recursive: true });
+  fs.writeFileSync(fp, collected.join('\n') + '\n', 'utf8');
 
+  const fileCount = collected.length;
   const updated = indexes.map(i => i.id === id
     ? { ...i, lastIndexed: new Date().toISOString(), fileCount }
     : i
@@ -162,7 +178,8 @@ ipcMain.handle('rebuild-index', async (event, id) => {
   if (win && !win.isDestroyed()) {
     win.webContents.send('index-done', { id, fileCount });
   }
-  return { ok: true, fileCount, errors };
+
+  return { ok: true, fileCount };
 });
 
 ipcMain.handle('add-index', (_, { name, paths }) => {
@@ -190,21 +207,24 @@ ipcMain.handle('delete-index', (_, id) => {
 ipcMain.handle('search-index', (_, { query, limit = 30 }) => {
   const indexes = ensureConfig();
   const results = [];
+  const q = (query || '').toLowerCase();
+  if (!q) return { ok: true, results: [] };
+
   for (const idx of indexes) {
     const fp = indexFile(idx.id);
     if (!fs.existsSync(fp)) continue;
-    const r = cp.spawnSync('grep', ['-i', '-m', String(limit), query, fp], { encoding: 'utf8', timeout: 3000 });
-    const lines = (r.stdout || '').split('\n').filter(Boolean);
+    const lines = fs.readFileSync(fp, 'utf8').split('\n').filter(Boolean);
     for (const p of lines) {
-      let isDir = false;
-      try { isDir = fs.statSync(p).isDirectory(); } catch {}
-      results.push({ path: p, name: path.basename(p), isDir, indexId: idx.id });
-      if (results.length >= limit) break;
+      if (p.toLowerCase().includes(q)) {
+        let isDir = false;
+        try { isDir = fs.statSync(p).isDirectory(); } catch {}
+        results.push({ path: p, name: path.basename(p), isDir, indexId: idx.id });
+        if (results.length >= limit) break;
+      }
     }
     if (results.length >= limit) break;
   }
   return { ok: true, results };
 });
 
-// Export for testing
-module.exports = { ensureConfig, saveConfig, DEFAULT_INDEXES, indexFile };
+module.exports = { ensureConfig, saveConfig, DEFAULT_INDEXES, indexFile, scanDirectory };

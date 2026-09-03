@@ -1,0 +1,10 @@
+{
+  "name": "topology-manager",
+  "version": "1.0.0",
+  "description": "RobOS System Topology & Backstage C4 Catalog Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {}
+}

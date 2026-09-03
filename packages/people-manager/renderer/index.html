@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Human & AI Agent Personnel Roster</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">👥</div>
+        <div>
+          <h1>Human & AI Agent Personnel Roster</h1>
+          <div class="subtitle">Team Topologies &middot; Model Context Protocol (MCP) &middot; .robos/teams.yaml</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-add-team" onclick="window.addNewTeam()">+ New Team</button>
+        <button class="btn btn-primary" id="btn-add-agent" onclick="window.addNewAgent()">+ Add AI Agent Persona</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-teams-count">3 Teams</div>
+        <div class="stat-label">Team Topologies Classification</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-human-count">3 Human Engineers</div>
+        <div class="stat-label">Lead Architects & Approvers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-agent-count">4 AI Agent Personas</div>
+        <div class="stat-label">Autonomous Swarm Members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-mcp-status" style="color: var(--success);">100% MCP BOUND</div>
+        <div class="stat-label">.robos/teams.yaml Conformance</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="people-grid">
+        <!-- Left: Team Topologies Directory -->
+        <section class="panel teams-panel">
+          <div class="panel-header">
+            <span>🏛️ Team Topologies</span>
+            <span class="count-badge" id="teams-count-badge">3 Teams</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="team-search-input" class="search-input" placeholder="🔍 Search teams & personas..." />
+          </div>
+          <div class="teams-tree-body" id="teams-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Team Details & Human-Agent Pair Roster -->
+        <section class="panel details-panel">
+          <div class="panel-header">
+            <span>👥 Team Personnel & AI Agent Swarm Roster</span>
+            <span class="status-tag-pass" id="team-topology-badge">Platform Team</span>
+          </div>
+          <div class="details-body" id="team-details">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

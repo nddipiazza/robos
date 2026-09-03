@@ -2,13 +2,13 @@
 nav_exclude: true
 ---
 
-# Epic 04: Tree View Navigation
+# Tree View Navigation
 
 **Status:** Core complete; MCP stubs present (v0.2.6)
 **Priority:** High
 **Repository:** `Hermetiq/buildbarn-forms`
 **Package:** `@hermetiq/buildbarn-forms`
-**Dependencies:** Epic 02 (core library), Epic 03 (Jsonnet editor)
+**Dependencies:** core library, Jsonnet editor
 
 The `TreeView` component provides hierarchical navigation for Buildbarn configuration structures. It solves the UX problem of deeply nested proto configs being hard to navigate in a flat vertical form — users can see the whole config tree at a glance and click to navigate to specific sections.
 

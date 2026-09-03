@@ -2,13 +2,13 @@
 nav_exclude: true
 ---
 
-# Epic 02: buildbarn-forms Core Library
+# buildbarn-forms Core Library
 
 **Status:** Substantially complete (v0.2.6 published)
 **Priority:** High — core library consumed by all integration work
 **Repository:** `Hermetiq/buildbarn-forms`
 **Package:** `@hermetiq/buildbarn-forms`
-**Dependencies:** Epic 01 (forms-proto must be published first)
+**Dependencies:** forms-proto must be published first
 
 The `@hermetiq/buildbarn-forms` React library is the primary deliverable. It provides the `ProtoFormBuilder` engine, form field components, tooltip infrastructure, and the package toolchain for building, testing, linting, and publishing.
 

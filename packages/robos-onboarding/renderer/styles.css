@@ -90,8 +90,10 @@ body {
 .nav-steps {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .step-nav-item {
@@ -439,3 +441,25 @@ textarea.form-control {
   overflow-y: auto;
   display: none;
 }
+
+/* Embedded Apps in Onboarding Steps */
+.embedded-app-container {
+  width: 100%;
+  flex: 1;
+  min-height: 520px;
+  height: calc(100vh - 240px);
+  margin-top: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.embedded-app-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: var(--bg-primary);
+  display: block;
+}
+

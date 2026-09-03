@@ -91,6 +91,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v6a3 3 0 0 1-3 3H9"/></svg>'
   },
   {
+    appId: 'mcp-manager',
+    label: 'MCP Manager',
+    category: 'RobOS AI',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 12h10"/><path d="M12 7v10"/><circle cx="8" cy="8" r="1.5" fill="#00bcd4"/><circle cx="16" cy="16" r="1.5" fill="#00bcd4"/></svg>'
+  },
+  {
     appId: 'notifications',
     label: 'Notifications',
     category: 'System',

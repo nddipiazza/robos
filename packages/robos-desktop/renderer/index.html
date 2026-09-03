@@ -6,7 +6,7 @@
   <title>RobOS Desktop</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="demo-mode">
 
   <!-- ── Top Menu Bar ──────────────────────────────────────────────────────── -->
   <div id="menu-bar">
@@ -23,6 +23,10 @@
       </button>
     </div>
     <div id="menu-bar-right">
+      <button id="btn-agent-widget" class="menubar-chip-btn" title="Ephemeral Agent Swarms">
+        <span class="agent-chip-icon">🤖</span>
+        <span id="agent-chip-count">0 Agents</span>
+      </button>
       <button id="btn-notifications" class="menubar-btn" title="Notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
              stroke-linecap="round" stroke-linejoin="round">
@@ -35,6 +39,35 @@
         <span id="clock-date">Mon Jan 1</span>
         <span id="clock-time">00:00</span>
       </div>
+      <button id="btn-show-desktop" class="show-desktop-sliver" title="Show Desktop (Minimize All / Restore)"></button>
+    </div>
+  </div>
+
+  <!-- ── Agent Sessions Popover Menu ──────────────────────────────────────── -->
+  <div id="agent-menu" class="agent-menu" style="display:none">
+    <div class="agent-menu-header">
+      <div class="agent-menu-title">
+        <span>🤖 Ephemeral Agents</span>
+        <span id="agent-menu-badge" class="agent-count-badge">0 Active</span>
+      </div>
+      <button id="btn-wipe-all-agents" class="btn-wipe-all" title="Purge all active agent profiles">Clean All</button>
+    </div>
+    <div id="agent-menu-list" class="agent-menu-list">
+      <div class="agent-empty">No active agent sessions running.</div>
+    </div>
+  </div>
+
+  <!-- ── Desktop Center Canvas ─────────────────────────────────────────── -->
+  <div id="desktop-center" class="desktop-center">
+    <div class="desktop-logo-wrap">
+      <svg class="desktop-brand-icon" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      <h1 class="desktop-brand-title">RobOS</h1>
+      <p class="desktop-brand-sub">AI-First Developer Operating System</p>
     </div>
   </div>
 
@@ -73,6 +106,17 @@
 
   <!-- ── App launch feedback toast ─────────────────────────────────────────── -->
   <div id="launch-toast" class="launch-toast" style="display:none"></div>
+
+  <!-- ── Live Demo Narration Subtitle Banner ──────────────────────────────── -->
+  <div id="demo-subtitle-banner" class="demo-subtitle-banner"></div>
+
+  <!-- ── Virtual Animated Cursor ─────────────────────────────────────────── -->
+  <div id="virtual-cursor" class="virtual-cursor" style="display:none">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="#00bcd4" stroke="#0d1117" stroke-width="1.5">
+      <path d="M3 3l7 18 3-7 7-3L3 3z"/>
+    </svg>
+    <div class="cursor-pulse"></div>
+  </div>
 
   <script src="app.js"></script>
 </body>

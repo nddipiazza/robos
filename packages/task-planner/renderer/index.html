@@ -30,7 +30,7 @@
           </button>
         </div>
         <div id="project-new-form" class="project-new-form" style="display:none">
-          <input id="project-name-input" class="project-name-input" type="text" placeholder="Project name…" maxlength="80"/>
+          <textarea id="project-name-input" class="project-name-input" placeholder="Project name & title…" rows="2" maxlength="160"></textarea>
           <div class="project-new-actions">
             <button id="btn-project-confirm" class="btn-icon btn-icon-ok" title="Create">✓</button>
             <button id="btn-project-cancel" class="btn-icon" title="Cancel">✕</button>
@@ -51,6 +51,33 @@
         </div>
 
         <main id="main-content" style="display:none">
+          <!-- Project Knowledge Graph Metadata & Multi-Feature Hub -->
+          <section id="project-metadata-card" class="card project-metadata-card" style="display:none">
+            <div class="project-meta-header">
+              <div class="project-meta-title-row">
+                <h2 id="project-meta-name">📁 Project Name</h2>
+                <span class="kgraph-badge" id="project-kgraph-badge">⬡ KGraph: urn:robos:project:...</span>
+                <span class="status-badge" id="project-status-badge">Active SDLC Resource</span>
+              </div>
+              <div class="project-features-tabs" id="project-features-tabs">
+                <button class="feature-tab-add" id="btn-new-feature" title="Plan New Feature under this Project">+ Plan New Feature</button>
+              </div>
+            </div>
+            <div class="project-meta-body">
+              <div class="meta-field">
+                <label>Tech Stack & Architecture Context</label>
+                <input type="text" id="project-tech-stack" class="meta-input" placeholder="e.g. Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL" />
+              </div>
+              <div class="meta-field">
+                <label>Bound Microservices & Repositories</label>
+                <div class="repo-tags-row" id="repo-tags-container">
+                  <div id="repo-tags-list" class="repo-tags-list"></div>
+                  <input type="text" id="repo-tag-input" class="repo-tag-input" placeholder="+ Add repo tag (e.g. petstore-api)..." />
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- Parent Epic Selector (Jira only) -->
           <section id="epic-parent-section" class="card epic-parent-section" style="display:none">
             <div class="epic-parent-header">
@@ -65,28 +92,55 @@
           </section>
 
           <section class="prompt-section card">
-            <h2>Describe the tasks you want to create</h2>
-            <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
-              placeholder="e.g. Create a user authentication system with login, logout, and password reset features. Break it into epics and stories." min-height="100"></robos-ai-textarea>
-            <div class="prompt-actions">
-              <button class="btn btn-accent" id="btn-generate">
-                <span id="btn-generate-text">✦ Generate with AI</span>
-                <span id="btn-generate-spinner" class="spinner" style="display:none"></span>
-              </button>
-              <span id="generate-status" class="status-text"></span>
+            <div class="prompt-header-row">
+              <h2>Describe the architecture, feature, or tasks to plan</h2>
+            </div>
+            <div class="prompt-row">
+              <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
+                placeholder="e.g. Create Acme Petshop polyglot platform with Java 21 Spring Boot REST API, React 18 web adoption portal, and TypeSpec shared library. Ask me questions to refine the design." min-height="120"></robos-ai-textarea>
+              <div class="prompt-actions">
+                <button class="btn btn-accent" id="btn-generate" disabled>
+                  <span id="btn-generate-text">✦ Plan using AI Prompt</span>
+                  <span id="btn-generate-spinner" class="spinner" style="display:none"></span>
+                </button>
+                <span id="generate-status" class="status-text"></span>
+              </div>
+            </div>
+
+            <!-- Form-Based AI Architecture Clarification Wizard -->
+            <div id="ai-questions-card" class="ai-questions-card" style="display:none">
+              <div class="questions-card-header">
+                <div class="questions-card-title-row">
+                  <span class="questions-icon">📋</span>
+                  <span class="questions-title" id="question-step-indicator">Question 1 of 2: Messaging & Event Pipeline</span>
+                  <span class="questions-badge">Interactive Architecture Form</span>
+                </div>
+              </div>
+
+              <div class="question-body">
+                <h3 id="question-prompt-text" class="question-prompt-text">How should pet adoption and inventory events be handled across microservices?</h3>
+                <div id="question-options-list" class="question-options-list"></div>
+              </div>
+
+              <div class="question-actions">
+                <button class="btn btn-outline btn-sm" id="btn-question-prev" style="display:none">← Previous</button>
+                <button class="btn btn-accent btn-sm" id="btn-question-next">Next Question →</button>
+                <button class="btn btn-success btn-sm" id="btn-question-submit" style="display:none">✦ Generate Epics & Tasks</button>
+              </div>
             </div>
           </section>
 
           <section id="preview-section" class="preview-section" style="display:none">
             <div class="preview-header">
               <div class="preview-header-left">
-                <h2>Plan <span id="task-count" class="badge">0</span></h2>
+                <h2>Project Tasks & Epics <span id="task-count" class="badge">0</span></h2>
                 <span id="epic-count" class="epic-count-badge" style="display:none"></span>
                 <span id="current-project-badge" class="project-name-badge" style="display:none"></span>
               </div>
               <div class="preview-actions">
+                <button class="btn btn-sm btn-outline" id="btn-add-epic">⬡ + Add Epic</button>
+                <button class="btn btn-sm btn-outline" id="btn-add-task">📄 + Add Task</button>
                 <button class="btn btn-sm btn-project" id="btn-save-project">💾 Save to Project</button>
-                <button class="btn btn-sm btn-outline" id="btn-add-task">+ Add Task</button>
                 <button class="btn btn-sm btn-danger" id="btn-clear">Clear All</button>
               </div>
             </div>
@@ -114,7 +168,7 @@
   <div id="save-modal-overlay" class="modal-overlay" style="display:none">
     <div class="modal-box">
       <h3 class="modal-title">Save to Project</h3>
-      <input id="save-modal-input" class="project-name-input" type="text" placeholder="Project name…" maxlength="80"/>
+      <textarea id="save-modal-input" class="project-name-input" placeholder="Project name & title…" rows="2" maxlength="160"></textarea>
       <div class="modal-actions">
         <button class="btn btn-accent" id="save-modal-ok">Save</button>
         <button class="btn btn-outline" id="save-modal-cancel">Cancel</button>
@@ -122,8 +176,7 @@
     </div>
   </div>
 
-  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
-  <script src="../node_modules/marked/lib/marked.umd.js"></script>
+  <script src="../../robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

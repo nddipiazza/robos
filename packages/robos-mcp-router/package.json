@@ -1,0 +1,16 @@
+{
+  "name": "robos-mcp-router",
+  "version": "0.1.0",
+  "description": "Unified MCP Router & Multiplexer for RobOS AI Agents",
+  "main": "main.js",
+  "bin": {
+    "robos-mcp-router": "cli.js"
+  },
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

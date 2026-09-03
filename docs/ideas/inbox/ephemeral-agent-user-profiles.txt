@@ -1,0 +1,9 @@
+Robos needs this feature:
+
+My host desktop can launch apps - add ability to create temporary user profile /home/my-agent-{unique-name} that lives only as long as the session as that /home/my-agent-{unique-name}.
+
+everything important tunnels exactly the same as the host user, but the $HOME directory is going to be different. including apps running in the robos desktop. we will have toolbar support showing all the running 
+
+for example my user account ndipiazza will create 4 user accounts, then log in as those accounts and run all processes as those users except
+
+the desktop for the app will appear on the host display as any other desktop

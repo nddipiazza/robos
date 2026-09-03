@@ -74,7 +74,7 @@ function flatText(tree) {
 
 // ── Interaction helpers (wrap POST /eval) ────────────────────────────────────
 
-function httpPost(url, body, timeoutMs = 5000) {
+function httpPost(url, body, timeoutMs = 25000) {
   return new Promise((resolve, reject) => {
     const req = http.request(url, {
       method: 'POST',
@@ -93,8 +93,8 @@ function httpPost(url, body, timeoutMs = 5000) {
 }
 
 /** Execute arbitrary JS in the renderer via POST /eval */
-async function evalJS(port, js) {
-  const res = await httpPost(`http://localhost:${port}/eval`, js);
+async function evalJS(port, js, timeoutMs = 25000) {
+  const res = await httpPost(`http://localhost:${port}/eval`, js, timeoutMs);
   try { return JSON.parse(res.data).result; }
   catch { return res.data; }
 }

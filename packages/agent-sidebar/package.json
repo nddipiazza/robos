@@ -1,0 +1,12 @@
+{
+  "name": "agent-sidebar",
+  "version": "0.1.0",
+  "description": "Pinned Sub-Agent Workflow Sidebar for RobOS Virtual Desktops",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

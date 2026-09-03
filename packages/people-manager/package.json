@@ -1,0 +1,10 @@
+{
+  "name": "people-manager",
+  "version": "1.0.0",
+  "description": "RobOS Human & AI Agent Personnel Manager (Team Topologies & MCP)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {}
+}

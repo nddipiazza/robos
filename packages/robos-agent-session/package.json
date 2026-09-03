@@ -1,0 +1,9 @@
+{
+  "name": "robos-agent-session",
+  "version": "0.1.0",
+  "description": "Shared Client Library for RobOS Sub-Agent Session Lifecycle Management",
+  "main": "main.js",
+  "scripts": {
+    "test": "node --test"
+  }
+}

@@ -2,12 +2,12 @@
 nav_exclude: true
 ---
 
-# Epic 06: Production Config Types
+# Production Config Types
 
 **Status:** Not started
 **Priority:** Medium — needed for production usefulness beyond storage configs
 **Repository:** `Hermetiq/buildbarn-forms`
-**Dependencies:** Epic 02 (core library), Epic 04 (tree view split-pane for navigation)
+**Dependencies:** core library, tree view split-pane for navigation
 
 Extend the library to support all major Buildbarn configuration types beyond storage: worker, scheduler, and browser. Add config templates (pre-filled starting points), ConfigMap YAML export (the Kubernetes-ready output format), and frontend validation improvements.
 

@@ -4,7 +4,7 @@ let _schema = null;
 let _settings = {};
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 async function init() {
@@ -16,12 +16,15 @@ async function init() {
 
 function renderSidebar() {
   const el = document.getElementById('sidebar');
-  el.innerHTML = _schema.sections.map(s =>
-    '<div class="sidebar-item" data-section="' + s.id + '">' + esc(s.label) + '</div>'
+  el.innerHTML = _schema.sections.map((s, idx) =>
+    `<div class="sidebar-item ${idx === 0 ? 'active' : ''}" id="sidebar-item-${s.id}" data-section="${s.id}">${esc(s.label)}</div>`
   ).join('');
   el.querySelectorAll('.sidebar-item').forEach(item => {
     item.addEventListener('click', () => {
-      document.getElementById('section-' + item.dataset.section)?.scrollIntoView({ behavior: 'smooth' });
+      el.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      const target = document.getElementById('section-' + item.dataset.section);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
     });
   });
 }
@@ -33,24 +36,24 @@ function renderSections() {
       const val = _settings[f.key] !== undefined ? _settings[f.key] : f.default;
       let input = '';
       if (f.type === 'text' || f.type === 'password') {
-        input = '<input type="' + f.type + '" class="text-input" data-key="' + f.key + '" value="' + esc(val) + '" />';
+        input = `<input type="${f.type}" id="field-${f.key}" class="text-input" data-key="${f.key}" value="${esc(val)}" />`;
       } else if (f.type === 'checkbox') {
-        input = '<input type="checkbox" data-key="' + f.key + '" ' + (val ? 'checked' : '') + ' />';
+        input = `<input type="checkbox" id="field-${f.key}" data-key="${f.key}" ${val ? 'checked' : ''} />`;
       } else if (f.type === 'select') {
-        input = '<select class="select-input" data-key="' + f.key + '">' +
-          f.options.map(o => '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>').join('') +
-          '</select>';
+        input = `<select id="field-${f.key}" class="select-input" data-key="${f.key}">` +
+          f.options.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o)}</option>`).join('') +
+          `</select>`;
       }
-      return '<div class="field-row">' +
-        '<label class="field-label">' + esc(f.label) + '</label>' +
-        '<div class="field-input">' + input + '</div>' +
-      '</div>';
+      return `<div class="field-row">` +
+        `<label class="field-label" for="field-${f.key}">${esc(f.label)}</label>` +
+        `<div class="field-input">${input}</div>` +
+      `</div>`;
     }).join('');
 
-    return '<div class="section" id="section-' + section.id + '">' +
-      '<h3 class="section-title">' + esc(section.label) + '</h3>' +
+    return `<div class="section" id="section-${section.id}">` +
+      `<h3 class="section-title">${esc(section.label)}</h3>` +
       fields +
-    '</div>';
+    `</div>`;
   }).join('');
 }
 
@@ -66,12 +69,24 @@ function collectSettings() {
   return data;
 }
 
-document.getElementById('btn-save').addEventListener('click', async () => {
+window.setFieldValue = function(key, value) {
+  const el = document.getElementById('field-' + key);
+  if (!el) return false;
+  if (el.type === 'checkbox') {
+    el.checked = !!value;
+  } else {
+    el.value = value;
+  }
+  _settings[key] = value;
+  return true;
+};
+
+window.saveAll = async function() {
   const data = collectSettings();
   const result = await window.api.saveSettings(data);
   const msg = document.getElementById('status-msg');
   if (result.ok) {
-    msg.textContent = 'Settings saved successfully.';
+    msg.textContent = '✓ Settings saved successfully.';
     msg.className = 'status-msg success';
   } else {
     msg.textContent = 'Error saving settings.';
@@ -79,6 +94,9 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   }
   msg.classList.remove('hidden');
   setTimeout(() => msg.classList.add('hidden'), 3000);
-});
+  return result;
+};
+
+document.getElementById('btn-save').addEventListener('click', window.saveAll);
 
 init();

@@ -73,7 +73,7 @@ robos/
 └── docs/                              # the docs site (you're reading one of them)
 ```
 
-Whenever you touch an app, check the **registration checklist** in [`CLAUDE.md`](https://github.com/nddipiazza/robos/blob/main/CLAUDE.md): `desktop-manager/main.js` (APP_REGISTRY + APP_BINS) and `robos-icons/index.js` (BUILTIN_APPS) are easy to forget and break the launcher silently.
+Whenever you touch an app, check the **registration checklist** in [`AGENTS.md`](https://github.com/nddipiazza/robos/blob/main/AGENTS.md): `desktop-manager/main.js` (APP_REGISTRY + APP_BINS) and `robos-icons/index.js` (BUILTIN_APPS) are easy to forget and break the launcher silently.
 
 ## 4. VM lifecycle
 
@@ -458,4 +458,4 @@ Use Conventional Commits — `feat:`, `fix:`, `docs:`, `chore:`, `refactor:` —
 - **Harness or demo flakiness**: `packages/robos-test/lib/{harness,snapshot,recorder,narrator,demo-runner}.js`.
 - **VM provisioning**: `infra/desktop/cloud-init/user-data` (it's the source of truth for everything that lands on a fresh VM).
 - **Series production**: [`docs/model-problem/handoff.md`](model-problem/handoff.md), [`fixtures.md`](model-problem/fixtures.md), [`metadata-template.md`](model-problem/metadata-template.md).
-- **Conventions you didn't know existed**: [`CLAUDE.md`](https://github.com/nddipiazza/robos/blob/main/CLAUDE.md). Read it once a quarter.
+- **Conventions you didn't know existed**: [`AGENTS.md`](https://github.com/nddipiazza/robos/blob/main/AGENTS.md). Read it once a quarter.

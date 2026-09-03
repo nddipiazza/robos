@@ -15,24 +15,57 @@ const path = require('path');
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+function getXauth() {
+  if (process.env.XAUTHORITY) return process.env.XAUTHORITY;
+  try {
+    const uid = process.getuid ? process.getuid() : 1000;
+    const candidates = [
+      `/run/user/${uid}/.mutter-Xwaylandauth*`,
+      `/run/user/${uid}/gdm/Xauthority`,
+      path.join(process.env.HOME || '/home/robos', '.Xauthority'),
+    ];
+    for (const pat of candidates) {
+      const found = execSync(`ls ${pat} 2>/dev/null | head -1`, { encoding: 'utf8' }).trim();
+      if (found && fs.existsSync(found)) return found;
+    }
+  } catch {}
+  return null;
+}
+
 async function findWindowGeometry(title, { display, timeoutMs = 10000 } = {}) {
   const disp  = display || process.env.DISPLAY || ':0.0';
+  const xauth = getXauth();
+  const env = { ...process.env, DISPLAY: disp };
+  if (xauth) env.XAUTHORITY = xauth;
+
   const start = Date.now();
   let lastErr;
   while (Date.now() - start < timeoutMs) {
     try {
-      const out = execSync(`xwininfo -name ${JSON.stringify(title)}`, {
-        env: { ...process.env, DISPLAY: disp },
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      const x = parseInt((out.match(/Absolute upper-left X:\s+(-?\d+)/) || [])[1], 10);
-      const y = parseInt((out.match(/Absolute upper-left Y:\s+(-?\d+)/) || [])[1], 10);
-      const w = parseInt((out.match(/Width:\s+(\d+)/) || [])[1], 10);
-      const h = parseInt((out.match(/Height:\s+(\d+)/) || [])[1], 10);
-      const mapped = /Map State:\s+IsViewable/.test(out);
-      if (Number.isFinite(x + y + w + h) && mapped) {
-        return { x, y, w, h, display: disp };
+      let out = null;
+      try {
+        out = execSync(`xwininfo -name ${JSON.stringify(title)}`, {
+          env,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+      } catch {
+        // Fallback: search tree for matching title substring
+        const tree = execSync(`xwininfo -root -tree`, { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        const m = tree.match(new RegExp(`(0x[0-9a-f]+)\\s+"[^"]*${title}[^"]*"`, 'i'));
+        if (m) {
+          out = execSync(`xwininfo -id ${m[1]}`, { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        }
+      }
+      if (out) {
+        const x = parseInt((out.match(/Absolute upper-left X:\s+(-?\d+)/) || [])[1], 10);
+        const y = parseInt((out.match(/Absolute upper-left Y:\s+(-?\d+)/) || [])[1], 10);
+        const w = parseInt((out.match(/Width:\s+(\d+)/) || [])[1], 10);
+        const h = parseInt((out.match(/Height:\s+(\d+)/) || [])[1], 10);
+        const mapped = /Map State:\s+IsViewable/.test(out);
+        if (Number.isFinite(x + y + w + h) && mapped) {
+          return { x, y, w, h, display: disp };
+        }
       }
     } catch (e) { lastErr = e; }
     await sleep(300);
@@ -42,6 +75,10 @@ async function findWindowGeometry(title, { display, timeoutMs = 10000 } = {}) {
 
 function startRecording({ geometry, outPath, framerate = 30 }) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  const xauth = getXauth();
+  const env = { ...process.env, DISPLAY: geometry.display };
+  if (xauth) env.XAUTHORITY = xauth;
+
   // ffmpeg requires even dimensions for most codecs
   const w = geometry.w - (geometry.w % 2);
   const h = geometry.h - (geometry.h % 2);
@@ -60,7 +97,7 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
     '-pix_fmt', 'yuv420p',
     outPath,
   ];
-  const proc = spawn('ffmpeg', args, { stdio: ['pipe', 'pipe', 'pipe'] });
+  const proc = spawn('ffmpeg', args, { env, stdio: ['pipe', 'pipe', 'pipe'] });
   let stderr = '';
   proc.stderr.on('data', d => { stderr += d.toString(); });
   proc.on('error', err => { stderr += `\nspawn error: ${err.message}`; });

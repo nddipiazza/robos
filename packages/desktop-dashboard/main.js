@@ -16,7 +16,7 @@ if (!lock) { app.quit(); }
 app.setName('robos-desktop-dashboard');
 
 let win = null;
-const TITLE = 'RobOS Desktop';
+const TITLE = 'RobOS Desktop Dashboard';
 
 // ── Set X11 window type to DESKTOP via xprop ─────────────────────────────────
 function setDesktopWindowType() {

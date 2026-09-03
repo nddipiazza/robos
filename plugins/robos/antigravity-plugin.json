@@ -1,0 +1,7 @@
+{
+  "name": "robos",
+  "version": "1.0.0",
+  "description": "RobOS developer tools, VM lifecycle management, and Electron app skills for Google Antigravity",
+  "skills": "./skills",
+  "commands": "./commands"
+}

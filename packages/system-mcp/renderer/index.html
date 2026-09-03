@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS System MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">⚙️</div>
+        <div>
+          <h1>System MCP Server Console</h1>
+          <div class="subtitle">System Preferences, Notifications, Dev Tools & @-Mention File Search</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-search-files">🔍 @-Search Files</button>
+        <button class="btn btn-primary" id="btn-send-toast">🔔 Send Toast Notification</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-ai-model">Claude 3.7 Sonnet</div>
+        <div class="stat-label">AI Agent Model</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-task">TASK-101</div>
+        <div class="stat-label">Active Task Context</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">6 MCP Tools</div>
+        <div class="stat-label">Exposed Protocol Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-notifs">1 Recent</div>
+        <div class="stat-label">System Notifications</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="system-layout">
+        <!-- System Preferences & Dev Tools -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Dev Tools & Preferences (robos_system_get_installed_tools)</span>
+          </div>
+          <div class="panel-body" id="tools-list"></div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Recent System Notifications (robos_system_send_notification)</span>
+          </div>
+          <div class="panel-body" id="notifs-list"></div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live System MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. Dispatched System tool operations will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

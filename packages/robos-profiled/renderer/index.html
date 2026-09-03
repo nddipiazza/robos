@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS Ephemeral Profile Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div class="header-left">
+        <div class="header-icon">🛡️</div>
+        <div>
+          <h1>RobOS Ephemeral Profile Daemon</h1>
+          <div class="subtitle">Multi-User Linux Session Isolation & Direct Host Display Bridging</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-spawn-swarm" style="background:rgba(0,188,212,0.15); color:var(--accent); border-color:rgba(0,188,212,0.4); margin-right:8px;">⚡ Spawn 4x Swarm</button>
+        <button class="btn btn-primary" id="btn-spawn-profile">+ Provision Profile</button>
+      </div>
+    </header>
+
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active">0</div>
+        <div class="stat-label">Active Profiles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tmpfs">Tmpfs</div>
+        <div class="stat-label">RAM Home Isolation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-display">Direct :0</div>
+        <div class="stat-label">Display Bridged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-groups">4 Groups</div>
+        <div class="stat-label">video, render, audio, kvm</div>
+      </div>
+    </div>
+
+    <div id="main-content">
+      <!-- Profiles Table / List -->
+      <section id="table-pane">
+        <div class="pane-header">
+          <h2>Ephemeral Agent Profiles</h2>
+          <button class="btn-sm" id="btn-refresh">⚡ Refresh</button>
+        </div>
+        <div id="profile-list" class="profile-grid">
+          <div class="empty-state">No active ephemeral agent profiles. Click "+ Provision Agent Profile" to spawn.</div>
+        </div>
+      </section>
+
+      <!-- Profile Inspect Drawer -->
+      <aside id="inspect-pane" class="inspect-pane hidden">
+        <div class="inspect-header">
+          <h3 id="inspect-username">my-agent-reviewer</h3>
+          <button id="btn-close-inspect" class="btn-close">✕</button>
+        </div>
+        <div class="inspect-body" id="inspect-details"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Spawn Modal -->
+  <div id="modal-spawn" class="modal hidden">
+    <div class="modal-box">
+      <h2>Provision Ephemeral Agent Profile</h2>
+      <div class="form-row">
+        <label>Agent Identifier / Name</label>
+        <input type="text" id="spawn-name" placeholder="e.g. pr-reviewer" class="input-text" />
+      </div>
+      <div class="form-row">
+        <label>Agent Role</label>
+        <select id="spawn-role" class="input-select">
+          <option value="Code Reviewer" selected>Code Reviewer (Pact / PR Verification)</option>
+          <option value="Implementation Agent">Implementation Agent (Red-Green-Refactor)</option>
+          <option value="Test Fabric Runner">Test Fabric Runner (Docker / Xvfb)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Target LLM Model</label>
+        <select id="spawn-model" class="input-select">
+          <option value="claude-sonnet-4-20250514" selected>Claude Sonnet 4</option>
+          <option value="claude-opus-4-20250514">Claude Opus 4</option>
+          <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-cancel-spawn" class="btn btn-secondary">Cancel</button>
+        <button id="btn-confirm-spawn" class="btn btn-primary">Provision Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

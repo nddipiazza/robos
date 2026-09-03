@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Agent Session Client Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📦</div>
+        <div>
+          <h1>RobOS Agent Session Client Library</h1>
+          <div class="subtitle">Shared API bindings for Dev Central, Issue Manager & Desktop Apps</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" id="btn-spawn-client">+ Spawn via Library</button>
+      </div>
+    </header>
+
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-sessions">0</div>
+        <div class="stat-label">Active Library Sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">UNIX Socket</div>
+        <div class="stat-label">IPC Transport</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">EventEmitter</div>
+        <div class="stat-label">Lifecycle Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-last-event">Ready</div>
+        <div class="stat-label">Last Dispatched Event</div>
+      </div>
+    </div>
+
+    <main class="main-content">
+      <div class="section-title">
+        <span>Managed Sessions via RobOSAgentSession API</span>
+        <button class="btn-refresh" id="btn-refresh">⚡ Refresh</button>
+      </div>
+      <div id="session-grid" class="session-grid"></div>
+
+      <div class="command-box">
+        <div class="command-title">Dispatch Agent Command over IPC</div>
+        <div class="command-inputs">
+          <input type="text" id="cmd-task-id" placeholder="Task ID (e.g. task-lib-1)" />
+          <input type="text" id="cmd-text" placeholder="Command (e.g. npm test -- --coverage)" />
+          <button class="btn btn-primary" id="btn-send-cmd">Send Command</button>
+        </div>
+        <div class="event-log" id="event-log"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

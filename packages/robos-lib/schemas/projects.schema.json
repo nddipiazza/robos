@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS Multi-Repo Projects Schema",
+  "type": "object",
+  "required": ["version", "kind", "projects"],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.0"] },
+    "kind": { "type": "string", "enum": ["Projects"] },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "repos"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "url", "defaultBranch"],
+              "properties": {
+                "id": { "type": "string" },
+                "url": { "type": "string" },
+                "defaultBranch": { "type": "string" },
+                "path": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

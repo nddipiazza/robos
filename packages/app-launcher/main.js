@@ -34,7 +34,25 @@ function pinSkipTaskbar() {
 // process. Without this, a stale Singleton lock from any unrelated Electron
 // crash would silently block the launcher from spawning.
 app.setName('robos-app-launcher');
-app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'app-launcher'));
+const userDataDir = path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'app-launcher');
+app.setPath('userData', userDataDir);
+
+// Clean up stale lock files if target PID is no longer alive
+try {
+  const lockFile = path.join(userDataDir, 'SingletonLock');
+  if (fs.existsSync(lockFile)) {
+    const target = fs.readlinkSync(lockFile);
+    const m = target.match(/-(\d+)$/);
+    if (m) {
+      const pid = parseInt(m[1], 10);
+      try { process.kill(pid, 0); } catch {
+        try { fs.unlinkSync(lockFile); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonCookie')); } catch {}
+        try { fs.unlinkSync(path.join(userDataDir, 'SingletonSocket')); } catch {}
+      }
+    }
+  }
+} catch {}
 
 // Toggle behavior: pressing Super_L while the launcher is already open should
 // close it, not spawn a second process. requestSingleInstanceLock() returns
@@ -63,25 +81,35 @@ try {
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
+if (process.env.WAYLAND_DISPLAY || fs.existsSync('/run/user/1000/wayland-0')) {
+  app.commandLine.appendSwitch('ozone-platform', 'wayland');
+}
 
 let mainWindow = null;
 
 const DESKTOP_DIRS = [
   '/usr/share/applications',
+  '/usr/local/share/applications',
   '/var/lib/snapd/desktop/applications',
   path.join(process.env.HOME || '/home/robos', '.local/share/applications')
 ];
 
 const ICON_SEARCH_PATHS = [
-  '/usr/share/icons/Yaru/48x48/apps',
   '/usr/share/icons/Yaru/scalable/apps',
-  '/usr/share/icons/hicolor/48x48/apps',
+  '/usr/share/icons/Yaru/256x256/apps',
+  '/usr/share/icons/Yaru/48x48/apps',
   '/usr/share/icons/hicolor/scalable/apps',
   '/usr/share/icons/hicolor/256x256/apps',
+  '/usr/share/icons/hicolor/128x128/apps',
+  '/usr/share/icons/hicolor/48x48/apps',
+  '/usr/share/icons/Adwaita/scalable/apps',
+  '/usr/share/icons/Adwaita/48x48/apps',
+  '/var/lib/snapd/desktop/icons',
+  path.join(process.env.HOME || '/home/robos', '.local/share/icons'),
   '/usr/share/pixmaps'
 ];
 
-const ICON_EXTENSIONS = ['.svg', '.png', '.xpm'];
+const ICON_EXTENSIONS = ['.svg', '.png', '.xpm', '.jpg', '.jpeg'];
 
 function resolveIcon(iconValue) {
   if (!iconValue) return null;
@@ -89,6 +117,7 @@ function resolveIcon(iconValue) {
   if (iconValue.startsWith('/')) {
     return fs.existsSync(iconValue) ? iconValue : null;
   }
+  const cleanName = iconValue.replace(/\.(svg|png|xpm|jpg|jpeg)$/i, '');
   // Search icon theme directories
   for (const dir of ICON_SEARCH_PATHS) {
     // Try exact name first
@@ -96,7 +125,7 @@ function resolveIcon(iconValue) {
     if (fs.existsSync(exact)) return exact;
     // Try with extensions
     for (const ext of ICON_EXTENSIONS) {
-      const withExt = path.join(dir, iconValue + ext);
+      const withExt = path.join(dir, cleanName + ext);
       if (fs.existsSync(withExt)) return withExt;
     }
   }

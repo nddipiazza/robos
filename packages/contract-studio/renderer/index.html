@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS API Contract & Governance Engine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with GitOps Branch Switcher -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">📋</div>
+        <div>
+          <h1>API Contract & Governance Engine</h1>
+          <div class="subtitle">OpenAPI 3.1 &middot; AsyncAPI &middot; Pact Consumer Testing &middot; Spectral &middot; Prism</div>
+        </div>
+      </div>
+
+      <!-- GitOps Branch Selector -->
+      <div class="gitops-branch-wrap">
+        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+          <option value="main">🌿 main (Production / GitOps HEAD)</option>
+          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+        </select>
+        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-run-spectral" onclick="window.runSpectral()">🛡️ Run Spectral Lint</button>
+        <button class="btn btn-secondary" id="btn-run-pact" onclick="window.runPact()">🤝 Run Pact Tests</button>
+        <button class="btn btn-primary" id="btn-start-prism" onclick="window.startPrism()">⚡ Start Prism Mock</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-contracts-count">3 API Contracts</div>
+        <div class="stat-label">Registered in .robos/contracts/</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active-spec">OpenAPI 3.1 REST</div>
+        <div class="stat-label">Active Schema Standard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pact-status" style="color: var(--success);">14/14 Consumer Tests PASSED</div>
+        <div class="stat-label">Pact.io Consumer Guard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-spectral-status" style="color: var(--accent);">0 Errors &middot; Compliant</div>
+        <div class="stat-label">Spectral Style Governance</div>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="main-content">
+      <div class="contract-grid">
+        <!-- Left: Contracts Browser -->
+        <section class="panel contracts-panel">
+          <div class="panel-header">
+            <span>📁 Contract Registry</span>
+            <span class="count-badge" id="contracts-count-badge">3 Contracts</span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="contract-search-input" class="search-input" placeholder="🔍 Search contracts & endpoints..." />
+          </div>
+          <div class="contracts-tree-body" id="contracts-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Contract Inspector & Governance Gates -->
+        <section class="panel inspector-panel">
+          <div class="panel-header">
+            <span>🔬 Contract Operations & Verification Gates</span>
+            <span class="status-tag-pass" id="prism-badge">⚡ Prism Mock: Offline</span>
+          </div>
+          <div class="inspector-body" id="contract-workspace">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

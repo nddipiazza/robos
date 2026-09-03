@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Desktop Agents Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🤖</div>
+        <div>
+          <h1>RobOS Desktop Agents Manager</h1>
+          <div class="subtitle">Multi-User Sub-Agent Linux Daemon & Session Orchestrator</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-wipe-all" style="background:rgba(248,81,73,0.15); color:#f85149; border-color:rgba(248,81,73,0.4); margin-right:8px;">Purge All</button>
+        <button class="btn btn-primary" id="btn-spawn-agent">+ Spawn Sub-Agent</button>
+      </div>
+    </header>
+
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-active">0</div>
+        <div class="stat-label">Active Agents</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-display">Xvfb / :0</div>
+        <div class="stat-label">Virtual Display</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-cgroups">cgroups v2</div>
+        <div class="stat-label">Resource Isolation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-logs">Archived</div>
+        <div class="stat-label">Log Preservation</div>
+      </div>
+    </div>
+
+    <main class="main-content">
+      <div class="section-title">
+        <span>Active Sub-Agent User Sessions</span>
+        <button class="btn-refresh" id="btn-refresh">⚡ Refresh</button>
+      </div>
+      <div id="agent-grid" class="agent-grid"></div>
+    </main>
+
+    <!-- Inspect Log Drawer -->
+    <div id="inspect-pane" class="inspect-pane hidden">
+      <div class="inspect-header">
+        <div class="inspect-title" id="inspect-title">Agent Telemetry</div>
+        <button class="btn-close" id="btn-close-inspect">✕</button>
+      </div>
+      <div class="inspect-content">
+        <div id="inspect-details" class="inspect-details"></div>
+        <div class="log-viewer-title">Virtual Display Stream Output</div>
+        <div class="display-stream-viewport">
+          <canvas id="display-canvas" width="380" height="214"></canvas>
+          <div class="display-overlay-badge" id="display-badge">Virtual Output :10 &middot; 60 FPS</div>
+        </div>
+        <div class="log-viewer-title">Live Session Log Stream</div>
+        <div id="inspect-logs" class="inspect-logs"></div>
+      </div>
+    </div>
+
+    <!-- Modal Spawn Sub-Agent -->
+    <div id="modal-spawn" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h2>Spawn Sub-Agent User Session</h2>
+        <p class="modal-sub">Provisions an isolated Linux user account (agent-&lt;task-id&gt;) with cgroup limits.</p>
+        <div class="form-group">
+          <label>Task ID / Identifier</label>
+          <input type="text" id="spawn-task-id" placeholder="e.g. task-101 or code-review" />
+        </div>
+        <div class="form-group">
+          <label>Engineering Role Persona</label>
+          <select id="spawn-role">
+            <option value="Lead Architect Agent">Lead Architect Agent</option>
+            <option value="Senior Code Reviewer" selected>Senior Code Reviewer</option>
+            <option value="BDD Test Implementer">BDD Test Implementer</option>
+            <option value="Security & Compliance Auditor">Security & Compliance Auditor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Memory Limit (MB)</label>
+          <input type="number" id="spawn-memory" value="2048" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="btn-cancel-spawn">Cancel</button>
+          <button class="btn btn-primary" id="btn-confirm-spawn">Spawn Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

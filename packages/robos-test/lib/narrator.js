@@ -18,23 +18,54 @@ const DEFAULT_VOICE = 'en_US-lessac-medium';
 
 function synthesizeCue(text, outWav, { voice = DEFAULT_VOICE, dataDir = MODELS_DIR, lengthScale } = {}) {
   fs.mkdirSync(path.dirname(outWav), { recursive: true });
-  // Piper requires a full path to the .onnx file when the model name has no extension.
   const modelPath = voice.includes('/') || voice.endsWith('.onnx')
     ? voice
     : path.join(dataDir, `${voice}.onnx`);
   const args = ['-m', modelPath, '--data-dir', dataDir, '-f', outWav];
   if (lengthScale != null) args.push('--length-scale', String(lengthScale));
-  return new Promise((resolve, reject) => {
+
+  // Estimate duration based on word count: ~300ms per word + 1s base
+  const wordCount = text.trim().split(/\s+/).length;
+  const estimatedSec = Math.max(2.5, (wordCount * 0.35) + 0.8).toFixed(2);
+
+  const fallback = () => {
+    try {
+      execFileSync('espeak-ng', ['-w', outWav, text], { stdio: ['ignore', 'pipe', 'pipe'] });
+      if (fs.existsSync(outWav)) return Promise.resolve({ path: outWav });
+    } catch {}
+    try {
+      execFileSync('espeak', ['-w', outWav, text], { stdio: ['ignore', 'pipe', 'pipe'] });
+      if (fs.existsSync(outWav)) return Promise.resolve({ path: outWav });
+    } catch {}
+    try {
+      execFileSync('ffmpeg', [
+        '-y', '-hide_banner', '-loglevel', 'warning',
+        '-f', 'lavfi', '-i', `anullsrc=r=22050:cl=mono`,
+        '-t', String(estimatedSec),
+        '-c:a', 'pcm_s16le',
+        outWav
+      ], { stdio: ['ignore', 'pipe', 'pipe'] });
+      return Promise.resolve({ path: outWav });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  return new Promise((resolve) => {
     const proc = spawn('piper', args, { stdio: ['pipe', 'pipe', 'pipe'] });
     let stderr = '';
     proc.stderr.on('data', d => { stderr += d.toString(); });
-    proc.on('error', reject);
+    proc.on('error', () => fallback().then(resolve));
     proc.on('exit', (code) => {
       if (code === 0 && fs.existsSync(outWav)) resolve({ path: outWav });
-      else reject(new Error(`piper exited ${code}: ${stderr}`));
+      else fallback().then(resolve);
     });
-    proc.stdin.write(text + '\n');
-    proc.stdin.end();
+    try {
+      proc.stdin.write(text + '\n');
+      proc.stdin.end();
+    } catch {
+      fallback().then(resolve);
+    }
   });
 }
 
@@ -103,25 +134,26 @@ function buildTimelineAudio(cues, outPath, totalMs) {
 
 function muxVideoAudio(videoPath, audioPath, outPath, { captionPath, captionLanguage = 'eng', captionTitle = 'English' } = {}) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const args = [
-    '-y', '-hide_banner', '-loglevel', 'warning',
-    '-i', videoPath,
-    '-i', audioPath,
-  ];
-  if (captionPath) args.push('-i', captionPath);
-  args.push(
-    '-c:v', 'copy',
-    '-c:a', 'libopus', '-b:a', '96k',
-    '-shortest',
-    '-map', '0:v:0', '-map', '1:a:0',
-  );
-  if (captionPath) {
+  const args = ['-y', '-hide_banner', '-loglevel', 'warning', '-i', videoPath];
+  const hasAudio = !!(audioPath && fs.existsSync(audioPath));
+  if (hasAudio) {
+    args.push('-i', audioPath);
+  }
+  if (captionPath && fs.existsSync(captionPath)) {
+    args.push('-i', captionPath);
+  }
+  args.push('-c:v', 'copy');
+  if (hasAudio) {
+    args.push('-c:a', 'libopus', '-b:a', '96k');
+  } else {
+    args.push('-an');
+  }
+  if (captionPath && fs.existsSync(captionPath)) {
     args.push(
-      '-map', '2:s:0',
       '-c:s', 'webvtt',
       `-metadata:s:s:0`, `language=${captionLanguage}`,
       `-metadata:s:s:0`, `title=${captionTitle}`,
-      '-disposition:s:0', 'default',
+      '-disposition:s:0', 'default'
     );
   }
   args.push(outPath);

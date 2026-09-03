@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld('robos', {
   getReviewRequests: ()   => ipcRenderer.invoke('dc-get-review-requests'),
   getRecentActivity: ()   => ipcRenderer.invoke('dc-get-recent-activity'),
   openUrl:           (u)  => ipcRenderer.invoke('dc-open-url', u),
+  getTaskProof:      (id) => ipcRenderer.invoke('dc-review-get-task-proof', id),
+  signOffAndMerge:   (id) => ipcRenderer.invoke('dc-review-signoff-merge', id),
 });

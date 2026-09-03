@@ -2,7 +2,7 @@
 nav_exclude: true
 ---
 
-# Epic 05: MVP Integration
+# MVP Integration
 
 **Status:** Not started
 **Priority:** High — delivers user-facing value in dashboard.hermetiq.io

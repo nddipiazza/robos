@@ -1,0 +1,13 @@
+{
+  "name": "dev-tools-mcp",
+  "version": "0.1.0",
+  "description": "RobOS Developer CLI Tools, Cloud SDKs & Package Provisioning MCP Server",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

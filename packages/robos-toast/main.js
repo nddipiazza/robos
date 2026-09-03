@@ -2,9 +2,10 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
+const net  = require('net');
 
 // Debug server (optional)
-var _debugServer = null;
+let _debugServer = null;
 try {
   const libPaths = [
     process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
@@ -16,22 +17,49 @@ try {
   }
 } catch {}
 
-// Single-instance lock
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); process.exit(0); }
+// Single-instance lock (bypassed in test mode)
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) { app.quit(); process.exit(0); }
+}
 
 app.setName('robos-toast');
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
-const NOTIF_FILE = path.join(os.homedir(), '.config', 'robos', 'notifications.json');
-const PREFS_FILE = path.join(os.homedir(), '.config', 'robos', 'notification-prefs.json');
+const HOME_DIR   = process.env.HOME || os.homedir();
+const CONFIG_DIR = path.join(HOME_DIR, '.config', 'robos');
+const NOTIF_FILE = path.join(CONFIG_DIR, 'notifications.json');
+const PREFS_FILE = path.join(CONFIG_DIR, 'notification-prefs.json');
 
-// ── Notification categories and tiers ───────────────────────────────────────
+// ── Notification Categories, Events & Tiers ──────────────────────────────────
 
 const CATEGORIES = ['pr_review', 'ci_cd', 'task', 'agent', 'system'];
 const TIERS = ['critical', 'warning', 'info'];
+
+const EVENT_CATEGORY_MAP = {
+  pr_review_requested: 'pr_review',
+  pr_review_received:  'pr_review',
+  pr_merged:           'pr_review',
+  ci_started:          'ci_cd',
+  ci_completed:        'ci_cd',
+  ci_failed:           'ci_cd',
+  deploy:              'ci_cd',
+  task_started:        'task',
+  task_status_changed: 'task',
+  agent_session:       'agent',
+  disk_low:            'system',
+  service_crash:       'system',
+  update_available:    'system',
+};
+
+function normalizeCategory(catOrEvent) {
+  if (!catOrEvent) return 'system';
+  if (EVENT_CATEGORY_MAP[catOrEvent]) return EVENT_CATEGORY_MAP[catOrEvent];
+  if (CATEGORIES.includes(catOrEvent)) return catOrEvent;
+  return 'system';
+}
 
 const TIER_DEFAULTS = {
   critical: { persistent: true, duration: 0, sound: true },
@@ -41,9 +69,23 @@ const TIER_DEFAULTS = {
 
 function loadPrefs() {
   try {
-    if (fs.existsSync(PREFS_FILE)) return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+    if (fs.existsSync(PREFS_FILE)) {
+      return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+    }
   } catch {}
-  return { categoryOverrides: {}, quietHours: { enabled: false, start: '22:00', end: '07:00' }, dnd: false };
+  return {
+    categoryOverrides: {},
+    quietHours: { enabled: false, start: '22:00', end: '07:00' },
+    dnd: false,
+  };
+}
+
+function savePrefs(prefs) {
+  try {
+    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+    fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2));
+    return true;
+  } catch { return false; }
 }
 
 function isQuietHours() {
@@ -64,14 +106,16 @@ function isQuietHours() {
 function shouldPlaySound(category, tier) {
   const prefs = loadPrefs();
   if (isQuietHours() && tier !== 'critical') return false;
-  const override = prefs.categoryOverrides?.[category]?.[tier];
+  const normalized = normalizeCategory(category);
+  const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.sound !== undefined) return !!override.sound;
   return TIER_DEFAULTS[tier]?.sound || false;
 }
 
 function getDuration(category, tier) {
   const prefs = loadPrefs();
-  const override = prefs.categoryOverrides?.[category]?.[tier];
+  const normalized = normalizeCategory(category);
+  const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.duration !== undefined) return override.duration;
   if (override && override.persistent) return 0;
   return TIER_DEFAULTS[tier]?.duration || 5000;
@@ -79,14 +123,15 @@ function getDuration(category, tier) {
 
 function isPersistent(category, tier) {
   const prefs = loadPrefs();
-  const override = prefs.categoryOverrides?.[category]?.[tier];
+  const normalized = normalizeCategory(category);
+  const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.persistent !== undefined) return override.persistent;
   return TIER_DEFAULTS[tier]?.persistent || false;
 }
 
-// Track last known notification IDs to detect new ones
+// ── Toast Stack Management ───────────────────────────────────────────────────
+
 let knownIds = new Set();
-// Active toast windows (top-right stack)
 const activeToasts = [];
 const MAX_VISIBLE_TOASTS = 5;
 const queuedToasts = [];
@@ -113,14 +158,13 @@ function initKnownIds() {
 }
 
 function getToastY(index) {
-  const display = screen.getPrimaryDisplay();
   return TOAST_MARGIN + (TOAST_HEIGHT + TOAST_GAP) * index;
 }
 
 function repositionToasts() {
-  activeToasts.forEach((win, i) => {
-    if (!win.isDestroyed()) {
-      win.setPosition(win.getBounds().x, getToastY(i));
+  activeToasts.forEach((item, i) => {
+    if (item && item.win && !item.win.isDestroyed()) {
+      item.win.setPosition(item.win.getBounds().x, getToastY(i));
     }
   });
 }
@@ -136,27 +180,30 @@ function getTierBorderColor(tier) {
 
 function createToast(notif) {
   const prefs = loadPrefs();
+  const category = normalizeCategory(notif.category || notif.eventType || notif.type);
+  const tier = notif.tier || 'info';
 
-  // DND mode — queue critical, suppress everything else
+  // DND mode — queue critical/sticky, suppress non-critical
   if (prefs.dnd) {
-    if (notif.tier === 'critical' || notif.sticky) {
+    if (tier === 'critical' || notif.sticky) {
       queuedToasts.push(notif);
     }
-    return;
+    return null;
   }
 
-  // Max visible check
+  // Max visible limit — queue excess
   if (activeToasts.length >= MAX_VISIBLE_TOASTS) {
     queuedToasts.push(notif);
-    return;
+    return null;
   }
 
-  const display = screen.getPrimaryDisplay();
-  const { width } = display.workAreaSize;
-  const index = activeToasts.length;
+  let width = 1920;
+  try {
+    const display = screen.getPrimaryDisplay();
+    width = display.workAreaSize.width;
+  } catch {}
 
-  const category = notif.category || 'system';
-  const tier = notif.tier || 'info';
+  const index = activeToasts.length;
   const persistent = notif.sticky || isPersistent(category, tier);
   const duration = persistent ? 0 : getDuration(category, tier);
 
@@ -173,6 +220,7 @@ function createToast(notif) {
     resizable: false,
     focusable: false,
     hasShadow: true,
+    show: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -180,21 +228,28 @@ function createToast(notif) {
     },
   });
 
-  win.setIgnoreMouseEvents(false);
   win.loadFile(path.join(__dirname, 'toast.html'));
+
+  const toastItem = {
+    id: notif.id || Date.now().toString(),
+    win,
+    notif: { ...notif, category, tier },
+  };
 
   win.webContents.once('did-finish-load', () => {
     win.webContents.send('toast-data', {
       ...notif,
+      category,
+      tier,
       _tierColor: getTierBorderColor(tier),
       _persistent: persistent,
       _duration: duration,
     });
   });
 
-  activeToasts.push(win);
+  activeToasts.push(toastItem);
 
-  // Auto-dismiss
+  // Auto-dismiss timer
   if (!persistent && duration > 0) {
     const timer = setTimeout(() => {
       dismissToast(win);
@@ -203,19 +258,29 @@ function createToast(notif) {
   }
 
   win.on('closed', () => {
-    const idx = activeToasts.indexOf(win);
+    const idx = activeToasts.findIndex(t => t.win === win);
     if (idx !== -1) activeToasts.splice(idx, 1);
     repositionToasts();
-    // Show queued toasts
+    // Dequeue next if available
     if (queuedToasts.length > 0 && activeToasts.length < MAX_VISIBLE_TOASTS) {
       createToast(queuedToasts.shift());
     }
   });
+
+  return toastItem;
 }
 
 function dismissToast(win) {
-  if (!win.isDestroyed()) win.close();
+  if (win && !win.isDestroyed()) win.close();
 }
+
+function dismissAll() {
+  const copy = [...activeToasts];
+  copy.forEach(t => dismissToast(t.win));
+  queuedToasts.length = 0;
+}
+
+// ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.on('dismiss-toast', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -225,25 +290,54 @@ ipcMain.on('dismiss-toast', (event) => {
 ipcMain.on('toast-action', (event, action) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (action && action.type === 'open-app') {
-    const { spawn: spawnProc } = require('child_process');
-    // Try launching via desktop-manager socket
-    const net = require('net');
-    const sockPath = `/run/user/${process.getuid()}/robos-dm.sock`;
+    // Dispatch app launch request to desktop-manager socket or fallback
+    const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
     try {
-      const sock = net.connect(sockPath);
-      sock.write(JSON.stringify({ launch: action.app }));
-      sock.end();
-    } catch {
-      // Fallback: launch directly
-      const appBase = '/usr/local/share/robos';
-      const script = path.join(appBase, action.app, `${action.app}.sh`);
-      if (fs.existsSync(script)) {
-        const { exec } = require('child_process');
-        exec(`bash "${script}"`, { env: { ...process.env, DISPLAY: ':0' } });
-      }
-    }
+      const client = net.connect(sockPath, () => {
+        client.write(JSON.stringify({ launch: action.app }));
+        client.end();
+      });
+    } catch {}
   }
   if (win) dismissToast(win);
+});
+
+ipcMain.handle('get-active-toasts', () => {
+  return activeToasts.map(t => ({
+    id: t.id,
+    category: t.notif.category,
+    tier: t.notif.tier,
+    title: t.notif.title,
+  }));
+});
+
+ipcMain.handle('get-queued-toasts', () => {
+  return queuedToasts.map(n => ({
+    id: n.id,
+    category: n.category,
+    tier: n.tier,
+    title: n.title,
+  }));
+});
+
+ipcMain.handle('emit-toast', (_, notif) => {
+  return createToast(notif) ? { ok: true } : { queued: true };
+});
+
+ipcMain.handle('get-prefs', () => loadPrefs());
+ipcMain.handle('set-prefs', (_, prefs) => {
+  savePrefs(prefs);
+  if (!prefs.dnd && queuedToasts.length > 0) {
+    while (queuedToasts.length > 0 && activeToasts.length < MAX_VISIBLE_TOASTS) {
+      createToast(queuedToasts.shift());
+    }
+  }
+  return { ok: true, prefs: loadPrefs() };
+});
+
+ipcMain.handle('dismiss-all', () => {
+  dismissAll();
+  return { ok: true };
 });
 
 function checkForNewNotifications() {
@@ -260,39 +354,56 @@ let debugWin = null;
 app.on('ready', () => {
   if (app.dock) app.dock.hide();
 
-  // Create a hidden window for debug server
+  // Create dashboard/status window for demo and test assertions
   debugWin = new BrowserWindow({
-    width: 1, height: 1,
-    show: false,
+    title: 'RobOS Toast Daemon',
+    width: 900,
+    height: 620,
+    backgroundColor: '#0d1117',
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
-  debugWin.loadFile(path.join(__dirname, 'toast.html'));
+  debugWin.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  debugWin.once('ready-to-show', () => {
+    debugWin.show();
+    debugWin.focus();
+  });
 
   if (_debugServer) _debugServer.startDebugServer(debugWin, 19126);
 
   initKnownIds();
 
-  const dir = path.dirname(NOTIF_FILE);
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
   if (!fs.existsSync(NOTIF_FILE)) fs.writeFileSync(NOTIF_FILE, '[]');
 
-  fs.watch(NOTIF_FILE, { persistent: true }, (event) => {
-    if (event === 'change') {
-      setTimeout(checkForNewNotifications, 100);
-    }
-  });
+  try {
+    fs.watch(NOTIF_FILE, { persistent: true }, (event) => {
+      if (event === 'change') {
+        setTimeout(checkForNewNotifications, 100);
+      }
+    });
+  } catch {}
 });
 
-app.on('window-all-closed', () => {
-  // Keep running even with no windows
-});
+app.on('window-all-closed', (e) => e.preventDefault());
 
-// Export for testing
 module.exports = {
-  loadPrefs, isQuietHours, shouldPlaySound, getDuration, isPersistent,
-  CATEGORIES, TIERS, TIER_DEFAULTS, getTierBorderColor,
+  loadPrefs,
+  savePrefs,
+  isQuietHours,
+  shouldPlaySound,
+  getDuration,
+  isPersistent,
+  normalizeCategory,
+  CATEGORIES,
+  TIERS,
+  TIER_DEFAULTS,
+  EVENT_CATEGORY_MAP,
+  getTierBorderColor,
+  createToast,
+  dismissAll,
 };

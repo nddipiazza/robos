@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS Team & Agent Roster Schema",
+  "type": "object",
+  "required": ["version", "kind", "teams"],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.0"] },
+    "kind": { "type": "string", "enum": ["TeamRoster"] },
+    "teams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "topology", "members"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "topology": { "type": "string", "enum": ["stream-aligned", "platform", "enabling", "complicated-subsystem"] },
+          "description": { "type": "string" },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "type", "role"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "type": { "type": "string", "enum": ["human", "agent"] },
+                "role": { "type": "string" },
+                "model": { "type": "string" },
+                "skills": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

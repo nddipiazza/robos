@@ -2,205 +2,171 @@
 nav_exclude: true
 ---
 
-# RobOS Project Plan
+# RobOS Project Plan — Agentic Review-Based Engineering OS
 
-## Release: v1.0 — RobOS AI-Assisted Engineering OS
-
-19 epics, 119 stories, ~539 story points.
-
-The plan is organized around the **Model Problem** (see [model-problem.md](../model-problem.md)) — Acme Inc using RobOS to build the buildbarn-forms project. The MVP delivers every phase of that scenario end-to-end. Post-MVP epics add depth (knowledge graph, voice, MCP, packaging).
+RobOS is the developer-first operating system and desktop ecosystem engineered for **Agentic Review-Based Software Development**. By consolidating open-source standards (OASIS OSLC, Backstage, TypeSpec, Pact, Devcontainers, C4 Model, Team Topologies, MCP, Piper TTS, and Gherkin BDD), RobOS enables autonomous AI agent swarms to plan, build, test, and demonstrate software while human developers act as Lead Architects and Code Reviewers.
 
 ---
 
-## MVP — Model Problem End-to-End
+## Autonomous Agent Feedback & Iterative Development (Xvfb E2E Fabric)
 
-**11 epics (4 done), 7 to build. Ordered by dependency wave.**
+To enable AI agents to autonomously build RobOS feature by feature, development follows a strict, grainlike **End-to-End Driven Development (EDD)** process:
+- **Isolated Headless Display**: Every UI test runs against headless `Xvfb` (display `:99`) with `Picom/Mutter` compositors.
+- **Fast Deterministic Feedback**: Agents inspect DOM states using `packages/robos-lib/snapshot-cli.js` (ports 19100–19126) and containerized runners (`./scripts/e2e-container.sh`).
+- **Proof-of-Work Evidence**: Agents verify each increment by generating timestamped DOM snapshots, contract verification reports, and 1080p narrated video walkthroughs.
 
-### Wave 0: Foundation (Done)
+---
 
-| # | Epic | Stories | Status |
-|---|------|---------|--------|
-| 01 | [Desktop Foundation](epic-01-desktop-foundation/epic.md) | 8 | **Done** |
-| 02 | [App Framework](epic-02-app-framework/epic.md) | 7 | **Done** |
-| 03 | [Dev Tools](epic-03-dev-tools/epic.md) | 5 | **Done** |
+## Phased Iterative Roadmap
 
-### Wave 1: Core Infrastructure (parallel)
-
-No dependencies between these three — build simultaneously.
-
-| # | Epic | Stories | Model Problem Phase | What It Delivers |
-|---|------|---------|---------------------|------------------|
-| 13 | [Security & Auth](epic-13-security-auth/epic.md) | 4 | Phase 1.1, 1.4, 3 | **Done** — Security Setup (GPG/SSH keys), Pass Manager (secrets distribution) |
-| 04 | [Task Management](epic-04-task-management/epic.md) | 8 | Phase 1.2, 1.3, 2, 4.1 | Task Servers (Jira config), Workflow Studio, Task Manager (CRUD, AI breakdown, status tracking) |
-| 12 | [System Services](epic-12-system-services/epic.md) | 7 | Phase 5, 6 | Desktop Manager (IPC hub), Toast Daemon (notifications), Notifications app, CLI tools |
-
-### Wave 2: Workspace & Events (parallel, depends on Wave 1)
-
-| # | Epic | Stories | Model Problem Phase | What It Delivers |
-|---|------|---------|---------------------|------------------|
-| 05 | [Workspace Management](epic-05-workspace-management/epic.md) | 6 | Phase 3.2, 4.1 | Auto-provision workspace (clone, branch, install, start dev server) |
-| 18 | [Event Engine](epic-18-event-engine/epic.md) | 6 | Phase 5, 6, 7 | Event Bus, Rule Engine, auto status transitions, event-driven notifications |
-
-### Wave 3: AI Agents (depends on Wave 2)
-
-| # | Epic | Stories | Model Problem Phase | What It Delivers |
-|---|------|---------|---------------------|------------------|
-| 06 | [AI Agent Integration](epic-06-ai-agent-integration/epic.md) | 8 | Phase 4.2, 4.3, 4.4 | AI Agent Manager (questionnaire, draft, PR creation, review-fix cycles) |
-
-### Wave 4: Code Review & CI (depends on Wave 3)
-
-| # | Epic | Stories | Model Problem Phase | What It Delivers |
-|---|------|---------|---------------------|------------------|
-| 07 | [Code Review & CI/CD](epic-07-code-review-ci/epic.md) | 6 | Phase 5.2, 6 | PR Review Board (AI summary, breakpoint review, "start the app"), CI Monitor |
-
-### Wave 5: Dashboards (depends on Wave 4)
-
-| # | Epic | Stories | Model Problem Phase | What It Delivers |
-|---|------|---------|---------------------|------------------|
-| 10 | [Management & Reporting](epic-10-management-reporting/epic.md) | 4 | Phase 8 | Manager Dashboard (sprint board, velocity, deploy tracker), Dev Central dashboards |
-
-### MVP Dependency Diagram
+The roadmap is structured into 6 sequential dependency waves, starting from the completed **Setup Wizard**:
 
 ```mermaid
 graph TD
-    %% Done
-    E01["Epic 01<br/>Desktop Foundation ✅"]
-    E02["Epic 02<br/>App Framework ✅"]
-    E03["Epic 03<br/>Dev Tools ✅"]
+    subgraph Phase0 [Phase 0: Bootstrapped Foundation & Setup - COMPLETED]
+        DF[Desktop Foundation ✅]
+        AF[App Framework & RobOS Lib ✅]
+        DT[Developer Tool Center ✅]
+        SA[Security & Secrets Distribution ✅]
+        SU[Unified Setup Wizard & Project Provisioner ✅]
+    end
 
-    %% Wave 1 - parallel
-    E13["Epic 13<br/>Security & Auth ✅"]
-    E04["Epic 04<br/>Task Management<br/><i>Jira, workflow, tasks</i>"]
-    E12["Epic 12<br/>System Services<br/><i>toast, notifications, IPC</i>"]
+    subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
+        SS[System Services & Desktop Integration]
+        EP[Ephemeral Agent User Profiles & Display Bridging]
+        DA[Desktop Agent Sessions & Tunneling]
+        MCP[First-Class MCP Server Support]
+    end
 
-    %% Wave 2 - parallel
-    E05["Epic 05<br/>Workspace Management<br/><i>auto-provision</i>"]
-    E18["Epic 18<br/>Event Engine<br/><i>bus, rules, auto-transitions</i>"]
+    subgraph Phase2 [Phase 2: World State Modeling & GitOps Schema]
+        KG[Dual-State SDLC Knowledge Graph & OSLC Engine]
+        SLOS[Agent-First Software Lifecycle OS]
+        PG[Contract-Driven Project Knowledge Graph]
+        EK[Engineering Knowledge Graph - EKGraph]
+    end
 
-    %% Wave 3
-    E06["Epic 06<br/>AI Agent Integration<br/><i>questionnaire, draft, PR</i>"]
+    subgraph Phase3 [Phase 3: Work Items, Multi-Repo Workspaces & Review Hub]
+        TM[Task & Issue Management]
+        WM[Multi-Repo Workspace Orchestrator]
+        EE[Event Engine & Agent Scheduler]
+        DC[Dev Central — AI Agent Review Hub]
+    end
 
-    %% Wave 4
-    E07["Epic 07<br/>Code Review & CI/CD<br/><i>PR review board, CI monitor</i>"]
+    subgraph Phase4 [Phase 4: Autonomous E2E-Driven Dev & Verification]
+        EDD[App Test Framework & Local Test Fabric]
+        REV[Dual-Context eLearning & Interactive Reviewer]
+        AI[AI Agent Integration & Questionnaire]
+        CR[Code Review Board & CI/CD Monitor]
+    end
 
-    %% Wave 5
-    E10["Epic 10<br/>Management & Reporting<br/><i>dashboards</i>"]
+    subgraph Phase5 [Phase 5: Extended Experience & Distribution]
+        WJ[Work Journal & Activity Feed]
+        VI[Voice Dictation & Input]
+        MR[Management Dashboards & Blocker Radar]
+        RP[Release Packaging & Automated Pipeline]
+    end
 
-    %% Foundation
-    E01 --> E02
-    E02 --> E03
-
-    %% Wave 1 fan-out
-    E02 --> E13
-    E02 --> E04
-    E02 --> E12
-
-    %% Wave 2
-    E04 --> E05
-    E04 --> E18
-    E12 --> E18
-
-    %% Wave 3
-    E04 --> E06
-    E05 --> E06
-    E13 --> E06
-
-    %% Wave 4
-    E06 --> E07
-    E04 --> E07
-
-    %% Wave 5
-    E07 --> E10
-    E04 --> E10
-
-    %% Styling
-    classDef done fill:#1a3a1a,stroke:#2ea043,color:#2ea043
-    classDef wave1 fill:#1a2744,stroke:#58a6ff,color:#58a6ff
-    classDef wave2 fill:#2a1a3a,stroke:#bc8cff,color:#bc8cff
-    classDef wave3 fill:#3a2a1a,stroke:#f0883e,color:#f0883e
-    classDef wave4 fill:#3a1a2a,stroke:#f778ba,color:#f778ba
-    classDef wave5 fill:#1a3a3a,stroke:#3fb950,color:#3fb950
-
-    class E01,E02,E03,E13 done
-    class E04,E12 wave1
-    class E05,E18 wave2
-    class E06 wave3
-    class E07 wave4
-    class E10 wave5
+    Phase0 --> Phase1
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
+    Phase4 --> Phase5
 ```
-
-### MVP Critical Path
-
-The longest dependency chain determines the minimum calendar time:
-
-```
-Epic 02 (done) → Epic 04 (Task Mgmt) → Epic 05 (Workspace) → Epic 06 (AI Agents) → Epic 07 (Code Review) → Epic 10 (Dashboards)
-```
-
-Everything else runs in parallel with this chain. Epic 12, 13, and 18 are off the critical path — they can slip without delaying the overall MVP, as long as they finish before their downstream consumer needs them.
 
 ---
 
-## Post-MVP — Depth & Polish
+## Phase Breakdown & Epic Catalog
 
-These epics add capabilities that enrich the platform but aren't required for the model problem scenario.
+### Phase 0: Bootstrapped Foundation & Setup (Completed Baseline)
+*Delivers the virtual machine environment, dark desktop shell, app scaffolding, and the unified setup wizard.*
 
-| # | Epic | Stories | What It Adds |
-|---|------|---------|-------------|
-| 08 | [Engineering Knowledge Graph](epic-08-ekgraph/epic.md) | 6 | Structured company knowledge, auto-context for AI agents |
-| 09 | [Voice & Input](epic-09-voice-input/epic.md) | 4 | Voice dictation in all AI text areas, offline STT |
-| 15 | [First-Class MCP Server Support](epic-15-mcp-servers/epic.md) | 11 | MCP tool/resource servers for AI agents |
-| 17 | [Work Journal](epic-17-work-journal/epic.md) | 9 | Auto-captured developer activity journal |
-| 16 | [App Test Framework](epic-16-test-framework/epic.md) | 8 | Scenario-based Electron app testing |
-| 14 | [Developer Experience & Testing](epic-14-developer-experience/epic.md) | 4 | Dev harness improvements, DX polish |
-| 11 | [Release & Packaging](epic-11-release-packaging/epic.md) | 5 | Package RobOS for distribution |
-| 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | OAuth PKCE flows, token storage, provider config UI |
-| 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Sub-agent Linux user sessions, socket tunneling, desktop streaming, Proof of Work verification |
-| 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Dual-context Prod vs Proposed knowledge, eLearning generator, RobOS Reviewer app with "Teach Me" and "Show Me" DevTools MCP presentation |
-| 27 | [Contract-Driven Project Graph & Agent Deployment Engine](epic-27-contract-driven-project-graph/epic.md) | 5 | Git-tracked `.robos/project-graph.json-ld`, Project Graph Studio app (`packages/project-graph`), universal repo dumper CLI, contract-driven agent loop & test gates |
-| 28 | [Unified Setup Assistant & AI Project Provisioner](epic-28-unified-setup-and-ai-provisioning/epic.md) | 6 | Unified setup app (`packages/robos-onboarding`), missing credential popup suppression guard, AI agent credential connector, automated project provisioning skill, agent plugin repos (`robos-claude-plugin`, `robos-codex-plugin`, `robos-copilot-plugin`, `robos-gemini-plugin`), multi-repo skill synchronizer |
-
-Post-MVP epics can be prioritized in any order once the MVP ships. Suggested first picks:
-- **Epic 17 (Work Journal)** — auto-capture is low effort and high visibility
-- **Epic 08 (EKGraph)** — makes AI agents significantly smarter with company context
-- **Epic 15 (MCP Servers)** — unlocks extensible AI tool integration
-- **Epic 25 (RobOS Desktop Agents)** — full visual sub-user Linux sessions & Proof of Work
-- **Epic 26 (Interactive Reviewer)** — dual-context eLearning and live browser demos
-- **Epic 27 (Contract-Driven Project Graph)** — contract-driven project knowledge graphs & test gates
-- **Epic 28 (Unified Setup Assistant)** — unified setup wizard & automated agent project setup
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **Desktop Foundation** | [desktop-foundation/](desktop-foundation/epic.md) | **Done** | QEMU VM build, cloud-init provisioning, GNOME dark theme, Tilix, LightDM. |
+| **App Framework** | [app-framework/](app-framework/epic.md) | **Done** | App launcher, `robos-lib`, `robos-icons`, snapshot debug server (ports 19100–19126). |
+| **Dev Tools** | [dev-tools/](dev-tools/epic.md) | **Done** | Software Center tool registry, JetBrains & VS Code installers, streaming logs. |
+| **Security & Auth** | [security-auth/](security-auth/epic.md) | **Done** | Security Setup (GPG/SSH keys), Pass Manager (encrypted secrets store). |
+| **Unified Setup Wizard** | [unified-setup-and-ai-provisioning/](unified-setup-and-ai-provisioning/epic.md) | **Done** | First-boot onboarding wizard (`packages/robos-onboarding`), missing credential guard, automated project provisioner. |
 
 ---
 
-## Full Epic Overview
+### Phase 1: Agent Identity, Isolation & System Services
+*Delivers multi-user Linux session isolation, direct host display bridging, and MCP tool servers.*
 
-| # | Epic | Stories | Status | MVP? | Wave |
-|---|------|---------|--------|------|------|
-| 01 | [Desktop Foundation](epic-01-desktop-foundation/epic.md) | 8 | **Done** | ✅ | 0 |
-| 02 | [App Framework](epic-02-app-framework/epic.md) | 7 | **Done** | ✅ | 0 |
-| 03 | [Dev Tools](epic-03-dev-tools/epic.md) | 5 | **Done** | ✅ | 0 |
-| 04 | [Task Management](epic-04-task-management/epic.md) | 8 | Not started | ✅ | 1 |
-| 05 | [Workspace Management](epic-05-workspace-management/epic.md) | 6 | Not started | ✅ | 2 |
-| 06 | [AI Agent Integration](epic-06-ai-agent-integration/epic.md) | 8 | Not started | ✅ | 3 |
-| 07 | [Code Review & CI/CD](epic-07-code-review-ci/epic.md) | 6 | Not started | ✅ | 4 |
-| 08 | [Engineering Knowledge Graph](epic-08-ekgraph/epic.md) | 6 | Not started | | Post |
-| 09 | [Voice & Input](epic-09-voice-input/epic.md) | 4 | Not started | | Post |
-| 10 | [Management & Reporting](epic-10-management-reporting/epic.md) | 4 | Not started | ✅ | 5 |
-| 11 | [Release & Packaging](epic-11-release-packaging/epic.md) | 5 | Not started | | Post |
-| 12 | [System Services](epic-12-system-services/epic.md) | 7 | Not started | ✅ | 1 |
-| 13 | [Security & Authentication](epic-13-security-auth/epic.md) | 4 | **Done** | ✅ | 1 |
-| 14 | [Developer Experience & Testing](epic-14-developer-experience/epic.md) | 4 | Not started | | Post |
-| 15 | [First-Class MCP Server Support](epic-15-mcp-servers/epic.md) | 11 | Not started | | Post |
-| 16 | [App Test Framework](epic-16-test-framework/epic.md) | 8 | Not started | | Post |
-| 17 | [Work Journal](epic-17-work-journal/epic.md) | 9 | Not started | | Post |
-| 18 | [Event Engine & Agent Scheduler](epic-18-event-engine/epic.md) | 6 | Not started | ✅ | 2 |
-| 19 | [OAuth Provider Integration](epic-19-oauth-providers/epic.md) | 3 | Not started | | Post |
-| 25 | [RobOS Desktop Agents](epic-25-desktop-agents/epic.md) | 7 | Not started | | Post |
-| 26 | [Dual-Context eLearning & Interactive Reviewer](epic-26-elearning-and-interactive-reviewer/epic.md) | 5 | Not started | | Post |
-| 27 | [Contract-Driven Project Graph & Agent Deployment Engine](epic-27-contract-driven-project-graph/epic.md) | 5 | Not started | | Post |
-| 28 | [Unified Setup Assistant & AI Project Provisioner](epic-28-unified-setup-and-ai-provisioning/epic.md) | 6 | Not started | | Post |
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **System Services** | [system-services/](system-services/epic.md) | **Done** | Desktop Manager IPC hub, Toast Daemon notifications, Notification history. |
+| **Ephemeral Agent Profiles** | [ephemeral-agent-user-profiles/](ephemeral-agent-user-profiles/epic.md) | **Done** | Dynamic ephemeral Linux user accounts (`/home/my-agent-...`), tmpfs memory-backed home storage, direct host X11 display rendering, taskbar/toolbar agent widget. |
+| **Desktop Agents** | [desktop-agents/](desktop-agents/epic.md) | **Done** | Sub-agent Linux user sessions, socket tunneling, desktop streaming, Proof of Work verification. |
+| **MCP Servers** | [mcp-servers/](mcp-servers/epic.md) | Not started | First-class Model Context Protocol tool and resource servers for AI agent swarms. |
 
-## Story Status Key
+---
 
-- **Done** — Implemented and deployed
-- **In Progress** — Currently being worked on
-- **Not started** — Ready to begin when dependencies met
+### Phase 2: World State Modeling & GitOps Schema
+*Delivers the standardized OSLC/JSON-LD knowledge graph, dual-state world branching (Prod vs Future), and declarative `.robos/` storage.*
+
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **Dual-State SDLC Knowledge Graph** | [dual-state-sdlc-knowledge-graph/](dual-state-sdlc-knowledge-graph/epic.md) | Not started | OASIS OSLC Core 3.0 & W3C JSON-LD + SHACL knowledge graph, multi-branch world states (`main` = Prod, `feature/poc/pilot` = Future), semantic graph diffing, and blast radius analysis. |
+| **Agent-First Software Lifecycle OS** | [agent-first-software-lifecycle-os/](agent-first-software-lifecycle-os/epic.md) | Not started | 8-pillar SDLC architecture: System Topology, HR/Agents, Entity Schemas (TypeSpec/Buf), API Contracts (OpenAPI/Pact), Packages, Projects, Tasks, and 100% Declarative GitOps Storage. |
+| **Contract-Driven Project Graph** | [contract-driven-project-graph/](contract-driven-project-graph/epic.md) | Not started | Project Graph Studio (`packages/project-graph`), universal repo dumper CLI (`robos-graph dump`), contract-driven agent loop. |
+| **Engineering Knowledge Graph (EKGraph)** | [engineering-knowledge-graph/](engineering-knowledge-graph/epic.md) | Not started | Structured AI-indexed knowledge base for company engineering knowledge. |
+
+---
+
+### Phase 3: Work Items, Multi-Repo Workspaces & Review Hub
+*Delivers DAG task dependency graphs, Git worktree workspace isolation, and Dev Central review hub.*
+
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **Task Management** | [task-management/](task-management/epic.md) | Not started | Task servers (Jira/GitHub Issues), Workflow Studio, Beads DAG task graphs, automated state transitions. |
+| **Workspace Management** | [workspace-management/](workspace-management/epic.md) | Not started | Multi-repo Git worktree isolation, automated dev server startup, IDE bridge (IntelliJ port 63343 & VS Code). |
+| **Event Engine** | [event-engine/](event-engine/epic.md) | Not started | System event bus, rule engine, automated task status transitions, background agent scheduler. |
+| **Dev Central Review Hub** | [dev-central-review-hub/](dev-central-review-hub/epic.md) | Not started | Rebranded Dev Central command center, Planning Mode goal dispatcher, interactive `/grill-me` design grilling, real-time agent telemetry, and blocker radar. |
+
+---
+
+### Phase 4: Autonomous E2E-Driven Dev & Verification
+*Delivers self-contained local test fabrics, autonomous Red-Green-Refactor agent loops, and narrated video walkthrough verifications.*
+
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **App Test Framework & Test Fabric** | [test-framework/](test-framework/epic.md) | Not started | Scenario-based Electron app testing, self-contained test fabrics (Docker/Devcontainers, Prism/WireMock stubs, seeded DBs). |
+| **Interactive Reviewer & Video Studio** | [elearning-and-interactive-reviewer/](elearning-and-interactive-reviewer/epic.md) | Not started | Dual-context eLearning generator, RobOS Reviewer app with "Teach Me" and "Show Me" multi-modal presentations, Piper neural TTS voiceovers. |
+| **AI Agent Integration** | [ai-agent-integration/](ai-agent-integration/epic.md) | Not started | AI agent session manager, questionnaire workflows, draft PR generation, review-fix cycles. |
+| **Code Review & CI/CD** | [code-review-ci/](code-review-ci/epic.md) | Not started | PR Review Board, CI monitor, Pact consumer contract gates, 1-click merge approvals. |
+
+---
+
+### Phase 5: Extended Experience & Distribution
+*Delivers activity journaling, voice dictation, management telemetry, and distribution packaging.*
+
+| Epic | Location | Status | Scope |
+|------|----------|--------|-------|
+| **Work Journal** | [work-journal/](work-journal/epic.md) | Not started | Auto-captured developer activity journal backed by Git. |
+| **Voice & Input** | [voice-input/](voice-input/epic.md) | Not started | Voice dictation in all `<robos-ai-textarea>` widgets with offline speech-to-text. |
+| **Management & Reporting** | [management-reporting/](management-reporting/epic.md) | Not started | Manager dashboard, sprint velocity, deployment trackers, blocker radar. |
+| **OAuth Providers** | [oauth-providers/](oauth-providers/epic.md) | Not started | OAuth PKCE flows, token storage, provider configuration UI. |
+| **Desktop Customizer** | [desktop-customizer/](desktop-customizer/epic.md) | Not started | Prompt-driven desktop theme engine and widget customizer. |
+| **Developer Experience & Polish** | [developer-experience/](developer-experience/epic.md) | Not started | Dev harness improvements, CLI ergonomics, DX polish. |
+| **Deep Test Coverage** | [deep-test-coverage/](deep-test-coverage/epic.md) | Not started | Deep mutation testing, coverage visualization, fault injection. |
+| **AI Orchestration** | [ai-orchestration/](ai-orchestration/epic.md) | Not started | Multi-model agent orchestration (Claude, Gemini, OpenAI, Ollama). |
+| **GitHub Pages Documentation** | [github-pages-docs/](github-pages-docs/epic.md) | Not started | Static documentation portal and architecture site generation. |
+| **Release & Packaging** | [release-packaging/](release-packaging/epic.md) | Not started | AppImage, Deb, and VM appliance distribution packages. |
+| **Release Pipeline** | [release-pipeline/](release-pipeline/epic.md) | Not started | Automated CI/CD release workflow and semantic versioning. |
+
+---
+
+## Open-Source Standards Integrated ("Reinvent Nothing!")
+
+| Domain | Open Source Standard / Project | How RobOS Integrates It |
+|--------|--------------------------------|-------------------------|
+| **Knowledge Graph** | [OASIS OSLC Core 3.0](https://open-services.net/), [W3C JSON-LD](https://www.w3.org/TR/json-ld11/), [W3C SHACL](https://www.w3.org/TR/shacl/) | International lifecycle linked data standard storing full system state in `.robos/knowledge-graph.jsonld`. |
+| **Topology & Catalog** | [Backstage](https://backstage.io/), [C4 Model](https://c4model.com/), [Cytoscape.js](https://js.cytoscape.org/) | Reuses Backstage `catalog-info.yaml` and C4 DSL; interactive node-link diagrams in Electron. |
+| **Human & Agent HR** | [Team Topologies](https://teamtopologies.com/), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) | Stream-aligned/platform team models; MCP skill bindings for agent personas. |
+| **Entity Schemas** | [Microsoft TypeSpec](https://typespec.io/), [JSON Schema](https://json-schema.org/), [Buf CLI](https://buf.build/) | Author once in TypeSpec, auto-generate TypeScript, Java, Python, Go types and Prisma models. |
+| **API Contracts** | [OpenAPI 3.1](https://www.openapis.org/), [AsyncAPI](https://www.asyncapi.com/), [Pact](https://pact.io/), [Spectral](https://stoplight.io/open-source/spectral) | Consumer-driven contract testing with Pact; schema linting with Spectral; mock servers with Prism. |
+| **Requirements & BDD** | [Cucumber / Gherkin BDD](https://cucumber.io/docs/gherkin/) | First-class `.feature` files and step definitions linked to graph nodes. |
+| **Local Environments** | [Development Containers](https://containers.dev/), [Mise](https://mise.jdx.dev/), [Devenv / Nix](https://devenv.sh/) | Standard `.devcontainer/devcontainer.json` environment definitions; isolated runtime containers. |
+| **Workspace Isolation** | [Git Worktrees](https://git-scm.com/docs/git-worktree), [Simple-Git](https://github.com/steveukx/git-js) | Zero-overhead multi-repo branch checkouts sharing underlying object stores. |
+| **Audio Voiceover** | [Piper TTS](https://github.com/rhasspy/piper) (Rhasspy), [W3C WebVTT](https://www.w3.org/TR/webvtt1/) | Fast local neural voice synthesis synchronized with WebVTT subtitle tracks. |

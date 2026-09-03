@@ -1,0 +1,9 @@
+{
+  "name": "@robos/adapters",
+  "version": "1.0.0",
+  "description": "RobOS Open-Source Ecosystem Adapter Suite (Backstage, TypeSpec, Buf, Pact, Devcontainers)",
+  "main": "index.js",
+  "keywords": ["robos", "backstage", "typespec", "buf", "pact", "devcontainer"],
+  "author": "RobOS Contributors",
+  "license": "MIT"
+}

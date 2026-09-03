@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
+  <title>RobOS Toast Daemon</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-card: #161b22;
+      --bg-input: #090d12;
+      --border: #30363d;
+      --accent: #00bcd4;
+      --accent-dim: rgba(0, 188, 212, 0.15);
+      --accent-glow: rgba(0, 188, 212, 0.35);
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Header */
+    #header {
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 16px;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .title-group h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-group .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      color: var(--success);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    /* Main Layout */
+    #main-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Preset Triggers */
+    .preset-triggers {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn {
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background: #33c9dc;
+      border-color: #33c9dc;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.4);
+      color: var(--danger);
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .tier-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+    .tier-badge.info { background: rgba(0, 188, 212, 0.2); color: var(--accent); }
+    .tier-badge.warning { background: rgba(210, 153, 34, 0.2); color: var(--warning); }
+    .tier-badge.critical { background: rgba(248, 81, 73, 0.2); color: var(--danger); }
+
+    /* Toast Stack Preview */
+    .toast-stack-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 180px;
+      padding: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow-y: auto;
+    }
+    .preview-toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: slideIn 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(15px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .preview-toast.tier-critical { border-left-color: var(--danger); }
+    .preview-toast.tier-warning { border-left-color: var(--warning); }
+    .preview-toast.tier-info { border-left-color: var(--accent); }
+
+    /* DND Switch */
+    .dnd-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #11161d;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      display: inline-block;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #30363d;
+      transition: .2s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(16px);
+      background-color: #0d1117;
+    }
+
+    /* Event Stream */
+    .event-log {
+      grid-column: 1 / -1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .log-stream {
+      background: #090d12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      max-height: 140px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-line {
+      color: #c9d1d9;
+      display: flex;
+      gap: 8px;
+    }
+    .log-line .time { color: var(--text-muted); }
+    .log-line .tag { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <header id="header">
+    <div class="header-left">
+      <div class="logo-badge">🔔</div>
+      <div class="title-group">
+        <h1>RobOS Toast Daemon</h1>
+        <div class="sub">Categorized SDLC Overlay Notification Manager</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>Daemon Active</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Left Column: Notification Triggers -->
+    <div class="card">
+      <div class="card-title">
+        <span>⚡ SDLC Notification Triggers</span>
+        <span style="font-size:11px; color:var(--text-muted);">5 Categories &bull; 3 Tiers</span>
+      </div>
+      <div class="preset-triggers">
+        <button class="btn" id="btn-trigger-ci-info">
+          <span>⚙️</span>
+          <span><strong>CI Build Passed</strong> (ci_completed)</span>
+          <span class="tier-badge info">INFO &bull; 5s</span>
+        </button>
+        <button class="btn" id="btn-trigger-pr-warning">
+          <span>🔍</span>
+          <span><strong>PR Review Requested</strong> (pr_review_requested)</span>
+          <span class="tier-badge warning">WARNING &bull; 15s</span>
+        </button>
+        <button class="btn" id="btn-trigger-ci-crit">
+          <span>❌</span>
+          <span><strong>CI Pipeline Blocked</strong> (ci_failed)</span>
+          <span class="tier-badge critical">CRITICAL &bull; PERSISTENT</span>
+        </button>
+        <button class="btn" id="btn-trigger-task-info">
+          <span>📋</span>
+          <span><strong>Task Assigned: TASK-408</strong> (task_started)</span>
+          <span class="tier-badge info">INFO &bull; 5s</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: Overlay Stack & DND Controls -->
+    <div class="card">
+      <div class="card-title">
+        <span>🥞 Active Toast Stack (<span id="active-toast-count">0</span>/5)</span>
+        <button class="btn btn-danger" id="btn-dismiss-all" style="padding:4px 8px; font-size:11px;">Dismiss All</button>
+      </div>
+
+      <div class="dnd-row">
+        <div>
+          <div style="font-size:12px; font-weight:600;">Do Not Disturb (DND) Mode</div>
+          <div style="font-size:11px; color:var(--text-muted);">Suppress toasts; queue critical alerts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dnd-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toast-stack-preview" id="toast-stack-preview">
+        <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px;">
+          No active overlay toasts. Trigger an SDLC notification on the left.
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Event Stream -->
+    <div class="event-log">
+      <div class="card-title">
+        <span>📜 Toast Daemon Event Stream</span>
+        <span style="font-size:11px; color:var(--text-muted);" id="queue-status">Queue: 0 items</span>
+      </div>
+      <div class="log-stream" id="log-stream">
+        <div class="log-line">
+          <span class="time">[00:00:00]</span>
+          <span class="tag">[DAEMON READY]</span>
+          <span>Toast overlay subsystem initialized on top-right viewport.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "robos-profiled",
+  "version": "0.1.0",
+  "main": "main.js",
+  "description": "RobOS Ephemeral Agent User Profile Daemon & PAM Helper",
+  "bin": {
+    "robos-profile": "./robos-profile"
+  },
+  "keywords": [
+    "robos",
+    "daemon",
+    "agent-profile",
+    "pam",
+    "cgroup"
+  ],
+  "license": "MIT"
+}

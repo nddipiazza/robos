@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS Package & Runtime Schema",
+  "type": "object",
+  "required": ["version", "kind", "packages"],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.0"] },
+    "kind": { "type": "string", "enum": ["Packages"] },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "type", "runtime"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["desktop-app", "cli", "library", "daemon", "service"] },
+          "runtime": { "type": "string" },
+          "entry": { "type": "string" },
+          "devcontainer": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

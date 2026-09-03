@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS Universal AI Agent Auto-Configuration Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🤖</div>
+        <div>
+          <h1>Universal AI Agent Auto-Configuration Console</h1>
+          <div class="subtitle">Multi-Agent Gateway &middot; Claude Code, Gemini, Copilot, Cursor & AGENTS.md</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-select-universal">🌐 Universal AGENTS.md</button>
+        <button class="btn btn-primary" id="btn-sync-all">🔄 Sync All Agent Configurations</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-agents">5 Agents</div>
+        <div class="stat-label">Supported AI Agent Systems</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-mcp-router">Unified :19151</div>
+        <div class="stat-label">MCP Router Stdio Gateway</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-task">TASK-101</div>
+        <div class="stat-label">Auto-Injected Task Context</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-ekgraph">142 Nodes</div>
+        <div class="stat-label">EKGraph Repo Knowledge</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="agent-layout">
+        <!-- Supported Agents List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Supported AI Coding Assistants & Standards</span>
+          </div>
+          <div class="panel-body" id="agents-list"></div>
+        </div>
+
+        <!-- Generated MCP Config Viewer -->
+        <div class="panel">
+          <div class="panel-header">
+            <span id="config-title">Generated MCP Configuration (~/.claude/settings.json)</span>
+          </div>
+          <div class="panel-body config-body">
+            <pre class="config-pre" id="config-text">// Click an agent to view generated MCP config...</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Generated Markdown Context Preview -->
+      <div class="doc-box">
+        <div class="doc-header">
+          <span id="doc-title">Project Instruction & Context Sync (AGENTS.md)</span>
+          <span class="sync-status" id="sync-status">🟢 Fully Synchronized</span>
+        </div>
+        <pre class="doc-text" id="doc-text">// Synchronized instructions and context will preview here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

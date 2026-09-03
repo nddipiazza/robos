@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RobOS EKGraph MCP Server Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🌐</div>
+        <div>
+          <h1>EKGraph MCP Server Console</h1>
+          <div class="subtitle">Engineering Knowledge Graph, Architecture Topology & MCP Knowledge Retrieval</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="btn-traverse-linked">🔗 Traverse Linked Nodes</button>
+        <button class="btn btn-primary" id="btn-create-node">+ Create Knowledge Node</button>
+      </div>
+    </header>
+
+    <!-- Stat Bar -->
+    <div id="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total-nodes">5</div>
+        <div class="stat-label">Knowledge Nodes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-categories">4</div>
+        <div class="stat-label">Graph Categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tools">6</div>
+        <div class="stat-label">Exposed MCP Tools</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-resources">4</div>
+        <div class="stat-label">Exposed MCP Resources</div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-bar-row">
+      <input type="text" id="input-search" class="search-input" placeholder="🔍 Search knowledge graph (e.g. auth, prod, lead)..." />
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="graph-layout">
+        <!-- Nodes Column -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Knowledge Topology Nodes (robos_ekgraph_search)</span>
+          </div>
+          <div class="panel-body" id="nodes-list"></div>
+        </div>
+
+        <!-- Detail View Column -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>Selected Node Details & Linked Dependencies</span>
+          </div>
+          <div class="panel-body node-detail-body" id="node-detail">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Protocol Trace -->
+      <div class="trace-box">
+        <div class="trace-header">
+          <span>Live EKGraph MCP Protocol Trace (tools/call & resources/read)</span>
+          <button class="btn-clear" id="btn-clear-trace">Clear Trace</button>
+        </div>
+        <pre class="trace-log" id="trace-log">// Ready. EKGraph MCP queries will log here...</pre>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

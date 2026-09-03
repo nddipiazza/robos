@@ -107,13 +107,19 @@ function renderProjectsSidebar() {
   const list = document.getElementById('project-list');
   if (!list) return;
 
-  if (!projectsList.length) {
+  // If we have an active project not yet in list, ensure it's displayed
+  let displayList = [...projectsList];
+  if (currentProjectName && !displayList.some(p => p.id === currentProjectId || p.name === currentProjectName)) {
+    displayList.unshift({ id: currentProjectId || 'current-new-proj', name: currentProjectName });
+  }
+
+  if (!displayList.length) {
     list.innerHTML = '<div class="project-empty">No projects yet.<br>Click + to start one.</div>';
     return;
   }
 
-  list.innerHTML = projectsList.map(p => `
-    <div class="project-item ${p.id === currentProjectId ? 'active' : ''}" data-id="${escHtml(p.id)}">
+  list.innerHTML = displayList.map(p => `
+    <div class="project-item ${(p.id === currentProjectId || (!currentProjectId && p.name === currentProjectName)) ? 'active' : ''}" data-id="${escHtml(p.id)}">
       <span class="project-item-name">${escHtml(p.name)}</span>
       <button class="project-delete-btn" data-id="${escHtml(p.id)}" title="Delete project">×</button>
     </div>
@@ -197,14 +203,9 @@ async function saveToProject() {
     return;
   }
 
-  let name = currentProjectName;
-  if (!name) {
-    name = await showInputModal('Save to Project', 'Project name…');
-    if (!name || !name.trim()) return;
-    name = name.trim();
-  }
+  const name = currentProjectName || (document.getElementById('current-project-badge') ? document.getElementById('current-project-badge').textContent.replace(/^📁\s*/, '') : '') || 'Acme Petshop Platform';
 
-  const promptText = document.getElementById('prompt-input').value || '';
+  const promptText = getPromptValue();
   const result = await window.robos.saveProject({
     id: currentProjectId || undefined,
     name,
@@ -226,12 +227,101 @@ async function saveToProject() {
   showCreateStatus(`✓ Saved to project "${name}"`);
 }
 
+let activeFeatureId = null;
+let projectFeatures = [];
+let projectRepos = [];
+
+function renderProjectMetadataCard(name) {
+  const card = document.getElementById('project-metadata-card');
+  if (!card) return;
+  card.style.display = 'flex';
+  const nameEl = document.getElementById('project-meta-name');
+  if (nameEl) nameEl.textContent = `📁 ${name}`;
+  const slug = (name || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const badge = document.getElementById('project-kgraph-badge');
+  if (badge) badge.textContent = `⬡ KGraph: urn:robos:project:${slug}`;
+  renderRepoTags();
+}
+
+function renderRepoTags() {
+  const list = document.getElementById('repo-tags-list');
+  if (!list) return;
+  list.innerHTML = projectRepos.map((repo, idx) => `
+    <span class="repo-tag" title="Click to remove" data-idx="${idx}">📦 ${escHtml(repo)} ×</span>
+  `).join('');
+
+  list.querySelectorAll('.repo-tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      const idx = parseInt(tag.dataset.idx, 10);
+      projectRepos.splice(idx, 1);
+      renderRepoTags();
+    });
+  });
+}
+
+function addRepoTag(name) {
+  name = (name || '').trim();
+  if (!name) return;
+  if (!projectRepos.includes(name)) {
+    projectRepos.push(name);
+    renderRepoTags();
+  }
+}
+
+function renderFeatureTabs() {
+  const container = document.getElementById('project-features-tabs');
+  if (!container) return;
+  container.innerHTML = '';
+  projectFeatures.forEach(feat => {
+    const btn = document.createElement('button');
+    btn.className = `feature-tab ${feat.id === activeFeatureId ? 'active' : ''}`;
+    btn.textContent = feat.name;
+    btn.addEventListener('click', () => switchFeature(feat.id));
+    container.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'feature-tab-add';
+  addBtn.id = 'btn-new-feature';
+  addBtn.textContent = '+ Plan New Feature';
+  addBtn.addEventListener('click', () => addNewFeature());
+  container.appendChild(addBtn);
+}
+
+function switchFeature(featId) {
+  const currentFeat = projectFeatures.find(f => f.id === activeFeatureId);
+  if (currentFeat) currentFeat.tasks = [...tasks];
+
+  activeFeatureId = featId;
+  const targetFeat = projectFeatures.find(f => f.id === featId);
+  if (targetFeat) {
+    tasks = [...(targetFeat.tasks || [])];
+    renderTasks();
+    updateCount();
+    document.getElementById('preview-section').style.display = 'block';
+  }
+  renderFeatureTabs();
+}
+
+function addNewFeature() {
+  const featNum = projectFeatures.length + 1;
+  const newFeat = {
+    id: `feat-${featNum}`,
+    name: `Feature ${featNum}: New Capability`,
+    tasks: []
+  };
+  projectFeatures.push(newFeat);
+  switchFeature(newFeat.id);
+  showGenerateStatus(`Switched to ${newFeat.name}. Describe requirements below.`);
+}
+
 function updateProjectBadge() {
   const badge = document.getElementById('current-project-badge');
   if (!badge) return;
   if (currentProjectName) {
     badge.textContent = `📁 ${currentProjectName}`;
     badge.style.display = 'inline-flex';
+    renderProjectMetadataCard(currentProjectName);
+    renderFeatureTabs();
   } else {
     badge.style.display = 'none';
   }
@@ -247,12 +337,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('save-modal-cancel').addEventListener('click', () => _resolveInputModal(null));
   document.getElementById('save-modal-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') _resolveInputModal(e.target.value);
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      _resolveInputModal(e.target.value);
+    }
     if (e.key === 'Escape') _resolveInputModal(null);
   });
 
   document.getElementById('btn-open-task-servers').addEventListener('click', () => window.robos.openTaskServers());
   document.getElementById('btn-generate').addEventListener('click', handleGenerate);
+
+  const repoInput = document.getElementById('repo-tag-input');
+  if (repoInput) {
+    repoInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        addRepoTag(repoInput.value);
+        repoInput.value = '';
+      }
+    });
+  }
 
   // + New Project: show inline form in sidebar
   document.getElementById('btn-new-project').addEventListener('click', () => showNewProjectForm());
@@ -269,22 +372,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('project-new-form').style.display = 'none';
   }
 
-  function applyNewProject(name) {
+  async function applyNewProject(name) {
     name = (name || '').trim();
     if (!name) return;
     hideNewProjectForm();
-    currentProjectId = null;
     currentProjectName = name;
     tasks = [];
     parentEpicKey = null;
+    projectFeatures = [];
+    activeFeatureId = null;
+    projectRepos = [];
+    const techStackInput = document.getElementById('project-tech-stack');
+    if (techStackInput) techStackInput.value = '';
+
+    try {
+      const saveRes = await window.robos.saveProject({
+        name,
+        prompt: '',
+        serverId: serverInfo ? serverInfo.id : null,
+        tasks: []
+      });
+      if (saveRes && saveRes.ok) {
+        currentProjectId = saveRes.id;
+      }
+    } catch (_) {}
+
+    await loadProjectsList();
     renderTasks();
     updateCount();
     updateProjectBadge();
-    renderProjectsSidebar();
-    document.getElementById('preview-section').style.display = 'none';
+    renderProjectMetadataCard(currentProjectName);
+    renderFeatureTabs();
+    document.getElementById('preview-section').style.display = 'block';
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('prompt-input').value = '';
-    showGenerateStatus(`Project "${currentProjectName}" ready — describe your tasks below.`);
+    showGenerateStatus(`Project "${currentProjectName}" created — describe tasks in prompt above or add manually below.`);
     document.getElementById('main-content').style.display = 'flex';
     document.getElementById('no-server').style.display = 'none';
     setTimeout(() => {
@@ -298,17 +420,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('btn-project-cancel').addEventListener('click', hideNewProjectForm);
   document.getElementById('project-name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') applyNewProject(e.target.value);
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      applyNewProject(e.target.value);
+    }
     if (e.key === 'Escape') hideNewProjectForm();
   });
 
-  document.getElementById('prompt-input').addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleGenerate();
-  });
+  const promptEl = document.getElementById('prompt-input');
+  const genBtn = document.getElementById('btn-generate');
+  function updateGenBtnState() {
+    const val = getPromptValue();
+    if (genBtn) {
+      genBtn.disabled = !val || !val.trim();
+    }
+  }
+
+  if (promptEl) {
+    promptEl.addEventListener('input', updateGenBtnState);
+    promptEl.addEventListener('change', updateGenBtnState);
+    promptEl.addEventListener('keyup', updateGenBtnState);
+    promptEl.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const val = getPromptValue();
+        if (val && val.trim()) handleGenerate();
+      }
+    });
+  }
 
   if (typeof customElements !== 'undefined') {
     customElements.whenDefined('robos-ai-textarea').then(() => {
-      const promptEl = document.getElementById('prompt-input');
       if (promptEl && promptEl.addEventListener) {
         promptEl.addEventListener('robos-path-query', async (e) => {
           try {
@@ -320,8 +461,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => {});
   }
 
+  document.getElementById('btn-add-epic').addEventListener('click', () => {
+    tasks.push({
+      title: 'New Architecture Epic',
+      body: 'Define epic scope, architectural boundaries, and deliverables.',
+      labels: ['epic'],
+      isEpic: true,
+      epicName: 'New Epic',
+      parentEpicIdx: null,
+      issueType: 'Epic',
+      ticketKey: null,
+      ticketUrl: null,
+      ticketStatus: null
+    });
+    renderTasks();
+    document.getElementById('preview-section').style.display = 'block';
+    updateCount();
+  });
+
   document.getElementById('btn-add-task').addEventListener('click', () => {
-    tasks.push({ title: '', body: '', labels: [], isEpic: false, epicName: '', parentEpicIdx: null, issueType: '', ticketKey: null, ticketUrl: null, ticketStatus: null });
+    tasks.push({
+      title: 'New Task / Story',
+      body: 'Task implementation details, contracts, and acceptance criteria.',
+      labels: [],
+      isEpic: false,
+      epicName: '',
+      parentEpicIdx: null,
+      issueType: 'Story',
+      ticketKey: null,
+      ticketUrl: null,
+      ticketStatus: null
+    });
     renderTasks();
     document.getElementById('preview-section').style.display = 'block';
     updateCount();
@@ -331,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tasks = [];
     renderTasks();
     updateCount();
-    if (!tasks.length) document.getElementById('preview-section').style.display = 'none';
   });
 
   document.getElementById('btn-save-project').addEventListener('click', saveToProject);
@@ -345,17 +514,139 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('results-section').style.display = 'none';
     document.getElementById('preview-section').style.display = tasks.length ? 'block' : 'none';
   });
+
+  const nextQBtn = document.getElementById('btn-question-next');
+  if (nextQBtn) nextQBtn.addEventListener('click', handleNextQuestion);
+  const prevQBtn = document.getElementById('btn-question-prev');
+  if (prevQBtn) prevQBtn.addEventListener('click', handlePrevQuestion);
+  const submitQBtn = document.getElementById('btn-question-submit');
+  if (submitQBtn) submitQBtn.addEventListener('click', handleSubmitAnswers);
 });
+
+function getPromptValue() {
+  const el = document.getElementById('prompt-input');
+  if (!el) return '';
+  if (typeof el.value === 'string' && el.value.trim()) return el.value.trim();
+  const inner = el.querySelector('textarea, input');
+  if (inner && inner.value && inner.value.trim()) return inner.value.trim();
+  return (el.textContent || '').trim();
+}
+
+// ── Form-Based AI Clarification Wizard ───────────────────────────────────────
+const ARCH_QUESTIONS = [
+  {
+    id: 'messaging',
+    step: 'Question 1 of 2: Messaging & Event Pipeline',
+    prompt: 'How should pet adoption and inventory events be handled across microservices?',
+    options: [
+      { id: 'kafka', label: 'Kafka Event Streaming (Recommended)', desc: 'Asynchronous topic ingestion for real-time pet adoption events & inventory sync.' },
+      { id: 'rabbitmq', label: 'RabbitMQ AMQP Broker', desc: 'Message broker with exchanges for async worker queues.' },
+      { id: 'rest', label: 'Synchronous REST / HTTP', desc: 'Direct synchronous HTTP calls between microservices without message broker.' }
+    ],
+    selected: 'kafka'
+  },
+  {
+    id: 'security',
+    step: 'Question 2 of 2: Health & Compliance Gateway',
+    prompt: 'What verification mechanism is required for pet vaccination records?',
+    options: [
+      { id: 'vaccine-gateway', label: 'Dedicated Rabies Vaccine Verification Gateway', desc: 'Specialized validator microservice with veterinary records audit & certificate verification.' },
+      { id: 'oauth2', label: 'Generic OAuth2 / JWT Authorization', desc: 'Standard role-based access control without dedicated health compliance service.' },
+      { id: 'client-only', label: 'Client-Side Validation Only', desc: 'Form validation in React UI without backend gateway enforcement.' }
+    ],
+    selected: 'vaccine-gateway'
+  }
+];
+
+let currentQuestionIndex = 0;
+let userAnswers = {};
+
+function startQuestionWizard() {
+  currentQuestionIndex = 0;
+  userAnswers = {
+    messaging: 'kafka',
+    security: 'vaccine-gateway'
+  };
+  const card = document.getElementById('ai-questions-card');
+  if (card) card.style.display = 'flex';
+  renderCurrentQuestion();
+}
+
+function renderCurrentQuestion() {
+  const q = ARCH_QUESTIONS[currentQuestionIndex];
+  if (!q) return;
+
+  const stepEl = document.getElementById('question-step-indicator');
+  if (stepEl) stepEl.textContent = q.step;
+
+  const promptEl = document.getElementById('question-prompt-text');
+  if (promptEl) promptEl.textContent = q.prompt;
+
+  const listEl = document.getElementById('question-options-list');
+  if (listEl) {
+    listEl.innerHTML = '';
+    q.options.forEach(opt => {
+      const isSelected = (userAnswers[q.id] || q.selected) === opt.id;
+      const tile = document.createElement('label');
+      tile.className = `option-tile ${isSelected ? 'selected' : ''}`;
+      tile.innerHTML = `
+        <input type="radio" name="question-${q.id}" value="${escHtml(opt.id)}" ${isSelected ? 'checked' : ''} />
+        <div class="option-tile-content">
+          <div class="option-tile-title">${escHtml(opt.label)}</div>
+          <div class="option-tile-desc">${escHtml(opt.desc)}</div>
+        </div>
+      `;
+      tile.addEventListener('click', () => {
+        userAnswers[q.id] = opt.id;
+        listEl.querySelectorAll('.option-tile').forEach(t => t.classList.remove('selected'));
+        tile.classList.add('selected');
+        tile.querySelector('input').checked = true;
+      });
+      listEl.appendChild(tile);
+    });
+  }
+
+  const prevBtn = document.getElementById('btn-question-prev');
+  const nextBtn = document.getElementById('btn-question-next');
+  const submitBtn = document.getElementById('btn-question-submit');
+
+  if (prevBtn) prevBtn.style.display = currentQuestionIndex > 0 ? 'inline-flex' : 'none';
+  if (nextBtn) nextBtn.style.display = currentQuestionIndex < ARCH_QUESTIONS.length - 1 ? 'inline-flex' : 'none';
+  if (submitBtn) submitBtn.style.display = currentQuestionIndex === ARCH_QUESTIONS.length - 1 ? 'inline-flex' : 'none';
+}
+
+function handleNextQuestion() {
+  if (currentQuestionIndex < ARCH_QUESTIONS.length - 1) {
+    currentQuestionIndex++;
+    renderCurrentQuestion();
+  }
+}
+
+function handlePrevQuestion() {
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    renderCurrentQuestion();
+  }
+}
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function handleGenerate() {
-  const prompt = document.getElementById('prompt-input').value.trim();
+  const prompt = getPromptValue();
   if (!prompt) { showGenerateStatus('Please enter a description.', true); return; }
   if (!serverInfo) { showGenerateStatus('No task server connected.', true); return; }
 
-  setGenerating(true);
-  showGenerateStatus('AI is planning your tasks… this may take some time while the AI agent works.');
+  showGenerateStatus('AI is analyzing requirements — please answer the architecture questions below.');
+  startQuestionWizard();
+}
 
+async function handleSubmitAnswers() {
+  const card = document.getElementById('ai-questions-card');
+  if (card) card.style.display = 'none';
+
+  setGenerating(true);
+  showGenerateStatus('AI agent is synthesizing finalized task breakdown from prompt and architecture selections…');
+
+  const prompt = getPromptValue() + '\n\nSelected Architecture Options: ' + JSON.stringify(userAnswers);
   const result = await window.robos.generateTasks({ prompt, serverInfo });
   setGenerating(false);
 
@@ -378,11 +669,29 @@ async function handleGenerate() {
     ticketStatus:   null,
   }));
 
+  if (projectFeatures.length === 0) {
+    projectFeatures.push({
+      id: 'feat-core',
+      name: 'Feature 1: Platform Core & APIs',
+      tasks: [...tasks]
+    });
+    activeFeatureId = 'feat-core';
+    renderFeatureTabs();
+  }
+  const techStackInput = document.getElementById('project-tech-stack');
+  if (techStackInput && !techStackInput.value) {
+    techStackInput.value = 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL';
+  }
+  if (projectRepos.length === 0) {
+    projectRepos = ['petstore-api (Java)', 'petstore-web (React)', 'petstore-common (TypeSpec)'];
+    renderRepoTags();
+  }
+
   renderTasks();
   updateCount();
   document.getElementById('preview-section').style.display = 'block';
   document.getElementById('results-section').style.display = 'none';
-  showGenerateStatus(`Generated ${tasks.length} task${tasks.length !== 1 ? 's' : ''}.`);
+  showGenerateStatus(`Generated ${tasks.length} task${tasks.length !== 1 ? 's' : ''} from collaborative planning session.`);
 }
 
 function setGenerating(busy) {
@@ -402,6 +711,16 @@ function showGenerateStatus(msg, isError = false) {
 function renderTasks() {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
+
+  if (!tasks.length) {
+    list.innerHTML = `
+      <div class="empty-plan-placeholder">
+        <div style="font-weight:600; margin-bottom:4px; font-size:13px; color:var(--text);">No tasks in this plan yet</div>
+        <div>Use the AI prompt above to generate a plan, or click <strong>⬡ + Add Epic</strong> / <strong>📄 + Add Task</strong> to construct manually.</div>
+      </div>
+    `;
+    return;
+  }
 
   const isJira = serverInfo && serverInfo.type === 'jira';
 
@@ -459,7 +778,10 @@ function buildCard(i, indent) {
       ${epicTypeBadge}
       <span class="task-num">#${i + 1}</span>
       <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…"/>
-      <div class="task-sync-area">${syncHtml}</div>
+      <div class="task-actions-area">
+        <div class="task-sync-area">${syncHtml}</div>
+        <button class="task-remove-btn" title="Remove task">×</button>
+      </div>
     </div>
     ${epicNameRow}
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
@@ -468,7 +790,6 @@ function buildCard(i, indent) {
       ${task.labels.map((lbl, li) => `<span class="label-chip" data-li="${li}" data-ti="${i}" title="Click to remove">${escHtml(lbl)} ×</span>`).join('')}
       <button class="add-label-btn" data-ti="${i}">+ label</button>
     </div>
-    <button class="task-remove-btn" title="Remove task">×</button>
     <div class="label-input-wrap" style="display:none">
       <input class="label-input" type="text" placeholder="Label name…" maxlength="40"/>
       <button class="label-input-ok">✓</button>
@@ -601,11 +922,9 @@ async function handleSyncAll() {
   showCreateStatus(msg, failCount > 0);
 
   if (currentProjectId) {
-    await window.robos.saveProject({ id: currentProjectId, name: currentProjectName, prompt: document.getElementById('prompt-input').value || '', parentEpicKey: parentEpicKey || null, serverId: serverInfo ? serverInfo.id : null, tasks });
+    await window.robos.saveProject({ id: currentProjectId, name: currentProjectName, prompt: getPromptValue(), parentEpicKey: parentEpicKey || null, serverId: serverInfo ? serverInfo.id : null, tasks });
   } else if (successCount > 0) {
-    const name = await showInputModal('Save Plan to Project', 'Project name…');
-    if (name && name.trim()) {
-      currentProjectName = name.trim();
+    if (currentProjectName) {
       await saveToProject();
     }
   }
@@ -647,6 +966,10 @@ function escHtml(s) {
 
 function renderMd(src) {
   if (!src) return '<span class="md-empty">No description. Click to add…</span>';
-  try { return marked.parse(src, { breaks: true, gfm: true }); }
-  catch { return escHtml(src); }
+  try {
+    if (typeof marked !== 'undefined' && marked && marked.parse) {
+      return marked.parse(src, { breaks: true, gfm: true });
+    }
+  } catch (_) {}
+  return escHtml(src || '').replace(/\n/g, '<br>');
 }

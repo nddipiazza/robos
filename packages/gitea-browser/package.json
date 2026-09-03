@@ -1,0 +1,6 @@
+{
+  "name": "gitea-browser",
+  "version": "1.0.0",
+  "description": "RobOS Chrome Browser for Gitea Forge Verification",
+  "main": "main.js"
+}

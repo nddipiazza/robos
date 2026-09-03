@@ -1,0 +1,13 @@
+{
+  "name": "claude-autoconfig",
+  "version": "0.1.0",
+  "description": "Claude Code Auto-Configuration, MCP Settings & CLAUDE.md Synchronizer for RobOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}
