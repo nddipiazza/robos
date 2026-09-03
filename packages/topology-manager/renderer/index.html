@@ -66,7 +66,8 @@
         </div>
       </div>
       <div class="ai-textarea-wrapper">
-        <robos-ai-textarea id="topology-ai-prompt" placeholder="Describe the polyglot microservices, databases, Kafka topics, and gateways to synthesize the C4 topology..."></robos-ai-textarea>
+        <robos-ai-textarea id="topology-ai-prompt" placeholder="e.g. Synthesize Acme Petshop polyglot architecture (Java 21 Spring Boot REST API, React 18 client, PostgreSQL, Kafka). Ask me questions to refine service boundaries, messaging, and compliance gateways."></robos-ai-textarea>
+        <robos-question-wizard id="topology-question-wizard" style="display: none;"></robos-question-wizard>
       </div>
     </div>
 

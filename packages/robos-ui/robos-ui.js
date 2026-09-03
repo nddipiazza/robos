@@ -496,6 +496,142 @@ robos-ai-textarea {
   font-size: 15px; line-height: 1; padding: 0 2px; flex-shrink: 0;
 }
 .robos-auth-banner-dismiss:hover { color: #f85149; }
+
+/* ── RobosQuestionWizard styles ────────────────────────────────────────────── */
+robos-question-wizard {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+.robos-wizard-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.robos-wizard-header {
+  padding: 8px 12px;
+  background: #090d13;
+  border-bottom: 1px solid #30363d;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.robos-wizard-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.robos-wizard-icon { font-size: 14px; }
+.robos-wizard-step {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00bcd4;
+}
+.robos-wizard-badge {
+  font-size: 9px;
+  background: rgba(0, 188, 212, 0.15);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  color: #00bcd4;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.robos-wizard-body {
+  padding: 12px 14px;
+}
+.robos-wizard-prompt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e6edf3;
+  margin-bottom: 10px;
+}
+.robos-wizard-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.robos-wizard-option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.robos-wizard-option-label:hover {
+  border-color: #00bcd4;
+  background: #111923;
+}
+.robos-wizard-option-label.selected {
+  border-color: #00bcd4;
+  background: rgba(0, 188, 212, 0.08);
+}
+.robos-wizard-option-label input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #00bcd4;
+}
+.robos-wizard-option-content {
+  flex: 1;
+}
+.robos-wizard-option-text {
+  font-size: 11px;
+  color: #e6edf3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.robos-wizard-rec-tag {
+  font-size: 9px;
+  color: #3fb950;
+  font-weight: 600;
+}
+.robos-wizard-option-desc {
+  font-size: 10px;
+  color: #8b949e;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.robos-wizard-footer {
+  padding: 8px 12px;
+  background: #090d13;
+  border-top: 1px solid #30363d;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.robos-wizard-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+.robos-wizard-btn-prev {
+  background: #21262d;
+  border-color: #30363d;
+  color: #e6edf3;
+}
+.robos-wizard-btn-prev:hover { background: #30363d; }
+.robos-wizard-btn-next {
+  background: rgba(0, 188, 212, 0.2);
+  border-color: #00bcd4;
+  color: #00bcd4;
+}
+.robos-wizard-btn-next:hover {
+  background: #00bcd4;
+  color: #0d1117;
+}
+.robos-wizard-btn-submit {
+  background: #238636;
+  color: #ffffff;
+}
+.robos-wizard-btn-submit:hover { background: #2ea043; }
 `;
 
   let stylesInjected = false;
@@ -1976,11 +2112,136 @@ robos-person-selector-textbox {
     }
   }
 
+  // ── RobosQuestionWizard Component ──────────────────────────────────────────
+  class RobosQuestionWizard extends HTMLElement {
+    constructor() {
+      super();
+      this._questions = [];
+      this._currentIndex = 0;
+      this._answers = {};
+    }
+
+    connectedCallback() {
+      this.classList.add('robos-question-wizard-host');
+      this._render();
+    }
+
+    setQuestions(questions) {
+      this._questions = Array.isArray(questions) ? questions : [];
+      this._currentIndex = 0;
+      this._answers = {};
+      this._render();
+    }
+
+    getAnswers() {
+      return { ...this._answers };
+    }
+
+    _render() {
+      if (!this._questions || this._questions.length === 0) {
+        this.innerHTML = '';
+        return;
+      }
+
+      const q = this._questions[this._currentIndex];
+      const total = this._questions.length;
+      const isFirst = this._currentIndex === 0;
+      const isLast = this._currentIndex === total - 1;
+      const currentSelected = this._answers[q.id] || (q.options && q.options[0] ? q.options[0].id : null);
+      if (!this._answers[q.id] && currentSelected) {
+        this._answers[q.id] = currentSelected;
+      }
+
+      this.innerHTML = `
+        <div class="robos-wizard-card">
+          <div class="robos-wizard-header">
+            <div class="robos-wizard-header-title">
+              <span class="robos-wizard-icon">📋</span>
+              <span class="robos-wizard-step">${q.step || `Question ${this._currentIndex + 1} of ${total}: ${q.title || ''}`}</span>
+              <span class="robos-wizard-badge">Interactive Architecture Survey</span>
+            </div>
+          </div>
+          <div class="robos-wizard-body">
+            <h3 class="robos-wizard-prompt">${q.prompt || q.title || ''}</h3>
+            <div class="robos-wizard-options">
+              ${(q.options || []).map(opt => {
+                const isSelected = this._answers[q.id] === opt.id;
+                return `
+                  <label class="robos-wizard-option-label ${isSelected ? 'selected' : ''}">
+                    <input type="radio" name="rw-opt-${q.id}" value="${opt.id}" ${isSelected ? 'checked' : ''} />
+                    <div class="robos-wizard-option-content">
+                      <div class="robos-wizard-option-text">
+                        <strong>${opt.label}</strong>
+                        ${opt.recommended ? '<span class="robos-wizard-rec-tag">(Recommended)</span>' : ''}
+                      </div>
+                      ${opt.desc ? `<div class="robos-wizard-option-desc">${opt.desc}</div>` : ''}
+                    </div>
+                  </label>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          <div class="robos-wizard-footer">
+            <button class="robos-wizard-btn robos-wizard-btn-prev" style="${isFirst ? 'display:none;' : ''}">← Previous</button>
+            ${isLast
+              ? `<button class="robos-wizard-btn robos-wizard-btn-submit">✦ Apply & Synthesize Topology</button>`
+              : `<button class="robos-wizard-btn robos-wizard-btn-next">Next Question →</button>`
+            }
+          </div>
+        </div>
+      `;
+
+      // Event bindings
+      const radioInputs = this.querySelectorAll(`input[name="rw-opt-${q.id}"]`);
+      radioInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+          this._answers[q.id] = e.target.value;
+          this.querySelectorAll('.robos-wizard-option-label').forEach(l => l.classList.remove('selected'));
+          const parent = e.target.closest('.robos-wizard-option-label');
+          if (parent) parent.classList.add('selected');
+        });
+      });
+
+      const prevBtn = this.querySelector('.robos-wizard-btn-prev');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (this._currentIndex > 0) {
+            this._currentIndex--;
+            this._render();
+          }
+        });
+      }
+
+      const nextBtn = this.querySelector('.robos-wizard-btn-next');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (this._currentIndex < total - 1) {
+            this._currentIndex++;
+            this._render();
+          }
+        });
+      }
+
+      const submitBtn = this.querySelector('.robos-wizard-btn-submit');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', () => {
+          this.dispatchEvent(new CustomEvent('robos-wizard-complete', {
+            detail: { answers: this.getAnswers() },
+            bubbles: true,
+          }));
+        });
+      }
+    }
+  }
+
   if (!customElements.get('robos-person-selector-textbox')) {
     customElements.define('robos-person-selector-textbox', RobosPersonSelectorTextbox);
   }
+  if (!customElements.get('robos-question-wizard')) {
+    customElements.define('robos-question-wizard', RobosQuestionWizard);
+  }
 
   // Export
-  global.RobosUI = { RobosAITextarea, RobosPersonSelectorTextbox, DEFAULT_COMMANDS };
+  global.RobosUI = { RobosAITextarea, RobosPersonSelectorTextbox, RobosQuestionWizard, DEFAULT_COMMANDS };
 
 })(typeof window !== 'undefined' ? window : globalThis);

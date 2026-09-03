@@ -27,16 +27,38 @@ const ACME_FULL_LINKS = [
   { from: 'petstore-api', to: 'petstore-common', protocol: 'Maven DTO Jar' },
 ];
 
+const TOPOLOGY_QUESTIONS = [
+  {
+    id: 'event-broker',
+    step: 'Question 1 of 2: Interservice Messaging & Event Streaming',
+    title: 'Interservice Messaging',
+    prompt: 'Which event streaming broker should decouple pet adoption events and inventory updates?',
+    options: [
+      { id: 'kafka', label: 'Apache Kafka 3.7 Event Bus (event-bus)', desc: 'High-throughput partitioned event log with Protobuf schemas (recommended for distributed polyglot topologies)', recommended: true },
+      { id: 'rabbitmq', label: 'RabbitMQ AMQP Broker', desc: 'Message queue broker with exchange-based topic routing' },
+      { id: 'direct-rest', label: 'Direct Synchronous REST Calls', desc: 'Direct point-to-point HTTP/REST calls between services (tightly coupled)' },
+    ],
+  },
+  {
+    id: 'vaccine-compliance',
+    step: 'Question 2 of 2: Health & Compliance Gateway',
+    title: 'Compliance Gateway Architecture',
+    prompt: 'How should rabies vaccination certification and veterinary health registry validation be isolated?',
+    options: [
+      { id: 'fastify-gateway', label: 'Dedicated Fastify & TypeSpec Compliance Gateway (vaccine-gateway)', desc: 'Isolates external vet registry APIs, state compliance, and mTLS security boundaries', recommended: true },
+      { id: 'monolith-module', label: 'Embedded Module in Java Spring Boot API', desc: 'Directly integrates validation logic within petstore-api monolith container' },
+    ],
+  },
+];
+
 async function init() {
   const promptEl = document.getElementById('topology-ai-prompt');
   if (promptEl) {
     promptEl.addEventListener('robos-submit', (e) => {
-      const text = e.detail?.value || promptEl.value || '';
-      window.synthesizeTopology(text);
+      window.promptQuestions();
     });
     promptEl.addEventListener('submit', (e) => {
-      const text = e.detail?.text || promptEl.value || '';
-      window.synthesizeTopology(text);
+      window.promptQuestions();
     });
   }
 
@@ -46,13 +68,21 @@ async function init() {
   renderInspector();
 }
 
-window.synthesizeTopology = function(promptText) {
-  if (!promptText) {
-    const host = document.getElementById('topology-ai-prompt');
-    const inner = host ? (host.querySelector('.robos-ai-inner') || host) : null;
-    promptText = inner ? (inner.innerText || inner.value || '') : '';
+window.promptQuestions = function() {
+  const wizard = document.getElementById('topology-question-wizard');
+  if (wizard) {
+    wizard.style.display = 'block';
+    wizard.setQuestions(TOPOLOGY_QUESTIONS);
+    wizard.addEventListener('robos-wizard-complete', (e) => {
+      wizard.style.display = 'none';
+      window.applyTopologyAnswers(e.detail?.answers || {});
+    }, { once: true });
+  } else {
+    window.applyTopologyAnswers({});
   }
+};
 
+window.applyTopologyAnswers = function(answers) {
   topology.nodes = [...ACME_FULL_NODES];
   topology.links = [...ACME_FULL_LINKS];
   selectedNodeId = 'petstore-api';
@@ -69,6 +99,10 @@ window.synthesizeTopology = function(promptText) {
   renderInspector();
 };
 
+window.synthesizeTopology = function(promptText) {
+  window.promptQuestions();
+};
+
 window.importFromTaskPlanner = function() {
   const defaultPrompt = `Synthesizing architecture from Task Planner (Acme Petshop Platform):
 - Java 21 Spring Boot 3 REST API microservice (petstore-api)
@@ -76,7 +110,9 @@ window.importFromTaskPlanner = function() {
 - React 18 TypeScript web client (petstore-web)
 - Apache Kafka event bus for async pet adoption (event-bus)
 - Dedicated rabies vaccine certification gateway (vaccine-gateway)
-- Reusable TypeSpec & Pact contract models (petstore-common)`;
+- Reusable TypeSpec & Pact contract models (petstore-common)
+
+Ask me clarifying questions to refine service boundaries and messaging topology.`;
 
   const host = document.getElementById('topology-ai-prompt');
   if (host) {
@@ -84,7 +120,7 @@ window.importFromTaskPlanner = function() {
     if (inner) inner.innerText = defaultPrompt;
   }
 
-  window.synthesizeTopology(defaultPrompt);
+  window.promptQuestions();
 };
 
 function renderStats() {

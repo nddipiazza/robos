@@ -9,13 +9,15 @@ const SLUG = 'acme-petshop-step2-topology';
 const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
 const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-9b8f-bb0ba6b00424';
 
-const TOPOLOGY_PROMPT = `Synthesizing architecture from Task Planner (Acme Petshop Platform):
+const TOPOLOGY_PROMPT = `Synthesizing architecture for Acme Petshop Platform:
 - Java 21 Spring Boot 3 REST API microservice (petstore-api)
 - PostgreSQL 16 relational database with Flyway (petstore-db)
 - React 18 TypeScript web client (petstore-web)
 - Apache Kafka event bus for async pet adoption (event-bus)
 - Dedicated rabies vaccine certification gateway (vaccine-gateway)
-- Reusable TypeSpec & Pact contract models (petstore-common)`;
+- Reusable TypeSpec & Pact contract models (petstore-common)
+
+Ask me clarifying questions via the interactive survey to refine service boundaries, event streaming, and compliance gateways.`;
 
 const SCRIPT = [
   {
@@ -31,11 +33,11 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: 'In the multi-line AI textarea, we enter the polyglot microservice specifications from our task plan.',
+    narration: 'In the multi-line AI textarea, we enter the architecture prompt encouraging clarifying questions.',
     target: '#topology-ai-prompt',
     action: 'type',
     value: TOPOLOGY_PROMPT,
-    callout: 'Enter Polyglot Architecture Prompt',
+    callout: 'Enter Architecture Prompt (Ask Questions)',
     js: `(() => {
       const host = document.getElementById('topology-ai-prompt');
       if (host) {
@@ -49,19 +51,69 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: 'We submit the AI prompt to synthesize the 6-container C4 architecture graph in real-time.',
+    narration: 'We submit the prompt. The AI responds by launching an interactive architecture survey.',
     target: '.robos-submit-btn',
     action: 'click',
-    callout: 'Submit AI Architecture Prompt',
+    callout: 'AI Questions Survey Triggered',
     js: `(() => {
       const host = document.getElementById('topology-ai-prompt');
       if (host && host._doSubmit) {
         host._doSubmit();
-      } else if (window.synthesizeTopology) {
-        window.synthesizeTopology();
+      } else if (window.promptQuestions) {
+        window.promptQuestions();
       }
     })()`,
     minHold: 4000,
+  },
+  {
+    narration: 'We answer Question 1: selecting Apache Kafka 3.7 partitioned event bus for event decoupling.',
+    target: '.robos-wizard-option-label',
+    action: 'click',
+    callout: 'Question 1: Interservice Event Broker',
+    js: `(() => {
+      const wizard = document.getElementById('topology-question-wizard');
+      if (wizard) {
+        const radio = wizard.querySelector('input[value="kafka"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: 'We click "Next Question" to proceed to compliance and veterinary certification architecture.',
+    target: '.robos-wizard-btn-next',
+    action: 'click',
+    callout: 'Next Question: Compliance Gateway',
+    js: `(() => {
+      const wizard = document.getElementById('topology-question-wizard');
+      if (wizard) {
+        const nextBtn = wizard.querySelector('.robos-wizard-btn-next');
+        if (nextBtn) nextBtn.click();
+      }
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: 'We select the Dedicated Fastify & TypeSpec Compliance Gateway and submit the answers.',
+    target: '.robos-wizard-btn-submit',
+    action: 'click',
+    callout: 'Submit Survey & Synthesize Topology',
+    js: `(() => {
+      const wizard = document.getElementById('topology-question-wizard');
+      if (wizard) {
+        const radio = wizard.querySelector('input[value="fastify-gateway"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const submitBtn = wizard.querySelector('.robos-wizard-btn-submit');
+        if (submitBtn) submitBtn.click();
+      }
+    })()`,
+    minHold: 4500,
   },
   {
     narration: 'The Backstage catalog and canvas are populated with all 6 polyglot nodes and protocol links.',
@@ -151,10 +203,12 @@ async function main() {
     execSync(`ffmpeg -y -ss 00:00:02 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-desktop_frame.png`, { stdio: 'ignore' });
     execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-empty_clean_frame.png`, { stdio: 'ignore' });
     execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-prompt_typing_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-synthesized_canvas_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:23 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:28 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-vaccine_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:33 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-question1_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:20 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-question2_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:26 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-synthesized_canvas_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:32 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-inspector_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:38 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-vaccine_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:43 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step2-l1_frame.png`, { stdio: 'ignore' });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step2-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step2.vtt`);
 
