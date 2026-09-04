@@ -82,7 +82,7 @@ Multi-environment deployment pipeline tracking (Development, Staging, Production
 
 ### CI Monitor
 Real-time pipeline monitoring with automated AI root-cause diagnosis and one-click failure reruns.
-![CI Monitor]({{ '/assets/images/screenshots/ci-monitor.png' | relative_url }})
+![CI Monitor]({{ '/assets/images/screenshots/acme-petshop-step6-ci_checks_frame.png' | relative_url }})
 
 ---
 
