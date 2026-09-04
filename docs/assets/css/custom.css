@@ -1,0 +1,250 @@
+/* ==========================================================================
+   RobOS Bespoke Dark Obsidian & Electric Cyan Theme
+   ========================================================================== */
+
+/* Global Typography & Deep Obsidian Background */
+html, body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  background-color: #080b11 !important;
+  color: #e2e8f0 !important;
+  letter-spacing: -0.01em !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6, .site-title {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+h1 {
+  font-size: 2.35rem !important;
+  line-height: 1.25 !important;
+  margin-bottom: 1.5rem !important;
+  background: linear-gradient(135deg, #ffffff 40%, #00e5ff 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+h2 {
+  font-size: 1.55rem !important;
+  margin-top: 2.75rem !important;
+  margin-bottom: 1.25rem !important;
+  border-bottom: 1px solid #1e293b !important;
+  padding-bottom: 0.6rem !important;
+  color: #f8fafc !important;
+}
+
+h3 {
+  font-size: 1.25rem !important;
+  margin-top: 2rem !important;
+  color: #00e5ff !important;
+}
+
+p, li {
+  line-height: 1.72 !important;
+  color: #cbd5e1 !important;
+  font-size: 0.98rem !important;
+}
+
+strong {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Links */
+a {
+  color: #00e5ff !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+a:hover {
+  color: #80f3ff !important;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.45) !important;
+}
+
+/* Monospace & Code */
+code, pre, kbd, samp {
+  font-family: 'Fira Code', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace !important;
+  font-size: 0.88em !important;
+}
+
+code:not(pre code) {
+  background-color: #162032 !important;
+  color: #38bdf8 !important;
+  padding: 0.2em 0.45em !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  font-weight: 500 !important;
+}
+
+pre {
+  background-color: #0f1624 !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sidebar & Header */
+.side-bar {
+  background-color: #0d131f !important;
+  border-right: 1px solid #1e293b !important;
+}
+
+.side-bar .site-header {
+  min-height: 5.5rem !important;
+  padding-top: 0.75rem !important;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
+}
+
+.side-bar .site-logo {
+  height: 4.5rem !important;
+  min-height: 4.5rem !important;
+  background-size: contain !important;
+  background-position: left center !important;
+}
+
+.side-bar .nav-list-item {
+  margin-bottom: 3px !important;
+}
+
+.side-bar .nav-list-link {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  color: #94a3b8 !important;
+  padding: 0.45rem 0.85rem !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.side-bar .nav-list-link:hover {
+  background-color: rgba(0, 229, 255, 0.08) !important;
+  color: #ffffff !important;
+  transform: translateX(3px) !important;
+}
+
+.side-bar .nav-list-link.active {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.16) 0%, rgba(0, 229, 255, 0.02) 100%) !important;
+  color: #00e5ff !important;
+  font-weight: 600 !important;
+  border-left: 3px solid #00e5ff !important;
+  box-shadow: inset 1px 0 0 0 #00e5ff !important;
+}
+
+/* Tables */
+table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  margin: 1.75rem 0 !important;
+  background-color: #0f1624 !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+table thead th {
+  background-color: #162032 !important;
+  color: #00e5ff !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.9rem 1rem !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+
+table tbody td {
+  padding: 0.8rem 1rem !important;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
+  font-size: 0.92rem !important;
+  color: #cbd5e1 !important;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+table tbody tr:hover {
+  background-color: rgba(0, 229, 255, 0.04) !important;
+}
+
+/* Buttons */
+.btn {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  padding: 0.55rem 1.35rem !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+}
+
+.btn.btn-primary {
+  background: linear-gradient(135deg, #00bcd4 0%, #00e5ff 100%) !important;
+  color: #080b11 !important;
+  border: none !important;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35) !important;
+}
+
+.btn.btn-primary:hover {
+  background: linear-gradient(135deg, #00e5ff 0%, #38bdf8 100%) !important;
+  box-shadow: 0 0 28px rgba(0, 229, 255, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn:not(.btn-primary) {
+  background-color: #162032 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #1e293b !important;
+}
+
+.btn:not(.btn-primary):hover {
+  background-color: #1e2d44 !important;
+  border-color: #00e5ff !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Callouts / Blockquotes */
+.callout, blockquote {
+  background-color: #0f1624 !important;
+  border: 1px solid #1e293b !important;
+  border-left: 4px solid #00e5ff !important;
+  border-radius: 8px !important;
+  padding: 1.1rem 1.35rem !important;
+  margin: 1.75rem 0 !important;
+}
+
+.callout p, blockquote p {
+  margin: 0 !important;
+}
+
+/* Images & Screenshots */
+img {
+  border-radius: 8px !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55) !important;
+  transition: all 0.25s ease !important;
+}
+
+img:hover {
+  border-color: rgba(0, 229, 255, 0.45) !important;
+  box-shadow: 0 12px 40px rgba(0, 229, 255, 0.12) !important;
+}
+
+/* Footer */
+.site-footer {
+  border-top: 1px solid #1e293b !important;
+  color: #64748b !important;
+  font-size: 0.85rem !important;
+  margin-top: 4rem !important;
+  padding-top: 1.75rem !important;
+}
