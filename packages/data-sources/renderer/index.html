@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS Data Sources</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <div id="app-logo-icon" class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="header-title">RobOS Data Sources</h1>
+        <div class="header-subtitle">Knowledge Graph Data Sources & Database Explorer</div>
+      </div>
+      <span class="kgraph-badge">
+        <span class="pulse-dot"></span>
+        Knowledge Graph Connected (5 Sources)
+      </span>
+    </div>
+
+    <div class="header-right">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Filter data sources, tables, buckets..."/>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-add-datasource">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        + New Data Source
+      </button>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div id="main-layout">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Data Source Categories</div>
+        <nav class="sidebar-nav" id="category-nav">
+          <div class="nav-item active" data-cat="all">
+            <span class="nav-icon">🗄️</span>
+            <span class="nav-label">All Data Sources</span>
+            <span class="nav-count" id="count-all">5</span>
+          </div>
+          <div class="nav-item" data-cat="sql">
+            <span class="nav-icon">🐘</span>
+            <span class="nav-label">SQL / Relational</span>
+            <span class="nav-count" id="count-sql">2</span>
+          </div>
+          <div class="nav-item" data-cat="nosql">
+            <span class="nav-icon">⚡</span>
+            <span class="nav-label">NoSQL & Document</span>
+            <span class="nav-count" id="count-nosql">1</span>
+          </div>
+          <div class="nav-item" data-cat="storage">
+            <span class="nav-icon">☁️</span>
+            <span class="nav-label">Cloud & Object Storage</span>
+            <span class="nav-count" id="count-storage">2</span>
+          </div>
+          <div class="nav-item" data-cat="streaming">
+            <span class="nav-icon">📡</span>
+            <span class="nav-label">Streaming & Queues</span>
+            <span class="nav-count" id="count-streaming">0</span>
+          </div>
+        </nav>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Bound Microservices</div>
+        <div class="bound-services-list" id="bound-services-list">
+          <div class="service-tag active" data-service="all">All Microservices</div>
+          <div class="service-tag" data-service="petstore-api">petstore-api</div>
+          <div class="service-tag" data-service="vaccine-gateway">vaccine-gateway</div>
+          <div class="service-tag" data-service="petstore-infra">petstore-infra</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section" style="margin-top:auto;padding-top:12px;border-top:1px solid #21262d;">
+        <div class="kgraph-sync-info">
+          <div style="font-weight:600;color:#c9d1d9;margin-bottom:4px;font-size:12px;">Knowledge Graph Link</div>
+          <div style="font-size:11px;color:#8b949e;line-height:1.4;">Changes automatically sync with <code>~/.robos/knowledge-graph.jsonld</code></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Resizer -->
+    <div id="resizer"></div>
+
+    <!-- Content Workspace -->
+    <main id="content">
+
+      <!-- Active Data Source Master View -->
+      <div id="datasource-detail-container">
+
+        <!-- Top Overview Banner -->
+        <div id="ds-header-card" class="ds-header-card">
+          <div class="ds-header-left">
+            <div id="ds-icon-avatar" class="ds-icon-avatar">🐘</div>
+            <div>
+              <div class="ds-title-row">
+                <h2 id="ds-detail-name">Acme Petshop PostgreSQL Database</h2>
+                <span id="ds-detail-badge" class="badge badge-green">Connected</span>
+              </div>
+              <div class="ds-meta-row">
+                <span id="ds-detail-type" class="meta-item">Type: PostgreSQL (5432)</span>
+                <span id="ds-detail-endpoint" class="meta-item mono">127.0.0.1:5432/petshop</span>
+                <span id="ds-detail-latency" class="meta-item">Latency: 1.4ms</span>
+              </div>
+              <div class="ds-bindings-row" id="ds-bindings-row">
+                <span class="bind-label">Bound to:</span>
+                <span class="badge badge-cyan">petstore-api</span>
+                <span class="badge badge-cyan">vaccine-gateway</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ds-header-actions">
+            <button class="btn btn-sm btn-primary" id="btn-test-conn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Test Connection
+            </button>
+            <button class="btn btn-sm" id="btn-edit-current-ds">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Configure
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="schema">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Schema Inspector
+          </button>
+          <button class="tab-btn" data-tab="query">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Interactive Query Console
+          </button>
+          <button class="tab-btn" data-tab="sources-grid">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            All Data Sources Catalog
+          </button>
+        </div>
+
+        <!-- Tab 1: Schema Inspector -->
+        <div id="tab-schema" class="tab-content active">
+          <div class="schema-layout">
+            <div class="schema-tree-pane">
+              <div class="pane-title" id="schema-pane-title">Database Tables (4)</div>
+              <div class="tree-list" id="schema-tree-list">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <div class="schema-detail-pane">
+              <div class="pane-title" id="table-detail-title">Table: pets</div>
+              <div class="table-columns-wrapper" id="table-columns-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Column Name</th>
+                      <th>Data Type</th>
+                      <th>Nullable</th>
+                      <th>Key Constraint</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-columns-tbody">
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Interactive Query Console -->
+        <div id="tab-query" class="tab-content">
+          <div class="query-layout">
+            <div class="query-editor-card">
+              <div class="query-toolbar">
+                <span style="font-weight:600;font-size:12px;color:#8b949e;">SQL / Driver Query Console</span>
+                <div class="query-actions">
+                  <button class="btn btn-sm btn-primary" id="btn-run-query">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    ▶ Execute Query (Ctrl+Enter)
+                  </button>
+                </div>
+              </div>
+              <textarea id="query-input" class="query-textarea mono" rows="4">SELECT id, name, species, status, microchip_id, created_at FROM pets WHERE status = 'AVAILABLE';</textarea>
+            </div>
+
+            <div class="query-results-card">
+              <div class="results-header">
+                <div id="query-status-text" class="results-stats">5 rows returned in 2.1ms</div>
+                <div class="results-actions">
+                  <button class="btn btn-sm" id="btn-export-query">Export CSV</button>
+                </div>
+              </div>
+              <div class="results-table-container">
+                <table class="data-table" id="results-table">
+                  <thead id="results-thead"></thead>
+                  <tbody id="results-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: All Data Sources Catalog -->
+        <div id="tab-sources-grid" class="tab-content">
+          <div class="datasources-grid" id="datasources-grid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Configure Data Source Wizard -->
+  <div id="ds-modal" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="ds-modal-title">Configure Data Source</h3>
+        <button class="modal-close" id="btn-ds-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Driver / Provider Type</label>
+          <select id="modal-ds-driver" class="form-input">
+            <option value="postgres">PostgreSQL (Relational SQL)</option>
+            <option value="oracle">Oracle Database (Relational SQL)</option>
+            <option value="mysql">MySQL / MariaDB (Relational SQL)</option>
+            <option value="mssql">Microsoft SQL Server (Relational SQL)</option>
+            <option value="sqlite">SQLite / DuckDB (Embedded SQL)</option>
+            <option value="mongodb">MongoDB (NoSQL Document)</option>
+            <option value="redis">Redis (In-Memory Key-Value)</option>
+            <option value="s3">Amazon S3 / MinIO (Object Storage)</option>
+            <option value="gdrive">Google Drive / GCS (Cloud Storage)</option>
+            <option value="kafka">Apache Kafka (Event Streaming)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data Source Name</label>
+          <input type="text" id="modal-ds-name" class="form-input" placeholder="e.g. Acme Petshop PostgreSQL Database"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:2;">
+            <label class="form-label" id="lbl-ds-host">Host / Endpoint</label>
+            <input type="text" id="modal-ds-host" class="form-input mono" placeholder="127.0.0.1"/>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" id="lbl-ds-port">Port</label>
+            <input type="number" id="modal-ds-port" class="form-input mono" placeholder="5432"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="lbl-ds-database">Database / Bucket / Folder ID</label>
+          <input type="text" id="modal-ds-database" class="form-input mono" placeholder="petshop"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Username / Key ID</label>
+            <input type="text" id="modal-ds-user" class="form-input" placeholder="postgres"/>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Password / Secret</label>
+            <input type="password" id="modal-ds-password" class="form-input" placeholder="••••••••"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="flags-bool-label">
+            <input type="checkbox" id="modal-ds-ssl" class="flags-checkbox"/>
+            <span class="flags-label-text">Enable SSL / TLS Encryption</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bound Knowledge Graph Microservices (comma-separated)</label>
+          <input type="text" id="modal-ds-services" class="form-input mono" placeholder="petstore-api, vaccine-gateway"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-ds-modal-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btn-ds-modal-save">Save Data Source</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Test Connection Results -->
+  <div id="test-conn-modal" class="modal-overlay hidden">
+    <div class="modal-dialog" style="max-width:480px;">
+      <div class="modal-header">
+        <h3>Connection Verification</h3>
+        <button class="modal-close" id="btn-test-conn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="test-conn-result-card" style="padding:16px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span style="font-size:24px;">✓</span>
+            <div>
+              <div style="font-weight:600;color:#7ee787;font-size:15px;">Connection Successful</div>
+              <div id="test-conn-latency" style="font-size:12px;color:#8b949e;">Round-trip latency: 1.4 ms</div>
+            </div>
+          </div>
+          <div id="test-conn-version" style="font-size:12px;color:#c9d1d9;margin-bottom:8px;" class="mono">PostgreSQL 16.3 (Debian 16.3-1.pgdg120+1)</div>
+          <div id="test-conn-msg" style="font-size:12px;color:#8b949e;line-height:1.4;">Successfully connected to Acme Petshop PostgreSQL Database. Handshake verified.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" id="btn-test-conn-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

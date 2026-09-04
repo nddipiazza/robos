@@ -93,7 +93,9 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Task Servers** | Jira / GitHub task server configuration |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
 | **REST API Client** | Bruno-powered Git-backed REST API client, collection runner, and microservice verifier |
+| **Data Sources** | Knowledge Graph data sources explorer, database schema inspector, and interactive query console |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
+
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |
 | **Icon Manager** | Manage and customize RobOS app icons |

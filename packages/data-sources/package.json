@@ -1,0 +1,12 @@
+{
+  "name": "data-sources",
+  "version": "1.0.0",
+  "description": "RobOS Knowledge Graph Data Sources Explorer, Schema Inspector & Query Console",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": ["robos", "datasources", "kgraph", "postgres", "sql", "nosql", "s3", "gdrive"],
+  "author": "RobOS Core Platform",
+  "license": "Apache-2.0"
+}

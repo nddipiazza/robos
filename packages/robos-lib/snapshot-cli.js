@@ -96,7 +96,9 @@ const PORT_REGISTRY = {
   'gitea-browser':     19175,
   'kube-studio':       19176,
   'rest-client':       19177,
+  'data-sources':      19178,
 };
+
 
 function getPort(appId) {
   return PORT_REGISTRY[appId] || 19100;
