@@ -2,8 +2,8 @@
 
 let clusters = [];
 let namespaces = [];
-let activeCluster = "eks-acme-prod";
-let activeNamespace = "acme-petshop-prod";
+let activeCluster = "kind-robos-local";
+let activeNamespace = "acme-petshop-local";
 let activeTab = "pods";
 let currentResources = [];
 let helmReleases = [];
@@ -14,11 +14,16 @@ let vercelProjects = [];
 const clusterSelect = document.getElementById("cluster-select");
 const namespaceSelect = document.getElementById("namespace-select");
 const clusterBadge = document.getElementById("cluster-provider-badge");
+const btnAddCluster = document.getElementById("btn-add-cluster");
 const resourceSearch = document.getElementById("resource-search");
 const btnRefresh = document.getElementById("btn-refresh");
+const tableWrapper = document.getElementById("table-wrapper");
 const tableHeaders = document.getElementById("table-headers");
 const tableBody = document.getElementById("table-body");
 const toolbarStats = document.getElementById("toolbar-stats");
+const emptyCard = document.getElementById("empty-namespace-card");
+const emptyNsName = document.getElementById("empty-ns-name");
+const btnDeployBaseline = document.getElementById("btn-deploy-baseline");
 const drawerPanel = document.getElementById("drawer-panel");
 const drawerTitle = document.getElementById("drawer-title");
 const drawerContent = document.getElementById("drawer-content");
@@ -26,6 +31,16 @@ const btnDrawerClose = document.getElementById("btn-drawer-close");
 const btnDrawerCopy = document.getElementById("btn-drawer-copy");
 const copilotResponse = document.getElementById("ai-copilot-response");
 const btnCopilotSend = document.getElementById("btn-ai-copilot-send");
+
+// Modal elements
+const modalAddCluster = document.getElementById("modal-add-cluster");
+const btnModalClose = document.getElementById("btn-modal-close");
+const btnModalCancel = document.getElementById("btn-modal-cancel");
+const btnModalConnect = document.getElementById("btn-modal-connect");
+const modalProviderSelect = document.getElementById("modal-provider-select");
+const modalClusterName = document.getElementById("modal-cluster-name");
+const modalContextName = document.getElementById("modal-context-name");
+const modalTargetNamespace = document.getElementById("modal-target-namespace");
 
 // ── Event Listeners ─────────────────────────────────────────────────────────
 
@@ -46,6 +61,59 @@ resourceSearch.addEventListener("input", () => {
 
 btnRefresh.addEventListener("click", () => {
   refreshActiveView();
+});
+
+btnAddCluster.addEventListener("click", () => {
+  modalAddCluster.classList.remove("hidden");
+});
+
+btnModalClose.addEventListener("click", () => {
+  modalAddCluster.classList.add("hidden");
+});
+
+btnModalCancel.addEventListener("click", () => {
+  modalAddCluster.classList.add("hidden");
+});
+
+btnModalConnect.addEventListener("click", async () => {
+  const provider = modalProviderSelect.value;
+  const name = modalClusterName.value.trim() || "Local Kind Cluster";
+  const context = modalContextName.value.trim() || "kind-robos-local";
+  const targetNs = modalTargetNamespace.value.trim() || "acme-petshop-local";
+
+  const res = await window.api.addCluster({
+    id: context,
+    name,
+    provider,
+    region: provider === "local" ? "localhost" : "us-east-1",
+    kubecontext: context,
+  });
+
+  if (res.ok) {
+    modalAddCluster.classList.add("hidden");
+    activeCluster = context;
+    activeNamespace = targetNs;
+    await init();
+  }
+});
+
+btnDeployBaseline.addEventListener("click", async () => {
+  btnDeployBaseline.disabled = true;
+  btnDeployBaseline.innerHTML = `<span class="spinner">⏳</span> Deploying PET-101 Baseline Manifests...`;
+
+  const res = await window.api.deployTaskManifests({
+    namespace: activeNamespace,
+    taskId: "PET-101",
+  });
+
+  if (res.ok) {
+    toolbarStats.innerHTML = `<span style="color: var(--green)">✓ ${res.message}</span>`;
+    setTimeout(() => {
+      btnDeployBaseline.disabled = false;
+      btnDeployBaseline.innerHTML = `🚀 Deploy Task PET-101 Baseline Manifests`;
+      loadResources();
+    }, 1200);
+  }
 });
 
 btnDrawerClose.addEventListener("click", () => {
@@ -113,7 +181,7 @@ async function init() {
 function updateClusterBadge() {
   const curr = clusters.find(c => c.id === activeCluster) || clusters[0];
   if (!curr) return;
-  const p = curr.provider.toUpperCase();
+  const p = (curr.provider || "LOCAL").toUpperCase();
   clusterBadge.textContent = `${p} ${curr.flavor ? curr.flavor.toUpperCase() : ""}`;
   clusterBadge.className = `provider-badge provider-${curr.provider}`;
 }
@@ -122,6 +190,13 @@ async function loadNamespaces() {
   const nsRes = await window.api.getNamespaces({ clusterId: activeCluster });
   if (nsRes.ok) {
     namespaces = nsRes.namespaces;
+    
+    // Ensure activeNamespace is present or select the first
+    const hasActive = namespaces.some(n => n.name === activeNamespace);
+    if (!hasActive && namespaces.length > 0) {
+      activeNamespace = namespaces[0].name;
+    }
+
     namespaceSelect.innerHTML = `<option value="all">All Namespaces</option>` +
       namespaces.map(ns => 
         `<option value="${ns.name}" ${ns.name === activeNamespace ? "selected" : ""}>${ns.name}</option>`
@@ -148,7 +223,7 @@ async function loadResources() {
   });
 
   if (res.ok) {
-    currentResources = res.items;
+    currentResources = res.items || [];
     renderResourceTable();
   } else {
     toolbarStats.textContent = `Error loading resources: ${res.error}`;
@@ -162,6 +237,17 @@ function renderResourceTable() {
     items = items.filter(it => it.name.toLowerCase().includes(query) || (it.image || "").toLowerCase().includes(query));
   }
 
+  // Handle Empty State
+  if (items.length === 0 && !query) {
+    tableWrapper.classList.add("hidden");
+    emptyCard.classList.remove("hidden");
+    emptyNsName.textContent = activeNamespace;
+    toolbarStats.innerHTML = `Showing <strong>0</strong> ${activeTab} in <code>${activeNamespace}</code>`;
+    return;
+  }
+
+  tableWrapper.classList.remove("hidden");
+  emptyCard.classList.add("hidden");
   toolbarStats.innerHTML = `Showing <strong>${items.length}</strong> ${activeTab} in <code>${activeNamespace}</code>`;
 
   if (activeTab === "pods") {

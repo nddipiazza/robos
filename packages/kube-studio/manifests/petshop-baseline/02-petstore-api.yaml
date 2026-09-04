@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petstore-api
+  namespace: acme-petshop-local
+  labels:
+    app: petstore-api
+    app.kubernetes.io/component: api-service
+    robos.dev/task: PET-101
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: petstore-api
+  template:
+    metadata:
+      labels:
+        app: petstore-api
+        version: v1.0.0
+        robos.dev/task: PET-101
+    spec:
+      containers:
+        - name: petstore-api
+          image: nginx:alpine
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: local
+            - name: DB_HOST
+              value: petstore-db
+            - name: DB_PORT
+              value: "5432"
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petstore-api
+  namespace: acme-petshop-local
+  labels:
+    app: petstore-api
+    robos.dev/task: PET-101
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 80
+      name: http
+  selector:
+    app: petstore-api

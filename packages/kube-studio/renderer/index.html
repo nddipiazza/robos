@@ -23,7 +23,8 @@
       <div class="cluster-context-box">
         <span class="label">Cluster:</span>
         <select id="cluster-select" class="select-box"></select>
-        <span id="cluster-provider-badge" class="provider-badge">AWS EKS</span>
+        <span id="cluster-provider-badge" class="provider-badge">LOCAL KIND</span>
+        <button id="btn-add-cluster" class="btn-tiny btn-outline" title="Connect Cloud Provider or Local Cluster">+ Add Cluster</button>
       </div>
       <div class="namespace-context-box">
         <span class="label">Namespace:</span>
@@ -57,7 +58,18 @@
         <div class="toolbar-stats" id="toolbar-stats">Loading cluster resources...</div>
         <div class="toolbar-actions" id="toolbar-actions"></div>
       </div>
-      <div class="table-container">
+      
+      <!-- Empty State Card (Visible when namespace has no workloads) -->
+      <div id="empty-namespace-card" class="empty-state-card hidden">
+        <div class="empty-icon">⬡</div>
+        <h3 id="empty-state-title">Namespace Connected — No Workloads Found</h3>
+        <p id="empty-state-desc">Connected to namespace <code id="empty-ns-name">acme-petshop-local</code> in active cluster. No active pods or deployments are currently running.</p>
+        <div class="empty-actions">
+          <button id="btn-deploy-baseline" class="btn btn-accent">🚀 Deploy Task PET-101 Baseline Manifests</button>
+        </div>
+      </div>
+
+      <div class="table-container" id="table-wrapper">
         <table id="resource-table">
           <thead><tr id="table-headers"></tr></thead>
           <tbody id="table-body"></tbody>
@@ -119,7 +131,7 @@
       <span class="copilot-title">🤖 AI Infrastructure CoPilot</span>
       <div class="copilot-chips">
         <button class="chip-btn" data-prompt="Check cluster health and pod status">Cluster Health</button>
-        <button class="chip-btn" data-prompt="Inspect petstore-api mTLS handshake logs">Audit mTLS Handshake</button>
+        <button class="chip-btn" data-prompt="Explain task PET-101 baseline deployment architecture">PET-101 Architecture</button>
         <button class="chip-btn" data-prompt="Show Helm release revision and values for acme-petshop">Helm Values</button>
         <button class="chip-btn" data-prompt="Check ArgoCD GitOps synchronization status">ArgoCD Sync</button>
         <button class="chip-btn" data-prompt="Inspect Vercel edge deployment status for petstore-web">Vercel Status</button>
@@ -132,6 +144,44 @@
       <button id="btn-ai-copilot-send" class="btn btn-primary">Ask CoPilot</button>
     </div>
   </footer>
+
+  <!-- Modal: Add Cluster / Cloud Provider -->
+  <div id="modal-add-cluster" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Connect Kubernetes Cluster / Cloud Provider</h3>
+        <button id="btn-modal-close" class="btn-icon">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Cloud Provider / Platform:</label>
+          <select id="modal-provider-select" class="form-control">
+            <option value="local">Local Kind (Kubernetes-in-Docker)</option>
+            <option value="minikube">Local Minikube</option>
+            <option value="aws">AWS Elastic Kubernetes Service (EKS)</option>
+            <option value="gcp">Google Kubernetes Engine (GKE)</option>
+            <option value="azure">Azure Kubernetes Service (AKS)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cluster Display Name:</label>
+          <input id="modal-cluster-name" class="form-control" type="text" value="Local Kind Cluster (robos-local)">
+        </div>
+        <div class="form-group">
+          <label>Kubeconfig Context:</label>
+          <input id="modal-context-name" class="form-control" type="text" value="kind-robos-local">
+        </div>
+        <div class="form-group">
+          <label>Target Namespace:</label>
+          <input id="modal-target-namespace" class="form-control" type="text" value="acme-petshop-local">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-cancel" class="btn btn-outline">Cancel</button>
+        <button id="btn-modal-connect" class="btn btn-accent">Connect Cluster &amp; Namespace</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="../../robos-ui/robos-ui.js"></script>

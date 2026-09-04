@@ -258,3 +258,45 @@ html, body {
 .hidden { display: none !important; }
 .spinner { animation: spin 1.5s infinite linear; display: inline-block; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ── Empty State Card ────────────────────────────────────────────────────── */
+.empty-state-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; background: var(--bg-card); border: 1px dashed var(--border);
+  border-radius: var(--radius); margin: 20px 0; text-align: center; gap: 14px;
+}
+.empty-icon { font-size: 42px; color: var(--accent); }
+.empty-state-card h3 { font-size: 16px; font-weight: 700; color: var(--text-bright); }
+.empty-state-card p { font-size: 13px; color: var(--text-dim); max-width: 500px; line-height: 1.5; }
+.empty-state-card code { background: var(--bg-primary); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+.empty-actions { margin-top: 10px; }
+
+/* ── Modal Overlay ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+  backdrop-filter: blur(4px);
+}
+.modal-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  width: 520px; max-width: 90vw; display: flex; flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 14px; font-weight: 700; color: var(--accent); }
+.modal-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px; padding: 14px 18px;
+  border-top: 1px solid var(--border); background: var(--bg-primary);
+  border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
+.form-control {
+  background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-bright);
+  border-radius: 4px; padding: 8px 10px; font-size: 12px; outline: none; font-family: inherit;
+}
+.form-control:focus { border-color: var(--accent); }

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petstore-db
+  namespace: acme-petshop-local
+  labels:
+    app: petstore-db
+    app.kubernetes.io/component: database
+    robos.dev/task: PET-101
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petstore-db
+  template:
+    metadata:
+      labels:
+        app: petstore-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_DB
+              value: petstore
+            - name: POSTGRES_USER
+              value: petstore_user
+            - name: POSTGRES_PASSWORD
+              value: petstore_secret
+          ports:
+            - containerPort: 5432
+              name: postgres
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petstore-db
+  namespace: acme-petshop-local
+  labels:
+    app: petstore-db
+    robos.dev/task: PET-101
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: petstore-db

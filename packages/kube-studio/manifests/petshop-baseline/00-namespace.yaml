@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acme-petshop-local
+  labels:
+    environment: local-dev
+    team: core-platform
+    app.kubernetes.io/part-of: acme-petshop
+    robos.dev/task: PET-101
