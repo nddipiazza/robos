@@ -1,32 +1,286 @@
-// Bigger RobOS logo in the side-bar header.
-//
-// Just-the-Docs renders the logo as a CSS background on `.site-logo`,
-// inside an `.site-title` link, inside `.site-header`. The default theme
-// pins `.site-header { height: 3.75rem; max-height: 3.75rem; }` (60px),
-// which clamps any logo size we set on `.site-logo`. We have to lift the
-// header cap before bumping the logo.
-.site-header {
-  height: auto;
-  min-height: 5.5rem;       // ~88px — gives the logo room
-  max-height: none;
+// ==============================================================================
+// RobOS Custom Theme & Typography Stylesheet
+// Bespoke Dark Obsidian & Electric Cyan Theme
+// ==============================================================================
+
+// --- Font Families ---
+$font-family-headings: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+$font-family-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+$font-family-code: "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+// --- RobOS Color Palette ---
+$robos-bg-deep: #080b11;          // Deep space obsidian background
+$robos-bg-surface: #0d131f;       // Midnight slate sidebar & header
+$robos-bg-card: #121927;          // Elevated card background
+$robos-bg-card-hover: #172033;    // Hover state for interactive cards
+$robos-border: #1e293b;           // Subtle slate border
+$robos-border-glow: rgba(0, 229, 255, 0.25); // Subtle cyan glow border
+
+$robos-cyan: #00e5ff;             // Primary Electric Cyan
+$robos-cyan-muted: #00bcd4;       // Muted Cyan
+$robos-indigo: #6366f1;           // Electric Indigo / Purple
+$robos-emerald: #10b981;          // Success Green
+$robos-amber: #f59e0b;            // Accent Warning Gold
+$robos-rose: #f43f5e;             // Danger Rose
+
+$robos-text-primary: #f1f5f9;     // Crisp high-contrast text
+$robos-text-secondary: #94a3b8;   // Muted slate text
+$robos-text-dim: #64748b;         // Dim metadata text
+
+// ==============================================================================
+// Global Typography & Body
+// ==============================================================================
+html, body {
+  font-family: $font-family-body;
+  background-color: $robos-bg-deep !important;
+  color: $robos-text-primary !important;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.site-title {
-  height: auto;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+// Headings
+h1, h2, h3, h4, h5, h6, .site-title {
+  font-family: $font-family-headings !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 700;
+  color: $robos-text-primary !important;
 }
 
-.site-logo {
-  height: 4.5rem;            // ~72px on small viewports
-  min-height: 4.5rem;
-  width: 100%;
-  background-size: contain;
-  background-position: left center;
+h1 {
+  font-size: 2.25rem !important;
+  line-height: 1.2 !important;
+  margin-bottom: 1.25rem !important;
+  background: linear-gradient(135deg, #ffffff 40%, $robos-cyan 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-// Wider viewports get a bigger mark.
-@media (min-width: 50rem) {
-  .site-header { min-height: 6.5rem; }   // ~104px
-  .site-logo   { height: 5.5rem; min-height: 5.5rem; } // ~88px
+h2 {
+  font-size: 1.5rem !important;
+  margin-top: 2.5rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 1px solid $robos-border !important;
+  padding-bottom: 0.5rem !important;
+  color: #ffffff !important;
+}
+
+h3 {
+  font-size: 1.2rem !important;
+  margin-top: 1.75rem !important;
+  color: $robos-cyan !important;
+}
+
+p, li {
+  line-height: 1.68 !important;
+  color: #cbd5e1 !important;
+}
+
+strong {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+// Links
+a {
+  color: $robos-cyan !important;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    color: #80f3ff !important;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+  }
+}
+
+// Code & Monospace
+code, pre, kbd, samp {
+  font-family: $font-family-code !important;
+  font-size: 0.88em !important;
+}
+
+code:not(pre code) {
+  background-color: #1a2234 !important;
+  color: #38bdf8 !important;
+  padding: 0.15em 0.4em !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  font-weight: 500;
+}
+
+pre {
+  background-color: $robos-bg-card !important;
+  border: 1px solid $robos-border !important;
+  border-radius: 8px !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+// ==============================================================================
+// Sidebar & Header Styling
+// ==============================================================================
+.side-bar {
+  background-color: $robos-bg-surface !important;
+  border-right: 1px solid $robos-border !important;
+
+  .site-header {
+    min-height: 5.5rem;
+    padding-top: 0.75rem;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+  }
+
+  .site-logo {
+    height: 4.5rem;
+    min-height: 4.5rem;
+    background-size: contain;
+    background-position: left center;
+  }
+
+  .nav-list-item {
+    margin-bottom: 2px;
+  }
+
+  .nav-list-link {
+    font-family: $font-family-body !important;
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+    color: $robos-text-secondary !important;
+    padding: 0.45rem 0.75rem !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease-in-out !important;
+
+    &:hover {
+      background-color: rgba(0, 229, 255, 0.08) !important;
+      color: #ffffff !important;
+      transform: translateX(3px);
+    }
+
+    &.active {
+      background: linear-gradient(90deg, rgba(0, 229, 255, 0.15) 0%, rgba(0, 229, 255, 0.02) 100%) !important;
+      color: $robos-cyan !important;
+      font-weight: 600 !important;
+      border-left: 3px solid $robos-cyan !important;
+      box-shadow: inset 1px 0 0 0 $robos-cyan;
+    }
+  }
+}
+
+// ==============================================================================
+// Tables & Data Grids
+// ==============================================================================
+table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  margin: 1.5rem 0 !important;
+  background-color: $robos-bg-card !important;
+  border: 1px solid $robos-border !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+
+  thead th {
+    background-color: #0f1624 !important;
+    color: $robos-cyan !important;
+    font-family: $font-family-headings !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.85rem 1rem !important;
+    border-bottom: 1px solid $robos-border !important;
+    border-top: none !important;
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
+    border-top: none !important;
+    font-size: 0.92rem !important;
+    color: #cbd5e1 !important;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none !important;
+  }
+
+  tbody tr:hover {
+    background-color: rgba(0, 229, 255, 0.03) !important;
+  }
+}
+
+// ==============================================================================
+// Buttons & Callouts
+// ==============================================================================
+.btn {
+  font-family: $font-family-headings !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  padding: 0.5rem 1.25rem !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  letter-spacing: -0.01em !important;
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #00bcd4 0%, #00e5ff 100%) !important;
+    color: #080b11 !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3) !important;
+
+    &:hover {
+      background: linear-gradient(135deg, #00e5ff 0%, #38bdf8 100%) !important;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+
+  &:not(.btn-primary) {
+    background-color: #162032 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid $robos-border !important;
+
+    &:hover {
+      background-color: #1e2d44 !important;
+      border-color: $robos-cyan !important;
+      color: #ffffff !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+}
+
+// Callouts / Alerts
+.callout, blockquote {
+  background-color: $robos-bg-card !important;
+  border: 1px solid $robos-border !important;
+  border-left: 4px solid $robos-cyan !important;
+  border-radius: 8px !important;
+  padding: 1rem 1.25rem !important;
+  margin: 1.5rem 0 !important;
+
+  p {
+    margin: 0 !important;
+  }
+}
+
+// ==============================================================================
+// Images & Visual Artifacts
+// ==============================================================================
+img {
+  border-radius: 8px !important;
+  border: 1px solid $robos-border !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  transition: border-color 0.2s ease !important;
+
+  &:hover {
+    border-color: rgba(0, 229, 255, 0.4) !important;
+  }
+}
+
+// Footer
+.site-footer {
+  border-top: 1px solid $robos-border !important;
+  color: $robos-text-dim !important;
+  font-size: 0.85rem !important;
+  margin-top: 4rem !important;
+  padding-top: 1.5rem !important;
 }
