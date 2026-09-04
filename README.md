@@ -24,7 +24,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 ## 📸 Visual Tour
 
 ### 1. System Topology & Knowledge Graph Studio
-*Interactive C4 architecture modeling (L1 Context to L3 Components) with Backstage software catalog synchronization and automated Kubernetes manifest synthesis:*
+*Visually map your entire architecture across C4 zoom levels (Level 1: System Context, Level 2: Microservices & DB Containers, Level 3: Internal Components), auto-sync Spotify Backstage `catalog-info.yaml` software catalogs, and automatically synthesize ready-to-deploy Kubernetes StatefulSet/Deployment YAML manifests and Helm charts:*
 ![System Topology Studio](docs/assets/images/screenshots/topology-db-c4_polyglot_frame.png)
 
 ### 2. RobOS Relational DB Manager (PostgreSQL, Oracle, MySQL)

@@ -196,7 +196,10 @@ graph LR
 ## Visual Tour of the RobOS Suite
 
 ### System Topology & Knowledge Graph Studio
-Define C4 level 1-3 architecture, Backstage software catalogs, and synthesize Kubernetes Helm templates on the fly:
+Visually map and manage your entire engineering architecture without writing tedious infrastructure boilerplate:
+- **C4 Architecture Modeling (Levels 1–3)**: Zoom from high-level user personas and third-party SaaS systems (**Level 1: System Context**), into polyglot microservices, frontends, and databases (**Level 2: Containers**), down to internal controllers and domain modules (**Level 3: Components**).
+- **Spotify Backstage Integration**: Automatically imports and synchronizes your team's `catalog-info.yaml` software catalogs so services, API contracts, and team ownership are always live and linked.
+- **On-the-Fly Kubernetes & Helm Synthesis**: Whenever you add a new database (e.g. PostgreSQL, Redis, Kafka) or microservice to the canvas, RobOS automatically generates the ready-to-deploy Kubernetes StatefulSet/Deployment YAML manifests and Helm chart templates.
 ![RobOS System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
 ### RobOS Relational DB Manager (PostgreSQL, Oracle, MySQL)

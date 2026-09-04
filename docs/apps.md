@@ -21,7 +21,7 @@ nav_order: 6
 ## 1. Core Planning & Architecture
 
 ### System Topology & Backstage Studio
-Interactive C4 architecture modeling (Level 1 Context to Level 3 Components), Backstage software catalog explorer, blast radius calculation, and automatic Kubernetes Helm manifest synthesis.
+Interactive visual mapping of your architecture across C4 zoom levels (Level 1: System Context, Level 2: Microservice/DB Containers, Level 3: Internal Components) with Spotify Backstage `catalog-info.yaml` synchronization, blast radius impact calculation, and automated Kubernetes & Helm manifest synthesis.
 ![System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
 ### Task Planner & DAG Dispatcher
