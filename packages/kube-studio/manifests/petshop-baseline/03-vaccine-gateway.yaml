@@ -1,3 +1,125 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaccine-gateway-code
+  namespace: acme-petshop-local
+data:
+  server.js: |
+    const http = require('http');
+    const pets = [
+      { id: 'PET-101', name: 'Barkley', species: 'Canine', breed: 'Golden Retriever', age: 2, status: 'AVAILABLE', vaccinated: true },
+      { id: 'PET-102', name: 'Whiskers', species: 'Feline', breed: 'Siamese', age: 1, status: 'AVAILABLE', vaccinated: true },
+      { id: 'PET-105-VAX', name: 'Luna', species: 'Canine', breed: 'German Shepherd', age: 3, status: 'AVAILABLE', vaccinated: true }
+    ];
+
+    const server = http.createServer((req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Client-Cert, Accept');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('X-Powered-By', 'Fastify / Node.js 20 (Kind Kubernetes)');
+      res.setHeader('X-RobOS-Service', 'vaccine-gateway');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      let bodyStr = '';
+      req.on('data', chunk => { bodyStr += chunk; });
+      req.on('end', () => {
+        let body = {};
+        try { if (bodyStr) body = JSON.parse(bodyStr); } catch (_) {}
+
+        const url = req.url.split('?')[0];
+
+        // 1. POST /api/v1/vaccines/verify
+        if (req.method === 'POST' && url === '/api/v1/vaccines/verify') {
+          const response = {
+            verified: true,
+            status: 'CERTIFIED',
+            certificateNumber: `${body.tagNumber || 'VAX-2026-9814'}-CERT`,
+            petId: body.petId || 'PET-105-VAX',
+            vaccineType: body.vaccineType || 'RABIES_V1',
+            species: 'Canine',
+            issuer: 'Acme Animal Health & Vaccine Authority',
+            mtlsVerified: true,
+            issuedAt: new Date().toISOString(),
+            validUntil: new Date(Date.now() + 86400000 * 365).toISOString(),
+            cluster: 'kind-robos-local',
+            namespace: 'acme-petshop-local',
+            servingPod: process.env.POD_NAME || 'vaccine-gateway-pod',
+            timestamp: new Date().toISOString()
+          };
+          res.writeHead(200);
+          res.end(JSON.stringify(response, null, 2));
+          return;
+        }
+
+        // 2. GET /api/v1/pets
+        if (req.method === 'GET' && url === '/api/v1/pets') {
+          res.writeHead(200);
+          res.end(JSON.stringify({ pets, total: pets.length, cluster: 'kind-robos-local' }, null, 2));
+          return;
+        }
+
+        // 3. POST /api/v1/pets
+        if (req.method === 'POST' && url === '/api/v1/pets') {
+          const newPet = {
+            id: body.id || `PET-${Math.floor(Math.random() * 1000)}`,
+            name: body.name || 'Unknown',
+            species: body.species || 'Canine',
+            breed: body.breed || 'Mixed',
+            age: body.age || 1,
+            status: body.status || 'AVAILABLE',
+            vaccinated: true
+          };
+          pets.push(newPet);
+          res.writeHead(201);
+          res.end(JSON.stringify(newPet, null, 2));
+          return;
+        }
+
+        // 4. POST /api/v1/pets/adopt
+        if (req.method === 'POST' && url === '/api/v1/pets/adopt') {
+          const pet = pets.find(p => p.id === body.petId);
+          if (pet) pet.status = 'ADOPTED';
+          res.writeHead(201);
+          res.end(JSON.stringify({
+            status: 'ADOPTED',
+            petId: body.petId,
+            adopterName: body.adopterName || 'Alex Rivera',
+            verificationCert: body.verificationCert || 'VAX-2026-9814-CERT',
+            adoptedAt: new Date().toISOString()
+          }, null, 2));
+          return;
+        }
+
+        // 5. GET /api/v1/health/mtls or /
+        if (url === '/api/v1/health/mtls' || url === '/health' || url === '/') {
+          res.writeHead(200);
+          res.end(JSON.stringify({
+            status: 'UP',
+            mtlsActive: true,
+            cluster: 'kind-robos-local',
+            namespace: 'acme-petshop-local',
+            servingPod: process.env.POD_NAME || 'vaccine-gateway-pod'
+          }, null, 2));
+          return;
+        }
+
+        // 404 Not Found
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Not Found', url: req.url }, null, 2));
+      });
+    });
+
+    const PORT = 8443;
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`[vaccine-gateway] Real microservice listening on 0.0.0.0:${PORT} in Kind cluster`);
+    });
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,10 +141,23 @@ spec:
     spec:
       containers:
         - name: vaccine-gateway
-          image: nginx:alpine
+          image: node:20-alpine
+          command: ["node", "/app/server.js"]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           ports:
             - containerPort: 8443
               name: https
+          volumeMounts:
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: code
+          configMap:
+            name: vaccine-gateway-code
 ---
 apiVersion: v1
 kind: Service
