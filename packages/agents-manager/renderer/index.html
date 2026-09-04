@@ -57,6 +57,93 @@
     <div id="provider-detail" class="hidden"></div>
   </main>
 
+  <!-- Modal: Add / Edit MCP Server -->
+  <div id="mcp-server-modal" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="mcp-modal-title">Configure MCP Server</h3>
+        <button class="modal-close" id="btn-mcp-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Server ID / Identifier</label>
+          <input type="text" id="mcp-modal-id" class="form-input mono" placeholder="e.g. sentry-prod"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" id="mcp-modal-name" class="form-input" placeholder="e.g. Sentry Crash Reporter"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transport Type</label>
+          <select id="mcp-modal-type" class="form-input">
+            <option value="stdio">stdio (Standard Input/Output process)</option>
+            <option value="http">http (JSON-RPC over HTTP)</option>
+            <option value="sse">sse (Server-Sent Events)</option>
+          </select>
+        </div>
+        <div class="form-group" id="group-mcp-command">
+          <label class="form-label">Executable Command / Endpoint URL</label>
+          <input type="text" id="mcp-modal-command" class="form-input mono" placeholder="e.g. npx or http://localhost:19133/mcp"/>
+        </div>
+        <div class="form-group" id="group-mcp-args">
+          <label class="form-label">Arguments (space separated)</label>
+          <input type="text" id="mcp-modal-args" class="form-input mono" placeholder="e.g. -y @modelcontextprotocol/server-sentry"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Environment Variables (KEY=VALUE per line)</label>
+          <textarea id="mcp-modal-env" class="form-textarea mono" rows="3" placeholder="SENTRY_ORG=acme-petshop&#10;NODE_ENV=production"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Authentication Type</label>
+          <select id="mcp-modal-authtype" class="form-input">
+            <option value="none">None (No authentication needed)</option>
+            <option value="api-token">API Token / Secret Key</option>
+            <option value="oauth2">OAuth 2.0</option>
+            <option value="database-credentials">Database Credentials</option>
+            <option value="local-ipc">Local System / IPC</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:8px;">
+          <label class="flags-bool-label">
+            <input type="checkbox" id="mcp-modal-authenticated" class="flags-checkbox"/>
+            <span class="flags-label-text">Mark as Authenticated</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-mcp-modal-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btn-mcp-modal-save">Save MCP Server</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Authenticate MCP Server -->
+  <div id="mcp-auth-modal" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Authenticate MCP Server</h3>
+        <button class="modal-close" id="btn-mcp-auth-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="mcp-auth-desc" style="color:#8b949e;font-size:12px;margin-bottom:14px;">
+          Provide credentials to authenticate this MCP server.
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="lbl-auth-token">API Token / Secret</label>
+          <input type="password" id="mcp-auth-token" class="form-input mono" placeholder="Enter token or key..."/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account / Resource ID (Optional)</label>
+          <input type="text" id="mcp-auth-account" class="form-input" placeholder="e.g. acme-corp"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-mcp-auth-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="btn-mcp-auth-save">Authenticate & Verify</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 <script src="app.js"></script>
 </body>

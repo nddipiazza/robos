@@ -39,6 +39,12 @@ contextBridge.exposeInMainWorld('agents', {
   antigravityLaunchTerminal: (id, extraArgs, cwd)   => ipcRenderer.invoke('antigravity-launch-terminal', id, extraArgs, cwd),
   antigravityRunMcpWorkflow: (workflowParams)       => ipcRenderer.invoke('antigravity-run-mcp-workflow', workflowParams),
 
+  // MCP Server Management across Providers
+  getMcpServers:    (providerId) => ipcRenderer.invoke('mcp-get-provider-servers', providerId),
+  saveMcpServer:    (providerId, server) => ipcRenderer.invoke('mcp-save-provider-server', { providerId, server }),
+  deleteMcpServer:  (providerId, serverId) => ipcRenderer.invoke('mcp-delete-provider-server', { providerId, serverId }),
+  authMcpServer:    (providerId, serverId, credentials) => ipcRenderer.invoke('mcp-auth-provider-server', { providerId, serverId, credentials }),
+
   // General
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),
   writeSettings:  (d)   => ipcRenderer.invoke('write-settings', d),

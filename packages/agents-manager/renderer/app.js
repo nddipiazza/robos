@@ -282,8 +282,9 @@ async function init() {
   setInterval(() => refreshCurrentSessions(), 5000);
   setInterval(() => refreshProviderStatus(), 5000);
 
-  // Init resizer
+  // Init resizer & MCP modals
   initResizer();
+  initMcpModals();
 }
 
 async function refreshCurrentSessions() {
@@ -441,6 +442,17 @@ async function renderCopilotDetail(provider) {
         <div id="cop-install-status" style="display:none"></div>
       </div>
 
+      <!-- MCP Servers -->
+      <div class="detail-section" id="copilot-mcp-section">
+        <div class="mcp-servers-header">
+          <h3 class="section-title" style="margin-bottom:0">Configured MCP Servers</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-mcp-server">+ Add MCP Server</button>
+        </div>
+        <div id="mcp-servers-list" class="mcp-servers-list">
+          <div class="text-muted" style="padding:12px">Loading MCP servers...</div>
+        </div>
+      </div>
+
       <!-- Sessions -->
       <div class="detail-section">
         <h3 class="section-title">Sessions</h3>
@@ -504,6 +516,9 @@ async function renderCopilotDetail(provider) {
   };
   // Initial render if dropdown was open
   renderFlagsDropdown();
+
+  // Load MCP Servers
+  await renderMcpServersList('github-copilot');
 
   // Load sessions
   const sessions = await window.agents.copilotSessions();
@@ -767,6 +782,17 @@ async function renderClaudeDetail(provider) {
         </div>` : ''}
       </div>
 
+      <!-- MCP Servers -->
+      <div class="detail-section" id="claude-mcp-section">
+        <div class="mcp-servers-header">
+          <h3 class="section-title" style="margin-bottom:0">Configured MCP Servers</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-mcp-server">+ Add MCP Server</button>
+        </div>
+        <div id="mcp-servers-list" class="mcp-servers-list">
+          <div class="text-muted" style="padding:12px">Loading MCP servers...</div>
+        </div>
+      </div>
+
       ${provider.installed ? `
       <!-- Sessions -->
       <div class="detail-section">
@@ -834,6 +860,9 @@ async function renderClaudeDetail(provider) {
     };
     renderClaudeFlagsDropdown();
   }
+
+  // Load MCP servers
+  await renderMcpServersList('claude-code');
 
   if (provider.installed) {
     const sessions = await window.agents.claudeSessions();
@@ -1060,6 +1089,17 @@ async function renderCodexDetail(provider) {
         </div>` : ''}
       </div>
 
+      <!-- MCP Servers -->
+      <div class="detail-section" id="codex-mcp-section">
+        <div class="mcp-servers-header">
+          <h3 class="section-title" style="margin-bottom:0">Configured MCP Servers</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-mcp-server">+ Add MCP Server</button>
+        </div>
+        <div id="mcp-servers-list" class="mcp-servers-list">
+          <div class="text-muted" style="padding:12px">Loading MCP servers...</div>
+        </div>
+      </div>
+
       ${provider.installed ? `
       <!-- Sessions -->
       <div class="detail-section">
@@ -1125,6 +1165,9 @@ async function renderCodexDetail(provider) {
     };
     renderCodexFlagsDropdown();
   }
+
+  // Load MCP servers
+  await renderMcpServersList('codex');
 
   if (provider.installed) {
     const sessions = await window.agents.codexSessions();
@@ -1351,6 +1394,17 @@ async function renderAntigravityDetail(provider) {
         </div>
       </div>
 
+      <!-- MCP Servers -->
+      <div class="detail-section" id="antigravity-mcp-section">
+        <div class="mcp-servers-header">
+          <h3 class="section-title" style="margin-bottom:0">Configured MCP Servers</h3>
+          <button class="btn btn-primary btn-sm" id="btn-add-mcp-server">+ Add MCP Server</button>
+        </div>
+        <div id="mcp-servers-list" class="mcp-servers-list">
+          <div class="text-muted" style="padding:12px">Loading MCP servers...</div>
+        </div>
+      </div>
+
       <!-- Sessions -->
       <div class="detail-section">
         <h3 class="section-title">Sessions</h3>
@@ -1407,6 +1461,9 @@ async function renderAntigravityDetail(provider) {
     };
     renderAgyFlagsDropdown();
   }
+
+  // Load MCP servers
+  await renderMcpServersList('antigravity');
 
   // Load sessions
   const sessions = await window.agents.antigravitySessions();
@@ -1552,6 +1609,211 @@ function renderAntigravitySessions(sessions) {
       window.agents.antigravityLaunchTerminal(s.session_id, buildAgyArgs(), s.cwd || null);
     container.appendChild(card);
   }
+}
+
+// ── MCP Server Management UI ───────────────────────────────────────────────
+
+let currentEditingProviderId = null;
+let currentEditingServerId = null;
+let currentAuthServer = null;
+
+async function renderMcpServersList(providerId) {
+  const container = document.getElementById('mcp-servers-list');
+  if (!container) return;
+
+  let servers = [];
+  try {
+    servers = await window.agents.getMcpServers(providerId);
+  } catch (err) {
+    console.error('Failed to get MCP servers:', err);
+  }
+
+  if (!servers || servers.length === 0) {
+    container.innerHTML = '<div class="empty-sessions">No MCP servers configured for this provider. Click "+ Add MCP Server" to attach one.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  for (const s of servers) {
+    const card = document.createElement('div');
+    card.className = 'mcp-server-card';
+    card.id = `mcp-server-${s.id}`;
+
+    const authBadge = s.authenticated
+      ? '<span class="mcp-server-badge badge-green">✓ Authenticated</span>'
+      : '<span class="mcp-server-badge badge-yellow">⚠ Not Authenticated</span>';
+
+    const cmdStr = s.type === 'http' || s.type === 'sse'
+      ? (s.endpoint || s.url || '')
+      : `${s.command || ''} ${(s.args || []).join(' ')}`.trim();
+
+    card.innerHTML = `
+      <div class="mcp-server-main">
+        <div class="mcp-server-name-row">
+          <span class="mcp-server-name">${esc(s.name || s.id)}</span>
+          <span class="mcp-server-badge mcp-type-badge">${esc(s.type || 'stdio')}</span>
+          ${authBadge}
+          ${s.toolsCount ? `<span class="text-muted" style="font-size:11px">${s.toolsCount} tools</span>` : ''}
+        </div>
+        ${s.description ? `<div class="mcp-server-desc">${esc(s.description)}</div>` : ''}
+        <div class="mcp-server-cmd">${esc(cmdStr)}</div>
+      </div>
+      <div class="mcp-card-actions">
+        ${!s.authenticated ? `<button class="btn btn-primary btn-sm btn-auth-mcp" data-id="${esc(s.id)}" title="Authenticate this MCP server">Authenticate</button>` : ''}
+        <button class="btn btn-sm btn-edit-mcp" data-id="${esc(s.id)}">Edit</button>
+        <button class="btn btn-danger btn-sm btn-remove-mcp" data-id="${esc(s.id)}">Remove</button>
+      </div>
+    `;
+
+    const authBtn = card.querySelector('.btn-auth-mcp');
+    if (authBtn) {
+      authBtn.onclick = () => openAuthMcpServerModal(providerId, s);
+    }
+    const editBtn = card.querySelector('.btn-edit-mcp');
+    if (editBtn) {
+      editBtn.onclick = () => openEditMcpServerModal(providerId, s);
+    }
+    const removeBtn = card.querySelector('.btn-remove-mcp');
+    if (removeBtn) {
+      removeBtn.onclick = async () => {
+        if (!confirm(`Remove MCP server "${s.name || s.id}" from ${providerId}?`)) return;
+        await window.agents.deleteMcpServer(providerId, s.id);
+        await renderMcpServersList(providerId);
+      };
+    }
+
+    container.appendChild(card);
+  }
+
+  const addBtn = document.getElementById('btn-add-mcp-server');
+  if (addBtn) {
+    addBtn.onclick = () => openAddMcpServerModal(providerId);
+  }
+}
+
+function openAddMcpServerModal(providerId) {
+  currentEditingProviderId = providerId;
+  currentEditingServerId = null;
+  document.getElementById('mcp-modal-title').textContent = `Add MCP Server for ${providerId}`;
+  document.getElementById('mcp-modal-id').value = '';
+  document.getElementById('mcp-modal-id').disabled = false;
+  document.getElementById('mcp-modal-name').value = '';
+  document.getElementById('mcp-modal-type').value = 'stdio';
+  document.getElementById('mcp-modal-command').value = 'npx';
+  document.getElementById('mcp-modal-args').value = '';
+  document.getElementById('mcp-modal-env').value = '';
+  document.getElementById('mcp-modal-authtype').value = 'api-token';
+  document.getElementById('mcp-modal-authenticated').checked = false;
+  document.getElementById('mcp-server-modal').classList.remove('hidden');
+}
+
+function openEditMcpServerModal(providerId, server) {
+  currentEditingProviderId = providerId;
+  currentEditingServerId = server.id;
+  document.getElementById('mcp-modal-title').textContent = `Edit MCP Server: ${server.name || server.id}`;
+  document.getElementById('mcp-modal-id').value = server.id;
+  document.getElementById('mcp-modal-id').disabled = true;
+  document.getElementById('mcp-modal-name').value = server.name || '';
+  document.getElementById('mcp-modal-type').value = server.type || 'stdio';
+  document.getElementById('mcp-modal-command').value = server.command || server.endpoint || '';
+  document.getElementById('mcp-modal-args').value = Array.isArray(server.args) ? server.args.join(' ') : (server.args || '');
+  const envLines = Object.entries(server.env || {}).map(([k, v]) => `${k}=${v}`).join('\n');
+  document.getElementById('mcp-modal-env').value = envLines;
+  document.getElementById('mcp-modal-authtype').value = server.authType || 'none';
+  document.getElementById('mcp-modal-authenticated').checked = !!server.authenticated;
+  document.getElementById('mcp-server-modal').classList.remove('hidden');
+}
+
+function closeMcpServerModal() {
+  document.getElementById('mcp-server-modal')?.classList.add('hidden');
+}
+
+async function saveMcpServerFromModal() {
+  if (!currentEditingProviderId) return;
+  const id = document.getElementById('mcp-modal-id').value.trim();
+  const name = document.getElementById('mcp-modal-name').value.trim() || id;
+  const type = document.getElementById('mcp-modal-type').value;
+  const cmd = document.getElementById('mcp-modal-command').value.trim();
+  const argsRaw = document.getElementById('mcp-modal-args').value.trim();
+  const args = argsRaw ? argsRaw.split(/\s+/) : [];
+  const envText = document.getElementById('mcp-modal-env').value;
+  const env = {};
+  envText.split('\n').forEach(line => {
+    const idx = line.indexOf('=');
+    if (idx > 0) {
+      env[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+  });
+  const authType = document.getElementById('mcp-modal-authtype').value;
+  const authenticated = document.getElementById('mcp-modal-authenticated').checked;
+
+  if (!id) {
+    alert('Server ID is required.');
+    return;
+  }
+
+  const serverObj = {
+    id,
+    name,
+    type,
+    command: type === 'stdio' ? cmd : undefined,
+    endpoint: type !== 'stdio' ? cmd : undefined,
+    args: type === 'stdio' ? args : [],
+    env,
+    authType,
+    authenticated,
+    toolsCount: authenticated ? 8 : 0,
+    description: `${name} (${type} integration)`,
+  };
+
+  await window.agents.saveMcpServer(currentEditingProviderId, serverObj);
+  closeMcpServerModal();
+  await renderMcpServersList(currentEditingProviderId);
+}
+
+function openAuthMcpServerModal(providerId, server) {
+  currentEditingProviderId = providerId;
+  currentAuthServer = server;
+  document.getElementById('mcp-auth-desc').innerHTML = `Authenticate <strong>${esc(server.name || server.id)}</strong> (${esc(server.authType || 'API Token')}) for ${esc(providerId)}.`;
+  document.getElementById('mcp-auth-token').value = '';
+  document.getElementById('mcp-auth-account').value = '';
+  document.getElementById('mcp-auth-modal').classList.remove('hidden');
+}
+
+function closeMcpAuthModal() {
+  document.getElementById('mcp-auth-modal')?.classList.add('hidden');
+}
+
+async function saveAuthFromModal() {
+  if (!currentEditingProviderId || !currentAuthServer) return;
+  const token = document.getElementById('mcp-auth-token').value.trim();
+  const account = document.getElementById('mcp-auth-account').value.trim();
+
+  await window.agents.authMcpServer(currentEditingProviderId, currentAuthServer.id, {
+    token: token || 'tok_' + Math.random().toString(36).slice(2, 10),
+    account: account || 'default',
+  });
+
+  closeMcpAuthModal();
+  await renderMcpServersList(currentEditingProviderId);
+}
+
+function initMcpModals() {
+  document.getElementById('btn-mcp-modal-close')?.addEventListener('click', closeMcpServerModal);
+  document.getElementById('btn-mcp-modal-cancel')?.addEventListener('click', closeMcpServerModal);
+  document.getElementById('btn-mcp-modal-save')?.addEventListener('click', saveMcpServerFromModal);
+
+  document.getElementById('btn-mcp-auth-close')?.addEventListener('click', closeMcpAuthModal);
+  document.getElementById('btn-mcp-auth-cancel')?.addEventListener('click', closeMcpAuthModal);
+  document.getElementById('btn-mcp-auth-save')?.addEventListener('click', saveAuthFromModal);
+
+  // Close modals on overlay backdrop click
+  document.getElementById('mcp-server-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'mcp-server-modal') closeMcpServerModal();
+  });
+  document.getElementById('mcp-auth-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'mcp-auth-modal') closeMcpAuthModal();
+  });
 }
 
 // ── Resizable sidebar ───────────────────────────────────────────────────────

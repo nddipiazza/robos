@@ -752,3 +752,217 @@ ipcMain.handle('antigravity-run-mcp-workflow', async (_, params) => {
   return { ok: true, logs };
 });
 
+// ── MCP Server Management across Providers ──────────────────────────────────
+
+const AGENT_MCP_SERVERS_FILE = path.join(os.homedir(), '.config', 'robos', 'agent-mcp-servers.json');
+
+const DEFAULT_MCP_SERVERS = {
+  'github-copilot': [
+    {
+      id: 'robos',
+      name: 'RobOS Unified MCP Router',
+      type: 'stdio',
+      command: 'node',
+      args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      env: { NODE_ENV: 'production' },
+      toolsCount: 11,
+      authenticated: true,
+      authType: 'local-ipc',
+      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+    },
+    {
+      id: 'sentry',
+      name: 'Sentry Crash Reporter & Tracing',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-sentry'],
+      env: { SENTRY_ORG: 'acme-petshop' },
+      toolsCount: 6,
+      authenticated: false,
+      authType: 'api-token',
+      description: 'Sentry issue tracking and error log inspection',
+    },
+    {
+      id: 'dev-tools',
+      name: 'Developer Tool Center MCP',
+      type: 'http',
+      endpoint: 'http://localhost:19133/mcp',
+      toolsCount: 4,
+      authenticated: true,
+      authType: 'none',
+      description: 'CLI tool manager & runtime environment verifier',
+    },
+  ],
+  'claude-code': [
+    {
+      id: 'robos',
+      name: 'RobOS Unified MCP Router',
+      type: 'stdio',
+      command: 'node',
+      args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      env: { NODE_ENV: 'production' },
+      toolsCount: 11,
+      authenticated: true,
+      authType: 'local-ipc',
+      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+    },
+    {
+      id: 'postgres-petshop',
+      name: 'Petshop PostgreSQL Database',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-postgres', 'postgresql://localhost:5432/petshop'],
+      env: { PGDATABASE: 'petshop' },
+      toolsCount: 9,
+      authenticated: false,
+      authType: 'database-credentials',
+      description: 'Live SQL query executor and schema inspector',
+    },
+    {
+      id: 'kubernetes',
+      name: 'Kubernetes Cluster Engine',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-kubernetes'],
+      env: { KUBECONFIG: path.join(os.homedir(), '.kube', 'config') },
+      toolsCount: 14,
+      authenticated: true,
+      authType: 'kubeconfig',
+      description: 'Kind & cloud Kubernetes pod management',
+    },
+  ],
+  'codex': [
+    {
+      id: 'robos',
+      name: 'RobOS Unified MCP Router',
+      type: 'stdio',
+      command: 'node',
+      args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      env: { NODE_ENV: 'production' },
+      toolsCount: 11,
+      authenticated: true,
+      authType: 'local-ipc',
+      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+    },
+    {
+      id: 'aws-cloud',
+      name: 'AWS Cloud Infrastructure',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-aws'],
+      env: { AWS_REGION: 'us-east-1' },
+      toolsCount: 12,
+      authenticated: false,
+      authType: 'aws-iam',
+      description: 'AWS Lambda, EKS, and S3 infrastructure manager',
+    },
+    {
+      id: 'task-manager',
+      name: 'Task Manager MCP Server',
+      type: 'http',
+      endpoint: 'http://localhost:19131/mcp',
+      toolsCount: 5,
+      authenticated: true,
+      authType: 'none',
+      description: 'Task board and sprint tracker',
+    },
+  ],
+  'antigravity': [
+    {
+      id: 'robos',
+      name: 'RobOS Unified MCP Router',
+      type: 'stdio',
+      command: 'node',
+      args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      env: { NODE_ENV: 'production' },
+      toolsCount: 11,
+      authenticated: true,
+      authType: 'local-ipc',
+      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+    },
+    {
+      id: 'jira-cloud',
+      name: 'Jira Cloud Integration',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-jira'],
+      env: { JIRA_URL: 'https://acme-petshop.atlassian.net' },
+      toolsCount: 8,
+      authenticated: false,
+      authType: 'api-token',
+      description: 'Enterprise Jira issue and sprint tracking',
+    },
+    {
+      id: 'github-enterprise',
+      name: 'GitHub Enterprise MCP',
+      type: 'stdio',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-github'],
+      env: { GITHUB_API_URL: 'https://api.github.com' },
+      toolsCount: 15,
+      authenticated: true,
+      authType: 'github-token',
+      description: 'Pull requests, issues, and git repository intelligence',
+    },
+  ],
+};
+
+function loadAgentMcpServers() {
+  try {
+    if (fs.existsSync(AGENT_MCP_SERVERS_FILE)) {
+      return JSON.parse(fs.readFileSync(AGENT_MCP_SERVERS_FILE, 'utf8'));
+    }
+  } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_MCP_SERVERS));
+}
+
+function saveAgentMcpServers(data) {
+  try {
+    fs.mkdirSync(path.dirname(AGENT_MCP_SERVERS_FILE), { recursive: true });
+    fs.writeFileSync(AGENT_MCP_SERVERS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch {}
+}
+
+ipcMain.handle('mcp-get-provider-servers', async (_, providerId) => {
+  const all = loadAgentMcpServers();
+  return all[providerId] || DEFAULT_MCP_SERVERS[providerId] || [];
+});
+
+ipcMain.handle('mcp-save-provider-server', async (_, { providerId, server }) => {
+  const all = loadAgentMcpServers();
+  if (!all[providerId]) all[providerId] = [];
+  const idx = all[providerId].findIndex(s => s.id === server.id);
+  if (idx >= 0) {
+    all[providerId][idx] = { ...all[providerId][idx], ...server };
+  } else {
+    all[providerId].push(server);
+  }
+  saveAgentMcpServers(all);
+  return all[providerId];
+});
+
+ipcMain.handle('mcp-delete-provider-server', async (_, { providerId, serverId }) => {
+  const all = loadAgentMcpServers();
+  if (all[providerId]) {
+    all[providerId] = all[providerId].filter(s => s.id !== serverId);
+    saveAgentMcpServers(all);
+  }
+  return all[providerId] || [];
+});
+
+ipcMain.handle('mcp-auth-provider-server', async (_, { providerId, serverId, credentials }) => {
+  const all = loadAgentMcpServers();
+  if (all[providerId]) {
+    const server = all[providerId].find(s => s.id === serverId);
+    if (server) {
+      server.authenticated = true;
+      if (credentials) {
+        server.credentials = { ...credentials, savedAt: new Date().toISOString() };
+      }
+      saveAgentMcpServers(all);
+    }
+  }
+  return all[providerId] || [];
+});
+
+
