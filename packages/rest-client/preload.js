@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('api', {
   saveBru: (opts) => ipcRenderer.invoke('rest-save-bru', opts),
   aiGenerate: (prompt) => ipcRenderer.invoke('rest-ai-generate', prompt),
   getEnvironments: () => ipcRenderer.invoke('rest-get-environments'),
+  runCollection: (opts) => ipcRenderer.invoke('rest-run-collection', opts),
 });

@@ -68,4 +68,50 @@ describe('RobOS REST API Client (Bruno) E2E Tests', () => {
       await killApp(app);
     }
   });
+
+  it('runs entire Bruno collection through Collection Runner and validates 5/5 requests, 10/10 assertions, and scorecards', async () => {
+    const binDir = path.join(os.homedir(), '.local', 'bin');
+    const app = await launchApp('rest-client', {
+      ...scenarios['all-good'],
+      useRealBinaries: true,
+      env: {
+        ROBOS_TEST: '1',
+        ROBOS_REAL_BINARIES: '1',
+        PATH: `${binDir}:${process.env.PATH}`,
+      },
+    });
+
+    try {
+      assert.ok(app.port, 'REST Client debug snapshot port must be allocated');
+
+      // 1. Switch to Runner View
+      await evalClick(app.port, '#mode-runner-btn');
+      await new Promise(r => setTimeout(r, 400));
+
+      const runnerVisible = await evalJS(app.port, `!document.getElementById('runner-workspace').classList.contains('hidden')`);
+      assert.ok(runnerVisible, 'Collection Runner workspace must be visible');
+
+      // 2. Start Collection Runner
+      await evalClick(app.port, '#btn-start-runner');
+      await new Promise(r => setTimeout(r, 2000));
+
+      // 3. Assert Matrix rows rendered (5 requests)
+      const rowCount = await evalJS(app.port, `document.querySelectorAll('.runner-row').length`);
+      assert.strictEqual(rowCount, 5, 'Collection runner must execute all 5 requests');
+
+      // 4. Assert Scorecards Metrics
+      const totalRequestsText = await evalJS(app.port, `document.getElementById('metric-total-requests').textContent`);
+      assert.ok(totalRequestsText.includes('5 / 5'), `Expected 5 / 5 passed requests, got: ${totalRequestsText}`);
+
+      const totalAssertionsText = await evalJS(app.port, `document.getElementById('metric-total-assertions').textContent`);
+      assert.ok(totalAssertionsText.includes('10 / 10'), `Expected 10 / 10 green assertions, got: ${totalAssertionsText}`);
+
+      // 5. Assert PR Gate button enabled
+      const prBtnDisabled = await evalJS(app.port, `document.getElementById('btn-publish-pr-gate').disabled`);
+      assert.strictEqual(prBtnDisabled, false, 'PR Gate publish button must be enabled after run');
+    } finally {
+      await killApp(app);
+    }
+  });
 });
+

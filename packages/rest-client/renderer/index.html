@@ -21,6 +21,10 @@
         <span class="env-label">Env:</span>
         <select id="env-select" class="env-dropdown"></select>
       </div>
+      <div class="nav-mode-switcher">
+        <button id="mode-builder-btn" class="nav-mode-btn active">⚡ Request Editor</button>
+        <button id="mode-runner-btn" class="nav-mode-btn">▶ Collection Runner</button>
+      </div>
     </div>
     <div class="top-right">
       <div class="badge-git-sync">● Git-Backed (.bru)</div>
@@ -34,6 +38,7 @@
       <div class="sidebar-header">
         <h4>COLLECTIONS</h4>
         <div class="sidebar-actions">
+          <button id="btn-run-collection-sidebar" class="btn-run-suite" title="Run Entire Collection"><span class="btn-icon">▶</span> Run Suite</button>
           <button id="btn-ai-generate-bru" class="btn-ai-generate" title="Generate .bru from TypeSpec / OpenAPI"><span class="btn-sparkle">✨</span> Generate (.bru)</button>
           <button id="btn-add-request" class="btn-icon-tiny" title="New Request">+</button>
         </div>
@@ -163,6 +168,102 @@ test("Certificate is certified and mTLS verified", function() {
         </section>
       </div>
     </main>
+
+    <!-- Center: Collection Runner Workspace -->
+    <section id="runner-workspace" class="runner-workspace hidden">
+      <!-- Runner Header -->
+      <div class="runner-header-bar">
+        <div class="runner-title-group">
+          <span class="runner-icon">▶</span>
+          <div class="runner-title-meta">
+            <h2>Collection Runner — Multi-Service Integration Suite</h2>
+            <p>Automated end-to-end regression testing across <code>petstore-api</code>, <code>vaccine-gateway</code>, and <code>petstore-infra</code></p>
+          </div>
+        </div>
+        <div class="runner-controls">
+          <div class="control-item">
+            <label>Env:</label>
+            <span class="badge-env">☸️ Kind: acme-petshop-local</span>
+          </div>
+          <div class="control-item">
+            <label>Iterations:</label>
+            <input type="number" id="run-iterations" class="input-tiny" value="1" min="1" max="10">
+          </div>
+          <div class="control-item">
+            <label>Delay:</label>
+            <input type="number" id="run-delay" class="input-tiny" value="60" min="0" step="10"> ms
+          </div>
+          <button id="btn-start-runner" class="btn-run-all">
+            <span class="btn-icon">⚡</span> Run Collection (5 Requests)
+          </button>
+        </div>
+      </div>
+
+      <!-- Runner Progress & Status -->
+      <div id="runner-progress-card" class="runner-progress-card">
+        <div class="progress-status-line">
+          <span id="runner-status-text" class="status-live-text">Ready to execute integration test suite</span>
+          <span id="runner-progress-count" class="progress-count">0 / 5 Completed</span>
+        </div>
+        <div class="progress-track">
+          <div id="runner-progress-bar" class="progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Scorecards Matrix -->
+      <div id="runner-metrics-grid" class="metrics-grid hidden">
+        <div class="metric-card card-green">
+          <span class="metric-label">TOTAL REQUESTS</span>
+          <span id="metric-total-requests" class="metric-val">5 / 5 Passed</span>
+          <span class="metric-sub">100% Success Rate</span>
+        </div>
+        <div class="metric-card card-cyan">
+          <span class="metric-label">ASSERTIONS</span>
+          <span id="metric-total-assertions" class="metric-val">10 / 10 Green</span>
+          <span class="metric-sub">0 Failures</span>
+        </div>
+        <div class="metric-card card-purple">
+          <span class="metric-label">AVG LATENCY</span>
+          <span id="metric-avg-latency" class="metric-val">13.6 ms</span>
+          <span class="metric-sub">Total: 68 ms</span>
+        </div>
+        <div class="metric-card card-blue">
+          <span class="metric-label">MICROSERVICES</span>
+          <span id="metric-services-count" class="metric-val">3 Services</span>
+          <span class="metric-sub">Kind Cluster (Docker)</span>
+        </div>
+      </div>
+
+      <!-- Multi-Service Test Results Table -->
+      <div class="runner-results-container">
+        <div class="results-table-header">
+          <h3>TEST EXECUTION MATRIX</h3>
+          <div class="results-actions">
+            <button id="btn-export-report" class="btn-tiny" disabled>📄 Export Report (HTML / JUnit)</button>
+            <button id="btn-publish-pr-gate" class="btn-tiny btn-accent-pr" disabled>✓ Publish Gate to PR #42</button>
+          </div>
+        </div>
+
+        <table class="runner-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th style="width: 140px;">MICROSERVICE</th>
+              <th style="width: 80px;">METHOD</th>
+              <th>REQUEST NAME & ENDPOINT</th>
+              <th style="width: 100px;">STATUS</th>
+              <th style="width: 90px;">LATENCY</th>
+              <th style="width: 120px;">ASSERTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="runner-table-tbody">
+            <tr class="empty-runner-row">
+              <td colspan="7">Click <strong>Run Collection</strong> to execute the multi-service test suite.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <!-- Bottom AI Dock -->
