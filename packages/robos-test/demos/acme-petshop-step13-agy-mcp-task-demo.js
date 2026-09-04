@@ -11,10 +11,10 @@ const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-
 
 const SCRIPT = [
   {
-    narration: "RobOS integrates Google Antigravity (AGY) as a first-class AI provider connected directly to the RobOS Unified MCP Router.",
+    narration: "RobOS integrates Google Antigravity (AGY) as a first-class AI provider alongside GitHub Copilot, Claude Code, and Codex.",
     target: "#sidebar",
     action: "hover",
-    callout: "RobOS Agents Manager — Antigravity & Unified MCP",
+    callout: "RobOS Agents Manager — AI Provider Management",
     minHold: 4000,
   },
   {
@@ -38,56 +38,68 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "We click '⚡ Run Autonomous SDLC Workflow (PET-106)'. Antigravity initiates autonomous orchestration via JSON-RPC 2.0 MCP tools.",
-    target: "#btn-run-agy-mcp-workflow",
+    narration: "We click the Launch Flags arrow to configure runtime options for the Antigravity agent CLI.",
+    target: "#btn-agy-flags-toggle",
     action: "click",
-    callout: "Trigger Autonomous SDLC Pipeline via RobOS MCP Tools",
+    callout: "Configure Launch Flags Dropdown",
     js: `(() => {
-      const btn = document.getElementById('btn-run-agy-mcp-workflow');
+      const btn = document.getElementById('btn-agy-flags-toggle');
       if (btn) btn.click();
     })()`,
-    minHold: 5000,
-  },
-  {
-    narration: "Antigravity executes robos_tasks_create for ticket PET-106 and robos_ekgraph_update_node to register the emergency surgery endpoint in the architecture graph.",
-    target: "#agy-terminal-box",
-    action: "hover",
-    callout: "MCP Calls: robos_tasks_create & robos_ekgraph_update_node",
-    minHold: 5500,
-  },
-  {
-    narration: "Antigravity implements the Fastify route in 03-vaccine-gateway.yaml and calls robos_kube_deploy to apply manifests to the live Kind cluster in acme-petshop-local.",
-    target: "#agy-terminal-box",
-    action: "hover",
-    callout: "Code Implementation & Kubernetes Rollout via robos_kube_deploy",
-    minHold: 6000,
-  },
-  {
-    narration: "Antigravity executes robos_rest_send_request, verifying POST /api/v1/pets/PET-105-VAX/surgery returns 201 Created from live pod vaccine-gateway.",
-    target: "#agy-terminal-box",
-    action: "hover",
-    callout: "Live REST Verification: POST /api/v1/pets/PET-105-VAX/surgery (201 Created)",
-    minHold: 6000,
-  },
-  {
-    narration: "Antigravity completes the workflow by calling robos_tasks_advance_workflow, promoting PET-106 to DONE with all verification criteria satisfied.",
-    target: "#agy-terminal-box",
-    action: "hover",
-    callout: "MCP Call: robos_tasks_advance_workflow -> PET-106 DONE",
-    minHold: 5000,
-  },
-  {
-    narration: "We inspect the recent sessions list and click 'Open AGY Terminal' to inspect the interactive command-line session paired with the RobOS MCP server.",
-    target: "#agy-sessions-list",
-    action: "hover",
-    callout: "Interactive Antigravity (AGY) CLI & Session Resuming",
     minHold: 4500,
   },
   {
-    narration: "RobOS seamlessly merges desktop AI workflows, Model Context Protocol routing, Kubernetes infrastructure, and real API verification into one unified experience.",
+    narration: "In the Launch Flags dropdown, we review the active configuration: Model (gemini-2.5-pro), MCP Router (robos), and Active Task (PET-106).",
+    target: "#agy-flags-dropdown",
+    action: "hover",
+    callout: "Flags: --model gemini-2.5-pro, --mcp robos, --task PET-106",
+    minHold: 5000,
+  },
+  {
+    narration: "We click 'All' to explore advanced launch flags including --full-auto, --workflow, and --allow-all-tools.",
+    target: "#agy-flags-mode-all",
+    action: "click",
+    callout: "Switch to All Launch Flags View",
+    js: `(() => {
+      const btn = document.getElementById('agy-flags-mode-all');
+      if (btn) btn.click();
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We return to 'Most Common' flags and prepare to launch the interactive Antigravity CLI session.",
+    target: "#agy-flags-mode-common",
+    action: "click",
+    callout: "Switch to Most Common Flags View",
+    js: `(() => {
+      const btn = document.getElementById('agy-flags-mode-common');
+      if (btn) btn.click();
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: "We click 'Open AGY Terminal' to launch the Antigravity session in Tilix terminal, pre-configured with the RobOS Unified MCP Router.",
+    target: "#btn-agy-terminal",
+    action: "click",
+    callout: "Launch Interactive Antigravity CLI Session with RobOS MCP",
+    js: `(() => {
+      const btn = document.getElementById('btn-agy-terminal');
+      if (btn) btn.click();
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "In the Sessions section, we inspect active Antigravity brain sessions, showing task contexts, model metadata, and instant session resumption.",
+    target: "#agy-sessions-list",
+    action: "hover",
+    callout: "Inspect Antigravity Brain Sessions & Resume Controls",
+    minHold: 5000,
+  },
+  {
+    narration: "RobOS provides a uniform, authentic developer experience across all AI agents with seamless Model Context Protocol integration.",
     target: "#sidebar",
     action: "hover",
-    callout: "Complete AI-First SDLC with Antigravity & RobOS MCP Router",
+    callout: "Unified AI-First SDLC Architecture with Antigravity & MCP",
     minHold: 4000,
   },
 ];
@@ -124,16 +136,16 @@ async function main() {
     // Extract key frames for walkthrough verification
     execSync(`ffmpeg -y -ss 00:00:02 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-desktop_frame.png`, { stdio: "ignore" });
     execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-agy_provider_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:12 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-mcp_connected_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:18 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-trigger_workflow_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:24 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-mcp_task_topology_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:30 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-kube_deploy_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:36 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-rest_verify_201_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:42 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-workflow_done_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:11 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-mcp_connected_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:16 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-open_flags_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:21 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-configure_flags_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:26 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-all_flags_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:33 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-launch_terminal_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:39 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step13-sessions_list_frame.png`, { stdio: "ignore" });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step13-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step13.vtt`);
 
-    console.log("✓ Full Inclusive Step 13 Antigravity (AGY) + RobOS MCP Demo Finished Successfully!");
+    console.log("✓ Full Inclusive Step 13 Realistic Antigravity (AGY) Demo Finished Successfully!");
     process.exit(0);
   }).catch(async (err) => {
     console.error(err);

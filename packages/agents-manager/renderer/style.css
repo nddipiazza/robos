@@ -144,17 +144,3 @@ html, body { background: #0d1117; color: #e6edf3; font-family: -apple-system, Bl
 .flags-dir-browse { padding: 2px 7px !important; font-size: 13px !important; min-width: 28px; border-color: #30363d; color: #79c0ff; flex-shrink: 0; }
 .flags-dir-browse:hover { border-color: #388bfd; color: #58a6ff; }
 
-/* ── AGY Terminal & MCP Pipeline ── */
-.agy-terminal-box { background: #090d13; border: 1px solid #21262d; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.6; color: #c9d1d9; margin-top: 12px; overflow: hidden; }
-.agy-terminal-header { background: #161b22; border-bottom: 1px solid #21262d; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 600; color: #8b949e; }
-.agy-terminal-body { padding: 14px; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-.agy-terminal-body::-webkit-scrollbar { width: 6px; }
-.agy-terminal-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
-.agy-log-line { display: flex; gap: 10px; align-items: flex-start; }
-.agy-log-badge { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
-.agy-badge-mcp { background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb55; }
-.agy-badge-tool { background: #23863622; color: #3fb950; border: 1px solid #23863655; }
-.agy-badge-kube { background: #a371f722; color: #bc8cff; border: 1px solid #a371f755; }
-.agy-badge-rest { background: #00bcd422; color: #00bcd4; border: 1px solid #00bcd455; }
-.agy-log-content { flex: 1; word-break: break-all; color: #e6edf3; }
-.agy-log-json { background: #11161f; border: 1px solid #21262d; padding: 8px; border-radius: 6px; color: #7ee787; font-size: 11px; margin-top: 4px; overflow-x: auto; white-space: pre; }

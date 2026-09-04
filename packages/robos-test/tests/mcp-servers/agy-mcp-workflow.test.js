@@ -120,7 +120,7 @@ describe('Antigravity (AGY) Terminal + RobOS MCP Integration Tests (Step 13)', (
     assert.strictEqual(advData.id, 'PET-106');
   });
 
-  it('Agents Manager UI launches in Electron, renders Antigravity in sidebar, and executes live MCP SDLC workflow', async () => {
+  it('Agents Manager UI launches in Electron, renders Antigravity in sidebar, configures launch flags and sessions', async () => {
     const app = await launchApp('agents-manager', scenarios['all-good']);
     try {
       // Allow async provider detection to settle
@@ -141,24 +141,26 @@ describe('Antigravity (AGY) Terminal + RobOS MCP Integration Tests (Step 13)', (
       const mcpBadge = await evalJS(app.port, `document.querySelector('.detail-title-row .active-badge:last-child').textContent`);
       assert.ok(mcpBadge.includes('mcpServers.robos CONNECTED'));
 
-      // 4. Trigger Autonomous MCP SDLC Workflow
-      await evalJS(app.port, `document.getElementById('btn-run-agy-mcp-workflow').click()`);
+      // 4. Toggle Launch Flags dropdown
+      await evalJS(app.port, `document.getElementById('btn-agy-flags-toggle').click()`);
+      await new Promise(r => setTimeout(r, 300));
+      const isDropdownOpen = await evalJS(app.port, `!document.getElementById('agy-flags-dropdown').classList.contains('hidden')`);
+      assert.strictEqual(isDropdownOpen, true);
 
-      // Wait up to 10s for workflow to complete
-      let statusText = '';
-      for (let i = 0; i < 20; i++) {
-        await new Promise(r => setTimeout(r, 500));
-        statusText = await evalJS(app.port, `document.getElementById('agy-stream-status')?.textContent || ''`);
-        if (statusText.includes('COMPLETED')) break;
-      }
+      // Verify flag fields rendered
+      const flagsListHtml = await evalJS(app.port, `document.getElementById('agy-flags-list').innerHTML`);
+      assert.ok(flagsListHtml.includes('--model'));
+      assert.ok(flagsListHtml.includes('--mcp'));
+      assert.ok(flagsListHtml.includes('--task'));
 
-      // 5. Assert terminal log outputs
-      const termLogs = await evalJS(app.port, `document.getElementById('agy-terminal-body').textContent`);
-      assert.ok(termLogs.includes('mcpServers.robos'));
-      assert.ok(termLogs.includes('PET-106'));
-      assert.ok(termLogs.includes('201 CREATED') || termLogs.includes('SCHEDULED'));
-      assert.ok(termLogs.includes('STAGE DONE') || termLogs.includes('DONE'));
-      assert.ok(statusText.includes('COMPLETED'));
+      // 5. Verify Sessions list rendered
+      const sessionsHtml = await evalJS(app.port, `document.getElementById('agy-sessions-list').innerHTML`);
+      assert.ok(sessionsHtml.includes('session-card'));
+      assert.ok(sessionsHtml.includes('Resume'));
+
+      // 6. Test Terminal Launch button trigger
+      const terminalBtnText = await evalJS(app.port, `document.getElementById('btn-agy-terminal').textContent`);
+      assert.strictEqual(terminalBtnText, 'Open AGY Terminal');
     } finally {
       await killApp(app);
     }

@@ -222,28 +222,40 @@ function saveCodexFlagState() {
 // ── Antigravity / Gemini CLI flag definitions ──────────────────────────────
 
 const AGY_FLAGS = [
+  // ── Most Common ──
   { id: 'model', flag: '--model', type: 'select', label: 'Model',
     desc: 'Gemini model powering Antigravity reasoning',
     options: ['gemini-2.5-pro', 'gemini-2.5-flash', 'antigravity-2.0'],
     common: true },
+  { id: 'effort', flag: '--effort', type: 'select', label: 'Reasoning Effort',
+    desc: 'Set the reasoning effort / thinking budget',
+    options: ['low', 'medium', 'high', 'xhigh', 'max'],
+    common: true },
   { id: 'mcp', flag: '--mcp', type: 'select', label: 'MCP Router Connection',
-    desc: 'Model Context Protocol router to attach',
+    desc: 'Model Context Protocol router to attach (mcpServers.robos)',
     options: ['robos', 'all', 'none'],
     common: true },
-  { id: 'workflow', flag: '--workflow', type: 'select', label: 'Autonomous Workflow',
-    desc: 'Target SDLC workflow pipeline',
-    options: ['task-to-deploy', 'plan-and-review', 'e2e-verification'],
-    common: true },
-  { id: 'task', flag: '--task', type: 'text', label: 'Active Task ID',
-    desc: 'Active Task Context in RobOS Task Management',
+  { id: 'task', flag: '--task', type: 'text', label: 'Active Task Context',
+    desc: 'Task context in RobOS Task Management (e.g. PET-106)',
     common: true },
   { id: 'cwd', flag: 'cwd', type: 'dir', label: 'Working Directory',
-    desc: 'Repository root for development session',
+    desc: 'Start Antigravity in this directory (cd before launching)',
     common: true },
+  // ── All ──
+  { id: 'full-auto', flag: '--full-auto', type: 'bool', label: 'Full Auto Mode',
+    desc: 'Execute tool commands autonomously without interactive prompt confirmations',
+    common: false },
+  { id: 'workflow', flag: '--workflow', type: 'select', label: 'Autonomous Workflow',
+    desc: 'Target SDLC workflow pipeline mode',
+    options: ['task-to-deploy', 'plan-and-review', 'e2e-verification'],
+    common: false },
+  { id: 'allow-all-tools', flag: '--allow-all-tools', type: 'bool', label: 'Allow All MCP Tools',
+    desc: 'Allow all MCP tools to execute automatically',
+    common: false },
 ];
 
 let agyFlagMode = localStorage.getItem('agyFlagMode') || 'common';
-let agyFlagValues = (() => { try { return JSON.parse(localStorage.getItem('agyFlagValues') || '{"model":"gemini-2.5-pro","mcp":"robos","workflow":"task-to-deploy","task":"PET-106"}'); } catch { return { model: 'gemini-2.5-pro', mcp: 'robos', workflow: 'task-to-deploy', task: 'PET-106' }; } })();
+let agyFlagValues = (() => { try { return JSON.parse(localStorage.getItem('agyFlagValues') || '{"model":"gemini-2.5-pro","mcp":"robos","task":"PET-106"}'); } catch { return { model: 'gemini-2.5-pro', mcp: 'robos', task: 'PET-106' }; } })();
 
 function saveAgyFlagState() {
   localStorage.setItem('agyFlagMode', agyFlagMode);
@@ -1291,7 +1303,6 @@ function renderCodexSessions(sessions) {
 async function renderAntigravityDetail(provider) {
   const detail = document.getElementById('provider-detail');
   const isActive = activeProviderId === 'antigravity';
-  const sessions = await window.agents.antigravitySessions();
 
   detail.innerHTML = `
     <div class="detail-scroll">
@@ -1302,12 +1313,12 @@ async function renderAntigravityDetail(provider) {
           ${isActive ? '<span class="active-badge">ACTIVE PROVIDER</span>' : `<button class="btn btn-primary btn-sm" id="btn-set-active">Set as Active</button>`}
           <span class="active-badge" style="background:#0d2137;border-color:#00bcd4;color:#00bcd4;">mcpServers.robos CONNECTED</span>
         </div>
-        <div class="detail-sub">Deep reasoning AI pair programmer & automated SDLC orchestrator for RobOS.</div>
+        <p class="detail-sub">Google Antigravity deep reasoning AI pair programmer & automated SDLC agent</p>
       </div>
 
       <!-- Status -->
       <div class="detail-section">
-        <h3 class="section-title">Status & MCP Gateway</h3>
+        <h3 class="section-title">Status</h3>
         <div class="info-grid">
           <span class="info-label">AI Runtime</span>
           <span class="info-value mono">${esc(provider.version || 'Antigravity 2.0 (Gemini 2.5 Pro)')}</span>
@@ -1315,64 +1326,43 @@ async function renderAntigravityDetail(provider) {
           <span class="info-value">${esc(provider.user || 'developer@robos.internal')}</span>
           <span class="info-label">MCP Router</span>
           <span class="info-value" style="color:#00bcd4;font-weight:600;">Connected (11 tools: tasks, ekgraph, kube, rest)</span>
-          <span class="info-label">Active Task</span>
-          <span class="info-value mono" style="color:#7ee787;">PET-106: Add Emergency Pet Surgery Booking Endpoint</span>
+          <span class="info-label">Status</span>
+          <span class="info-value" style="color:#3fb950">Connected & Ready</span>
         </div>
-      </div>
-
-      <!-- Autonomous MCP SDLC Orchestrator -->
-      <div class="detail-section">
-        <h3 class="section-title">Antigravity Autonomous MCP Execution</h3>
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
-          <button class="btn btn-primary" id="btn-run-agy-mcp-workflow" style="background:#1f6feb;border-color:#388bfd;font-weight:600;">
-            ⚡ Run Autonomous SDLC Workflow (PET-106)
-          </button>
-          <button class="btn btn-ai" id="btn-launch-agy-terminal">
-            ⌨ Open AGY Terminal
-          </button>
-          <button class="btn" id="btn-launch-agy-session" style="border-color:#30363d;">
-            + New AGY Session
-          </button>
-        </div>
-
-        <!-- Live Terminal Stream Box -->
-        <div class="agy-terminal-box" id="agy-terminal-box">
-          <div class="agy-terminal-header">
-            <span>🖥️ ANTIGRAVITY AGENT CONSOLE &mdash; LIVE MCP STREAM</span>
-            <span id="agy-stream-status" style="color:#7ee787;">● IDLE / READY</span>
+        <div class="section-actions">
+          <button class="btn btn-sm" id="btn-agy-refresh">Refresh</button>
+          <button class="btn btn-primary btn-sm" id="btn-agy-new-session">+ New AGY Session</button>
+          <div class="split-btn-group" id="agy-terminal-group">
+            <button class="btn btn-ai btn-sm" id="btn-agy-terminal">Open AGY Terminal</button>
+            <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-agy-flags-toggle" title="Configure launch flags">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
-          <div class="agy-terminal-body" id="agy-terminal-body">
-            <div class="agy-log-line">
-              <span class="agy-log-badge agy-badge-mcp">MCP</span>
-              <span class="agy-log-content">Connected to <strong>RobOS Unified MCP Router</strong> (<code>mcpServers.robos</code>). Discovered 11 tools across 5 servers.</span>
-            </div>
-            <div class="agy-log-line">
-              <span class="agy-log-badge agy-badge-tool">TASK</span>
-              <span class="agy-log-content">Standing by for task execution. Click <strong>Run Autonomous SDLC Workflow</strong> to execute PET-106.</span>
+        </div>
+        <div class="flags-dropdown hidden" id="agy-flags-dropdown">
+          <div class="flags-dropdown-header">
+            <span class="flags-dropdown-title">Launch Flags</span>
+            <div class="flags-mode-toggle">
+              <button class="flags-mode-btn ${agyFlagMode === 'common' ? 'active' : ''}" id="agy-flags-mode-common">Most Common</button>
+              <button class="flags-mode-btn ${agyFlagMode === 'all' ? 'active' : ''}" id="agy-flags-mode-all">All</button>
             </div>
           </div>
+          <div id="agy-flags-list" class="flags-list"></div>
         </div>
       </div>
 
       <!-- Sessions -->
       <div class="detail-section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <h3 class="section-title" style="margin-bottom:0;">Recent AGY Sessions</h3>
-          <span class="text-muted" id="agy-session-count">${sessions.length} sessions</span>
-        </div>
-        <div class="sessions-list" id="agy-sessions-list">
-          <!-- Populated by renderAntigravitySessions -->
+        <h3 class="section-title">Sessions</h3>
+        <div id="agy-sessions-list" class="sessions-list">
+          <div class="text-muted" style="padding:12px">Loading sessions...</div>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  renderAntigravitySessions(sessions);
-
-  // Bind buttons
-  const setActiveBtn = document.getElementById('btn-set-active');
-  if (setActiveBtn) {
-    setActiveBtn.onclick = async () => {
+  // Wire buttons
+  if (!isActive) {
+    document.getElementById('btn-set-active').onclick = async () => {
       await window.agents.setActiveProvider('antigravity');
       activeProviderId = 'antigravity';
       renderSidebar();
@@ -1380,131 +1370,188 @@ async function renderAntigravityDetail(provider) {
     };
   }
 
-  const launchTermBtn = document.getElementById('btn-launch-agy-terminal');
-  if (launchTermBtn) {
-    launchTermBtn.onclick = () => {
-      window.agents.antigravityLaunchTerminal(null, ['--task', 'PET-106', '--mcp', 'robos']);
+  document.getElementById('btn-agy-refresh').onclick = async () => {
+    providers = await window.agents.detectProviders();
+    const updated = providers.find(p => p.id === 'antigravity');
+    renderSidebar();
+    await renderAntigravityDetail(updated);
+  };
+
+  document.getElementById('btn-agy-new-session').onclick = () => {
+    window.agents.antigravityLaunchTerminal('new', buildAgyArgs(), agyFlagValues['cwd'] || null);
+  };
+
+  document.getElementById('btn-agy-terminal').onclick = () => {
+    window.agents.antigravityLaunchTerminal(null, buildAgyArgs(), agyFlagValues['cwd'] || null);
+  };
+
+  // Flags dropdown toggle
+  const flagsToggle = document.getElementById('btn-agy-flags-toggle');
+  if (flagsToggle) {
+    flagsToggle.onclick = (e) => {
+      e.stopPropagation();
+      const dd = document.getElementById('agy-flags-dropdown');
+      dd.classList.toggle('hidden');
+      if (!dd.classList.contains('hidden')) renderAgyFlagsDropdown();
     };
+    document.getElementById('agy-flags-dropdown').addEventListener('click', e => e.stopPropagation());
+    document.getElementById('agy-flags-mode-common').onclick = () => {
+      agyFlagMode = 'common';
+      saveAgyFlagState();
+      renderAgyFlagsDropdown();
+    };
+    document.getElementById('agy-flags-mode-all').onclick = () => {
+      agyFlagMode = 'all';
+      saveAgyFlagState();
+      renderAgyFlagsDropdown();
+    };
+    renderAgyFlagsDropdown();
   }
 
-  const newSessionBtn = document.getElementById('btn-launch-agy-session');
-  if (newSessionBtn) {
-    newSessionBtn.onclick = () => {
-      window.agents.antigravityLaunchTerminal('new', ['--workflow', 'task-to-deploy']);
-    };
-  }
+  // Load sessions
+  const sessions = await window.agents.antigravitySessions();
+  renderAntigravitySessions(sessions);
+}
 
-  const runWorkflowBtn = document.getElementById('btn-run-agy-mcp-workflow');
-  if (runWorkflowBtn) {
-    runWorkflowBtn.onclick = async () => {
-      await executeAgyMcpWorkflow();
-    };
+// ── Antigravity flags dropdown ───────────────────────────────────────────────
+
+function renderAgyFlagsDropdown() {
+  const listEl = document.getElementById('agy-flags-list');
+  if (!listEl) return;
+
+  document.getElementById('agy-flags-mode-common')?.classList.toggle('active', agyFlagMode === 'common');
+  document.getElementById('agy-flags-mode-all')?.classList.toggle('active', agyFlagMode === 'all');
+
+  const flags = agyFlagMode === 'common'
+    ? AGY_FLAGS.filter(f => f.common)
+    : [...AGY_FLAGS].sort((a, b) => a.label.localeCompare(b.label));
+
+  listEl.innerHTML = '';
+  for (const f of flags) {
+    const row = document.createElement('div');
+    row.className = 'flags-row';
+
+    if (f.type === 'bool') {
+      const checked = !!agyFlagValues[f.id];
+      row.innerHTML = `
+        <label class="flags-bool-label" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${checked ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          <span class="flags-label-text">${esc(f.label)}</span>
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </label>`;
+      row.querySelector('input').onchange = (e) => {
+        if (e.target.checked) agyFlagValues[f.id] = true;
+        else delete agyFlagValues[f.id];
+        saveAgyFlagState();
+      };
+    } else {
+      const val = agyFlagValues[f.id] || '';
+      const enabled = !!val;
+      const isDirType = f.type === 'dir';
+      row.innerHTML = `
+        <div class="flags-value-row" title="${esc(f.desc)}">
+          <input type="checkbox" class="flags-checkbox" data-id="${f.id}" ${enabled ? 'checked' : ''}/>
+          <span class="flags-flag-name">${esc(f.flag)}</span>
+          ${f.type === 'select' ? `
+            <select class="flags-select flags-value-input" data-id="${f.id}">
+              <option value="">-- choose --</option>
+              ${f.options.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            </select>` : isDirType ? `
+            <div class="flags-dir-group">
+              <input type="text" class="flags-text-input flags-value-input" data-id="${f.id}"
+                value="${esc(String(val))}" placeholder="choose directory…" readonly/>
+              <button class="btn btn-sm flags-dir-browse" title="Browse…">📁</button>
+            </div>` : `
+            <input type="${f.type === 'number' ? 'number' : 'text'}" class="flags-text-input flags-value-input"
+              data-id="${f.id}" value="${esc(String(val))}"
+              placeholder="${f.type === 'number' ? '0' : f.label}"/>`}
+          <span class="flags-desc">${esc(f.desc)}</span>
+        </div>`;
+      const checkbox = row.querySelector('.flags-checkbox');
+      const input = row.querySelector('.flags-value-input');
+      checkbox.onchange = (e) => {
+        if (!e.target.checked) { delete agyFlagValues[f.id]; input.value = ''; }
+        else if (input.value) agyFlagValues[f.id] = input.value;
+        saveAgyFlagState();
+      };
+      if (isDirType) {
+        row.querySelector('.flags-dir-browse').onclick = async () => {
+          const chosen = await window.agents.openDirDialog();
+          if (chosen) {
+            input.value = chosen;
+            agyFlagValues[f.id] = chosen;
+            checkbox.checked = true;
+            saveAgyFlagState();
+          }
+        };
+        input.oninput = input.onchange = () => {
+          if (input.value) { agyFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete agyFlagValues[f.id]; checkbox.checked = false; }
+          saveAgyFlagState();
+        };
+      } else {
+        input.oninput = input.onchange = () => {
+          if (input.value) { agyFlagValues[f.id] = input.value; checkbox.checked = true; }
+          else { delete agyFlagValues[f.id]; checkbox.checked = false; }
+          saveAgyFlagState();
+        };
+      }
+    }
+    listEl.appendChild(row);
   }
 }
 
-function renderAntigravitySessions(sessions) {
-  const list = document.getElementById('agy-sessions-list');
-  if (!list) return;
+function buildAgyArgs() {
+  const args = [];
+  for (const f of AGY_FLAGS) {
+    if (f.id === 'cwd') continue;
+    const val = agyFlagValues[f.id];
+    if (!val) continue;
+    if (f.type === 'bool') {
+      args.push(f.flag);
+    } else {
+      const str = String(val).trim();
+      if (str) args.push(f.flag, str);
+    }
+  }
+  return args;
+}
 
-  if (!sessions || sessions.length === 0) {
-    list.innerHTML = '<div class="empty-sessions">No previous Antigravity sessions found.</div>';
+// ── Antigravity sessions ────────────────────────────────────────────────────
+
+function renderAntigravitySessions(sessions) {
+  const container = document.getElementById('agy-sessions-list');
+  if (!container) return;
+
+  if (!sessions || !sessions.length) {
+    container.innerHTML = '<div class="empty-sessions">No previous Antigravity sessions found. Open a terminal to start one.</div>';
     return;
   }
 
-  list.innerHTML = sessions.map(s => `
-    <div class="session-card" id="agy-session-${s.session_id}">
+  container.innerHTML = '';
+  for (const s of sessions) {
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    card.innerHTML = `
       <div class="session-card-main">
         <div class="session-card-name">${esc(s.name || s.session_id)}</div>
-        <div class="session-card-message">${esc(s.first_message || 'PET-106: Add Emergency Pet Surgery Booking Endpoint')}</div>
+        <div class="session-card-message">${esc(s.first_message || 'No initial prompt')}</div>
         <div class="session-card-meta">
-          <span class="text-muted">${esc(s.cwd || '/home/ndipiazza/source/robos')}</span>
-          <span class="text-muted">&middot;</span>
-          <span class="text-muted">${formatDate(s.updated_at || s.created_at)}</span>
-          <span class="text-muted">&middot;</span>
-          <span class="mono" style="color:#79c0ff;">${esc(s.model || 'gemini-2.5-pro')}</span>
+          <span class="mono text-muted">${esc(s.cwd || '')}</span>
+          ${s.model ? `<span class="mono" style="color:#79c0ff;">${esc(s.model)}</span>` : ''}
           <span class="mono" style="color:#7ee787;">[mcp: robos]</span>
+          <span class="text-muted">${formatDate(s.updated_at || s.created_at)}</span>
         </div>
       </div>
       <div class="session-card-actions">
-        <button class="btn btn-sm btn-ai" onclick="window.agents.antigravityLaunchTerminal('${s.session_id}')">Resume in Terminal</button>
-      </div>
-    </div>
-  `).join('');
-}
+        <button class="btn btn-ai btn-sm btn-resume" title="Resume in terminal">Resume</button>
+      </div>`;
 
-async function executeAgyMcpWorkflow() {
-  const termBody = document.getElementById('agy-terminal-body');
-  const statusEl = document.getElementById('agy-stream-status');
-  const runBtn = document.getElementById('btn-run-agy-mcp-workflow');
-  if (runBtn) runBtn.disabled = true;
-  if (statusEl) {
-    statusEl.textContent = '● RUNNING MCP WORKFLOW...';
-    statusEl.style.color = '#e3b341';
+    card.querySelector('.btn-resume').onclick = () =>
+      window.agents.antigravityLaunchTerminal(s.session_id, buildAgyArgs(), s.cwd || null);
+    container.appendChild(card);
   }
-
-  function appendLog(badgeClass, badgeText, contentHtml) {
-    const row = document.createElement('div');
-    row.className = 'agy-log-line';
-    row.innerHTML = `
-      <span class="agy-log-badge ${badgeClass}">${badgeText}</span>
-      <span class="agy-log-content">${contentHtml}</span>
-    `;
-    termBody.appendChild(row);
-    termBody.scrollTop = termBody.scrollHeight;
-  }
-
-  // Animated execution steps
-  appendLog('agy-badge-mcp', 'MCP INIT', 'Initializing JSON-RPC 2.0 handshake with <code>mcpServers.robos</code>...');
-  await new Promise(r => setTimeout(r, 250));
-
-  appendLog('agy-badge-tool', 'TOOL DISCOVERY', 'Unified Router catalog populated: <strong>11 tools</strong> (<code>robos_tasks_*</code>, <code>robos_ekgraph_*</code>, <code>robos_kube_*</code>, <code>robos_rest_*</code>)');
-  await new Promise(r => setTimeout(r, 300));
-
-  appendLog('agy-badge-tool', 'TASK CREATE', 'Antigravity calling <code>robos_tasks_create</code> for ticket <strong>PET-106</strong>: "Add Emergency Pet Surgery Booking Endpoint [POST /api/v1/pets/{id}/surgery]"');
-  await new Promise(r => setTimeout(r, 350));
-
-  appendLog('agy-badge-tool', 'TOPOLOGY', 'Antigravity calling <code>robos_ekgraph_update_node</code>: Registered <code>POST /api/v1/pets/:id/surgery</code> in microservice knowledge graph.');
-  await new Promise(r => setTimeout(r, 300));
-
-  appendLog('agy-badge-mcp', 'CODE GEN', 'Antigravity implemented Fastify route in <code>03-vaccine-gateway.yaml</code> and synthesized Bruno spec <code>06-book-emergency-surgery.bru</code>.');
-  await new Promise(r => setTimeout(r, 350));
-
-  appendLog('agy-badge-kube', 'KUBE DEPLOY', 'Antigravity calling <code>robos_kube_deploy</code>: Applying manifests to Kind cluster in namespace <code>acme-petshop-local</code> & restarting pod...');
-  
-  // Real execution call
-  const result = await window.agents.antigravityRunMcpWorkflow({ taskId: 'PET-106' });
-  await new Promise(r => setTimeout(r, 400));
-
-  appendLog('agy-badge-kube', 'KUBE SUCCESS', 'Kubernetes rollout complete: <code>configmap/vaccine-gateway-code configured</code>, pod <code>vaccine-gateway-55f5cbbbcb-mqlwm</code> healthy (1/1 Running).');
-  await new Promise(r => setTimeout(r, 300));
-
-  appendLog('agy-badge-rest', 'REST EXEC', 'Antigravity calling <code>robos_rest_send_request</code>: <code>POST http://127.0.0.1:8443/api/v1/pets/PET-105-VAX/surgery</code>');
-  await new Promise(r => setTimeout(r, 300));
-
-  const surgeryLog = result?.logs?.find(l => l.step === 'rest_verification')?.output?.body;
-  const surgeryBodyStr = JSON.stringify(surgeryLog || {
-    bookingId: 'SURG-829410',
-    petId: 'PET-105-VAX',
-    procedure: 'Emergency Orthopedic Surgery',
-    surgeon: 'Dr. Maya Patel, DVM, DACVS',
-    status: 'SCHEDULED',
-    operatingRoom: 'OR-3-TRAUMA',
-    cluster: 'kind-robos-local',
-    namespace: 'acme-petshop-local',
-    servingPod: 'vaccine-gateway-55f5cbbbcb-mqlwm'
-  }, null, 2);
-
-  appendLog('agy-badge-rest', '201 CREATED', `Live REST endpoint response verified with 100% assertions green:
-<div class="agy-log-json">${esc(surgeryBodyStr)}</div>`);
-  await new Promise(r => setTimeout(r, 300));
-
-  appendLog('agy-badge-tool', 'STAGE DONE', 'Antigravity calling <code>robos_tasks_advance_workflow</code>: Task <strong>PET-106</strong> advanced to <strong style="color:#7ee787;">DONE</strong>.');
-
-  if (statusEl) {
-    statusEl.textContent = '● COMPLETED & VERIFIED';
-    statusEl.style.color = '#3fb950';
-  }
-  if (runBtn) runBtn.disabled = false;
 }
 
 // ── Resizable sidebar ───────────────────────────────────────────────────────

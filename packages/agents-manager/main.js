@@ -643,9 +643,14 @@ ipcMain.handle('antigravity-fetch-models', async () => {
 });
 
 ipcMain.handle('antigravity-launch-terminal', (_, id, extraArgs, cwd) => {
-  const targetCwd = cwd || '/home/ndipiazza/source/robos';
-  const args = (extraArgs || []).join(' ');
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'cd "${targetCwd}" && echo "[Antigravity] Launching AGY Session ${id || 'new'} with RobOS MCP..." && agy ${args} ; read -p "Press Enter to close..." x'`], {
+  const parts = ['agy'];
+  if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
+  if (id && id !== 'new') parts.push('--resume', id);
+  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
+  const targetCwd = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : '/home/ndipiazza/source/robos';
+  const cwdPrefix = `cd "${dqEscape(targetCwd)}" && `;
+  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}echo "[Antigravity] Starting AGY paired with RobOS Unified MCP Router..." && ${shellCmd}; read -p "Press Enter to close..." x'`], {
     env: { ...process.env, DISPLAY: ':0', ROBOS_MCP_AUTO: 'true' },
     detached: true,
   });
