@@ -11,67 +11,80 @@ const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/2d2c4639-6694-4741-
 
 const SCRIPT = [
   {
-    narration: 'We begin on the RobOS developer desktop to execute Step 5: IDE Breakpoint & AI Coding Execution.',
-    callout: 'RobOS Desktop Shell',
-    minHold: 3000,
-  },
-  {
-    narration: 'Picking up task PET-105 provisions the workspace and launches IntelliJ IDEA at the reproduction breakpoint.',
-    target: '.ij-titlebar',
-    action: 'click',
-    callout: 'Launch IntelliJ IDEA (RobOS Breakpoint Workspace)',
+    narration: 'On the RobOS desktop, 6 polyglot repositories are cloned and 5 tasks are queued. We open Task Implementer to implement the Petstore features.',
+    callout: 'RobOS Desktop Shell & Task Implementer',
     minHold: 3500,
   },
   {
-    narration: 'The workspace is brought directly to line 48 in PetService.java where rabies certification is required.',
-    target: '#code-line-48',
-    action: 'hover',
-    callout: 'Inspect Suspended Breakpoint at PetService.java:48',
-    minHold: 4000,
-  },
-  {
-    narration: 'The Debugger Tool Window displays thread state, stack frames, and live variables for the pending pet adoption.',
-    target: '#ij-debugger',
+    narration: 'We select task PET-105: Rabies Vaccine Verification Gateway & Certification on the petstore-api backend.',
+    target: '#task-item-105',
     action: 'click',
-    callout: 'Inspect Thread Stack & Variable State',
+    callout: 'Select Task PET-105 from Sprint Backlog',
+    js: `(() => {
+      if (window._demoSelectTask) window._demoSelectTask('PET-105');
+    })()`,
     minHold: 4000,
   },
   {
-    narration: 'The RobOS AI Workspace tool window analyzes the breakpoint and ticket context from the project graph.',
-    target: '#ij-ai-sidebar',
-    action: 'click',
-    callout: 'RobOS AI Workspace & Diagnostic Analysis',
-    minHold: 4000,
-  },
-  {
-    narration: 'AI proposes a 4-step solution plan: invoke mTLS compliance gateway, validate signature, emit Kafka event, and run Pact tests.',
-    target: '#ai-plan-card',
+    narration: 'The task panel outlines the requirement: when adopting a puppy or kitten, verify its certificate via vaccine-gateway over mTLS before approving adoption.',
+    target: '.task-detail-panel',
     action: 'hover',
-    callout: 'Review AI Proposed Solution Plan',
+    callout: 'Review Task Requirements, Branch & Secret Bindings',
     minHold: 4500,
   },
   {
-    narration: 'In RobOS, the developer reviews and approves the AI plan before any code changes are applied.',
-    target: '#btn-approve-plan',
+    narration: 'We click "Launch Task Workspace". RobOS checks out the branch, injects mTLS secrets from pass, starts dependencies, and executes the reproduction test.',
+    target: '#btn-launch-ws',
     action: 'click',
-    callout: 'Human-in-the-Loop Plan Approval',
+    callout: 'Automated Provisioning & Reproduction Test Run',
     js: `(() => {
-      if (window.approveAndExecutePlan) window.approveAndExecutePlan();
+      if (window._demoStartProvisioning) window._demoStartProvisioning();
     })()`,
     minHold: 4500,
   },
   {
-    narration: 'The AI Agent executes the plan, applies the code diff, runs unit & Pact tests (14/14 passed), and resumes execution.',
-    target: '#ai-execution-card',
+    narration: 'The reproduction test triggers and halts execution at the exact breakpoint in PetService.java:48 where rabies certification is required.',
+    target: '#code-line-48',
+    action: 'hover',
+    callout: 'Execution Suspended at Breakpoint (PetService.java:48)',
+    minHold: 4500,
+  },
+  {
+    narration: 'In the Debugger, we inspect live variable state: pet id, canine species, tag ID VAX-2026-9814, and the mTLS client endpoint.',
+    target: '#ij-debugger',
     action: 'click',
-    callout: 'Plan Executed, Tests Passed & Breakpoint Resumed',
+    callout: 'Inspect Live Debugger Variables & Stack Frames',
+    minHold: 4500,
+  },
+  {
+    narration: 'In the RobOS AI Workspace, the AI analyzes the breakpoint and presents a 4-step solution plan: call mTLS gateway, validate signature, emit Kafka event, and run Pact tests.',
+    target: '#ai-plan-card',
+    action: 'hover',
+    callout: 'RobOS AI Workspace: Diagnostic & 4-Step Plan',
     minHold: 5000,
   },
   {
-    narration: 'The full 5-stage RobOS SDLC loop is complete: Task Planning, C4 Topology, Contracts, Repos, and IDE AI Execution.',
+    narration: 'The developer reviews and approves the AI plan. RobOS applies the code diff, binds the mTLS keystore, and runs the test suite.',
+    target: '#btn-approve-plan',
+    action: 'click',
+    callout: 'Human-in-the-Loop Plan Approval & Execution',
+    js: `(() => {
+      if (window._demoApprovePlan) window._demoApprovePlan();
+    })()`,
+    minHold: 5000,
+  },
+  {
+    narration: 'All 14 unit and Pact contract tests pass! The breakpoint resumes with 200 OK, Kafka event is published, and the Petstore adoption feature is verified.',
+    target: '#ai-execution-card',
+    action: 'click',
+    callout: '14/14 Pact Tests Passed & Breakpoint Resumed 200 OK',
+    minHold: 5000,
+  },
+  {
+    narration: 'The full 5-stage RobOS SDLC loop is complete: from Task Planning and Topology, to Contracts, Git Projects, and AI IDE Breakpoint Execution.',
     target: '.ij-titlebar',
     action: 'click',
-    callout: 'Full 5-Stage SDLC Lifecycle Verified',
+    callout: 'Complete 5-Stage RobOS SDLC Loop Verified',
     minHold: 4000,
   },
 ];
@@ -99,12 +112,12 @@ async function main() {
 
     // Extract key frames for walkthrough verification
     execSync(`ffmpeg -y -ss 00:00:02 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-desktop_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-ide_open_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-breakpoint_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-debugger_state_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:20 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-ai_plan_review_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:26 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-plan_approval_frame.png`, { stdio: 'ignore' });
-    execSync(`ffmpeg -y -ss 00:00:32 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-execution_verified_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-task_select_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-provisioning_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:16 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-breakpoint_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:22 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-debugger_vars_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:28 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-ai_plan_review_frame.png`, { stdio: 'ignore' });
+    execSync(`ffmpeg -y -ss 00:00:36 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/acme-petshop-step5-execution_verified_frame.png`, { stdio: 'ignore' });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step5-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step5.vtt`);
 
@@ -117,3 +130,4 @@ async function main() {
 }
 
 main();
+

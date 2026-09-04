@@ -416,6 +416,475 @@ body {
   border-radius: 3px;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* ── RobOS Task Implementation & Workspace Launcher View ─────────────────── */
+.robos-task-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+.task-view-header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 24px;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+
+.header-subtitle {
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.header-subtitle code {
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.header-stats {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-badge {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 12px;
+  background: #21262d;
+  color: #c9d1d9;
+  font-weight: 600;
+}
+
+.stat-badge.accent {
+  background: rgba(0, 188, 212, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+.task-view-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  overflow: hidden;
+  height: calc(100vh - 58px);
+}
+
+.task-backlog-panel {
+  background: #0d1117;
+  border-right: 1px solid #30363d;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-heading {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #21262d;
+}
+
+.task-count-tag {
+  background: #21262d;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  color: #c9d1d9;
+}
+
+.task-backlog-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.backlog-item {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backlog-item:hover {
+  border-color: #58a6ff;
+}
+
+.backlog-item.active-task {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.06);
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.15);
+}
+
+.backlog-item.done {
+  opacity: 0.75;
+}
+
+.task-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.task-key {
+  font-size: 11px;
+  font-weight: 700;
+  color: #58a6ff;
+  font-family: monospace;
+}
+
+.status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.status-pill.done {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--success);
+}
+
+.status-pill.ready {
+  background: rgba(0, 188, 212, 0.2);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.task-item-title {
+  font-size: 12px;
+  color: #f0f6fc;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.task-item-repo {
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.task-detail-panel {
+  background: #0d1117;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.task-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-card-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.task-pill {
+  background: #1f6feb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.tag {
+  background: #21262d;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #30363d;
+}
+
+.task-card-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+
+.task-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.spec-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.spec-label {
+  font-size: 10px;
+  color: #8b949e;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.spec-value {
+  font-size: 12px;
+  color: #c9d1d9;
+  font-weight: 600;
+}
+
+.spec-value code {
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.task-description-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.desc-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.desc-p {
+  font-size: 13px;
+  color: #c9d1d9;
+  line-height: 1.6;
+}
+
+.desc-p code {
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.workspace-automation-banner {
+  background: rgba(0, 188, 212, 0.08);
+  border: 1px solid rgba(0, 188, 212, 0.25);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.banner-icon {
+  font-size: 20px;
+}
+
+.banner-text {
+  font-size: 12px;
+  color: #c9d1d9;
+  line-height: 1.5;
+}
+
+.banner-text strong {
+  color: var(--accent);
+}
+
+.launch-action-bar {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.btn-launch-ws {
+  background: linear-gradient(135deg, #008ba3, #00bcd4);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-launch-ws:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.4);
+}
+
+/* ── Provisioning Progress Modal Overlay ─────────────────────────────────── */
+.provision-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.provision-modal-card {
+  background: #161b22;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 24px 28px;
+  width: 540px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 188, 212, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 12px;
+}
+
+.modal-icon {
+  font-size: 24px;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  color: #f0f6fc;
+  font-weight: 700;
+}
+
+.modal-sub {
+  font-size: 12px;
+  color: #8b949e;
+}
+
+.modal-sub code {
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.provision-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prov-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #8b949e;
+  padding: 8px 10px;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.prov-step.running {
+  border-color: var(--accent);
+  color: #f0f6fc;
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.prov-step.done {
+  border-color: var(--success);
+  color: #c9d1d9;
+  background: rgba(63, 185, 80, 0.06);
+}
+
+.prov-icon {
+  font-size: 15px;
+}
+
+.prov-text {
+  flex: 1;
+}
+
+.prov-text code {
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.prov-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b949e;
+}
+
+.prov-step.running .prov-status {
+  color: var(--accent);
+}
+
+.prov-step.done .prov-status {
+  color: var(--success);
+}
+
+.prov-footer {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prov-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 188, 212, 0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .ai-action-bar {
   background: var(--ij-header);
   border-top: 1px solid var(--ij-border);
@@ -452,3 +921,4 @@ body {
 .btn-approve:hover {
   background: #2ea043;
 }
+

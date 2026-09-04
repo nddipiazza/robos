@@ -3,11 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IntelliJ IDEA Ultimate 2026.1 - petstore-api [feature/PET-105-rabies-verification]</title>
+  <title>RobOS Task Workspace &amp; IDE — Acme Petshop</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="intellij-window">
+  <!-- =========================================================================
+       VIEW 1: RobOS Task Implementation & Workspace Launcher
+       ========================================================================= -->
+  <div id="robos-task-view" class="robos-task-view">
+    <!-- Top Header Bar -->
+    <header class="task-view-header">
+      <div class="header-brand">
+        <span class="header-icon">⚡</span>
+        <div>
+          <h1 class="header-title">RobOS Dev Central &middot; Task Implementer</h1>
+          <div class="header-subtitle">Acme Petshop Platform (<code>urn:robos:project:acme-petshop-platform</code>)</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        <span class="stat-badge">🟢 Gitea Task Forge: 5 Issues</span>
+        <span class="stat-badge accent">📦 6 Repositories Ready</span>
+      </div>
+    </header>
+
+    <!-- Main Content Grid: Backlog & Task Detail -->
+    <div class="task-view-grid">
+      <!-- Left Sidebar: Task Backlog -->
+      <aside class="task-backlog-panel">
+        <div class="panel-heading">
+          <span>Sprint Backlog</span>
+          <span class="task-count-tag">5 Tasks</span>
+        </div>
+        <div class="task-backlog-list">
+          <div class="backlog-item done" id="task-item-101">
+            <div class="task-item-top">
+              <span class="task-key">PET-101</span>
+              <span class="status-pill done">✓ Scaffolding</span>
+            </div>
+            <div class="task-item-title">Initialize PostgreSQL Schema &amp; Flyway</div>
+            <div class="task-item-repo">📦 petstore-db</div>
+          </div>
+
+          <div class="backlog-item done" id="task-item-102">
+            <div class="task-item-top">
+              <span class="task-key">PET-102</span>
+              <span class="status-pill done">✓ Scaffolding</span>
+            </div>
+            <div class="task-item-title">Core Java Spring Boot REST API</div>
+            <div class="task-item-repo">📦 petstore-api</div>
+          </div>
+
+          <div class="backlog-item done" id="task-item-103">
+            <div class="task-item-top">
+              <span class="task-key">PET-103</span>
+              <span class="status-pill done">✓ Scaffolding</span>
+            </div>
+            <div class="task-item-title">React 18 Pet Adoption Portal</div>
+            <div class="task-item-repo">📦 petstore-web</div>
+          </div>
+
+          <div class="backlog-item done" id="task-item-104">
+            <div class="task-item-top">
+              <span class="task-key">PET-104</span>
+              <span class="status-pill done">✓ Scaffolding</span>
+            </div>
+            <div class="task-item-title">Apache Kafka Event Streaming Broker</div>
+            <div class="task-item-repo">📦 event-bus</div>
+          </div>
+
+          <div class="backlog-item active-task" id="task-item-105">
+            <div class="task-item-top">
+              <span class="task-key">PET-105</span>
+              <span class="status-pill ready">⚡ Ready to Implement</span>
+            </div>
+            <div class="task-item-title">Rabies Vaccine Verification Gateway &amp; Certification</div>
+            <div class="task-item-repo">📦 petstore-api &middot; mTLS</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Detail Panel: Task Workspace Configuration -->
+      <main class="task-detail-panel">
+        <div class="task-card-header">
+          <div class="task-card-meta">
+            <span class="task-pill">PET-105</span>
+            <span class="tag">backend</span>
+            <span class="tag">java</span>
+            <span class="tag">spring-boot</span>
+            <span class="tag">mTLS</span>
+            <span class="tag">compliance</span>
+          </div>
+          <h2 class="task-card-title">Rabies Vaccine Verification Gateway &amp; Certification</h2>
+        </div>
+
+        <div class="task-specs-grid">
+          <div class="spec-card">
+            <div class="spec-label">Target Repository</div>
+            <div class="spec-value"><code>github.com/acme-org/petstore-api</code></div>
+          </div>
+          <div class="spec-card">
+            <div class="spec-label">Feature Branch</div>
+            <div class="spec-value"><code>feature/PET-105-rabies-verification</code></div>
+          </div>
+          <div class="spec-card">
+            <div class="spec-label">Secret Vault Injection</div>
+            <div class="spec-value"><code>acme/vaccine-gateway-mTLS</code> (GPG pass)</div>
+          </div>
+          <div class="spec-card">
+            <div class="spec-label">Linked API Contract</div>
+            <div class="spec-value"><code>vaccine-gateway.openapi.yaml</code> (mTLS)</div>
+          </div>
+        </div>
+
+        <div class="task-description-box">
+          <div class="desc-heading">📋 Requirements &amp; Scope</div>
+          <p class="desc-p">
+            Implement the rabies vaccination verification flow in <code>PetService.adoptPet()</code>. When adopting a puppy or kitten requiring state compliance, query the <code>vaccine-gateway</code> over MutualTLS before finalizing adoption, persisting adoption status in PostgreSQL, and publishing the <code>acme.petshop.pet.adopted</code> Kafka event.
+          </p>
+        </div>
+
+        <div class="workspace-automation-banner">
+          <div class="banner-icon">💡</div>
+          <div class="banner-text">
+            <strong>RobOS Task-Driven Workspace Provisioning:</strong>
+            <div>When you launch this workspace, RobOS will check out the branch, inject GPG secrets, spin up the local environment, and execute the reproduction test harness to bring IntelliJ IDEA directly to the breakpoint where implementation is needed.</div>
+          </div>
+        </div>
+
+        <div class="launch-action-bar">
+          <button class="btn-launch-ws" id="btn-launch-ws" onclick="window.startWorkspaceProvisioning()">
+            🚀 Launch Task Workspace (Auto-Provision &amp; Run Reproduction)
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <!-- Provisioning Progress Modal Overlay -->
+    <div id="ws-provision-modal" class="provision-modal-overlay hidden">
+      <div class="provision-modal-card">
+        <div class="modal-header">
+          <span class="modal-icon">⚙️</span>
+          <div>
+            <h3>RobOS Workspace Provisioning Engine</h3>
+            <div class="modal-sub">Preparing Task PET-105 on <code>petstore-api</code></div>
+          </div>
+        </div>
+        <div class="provision-steps">
+          <div class="prov-step" id="prov-step-1">
+            <span class="prov-icon">🌿</span>
+            <span class="prov-text">Checking out branch <code>feature/PET-105-rabies-verification</code></span>
+            <span class="prov-status" id="prov-stat-1">Pending</span>
+          </div>
+          <div class="prov-step" id="prov-step-2">
+            <span class="prov-icon">🔐</span>
+            <span class="prov-text">Injecting secrets from GPG pass (<code>acme/vaccine-gateway-mTLS</code>)</span>
+            <span class="prov-status" id="prov-stat-2">Pending</span>
+          </div>
+          <div class="prov-step" id="prov-step-3">
+            <span class="prov-icon">🐳</span>
+            <span class="prov-text">Starting local dependencies &amp; mock gateway on port 8443</span>
+            <span class="prov-status" id="prov-stat-3">Pending</span>
+          </div>
+          <div class="prov-step" id="prov-step-4">
+            <span class="prov-icon">🐛</span>
+            <span class="prov-text">Launching IntelliJ IDEA &amp; executing reproduction test <code>PetServiceTest</code>...</span>
+            <span class="prov-status" id="prov-stat-4">Pending</span>
+          </div>
+        </div>
+        <div class="prov-footer" id="prov-footer">
+          <span class="prov-spinner"></span> Auto-navigating to reproduction breakpoint in IDE...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       VIEW 2: IntelliJ IDEA Ultimate Workspace with Breakpoint & AI Assistant
+       ========================================================================= -->
+  <div id="intellij-window" class="intellij-window hidden">
     <!-- IntelliJ Titlebar -->
     <div class="ij-titlebar">
       <div class="ij-titlebar-left">
@@ -15,13 +188,13 @@
         <span class="ij-title">petstore-api — src/main/java/com/acme/petshop/service/PetService.java [feature/PET-105-rabies-verification]</span>
       </div>
       <div class="ij-titlebar-right">
-        <span class="ij-port-tag">🟢 RobOS IDE Plugin :63343 &middot; Active Workspace</span>
+        <span class="ij-port-tag">🟢 RobOS IDE Plugin :63343 &middot; Active Workspace (PET-105)</span>
       </div>
     </div>
 
     <!-- Main Workspace (Editor + RobOS AI Tool Window) -->
     <div class="ij-main-workspace">
-      <!-- Left 70%: Editor & Debugger -->
+      <!-- Left 66%: Editor & Debugger -->
       <div class="ij-editor-col">
         <!-- IntelliJ Tab Bar -->
         <div class="ij-tabbar">
@@ -99,7 +272,7 @@
               <div class="ij-frame-item">doFilterInternal:221, SecurityFilterChain</div>
             </div>
             <div class="ij-variables">
-              <div class="ij-section-title">Variables & Breakpoint State</div>
+              <div class="ij-section-title">Variables &amp; Breakpoint State</div>
               <div class="ij-var-item"><span class="var-name">pet</span> = <span class="str">{Pet@1402} "id=a81b2c-91, species=Canine, ageMonths=4, status=PENDING"</span></div>
               <div class="ij-var-item"><span class="var-name">tagId</span> = <span class="str">"VAX-2026-9814"</span></div>
               <div class="ij-var-item"><span class="var-name">vaccineGateway</span> = <span class="str">{VaccineGatewayClient@1499} (mTLS target: https://localhost:8443)</span></div>
@@ -108,7 +281,7 @@
         </div>
       </div>
 
-      <!-- Right 30%: RobOS AI Workspace & Plan Approval Tool Window -->
+      <!-- Right 34%: RobOS AI Workspace & Plan Approval Tool Window -->
       <aside class="ij-ai-sidebar" id="ij-ai-sidebar">
         <div class="ai-toolwindow-header">
           <div class="ai-header-title">
@@ -122,7 +295,7 @@
           <!-- Ticket Context -->
           <div class="ai-card">
             <div class="ai-card-title">📋 Active Task Ticket</div>
-            <div class="ticket-name">PET-105: Rabies Vaccine Verification Gateway & Certification</div>
+            <div class="ticket-name">PET-105: Rabies Vaccine Verification Gateway &amp; Certification</div>
             <div class="ticket-meta">
               <span>🌿 <code>feature/PET-105-rabies-verification</code></span>
               <span>📦 <code>petstore-api</code></span>
@@ -133,7 +306,7 @@
           <div class="ai-card">
             <div class="ai-card-title">🔍 Breakpoint Diagnostic</div>
             <div class="diagnostic-text">
-              Execution halted at <code>PetService.java:48</code>. Juvenile puppy adoption requires cryptographic validation against the State Vet Registry via <code>vaccine-gateway</code> over MutualTLS before adoption can finalize.
+              Execution halted at <code>PetService.java:48</code> during reproduction test. Juvenile puppy adoption requires cryptographic validation against the State Vet Registry via <code>vaccine-gateway</code> over MutualTLS before adoption can finalize.
             </div>
           </div>
 
@@ -158,15 +331,15 @@
               <div class="plan-step">
                 <span class="step-num">3</span>
                 <div class="step-content">
-                  <strong>Persist Status & Publish Kafka Event</strong>
+                  <strong>Persist Status &amp; Publish Kafka Event</strong>
                   <div>Update PostgreSQL record and broadcast <code>acme.petshop.pet.adopted</code>.</div>
                 </div>
               </div>
               <div class="plan-step">
                 <span class="step-num">4</span>
                 <div class="step-content">
-                  <strong>Verify Automated Pact & Unit Suite</strong>
-                  <div>Execute <code>./mvnw test</code> & verify 14/14 contract tests pass.</div>
+                  <strong>Verify Automated Pact &amp; Unit Suite</strong>
+                  <div>Execute <code>./mvnw test</code> &amp; verify 14/14 contract tests pass.</div>
                 </div>
               </div>
             </div>
@@ -174,12 +347,12 @@
 
           <!-- Execution Output / Live Status -->
           <div class="ai-card hidden" id="ai-execution-card">
-            <div class="ai-card-title">⚡ Execution & Verification Log</div>
+            <div class="ai-card-title">⚡ Execution &amp; Verification Log</div>
             <div class="exec-log" id="exec-log">
               <div class="log-line">✓ Code diff applied to PetService.java</div>
               <div class="log-line">✓ MutualTLS keystore injected from GPG pass</div>
               <div class="log-line">✓ Running ./mvnw test ...</div>
-              <div class="log-line success">✓ 14/14 Unit & Pact Tests PASSED</div>
+              <div class="log-line success">✓ 14/14 Unit &amp; Pact Tests PASSED</div>
               <div class="log-line highlight">🟢 Breakpoint Resumed: 200 OK — Adoption Certified</div>
             </div>
           </div>

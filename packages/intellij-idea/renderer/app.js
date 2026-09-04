@@ -1,6 +1,59 @@
 'use strict';
 
 let planExecuted = false;
+let isProvisioning = false;
+
+window.selectTask = function(taskKey) {
+  const items = document.querySelectorAll('.backlog-item');
+  items.forEach(el => el.classList.remove('active-task'));
+  const target = document.getElementById(`task-item-${taskKey.replace('PET-', '')}`);
+  if (target) {
+    target.classList.add('active-task');
+  }
+};
+
+window.startWorkspaceProvisioning = function() {
+  if (isProvisioning) return;
+  isProvisioning = true;
+
+  const modal = document.getElementById('ws-provision-modal');
+  if (modal) modal.classList.remove('hidden');
+
+  const steps = [
+    { id: 1, text: '✓ Branch checked out', delay: 400 },
+    { id: 2, text: '✓ Secrets injected from pass', delay: 1000 },
+    { id: 3, text: '✓ Services active (:8443)', delay: 1600 },
+    { id: 4, text: '⏸️ Breakpoint hit at PetService.java:48', delay: 2200 },
+  ];
+
+  steps.forEach(s => {
+    setTimeout(() => {
+      const stepEl = document.getElementById(`prov-step-${s.id}`);
+      const statEl = document.getElementById(`prov-stat-${s.id}`);
+      if (stepEl) {
+        stepEl.classList.remove('running');
+        stepEl.classList.add('done');
+      }
+      if (statEl) statEl.textContent = s.text;
+
+      // Next step running
+      if (s.id < 4) {
+        const nextStep = document.getElementById(`prov-step-${s.id + 1}`);
+        const nextStat = document.getElementById(`prov-stat-${s.id + 1}`);
+        if (nextStep) nextStep.classList.add('running');
+        if (nextStat) nextStat.textContent = 'Running…';
+      }
+    }, s.delay);
+  });
+
+  // After 2.8s, reveal IntelliJ IDEA IDE Workspace
+  setTimeout(() => {
+    const taskView = document.getElementById('robos-task-view');
+    const ijWindow = document.getElementById('intellij-window');
+    if (taskView) taskView.classList.add('hidden');
+    if (ijWindow) ijWindow.classList.remove('hidden');
+  }, 2900);
+};
 
 window.approveAndExecutePlan = async function() {
   if (planExecuted) return;
@@ -65,7 +118,21 @@ window.approveAndExecutePlan = async function() {
   }, 2800);
 };
 
+// Demo automation hooks
+window._demoSelectTask = function(key) {
+  window.selectTask(key);
+};
+
+window._demoStartProvisioning = function() {
+  window.startWorkspaceProvisioning();
+};
+
+window._demoApprovePlan = function() {
+  window.approveAndExecutePlan();
+};
+
 // Listen for external IPC triggers if present
 if (window.electronAPI) {
   window.electronAPI.on('ide-run', () => window.approveAndExecutePlan());
 }
+
