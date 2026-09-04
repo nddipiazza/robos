@@ -73,24 +73,22 @@ graph LR
 
 ## 📦 Installation Options
 
-### Option A: Install as Desktop App Suite (Linux, macOS, Windows)
-Run all 30+ lightweight Electron developer applications on your existing development workstation:
+### ⭐️ Primary Option: Install on Current Ubuntu GNOME Desktop
+Deploy all 30+ RobOS apps, GNOME desktop launchers, and shared libraries directly onto your existing Ubuntu machine (22.04, 24.04, or 26.04):
 ```bash
 # Clone the repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
-# Install dependencies and setup environment
+# Audit & install dependencies
 node scripts/install-dev-deps.js
 
-# Launch any application (e.g. Relational DB Manager, System Topology)
-node packages/robos-test/lib/harness.js --app db-manager
-node packages/robos-test/lib/harness.js --app topology-manager
-node packages/robos-test/lib/harness.js --app dev-central
+# Install all apps and desktop integration to /usr/local/share/robos/
+sudo bash packages/desktop-shell/install.sh
 ```
 
-### Option B: Install Full RobOS Ubuntu OS Distro
-Build a bootable QEMU/KVM disk image or write a flashable USB drive with Rufus / Etcher for bare-metal hardware:
+### Option 2: Install Full RobOS Ubuntu OS Distro (Bare Metal & VM)
+Build a dedicated bootable disk image (flashable via Rufus / Etcher) or run in a local QEMU/KVM virtual machine:
 ```bash
 # Build the disk image + cloud-init ISO
 infra/desktop/build.sh
@@ -98,6 +96,11 @@ infra/desktop/build.sh
 # Run VM (16GB RAM, all host CPUs, SSH on port 2224, VNC on port 5910)
 infra/desktop/run.sh
 ```
+
+### Option 3: Cross-Platform Desktop App Suite (Windows & macOS Coming Soon)
+- **Linux (Available Now)**: Run all 30+ Electron developer apps directly with Node.js 20+.
+- **macOS / OS X (Coming Soon)**: Universal `.dmg` installer and Homebrew Cask with native Apple Silicon (M1–M4) support and top menu bar widget.
+- **Windows (Coming Soon)**: One-click MSI package with WSL2 integration for ephemeral agent profile isolation.
 
 ---
 

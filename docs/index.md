@@ -222,24 +222,22 @@ Multi-cluster Kubernetes, ArgoCD GitOps, Helm release tracking, and automated co
 
 ## Installation Options
 
-### Option 1: Install as Desktop App Suite
-Run the full suite of 30+ RobOS Electron applications on your existing operating system:
+### ⭐️ Primary Option: Install on Current Ubuntu GNOME Desktop
+Install the full suite of 30+ RobOS desktop apps, GNOME launchers, and shared libraries directly onto your existing Ubuntu machine (22.04, 24.04, or 26.04):
 ```bash
 # Clone the repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
-# Install dependencies and setup environment
+# Audit & install dependencies
 node scripts/install-dev-deps.js
 
-# Launch any application or developer harness
-node packages/robos-test/lib/harness.js --app db-manager
-node packages/robos-test/lib/harness.js --app topology-manager
-node packages/robos-test/lib/harness.js --app dev-central
+# Install all apps and desktop integration to /usr/local/share/robos/
+sudo bash packages/desktop-shell/install.sh
 ```
 
-### Option 2: Install Full RobOS Ubuntu OS Distro
-Build a bootable QEMU/KVM disk image or write a flashable USB drive for bare-metal deployment:
+### Option 2: Install Full RobOS Ubuntu OS Distro (Bare Metal & VM)
+Build a dedicated, bare-metal bootable ISO (flashable via Rufus / Etcher) or run in a local QEMU/KVM virtual machine:
 ```bash
 # Build disk image + cloud-init ISO
 infra/desktop/build.sh
@@ -247,6 +245,11 @@ infra/desktop/build.sh
 # Run virtual machine (16GB RAM, all host CPUs, SSH port 2224)
 infra/desktop/run.sh
 ```
+
+### Option 3: Cross-Platform Desktop App Suite (Windows & macOS Coming Soon)
+- **Linux (Available Now)**: Run all 30+ Electron developer apps directly with Node.js 20+.
+- **macOS / OS X (Coming Soon)**: Universal `.dmg` installer and Homebrew Cask with native Apple Silicon (M1–M4) support and top menu bar widget.
+- **Windows (Coming Soon)**: One-click MSI package with WSL2 integration for ephemeral agent profile isolation.
 
 ---
 
