@@ -18,14 +18,21 @@ const SCRIPT = [
     minHold: 4000,
   },
   {
-    narration: "In the GitHub Copilot view, we scroll to Configured MCP Servers. Notice 'Sentry Crash Reporter' is unauthenticated with an explicit 'Authenticate' button.",
-    target: "#copilot-mcp-section",
+    narration: "In the GitHub Copilot view, we see the active localhost RobOS MCP server ('RobOS Unified MCP Server localhost:19151') connected with 11 SDLC tools.",
+    target: "#mcp-server-robos",
     action: "hover",
-    callout: "Inspect Copilot MCP Servers: Sentry Not Authenticated",
+    callout: "RobOS Localhost MCP Server (localhost:19151) Active & Connected",
     minHold: 5000,
   },
   {
-    narration: "We click 'Authenticate' on Sentry. The Authenticate MCP Server dialog opens to accept an API token.",
+    narration: "Below the localhost server, notice 'Sentry Crash Reporter' is unauthenticated with an explicit 'Authenticate' button.",
+    target: "#mcp-server-sentry",
+    action: "hover",
+    callout: "Inspect Copilot MCP Servers: Sentry Not Authenticated",
+    minHold: 4500,
+  },
+  {
+    narration: "We click 'Authenticate' on Sentry. The Authenticate MCP Server dialog opens to accept credentials.",
     target: "#mcp-server-sentry .btn-auth-mcp",
     action: "click",
     callout: "Click 'Authenticate' on Sentry MCP Server",
@@ -36,10 +43,10 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "We enter the Sentry organization API token and click 'Authenticate & Verify'.",
+    narration: "We enter the API token / credentials and click 'Authenticate & Verify'.",
     target: "#mcp-auth-modal .modal-dialog",
     action: "hover",
-    callout: "Submit API Token & Verify Credentials",
+    callout: "Submit API Credentials & Verify",
     js: `(() => {
       const tokenInput = document.getElementById('mcp-auth-token');
       if (tokenInput) tokenInput.value = 'sntry_prod_token_9941';
@@ -58,7 +65,7 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "We select 'Claude Code' in the sidebar and click '+ Add MCP Server' to attach a new data source.",
+    narration: "We select 'Claude Code' in the sidebar and click '+ Add MCP Server' to attach a new data source alongside localhost RobOS MCP.",
     target: "#provider-nav",
     action: "click",
     callout: "Switch to Claude Code & Add New MCP Server",
@@ -91,24 +98,24 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: "The Redis Enterprise Cluster server is saved and rendered live in Claude Code's MCP server list.",
+    narration: "The Redis Enterprise Cluster server is saved and rendered live in Claude Code's MCP server list alongside the localhost RobOS router.",
     target: "#claude-mcp-section",
     action: "hover",
     callout: "New Redis MCP Server Added to Claude Code",
     minHold: 4500,
   },
   {
-    narration: "We switch to 'Antigravity / Gemini CLI'. We see Jira Cloud with an 'Authenticate' button alongside the active RobOS Unified MCP Router.",
+    narration: "We switch to 'Antigravity / Gemini CLI'. We see the localhost RobOS MCP server and Jira Cloud with an 'Authenticate' button.",
     target: "#provider-nav",
     action: "click",
-    callout: "Inspect Antigravity MCP Servers: Jira Cloud & RobOS Router",
+    callout: "Inspect Antigravity MCP Servers: Localhost RobOS Router & Jira Cloud",
     js: `(() => {
       if (typeof selectProvider === 'function') selectProvider('antigravity');
     })()`,
     minHold: 5000,
   },
   {
-    narration: "We authenticate Jira Cloud and remove obsolete servers, giving developers complete governance over AI tools and credentials.",
+    narration: "We authenticate Jira Cloud and verify full MCP lifecycle governance across all AI products in RobOS.",
     target: "#antigravity-mcp-section",
     action: "hover",
     callout: "Full MCP Lifecycle: View, Edit, Auth & Remove across AI Products",
@@ -123,6 +130,7 @@ const SCRIPT = [
     minHold: 5000,
   },
 ];
+
 
 async function main() {
   const display = process.env.DISPLAY || ":99";
@@ -155,18 +163,20 @@ async function main() {
 
     // Extract key frames for walkthrough verification
     execSync(`ffmpeg -y -ss 00:00:02 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-desktop_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-unauth_sentry_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:11 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-auth_modal_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:18 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-sentry_authed_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:24 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-add_modal_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:30 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-redis_added_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:36 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-antigravity_servers_frame.png`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:43 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-jira_authed_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:06 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-localhost_robos_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:10 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-unauth_sentry_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-auth_modal_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:22 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-sentry_authed_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:28 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-add_modal_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:35 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-redis_added_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:41 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-antigravity_servers_frame.png`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:48 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/agent-mcp-jira_authed_frame.png`, { stdio: "ignore" });
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/agent-mcp-management-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/agent-mcp-management.vtt`);
 
     console.log("✓ Full Inclusive RobOS Agents MCP Management Demo Finished Successfully!");
     process.exit(0);
+
   }).catch(async (err) => {
     console.error(err);
     process.exit(1);

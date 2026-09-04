@@ -760,15 +760,16 @@ const DEFAULT_MCP_SERVERS = {
   'github-copilot': [
     {
       id: 'robos',
-      name: 'RobOS Unified MCP Router',
+      name: 'RobOS Unified MCP Server (localhost:19151)',
       type: 'stdio',
       command: 'node',
       args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      endpoint: 'http://localhost:19151/mcp',
       env: { NODE_ENV: 'production' },
       toolsCount: 11,
       authenticated: true,
       authType: 'local-ipc',
-      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+      description: 'Localhost unified SDLC tool gateway for tasks, graphs, kube & rest (11 tools)',
     },
     {
       id: 'sentry',
@@ -796,15 +797,16 @@ const DEFAULT_MCP_SERVERS = {
   'claude-code': [
     {
       id: 'robos',
-      name: 'RobOS Unified MCP Router',
+      name: 'RobOS Unified MCP Server (localhost:19151)',
       type: 'stdio',
       command: 'node',
       args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      endpoint: 'http://localhost:19151/mcp',
       env: { NODE_ENV: 'production' },
       toolsCount: 11,
       authenticated: true,
       authType: 'local-ipc',
-      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+      description: 'Localhost unified SDLC tool gateway for tasks, graphs, kube & rest (11 tools)',
     },
     {
       id: 'postgres-petshop',
@@ -834,15 +836,16 @@ const DEFAULT_MCP_SERVERS = {
   'codex': [
     {
       id: 'robos',
-      name: 'RobOS Unified MCP Router',
+      name: 'RobOS Unified MCP Server (localhost:19151)',
       type: 'stdio',
       command: 'node',
       args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      endpoint: 'http://localhost:19151/mcp',
       env: { NODE_ENV: 'production' },
       toolsCount: 11,
       authenticated: true,
       authType: 'local-ipc',
-      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+      description: 'Localhost unified SDLC tool gateway for tasks, graphs, kube & rest (11 tools)',
     },
     {
       id: 'aws-cloud',
@@ -870,15 +873,16 @@ const DEFAULT_MCP_SERVERS = {
   'antigravity': [
     {
       id: 'robos',
-      name: 'RobOS Unified MCP Router',
+      name: 'RobOS Unified MCP Server (localhost:19151)',
       type: 'stdio',
       command: 'node',
       args: ['/usr/local/share/robos/robos-mcp-router/router.js'],
+      endpoint: 'http://localhost:19151/mcp',
       env: { NODE_ENV: 'production' },
       toolsCount: 11,
       authenticated: true,
       authType: 'local-ipc',
-      description: 'Unified SDLC tool gateway for tasks, graphs, kube & rest',
+      description: 'Localhost unified SDLC tool gateway for tasks, graphs, kube & rest (11 tools)',
     },
     {
       id: 'jira-cloud',
@@ -906,6 +910,7 @@ const DEFAULT_MCP_SERVERS = {
     },
   ],
 };
+
 
 function loadAgentMcpServers() {
   try {
