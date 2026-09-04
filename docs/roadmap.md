@@ -1,13 +1,13 @@
 ---
-title: Roadmap
+title: Project Plan & Roadmap
 layout: default
 nav_order: 8
 ---
 
-# Project Roadmap & Vision
+# RobOS Project Plan & Engineering Roadmap
 {: .no_toc }
 
-RobOS is the developer-first operating system and desktop ecosystem engineered for AI Agent Review-Based Software Development. Here is our product evolution, current architecture milestones, and upcoming development roadmap.
+The phased engineering architecture, dependency waves, and delivery roadmap for RobOS — the AI-First Software Development Operating System.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,81 +18,162 @@ RobOS is the developer-first operating system and desktop ecosystem engineered f
 
 ---
 
-## Current Architecture Milestones (Verified in Production)
+## The End-to-End Driven Development (EDD) Standard
 
-RobOS development is strictly driven by **End-to-End Driven Development (EDD)**. Every completed milestone is backed by automated headless test suites (`packages/robos-test`), DOM snapshots, and 1080p narrated video proof-of-work.
+In RobOS, every architectural phase is validated through containerized headless E2E test fabrics before milestone signoff:
+- **Isolated Headless Compositor**: Automated testing on headless `Xvfb` with `Picom/Mutter` compositors.
+- **Fast Deterministic Feedback**: Direct DOM tree hierarchy and snapshot inspection via `packages/robos-lib/snapshot-cli.js`.
+- **Proof-of-Work Verification**: Every completed capability generates timestamped DOM snapshots, contract verification reports, and 1080p narrated video walkthroughs with neural Piper TTS voiceovers.
 
-| Domain | Milestone | Capabilities & Verified Artifacts | Status |
-|:---|:---|:---|:---:|
-| **Knowledge Graph** | Dual-State SDLC World Graph | OASIS OSLC Core 3.0 / W3C JSON-LD / SHACL engine. Semantic graph diffing between `main` and feature branches with blast-radius detection. | **Complete** |
-| **System Topology** | C4 Polyglot Architecture & Backstage | Interactive C4 Level 1-3 modeling, Backstage catalog sync, and automated Kubernetes & Helm manifest synthesis. | **Complete** |
-| **API Contracts** | Contract Studio & Mock Servers | OpenAPI 3.1, TypeSpec, and AsyncAPI validation with live Spectral linting and Prism mock servers. | **Complete** |
-| **IDE Integration** | IntelliJ IDEA IPC Bridge | Local IPC bridge (`port 63343`), workspace auto-provisioning, and breakpoint reproduction before AI plan review. | **Complete** |
-| **Developer Tools** | Protocol & Database Suite | DBeaver-inspired Relational DB Manager (Postgres, MySQL, Oracle), MongoDB/Redis NoSQL Manager, gRPC Client, GraphQL Client, and Bruno-powered REST Client. | **Complete** |
-| **Cloud & GitOps** | Kube Studio & Cloud Navigator | Multi-cluster Kubernetes management (Kind, EKS, GKE, AKS), Helm release matrices, ArgoCD GitOps sync, and live pod log streaming. | **Complete** |
-| **Agent Isolation** | Ephemeral Linux Profiles & Display Bridging | Zero-residue `tmpfs` user profiles (`/home/agent-...`) with direct X11/Wayland display rendering and Piper neural TTS voiceovers. | **Complete** |
-| **Agent Protocols** | Model Context Protocol (MCP) Router | Multi-agent tool provider routing and OAuth authentication popups across Claude Code, Google Antigravity, Copilot CLI, and Gemini. | **Complete** |
+---
+
+## 6-Phase Dependency Roadmap
+
+```mermaid
+graph TD
+    subgraph Phase0 [Phase 0: Bootstrapped Foundation & Setup]
+        DF[Desktop Foundation]
+        AF[App Framework & Shared Libraries]
+        DT[Software Center & Dev Tools]
+        SA[Security Setup & GPG Secrets]
+        SU[Unified Onboarding Wizard]
+    end
+
+    subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
+        SS[System Services & Notification Engine]
+        EP[Ephemeral Agent User Profiles & tmpfs]
+        DA[Desktop Agent Sessions & Tunneling]
+        MCP[First-Class Model Context Protocol Servers]
+    end
+
+    subgraph Phase2 [Phase 2: World State Modeling & GitOps Schema]
+        KG[Dual-State SDLC Knowledge Graph]
+        SLOS[8-Pillar Declarative SDLC Engine]
+        PG[Contract-Driven Project Graph]
+        EK[Engineering Knowledge Graph]
+    end
+
+    subgraph Phase3 [Phase 3: Work Items, Multi-Repo Workspaces & Review Hub]
+        TM[Task & Issue Management DAGs]
+        WM[Multi-Repo Workspace Orchestrator]
+        EE[Event Engine & Agent Scheduler]
+        DC[Dev Central — AI Agent Review Hub]
+    end
+
+    subgraph Phase4 [Phase 4: Autonomous E2E-Driven Dev & Verification]
+        EDD[App Test Framework & Test Fabric]
+        REV[Interactive Reviewer & Video Proof]
+        AI[AI Agent Integration & Questionnaire]
+        CR[PR Review Board & CI Monitor]
+    end
+
+    subgraph Phase5 [Phase 5: Extended Experience & Distribution]
+        WJ[Work Journal & Activity Feed]
+        VI[Voice Dictation & Local STT]
+        MR[Management Dashboards & DORA KPIs]
+        RP[Release Packaging & VM Distribution]
+    end
+
+    Phase0 --> Phase1
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
+    Phase4 --> Phase5
+```
+
+---
+
+## Phase Breakdown & Architecture Milestones
+
+### Phase 0: Bootstrapped Foundation & Setup
+*Virtual machine environment, dark desktop shell, app scaffolding, and initial onboarding.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **Desktop Foundation** | QEMU/KVM VM build system, cloud-init automated provisioning, GNOME dark navy/cyan theme, Tilix terminal, LightDM auto-login. |
+| **App Framework** | App launcher, `robos-lib` desktop parsers, `robos-icons` central SVG registry, snapshot debug server (ports 19100–19182). |
+| **Software Center** | One-click installation and management for JetBrains IDEs, VS Code, CLI utilities, and language runtimes. |
+| **Security & Auth** | GPG-encrypted password vault (`pass-manager`), SSH key initialization, and Git credential safety net. |
+| **Unified Setup Wizard** | First-boot onboarding wizard (`packages/robos-onboarding`), missing credential checks, and automated project provisioner. |
+
+---
+
+### Phase 1: Agent Identity, Isolation & System Services
+*Multi-user Linux session isolation, direct host display bridging, and MCP tool servers.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **System Services** | Desktop Manager IPC hub, toast notification daemon, notification history center, and background workers. |
+| **Ephemeral Agent Profiles** | Dynamic ephemeral Linux user accounts (`/home/agent-...`), `tmpfs` RAM-backed home filesystems with zero residue, and direct host X11 display rendering. |
+| **Desktop Agents** | Multi-agent session management, socket tunneling, terminal multiplexing, and proof-of-work capture. |
+| **MCP Tool Servers** | High-performance Model Context Protocol routing across Claude Code, Google Antigravity, Copilot CLI, and Gemini with OAuth authentication popups. |
+
+---
+
+### Phase 2: World State Modeling & GitOps Schema
+*Standardized OSLC/JSON-LD knowledge graph, dual-state world branching (Prod vs Future), and declarative `.robos/` storage.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **Dual-State Knowledge Graph** | OASIS OSLC Core 3.0 & W3C JSON-LD + SHACL knowledge graph engine. Multi-branch world states (`main` = Prod, `feature/*` = Future) with semantic graph diffing and blast radius calculation. |
+| **8-Pillar SDLC Engine** | Declarative GitOps schema covering System Topology, HR/Agents, Entity Schemas (TypeSpec/Buf), API Contracts (OpenAPI/Pact), Packages, Projects, Tasks, and `.robos/` Git storage. |
+| **Contract-Driven Project Graph** | Interactive C4 architecture modeling (Level 1 Context to Level 3 Components), Backstage software catalog sync, and automated Kubernetes/Helm manifest synthesis. |
+| **Developer Protocol Suite** | Relational DB Manager (Postgres, MySQL, Oracle), NoSQL DB Manager (MongoDB, Redis), gRPC Client, GraphQL Client, and Bruno REST Client. |
+
+---
+
+### Phase 3: Work Items, Multi-Repo Workspaces & Review Hub
+*DAG task dependency graphs, Git worktree workspace isolation, and Dev Central review hub.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **Task & Issue Management** | Natural language task breakdown into directed acyclic graphs (DAG), bi-directional Gitea/Jira synchronization, and automated status transitions. |
+| **Workspace Orchestrator** | Multi-repository Git worktree workspace isolation sharing underlying object storage, automated dev server startup, and IntelliJ IDEA IPC bridge (port 63343). |
+| **Event Engine** | System-wide event bus, rule engine, action registry, and background AI agent cron scheduler. |
+| **Dev Central Review Hub** | Central daily developer command center, sprint board, PR health radar, calendar, and AI standup. |
+
+---
+
+### Phase 4: Autonomous E2E-Driven Dev & Verification
+*Self-contained local test fabrics, autonomous Red-Green-Refactor agent loops, and narrated video walkthrough verifications.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **App Test Framework** | Scenario-based Electron application testing with headless virtual framebuffers (`Xvfb + Picom`). |
+| **Interactive Reviewer & Video Studio** | Multi-modal video generation, timestamped DOM state assertions, and synchronized neural voiceovers via offline Piper TTS. |
+| **AI Agent Integration** | Context Manager token curation, AI planning interviews (`/grill-me`), breakpoint reproduction, and draft PR generation. |
+| **PR Review Board & CI Monitor** | AI-assisted code review, semantic file diffs, risk assessment, automated CI failure root-cause diagnosis, and 1-click merge approvals. |
+
+---
+
+### Phase 5: Extended Experience & Distribution
+*Activity journaling, voice dictation, management telemetry, and distribution packaging.*
+
+| Subsystem | Core Capabilities |
+|:---|:---|
+| **Work Journal** | Git-backed developer activity journal with AI daily summaries and time tracking. |
+| **Voice & Multimodal Input** | Local offline speech-to-text (Whisper/Vosk) in `<robos-ai-textarea>` widgets with push-to-talk. |
+| **Management & DORA KPIs** | Deploy Tracker with progressive canary rollouts, deployment frequency, MTTR, and change failure rate KPIs. |
+| **Release Packaging & Distribution** | Automated full VM build (`infra/desktop/build.sh`), QEMU/KVM images, and flashable installer USB builds. |
 
 ---
 
 ## 16-Step Reference Lifecycle (Acme Petshop E2E)
 
-The complete end-to-end SDLC lifecycle has been implemented and validated across 16 sequential automated walkthroughs:
+Every phase is validated against the complete multi-tier Acme Petshop microservice reference application:
 
-```mermaid
-flowchart TD
-    subgraph Phase1 [Planning & Contracts]
-        S1["Step 1: Task DAG & Backlog"]
-        S2["Step 2: Polyglot C4 Topology"]
-        S3["Step 3: Contract Studio & AsyncAPI"]
-        S4["Step 4: Git Projects & Dev-Setup"]
-    end
-
-    subgraph Phase2 [Implementation & Review]
-        S5["Step 5: IDE Breakpoint & Plan Review"]
-        S6["Step 6: PR CI Review & Semantic Diff"]
-        S7["Step 7: Deploy Tracker & KPIs"]
-    end
-
-    subgraph Phase3 [Cloud & Verification]
-        S8["Step 8: Kube Studio & Helm"]
-        S9["Step 9: Real K8s Deployment"]
-        S10["Step 10: Auto-Deploy & Reclaim"]
-        S11["Step 11: Bruno REST API Client"]
-        S12["Step 12: REST Collection Runner Gate"]
-    end
-
-    subgraph Phase4 [Protocols & Agents]
-        S13["Step 13: MCP Tool Registry & OAuth"]
-        S15["Step 15: Multi-DB Data Sources"]
-        S16["Step 16: DB to K8s Live Lifecycle"]
-    end
-
-    Phase1 --> Phase2 --> Phase3 --> Phase4
-```
-
----
-
-## Upcoming Roadmap
-
-### 1. Autonomous Multi-Agent Team Swarms
-- **Role Specialization**: Hierarchical swarms (Lead Architect, Microservice Specialist, QA/Verifier, Security Auditor, DevOps Engineer).
-- **Delegation DAGs**: Dynamic runtime task delegation with budget enforcement and progress telemetry.
-- **Human Escalation Gates**: Interactive prompt checkpoints (`/grill-me`) when agents hit architectural forks or breaking schema thresholds.
-
-### 2. Local Neural Voice & Multimodal Command
-- **Local Speech-to-Text (STT)**: Offline Whisper/Vosk push-to-talk integration across all RobOS textareas.
-- **Multimodal Screen Context**: Instant screenshot injection from active Electron windows into AI agent reasoning contexts.
-
-### 3. Distributed GitOps & Cloud Sync
-- **Remote Cluster Sync**: Headless synchronization with remote ArgoCD instances and enterprise Kubernetes clusters.
-- **Cloud Knowledge Graph Federation**: Federated multi-team JSON-LD knowledge graphs across distributed organizations.
-
----
-
-## Contributing & Development Philosophy
-
-RobOS is built entirely on open-source standards with zero proprietary lock-in:
-- **No Framework Overhead**: Pure vanilla JavaScript and Electron for desktop applications.
-- **Open Standards**: OASIS OSLC, W3C JSON-LD, OpenAPI 3.1, TypeSpec, Backstage, UseBruno, and Model Context Protocol.
-- **Proof-of-Work Verification**: Every pull request must be validated with containerized E2E test suites and video recordings.
+1. **Step 1: Tasks DAG** — Natural language backlog planning & Gitea sync.
+2. **Step 2: Topology C4** — Polyglot architecture modeling & Backstage catalog.
+3. **Step 3: Contracts** — Contract Studio, TypeSpec & AsyncAPI governance.
+4. **Step 4: Git Projects** — Multi-repo sync & AI `dev-setup.sh` runner.
+5. **Step 5: IDE Breakpoint** — IntelliJ workspace provisioning & breakpoint reproduction.
+6. **Step 6: PR Review** — Semantic diff analysis & automated CI validation.
+7. **Step 7: Deploy Tracker** — Staging/Prod pipeline filtering & DORA KPIs.
+8. **Step 8: Kube Studio** — Multi-cluster Kubernetes & Helm release catalog.
+9. **Step 9: Real K8s** — Live Kind cluster deployment & container logs.
+10. **Step 10: Auto-Deploy** — Continuous deployment upon PR merge & ephemeral reclamation.
+11. **Step 11: Bruno REST Client** — Git-backed `.bru` collections & OpenAPI synthesis.
+12. **Step 12: Runner Gate** — Automated REST test suite execution & PR quality gates.
+13. **Step 13: MCP OAuth** — Model Context Protocol tool registry & OAuth popups.
+14. **Step 15: Data Sources** — Knowledge Graph multi-database explorer (SQL, NoSQL, S3, Kafka).
+15. **Step 16: DB to K8s Lifecycle** — Analytics Postgres addition, auto-synthesizing K8s manifests, SQL data seeding, and live API verification.
