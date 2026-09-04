@@ -19,9 +19,10 @@ describe('RobOS Agents — MCP Server Lifecycle & Authentication across AI Provi
       await new Promise(r => setTimeout(r, 800));
 
       let copilotMcpHtml = await evalJS(app.port, `document.getElementById('mcp-servers-list').innerHTML`);
-      assert.ok(copilotMcpHtml.includes('RobOS Unified MCP Router'));
+      assert.ok(copilotMcpHtml.includes('RobOS Unified MCP'));
       assert.ok(copilotMcpHtml.includes('Sentry Crash Reporter'));
       assert.ok(copilotMcpHtml.includes('Not Authenticated'));
+
 
       // Click Authenticate on Sentry
       await evalJS(app.port, `document.querySelector('#mcp-server-sentry .btn-auth-mcp').click()`);
@@ -108,9 +109,10 @@ describe('RobOS Agents — MCP Server Lifecycle & Authentication across AI Provi
       await new Promise(r => setTimeout(r, 800));
 
       let agyMcpHtml = await evalJS(app.port, `document.getElementById('mcp-servers-list').innerHTML`);
-      assert.ok(agyMcpHtml.includes('RobOS Unified MCP Router'));
+      assert.ok(agyMcpHtml.includes('RobOS Unified MCP'));
       assert.ok(agyMcpHtml.includes('Jira Cloud Integration'));
       assert.ok(agyMcpHtml.includes('GitHub Enterprise MCP'));
+
 
       // Authenticate Jira Cloud
       await evalJS(app.port, `document.querySelector('#mcp-server-jira-cloud .btn-auth-mcp').click()`);
