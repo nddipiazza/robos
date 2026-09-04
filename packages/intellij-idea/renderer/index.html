@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IntelliJ IDEA Ultimate 2026.1 - robos-java-service</title>
+  <title>IntelliJ IDEA Ultimate 2026.1 - petstore-api [feature/PET-105-rabies-verification]</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,75 +11,186 @@
     <!-- IntelliJ Titlebar -->
     <div class="ij-titlebar">
       <div class="ij-titlebar-left">
-        <span class="ij-logo">🔷</span>
-        <span class="ij-title">robos-java-service — src/main/java/com/robos/HelloWorld.java [IntelliJ IDEA Ultimate 2026.1]</span>
+        <span class="ij-logo">🧠</span>
+        <span class="ij-title">petstore-api — src/main/java/com/acme/petshop/service/PetService.java [feature/PET-105-rabies-verification]</span>
       </div>
       <div class="ij-titlebar-right">
-        <span class="ij-port-tag">🟢 IPC HTTP Listening :63343</span>
+        <span class="ij-port-tag">🟢 RobOS IDE Plugin :63343 &middot; Active Workspace</span>
       </div>
     </div>
 
-    <!-- IntelliJ Tab Bar -->
-    <div class="ij-tabbar">
-      <div class="ij-tab active" id="ij-tab-hello">
-        <span class="ij-tab-icon">☕</span>
-        <span class="ij-tab-title">HelloWorld.java</span>
-        <span class="ij-tab-close">✕</span>
-      </div>
-      <div class="ij-tab" id="ij-tab-pom">
-        <span class="ij-tab-icon">📄</span>
-        <span class="ij-tab-title">pom.xml</span>
-        <span class="ij-tab-close">✕</span>
-      </div>
-    </div>
+    <!-- Main Workspace (Editor + RobOS AI Tool Window) -->
+    <div class="ij-main-workspace">
+      <!-- Left 70%: Editor & Debugger -->
+      <div class="ij-editor-col">
+        <!-- IntelliJ Tab Bar -->
+        <div class="ij-tabbar">
+          <div class="ij-tab active" id="ij-tab-service">
+            <span class="ij-tab-icon">☕</span>
+            <span class="ij-tab-title">PetService.java</span>
+            <span class="ij-tab-close">✕</span>
+          </div>
+          <div class="ij-tab" id="ij-tab-client">
+            <span class="ij-tab-icon">☕</span>
+            <span class="ij-tab-title">VaccineGatewayClient.java</span>
+            <span class="ij-tab-close">✕</span>
+          </div>
+          <div class="ij-tab" id="ij-tab-pom">
+            <span class="ij-tab-icon">📄</span>
+            <span class="ij-tab-title">pom.xml</span>
+            <span class="ij-tab-close">✕</span>
+          </div>
+          <div class="ij-tab" id="ij-tab-openapi">
+            <span class="ij-tab-icon">📋</span>
+            <span class="ij-tab-title">petstore-api.openapi.yaml</span>
+            <span class="ij-tab-close">✕</span>
+          </div>
+        </div>
 
-    <!-- IntelliJ Code Editor -->
-    <div class="ij-editor">
-      <div class="ij-gutter" id="ij-gutter">
-        <div class="ij-line-num">1</div>
-        <div class="ij-line-num">2</div>
-        <div class="ij-line-num">3</div>
-        <div class="ij-line-num">4</div>
-        <div class="ij-line-num">5</div>
-        <div class="ij-line-num ij-bp-line" id="gutter-line-6"><span class="ij-bp-dot" id="bp-dot-6">🔴</span> 6</div>
-        <div class="ij-line-num">7</div>
-        <div class="ij-line-num">8</div>
-        <div class="ij-line-num">9</div>
-      </div>
-      <div class="ij-code" id="ij-code">
-        <div class="ij-code-line"><span class="kwd">package</span> com.robos;</div>
-        <div class="ij-code-line"></div>
-        <div class="ij-code-line"><span class="kwd">public class</span> <span class="cls">HelloWorld</span> {</div>
-        <div class="ij-code-line">  <span class="kwd">public static void</span> <span class="fn">main</span>(<span class="cls">String</span>[] args) {</div>
-        <div class="ij-code-line">    <span class="cls">String</span> greeting = <span class="str">"Hello from RobOS & MCP!"</span>;</div>
-        <div class="ij-code-line ij-suspended-line" id="code-line-6">    <span class="cls">System</span>.out.<span class="fn">println</span>(greeting); <span class="comment">// ⏸️ BREAKPOINT TRIGGERED (Thread: main)</span></div>
-        <div class="ij-code-line">    <span class="cls">System</span>.out.<span class="fn">println</span>(<span class="str">"Execution completed."</span>);</div>
-        <div class="ij-code-line">  }</div>
-        <div class="ij-code-line">}</div>
-      </div>
-    </div>
+        <!-- IntelliJ Code Editor -->
+        <div class="ij-editor">
+          <div class="ij-gutter" id="ij-gutter">
+            <div class="ij-line-num">42</div>
+            <div class="ij-line-num">43</div>
+            <div class="ij-line-num">44</div>
+            <div class="ij-line-num">45</div>
+            <div class="ij-line-num">46</div>
+            <div class="ij-line-num">47</div>
+            <div class="ij-line-num ij-bp-line" id="gutter-line-48"><span class="ij-bp-dot" id="bp-dot-48">🔴</span> 48</div>
+            <div class="ij-line-num">49</div>
+            <div class="ij-line-num">50</div>
+            <div class="ij-line-num">51</div>
+            <div class="ij-line-num">52</div>
+            <div class="ij-line-num">53</div>
+            <div class="ij-line-num">54</div>
+            <div class="ij-line-num">55</div>
+          </div>
+          <div class="ij-code" id="ij-code">
+            <div class="ij-code-line"><span class="kwd">@Transactional</span></div>
+            <div class="ij-code-line"><span class="kwd">public</span> <span class="cls">AdoptionReceipt</span> <span class="fn">adoptPet</span>(<span class="cls">UUID</span> petId, <span class="cls">AdopterInfo</span> adopter) {</div>
+            <div class="ij-code-line">    <span class="cls">Pet</span> pet = petRepository.<span class="fn">findById</span>(petId).<span class="fn">orElseThrow</span>();</div>
+            <div class="ij-code-line">    <span class="comment">// PET-105: Verify state rabies certification compliance</span></div>
+            <div class="ij-code-line">    <span class="cls">String</span> tagId = pet.<span class="fn">getRabiesTagId</span>();</div>
+            <div class="ij-code-line">    <span class="kwd">if</span> (pet.<span class="fn">requiresVaccineCertification</span>()) {</div>
+            <div class="ij-code-line ij-suspended-line" id="code-line-48">        <span class="kwd">boolean</span> certified = vaccineGateway.<span class="fn">verifyRabiesCertificate</span>(tagId); <span class="comment">// ⏸️ BREAKPOINT TRIGGERED</span></div>
+            <div class="ij-code-line">        <span class="kwd">if</span> (!certified) <span class="kwd">throw new</span> <span class="cls">VaccineComplianceException</span>(<span class="str">"Rabies certificate unverified"</span>);</div>
+            <div class="ij-code-line">    }</div>
+            <div class="ij-code-line">    pet.<span class="fn">setStatus</span>(<span class="cls">PetStatus</span>.ADOPTED);</div>
+            <div class="ij-code-line">    eventPublisher.<span class="fn">publish</span>(<span class="str">"acme.petshop.pet.adopted"</span>, <span class="kwd">new</span> <span class="cls">PetAdoptedEvent</span>(petId, adopter));</div>
+            <div class="ij-code-line">    <span class="kwd">return new</span> <span class="cls">AdoptionReceipt</span>(petId, <span class="cls">UUID</span>.<span class="fn">randomUUID</span>(), <span class="cls">Instant</span>.<span class="fn">now</span>());</div>
+            <div class="ij-code-line">}</div>
+          </div>
+        </div>
 
-    <!-- IntelliJ Debug Tool Window -->
-    <div class="ij-debugger" id="ij-debugger">
-      <div class="ij-debug-header">
-        <div class="ij-debug-tabs">
-          <span class="ij-debug-tab active">🐛 Debug: HelloWorld.main()</span>
-          <span class="ij-debug-tab">Console</span>
+        <!-- IntelliJ Debug Tool Window -->
+        <div class="ij-debugger" id="ij-debugger">
+          <div class="ij-debug-header">
+            <div class="ij-debug-tabs">
+              <span class="ij-debug-tab active">🐛 Debug: PetServiceTest.testAdoptionFlow()</span>
+              <span class="ij-debug-tab">Console</span>
+            </div>
+            <span class="ij-debug-status" id="ij-debug-status">⏸️ SUSPENDED AT BREAKPOINT: PetService.java:48</span>
+          </div>
+          <div class="ij-debug-body">
+            <div class="ij-frames">
+              <div class="ij-section-title">Frames (Thread: http-nio-8080-exec-1)</div>
+              <div class="ij-frame-item active">adoptPet:48, PetService (com.acme.petshop.service)</div>
+              <div class="ij-frame-item">processAdoption:104, PetController (com.acme.petshop.web)</div>
+              <div class="ij-frame-item">doFilterInternal:221, SecurityFilterChain</div>
+            </div>
+            <div class="ij-variables">
+              <div class="ij-section-title">Variables & Breakpoint State</div>
+              <div class="ij-var-item"><span class="var-name">pet</span> = <span class="str">{Pet@1402} "id=a81b2c-91, species=Canine, ageMonths=4, status=PENDING"</span></div>
+              <div class="ij-var-item"><span class="var-name">tagId</span> = <span class="str">"VAX-2026-9814"</span></div>
+              <div class="ij-var-item"><span class="var-name">vaccineGateway</span> = <span class="str">{VaccineGatewayClient@1499} (mTLS target: https://localhost:8443)</span></div>
+            </div>
+          </div>
         </div>
-        <span class="ij-debug-status" id="ij-debug-status">⏸️ SUSPENDED AT BREAKPOINT: HelloWorld.java:6</span>
       </div>
-      <div class="ij-debug-body">
-        <div class="ij-frames">
-          <div class="ij-section-title">Frames (Thread: main)</div>
-          <div class="ij-frame-item active">main:6, HelloWorld (com.robos)</div>
-          <div class="ij-frame-item">invoke:12, NativeMethodAccessorImpl</div>
+
+      <!-- Right 30%: RobOS AI Workspace & Plan Approval Tool Window -->
+      <aside class="ij-ai-sidebar" id="ij-ai-sidebar">
+        <div class="ai-toolwindow-header">
+          <div class="ai-header-title">
+            <span class="ai-logo">✨</span>
+            <strong>RobOS AI Workspace</strong>
+          </div>
+          <span class="ai-badge-status" id="ai-plan-status">PLAN REVIEW</span>
         </div>
-        <div class="ij-variables">
-          <div class="ij-section-title">Variables & State</div>
-          <div class="ij-var-item"><span class="var-name">greeting</span> = <span class="str">"Hello from RobOS & MCP!"</span></div>
-          <div class="ij-var-item"><span class="var-name">args</span> = {String[0]@824} []</div>
+
+        <div class="ai-toolwindow-body">
+          <!-- Ticket Context -->
+          <div class="ai-card">
+            <div class="ai-card-title">📋 Active Task Ticket</div>
+            <div class="ticket-name">PET-105: Rabies Vaccine Verification Gateway & Certification</div>
+            <div class="ticket-meta">
+              <span>🌿 <code>feature/PET-105-rabies-verification</code></span>
+              <span>📦 <code>petstore-api</code></span>
+            </div>
+          </div>
+
+          <!-- Diagnostic -->
+          <div class="ai-card">
+            <div class="ai-card-title">🔍 Breakpoint Diagnostic</div>
+            <div class="diagnostic-text">
+              Execution halted at <code>PetService.java:48</code>. Juvenile puppy adoption requires cryptographic validation against the State Vet Registry via <code>vaccine-gateway</code> over MutualTLS before adoption can finalize.
+            </div>
+          </div>
+
+          <!-- Proposed Solution Plan -->
+          <div class="ai-card" id="ai-plan-card">
+            <div class="ai-card-title">💡 AI Proposed Solution Plan (Review Before Execution)</div>
+            <div class="plan-steps" id="plan-steps">
+              <div class="plan-step active">
+                <span class="step-num">1</span>
+                <div class="step-content">
+                  <strong>Invoke MutualTLS Compliance Gateway</strong>
+                  <div>Query <code>POST https://localhost:8443/api/v1/vaccines/verify</code> passing digital cert tag.</div>
+                </div>
+              </div>
+              <div class="plan-step">
+                <span class="step-num">2</span>
+                <div class="step-content">
+                  <strong>Validate State Registry Digital Signature</strong>
+                  <div>Assert veterinarian license active and certificate unexpired.</div>
+                </div>
+              </div>
+              <div class="plan-step">
+                <span class="step-num">3</span>
+                <div class="step-content">
+                  <strong>Persist Status & Publish Kafka Event</strong>
+                  <div>Update PostgreSQL record and broadcast <code>acme.petshop.pet.adopted</code>.</div>
+                </div>
+              </div>
+              <div class="plan-step">
+                <span class="step-num">4</span>
+                <div class="step-content">
+                  <strong>Verify Automated Pact & Unit Suite</strong>
+                  <div>Execute <code>./mvnw test</code> & verify 14/14 contract tests pass.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Output / Live Status -->
+          <div class="ai-card hidden" id="ai-execution-card">
+            <div class="ai-card-title">⚡ Execution & Verification Log</div>
+            <div class="exec-log" id="exec-log">
+              <div class="log-line">✓ Code diff applied to PetService.java</div>
+              <div class="log-line">✓ MutualTLS keystore injected from GPG pass</div>
+              <div class="log-line">✓ Running ./mvnw test ...</div>
+              <div class="log-line success">✓ 14/14 Unit & Pact Tests PASSED</div>
+              <div class="log-line highlight">🟢 Breakpoint Resumed: 200 OK — Adoption Certified</div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <!-- Human-in-the-Loop Action Bar -->
+        <div class="ai-action-bar" id="ai-action-bar">
+          <button class="btn-refine" id="btn-refine-plan">✏️ Refine Plan</button>
+          <button class="btn-approve" id="btn-approve-plan" onclick="window.approveAndExecutePlan()">✓ Approve &amp; Execute Plan</button>
+        </div>
+      </aside>
     </div>
   </div>
 

@@ -5,6 +5,10 @@
   --ij-gutter: #1e1f22;
   --ij-line-num: #606366;
   --ij-active-line: #2e3c43;
+  --accent: #00bcd4;
+  --success: #3fb950;
+  --warning: #f2c55c;
+  --danger: #f85149;
 }
 
 * {
@@ -56,8 +60,25 @@ body {
 
 .ij-port-tag {
   font-size: 11px;
-  color: #3fb950;
+  color: var(--success);
   font-weight: 600;
+}
+
+/* ── Main Workspace (Editor + RobOS AI Tool Window) ────────────────────────── */
+.ij-main-workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 66% 34%;
+  overflow: hidden;
+  height: calc(100vh - 36px);
+}
+
+.ij-editor-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid var(--ij-border);
+  overflow: hidden;
 }
 
 .ij-tabbar {
@@ -70,8 +91,8 @@ body {
 
 .ij-tab {
   background: transparent;
-  padding: 8px 14px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 11px;
   color: #8c8c8c;
   display: flex;
   align-items: center;
@@ -98,22 +119,22 @@ body {
   background: var(--ij-bg);
   overflow: hidden;
   font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .ij-gutter {
   background: var(--ij-gutter);
   border-right: 1px solid var(--ij-border);
-  padding: 12px 0;
-  width: 50px;
+  padding: 10px 0;
+  width: 48px;
   text-align: right;
   color: var(--ij-line-num);
 }
 
 .ij-line-num {
   padding-right: 10px;
-  height: 24px;
+  height: 22px;
   position: relative;
 }
 
@@ -125,24 +146,24 @@ body {
 .ij-bp-dot {
   position: absolute;
   left: 6px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .ij-code {
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 14px;
   color: #bcbec4;
   overflow-y: auto;
 }
 
 .ij-code-line {
-  height: 24px;
+  height: 22px;
   white-space: pre;
 }
 
 .ij-code-line.ij-suspended-line {
   background: #2e436e;
-  border-left: 3px solid #f2c55c;
+  border-left: 3px solid var(--warning);
   color: #ffffff;
   font-weight: 600;
 }
@@ -154,8 +175,9 @@ body {
 .str { color: #6aab73; }
 .comment { color: #7a7e85; font-style: italic; }
 
+/* ── Debugger Tool Window ─────────────────────────────────────────────────── */
 .ij-debugger {
-  height: 180px;
+  height: 160px;
   background: #18191b;
   border-top: 1px solid var(--ij-border);
   display: flex;
@@ -165,7 +187,7 @@ body {
 .ij-debug-header {
   background: var(--ij-header);
   border-bottom: 1px solid var(--ij-border);
-  padding: 6px 12px;
+  padding: 5px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -188,24 +210,25 @@ body {
 
 .ij-debug-status {
   font-size: 11px;
-  color: #f2c55c;
+  color: var(--warning);
   font-weight: 600;
 }
 
 .ij-debug-body {
   flex: 1;
   display: grid;
-  grid-template-columns: 40% 60%;
-  padding: 8px 12px;
-  gap: 12px;
+  grid-template-columns: 45% 55%;
+  padding: 6px 12px;
+  gap: 10px;
   font-size: 11px;
   font-family: monospace;
+  overflow-y: auto;
 }
 
 .ij-section-title {
   color: #8b949e;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .ij-frame-item {
@@ -226,4 +249,206 @@ body {
 
 .var-name {
   color: #cf8e6d;
+}
+
+/* ── RobOS AI Workspace & Plan Approval Tool Window ───────────────────────── */
+.ij-ai-sidebar {
+  background: #181b20;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ai-toolwindow-header {
+  background: var(--ij-header);
+  border-bottom: 1px solid var(--ij-border);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.ai-logo {
+  font-size: 14px;
+}
+
+.ai-badge-status {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(242, 197, 92, 0.15);
+  color: var(--warning);
+  border: 1px solid rgba(242, 197, 92, 0.4);
+}
+
+.ai-toolwindow-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-card {
+  background: #13161a;
+  border: 1px solid var(--ij-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.ai-card.hidden {
+  display: none;
+}
+
+.ai-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.ticket-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.ticket-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.diagnostic-text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #c9d1d9;
+}
+
+.plan-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.plan-step {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #1a1e24;
+  border: 1px solid #2d3139;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.plan-step.active {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.step-num {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  color: #000000;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content strong {
+  color: #ffffff;
+  display: block;
+  margin-bottom: 1px;
+}
+
+.step-content div {
+  color: #8b949e;
+  font-size: 9px;
+}
+
+.exec-log {
+  font-family: monospace;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.log-line {
+  color: #8b949e;
+}
+
+.log-line.success {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.log-line.highlight {
+  color: var(--accent);
+  font-weight: 700;
+  background: rgba(0, 188, 212, 0.1);
+  padding: 4px;
+  border-radius: 3px;
+}
+
+.ai-action-bar {
+  background: var(--ij-header);
+  border-top: 1px solid var(--ij-border);
+  padding: 8px 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-refine {
+  flex: 1;
+  background: #21262d;
+  border: 1px solid var(--ij-border);
+  color: #c9d1d9;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-approve {
+  flex: 2;
+  background: #238636;
+  border: 1px solid #2ea043;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-approve:hover {
+  background: #2ea043;
 }
