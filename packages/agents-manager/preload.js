@@ -33,6 +33,12 @@ contextBridge.exposeInMainWorld('agents', {
   codexLogin:          ()              => ipcRenderer.invoke('codex-login'),
   codexLogout:         ()              => ipcRenderer.invoke('codex-logout'),
 
+  // Antigravity (AGY) / Gemini CLI
+  antigravitySessions:       ()                     => ipcRenderer.invoke('antigravity-sessions'),
+  antigravityFetchModels:    ()                     => ipcRenderer.invoke('antigravity-fetch-models'),
+  antigravityLaunchTerminal: (id, extraArgs, cwd)   => ipcRenderer.invoke('antigravity-launch-terminal', id, extraArgs, cwd),
+  antigravityRunMcpWorkflow: (workflowParams)       => ipcRenderer.invoke('antigravity-run-mcp-workflow', workflowParams),
+
   // General
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),
   writeSettings:  (d)   => ipcRenderer.invoke('write-settings', d),

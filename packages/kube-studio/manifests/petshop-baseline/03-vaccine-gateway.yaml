@@ -96,7 +96,31 @@ data:
           return;
         }
 
-        // 5. GET /api/v1/health/mtls or /
+        // 5. POST /api/v1/pets/:id/surgery (PET-106)
+        const surgeryMatch = url.match(/^\/api\/v1\/pets\/([^/]+)\/surgery$/);
+        if (req.method === 'POST' && surgeryMatch) {
+          const targetPetId = surgeryMatch[1];
+          const booking = {
+            bookingId: `SURG-${Math.floor(Math.random() * 900000 + 100000)}`,
+            petId: targetPetId,
+            procedure: body.procedure || 'Emergency Orthopedic Surgery',
+            surgeon: body.surgeon || 'Dr. Maya Patel, DVM, DACVS',
+            priority: body.priority || 'EMERGENCY_CRITICAL',
+            scheduledTime: body.scheduledTime || new Date(Date.now() + 3600000).toISOString(),
+            status: 'SCHEDULED',
+            operatingRoom: body.operatingRoom || 'OR-3-TRAUMA',
+            anesthesiaProtocol: 'ISOFLURANE_FAST_TRACK',
+            cluster: 'kind-robos-local',
+            namespace: 'acme-petshop-local',
+            servingPod: process.env.POD_NAME || 'vaccine-gateway-pod',
+            confirmedAt: new Date().toISOString()
+          };
+          res.writeHead(201);
+          res.end(JSON.stringify(booking, null, 2));
+          return;
+        }
+
+        // 6. GET /api/v1/health/mtls or /
         if (url === '/api/v1/health/mtls' || url === '/health' || url === '/') {
           res.writeHead(200);
           res.end(JSON.stringify({

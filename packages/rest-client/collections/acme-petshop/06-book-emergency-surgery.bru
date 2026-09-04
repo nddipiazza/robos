@@ -1,0 +1,37 @@
+meta {
+  name: Book Emergency Surgery (PET-106)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/pets/PET-105-VAX/surgery
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "procedure": "Emergency Orthopedic Surgery",
+    "surgeon": "Dr. Maya Patel, DVM, DACVS",
+    "priority": "EMERGENCY_CRITICAL",
+    "operatingRoom": "OR-3-TRAUMA"
+  }
+}
+
+tests {
+  test("Status code is 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("Booking is confirmed and scheduled", function() {
+    expect(res.getBody().status).to.equal("SCHEDULED");
+    expect(res.getBody().petId).to.equal("PET-105-VAX");
+    expect(res.getBody().operatingRoom).to.equal("OR-3-TRAUMA");
+  });
+}

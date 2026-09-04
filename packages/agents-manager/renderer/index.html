@@ -4,7 +4,20 @@
 <meta charset="UTF-8"/>
 <title>RobOS Agents</title>
 <link rel="stylesheet" href="style.css"/>
-<script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+<script>
+  window._lastErrors = [];
+  window.addEventListener('error', e => { window._lastErrors.push(e.message + ' at ' + e.filename + ':' + e.lineno); });
+  (function() {
+    const s = document.createElement('script');
+    s.src = '../../robos-icons/builtin-apps-browser.js';
+    s.onerror = () => {
+      const s2 = document.createElement('script');
+      s2.src = '/usr/local/share/robos/robos-icons/builtin-apps-browser.js';
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  })();
+</script>
 </head>
 <body>
 <div id="app">
