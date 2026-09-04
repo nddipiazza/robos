@@ -1,26 +1,43 @@
 [
   {
-    "name": "Build / compile",
+    "name": "1. Maven Build & Compilation",
     "state": "SUCCESS",
-    "description": "Build completed",
-    "startedAt": "2026-04-14T15:00:00Z",
-    "completedAt": "2026-04-14T15:08:00Z",
-    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
+    "description": "Maven clean compile completed (0m 18s)",
+    "startedAt": "2026-09-04T09:40:00Z",
+    "completedAt": "2026-09-04T09:40:18Z",
+    "detailsUrl": "https://github.com/acme-org/petstore-api/actions/runs/142"
   },
   {
-    "name": "Test / unit-tests",
+    "name": "2. Spectral OpenAPI & TypeSpec Governance Gate",
     "state": "SUCCESS",
-    "description": "All 142 tests passed",
-    "startedAt": "2026-04-14T15:00:00Z",
-    "completedAt": "2026-04-14T15:12:00Z",
-    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
+    "description": "Spectral lint 0 errors, 100% ruleset compliance",
+    "startedAt": "2026-09-04T09:40:18Z",
+    "completedAt": "2026-09-04T09:40:24Z",
+    "detailsUrl": "https://github.com/acme-org/petstore-api/actions/runs/142"
   },
   {
-    "name": "Lint / golangci-lint",
+    "name": "3. JUnit 5 & Mockito Unit Test Suite",
     "state": "SUCCESS",
-    "description": "No lint issues",
-    "startedAt": "2026-04-14T15:00:00Z",
-    "completedAt": "2026-04-14T15:03:00Z",
-    "detailsUrl": "https://github.com/acme-corp/buildbarn-forms/actions/runs/1001"
+    "description": "38/38 unit tests passed (including PetServiceTest)",
+    "startedAt": "2026-09-04T09:40:24Z",
+    "completedAt": "2026-09-04T09:40:55Z",
+    "detailsUrl": "https://github.com/acme-org/petstore-api/actions/runs/142"
+  },
+  {
+    "name": "4. Pact Consumer-Driven Contract Verification",
+    "state": "SUCCESS",
+    "description": "14/14 Pact interactions verified (petstore-web ──▶ petstore-api)",
+    "startedAt": "2026-09-04T09:40:55Z",
+    "completedAt": "2026-09-04T09:41:20Z",
+    "detailsUrl": "https://github.com/acme-org/petstore-api/actions/runs/142"
+  },
+  {
+    "name": "5. Multi-Arch Docker Container Image Build",
+    "state": "SUCCESS",
+    "description": "Container image tagged: acme-org/petstore-api:v1.0.0",
+    "startedAt": "2026-09-04T09:41:20Z",
+    "completedAt": "2026-09-04T09:41:45Z",
+    "detailsUrl": "https://github.com/acme-org/petstore-api/actions/runs/142"
   }
 ]
+

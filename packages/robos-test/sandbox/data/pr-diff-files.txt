@@ -1,4 +1,5 @@
-pkg/storage/cas/blob_access.go
-pkg/storage/cas/blob_access_test.go
-proto/configuration/cas/cas.proto
-BUILD.bazel
+src/main/java/com/acme/petshop/service/PetService.java
+src/main/java/com/acme/petshop/client/VaccineGatewayClient.java
+src/test/java/com/acme/petshop/service/PetServiceTest.java
+pom.xml
+

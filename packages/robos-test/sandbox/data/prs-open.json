@@ -1,5 +1,35 @@
 [
   {
+    "number": 12,
+    "title": "feat(service): verify rabies certificate over mTLS before adoption [PET-105]",
+    "state": "OPEN",
+    "author": {"login": "robos-agent"},
+    "reviewRequests": [{"login": "ndipiazza"}],
+    "statusCheckRollup": [
+      {"state": "SUCCESS", "context": "1. Maven Build & Compilation"},
+      {"state": "SUCCESS", "context": "2. Spectral OpenAPI & TypeSpec Governance Gate"},
+      {"state": "SUCCESS", "context": "3. JUnit 5 & Mockito Unit Test Suite (38/38)"},
+      {"state": "SUCCESS", "context": "4. Pact Consumer-Driven Contract Verification (14/14)"},
+      {"state": "SUCCESS", "context": "5. Multi-Arch Docker Container Image Build"}
+    ],
+    "createdAt": "2026-09-04T08:00:00Z",
+    "updatedAt": "2026-09-04T09:45:00Z",
+    "headRefName": "feature/PET-105-rabies-verification",
+    "baseRefName": "main",
+    "additions": 28,
+    "deletions": 2,
+    "url": "https://github.com/acme-org/petstore-api/pull/12",
+    "isDraft": false,
+    "mergeable": "MERGEABLE",
+    "body": "Implements the state rabies vaccination certification validation in PetService.adoptPet() over MutualTLS with vaccine-gateway. Verified with 14/14 consumer-driven Pact contract tests against petstore-web.",
+    "labels": [{"name": "backend"}, {"name": "compliance"}, {"name": "mTLS"}, {"name": "pact-verified"}],
+    "comments": [
+      {"author": {"login": "copilot-reviewer"}, "body": "Verified mTLS client certificate configuration against GPG pass keystore. All Pact contract tests match OpenAPI 3.1 specification.", "createdAt": "2026-09-04T09:46:00Z"}
+    ],
+    "reviewDecision": "REVIEW_REQUIRED",
+    "mergedAt": null
+  },
+  {
     "number": 15,
     "title": "Add worker fleet health monitoring endpoint",
     "state": "OPEN",
