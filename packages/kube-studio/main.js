@@ -57,15 +57,26 @@ app.on('window-all-closed', () => app.quit());
 
 // ── Live Kubectl Helper ───────────────────────────────────────────────────────
 
+function getHostHome() {
+  return process.env.ROBOS_HOST_HOME || process.env.REAL_HOME || os.homedir();
+}
+
 function getKubectlBin() {
-  const localBin = path.join(os.homedir(), '.local', 'bin', 'kubectl');
+  const hostHome = getHostHome();
+  const localBin = path.join(hostHome, '.local', 'bin', 'kubectl');
   if (fs.existsSync(localBin)) return localBin;
   return 'kubectl';
 }
 
 function runKubectl(args) {
+  const hostHome = getHostHome();
   const bin = getKubectlBin();
-  const env = { ...process.env, PATH: `${path.join(os.homedir(), '.local', 'bin')}:${process.env.PATH}` };
+  const kubeconfig = process.env.KUBECONFIG || path.join(hostHome, '.kube', 'config');
+  const env = {
+    ...process.env,
+    PATH: `${path.join(hostHome, '.local', 'bin')}:${process.env.PATH}`,
+    KUBECONFIG: kubeconfig,
+  };
   try {
     const out = execSync(`${bin} ${args}`, { encoding: 'utf8', env, timeout: 15000 });
     return { ok: true, output: out };
@@ -357,7 +368,12 @@ ipcMain.handle('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
 ipcMain.handle('kube-undeploy-app', (_, { appId, namespace } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const app = KGRAPH_APPS.find(a => a.id === appId) || { id: appId, name: appId };
-  const res = runKubectl(`delete deployment ${appId} service ${appId} -n ${targetNs} --ignore-not-found`);
+  let res;
+  if (app && app.manifestPath && fs.existsSync(app.manifestPath)) {
+    res = runKubectl(`delete -f "${app.manifestPath}" -n ${targetNs} --ignore-not-found --now`);
+  } else {
+    res = runKubectl(`delete deployment ${appId} service ${appId} -n ${targetNs} --ignore-not-found --now`);
+  }
   return {
     ok: true,
     appId,

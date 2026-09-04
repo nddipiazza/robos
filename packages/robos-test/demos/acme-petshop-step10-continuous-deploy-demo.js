@@ -152,6 +152,24 @@ async function main() {
     fs.copyFileSync(videoPath, `${BRAIN_DIR}/acme-petshop-step10-final.webm`);
     fs.copyFileSync(vttPath, `${BRAIN_DIR}/acme-petshop-step10.vtt`);
 
+    // Pod list assertion: Ensure the auto-deployed pod is in the live Kubernetes cluster list
+    const binDir = path.join(process.env.HOME || "/home/ndipiazza", ".local", "bin");
+    const kubectlOut = execSync(`kubectl get pods -n acme-petshop-local -o json`, {
+      encoding: "utf8",
+      env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
+    });
+    const k8sData = JSON.parse(kubectlOut);
+    const pods = k8sData.items || [];
+    console.log(`[E2E Assertion] Found ${pods.length} pods in live Kind cluster:`, pods.map(p => p.metadata.name));
+    if (pods.length === 0) {
+      throw new Error("Assertion Failed: Live Kubernetes cluster must have running pods");
+    }
+    const hasVaccinePod = pods.some(p => p.metadata.name.includes("vaccine-gateway"));
+    if (!hasVaccinePod) {
+      throw new Error("Assertion Failed: 'vaccine-gateway' pod must be present in the live pod list");
+    }
+    console.log("✓ Assertion Passed: 'vaccine-gateway' pod is confirmed live in the Kubernetes cluster pod list!");
+
     console.log("✓ Full Inclusive Step 10 Continuous Deploy Demo Finished Successfully!");
     process.exit(0);
   }).catch(async (err) => {

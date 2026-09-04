@@ -446,20 +446,20 @@ async function deployKGraphApp(appId, btnEl) {
   }
 }
 
-async function undeployFromRow(appName) {
-  const ok = confirm(`Undeploy application '${appName}' from namespace '${activeNamespace}'?`);
-  if (!ok) return;
+async function undeployFromRow(appName, skipConfirm = false) {
+  if (!skipConfirm) {
+    try {
+      const ok = confirm(`Undeploy application '${appName}' from namespace '${activeNamespace}'?`);
+      if (!ok) return;
+    } catch (_) {}
+  }
 
-  const res = await window.api.undeployApp({
-    appId: appName,
-    namespace: activeNamespace,
-  });
-
+  const res = await window.api.undeployApp({ appId: appName, namespace: activeNamespace });
   if (res.ok) {
-    toolbarStats.innerHTML = `<span style="color: var(--yellow)">${res.message}</span>`;
+    toolbarStats.innerHTML = `<span style="color: var(--amber)">${res.message}</span>`;
     setTimeout(() => {
       loadResources();
-    }, 1000);
+    }, 1200);
   }
 }
 
@@ -661,5 +661,6 @@ window.restartDeployment = restartDeployment;
 window.syncArgoCD = syncArgoCD;
 window.deployKGraphApp = deployKGraphApp;
 window.undeployFromRow = undeployFromRow;
+window.loadResources = loadResources;
 
 init();
