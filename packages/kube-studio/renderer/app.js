@@ -16,6 +16,7 @@ const clusterSelect = document.getElementById("cluster-select");
 const namespaceSelect = document.getElementById("namespace-select");
 const clusterBadge = document.getElementById("cluster-provider-badge");
 const btnAddCluster = document.getElementById("btn-add-cluster");
+const btnTriggerKGraph = document.getElementById("btn-trigger-kgraph");
 const resourceSearch = document.getElementById("resource-search");
 const btnRefresh = document.getElementById("btn-refresh");
 const tableWrapper = document.getElementById("table-wrapper");
@@ -96,6 +97,26 @@ btnModalConnect.addEventListener("click", async () => {
     activeCluster = context;
     activeNamespace = targetNs;
     await init();
+  }
+});
+
+btnTriggerKGraph.addEventListener("click", async () => {
+  btnTriggerKGraph.disabled = true;
+  btnTriggerKGraph.innerHTML = `<span class="spinner">⏳</span> Reconciling KGraph main change...`;
+
+  const res = await window.api.triggerKGraphChange({
+    taskKey: "PET-105",
+    branch: "main",
+    namespace: activeNamespace,
+  });
+
+  if (res.ok) {
+    toolbarStats.innerHTML = `<span style="color: var(--green)">${res.message}</span>`;
+    setTimeout(() => {
+      btnTriggerKGraph.disabled = false;
+      btnTriggerKGraph.innerHTML = `⚡ Commit to KGraph main [PET-105]`;
+      loadResources();
+    }, 1200);
   }
 });
 
@@ -272,7 +293,9 @@ function renderResourceTable() {
       <th>ACTIONS</th>
     `;
 
-    tableBody.innerHTML = items.map(p => `
+    tableBody.innerHTML = items.map(p => {
+      const appName = (p.labels && p.labels.app) || (p.name.includes('-') ? p.name.substring(0, p.name.lastIndexOf('-')) : p.name);
+      return `
       <tr class="resource-row">
         <td class="res-name"><span class="status-dot dot-running"></span><strong>${p.name}</strong></td>
         <td><code>${p.namespace}</code></td>
@@ -287,9 +310,10 @@ function renderResourceTable() {
         <td class="row-actions">
           <button class="btn-tiny" onclick="viewPodLogs('${p.name}', '${p.namespace}')">Logs</button>
           <button class="btn-tiny" onclick="describeResource('${p.name}', 'Pod', '${p.namespace}')">YAML</button>
+          <button class="btn-danger-tiny" onclick="undeployFromRow('${appName}')">Undeploy</button>
         </td>
       </tr>
-    `).join("");
+    `}).join("");
   } else if (activeTab === "deployments") {
     tableHeaders.innerHTML = `
       <th>NAME</th>
@@ -316,6 +340,7 @@ function renderResourceTable() {
         <td class="row-actions">
           <button class="btn-tiny btn-accent-tiny" onclick="restartDeployment('${d.name}', '${d.namespace}')">Restart</button>
           <button class="btn-tiny" onclick="describeResource('${d.name}', 'Deployment', '${d.namespace}')">YAML</button>
+          <button class="btn-danger-tiny" onclick="undeployFromRow('${d.name}')">Undeploy</button>
         </td>
       </tr>
     `).join("");
@@ -382,7 +407,7 @@ function renderKGraphApps() {
           <span class="branch-label">Branch:</span>
           <input type="text" id="branch-input-${app.id}" class="branch-input" value="${app.defaultBranch || 'main'}" placeholder="main">
         </div>
-        <button class="btn btn-accent btn-tiny" onclick="deployKGraphApp('${app.id}', this)">Deploy</button>
+        <button class="btn btn-accent btn-tiny btn-deploy" onclick="deployKGraphApp('${app.id}', this)">Deploy</button>
       </div>
     </div>
   `).join("");
@@ -404,7 +429,7 @@ async function deployKGraphApp(appId, btnEl) {
   });
 
   if (res.ok) {
-    toolbarStats.innerHTML = `<span style="color: var(--green)">✓ ${res.message}</span>`;
+    toolbarStats.innerHTML = `<span style="color: var(--green)">${res.message}</span>`;
     setTimeout(() => {
       if (btnEl) {
         btnEl.disabled = false;
@@ -418,6 +443,23 @@ async function deployKGraphApp(appId, btnEl) {
       btnEl.disabled = false;
       btnEl.innerHTML = `Deploy`;
     }
+  }
+}
+
+async function undeployFromRow(appName) {
+  const ok = confirm(`Undeploy application '${appName}' from namespace '${activeNamespace}'?`);
+  if (!ok) return;
+
+  const res = await window.api.undeployApp({
+    appId: appName,
+    namespace: activeNamespace,
+  });
+
+  if (res.ok) {
+    toolbarStats.innerHTML = `<span style="color: var(--yellow)">${res.message}</span>`;
+    setTimeout(() => {
+      loadResources();
+    }, 1000);
   }
 }
 
@@ -618,5 +660,6 @@ window.describeResource = describeResource;
 window.restartDeployment = restartDeployment;
 window.syncArgoCD = syncArgoCD;
 window.deployKGraphApp = deployKGraphApp;
+window.undeployFromRow = undeployFromRow;
 
 init();

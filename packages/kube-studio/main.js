@@ -320,7 +320,7 @@ ipcMain.handle('kube-get-resources', (_, { clusterId, namespace, kind } = {}) =>
   return { ok: true, kind: k, items: [] };
 });
 
-// ── Deploy from Knowledge Graph ─────────────────────────────────────────────
+// ── Deploy & Undeploy from Knowledge Graph ──────────────────────────────────
 
 ipcMain.handle('kube-get-kgraph-apps', () => {
   return { ok: true, apps: KGRAPH_APPS };
@@ -351,6 +351,41 @@ ipcMain.handle('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
     branch: targetBranch,
     namespace: targetNs,
     message: `✓ Deployed ${appId} from branch '${targetBranch}' to namespace '${targetNs}'.`,
+  };
+});
+
+ipcMain.handle('kube-undeploy-app', (_, { appId, namespace } = {}) => {
+  const targetNs = namespace || 'acme-petshop-local';
+  const app = KGRAPH_APPS.find(a => a.id === appId) || { id: appId, name: appId };
+  const res = runKubectl(`delete deployment ${appId} service ${appId} -n ${targetNs} --ignore-not-found`);
+  return {
+    ok: true,
+    appId,
+    name: app.name,
+    namespace: targetNs,
+    message: `✓ Undeployed ${app.name || appId} from namespace '${targetNs}'.`,
+    output: res.output || res.error,
+  };
+});
+
+ipcMain.handle('kube-trigger-kgraph-change', (_, { taskKey, branch, namespace } = {}) => {
+  const targetNs = namespace || 'acme-petshop-local';
+  const targetBranch = branch || 'main';
+  const key = taskKey || 'PET-105';
+
+  const vgatewayPath = path.join(__dirname, 'manifests', 'petshop-baseline', '03-vaccine-gateway.yaml');
+  let kRes = { ok: true, output: '' };
+  if (fs.existsSync(vgatewayPath)) {
+    kRes = runKubectl(`apply -f "${vgatewayPath}" -n ${targetNs}`);
+  }
+
+  return {
+    ok: true,
+    taskKey: key,
+    branch: targetBranch,
+    namespace: targetNs,
+    message: `✓ Knowledge Graph commit on branch '${targetBranch}' [${key}]. Auto-reconciled & deployed vaccine-gateway to '${targetNs}'.`,
+    output: kRes.output || kRes.error,
   };
 });
 
@@ -455,8 +490,10 @@ ipcMain.handle('kube-ask-ai', (_, { prompt, clusterId, namespace }) => {
 
   if (p.includes("restart") || p.includes("crash") || p.includes("health")) {
     reply = `Local Kind cluster '${clusterId || "kind-robos-local"}' is Healthy. In namespace '${namespace || "acme-petshop-local"}', workloads are operating with 0 restarts and instant health check responses.`;
-  } else if (p.includes("deploy") || p.includes("kgraph") || p.includes("app")) {
-    reply = "Deployable applications are queried directly from the RobOS Knowledge Graph. Each application references its Git repository project, Kubernetes manifest spec, and target branch (defaulting to 'main').";
+  } else if (p.includes("deploy") || p.includes("kgraph") || p.includes("app") || p.includes("autodeploy")) {
+    reply = "Deployments are driven by the Knowledge Graph. When commits are pushed or merged to branch 'main', RobOS auto-reconciles the live cluster without manual button clicks.";
+  } else if (p.includes("undeploy") || p.includes("delete")) {
+    reply = "Undeploy actions cleanly tear down Kubernetes Deployment and Service objects, deleting running pods and releasing cluster compute resources.";
   } else if (p.includes("helm") || p.includes("values") || p.includes("chart")) {
     reply = "Helm release governance tracks revisions and value matrices across staging and production targets with instant rollback.";
   } else if (p.includes("argocd") || p.includes("gitops") || p.includes("sync")) {

@@ -30,8 +30,12 @@
         <span class="label">Namespace:</span>
         <select id="namespace-select" class="select-box"></select>
       </div>
+      <div class="autodeploy-box">
+        <span class="badge badge-autodeploy" title="Continuous Deployment configured for Knowledge Graph main branch">⚡ Auto-Deploy: KGraph main</span>
+      </div>
     </div>
     <div class="header-right">
+      <button id="btn-trigger-kgraph" class="btn btn-outline-tiny" title="Simulate Knowledge Graph commit on main branch">⚡ Commit to KGraph main [PET-105]</button>
       <div class="search-box">
         <input id="resource-search" type="text" placeholder="Filter resources... (e.g. petstore-api)" autocomplete="off">
       </div>
@@ -137,7 +141,7 @@
       <span class="copilot-title">🤖 AI Infrastructure CoPilot</span>
       <div class="copilot-chips">
         <button class="chip-btn" data-prompt="Check cluster health and pod status">Cluster Health</button>
-        <button class="chip-btn" data-prompt="List deployable applications in Knowledge Graph">Deployable Apps</button>
+        <button class="chip-btn" data-prompt="Explain auto-deployment from Knowledge Graph main branch">Auto-Deploy Engine</button>
         <button class="chip-btn" data-prompt="Show Helm release revision and values for acme-petshop">Helm Values</button>
         <button class="chip-btn" data-prompt="Check ArgoCD GitOps synchronization status">ArgoCD Sync</button>
         <button class="chip-btn" data-prompt="Inspect Vercel edge deployment status for petstore-web">Vercel Status</button>

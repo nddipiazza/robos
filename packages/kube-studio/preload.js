@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld("api", {
   scaleDeployment: (opts) => ipcRenderer.invoke("kube-scale-deployment", opts),
   getKGraphApps: () => ipcRenderer.invoke("kube-get-kgraph-apps"),
   deployApp: (opts) => ipcRenderer.invoke("kube-deploy-app", opts),
+  undeployApp: (opts) => ipcRenderer.invoke("kube-undeploy-app", opts),
+  triggerKGraphChange: (opts) => ipcRenderer.invoke("kube-trigger-kgraph-change", opts),
   deployTaskManifests: (opts) => ipcRenderer.invoke("kube-deploy-task-manifests", opts),
   getHelmReleases: (opts) => ipcRenderer.invoke("kube-get-helm-releases", opts),
   getArgoCDApps: (opts) => ipcRenderer.invoke("kube-get-argocd-apps", opts),
