@@ -1,13 +1,61 @@
 [
   {
+    "number": 12,
+    "title": "feat(service): verify rabies certificate over mTLS before adoption [PET-105]",
+    "state": "MERGED",
+    "author": {
+      "login": "robos-agent"
+    },
+    "reviewRequests": [],
+    "statusCheckRollup": [
+      {
+        "state": "SUCCESS",
+        "context": "ci/build"
+      },
+      {
+        "state": "SUCCESS",
+        "context": "ci/test"
+      }
+    ],
+    "createdAt": "2026-09-04T13:59:27.380Z",
+    "updatedAt": "2026-09-04T14:29:27.380Z",
+    "headRefName": "feature/PET-105-rabies-verification",
+    "baseRefName": "main",
+    "additions": 28,
+    "deletions": 4,
+    "url": "https://github.com/acme-corp/petstore-api/pull/12",
+    "isDraft": false,
+    "mergeable": "UNKNOWN",
+    "body": "Implements PET-105 rabies certificate verification via VaccineGateway mTLS client.",
+    "labels": [
+      {
+        "name": "feature"
+      },
+      {
+        "name": "compliance"
+      }
+    ],
+    "comments": [],
+    "reviewDecision": "APPROVED",
+    "mergedAt": "2026-09-04T14:31:27.380Z"
+  },
+  {
     "number": 11,
     "title": "Implement action result caching with TTL",
     "state": "MERGED",
-    "author": {"login": "alice-dev"},
+    "author": {
+      "login": "alice-dev"
+    },
     "reviewRequests": [],
     "statusCheckRollup": [
-      {"state": "SUCCESS", "context": "ci/build"},
-      {"state": "SUCCESS", "context": "ci/test"}
+      {
+        "state": "SUCCESS",
+        "context": "ci/build"
+      },
+      {
+        "state": "SUCCESS",
+        "context": "ci/test"
+      }
     ],
     "createdAt": "2026-03-28T09:00:00Z",
     "updatedAt": "2026-04-02T14:00:00Z",
@@ -19,7 +67,14 @@
     "isDraft": false,
     "mergeable": "UNKNOWN",
     "body": "Adds configurable TTL for action results in the cache layer.",
-    "labels": [{"name": "feature"}, {"name": "size/L"}],
+    "labels": [
+      {
+        "name": "feature"
+      },
+      {
+        "name": "size/L"
+      }
+    ],
     "comments": [],
     "reviewDecision": "APPROVED",
     "mergedAt": "2026-04-02T14:00:00Z"
@@ -28,11 +83,19 @@
     "number": 10,
     "title": "Fix scheduler deadlock on worker disconnect",
     "state": "MERGED",
-    "author": {"login": "testuser"},
+    "author": {
+      "login": "testuser"
+    },
     "reviewRequests": [],
     "statusCheckRollup": [
-      {"state": "SUCCESS", "context": "ci/build"},
-      {"state": "SUCCESS", "context": "ci/test"}
+      {
+        "state": "SUCCESS",
+        "context": "ci/build"
+      },
+      {
+        "state": "SUCCESS",
+        "context": "ci/test"
+      }
     ],
     "createdAt": "2026-03-20T11:00:00Z",
     "updatedAt": "2026-03-25T10:00:00Z",
@@ -44,7 +107,14 @@
     "isDraft": false,
     "mergeable": "UNKNOWN",
     "body": "Fixes a deadlock when a worker disconnects mid-execution.",
-    "labels": [{"name": "bug"}, {"name": "size/S"}],
+    "labels": [
+      {
+        "name": "bug"
+      },
+      {
+        "name": "size/S"
+      }
+    ],
     "comments": [],
     "reviewDecision": "APPROVED",
     "mergedAt": "2026-03-25T10:00:00Z"

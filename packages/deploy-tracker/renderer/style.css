@@ -134,6 +134,7 @@ select:focus { outline: none; border-color: var(--accent); }
   min-width: 80px; text-align: center;
 }
 .env-production { background: #16332a; color: var(--green); }
+.env-canary     { background: #231633; color: #c084fc; border: 1px solid #7c3aed44; }
 .env-staging    { background: #332b00; color: var(--yellow); }
 .env-preview    { background: #1a1a3a; color: var(--blue); }
 .env-default    { background: #1a2332; color: var(--text-dim); }

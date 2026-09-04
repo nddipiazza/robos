@@ -24,6 +24,7 @@ function envClass(env) {
   if (!env) return 'env-default';
   const e = env.toLowerCase();
   if (e.includes('prod')) return 'env-production';
+  if (e.includes('canary')) return 'env-canary';
   if (e.includes('stag')) return 'env-staging';
   if (e.includes('prev') || e.includes('dev')) return 'env-preview';
   return 'env-default';

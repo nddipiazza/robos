@@ -1,0 +1,32 @@
+[
+  {
+    "tagName": "v1.2.0",
+    "name": "v1.2.0 — Rabies Verification & Multi-Contract Governance (PET-105)",
+    "publishedAt": "2026-09-04T14:44:27.376Z",
+    "isPrerelease": false,
+    "isDraft": false,
+    "author": {
+      "login": "robos-agent"
+    }
+  },
+  {
+    "tagName": "v1.1.0",
+    "name": "v1.1.0 — Kafka Event Bus & Topology Integration",
+    "publishedAt": "2026-08-29T14:59:27.377Z",
+    "isPrerelease": false,
+    "isDraft": false,
+    "author": {
+      "login": "ndipiazza"
+    }
+  },
+  {
+    "tagName": "v1.0.0",
+    "name": "v1.0.0 — Initial Polyglot Microservices Scaffolding",
+    "publishedAt": "2026-08-17T14:59:27.377Z",
+    "isPrerelease": false,
+    "isDraft": false,
+    "author": {
+      "login": "ndipiazza"
+    }
+  }
+]

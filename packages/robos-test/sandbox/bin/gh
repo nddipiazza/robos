@@ -172,6 +172,13 @@ json.dump(filtered, sys.stdout)
     exit 0
     ;;
 
+  # ── Release commands ────────────────────────────────────────────────────────
+
+  "release list"|"release list "*)
+    cat "$DATA_DIR/releases.json" 2>/dev/null || echo "[]"
+    exit 0
+    ;;
+
   # ── PR commands ─────────────────────────────────────────────────────────────
 
   "pr list")
