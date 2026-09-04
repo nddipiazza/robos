@@ -33,7 +33,10 @@
     <aside id="sidebar">
       <div class="sidebar-header">
         <h4>COLLECTIONS</h4>
-        <button id="btn-add-request" class="btn-icon-tiny" title="New Request">+</button>
+        <div class="sidebar-actions">
+          <button id="btn-ai-generate-bru" class="btn-ai-generate" title="Generate .bru from TypeSpec / OpenAPI"><span class="btn-sparkle">✨</span> Generate (.bru)</button>
+          <button id="btn-add-request" class="btn-icon-tiny" title="New Request">+</button>
+        </div>
       </div>
       <div id="collections-tree" class="collections-tree"></div>
     </aside>
@@ -174,6 +177,80 @@ test("Certificate is certified and mTLS verified", function() {
     </div>
     <div id="ai-response-box" class="ai-response hidden"></div>
   </footer>
+
+  <!-- AI Generate .bru Modal -->
+  <div id="modal-ai-generate" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="modal-icon">✨</span>
+          <h3>AI Bruno Generator (.bru)</h3>
+        </div>
+        <button id="btn-modal-close" class="btn-close-icon">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-form-group">
+          <label for="gen-contract-source">Source API Contract / TypeSpec Schema:</label>
+          <select id="gen-contract-source" class="modal-select">
+            <option value="typespec-pet" selected>TypeSpec: petstore-common/entities/pet.typespec (Task PET-105)</option>
+            <option value="openapi-vax">OpenAPI 3.1: vaccine-gateway/openapi.yaml (POST /api/v1/vaccines/verify)</option>
+            <option value="kgraph-vax">Knowledge Graph: urn:robos:service:vaccine-gateway</option>
+          </select>
+        </div>
+
+        <div class="modal-form-row">
+          <div class="modal-form-group flex-1">
+            <label for="gen-collection-select">Target Collection:</label>
+            <select id="gen-collection-select" class="modal-select">
+              <option value="acme-petshop">Acme Petshop API Collection (petstore-api/collections)</option>
+            </select>
+          </div>
+          <div class="modal-form-group flex-1">
+            <label for="gen-file-name">Request File Name (.bru):</label>
+            <input id="gen-file-name" class="modal-input" type="text" value="01-verify-rabies-vaccine.bru">
+          </div>
+        </div>
+
+        <div class="modal-form-group">
+          <label>AI Generation Directives & Options:</label>
+          <div class="modal-checkbox-row">
+            <label class="modal-checkbox-label">
+              <input type="checkbox" id="chk-mtls" checked> Include mTLS Security Headers (<code>X-Client-Cert</code>)
+            </label>
+            <label class="modal-checkbox-label">
+              <input type="checkbox" id="chk-payload" checked> Generate Sample <code>PET-105-VAX</code> Fastify Body
+            </label>
+            <label class="modal-checkbox-label">
+              <input type="checkbox" id="chk-tests" checked> Generate JavaScript Status & Certificate Tests
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-action-bar">
+          <button id="btn-synthesize-bru" class="btn-primary-action">
+            <span class="btn-icon">⚡</span> Synthesize .bru Spec with AI
+          </button>
+        </div>
+
+        <!-- Generated Preview Section -->
+        <div id="gen-preview-section" class="gen-preview-box hidden">
+          <div class="preview-header">
+            <span>📄 Generated Bruno Source File (<code>01-verify-rabies-vaccine.bru</code>)</span>
+            <span class="badge-git-ready">Git Ready</span>
+          </div>
+          <pre id="gen-preview-code" class="preview-code-viewer"></pre>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-modal-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-save-commit-bru" class="btn-primary-accent" disabled>
+          💾 Save & Commit to Git (.bru)
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="../../robos-ui/robos-ui.js"></script>

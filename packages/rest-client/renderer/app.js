@@ -256,9 +256,140 @@ async function sendCurrentRequest() {
   }
 }
 
+// ── AI Bruno Generator (.bru) Modal Logic ────────────────────────────────────
+
+const btnAiGenerateBru = document.getElementById('btn-ai-generate-bru');
+const modalAiGenerate = document.getElementById('modal-ai-generate');
+const btnModalClose = document.getElementById('btn-modal-close');
+const btnModalCancel = document.getElementById('btn-modal-cancel');
+const btnSynthesizeBru = document.getElementById('btn-synthesize-bru');
+const genPreviewSection = document.getElementById('gen-preview-section');
+const genPreviewCode = document.getElementById('gen-preview-code');
+const btnSaveCommitBru = document.getElementById('btn-save-commit-bru');
+const genContractSource = document.getElementById('gen-contract-source');
+const genFileName = document.getElementById('gen-file-name');
+
+function openGenerateModal() {
+  if (modalAiGenerate) modalAiGenerate.classList.remove('hidden');
+}
+
+function closeGenerateModal() {
+  if (modalAiGenerate) modalAiGenerate.classList.add('hidden');
+}
+
+if (btnAiGenerateBru) btnAiGenerateBru.addEventListener('click', openGenerateModal);
+if (btnModalClose) btnModalClose.addEventListener('click', closeGenerateModal);
+if (btnModalCancel) btnModalCancel.addEventListener('click', closeGenerateModal);
+
+const GENERATED_BRU_TEMPLATE = `meta {
+  name: Verify Rabies Vaccine Certificate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/vaccines/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Client-Cert: mTLS-Verified-Client
+  Accept: application/json
+}
+
+body:json {
+  {
+    "petId": "PET-105-VAX",
+    "vaccineType": "RABIES_V1",
+    "tagNumber": "VAX-2026-9814",
+    "clinicId": "CLINIC-EAST-04"
+  }
+}
+
+tests {
+  test("Status code is 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Certificate is certified and mTLS verified", function() {
+    expect(res.getBody().verified).to.be.true;
+    expect(res.getBody().status).to.equal("CERTIFIED");
+    expect(res.getBody().mtlsVerified).to.be.true;
+  });
+}`;
+
+async function synthesizeBru() {
+  btnSynthesizeBru.disabled = true;
+  btnSynthesizeBru.innerHTML = `<span class="spinner">⏳</span> Synthesizing from TypeSpec Schema...`;
+
+  setTimeout(() => {
+    btnSynthesizeBru.disabled = false;
+    btnSynthesizeBru.innerHTML = `<span class="btn-icon">⚡</span> Synthesize .bru Spec with AI`;
+    genPreviewSection.classList.remove('hidden');
+    genPreviewCode.textContent = GENERATED_BRU_TEMPLATE;
+    btnSaveCommitBru.disabled = false;
+  }, 900);
+}
+
+if (btnSynthesizeBru) btnSynthesizeBru.addEventListener('click', synthesizeBru);
+
+async function saveAndCommitBru() {
+  btnSaveCommitBru.disabled = true;
+  btnSaveCommitBru.innerHTML = `💾 Committing to Git...`;
+
+  await window.api.saveBru({
+    filePath: 'collections/acme-petshop/01-verify-rabies-vaccine.bru',
+    content: GENERATED_BRU_TEMPLATE,
+  });
+
+  setTimeout(() => {
+    // Mark the request as newly generated
+    if (collections.length > 0 && collections[0].requests.length > 0) {
+      collections[0].requests[0].isNew = true;
+    }
+    renderCollectionsTree();
+    selectRequest('vax-verify');
+    closeGenerateModal();
+    btnSaveCommitBru.disabled = false;
+    btnSaveCommitBru.innerHTML = `💾 Save & Commit to Git (.bru)`;
+  }, 600);
+}
+
+if (btnSaveCommitBru) btnSaveCommitBru.addEventListener('click', saveAndCommitBru);
+
+// Custom override for renderCollectionsTree to show 'Newly Generated' badge
+const _origRenderTree = renderCollectionsTree;
+renderCollectionsTree = function() {
+  collectionsTree.innerHTML = collections.map(col => `
+    <div class="collection-folder">
+      <div class="folder-header">
+        <span class="folder-icon">📁</span>
+        <span>${col.name}</span>
+      </div>
+      <div class="folder-items">
+        ${col.requests.map(req => `
+          <div class="req-item ${currentRequest && currentRequest.id === req.id ? 'active' : ''}" 
+               id="req-item-${req.id}" onclick="selectRequest('${req.id}')">
+            <span class="method-tag method-${req.method}">${req.method}</span>
+            <span class="req-title">${req.name}</span>
+            ${req.isNew ? '<span class="badge-newly-generated">✨ Generated</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+};
+
 // Global exports for test automation
 window.selectRequest = selectRequest;
 window.sendCurrentRequest = sendCurrentRequest;
+window.openGenerateModal = openGenerateModal;
+window.closeGenerateModal = closeGenerateModal;
+window.synthesizeBru = synthesizeBru;
+window.saveAndCommitBru = saveAndCommitBru;
 window.init = init;
 
 init();
+
