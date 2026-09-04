@@ -965,4 +965,17 @@ ipcMain.handle('mcp-auth-provider-server', async (_, { providerId, serverId, cre
   return all[providerId] || [];
 });
 
+ipcMain.handle('open-url', async (_, url) => {
+  if (url) {
+    try {
+      await shell.openExternal(url);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+  return { ok: false };
+});
+
+
 

@@ -1771,13 +1771,55 @@ async function saveMcpServerFromModal() {
   await renderMcpServersList(currentEditingProviderId);
 }
 
+function getOAuthUrlForServer(server) {
+  if (server.oauthUrl) return server.oauthUrl;
+  if (server.id.includes('github')) return 'https://github.com/login/oauth/authorize?client_id=robos_client_app&scope=repo,read:org';
+  if (server.id.includes('jira') || server.id.includes('atlassian')) return 'https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=robos_jira_oauth&scope=read:jira-work,write:jira-work&response_type=code&redirect_uri=http://localhost:19104/callback';
+  if (server.id.includes('aws')) return 'https://signin.aws.amazon.com/oauth?response_type=code&client_id=robos-mcp';
+  if (server.id.includes('sentry')) return 'https://sentry.io/oauth/authorize/?client_id=robos_sentry&response_type=code&scope=project:read,event:read';
+  return `https://auth.robos.dev/oauth/authorize?provider=${encodeURIComponent(server.id)}&response_type=code`;
+}
+
 function openAuthMcpServerModal(providerId, server) {
   currentEditingProviderId = providerId;
   currentAuthServer = server;
+  const isOAuth = (server.authType === 'oauth' || server.authType === 'oauth2' || (server.authType && server.authType.includes('oauth')));
+  
   document.getElementById('mcp-auth-desc').innerHTML = `Authenticate <strong>${esc(server.name || server.id)}</strong> (${esc(server.authType || 'API Token')}) for ${esc(providerId)}.`;
-  document.getElementById('mcp-auth-token').value = '';
-  document.getElementById('mcp-auth-account').value = '';
+  
+  const oauthSection = document.getElementById('mcp-oauth-section');
+  const tokenSection = document.getElementById('mcp-token-section');
+  const oauthStatus = document.getElementById('mcp-oauth-status');
+  if (oauthStatus) oauthStatus.style.display = 'none';
+
+  if (isOAuth) {
+    if (oauthSection) oauthSection.classList.remove('hidden');
+    if (tokenSection) tokenSection.classList.add('hidden');
+    document.getElementById('mcp-oauth-code').value = '';
+    // Optionally trigger browser open automatically or let user click
+    const oauthUrl = getOAuthUrlForServer(server);
+    if (window.agents && window.agents.openUrl) {
+      window.agents.openUrl(oauthUrl);
+      if (oauthStatus) oauthStatus.style.display = 'block';
+    }
+  } else {
+    if (oauthSection) oauthSection.classList.add('hidden');
+    if (tokenSection) tokenSection.classList.remove('hidden');
+    document.getElementById('mcp-auth-token').value = '';
+    document.getElementById('mcp-auth-account').value = '';
+  }
+
   document.getElementById('mcp-auth-modal').classList.remove('hidden');
+}
+
+function launchOAuthInBrowser() {
+  if (!currentAuthServer) return;
+  const url = getOAuthUrlForServer(currentAuthServer);
+  if (window.agents && window.agents.openUrl) {
+    window.agents.openUrl(url);
+  }
+  const oauthStatus = document.getElementById('mcp-oauth-status');
+  if (oauthStatus) oauthStatus.style.display = 'block';
 }
 
 function closeMcpAuthModal() {
@@ -1786,13 +1828,27 @@ function closeMcpAuthModal() {
 
 async function saveAuthFromModal() {
   if (!currentEditingProviderId || !currentAuthServer) return;
-  const token = document.getElementById('mcp-auth-token').value.trim();
-  const account = document.getElementById('mcp-auth-account').value.trim();
+  const isOAuth = (currentAuthServer.authType === 'oauth' || currentAuthServer.authType === 'oauth2' || (currentAuthServer.authType && currentAuthServer.authType.includes('oauth')));
 
-  await window.agents.authMcpServer(currentEditingProviderId, currentAuthServer.id, {
-    token: token || 'tok_' + Math.random().toString(36).slice(2, 10),
-    account: account || 'default',
-  });
+  let creds;
+  if (isOAuth) {
+    const code = document.getElementById('mcp-oauth-code')?.value.trim();
+    creds = {
+      type: 'oauth',
+      code: code || 'oauth_code_' + Math.random().toString(36).slice(2, 10),
+      token: 'oauth_tok_' + Math.random().toString(36).slice(2, 12),
+      authorizedAt: new Date().toISOString(),
+    };
+  } else {
+    const token = document.getElementById('mcp-auth-token').value.trim();
+    const account = document.getElementById('mcp-auth-account').value.trim();
+    creds = {
+      token: token || 'tok_' + Math.random().toString(36).slice(2, 10),
+      account: account || 'default',
+    };
+  }
+
+  await window.agents.authMcpServer(currentEditingProviderId, currentAuthServer.id, creds);
 
   closeMcpAuthModal();
   await renderMcpServersList(currentEditingProviderId);
@@ -1806,6 +1862,7 @@ function initMcpModals() {
   document.getElementById('btn-mcp-auth-close')?.addEventListener('click', closeMcpAuthModal);
   document.getElementById('btn-mcp-auth-cancel')?.addEventListener('click', closeMcpAuthModal);
   document.getElementById('btn-mcp-auth-save')?.addEventListener('click', saveAuthFromModal);
+  document.getElementById('btn-mcp-oauth-launch')?.addEventListener('click', launchOAuthInBrowser);
 
   // Close modals on overlay backdrop click
   document.getElementById('mcp-server-modal')?.addEventListener('click', (e) => {
@@ -1815,6 +1872,7 @@ function initMcpModals() {
     if (e.target.id === 'mcp-auth-modal') closeMcpAuthModal();
   });
 }
+
 
 // ── Resizable sidebar ───────────────────────────────────────────────────────
 

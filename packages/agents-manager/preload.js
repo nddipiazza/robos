@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('agents', {
   authMcpServer:    (providerId, serverId, credentials) => ipcRenderer.invoke('mcp-auth-provider-server', { providerId, serverId, credentials }),
 
   // General
+  openUrl:        (url) => ipcRenderer.invoke('open-url', url),
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),
   writeSettings:  (d)   => ipcRenderer.invoke('write-settings', d),
   openDirDialog:  ()    => ipcRenderer.invoke('open-dir-dialog'),
@@ -53,3 +54,4 @@ contextBridge.exposeInMainWorld('agents', {
   // Events
   onOpenProvider: (cb) => ipcRenderer.on('open-provider', (_, id) => cb(id)),
 });
+
