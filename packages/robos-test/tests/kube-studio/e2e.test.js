@@ -12,6 +12,14 @@ describe('RobOS Kube Studio Real Kubernetes & Knowledge Graph Deployment E2E Tes
   it('connects to local Kind cluster, deploys from KGraph, undeploys, and auto-deploys on main branch commit with live pod list assertion', async () => {
     // 1. Launch Kube Studio in test harness with real local binaries
     const binDir = path.join(os.homedir(), '.local', 'bin');
+    // Cleanup any pre-existing pods before launch to ensure clean start
+    try {
+      execSync(`kubectl delete deployment petstore-api vaccine-gateway petstore-db --namespace=acme-petshop-local --ignore-not-found --now`, {
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
+      });
+    } catch (_) {}
+
     const app = await launchApp('kube-studio', {
       ...scenarios['all-good'],
       useRealBinaries: true,
@@ -37,20 +45,14 @@ describe('RobOS Kube Studio Real Kubernetes & Knowledge Graph Deployment E2E Tes
           nsSel.dispatchEvent(new Event('change', { bubbles: true }));
         }
       `);
-      // Cleanup any pre-existing pods in test namespace to start clean
-      try {
-        execSync(`kubectl delete deployment petstore-api vaccine-gateway petstore-db --namespace=acme-petshop-local --ignore-not-found`, {
-          encoding: 'utf8',
-          env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
-        });
-      } catch (_) {}
 
       // Wait for KGraph application cards to render
       let kgraphCards = 0;
       for (let i = 0; i < 10; i++) {
+        await evalJS(app.port, `if (typeof loadResources === 'function') loadResources();`);
+        await new Promise(r => setTimeout(r, 600));
         kgraphCards = await evalJS(app.port, `document.querySelectorAll('.kgraph-app-card').length`);
         if (kgraphCards >= 2) break;
-        await new Promise(r => setTimeout(r, 500));
       }
       assert.ok(kgraphCards >= 2, 'Should render deployable application cards from Knowledge Graph');
 

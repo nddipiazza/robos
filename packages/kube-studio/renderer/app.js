@@ -45,6 +45,17 @@ const modalClusterName = document.getElementById("modal-cluster-name");
 const modalContextName = document.getElementById("modal-context-name");
 const modalTargetNamespace = document.getElementById("modal-target-namespace");
 
+// Task Delivery & PR Review Modal Elements
+const btnOpenTaskDelivery = document.getElementById("btn-open-task-delivery");
+const modalTaskDelivery = document.getElementById("modal-task-delivery");
+const btnTaskModalClose = document.getElementById("btn-task-modal-close");
+const tabBtnImplementer = document.getElementById("tab-btn-implementer");
+const tabBtnPrReview = document.getElementById("tab-btn-pr-review");
+const panelTaskImpl = document.getElementById("panel-task-impl");
+const panelPrReview = document.getElementById("panel-pr-review");
+const btnProceedToPr = document.getElementById("btn-proceed-to-pr");
+const btnApproveAndMerge = document.getElementById("btn-approve-and-merge");
+
 // ── Event Listeners ─────────────────────────────────────────────────────────
 
 clusterSelect.addEventListener("change", (e) => {
@@ -99,6 +110,61 @@ btnModalConnect.addEventListener("click", async () => {
     await init();
   }
 });
+
+if (btnOpenTaskDelivery) {
+  btnOpenTaskDelivery.addEventListener("click", () => {
+    modalTaskDelivery.classList.remove("hidden");
+    showTaskImplTab();
+  });
+}
+
+if (btnTaskModalClose) {
+  btnTaskModalClose.addEventListener("click", () => {
+    modalTaskDelivery.classList.add("hidden");
+  });
+}
+
+function showTaskImplTab() {
+  tabBtnImplementer.classList.add("active");
+  tabBtnPrReview.classList.remove("active");
+  panelTaskImpl.classList.remove("hidden");
+  panelPrReview.classList.add("hidden");
+}
+
+function showPrReviewTab() {
+  tabBtnImplementer.classList.remove("active");
+  tabBtnPrReview.classList.add("active");
+  panelTaskImpl.classList.add("hidden");
+  panelPrReview.classList.remove("hidden");
+}
+
+if (tabBtnImplementer) tabBtnImplementer.addEventListener("click", showTaskImplTab);
+if (tabBtnPrReview) tabBtnPrReview.addEventListener("click", showPrReviewTab);
+if (btnProceedToPr) btnProceedToPr.addEventListener("click", showPrReviewTab);
+
+if (btnApproveAndMerge) {
+  btnApproveAndMerge.addEventListener("click", async () => {
+    btnApproveAndMerge.disabled = true;
+    btnApproveAndMerge.innerHTML = `<span class="spinner">⏳</span> Merging PR #42 &amp; Reconciling KGraph main...`;
+
+    const res = await window.api.triggerKGraphChange({
+      taskKey: "PET-105",
+      branch: "main",
+      namespace: activeNamespace,
+    });
+
+    modalTaskDelivery.classList.add("hidden");
+    btnApproveAndMerge.disabled = false;
+    btnApproveAndMerge.innerHTML = `✓ Approve &amp; Merge PR to main`;
+
+    if (res.ok) {
+      toolbarStats.innerHTML = `<span style="color: var(--green)">⚡ PR #42 Merged to main! ${res.message}</span>`;
+      setTimeout(() => {
+        loadResources();
+      }, 1000);
+    }
+  });
+}
 
 btnTriggerKGraph.addEventListener("click", async () => {
   btnTriggerKGraph.disabled = true;

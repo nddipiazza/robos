@@ -349,3 +349,63 @@ html, body {
   padding: 2px 6px; font-size: 11px; border-radius: 3px; cursor: pointer; font-family: inherit;
 }
 .btn-danger-tiny:hover { background: #ef4444; color: #fff; }
+
+/* ── Task Delivery & PR Review Modal Styles ─────────────────────────────── */
+.modal-card-wide {
+  max-width: 680px; width: 92%;
+}
+.task-modal-title { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.task-modal-title h3 { font-size: 15px; font-weight: 700; color: var(--text-bright); }
+.step-badge-pill {
+  font-size: 10px; font-weight: 700; background: #0c2b3d; color: var(--accent);
+  padding: 2px 8px; border-radius: 10px; width: fit-content; text-transform: uppercase; border: 1px solid #0369a1;
+}
+.task-modal-tabs {
+  display: flex; gap: 8px; padding: 10px 20px 0; background: var(--bg-card); border-bottom: 1px solid var(--border);
+}
+.task-tab-btn {
+  background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-dim);
+  padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.task-tab-btn.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+.task-subpanel { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.task-meta-box, .pr-meta-box {
+  background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; font-size: 12px;
+}
+.task-meta-row { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; }
+.task-meta-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.impl-agent-progress {
+  background: rgba(0, 188, 212, 0.05); border: 1px solid rgba(0, 188, 212, 0.2); border-radius: 6px; padding: 12px;
+}
+.progress-title { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.impl-checklist { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.impl-checklist li.done { color: var(--green); }
+.impl-checklist code { color: var(--accent); }
+.task-action-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+.pr-title-line { display: flex; align-items: center; gap: 10px; }
+.pr-badge-open {
+  background: #16332a; color: var(--green); border: 1px solid #14532d; font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px;
+}
+.pr-branches-line { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-dim); }
+.pr-dual-badge { background: #3d2b00; color: #f59e0b; border: 1px solid #78350f; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+.pr-diff-summary {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px;
+}
+.diff-block {
+  background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.diff-block h5 { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+.file-diff-row { display: flex; justify-content: space-between; align-items: center; font-family: monospace; }
+.diff-add { color: var(--green); font-weight: 700; }
+.diff-mod { color: var(--yellow); font-weight: 700; }
+.pr-approval-box {
+  background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 6px; padding: 10px 12px;
+  font-size: 12px; color: var(--text);
+}
+.btn-merge { background: var(--green); color: #000; font-weight: 700; }
+.btn-merge:hover { background: #16a34a; }

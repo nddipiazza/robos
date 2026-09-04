@@ -33,9 +33,9 @@
       <div class="autodeploy-box">
         <span class="badge badge-autodeploy" title="Continuous Deployment configured for Knowledge Graph main branch">⚡ Auto-Deploy: KGraph main</span>
       </div>
-    </div>
     <div class="header-right">
-      <button id="btn-trigger-kgraph" class="btn btn-outline-tiny" title="Simulate Knowledge Graph commit on main branch">⚡ Commit to KGraph main [PET-105]</button>
+      <button id="btn-open-task-delivery" class="btn btn-outline-tiny" title="Implement Next Task PET-105 &amp; Approve PR">⚡ Implement Next Task [PET-105]</button>
+      <button id="btn-trigger-kgraph" class="btn btn-outline-tiny" style="display:none">⚡ Commit to KGraph main [PET-105]</button>
       <div class="search-box">
         <input id="resource-search" type="text" placeholder="Filter resources... (e.g. petstore-api)" autocomplete="off">
       </div>
@@ -189,6 +189,89 @@
       <div class="modal-footer">
         <button id="btn-modal-cancel" class="btn btn-outline">Cancel</button>
         <button id="btn-modal-connect" class="btn btn-accent">Connect Cluster &amp; Namespace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Task Implementer & PR Review Workflow -->
+  <div id="modal-task-delivery" class="modal-overlay hidden">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <div class="task-modal-title">
+          <span class="step-badge-pill">Continuous Delivery Pipeline</span>
+          <h3 id="task-modal-heading">Task Implementer — PET-105: Rabies Vaccine Verification Gateway</h3>
+        </div>
+        <button id="btn-task-modal-close" class="btn-icon">&times;</button>
+      </div>
+
+      <div class="task-modal-tabs">
+        <button class="task-tab-btn active" id="tab-btn-implementer">1. Task Implementer</button>
+        <button class="task-tab-btn" id="tab-btn-pr-review">2. PR Review &amp; Approval</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- View 1: Task Implementer -->
+        <div id="panel-task-impl" class="task-subpanel active">
+          <div class="task-meta-box">
+            <div class="task-meta-row">
+              <div><strong>Task Key:</strong> <code>PET-105</code></div>
+              <div><strong>Service Target:</strong> <code>petstore-api</code> ──▶ <code>vaccine-gateway</code></div>
+              <div><strong>Target Branch:</strong> <code>feature/PET-105-rabies-verification</code></div>
+            </div>
+            <p class="task-meta-desc">Implement rabies vaccine verification gateway microservice with Fastify, mTLS mutual authentication on port 8443, and synchronous certificate verification before adoption approval.</p>
+          </div>
+
+          <div class="impl-agent-progress">
+            <div class="progress-title">🤖 AI Coding Agent Execution:</div>
+            <ul class="impl-checklist">
+              <li class="check-item done">✓ Scaffolding Fastify microservice in <code>vaccine-gateway/server.js</code></li>
+              <li class="check-item done">✓ Injecting mTLS client certificate from GPG pass (<code>acme/vaccine-gateway-mTLS</code>)</li>
+              <li class="check-item done">✓ Validating OpenAPI 3.1 &amp; TypeSpec contracts (<code>entities/pet.typespec</code>)</li>
+              <li class="check-item done">✓ Generating Kubernetes deployment manifests (<code>03-vaccine-gateway.yaml</code>)</li>
+              <li class="check-item done">✓ Registering entity in Knowledge Graph: <code>urn:robos:service:vaccine-gateway</code></li>
+            </ul>
+          </div>
+
+          <div class="task-action-row">
+            <button id="btn-proceed-to-pr" class="btn btn-accent">🚀 Submit PR #42 for Review</button>
+          </div>
+        </div>
+
+        <!-- View 2: PR Review & Approval -->
+        <div id="panel-pr-review" class="task-subpanel hidden">
+          <div class="pr-meta-box">
+            <div class="pr-title-line">
+              <span class="pr-badge-open">OPEN</span>
+              <h4>PR #42: feat(vax): Rabies Vaccine Certification Gateway &amp; Microservice</h4>
+            </div>
+            <div class="pr-branches-line">
+              <span>Merging <code>feature/PET-105-rabies-verification</code> into <code>main</code></span>
+              <span class="pr-dual-badge">⚡ Dual Commit: Git Repository + Knowledge Graph</span>
+            </div>
+          </div>
+
+          <div class="pr-diff-summary">
+            <div class="diff-block">
+              <h5>Code Changes (4 files):</h5>
+              <div class="file-diff-row"><code>+ packages/vaccine-gateway/server.js</code> <span class="diff-add">+142</span></div>
+              <div class="file-diff-row"><code>+ packages/kube-studio/manifests/petshop-baseline/03-vaccine-gateway.yaml</code> <span class="diff-add">+58</span></div>
+              <div class="file-diff-row"><code>~ packages/petstore-api/src/PetService.java</code> <span class="diff-mod">~24</span></div>
+            </div>
+            <div class="diff-block">
+              <h5>Knowledge Graph Updates:</h5>
+              <div class="file-diff-row"><code>+ robos:Microservice (vaccine-gateway)</code> <span class="diff-add">CREATED</span></div>
+              <div class="file-diff-row"><code>+ robos:KubernetesDeployment (vaccine-gateway)</code> <span class="diff-add">READY</span></div>
+            </div>
+          </div>
+
+          <div class="pr-approval-box">
+            <p><strong>AI Review Summary:</strong> Verified mTLS client implementation against vaccine-gateway. OpenAPI contract, 14/14 Pact tests, and Knowledge Graph branch confirmed. Ready to merge to <code>main</code>.</p>
+          </div>
+
+          <div class="task-action-row">
+            <button id="btn-approve-and-merge" class="btn btn-accent btn-merge">✓ Approve &amp; Merge PR to main</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
