@@ -417,9 +417,10 @@ async function deployKGraphApp(appId, btnEl) {
   const branchInput = document.getElementById(`branch-input-${appId}`);
   const branch = (branchInput ? branchInput.value.trim() : "main") || "main";
 
-  if (btnEl) {
-    btnEl.disabled = true;
-    btnEl.innerHTML = `<span class="spinner">⏳</span> Deploying...`;
+  const btn = btnEl || document.querySelector(`#card-${appId} .btn-deploy`);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner">⏳</span> Deploying...`;
   }
 
   const res = await window.api.deployApp({
@@ -431,17 +432,17 @@ async function deployKGraphApp(appId, btnEl) {
   if (res.ok) {
     toolbarStats.innerHTML = `<span style="color: var(--green)">${res.message}</span>`;
     setTimeout(() => {
-      if (btnEl) {
-        btnEl.disabled = false;
-        btnEl.innerHTML = `Deploy`;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `Deploy`;
       }
       loadResources();
     }, 1200);
   } else {
-    alert(`Deploy failed: ${res.error}`);
-    if (btnEl) {
-      btnEl.disabled = false;
-      btnEl.innerHTML = `Deploy`;
+    toolbarStats.innerHTML = `<span style="color: var(--red)">Deploy failed: ${res.error}</span>`;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `Deploy`;
     }
   }
 }
