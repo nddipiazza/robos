@@ -112,5 +112,5 @@ xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle
 
 - [**System Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Explore the 8-pillar SDLC architecture and Knowledge Graph.
 - [**AI Agent Review-Based Development**]({{ site.baseurl }}{% link agent-review-development.md %}) — Learn the plan-code-review-verify workflow.
-- [**App Suite Catalog**]({{ site.baseurl }}{% link apps/index.md %}) — Explore all 30+ applications.
+- [**App Suite Catalog**]({{ site.baseurl }}{% link apps.md %}) — Explore all 30+ applications.
 - [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.

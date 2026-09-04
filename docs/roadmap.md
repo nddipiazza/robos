@@ -37,7 +37,7 @@ RobOS is under heavy active development. This is an early-stage project with an 
 
 ---
 
-## MVP — Model Problem End-to-End
+## MVP — Core SDLC Foundation
 
 The MVP goal: a developer picks up a story and drives it from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
 
@@ -181,18 +181,15 @@ Individual video walkthroughs of every RobOS Electron app — what it does, how 
 | App Launcher + Desktop Tour | Planned |
 | Toast Daemon — system-wide overlay toasts | Planned |
 
-### Full Model Problem Video (Coming Soon)
+### Full 16-Step Acme Petshop Lifecycle Walkthrough
 
-A complete end-to-end video walkthrough of the Model Problem: a team of four builds the buildbarn-forms project using RobOS from start to finish.
-
-- Company setup (Jira, workflows, Git projects)
-- Developer onboarding (3-minute zero-to-productive)
-- Story implementation with AI (questionnaire → draft → PR)
-- Code review with AI assistance (breakpoint review, "start the app")
-- Merge, deploy, and automatic status transitions
-- Dashboard visibility for all four personas
-
-This will be the definitive demo of what RobOS can do.
+A complete end-to-end video walkthrough of the 16-step Acme Petshop lifecycle:
+- Backlog DAG & Task planning with Gitea synchronization
+- Polyglot C4 Architecture modeling & Backstage integration
+- Contract Studio with TypeSpec & AsyncAPI validation
+- IntelliJ IDEA breakpoint reproduction and AI plan review
+- PR review with semantic diffs and automated CI validation
+- Live Kubernetes deployment, Helm charts, and REST API verification with Bruno
 
 ---
 
