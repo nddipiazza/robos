@@ -54,7 +54,5 @@ kramdown:
 
 exclude:
   - project-plan/
-  - ideas/
-  - issues/
   - Gemfile
   - Gemfile.lock

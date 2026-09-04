@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Ephemeral Agent User Profiles with Direct Host Display Bridging
 
 - **Status**: Approved (Promoted to [Ephemeral Agent User Profiles with Direct Host Display Bridging](../../project-plan/ephemeral-agent-user-profiles/epic.md))

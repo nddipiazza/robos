@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Knowledgebase & Registry
 
 Welcome to the RobOS Issue Knowledgebase! This directory stores raw bug reports, structured issue specifications, and tracking status for system defects.

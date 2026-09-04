@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Specification: Bypass Ubuntu 26.04 Initial Setup Popups
 
 **Issue ID**: `ISSUE-001`  

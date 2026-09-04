@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS Dev Central — AI Agent Review-Based Development Hub
 
 - **Status**: In Plan ([Epic 29](../../project-plan/dev-central-review-hub/epic.md))

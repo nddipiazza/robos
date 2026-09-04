@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Ideas & Knowledgebase
 
 Welcome to the RobOS Feature Knowledgebase! This directory stores raw project ideas, structured feature specifications, and implementation plans.

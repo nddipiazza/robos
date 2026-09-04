@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Specification: App Menu Button Click Does Nothing / Unresponsive
 
 **Issue ID**: `ISSUE-005`  

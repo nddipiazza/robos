@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS Contract-Driven Project Knowledge Graph & Autonomous Deployment Engine
 
 - **Status**: Draft

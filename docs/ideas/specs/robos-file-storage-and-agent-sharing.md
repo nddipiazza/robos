@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS File Storage & MCP Agent-Driven File Sharing
 
 - **Status**: Draft

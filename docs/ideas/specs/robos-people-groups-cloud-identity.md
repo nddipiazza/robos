@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS People & Groups — Multi-Cloud Identity & Guided OAuth Integrations
 
 - **Status**: Draft

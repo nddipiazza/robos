@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Unified RobOS Setup Assistant & AI Project Provisioner
 
 - **Status**: Draft

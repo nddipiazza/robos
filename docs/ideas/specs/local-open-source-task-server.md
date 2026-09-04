@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Local Open-Source Task Server & RobOS Task Servers Integration
 
 - **Status**: Draft

@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Specification: Display Resize Does Not Reposition App Menu and Launcher Grid
 
 **Issue ID**: `ISSUE-004`  

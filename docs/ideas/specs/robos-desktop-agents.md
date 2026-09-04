@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS Desktop Agents & Multi-User Session Tunneling
 
 - **Status**: Draft

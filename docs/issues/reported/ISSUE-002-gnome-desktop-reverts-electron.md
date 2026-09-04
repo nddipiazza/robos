@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Specification: GNOME Desktop Switch Automatically Reverts to Electron Desktop
 
 **Issue ID**: `ISSUE-002`  

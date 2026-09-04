@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Dual-Context eLearning Engine & Interactive PR Reviewer App
 
 - **Status**: Draft

@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS Learning Management System (LMS) & SDLC Course Player
 
 - **Status**: Draft

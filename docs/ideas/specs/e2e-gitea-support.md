@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Hermetic Gitea Git Forge for E2E Test Suite
 
 - **Status**: Draft

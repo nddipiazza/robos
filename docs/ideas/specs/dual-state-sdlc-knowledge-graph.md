@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: Dual-State SDLC Knowledge Graph & E2E-Driven Verification Engine
 
 - **Status**: Approved

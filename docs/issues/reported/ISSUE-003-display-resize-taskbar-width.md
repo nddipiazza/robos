@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Issue Specification: Display Resize Does Not Properly Resize Top Taskbar
 
 **Issue ID**: `ISSUE-003`  

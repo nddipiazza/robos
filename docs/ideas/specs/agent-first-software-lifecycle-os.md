@@ -1,3 +1,8 @@
+---
+layout: default
+nav_exclude: true
+---
+
 # Feature Spec: RobOS — The Agent-First Software Lifecycle Operating System
 
 - **Status**: Approved
