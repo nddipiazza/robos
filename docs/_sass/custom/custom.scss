@@ -269,11 +269,193 @@ img {
   border-radius: 8px !important;
   border: 1px solid $robos-border !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-  transition: border-color 0.2s ease !important;
+  transition: all 0.25s ease !important;
 
   &:hover {
     border-color: rgba(0, 229, 255, 0.4) !important;
   }
+}
+
+// ==============================================================================
+// RobOS Interactive Image Zoom & Lightbox
+// ==============================================================================
+.robos-zoomable-img {
+  cursor: zoom-in !important;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
+
+  &:hover {
+    border-color: $robos-cyan !important;
+    box-shadow: 0 12px 36px rgba(0, 229, 255, 0.22), 0 0 0 1px rgba(0, 229, 255, 0.4) !important;
+    transform: translateY(-2px);
+  }
+}
+
+body.robos-lightbox-open {
+  overflow: hidden !important;
+}
+
+.robos-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(6, 9, 15, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.robos-lightbox-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(180deg, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0) 100%);
+  z-index: 10;
+}
+
+.robos-lightbox-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.robos-lightbox-badge {
+  font-family: $font-family-headings !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $robos-cyan;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+}
+
+.robos-lightbox-zoom-badge {
+  font-family: $font-family-code !important;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  background: $robos-bg-card;
+  border: 1px solid $robos-border;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.robos-lightbox-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.robos-lightbox-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: $robos-bg-card;
+  color: #cbd5e1;
+  border: 1px solid $robos-border;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  padding: 0;
+  text-decoration: none;
+
+  &:hover {
+    background: #1a2436;
+    border-color: $robos-cyan;
+    color: $robos-cyan;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+.robos-lightbox-btn-close {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #f43f5e;
+
+  &:hover {
+    background: #f43f5e;
+    color: #ffffff;
+    border-color: #f43f5e;
+    box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+  }
+}
+
+.robos-lightbox-viewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  cursor: default;
+}
+
+.robos-lightbox-img-wrapper {
+  display: inline-block;
+  transform-origin: center center;
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+
+  img {
+    max-width: 90vw;
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 229, 255, 0.15);
+    display: block;
+  }
+}
+
+.robos-lightbox-footer {
+  width: 100%;
+  padding: 0.85rem 1.5rem 1.25rem;
+  background: linear-gradient(0deg, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 10;
+}
+
+.robos-lightbox-caption {
+  font-family: $font-family-headings !important;
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  text-align: center;
+  margin: 0;
+  max-width: 850px;
+}
+
+.robos-lightbox-hints {
+  font-family: $font-family-body !important;
+  font-size: 0.78rem;
+  color: #64748b;
+  display: flex;
+  gap: 0.5rem;
 }
 
 // Footer
