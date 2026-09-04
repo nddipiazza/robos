@@ -287,6 +287,155 @@ header h1 { font-size: 15px; font-weight: 600; }
 .step-item { padding: 4px 0; color: var(--muted); }
 .step-item::before { content: "  "; color: var(--accent); margin-right: 8px; }
 
+/* ── AI Loading placeholder ── */
+.ai-loading-placeholder {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.spinner { animation: spin 1.5s infinite linear; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ── AI Chat Section ── */
+.ai-chat-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.chat-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-section-header h4 { font-size: 13px; font-weight: 600; color: var(--text); }
+.chat-hint { font-size: 11px; color: var(--muted); }
+.ai-chat-thread {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.chat-msg { display: flex; flex-direction: column; }
+.chat-bubble {
+  max-width: 90%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.user-bubble {
+  align-self: flex-end;
+  background: rgba(0, 188, 212, 0.15);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  color: var(--text);
+}
+.bot-bubble {
+  align-self: flex-start;
+  background: #111923;
+  border: 1px solid var(--border);
+  color: #c9d1d9;
+}
+.chat-role {
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 6px;
+}
+.ai-typing { color: var(--muted); font-style: italic; }
+.ai-chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.ai-chat-input-row robos-ai-textarea {
+  flex: 1;
+}
+.btn-chat-send {
+  padding: 10px 18px;
+  height: 48px;
+  white-space: nowrap;
+}
+
+/* ── Knowledge Graph Diff Tab ── */
+.kgraph-branch-header {
+  background: rgba(163, 113, 247, 0.08);
+  border: 1px solid rgba(163, 113, 247, 0.3);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.kgraph-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.kgraph-branch-badge {
+  font-size: 13px;
+  color: #d2a8ff;
+}
+.kgraph-sync-badge {
+  font-size: 11px;
+  color: var(--green);
+  background: rgba(63, 185, 80, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.kgraph-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.kg-stats-bar {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+.kg-stats-bar strong { color: var(--accent); }
+.kg-sync-text { margin-left: auto; color: var(--purple); font-family: monospace; }
+.kg-entity-list { display: flex; flex-direction: column; gap: 10px; }
+.kg-entity-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+.kg-entity-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.kg-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.kg-badge-add { background: #16332a; color: var(--green); }
+.kg-badge-link { background: #1a1a3a; color: var(--blue); }
+.kg-badge-mod { background: #332b00; color: var(--yellow); }
+.kg-entity-type { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; }
+.kg-entity-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; font-family: monospace; }
+.kg-entity-status { font-size: 11px; color: var(--accent); }
+.kg-entity-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.kg-status { color: var(--purple); font-family: monospace; font-weight: 600; }
+
 /* ── Empty state ── */
 #empty-state {
   display: flex; flex-direction: column; align-items: center;

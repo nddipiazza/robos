@@ -52,8 +52,9 @@
       <!-- Tab navigation -->
       <div id="detail-tabs">
         <button class="tab-btn active" data-tab="overview">Overview</button>
-        <button class="tab-btn" data-tab="ai-review">AI Review</button>
+        <button class="tab-btn" data-tab="ai-review">PR Review</button>
         <button class="tab-btn" data-tab="files">Files Changed</button>
+        <button class="tab-btn" data-tab="kgraph"><span class="kgraph-tab-icon">☊</span> Knowledge Graph</button>
         <button class="tab-btn" data-tab="checks">CI Checks</button>
         <button class="tab-btn tab-btn-decision" data-tab="actions"><span class="tab-badge-icon">✓</span> Review &amp; Approve</button>
       </div>
@@ -65,13 +66,40 @@
 
       <div id="tab-ai-review" class="tab-content">
         <div id="ai-review-content">
-          <button id="btn-ai-analyze" class="btn-primary">Generate AI Review Summary</button>
-          <div id="ai-summary"></div>
+          <div id="ai-summary">
+            <div class="ai-loading-placeholder">
+              <span class="spinner">⏳</span> Generating automated AI code &amp; security review...
+            </div>
+          </div>
+
+          <div id="ai-chat-section" class="ai-chat-section">
+            <div class="chat-section-header">
+              <h4>💬 Chat with AI Reviewer</h4>
+              <span class="chat-hint">Ask clarifying questions, verify implementation details, or challenge findings to remove false positives</span>
+            </div>
+            <div id="ai-chat-thread" class="ai-chat-thread"></div>
+            <div class="ai-chat-input-row">
+              <robos-ai-textarea id="ai-chat-prompt" show-submit="false" show-commands="false" min-height="48"
+                placeholder="Ask AI Reviewer a question (e.g. 'Is TLS session caching enabled in VaccineGatewayClient?')..."></robos-ai-textarea>
+              <button id="btn-ai-chat-send" class="btn-primary btn-chat-send">Ask AI</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div id="tab-files" class="tab-content">
         <div id="files-list"></div>
+      </div>
+
+      <div id="tab-kgraph" class="tab-content">
+        <div class="kgraph-branch-header">
+          <div class="kgraph-title-row">
+            <span class="kgraph-branch-badge">Knowledge Graph Branch: <strong id="kg-branch-name">kgraph/PET-105-rabies-verification</strong></span>
+            <span class="kgraph-sync-badge">✓ Synced with Git Branch</span>
+          </div>
+          <div class="kgraph-desc">RobOS tracks code and Knowledge Graph branches hand-in-hand. Merging this PR will merge both the code repository and corresponding architecture/contract entities into <code>main</code>.</div>
+        </div>
+        <div id="kgraph-diff-content"></div>
       </div>
 
       <div id="tab-checks" class="tab-content">
@@ -81,7 +109,7 @@
       <div id="tab-actions" class="tab-content">
         <div class="review-decision-banner">
           <div class="banner-title">Pull Request Review &amp; Approval Decision</div>
-          <div class="banner-subtitle">Submit your formal review decision to approve, request modifications, or comment on this pull request.</div>
+          <div class="banner-subtitle">Approving will merge Git code branch (<strong>feature/PET-105-rabies-verification</strong>) and Knowledge Graph branch (<strong>kgraph/PET-105-rabies-verification</strong>) into <strong>main</strong>.</div>
         </div>
         <div class="actions-grid">
           <div class="action-section review-signoff-card">
@@ -114,6 +142,7 @@
     </div>
   </div>
 </div>
+<script src="../../robos-ui/robos-ui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
