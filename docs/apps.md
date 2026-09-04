@@ -7,7 +7,7 @@ nav_order: 6
 # RobOS App Suite
 {: .no_toc }
 
-30+ purpose-built Electron desktop applications covering the complete software delivery lifecycle with zero framework overhead.
+30+ native developer desktop applications covering the complete software delivery lifecycle with zero framework overhead.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,96 +18,87 @@ nav_order: 6
 
 ---
 
-## 1. Core Planning & Architecture
+## 1. Planning & Visual Architecture
 
-### System Topology & Backstage Studio
-Interactive visual mapping of your architecture across C4 zoom levels (Level 1: System Context, Level 2: Microservice/DB Containers, Level 3: Internal Components) with Spotify Backstage `catalog-info.yaml` synchronization, blast radius impact calculation, and automated Kubernetes & Helm manifest synthesis.
+### System Topology & Visual Architecture Studio
+A visual whiteboard for mapping your entire engineering architecture:
+- **3-Level Visual Zoom**: Zoom from high-level personas (**Level 1: System Context**), down to microservices and databases (**Level 2: Containers**), to internal code modules (**Level 3: Components**).
+- **Service Catalog Discovery**: Reads existing Spotify Backstage `catalog-info.yaml` files across Git repositories to automatically populate service ownership and dependencies.
+- **Automatic Cloud Manifests**: Adding a new database or service to the canvas automatically creates ready-to-deploy Kubernetes YAML manifests and Helm charts.
 ![System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
-### Task Planner & DAG Dispatcher
-Natural language task breakdown into directed acyclic graphs (DAG) of interdependent work items, auto-syncing with Gitea and Jira, with 1-click workspace provisioning.
+### Task Planner & Project Breakdown
+Tell the AI what you want to build in plain English. RobOS breaks your goal down into an ordered, step-by-step roadmap of tasks and automatically synchronizes tickets to GitHub Issues, Gitea, or Jira.
 ![Task Planner]({{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }})
 
-### Contract Studio
-API contract-first design supporting OpenAPI 3.1, TypeSpec, and AsyncAPI with live Spectral linting, Prism mock servers, and automated breaking-change detection.
+### Contract Studio & Live API Mocks
+Design and validate how your services talk to each other before writing code. Supports REST APIs (OpenAPI 3.1) and event streams (AsyncAPI) with live mock servers so frontend teams can build user interfaces immediately.
 ![Contract Studio]({{ '/assets/images/screenshots/acme-petshop-step3-studio_open_frame.png' | relative_url }})
 
 ### Git Projects Multi-Repo Hub
-Multi-repository synchronization, AI-generated `dev-setup.sh` environment runners, GPG-encrypted secrets management, and automated IDE launch configurations.
+Connect all your company's Git repositories in one place. RobOS securely injects environment passwords from your encrypted vault and writes one-click setup scripts (`dev-setup.sh`) to get code building in seconds.
 ![Git Projects]({{ '/assets/images/screenshots/acme-petshop-step4-projects_open_frame.png' | relative_url }})
 
-### Dev Central
-The daily developer command center: sprint status, PR health, calendar, AI standup, and blocker radar.
+### Dev Central (Developer Command Center)
+Your daily engineering dashboard: sprint progress, pull request health, daily calendar, AI standup notes, and blocker radar.
 ![Dev Central]({{ '/assets/images/screenshots/dev-central.png' | relative_url }})
 
 ---
 
-## 2. Developer Protocol & Database Suite
+## 2. Databases & API Testing Suite
 
-### RobOS Relational DB Manager
-DBeaver and DataGrip-inspired database manager for PostgreSQL, MySQL, and Oracle. Live schema inspector, table data grid, multi-tab SQL console, query explain plans, and DDL generator.
+### RobOS Relational DB Manager (PostgreSQL, MySQL, Oracle)
+A fast database manager (inspired by DBeaver & DataGrip) with live table schema browsing, interactive data grids, multi-tab SQL console queries, and automated database creation (DDL) scripts.
 ![Relational DB Manager]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
 
-### RobOS NoSQL DB Manager
-MongoDB Compass and RedisInsight-inspired manager with JSON document inspection, query filters, and Redis keyspace explorer with TTL monitoring.
+### RobOS NoSQL DB Manager (MongoDB & Redis)
+Inspect JSON documents, query collections, and explore Redis key-value stores with live TTL expiration monitoring.
 ![NoSQL DB Manager]({{ '/assets/images/screenshots/dev-tools-db_manager_overview_frame.png' | relative_url }})
 
-### RobOS REST API Client (Bruno)
-Git-backed REST collections (`.bru`), automatic synthesis from OpenAPI specs, environment matrices, and automated test assertions.
+### RobOS REST API Client (Bruno-Powered)
+A Git-backed API testing client (powered by open-source Bruno). Stores plain text `.bru` request files directly in your Git repository with automated request synthesis from OpenAPI contracts.
 ![REST API Client]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }})
 
 ### RobOS REST Collection Runner
-Headless and interactive test suite runner, latency matrices, scorecards, and PR verification quality gates.
+Run entire suites of API requests in sequence, benchmark endpoint latency, test edge cases, and enforce quality gates for pull requests.
 ![REST Collection Runner]({{ '/assets/images/screenshots/acme-petshop-step12-runner_view_frame.png' | relative_url }})
 
 ### RobOS Data Sources Explorer
-Knowledge Graph multi-database explorer connecting relational databases, document stores, AWS S3 buckets, and Kafka streaming topics.
+Explore all your company's databases, AWS S3 cloud storage buckets, and Kafka streaming topics with live connection testing and schema viewers.
 ![Data Sources]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
 
 ---
 
 ## 3. Code Review, Testing & Cloud Infrastructure
 
-### PR Review Board
-AI-assisted code review with change summaries, risk assessments, interactive breakpoint debugging, and one-click merge approvals.
+### Pull Request Review Board
+AI-assisted code review with visual side-by-side diffs, automated security audits, contract compatibility checks, and one-click approvals.
 ![PR Review]({{ '/assets/images/screenshots/acme-petshop-step6-files_diff_frame.png' | relative_url }})
 
 ### Kube Studio & Cloud Infrastructure Navigator
-Multi-cluster Kubernetes management (Kind, EKS, GKE, AKS), Helm release matrices, ArgoCD GitOps synchronization, and live container log streaming.
+A visual control room for Kubernetes clusters (local Kind clusters, AWS EKS, Google Cloud GKE, Azure AKS). View running containers, inspect Helm releases, check ArgoCD GitOps status, and stream live server logs.
 ![Kube Studio]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }})
 
 ### Deploy Tracker
-Multi-environment deployment pipeline tracking (Development, Staging, Production), canary rollouts, DORA metrics KPI dashboards, and instant rollback triggers.
+Track your deployments across Development, Staging, and Production environments in real time with canary rollouts, team health metrics (DORA metrics), and one-click rollbacks.
 ![Deploy Tracker]({{ '/assets/images/screenshots/acme-petshop-step7-kpis_frame.png' | relative_url }})
 
 ### CI Monitor
-Real-time pipeline monitoring with automated AI root-cause diagnosis and one-click failure reruns.
+Real-time continuous integration pipeline monitoring with automated AI root-cause explanations and one-click failure reruns.
 ![CI Monitor]({{ '/assets/images/screenshots/acme-petshop-step6-ci_checks_frame.png' | relative_url }})
 
 ---
 
-## 4. AI Agent Sessions & System Utilities
+## 4. AI Assistants & System Tools
 
-### Agents Manager & MCP Manager
-Manage multi-agent sessions (Claude Code, Google Antigravity, Copilot CLI, Gemini) with interactive Model Context Protocol (MCP) server authentication and OAuth popups.
+### Agents Manager & Universal AI Tool Connections (MCP)
+Manage multiple AI coding agents (Claude Code, Google Antigravity, GitHub Copilot, Gemini) with secure Model Context Protocol (MCP) tool authentication and OAuth login popups.
 ![Agents Manager]({{ '/assets/images/screenshots/agent-mcp-antigravity_servers_frame.png' | relative_url }})
 
-### SDLC Knowledge Graph Explorer
-Visual explorer for the OASIS OSLC / W3C JSON-LD system knowledge graph with dual-state semantic diffing.
+### Live Architecture Knowledge Graph Explorer
+Explore the full connected map of your software ecosystem with visual comparisons between live production (`main`) and proposed feature branches.
 ![Knowledge Graph]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }})
 
-### Entity Schema Studio (TypeSpec)
-Microsoft TypeSpec schema modeler compiling domain types to TypeScript, Java, and Go DTO packages.
+### Data Model Studio (TypeSpec)
+Define your domain models once in Microsoft TypeSpec; RobOS automatically generates matching TypeScript interfaces, Java Records, and Go structs.
 ![Schema Studio]({{ '/assets/images/screenshots/schema-studio-frame_01.png' | relative_url }})
-
-### Personnel & Roster Manager
-Human and AI agent personnel directory with stream-aligned team models and tool capabilities.
-![People Manager]({{ '/assets/images/screenshots/people-manager-frame_01.png' | relative_url }})
-
-### Security Setup & Pass Manager
-GPG-encrypted credential vault and first-run SSH key initialization for secure GitOps delivery.
-![Security Setup]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
-
-### App Launcher & Notifications
-Instant searchable app launcher and real-time desktop notification daemon with audio cues.
-![App Launcher]({{ '/assets/images/screenshots/app-launcher.png' | relative_url }})

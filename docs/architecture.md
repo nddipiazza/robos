@@ -4,10 +4,10 @@ layout: default
 nav_order: 3
 ---
 
-# System Architecture
+# System Architecture (How RobOS Works Under the Hood)
 {: .no_toc }
 
-The 8-pillar declarative architecture, Dual-State Knowledge Graph, and IPC communications powering RobOS.
+The 8 architectural pillars, the Dual-State Comparison Engine, and the secure desktop bridge powering RobOS.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,21 +18,21 @@ The 8-pillar declarative architecture, Dual-State Knowledge Graph, and IPC commu
 
 ---
 
-## The 8 Pillars of the RobOS SDLC Engine
+## The 8 Pillars of RobOS
 
-RobOS organizes the Software Delivery Lifecycle around 8 declarative linked-data pillars stored in Git:
+RobOS structures all development lifecycle information into 8 connected, plain-text categories stored directly in your Git repositories:
 
 ```mermaid
 graph TD
-    subgraph KnowledgeGraph [Dual-State SDLC Knowledge Graph]
-        P1[1. System Topology & Backstage C4]
-        P2[2. Human & Agent Organization Roster]
-        P3[3. Entity Schema Studio TypeSpec/Buf]
-        P4[4. API Contract & Governance Engine OpenAPI/Pact]
-        P5[5. Package & Runtime Environment Manager]
-        P6[6. Multi-Repo Workspace Orchestrator]
-        P7[7. Task Dependency DAG Dispatcher]
-        P8[8. 100% Declarative GitOps Storage .robos/]
+    subgraph KnowledgeGraph [Live Architecture & Lifecycle Hub]
+        P1[1. Visual Architecture & Service Map]
+        P2[2. Team Roster & Service Ownership]
+        P3[3. Data Model Studio TypeSpec]
+        P4[4. API Contracts & Mock Servers]
+        P5[5. Runtimes & Devcontainers]
+        P6[6. Multi-Repo Workspace Hub]
+        P7[7. Step-by-Step Task Roadmap]
+        P8[8. Clean Git-Backed Files .robos/]
     end
 
     P1 --- P4
@@ -43,52 +43,52 @@ graph TD
     P1 --- P8
 ```
 
-1. **System Topology & Backstage C4 Graph**: Models all microservices, frontends, databases, and message brokers with upstream/downstream dependencies and blast-radius tracking.
-2. **Human & Agent Roster**: Stream-aligned team models with role bindings and MCP tool capabilities.
-3. **Entity Schema Studio**: Single source of truth in Microsoft TypeSpec compiling to TypeScript, Java, and Go domain models.
-4. **API Contract & Governance Engine**: OpenAPI 3.1, AsyncAPI, and Pact consumer-driven contract testing.
-5. **Package & Runtime Manager**: Standardized Devcontainer and Nix runtime environments.
-6. **Multi-Repo Workspace Orchestrator**: Git worktree branch checkouts sharing underlying object stores.
-7. **Task Dependency DAG Dispatcher**: Directed Acyclic Graph (DAG) task trees with automated state transitions.
-8. **100% Declarative GitOps Storage**: Everything stored in human-readable `.robos/` YAML/JSON-LD files.
+1. **Visual Architecture & Service Map**: Visualizes all microservices, frontends, databases, and message queues with live dependency maps and impact tracking.
+2. **Team Roster & Service Ownership**: Clear directory of engineering teams, who owns which service, and what tools each team uses.
+3. **Data Model Studio (TypeSpec)**: Define domain data models once and generate TypeScript, Java, and Go types automatically.
+4. **API Contracts & Mock Servers**: Define REST APIs and event streams with live mock servers for instant frontend testing.
+5. **Runtimes & Devcontainers**: Standardized Docker devcontainers so every developer has an identical build environment.
+6. **Multi-Repo Workspace Hub**: Switch between Git branches across multiple repositories simultaneously without duplicate disk storage.
+7. **Step-by-Step Task Roadmap**: Breaks high-level feature goals down into a clean checklist of prerequisite and dependent tasks.
+8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files under `.robos/` with zero proprietary cloud databases.
 
 ---
 
-## Dual-State World Modeling (Prod vs. Future)
+## Today vs. Tomorrow (The Dual-State Engine)
 
-Traditional developer environments only know about the files currently on disk. RobOS introduces **Dual-State Worlds**:
+Traditional developer tools only understand the files currently on your laptop. RobOS tracks two versions of your system at the same time:
 
-- **World 1 (Live Production `main`)**: Represents currently deployed production topology, active contracts, and released database schemas.
-- **World 2 (Future Feature Branch)**: Represents the state of the world when the current task or pull request is merged.
+- **World 1 (Live Production `main`)**: What is running in production right now — deployed services, active API contracts, and live databases.
+- **World 2 (Your Feature Branch)**: What the system will look like once your feature branch merges.
 
-RobOS computes **Semantic Graph Diffs** between the two states:
-- Breaking API contract changes are flagged before code is written.
-- Missing database migration steps are identified during planning.
-- Required downstream service updates are automatically scheduled as dependent tasks.
+RobOS automatically computes the difference between the two states:
+- **Breaking API Changes**: Flagged before any code is written.
+- **Missing Database Migrations**: Caught and planned upfront.
+- **Affected Downstream Apps**: Automatically identified so you can update client apps before releasing.
 
 ---
 
-## IPC Architecture & Shared Libraries
+## Fast, Secure Desktop Bridge
 
-RobOS uses Electron's secure IPC bridge (`contextBridge`) with zero framework overhead:
+RobOS applications are built using lightweight vanilla JavaScript and Electron, communicating through secure desktop channels:
 
 ```mermaid
 sequenceDiagram
-    participant UI as Electron Renderer (Vanilla JS)
-    participant Preload as preload.js (contextBridge)
-    participant Main as Electron Main Process
-    participant K8s as Live Kubernetes / Docker / DB
+    participant UI as Desktop App UI
+    participant Bridge as Secure Desktop Bridge
+    participant Backend as RobOS Background Engine
+    participant Cloud as Local Kubernetes / Docker / DB
 
-    UI->>Preload: window.api.deployTaskManifests({ taskId: 'PET-108' })
-    Preload->>Main: ipcRenderer.invoke('kube-deploy-task-manifests')
-    Main->>K8s: kubectl apply -f manifests/petshop-baseline/
-    K8s-->>Main: Workloads Scheduled (postgres:16-alpine)
-    Main-->>Preload: { ok: true, message: 'Deployed' }
-    Preload-->>UI: Update Live Status Pill
+    UI->>Bridge: Deploy Analytics Database (Task PET-108)
+    Bridge->>Backend: Forward verified request
+    Backend->>Cloud: Apply generated Kubernetes manifests
+    Cloud-->>Backend: Database container started & healthy
+    Backend-->>Bridge: Success response
+    Bridge-->>UI: Update green status badge on UI
 ```
 
-### Shared Libraries (`/usr/local/share/robos/`)
-- **`robos-lib`**: Desktop parsing, app categories, and DOM snapshot debug server.
-- **`robos-icons`**: Central Lucide-style SVG icon registry.
-- **`robos-graph`**: OSLC JSON-LD knowledge graph parser and diff engine.
-- **`robos-mcp-router`**: High-performance MCP tool request router.
+### Shared System Libraries (`/usr/local/share/robos/`)
+- **`robos-lib`**: Desktop application management and live visual testing tools.
+- **`robos-icons`**: Complete SVG icon registry.
+- **`robos-graph`**: Open-standard architecture parser and difference engine.
+- **`robos-mcp-router`**: Fast tool router connecting AI models (Claude, Antigravity, Copilot, Gemini) to local developer tools.
