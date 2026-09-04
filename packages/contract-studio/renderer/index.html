@@ -22,10 +22,9 @@
       <div class="gitops-branch-wrap">
         <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
           <option value="main">🌿 main (Production / GitOps HEAD)</option>
-          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
-          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+          <option value="feature/PET-105-rabies-verification">🌿 feature/PET-105-rabies-verification (Rabies Cert Delta)</option>
         </select>
-        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
+        <span class="commit-badge" id="git-commit-badge">commit: a8c2e1f (clean)</span>
       </div>
 
       <div class="header-right">
@@ -52,6 +51,21 @@
       <div class="stat-card">
         <div class="stat-num" id="stat-spectral-status" style="color: var(--accent);">0 Errors &middot; Compliant</div>
         <div class="stat-label">Spectral Style Governance</div>
+      </div>
+    </div>
+
+    <!-- AI Contract Authoring Bar -->
+    <div id="ai-contract-bar" class="ai-planner-bar">
+      <div class="ai-planner-header">
+        <div class="ai-planner-title">
+          <span class="ai-sparkle">✨</span>
+          <strong>AI Contract Authoring & Governance Assistant</strong>
+          <span class="badge-kgraph">Knowledge Graph: urn:robos:project:acme-petshop-platform</span>
+        </div>
+      </div>
+      <div class="ai-textarea-wrapper">
+        <div id="ai-conversation-thread" class="ai-conversation-thread" style="display: none;"></div>
+        <robos-ai-textarea id="contract-ai-prompt" placeholder="e.g. Compile TypeSpec entities into OpenAPI 3.1 contract for petstore-api, validate rabies certification endpoints, and enforce Pact consumer rules."></robos-ai-textarea>
       </div>
     </div>
 
@@ -86,6 +100,7 @@
     </main>
   </div>
 
+  <script src="../../robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

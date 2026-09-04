@@ -16,216 +16,194 @@ let mainWindow;
 let activeBranch = 'main';
 let prismRunning = false;
 
+const REAL_HOME = process.env.REAL_HOME || process.env.ROBOS_HOST_HOME || process.env.HOME || '/home/ndipiazza';
+const PROJECT_DIR = path.join(REAL_HOME, '.robos', 'projects', 'acme-petshop-platform');
+const CONTRACTS_DIR = path.join(PROJECT_DIR, 'contracts');
+
+function getPetstoreApiYaml() {
+  const p = path.join(CONTRACTS_DIR, 'petstore-api.openapi.yaml');
+  if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
+  return `openapi: 3.1.0\ninfo:\n  title: Acme Petshop Core REST API\n  version: 1.0.0`;
+}
+
+function getVaccineGatewayYaml() {
+  const p = path.join(CONTRACTS_DIR, 'vaccine-gateway.openapi.yaml');
+  if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
+  return `openapi: 3.1.0\ninfo:\n  title: Rabies Vaccine Gateway\n  version: 1.0.0`;
+}
+
 const BRANCH_CATALOG = {
   'main': {
     name: 'main',
-    commit: '8f9a2b1',
+    commit: 'a8c2e1f',
     clean: true,
     label: '🌿 main (Production / GitOps HEAD)',
-    rawYamlOverlay: `openapi: 3.1.0
-info:
-  title: BuildBarn Dynamic Forms API
-  version: 1.0.0
-  description: Core microservice API for dynamic forms submission and workflow dispatch.
-servers:
-  - url: https://api.buildbarn.dev/v1
-    description: Production Gateway
-paths:
-  /api/v1/forms:
-    get:
-      summary: List all active forms
-      operationId: listForms
-      responses:
-        '200':
-          description: Successful form list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DynamicForm'
-    post:
-      summary: Create dynamic form instance
-      operationId: createForm
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DynamicForm'
-      responses:
-        '201':
-          description: Form created successfully
-        '400':
-          description: Validation error
-        '401':
-          description: Unauthorized
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-  schemas:
-    DynamicForm:
-      $ref: '.robos/entities/form.typespec#DynamicForm'`,
+    rawYamlOverlay: null,
   },
-  'feature/TAX-1099-ein-verification': {
-    name: 'feature/TAX-1099-ein-verification',
-    commit: 'd4e5f6a',
+  'feature/PET-105-rabies-verification': {
+    name: 'feature/PET-105-rabies-verification',
+    commit: 'b9d4f21',
     clean: false,
-    label: '🌿 feature/TAX-1099-ein-verification (EIN Delta)',
-    rawYamlOverlay: `openapi: 3.1.0
-info:
-  title: BuildBarn Dynamic Forms API
-  version: 1.1.0-alpha
-  description: Forms API with TAX-1099 EIN verification and certification routes.
-servers:
-  - url: https://api-stage.buildbarn.dev/v1
-    description: Staging Feature Gateway
-paths:
-  /api/v1/forms:
-    post:
-      summary: Create dynamic form instance (with TAX-1099 EIN)
-      operationId: createForm
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DynamicForm'
-      responses:
-        '201':
-          description: Form created with EIN validation
-  /api/v1/forms/verify-ein:
-    post:
-      summary: Instant IRS EIN verification probe
-      operationId: verifyEin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [vendorEin]
-              properties:
-                vendorEin:
-                  type: string
-                  pattern: '^[0-9]{2}-[0-9]{7}$'
-      responses:
-        '200':
-          description: EIN valid and registered with IRS
-components:
-  schemas:
-    DynamicForm:
-      $ref: '.robos/entities/form.typespec#DynamicForm'`,
-  },
-  'hotfix/calc-rate': {
-    name: 'hotfix/calc-rate',
-    commit: 'e2b1c4f',
-    clean: true,
-    label: '🌿 hotfix/calc-rate',
+    label: '🌿 feature/PET-105-rabies-verification (Rabies Cert Delta)',
     rawYamlOverlay: null,
   },
 };
 
-const DEFAULT_CONTRACTS = {
-  activeContract: 'forms-api.openapi.yaml',
-  contracts: [
-    {
-      id: 'forms-api.openapi.yaml',
-      name: 'BuildBarn Forms API',
-      type: 'openapi',
-      version: '3.1.0',
-      path: '.robos/contracts/forms-api.openapi.yaml',
-      description: 'REST API contract for multi-step dynamic forms and IRS tax verification',
-      endpoints: [
-        {
-          method: 'POST',
-          path: '/api/v1/forms',
-          summary: 'Create dynamic form instance',
-          operationId: 'createForm',
-          security: 'BearerAuth (JWT)',
-          requestSchema: 'entities/form.typespec (DynamicForm)',
-          responses: [
-            { code: '201', desc: 'Form Created Successfully' },
-            { code: '400', desc: 'Validation Error (Schema mismatch)' },
-            { code: '401', desc: 'Unauthorized (Missing JWT)' },
-          ],
-        },
-        {
-          method: 'GET',
-          path: '/api/v1/forms',
-          summary: 'List active forms for tenant',
-          operationId: 'listForms',
-          security: 'BearerAuth (JWT)',
-          requestSchema: 'None (Query Params)',
-          responses: [{ code: '200', desc: 'Array of DynamicForms' }],
-        },
-      ],
-      spectralResult: {
-        status: 'passed',
-        errors: 0,
-        warnings: 1,
-        report: 'Spectral OpenAPI 3.1 Governance: 0 Errors, 1 Warning (info: add contact email to info block)',
+const ACME_CONTRACTS = [
+  {
+    id: 'petstore-api.openapi.yaml',
+    name: 'Acme Petshop Core REST API',
+    type: 'openapi',
+    version: '3.1.0',
+    path: 'contracts/petstore-api.openapi.yaml',
+    description: 'Java 21 Spring Boot 3.3 microservice REST API for catalog, adoption checkout, and health validation',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/pets',
+        summary: 'Add new pet to inventory',
+        operationId: 'createPet',
+        security: 'BearerAuth (JWT)',
+        requestSchema: 'entities/pet.typespec (NewPetRequest)',
+        responses: [
+          { code: '201', desc: 'Pet created successfully' },
+          { code: '400', desc: 'Validation Error (Schema mismatch)' },
+        ],
       },
-      pactResult: {
-        status: 'passed',
-        total: 14,
-        passed: 14,
-        failed: 0,
-        consumer: 'React Web Portal (web-client)',
-        provider: 'Forms API Service (forms-api)',
+      {
+        method: 'GET',
+        path: '/pets',
+        summary: 'List all active pets in catalog',
+        operationId: 'listPets',
+        security: 'None (Public)',
+        requestSchema: 'None (Query Params: status, species)',
+        responses: [{ code: '200', desc: 'Array of Pet entities' }],
       },
+      {
+        method: 'GET',
+        path: '/pets/{id}',
+        summary: 'Get pet details by ID',
+        operationId: 'getPetById',
+        security: 'None (Public)',
+        requestSchema: 'Path: id (UUID)',
+        responses: [
+          { code: '200', desc: 'Pet entity details' },
+          { code: '404', desc: 'Pet not found' },
+        ],
+      },
+      {
+        method: 'POST',
+        path: '/pets/{id}/adopt',
+        summary: 'Process pet adoption checkout',
+        operationId: 'adoptPet',
+        security: 'BearerAuth (JWT)',
+        requestSchema: 'entities/pet.typespec (AdoptionRequest)',
+        responses: [
+          { code: '200', desc: 'Adoption receipt confirmed' },
+          { code: '400', desc: 'Invalid adopter information' },
+        ],
+      },
+      {
+        method: 'GET',
+        path: '/pets/{id}/vaccines',
+        summary: 'Fetch verified rabies and health certificates',
+        operationId: 'getPetVaccines',
+        security: 'mTLS / Internal Service',
+        requestSchema: 'Path: id (UUID)',
+        responses: [{ code: '200', desc: 'Array of validated vaccine certificates' }],
+      },
+    ],
+    spectralResult: {
+      status: 'passed',
+      errors: 0,
+      warnings: 0,
+      report: 'Spectral OpenAPI 3.1 Governance: 0 Errors, 100% Compliant with RobOS API Style Guidelines',
     },
-    {
-      id: 'auth-api.openapi.yaml',
-      name: 'Identity & Auth API',
-      type: 'openapi',
-      version: '3.1.0',
-      path: '.robos/contracts/auth-api.openapi.yaml',
-      description: 'OAuth2 and JWT token minting service',
-      endpoints: [
-        {
-          method: 'POST',
-          path: '/api/v1/auth/token',
-          summary: 'Exchange credentials for JWT session',
-          operationId: 'mintToken',
-          security: 'BasicAuth',
-          requestSchema: 'entities/user.typespec (AuthCredentials)',
-          responses: [{ code: '200', desc: 'JWT Bearer Token' }],
-        },
-      ],
-      spectralResult: { status: 'passed', errors: 0, warnings: 0, report: 'Spectral: 100% Compliant' },
-      pactResult: { status: 'passed', total: 8, passed: 8, failed: 0, consumer: 'Web Portal', provider: 'Auth Service' },
+    pactResult: {
+      status: 'passed',
+      total: 14,
+      passed: 14,
+      failed: 0,
+      consumer: 'React Web Client (petstore-web)',
+      provider: 'Java Spring Boot REST API (petstore-api)',
     },
-    {
-      id: 'form-events.asyncapi.yaml',
-      name: 'Form Event Streams (AsyncAPI)',
-      type: 'asyncapi',
-      version: '2.6.0',
-      path: '.robos/contracts/form-events.asyncapi.yaml',
-      description: 'RabbitMQ topic exchange event definitions for form lifecycle events',
-      endpoints: [
-        {
-          method: 'PUB',
-          path: 'forms.lifecycle.submitted',
-          summary: 'Published when user submits a new form',
-          operationId: 'onFormSubmitted',
-          security: 'AMQP TLS',
-          requestSchema: 'entities/form.typespec (FormSubmittedEvent)',
-          responses: [{ code: 'ACK', desc: 'Acknowledged by RabbitMQ' }],
-        },
-      ],
-      spectralResult: { status: 'passed', errors: 0, warnings: 0, report: 'AsyncAPI Linter: 0 Violations' },
-      pactResult: { status: 'passed', total: 6, passed: 6, failed: 0, consumer: 'Notification Engine', provider: 'Event Broker' },
+  },
+  {
+    id: 'vaccine-gateway.openapi.yaml',
+    name: 'Rabies Vaccine Certification Gateway',
+    type: 'openapi',
+    version: '3.1.0',
+    path: 'contracts/vaccine-gateway.openapi.yaml',
+    description: 'High-assurance Fastify compliance gateway interfacing with state veterinary certification registries over mTLS',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/api/v1/vaccines/verify',
+        summary: 'Validate rabies vaccination certificate against state health registry',
+        operationId: 'verifyVaccineCertificate',
+        security: 'MutualTLS (State Vet Authority Cert)',
+        requestSchema: 'entities/pet.typespec (VerificationRequest)',
+        responses: [
+          { code: '200', desc: 'Verification response with digital signature' },
+          { code: '400', desc: 'Invalid certificate format or missing veterinarian license' },
+        ],
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/registries/{state}/status',
+        summary: 'Health check and sync status for state veterinary board registry',
+        operationId: 'getRegistryStatus',
+        security: 'None (Health Probe)',
+        requestSchema: 'Path: state (2-Letter Code)',
+        responses: [{ code: '200', desc: 'Registry online status and API latency' }],
+      },
+    ],
+    spectralResult: {
+      status: 'passed',
+      errors: 0,
+      warnings: 0,
+      report: 'Spectral: 100% Compliant (mTLS SecurityScheme verified)',
     },
-  ],
-};
+    pactResult: {
+      status: 'passed',
+      total: 8,
+      passed: 8,
+      failed: 0,
+      consumer: 'Java Spring Boot API (petstore-api)',
+      provider: 'Rabies Vaccine Gateway (vaccine-gateway)',
+    },
+  },
+  {
+    id: 'events.asyncapi.yml',
+    name: 'Acme Petshop Domain Event Streams',
+    type: 'asyncapi',
+    version: '3.0.0',
+    path: 'contracts/events.asyncapi.yml',
+    description: 'Apache Kafka 3.7 event streaming topics published for async pet adoption and inventory sync',
+    endpoints: [
+      {
+        method: 'PUB',
+        path: 'acme.petshop.pet.adopted',
+        summary: 'Published when user completes pet adoption checkout',
+        operationId: 'onPetAdopted',
+        security: 'Kafka SASL/SCRAM',
+        requestSchema: 'entities/pet.typespec (PetAdoptedEvent)',
+        responses: [{ code: 'ACK', desc: 'Partitioned event committed to Kafka cluster' }],
+      },
+      {
+        method: 'PUB',
+        path: 'acme.petshop.inventory.delta',
+        summary: 'Published on inventory count delta adjustments',
+        operationId: 'onInventoryDelta',
+        security: 'Kafka SASL/SCRAM',
+        requestSchema: 'entities/pet.typespec (InventoryDeltaEvent)',
+        responses: [{ code: 'ACK', desc: 'Committed to Kafka event log' }],
+      },
+    ],
+    spectralResult: { status: 'passed', errors: 0, warnings: 0, report: 'AsyncAPI Linter: 0 Violations' },
+    pactResult: { status: 'passed', total: 6, passed: 6, failed: 0, consumer: 'Apache Kafka Event Bus', provider: 'Java Spring Boot API' },
+  },
+];
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -248,66 +226,56 @@ function createWindow() {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
-ipcMain.handle('contract-get-contracts', async () => {
-  const branchInfo = BRANCH_CATALOG[activeBranch] || BRANCH_CATALOG['main'];
-  const activeContractObj = DEFAULT_CONTRACTS.contracts.find(c => c.id === DEFAULT_CONTRACTS.activeContract);
+ipcMain.handle('cs-get-contracts', async () => {
   return {
-    ...DEFAULT_CONTRACTS,
+    activeBranch,
+    contracts: ACME_CONTRACTS,
+    rawYaml: getPetstoreApiYaml(),
+  };
+});
+
+ipcMain.handle('cs-switch-branch', async (_evt, branchName) => {
+  activeBranch = branchName || 'main';
+  const branchInfo = BRANCH_CATALOG[activeBranch] || BRANCH_CATALOG['main'];
+  return {
+    ok: true,
     activeBranch,
     branchInfo,
-    prismRunning,
-    rawYaml: branchInfo.rawYamlOverlay || BRANCH_CATALOG['main'].rawYamlOverlay,
-    branches: Object.values(BRANCH_CATALOG).map(b => ({ name: b.name, commit: b.commit, label: b.label })),
   };
 });
 
-ipcMain.handle('contract-list-branches', async () => {
-  return Object.values(BRANCH_CATALOG);
-});
-
-ipcMain.handle('contract-switch-branch', async (_evt, branchName) => {
-  if (BRANCH_CATALOG[branchName]) {
-    activeBranch = branchName;
-    const branchInfo = BRANCH_CATALOG[branchName];
-    return { ok: true, activeBranch, branchInfo };
-  }
-  return { ok: false, message: 'Branch not found' };
-});
-
-ipcMain.handle('contract-run-spectral', async (_evt, contractId) => {
+ipcMain.handle('cs-run-spectral', async (_evt, contractId) => {
+  const contract = ACME_CONTRACTS.find(c => c.id === contractId) || ACME_CONTRACTS[0];
   return {
     ok: true,
-    contractId,
-    errors: 0,
-    warnings: 1,
-    passed: true,
-    report: 'Stoplight Spectral OpenAPI 3.1 Governance: 0 Errors, 1 Info Warning (Passed Quality Gate)',
+    contractId: contract.id,
+    result: contract.spectralResult,
   };
 });
 
-ipcMain.handle('contract-run-pact', async (_evt, contractId) => {
+ipcMain.handle('cs-run-pact', async (_evt, contractId) => {
+  const contract = ACME_CONTRACTS.find(c => c.id === contractId) || ACME_CONTRACTS[0];
   return {
     ok: true,
-    contractId,
-    total: 14,
-    passed: 14,
-    failed: 0,
-    durationMs: 312,
-    consumer: 'React Web Portal (web-client)',
-    provider: 'Forms API Service (forms-api)',
-    report: 'Pact Consumer Contract Verification: 14/14 Contracts Passed (0 Breaking Deltas)',
+    contractId: contract.id,
+    result: contract.pactResult,
   };
 });
 
-ipcMain.handle('contract-start-prism', async (_evt, contractId) => {
+ipcMain.handle('cs-start-prism', async (_evt, contractId) => {
   prismRunning = true;
   return {
     ok: true,
     port: 4010,
-    pid: 5120,
-    url: 'http://localhost:4010',
-    status: 'Running Mock Server',
-    routesSimulated: 4,
+    url: 'http://127.0.0.1:4010',
+    routes: [
+      'GET  http://127.0.0.1:4010/pets',
+      'POST http://127.0.0.1:4010/pets',
+      'GET  http://127.0.0.1:4010/pets/{id}',
+      'POST http://127.0.0.1:4010/pets/{id}/adopt',
+      'GET  http://127.0.0.1:4010/pets/{id}/vaccines',
+      'POST http://127.0.0.1:4010/api/v1/vaccines/verify',
+    ],
   };
 });
 
