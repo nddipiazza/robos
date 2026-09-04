@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS gRPC Client</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+  <header id="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div>
+        <h1 class="header-title">RobOS gRPC Client</h1>
+        <div class="header-subtitle">BloomRPC & Kreya-inspired Protobuf Service Studio</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <input type="text" id="endpoint-input" class="endpoint-input mono" value="127.0.0.1:8444"/>
+      <button class="btn btn-sm btn-primary" id="btn-invoke-grpc">▶ Invoke RPC (Ctrl+Enter)</button>
+    </div>
+  </header>
+
+  <div id="main-layout">
+    <aside id="sidebar">
+      <div class="sidebar-header">Protobuf Services (petshop.proto)</div>
+      <div id="services-tree"></div>
+    </aside>
+
+    <main id="content">
+      <div class="editor-pane">
+        <div class="pane-header">
+          <span id="active-method-title" style="font-weight:600;color:#58a6ff;font-family:var(--font-mono);">petshop.v1.VaccineVerificationService / VerifyCertificate</span>
+          <span class="badge badge-cyan">UNARY RPC</span>
+        </div>
+        <textarea id="payload-editor" class="json-textarea mono"></textarea>
+      </div>
+
+      <div class="response-pane">
+        <div class="pane-header">
+          <span style="font-weight:600;color:#8b949e;">Response Payload</span>
+          <span id="grpc-status-badge" class="badge badge-green">0 OK (220ms)</span>
+        </div>
+        <pre id="response-block" class="response-block mono">// Response will appear here</pre>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>RobOS NoSQL Database Management</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+  <header id="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div>
+        <h1 class="header-title">RobOS NoSQL Database Management</h1>
+        <div class="header-subtitle">MongoDB Compass & RedisInsight-inspired Document Studio</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-sm btn-primary" id="btn-switch-mode">Switch to Redis Cache</button>
+    </div>
+  </header>
+
+  <div id="main-layout">
+    <aside id="sidebar">
+      <div class="sidebar-header">NoSQL Clusters</div>
+      <div id="nosql-tree">
+        <!-- Injected via JS -->
+      </div>
+    </aside>
+
+    <main id="content">
+      <!-- MongoDB Mode -->
+      <div id="mongo-view" class="active">
+        <div class="filter-bar">
+          <span style="font-weight:600;font-size:12px;color:#8b949e;">Filter:</span>
+          <input type="text" id="mongo-filter-input" class="filter-input mono" value="{ status: 'AVAILABLE' }"/>
+          <button class="btn btn-sm btn-primary" id="btn-find-docs">Find Documents</button>
+        </div>
+        <div class="docs-container" id="docs-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Redis Mode -->
+      <div id="redis-view">
+        <div class="filter-bar">
+          <span style="font-weight:600;font-size:12px;color:#8b949e;">CLI Command:</span>
+          <input type="text" id="redis-cmd-input" class="filter-input mono" value="GET session:token:usr_991204"/>
+          <button class="btn btn-sm btn-primary" id="btn-exec-redis">Execute</button>
+        </div>
+        <div class="redis-keys-table">
+          <table class="data-table">
+            <thead><tr><th>Key</th><th>Type</th><th>TTL (sec)</th><th>Value Snippet</th></tr></thead>
+            <tbody id="redis-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

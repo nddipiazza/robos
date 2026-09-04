@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=gRPC Client
+Comment=RobOS gRPC Testing & Microservice API Studio
+Exec=/usr/local/share/robos/grpc-client/node_modules/.bin/electron /usr/local/share/robos/grpc-client --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/grpc-client/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;Network;
+StartupWMClass=grpc-client

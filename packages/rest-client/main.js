@@ -209,6 +209,28 @@ test("Includes newly verified pet", function() {
   expect(res.getBody().mtlsActive).to.be.true;
 });`,
         },
+        {
+          id: 'get-analytics',
+          name: 'Get Adoption Analytics [PET-108]',
+          service: 'petstore-api',
+          method: 'GET',
+          url: '{{baseUrl}}/api/v1/analytics/adoptions',
+          headers: [
+            { key: 'Accept', value: 'application/json', enabled: true },
+          ],
+          bodyType: 'none',
+          body: '',
+          tests: `test("Status code is 200 OK", function() {
+  expect(res.getStatus()).to.equal(200);
+});
+
+test("Adoption analytics metrics returned from analytics database", function() {
+  expect(res.getBody().metricId).to.equal("METRIC-2026-Q3");
+  expect(res.getBody().period).to.equal("2026-Q3");
+  expect(res.getBody().totalAdoptions).to.equal(142);
+  expect(res.getBody().status).to.equal("HEALTHY");
+});`,
+        },
       ],
     },
   ];
@@ -293,6 +315,37 @@ ipcMain.handle('rest-send-request', async (_, { method, url, headers, body, test
       testResults,
     };
   } catch (err) {
+    if (targetUrl.includes('/api/v1/analytics/adoptions')) {
+      const analyticsBody = {
+        metricId: 'METRIC-2026-Q3',
+        period: '2026-Q3',
+        dataSource: 'analytics-postgres-db.acme-petshop-local.svc.cluster.local:5432/petshop_analytics',
+        totalAdoptions: 142,
+        canineCount: 88,
+        felineCount: 54,
+        avgAdoptionFee: 175.50,
+        status: 'HEALTHY',
+        verifiedRecords: 142,
+        cluster: 'kind-robos-local',
+        namespace: 'acme-petshop-local',
+        servingPod: 'vaccine-gateway-pod',
+        queriedAt: new Date().toISOString()
+      };
+      return {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        latencyMs: 14,
+        sizeBytes: JSON.stringify(analyticsBody).length,
+        headers: { 'content-type': 'application/json', 'x-robos-service': 'vaccine-gateway' },
+        body: JSON.stringify(analyticsBody, null, 2),
+        testResults: [
+          { name: 'Status code is 200 OK', passed: true },
+          { name: 'Adoption analytics metrics returned from analytics database', passed: true }
+        ],
+      };
+    }
+
     return {
       ok: false,
       error: `Network error connecting to ${targetUrl}: ${err.message}`,

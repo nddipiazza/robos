@@ -94,7 +94,12 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
 | **REST API Client** | Bruno-powered Git-backed REST API client, collection runner, and microservice verifier |
 | **Data Sources** | Knowledge Graph data sources explorer, database schema inspector, and interactive query console |
+| **Relational DB Manager** | DBeaver & DataGrip-inspired SQL database manager, schema explorer, and query console |
+| **NoSQL DB Manager** | MongoDB Compass & RedisInsight-inspired NoSQL document and key-value store manager |
+| **gRPC Client** | BloomRPC & Kreya-inspired Protobuf gRPC microservice testing client |
+| **GraphQL Client** | GraphiQL & Altair-inspired GraphQL schema explorer, query editor, and variables runner |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
+
 
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |

@@ -82,6 +82,8 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
   // ffmpeg requires even dimensions for most codecs
   const w = geometry.w - (geometry.w % 2);
   const h = geometry.h - (geometry.h % 2);
+  const disp = (geometry.display || process.env.DISPLAY || ':0').trim();
+  const fullDisp = disp.includes('.') ? disp : `${disp}.0`;
   const args = [
     '-y',
     '-hide_banner',
@@ -89,7 +91,7 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
     '-f', 'x11grab',
     '-framerate', String(framerate),
     '-video_size', `${w}x${h}`,
-    '-i', `${geometry.display}+${geometry.x},${geometry.y}`,
+    '-i', `${fullDisp}+${geometry.x},${geometry.y}`,
     '-c:v', 'libvpx-vp9',
     '-b:v', '2M',
     '-deadline', 'realtime',

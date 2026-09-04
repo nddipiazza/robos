@@ -1,0 +1,51 @@
+{{- if .Values.analyticsDatabase.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+  namespace: {{ .Values.global.namespace | default "acme-petshop-local" }}
+  labels:
+    app: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+    app.kubernetes.io/component: data-warehouse
+    robos.dev/datasource: {{ .Values.analyticsDatabase.urn | default "urn:robos:datasource:petshop-analytics-db" }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.analyticsDatabase.database | default "petshop_analytics" }}
+            - name: POSTGRES_USER
+              value: {{ .Values.analyticsDatabase.user | default "postgres" }}
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+          ports:
+            - containerPort: {{ .Values.analyticsDatabase.service.port | default 5432 }}
+              name: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+  namespace: {{ .Values.global.namespace | default "acme-petshop-local" }}
+  labels:
+    app: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+    robos.dev/datasource: {{ .Values.analyticsDatabase.urn | default "urn:robos:datasource:petshop-analytics-db" }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.analyticsDatabase.service.port | default 5432 }}
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: {{ .Values.analyticsDatabase.service.name | default "analytics-postgres-db" }}
+{{- end }}

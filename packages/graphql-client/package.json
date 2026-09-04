@@ -1,0 +1,12 @@
+{
+  "name": "graphql-client",
+  "version": "1.0.0",
+  "description": "RobOS GraphQL Testing & Schema Studio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": ["robos", "graphql", "graphiql", "altair", "apollo"],
+  "author": "RobOS Core Platform",
+  "license": "Apache-2.0"
+}

@@ -425,6 +425,52 @@ window.exportC4Diagram = async function() {
   }
 };
 
+window.addDataSourceModal = async function(customDs) {
+  const ds = customDs || {
+    id: 'analytics-postgres-db',
+    name: 'PostgreSQL 16 Analytics Warehouse',
+    type: 'database',
+    technology: 'PostgreSQL 16 / TimescaleDB',
+    repo: 'infra/postgres-analytics',
+    ownerTeam: 'Data Platform & BI',
+    urn: 'urn:robos:datasource:petshop-analytics-db',
+    database: 'petshop_analytics',
+    port: 5432,
+    upstream: ['petstore-api'],
+    downstream: [],
+  };
+
+  if (window.topologyManager?.addDataSource) {
+    const res = await window.topologyManager.addDataSource(ds);
+    if (res.ok) {
+      if (!topology.nodes.some(n => n.id === ds.id)) {
+        topology.nodes.push(ds);
+        topology.links.push({ from: 'petstore-api', to: ds.id, protocol: 'TCP / JDBC (Port 5432)' });
+      }
+      selectedNodeId = ds.id;
+
+      const threadEl = document.getElementById('ai-conversation-thread');
+      if (threadEl) {
+        threadEl.style.display = 'flex';
+        threadEl.innerHTML += `
+          <div class="chat-bubble chat-agent">
+            <div class="chat-sender">✨ RobOS Architecture & KGraph Agent</div>
+            <div style="color: var(--success); font-weight: 600; margin-bottom: 4px;">✓ Data Source Synthesized & Bound to Helm Chart</div>
+            <div>Registered <code>${ds.name}</code> (<code>${ds.urn}</code>). Generated Kubernetes manifest at <code>04-analytics-postgres.yaml</code> ready for live deployment.</div>
+          </div>
+        `;
+        threadEl.scrollTop = threadEl.scrollHeight;
+      }
+
+      renderStats();
+      renderCatalog();
+      renderCanvas();
+      await renderInspector();
+      return res;
+    }
+  }
+};
+
 const searchInput = document.getElementById('catalog-search-input');
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {

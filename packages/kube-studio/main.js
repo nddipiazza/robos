@@ -131,6 +131,18 @@ const KGRAPH_APPS = [
     description: 'Mutual TLS certificate verification microservice for rabies and veterinary records.',
     manifestPath: path.join(__dirname, 'manifests', 'petshop-baseline', '03-vaccine-gateway.yaml'),
   },
+  {
+    id: 'analytics-postgres-db',
+    name: 'Analytics PostgreSQL Database',
+    urn: 'urn:robos:datasource:petshop-analytics-db',
+    repo: 'github.com/acme/petstore-api',
+    type: 'Kubernetes Database',
+    image: 'postgres:16-alpine',
+    ports: '5432/TCP',
+    defaultBranch: 'main',
+    description: 'PostgreSQL 16 analytics data warehouse synthesized from Knowledge Graph for adoption metrics & BI.',
+    manifestPath: path.join(__dirname, 'manifests', 'petshop-baseline', '04-analytics-postgres.yaml'),
+  },
 ];
 
 const HELM_RELEASES = [

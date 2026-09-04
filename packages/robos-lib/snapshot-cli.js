@@ -97,7 +97,12 @@ const PORT_REGISTRY = {
   'kube-studio':       19176,
   'rest-client':       19177,
   'data-sources':      19178,
+  'db-manager':        19179,
+  'nosql-manager':     19180,
+  'grpc-client':       19181,
+  'graphql-client':    19182,
 };
+
 
 
 function getPort(appId) {

@@ -1,0 +1,28 @@
+meta {
+  name: Get Adoption Analytics [PET-108]
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/analytics/adoptions
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("Status code is 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Adoption analytics metrics returned from analytics database", function() {
+    expect(res.getBody().metricId).to.equal("METRIC-2026-Q3");
+    expect(res.getBody().period).to.equal("2026-Q3");
+    expect(res.getBody().totalAdoptions).to.equal(142);
+    expect(res.getBody().status).to.equal("HEALTHY");
+  });
+}

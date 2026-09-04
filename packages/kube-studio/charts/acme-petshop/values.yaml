@@ -1,0 +1,41 @@
+global:
+  environment: local-kind
+  namespace: acme-petshop-local
+
+petstoreApi:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: acme-org/petstore-api
+    tag: v1.3.0
+  service:
+    type: ClusterIP
+    port: 8080
+
+vaccineGateway:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: node
+    tag: 20-alpine
+  service:
+    type: ClusterIP
+    port: 8443
+
+postgresPrimary:
+  enabled: true
+  database: petstore
+  user: petstore_user
+  service:
+    port: 5432
+
+analyticsDatabase:
+  enabled: true
+  urn: urn:robos:datasource:petshop-analytics-db
+  database: petshop_analytics
+  user: postgres
+  service:
+    name: analytics-postgres-db
+    port: 5432
+  storage:
+    size: 20Gi

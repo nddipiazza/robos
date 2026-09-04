@@ -267,6 +267,7 @@ async function init() {
   const kappsRes = await window.api.getKGraphApps();
   if (kappsRes.ok) {
     kgraphApps = kappsRes.apps || [];
+    renderKGraphApps();
   }
 
   await loadNamespaces();

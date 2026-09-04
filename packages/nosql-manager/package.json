@@ -1,0 +1,12 @@
+{
+  "name": "nosql-manager",
+  "version": "1.0.0",
+  "description": "RobOS NoSQL Database Management Studio (MongoDB, Redis, DynamoDB)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": ["robos", "nosql", "mongodb", "redis", "dynamodb", "json"],
+  "author": "RobOS Core Platform",
+  "license": "Apache-2.0"
+}

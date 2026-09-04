@@ -1,0 +1,12 @@
+{
+  "name": "db-manager",
+  "version": "1.0.0",
+  "description": "RobOS Relational Database Management Studio (PostgreSQL, MySQL, Oracle, SQLite, MSSQL)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": ["robos", "database", "postgres", "sql", "oracle", "mysql"],
+  "author": "RobOS Core Platform",
+  "license": "Apache-2.0"
+}

@@ -120,6 +120,28 @@ data:
           return;
         }
 
+        // 5.5 GET /api/v1/analytics/adoptions (PET-108 Analytics Warehouse)
+        if (req.method === 'GET' && url === '/api/v1/analytics/adoptions') {
+          const analyticsData = {
+            metricId: 'METRIC-2026-Q3',
+            period: '2026-Q3',
+            dataSource: 'analytics-postgres-db.acme-petshop-local.svc.cluster.local:5432/petshop_analytics',
+            totalAdoptions: 142,
+            canineCount: 88,
+            felineCount: 54,
+            avgAdoptionFee: 175.50,
+            status: 'HEALTHY',
+            verifiedRecords: 142,
+            cluster: 'kind-robos-local',
+            namespace: 'acme-petshop-local',
+            servingPod: process.env.POD_NAME || 'vaccine-gateway-pod',
+            queriedAt: new Date().toISOString()
+          };
+          res.writeHead(200);
+          res.end(JSON.stringify(analyticsData, null, 2));
+          return;
+        }
+
         // 6. GET /api/v1/health/mtls or /
         if (url === '/api/v1/health/mtls' || url === '/health' || url === '/') {
           res.writeHead(200);

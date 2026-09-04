@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-postgres-db
+  namespace: acme-petshop-local
+  labels:
+    app: analytics-postgres-db
+    app.kubernetes.io/component: data-warehouse
+    robos.dev/task: PET-108
+    robos.dev/datasource: urn:robos:datasource:petshop-analytics-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-postgres-db
+  template:
+    metadata:
+      labels:
+        app: analytics-postgres-db
+        robos.dev/task: PET-108
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_DB
+              value: petshop_analytics
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+              name: postgres
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-postgres-db
+  namespace: acme-petshop-local
+  labels:
+    app: analytics-postgres-db
+    robos.dev/task: PET-108
+    robos.dev/datasource: urn:robos:datasource:petshop-analytics-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: analytics-postgres-db
