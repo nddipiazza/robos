@@ -1,204 +1,136 @@
-# RobOS
-
-**The AI-Native Operating System for Software Teams**
-
-> A purpose-built Linux desktop where AI picks up tickets, writes the code, opens the PR, and asks you to review it — while you drink your coffee.
+# RobOS — AI-First Software Development Operating System
 
 [![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/nddipiazza/robos)](https://github.com/nddipiazza/robos/releases)
 [![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)
-[![Issues](https://img.shields.io/github/issues/nddipiazza/robos)](https://github.com/nddipiazza/robos/issues)
-[![Contributing](https://img.shields.io/badge/contributions-welcome-brightgreen)](#contributing)
+[![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen)](packages/robos-test)
+[![Standards](https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue)](https://nddipiazza.github.io/robos/)
 
-![RobOS Desktop](docs/assets/images/screenshots/robos-desktop.png)
-
-**[Documentation](https://nddipiazza.github.io/robos/)** | **[Getting Started](https://nddipiazza.github.io/robos/getting-started.html)** | **[App Suite](https://nddipiazza.github.io/robos/apps/)** | **[Contributing](CONTRIBUTING.md)**
+> **RobOS is the developer-first operating system and desktop ecosystem engineered for AI Agent Review-Based Development.** Autonomous AI agent swarms investigate issues, plan fixes, write code, run deep E2E test fabrics, provision databases, and synthesize Kubernetes Helm infrastructure — while human developers act as Lead Architects, Reviewers, and Approvers.
 
 ---
 
-## Two Pillars
+## 🚀 The Big Wins (Why RobOS?)
 
-### 1. AI-First Software Delivery
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system**:
 
-30+ purpose-built Electron apps cover every phase of the software delivery lifecycle. AI agents write code, review PRs, manage tasks, and track deployments. Every status transition, notification, and dashboard update happens automatically.
-
-| App | Purpose |
-|-----|---------|
-| **Task Board** | Kanban/list view with state and assignee filters |
-| **Issue Manager** | GitHub Issues client with AI breakdown and workflow transitions |
-| **PR Review Board** | AI-assisted code review with interactive breakpoint inspection |
-| **CI Monitor** | Pipeline monitoring with AI failure diagnosis |
-| **Dev Central** | Developer dashboard: my tasks, PRs, review requests, AI standup |
-| **Manager Dashboard** | Sprint board, velocity charts, deployment tracking |
-| **Workspace Manager** | Auto-provisioned workspaces per task (branch, deps, dev server) |
-| **AI Agent Manager** | Manage Claude, Copilot, Codex, Gemini agent sessions |
-| **Desktop Customizer** | Prompt-driven GNOME customization with versioned rollback |
-| + 20 more | Security, secrets, notifications, automation, widgets, search... |
-
-### 2. Prompt-Shaped Desktop
-
-The **Desktop Customizer** reshapes the entire GNOME experience through natural language and slash commands:
-
-```
-/move-clock left              Move the clock to the left
-/taskbar height 48px          Make the taskbar bigger
-/theme accent #ff6b6b         Change the accent color
-/shortcut super+1 open task-board   Create a keyboard shortcut
-/snapshot save "before experiment"   Save a checkpoint
-/restore last                 Undo the last change
-```
-
-Every change is git-snapshotted with instant rollback. Build entirely new Electron apps from a sentence description.
+- 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
+- 👤 **Ephemeral Linux Agent Profiles & X11 Display Bridging**: AI agents run in isolated ephemeral Linux accounts (`/home/agent-...`) on in-memory `tmpfs` storage with zero residue, rendering UI directly to real/headless X11 displays for visual verification.
+- 🎥 **Autonomous E2E-Driven Dev with Video Proof-of-Work**: Every task is validated in headless `Xvfb` compositors, generating timestamped DOM assertions, 1080p video walkthroughs, and synchronized neural voiceover subtitles (Piper TTS) before asking for human approval.
+- ⚡ **100% Declarative GitOps Storage (`.robos/`)**: Topology, contracts, schemas, and data sources are stored in standard Git repositories, automatically synthesizing deployable Kubernetes manifests and Helm charts.
+- 🗄️ **Comprehensive Developer Protocol & Database Suite**: DBeaver-inspired Relational DB Manager (Postgres, Oracle, MySQL), MongoDB/Redis NoSQL Manager, gRPC Client with Protobuf reflection, GraphQL Introspection Client, and Bruno-powered Git-backed REST client.
 
 ---
 
-## Quick Start
+## 📸 Visual Tour
 
-### Option A: Install on a Laptop (Bare Metal)
+### 1. System Topology & Knowledge Graph Studio
+*Interactive C4 architecture modeling (L1 Context to L3 Components) with Backstage software catalog synchronization and automated Kubernetes manifest synthesis:*
+![System Topology Studio](docs/assets/images/screenshots/topology-db-c4_polyglot_frame.png)
 
-1. Download the **RobOS Installer** for your OS from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases) (Linux AppImage, macOS dmg, Windows exe)
-2. Run it — select your USB drive, click Flash
-3. Boot from USB — RobOS installs unattended in ~15 minutes
+### 2. RobOS Relational DB Manager (PostgreSQL, Oracle, MySQL)
+*Live schema inspector, table data grid, multi-tab SQL console with sub-millisecond execution stats, and DDL generator:*
+![Relational DB Manager](docs/assets/images/screenshots/dev-tools-table_data_grid_frame.png)
 
-Or use the CLI: `sudo bash scripts/flash-robos.sh /dev/sdX`
+### 3. RobOS Data Sources & Multi-Provider Explorer
+*Connect and query relational databases, document stores, AWS S3 contract vaults, and Kafka streaming topics:*
+![Data Sources Explorer](docs/assets/images/screenshots/data-sources-postgres_overview_frame.png)
 
-See the [full guide](https://nddipiazza.github.io/robos/getting-started.html) for details.
+### 4. REST API Client & Collection Runner (Bruno)
+*Git-backed REST collections (`.bru`), collection runner, environment matrices, and automated test assertions:*
+![REST API Client](docs/assets/images/screenshots/data-sources-test_connection_frame.png)
 
-### Option B: Run as a VM
+### 5. Multi-Cluster Kube Studio & Cloud Infrastructure Navigator
+*Multi-cluster Kubernetes management (Kind, EKS, GKE, AKS), Helm release matrices, ArgoCD GitOps sync, and live pod log streaming:*
+![Kube Studio](docs/assets/images/screenshots/topology-db-datasource_synthesized_frame.png)
 
-```bash
-# Download pre-built image from GitHub Releases
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2.qcow2
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
+---
 
-# First boot (provisions the full desktop)
-qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
-  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
-  -drive file=robos-v0.0.2-seed.iso,format=raw,if=virtio \
-  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
-  -device virtio-net-pci,netdev=net0 -display gtk
+## 🔄 AI Agent Review-Based Development
+
+```mermaid
+graph LR
+    subgraph AutonomousAI [Autonomous AI Agent Swarm]
+        T[Task Intake] --> R[Investigation & Breakpoint]
+        R --> P[Architectural Plan & Schema Diff]
+        P --> K[K8s & DB Manifest Synthesis]
+        K --> V[Xvfb E2E Test & Video Proof]
+    end
+
+    subgraph HumanArchitect [Human Lead Architect]
+        P --> G[Interactive /grill-me Interview]
+        G --> K
+        V --> R2[Visual Review & Approval]
+        R2 --> M[1-Click Merge & Deploy]
+    end
 ```
 
-### Option C: Build from Source
+1. **AI Investigates & Reproduces**: When a task is picked up, the AI provisions an isolated workspace, reproduces the problem at a live breakpoint, and drafts a concrete architectural plan.
+2. **Interactive Plan Review (`/grill-me`)**: The lead architect reviews the plan, grills the AI on edge cases, and adjusts requirements before any code is written.
+3. **Autonomous Implementation & Verification**: The AI implements code, runs unit tests, updates API contracts, provisions databases, and runs headless E2E verifications.
+4. **Human Final Approval**: The human reviews the PR, visual diffs, and narrated video walkthrough, then approves with 1 click.
 
+---
+
+## 📦 Installation Options
+
+### Option A: Install as Desktop App Suite (Linux, macOS, Windows)
+Run all 30+ lightweight Electron developer applications on your existing development workstation:
 ```bash
+# Clone the repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
-infra/desktop/build.sh           # Build disk image + seed ISO
-infra/desktop/run.sh             # Starts VM (auto-detects unprovisioned disk & attaches seed ISO)
+
+# Install dependencies and setup environment
+node scripts/install-dev-deps.js
+
+# Launch any application (e.g. Relational DB Manager, System Topology)
+node packages/robos-test/lib/harness.js --app db-manager
+node packages/robos-test/lib/harness.js --app topology-manager
+node packages/robos-test/lib/harness.js --app dev-central
 ```
 
-**SSH**: `ssh -p 2224 robos@localhost` (password: `robos`) | **VNC**: port 5910 | **SPICE**: port 5932
-
----
-
-## Architecture
-
-```
-RobOS Desktop (Ubuntu 26.04 + GNOME)
-├── 30+ Electron Apps ──── dark theme, contextBridge IPC
-├── Desktop Customizer ─── prompt-driven GNOME customization
-├── Event Bus ──────────── automatic status transitions
-├── Rule Engine ────────── event → condition → action
-├── Agent Scheduler ────── background AI agent jobs
-├── Desktop Manager ────── system tray + app launch IPC hub
-└── Shared Libraries ───── robos-lib, robos-icons, robos-ui
-```
-
-- **OS**: Ubuntu 26.04 LTS, GNOME desktop, custom dark navy/cyan theme
-- **Apps**: Electron + vanilla JS, no framework lock-in
-- **IPC**: `contextBridge` + `ipcRenderer.invoke` (never `nodeIntegration: true`)
-- **Events**: Event Bus + Rule Engine for automatic status transitions
-- **Config**: `~/.config/robos/`, all persistent data
-- **Testing**: 440+ unit tests, 22 E2E test suites, VM smoke tests
-
----
-
-## Development
-
-### Testing Apps (Dev Harness)
-
-Run apps outside the VM in a sandboxed environment:
-
+### Option B: Install Full RobOS Ubuntu OS Distro
+Build a bootable QEMU/KVM disk image or write a flashable USB drive with Rufus / Etcher for bare-metal hardware:
 ```bash
-cd packages/robos-test
-npm install
+# Build the disk image + cloud-init ISO
+infra/desktop/build.sh
 
-# Run all unit tests
-npm run test:unit
-
-# Run all E2E tests (requires display)
-npm test
+# Run VM (16GB RAM, all host CPUs, SSH on port 2224, VNC on port 5910)
+infra/desktop/run.sh
 ```
 
-### Deploying to VM
+---
 
+## 🧪 Automated Testing & Continuous Verification
+
+Run the full automated E2E test suite inside an isolated Docker container with Xvfb virtual framebuffers:
 ```bash
-# Single app update
-scp -P 2224 -r packages/<app>/* robos@localhost:/tmp/<app>/
-ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/<app> && \
-  sudo cp -r /tmp/<app> /usr/local/share/robos/<app> && \
-  sudo chmod -R a+rX /usr/local/share/robos/<app> && \
-  cd /usr/local/share/robos/<app> && sudo npm install --quiet"
+# Run full containerized test suite
+./scripts/e2e-container.sh
+
+# Run specific E2E test suite
+xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle.test.js
+xvfb-run -a node --test packages/robos-test/tests/developer-tools/developer-tools-suite.test.js
 ```
 
 ---
 
-## The Model Problem
+## 🌐 Open-Source Standards Integrated ("Reinvent Nothing!")
 
-We validate every feature against a real project: **buildbarn-forms** — a React component library for editing Buildbarn remote build execution configurations. A team of four (Product Owner, Developer, Dev Lead, Manager) takes a story from backlog to deployed, with every status transition automatic.
-
-[Read the full walkthrough](https://nddipiazza.github.io/robos/model-problem/)
-
----
-
-## Project Status
-
-| Wave | Epics | Status |
-|------|-------|--------|
-| Foundation | Desktop, App Framework, Dev Tools | Complete |
-| Infrastructure | Security, Task Management, System Services | Complete |
-| Workspace & Events | Workspace Manager, Event Engine | Complete |
-| AI Agents | Agent Integration (Claude, Copilot, etc.) | Complete |
-| Code Review & CI | PR Review Board, CI Monitor | Complete |
-| Dashboards | Dev Central, Manager Dashboard | Complete |
-| Desktop Customizer | Prompt-driven GNOME customization | Complete |
-| Deep Testing | Expanded test harness, gh stubs, E2E | In Progress |
-
-[Full roadmap](https://nddipiazza.github.io/robos/roadmap.html)
+| Domain | Standard / Project | How RobOS Integrates It |
+|---|---|---|
+| **Knowledge Graph** | [OASIS OSLC Core 3.0](https://open-services.net/), [W3C JSON-LD](https://www.w3.org/TR/json-ld11/) | Full system world state stored in `.robos/knowledge-graph.jsonld`. |
+| **Architecture Topology** | [Backstage](https://backstage.io/), [C4 Model](https://c4model.com/) | Reads Backstage `catalog-info.yaml` and exports C4 Structurizr PlantUML. |
+| **API Contracts** | [OpenAPI 3.1](https://www.openapis.org/), [Pact](https://pact.io/), [AsyncAPI](https://www.asyncapi.com/) | Contract-driven testing and consumer verification gates. |
+| **Entity Schemas** | [Microsoft TypeSpec](https://typespec.io/), [Buf](https://buf.build/) | Single source of truth compiling to TypeScript, Java, and Go DTOs. |
+| **REST Collections** | [UseBruno](https://www.usebruno.com/) | Git-backed `.bru` collections with zero cloud lock-in. |
+| **Local Environments** | [Devcontainers](https://containers.dev/), [Docker](https://www.docker.com/) | Standardized `.devcontainer.json` workspace isolation. |
+| **Agent Protocols** | [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) | Claude Code, Antigravity, Copilot CLI, and Gemini tooling integrations. |
+| **Neural TTS** | [Piper TTS](https://github.com/rhasspy/piper) | Offline neural text-to-speech for synchronized demo video voiceovers. |
 
 ---
 
-## AI Agent Plugin Marketplace & Skills
+## 📖 Documentation
 
-RobOS features a standardized cross-agent plugin marketplace supporting **Claude Code**, **OpenAI Codex**, **Google Antigravity**, **GitHub Copilot**, and **Gemini CLI**.
-
-- 📚 **Agent Instructions**: See [`AGENTS.md`](AGENTS.md) for universal agent guidance and coding conventions.
-- 🧩 **Plugin Marketplace**: See [`plugins/README.md`](plugins/README.md) for instructions on installing and configuring the 22 built-in RobOS skills and slash commands.
-- ⚡ **Quick Install**: Run `./plugins/install.sh` to install and sync skills across all AI agent tools.
-
----
-
-## Contributing
-
-We welcome contributions of all sizes — new apps, bug fixes, docs, and ideas.
-
-- 📖 Read [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide
-- 🤖 Read [AGENTS.md](AGENTS.md) for AI pair programming instructions
-- 🐛 [Open an issue](https://github.com/nddipiazza/robos/issues/new) for bugs or feature requests
-- 💬 [Start a Discussion](https://github.com/nddipiazza/robos/discussions) for ideas and questions
-- 🔍 Browse [`good first issue`](https://github.com/nddipiazza/robos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for easy entry points
-
-Quick start:
-
-```bash
-git clone https://github.com/nddipiazza/robos.git
-cd robos/packages/robos-test
-npm install && node harness.js --list-apps
-```
-
----
-
-## License
-
-MIT
+Visit the official documentation portal for complete guides, architecture specifications, and walkthrough archives:
+👉 **[https://nddipiazza.github.io/robos/](https://nddipiazza.github.io/robos/)**

@@ -1,6 +1,6 @@
 title: RobOS
-tagline: The AI-Native Operating System for Software Teams
-description: "A purpose-built Linux desktop where AI writes code, reviews PRs, manages tasks, and tracks deployments — and the entire OS can be reshaped with a single prompt. Drop expensive hardware and proprietary licenses. Ship software faster on a $700 ThinkPad."
+tagline: AI-First Software Development Operating System
+description: "The developer-first operating system and desktop ecosystem engineered for AI Agent Review-Based Development. Autonomous agent swarms plan, code, test, and verify software while human developers act as Lead Architects and Reviewers."
 url: "https://nddipiazza.github.io"
 baseurl: "/robos"
 
@@ -28,7 +28,7 @@ nav_sort: case_insensitive
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "RobOS &mdash; AI-First Software Development OS. Built with <a href=\"https://github.com/nddipiazza/robos\">open source</a>."
+footer_content: "RobOS &mdash; AI-First Software Development Operating System. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>."
 
 mermaid:
   version: "10.9.0"
@@ -54,9 +54,3 @@ kramdown:
 
 exclude:
   - project-plan/
-  - model-flow.md
-  - robos-apps-plan.md
-  - user-types-and-use-cases.md
-  - workflow-examples.md
-  - mvp-checklist.md
-  - model-problem.md

@@ -1,5 +1,5 @@
 ---
-title: RobOS — The Developer's AI Operating System
+title: RobOS — AI-First Software Development Operating System
 layout: home
 nav_order: 1
 nav_exclude: false
@@ -7,218 +7,144 @@ nav_exclude: false
 
 # RobOS
 
-## You're Still at the Wheel. The AI Just Does the Driving.
+## The AI-Native Operating System for Software Engineering Teams
 {: .fs-9 }
 
-RobOS is an **AI-first development desktop built for software delivery** — every surface, app, and workflow is optimized to keep you shipping. Pick up a ticket, understand a bug, review a fix, merge and deploy — all with AI agents doing the heavy lifting while you stay in command.
+RobOS is a purpose-built developer operating system and desktop ecosystem engineered for **AI Agent Review-Based Software Development**. Autonomous AI agent swarms plan, write code, run deep unit and E2E tests, provision databases, and synthesize Kubernetes infrastructure — while human developers act as Lead Architects, Reviewers, and Approvers.
 
-The entire desktop shell and its 30+ apps are built on **Electron**, running natively on Linux over a GNOME base — giving every tool a consistent, hackable web-tech foundation.
+RobOS can be installed in two ways:
+1. **Desktop Suite**: 30+ lightweight, zero-framework Electron developer applications running natively on your existing Linux, macOS, or Windows workstation.
+2. **RobOS Ubuntu Distro**: A full-featured Ubuntu 26.04-based developer OS provisioned via QEMU/KVM or flashed directly to bare metal via Rufus/Etcher.
 
-The desktop itself is also **fully customizable by AI on the fly**: rearrange your taskbar, swap themes, change the clock format — just by typing a prompt.
 {: .fs-6 .fw-300 }
 
 {: .note }
-> **Early stage — building in public.** RobOS is pre-1.0 with 24 epics, 40+ apps, and new features landing weekly. App demos are shipping on [YouTube]({{ site.baseurl }}{% link roadmap.md %}#youtube-demo-series) with more landing weekly. Star the repo and [subscribe](https://www.youtube.com/@RobOS-e5i) to follow along.
+> **Pre-1.0 Production Architecture.** RobOS is built on open standards: **OASIS OSLC Core 3.0**, **W3C JSON-LD & SHACL**, **Spotify Backstage**, **C4 Architecture Model**, **Microsoft TypeSpec**, **Pact Consumer Contracts**, **Bruno REST Collections**, and **Model Context Protocol (MCP)**.
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Watch on YouTube](https://www.youtube.com/@RobOS-e5i){: .btn .fs-5 .mb-4 .mb-md-0 }
+[System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Browse 30+ Apps]({{ site.baseurl }}{% link apps/index.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
 
-![RobOS Desktop]({{ '/assets/images/screenshots/robos-desktop.png' | relative_url }})
+## The Big Wins (What Sets RobOS Apart)
 
-<p style="text-align: center; color: #8b9dc3; font-size: 0.85rem; margin-top: -0.5rem;">RobOS Desktop — the programmable 52px taskbar shell over a clean GNOME workspace</p>
+RobOS introduces key technological capabilities that do not exist in traditional IDEs or operating systems today:
 
-<div style="margin: 2rem 0;">
-<p style="font-size: 0.95rem; color: #8b9dc3; margin-bottom: 0.75rem;">
-  <strong style="color: #e6edf3;">Before → After:</strong> The default Ubuntu/GNOME desktop, reshaped into a Mac-style dark environment — slim bottom taskbar, floating dock, consistent dark navy theme — entirely through RobOS AI Prompt and Skills. No config files edited by hand.
-</p>
-<img src="{{ '/assets/images/screenshots/robos-desktop-custom.png' | relative_url }}" alt="RobOS Desktop customized to Mac/OS look and feel" style="width: 100%; border-radius: 8px; border: 1px solid #30363d;">
-<p style="text-align: center; color: #8b9dc3; font-size: 0.85rem; margin-top: 0.5rem;">Stock GNOME → RobOS-customized desktop — same hardware, completely different feel</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
+<h3 style="margin-top: 0; color: #00bcd4;">🧠 1. Dual-State SDLC Knowledge Graph</h3>
+<p>Unlike flat code repositories, RobOS maintains a live linked-data knowledge graph (OASIS OSLC / JSON-LD / SHACL) modeling system topology, services, schemas, API contracts, repos, team ownership, and tasks. It tracks <strong>Dual-State Worlds</strong> (<code>main</code> as Live Production vs feature branches as Future State) with semantic blast-radius calculation.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
+<h3 style="margin-top: 0; color: #8b5cf6;">👤 2. Ephemeral Agent Sessions & Host X11 Bridging</h3>
+<p>AI agents don't just run CLI subshells; they execute in isolated ephemeral Linux user accounts (<code>/home/agent-...</code>) backed by zero-residue <strong>tmpfs memory mounts</strong>. Agents bridge directly to host X11/Wayland displays to interact with UI applications, inspect rendered DOM snapshots, and test UI components visually.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #10b981;">
+<h3 style="margin-top: 0; color: #10b981;">🎥 3. Autonomous E2E Driven Development & Video Proof</h3>
+<p>Every development task is validated with containerized <strong>Xvfb headless test fabrics</strong>. AI agents prove their implementations by generating high-resolution video walkthroughs, synchronized WebVTT narration subtitles (using local neural Piper TTS), and timestamped DOM assertions before requesting human review.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #f59e0b;">
+<h3 style="margin-top: 0; color: #f59e0b;">⚡ 4. 100% Declarative GitOps Architecture</h3>
+<p>System topology, data sources, contracts, and work items are stored in standard human-readable <code>.robos/</code> files. When data sources or services are added in System Topology Studio, RobOS automatically synthesizes deployable <strong>Kubernetes manifests and Helm charts</strong> without manual YAML wrangling.</p>
+</div>
+
 </div>
 
 ---
 
-## See It in Action
+## AI Agent Review-Based Development
 
-### Task Planner + Task Implementer — Plan a Sprint, Ship the Code
+Traditional software development puts the burden of investigation, debugging, and initial coding on the human developer. **RobOS inverts this workflow**:
 
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/Ed4kddr9iyE"
-    title="RobOS Task Planner + Task Implementer — Plan to Code in Under 2 Minutes"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-</div>
+```mermaid
+graph LR
+    subgraph AutonomousAI [Autonomous AI Agent Swarm]
+        T[Task Pickup] --> R[Repo & Contract Investigation]
+        R --> B[Breakpoint Reproduction & Fix]
+        B --> K[K8s & DB Synthesis]
+        K --> V[Xvfb E2E Test & Video Proof]
+    end
 
-Type a plain-English sprint description → Task Planner generates a structured GitHub backlog in seconds → Task Implementer picks up an issue and runs the AI agent to completion. [Watch on YouTube](https://youtu.be/Ed4kddr9iyE).
-
-### The Full SDLC in RobOS — Every App, Start to Deploy
-
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1.5rem 0; border-radius: 8px;">
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/SfXUT25HaU4"
-    title="RobOS SDLC Tour — Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-</div>
-
-A rapid-fire walkthrough of every RobOS app in software delivery order — **Dev Central → Issue Manager → Git Projects → Task Planner → AI Prompt → PR Review → CI Monitor → Deploy Tracker**. Start to finish in under four minutes. [Watch on YouTube](https://youtu.be/SfXUT25HaU4).
-
-Individual deep-dive walkthroughs landing weekly on the [channel](https://www.youtube.com/@RobOS-e5i) — browse them all on the [App Suite page]({{ site.baseurl }}{% link apps/index.md %}).
-
----
-
-## Two Pillars
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
-
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
-<h3 style="margin-top: 0;">1. You Command. AI Delivers.</h3>
-<p>30+ purpose-built apps cover every phase of the SDLC — from picking up a ticket to merging code. AI agents investigate bugs, propose fixes, draft PRs, review code, and track deployments. <strong>You stay at the wheel</strong> — reviewing the plan, approving changes, and steering the agents. The AI does the grunt work. You ship without burning out.</p>
-</div>
-
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
-<h3 style="margin-top: 0;">2. A Desktop Built for Developers Who Own It</h3>
-<p>The <strong>RobOS Desktop</strong> is a fully programmable taskbar and shell — not a locked-down OS panel. Pair it with <strong>RobOS Skills</strong> (70+ shell skill packs) and <strong>RobOS AI Prompt</strong> to reshape the entire desktop through plain English: move the taskbar, reformat the clock, pin custom Electron apps, inject widgets, create shortcuts. Every change is git-snapshotted with instant rollback. <em>Your desktop, your rules.</em></p>
-</div>
-
-</div>
-
-### Pillar 2: RobOS Desktop + Skills + AI Prompt
-
-The three pieces of RobOS's customizable desktop work together as a unified layer:
-
-<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0;">
-
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #8b5cf6;">
-<h4 style="margin-top: 0; color: #8b5cf6;">🖥️ RobOS Desktop</h4>
-<p style="margin: 0; font-size: 0.9rem;">A 52px slim taskbar shell that owns the bottom of the screen — showing all open app windows with their icons, a launcher button, clock, and tray. Unlike GNOME's locked panel, every aspect of the RobOS Desktop is programmable through prompts and skills.</p>
-</div>
-
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #00bcd4;">
-<h4 style="margin-top: 0; color: #00bcd4;">⚡ RobOS Skills</h4>
-<p style="margin: 0; font-size: 0.9rem;">A library of 70+ reusable shell skill packs — including a dedicated <strong>Desktop</strong> category with skills for moving the taskbar, reformatting the clock, pinning apps, creating startup entries, injecting widgets, and more. Import community skill packs from any GitHub repo.</p>
-</div>
-
-<div style="background: var(--color-background-alt, #161b22); border-radius: 8px; padding: 1.25rem; border-left: 3px solid #f59e0b;">
-<h4 style="margin-top: 0; color: #f59e0b;">💬 RobOS AI Prompt</h4>
-<p style="margin: 0; font-size: 0.9rem;">A plain-English AI terminal. Describe what you want, select the right skills from the sidebar, and an AI agent runs the commands and returns a structured step-by-step report. No memorizing <code>gsettings</code> keys or digging through config files.</p>
-</div>
-
-</div>
-
-**What you can do with a single prompt:**
-
-```
-"Move the taskbar to the top of the screen"
-"Switch the clock to 24-hour format and show the date"
-"Add my new Pomodoro timer app to the taskbar as a pinned item"
-"Create a keyboard shortcut Super+T to open Tilix"
-"Show me all running processes sorted by memory and kill anything over 2 GB"
-"Build me a CPU usage widget and add it to the desktop"
+    subgraph HumanEngineer [Human Lead Architect]
+        V --> P[Interactive Review & Plan Approval]
+        P --> M[1-Click Merge & Prod Release]
+    end
 ```
 
-Each prompt selects the matching desktop skills, fills in parameters, runs the commands, and shows you exactly what changed — with a snapshot taken before each destructive operation so you can roll back instantly.
-
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 1rem 0; border-radius: 8px;">
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/P8dPsploaks"
-    title="RobOS Desktop Customizer — reshape GNOME in plain English"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px;"></iframe>
-</div>
-
-[Explore RobOS Desktop →]({{ site.baseurl }}{% link desktop-customizer.md %}){: .btn .btn-outline .fs-5 }
+1. **AI Investigates & Reproduces**: When a task is picked up, the AI provisions an isolated workspace, reproduces the problem at a live breakpoint, and drafts a concrete architectural plan.
+2. **Interactive Plan Review (`/grill-me`)**: The lead architect reviews the plan, grills the AI on edge cases, and adjusts requirements before any code is written.
+3. **Autonomous Implementation & Verification**: The AI implements code, runs unit tests, updates API contracts, provisions databases, and runs headless E2E verifications.
+4. **Human Final Approval**: The human reviews the PR, visual diffs, and narrated video walkthrough, then approves with 1 click.
 
 ---
 
-## What Makes RobOS Different
+## Visual Tour of the RobOS Suite
 
-**You're the Commander, Not the Typist** — AI agents investigate bugs, propose fixes, draft PRs, review code, and track deployments. You review the plan, steer the agents, and approve what ships. The AI does the grunt work. You stay sharp on what matters.
+### System Topology & Knowledge Graph Studio
+Define C4 level 1-3 architecture, Backstage software catalogs, and synthesize Kubernetes Helm templates on the fly:
+![RobOS System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
-**Prompt-Driven Desktop** — The RobOS Desktop is a fully programmable shell. Pair it with Skills and AI Prompt to reshape your environment in plain English — move the taskbar, reformat the clock, pin custom Electron apps, inject widgets. Every change snapshots automatically so you can roll back instantly.
+### RobOS Relational DB Manager (PostgreSQL, Oracle, MySQL)
+Inspect live schemas, view data grids, run multi-tab SQL console queries with sub-millisecond latency, and generate DDL:
+![RobOS Relational DB Manager]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
 
-**Task-Driven Workspaces** — Each task maps to its own IDE workspace provisioned automatically: branch checked out, dev environment started, breakpoint set at the issue reproduction point. You walk in, see the bug reproducing, and review the AI's proposed fix.
+### RobOS Data Sources & Knowledge Graph Explorer
+Manage SQL, NoSQL, Object Storage (S3), and Kafka streaming data sources with live connection testing:
+![RobOS Data Sources]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
 
-**Automatic Everything** — Status transitions, notifications, PR descriptions, reviewer checklists, and deployment tracking happen automatically through an event-driven architecture. You focus on decisions, not bookkeeping.
+### RobOS REST API Client (Bruno-Powered)
+Git-backed REST collections, collection runners, environment matrices, and automated test assertions:
+![RobOS REST API Client]({{ '/assets/images/screenshots/data-sources-test_connection_frame.png' | relative_url }})
 
-**Linux on a Budget** — RobOS runs beautifully on a $700 ThinkPad. Ubuntu 26.04 + GNOME, zero OS licensing, and the same environment your CI/CD runs on. [Details →](#the-cost-case)
-
----
-
-## Install RobOS
-
-Flash a USB, boot, and walk into a fully provisioned AI development desktop in under 20 minutes.
-
-[Install →]({{ site.baseurl }}{% link install.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 }
-
----
-
-## The Model Problem: Building Buildbarn Forms
-
-We validate every RobOS feature against a real project: **buildbarn-forms** — a React component library for editing [Buildbarn](https://github.com/buildbarn) remote build execution configurations. Buildbarn is an open-source remote execution system used by organizations running large-scale distributed builds. The buildbarn-forms library reads Buildbarn's protobuf configuration schemas and renders type-safe, validated form UIs for each config section (workers, storage, schedulers, browsers).
-
-A team of four (Product Owner, Developer, Dev Lead, Manager) uses RobOS to take a story from backlog to deployed, with every status transition, notification, and dashboard update happening automatically.
-
-[Read the Full Walkthrough]({{ site.baseurl }}{% link model-problem/index.md %}){: .btn .btn-outline .fs-5 }
+### Kube Studio & Cloud Infrastructure Navigator
+Multi-cluster Kubernetes, ArgoCD GitOps, Helm release tracking, and automated container lifecycle management:
+![Kube Studio]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }})
 
 ---
 
-## 30+ Purpose-Built Apps
+## Installation Options
 
-<div class="app-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin: 2rem 0;">
+### Option 1: Install as Desktop App Suite
+Run the full suite of 30+ RobOS Electron applications on your existing operating system:
+```bash
+# Clone the repository
+git clone https://github.com/nddipiazza/robos.git
+cd robos
 
-{% assign apps = "task-board,issue-manager,pr-review,ci-monitor,dev-central,agents-manager,workspace-manager,dev-tools,security-setup,automation-studio,manager-dashboard,notifications" | split: "," %}
-{% for app in apps %}
-<div style="text-align: center; padding: 1rem;">
-<img src="{{ '/assets/images/icons/' | append: app | append: '.svg' | relative_url }}" alt="{{ app }}" style="width: 48px; height: 48px; margin-bottom: 0.5rem;">
-<div style="font-size: 0.75rem;">{{ app | replace: '-', ' ' | capitalize }}</div>
-</div>
-{% endfor %}
+# Install dependencies
+npm run setup
 
-</div>
-
-[See All Apps]({{ site.baseurl }}{% link apps/index.md %}){: .btn .btn-outline .fs-5 }
-
----
-
-## Architecture at a Glance
-
-```
-RobOS Desktop (Ubuntu 26.04 + GNOME)
-├── 30+ Electron Apps ──── dark theme, contextBridge IPC
-├── RobOS Desktop ──────── programmable 52px taskbar shell
-├── RobOS Skills ───────── 70+ shell skill packs
-├── RobOS AI Prompt ────── plain-English AI agent terminal
-├── Event Bus ──────────── automatic status transitions
-├── Rule Engine ────────── event → condition → action
-├── Agent Scheduler ────── background AI agent jobs
-├── Desktop Manager ────── system tray + app launch IPC hub
-└── Shared Libraries ───── robos-lib, robos-icons, robos-ui
+# Launch any application or developer harness
+node packages/robos-test/lib/harness.js --app db-manager
 ```
 
-[Architecture Deep Dive]({{ site.baseurl }}{% link architecture.md %}){: .btn .btn-outline .fs-5 }
+### Option 2: Install Full RobOS Ubuntu OS Distro
+Build a bootable QEMU/KVM disk image or write a flashable USB drive for bare-metal deployment:
+```bash
+# Build disk image + cloud-init ISO
+infra/desktop/build.sh
+
+# Run virtual machine (16GB RAM, all host CPUs, SSH port 2224)
+infra/desktop/run.sh
+```
 
 ---
 
-## The Cost Case
-{: #the-cost-case }
+## Open-Source Standards Integrated
 
-RobOS runs on commodity Linux hardware. A $700 ThinkPad running Ubuntu runs VS Code, Docker, and every AI SDK identically to a $2,500 MacBook — because AI doesn't care about your OS, it runs in the cloud.
-
-| Line Item | MacBook Pro | RobOS + ThinkPad |
-|:----------|:------------|:-----------------|
-| **Hardware** | $2,499 (M3 Pro 14") | **$699** (ThinkPad E14 Gen 6) |
-| **OS License** | $0 (bundled) | **$0** (Ubuntu LTS) |
-| **Project Mgmt** | $77/yr (Jira Standard) | **$0** (RobOS + GitHub Issues) |
-| **3-Year Total** | **$3,400+** | **~$950** |
-
-For a 50-person org refreshing every 3 years, that's **$100,000+ saved per cycle** — before counting the productivity gains from AI-native tooling. Linux is also where your CI and containers run, eliminating "works on my machine" for good.
+| Capability | Standard / Technology | How RobOS Integrates It |
+|---|---|---|
+| **Knowledge Graph** | [OASIS OSLC Core 3.0](https://open-services.net/), [W3C JSON-LD](https://www.w3.org/TR/json-ld11/) | Full system world state stored in `.robos/knowledge-graph.jsonld`. |
+| **Architecture Topology** | [Backstage](https://backstage.io/), [C4 Model](https://c4model.com/) | Reads Backstage `catalog-info.yaml` and exports C4 Structurizr PlantUML. |
+| **API Contracts** | [OpenAPI 3.1](https://www.openapis.org/), [Pact](https://pact.io/), [AsyncAPI](https://www.asyncapi.com/) | Contract-driven testing and consumer verification gates. |
+| **Entity Schemas** | [Microsoft TypeSpec](https://typespec.io/), [Buf](https://buf.build/) | Single source of truth compiling to TypeScript, Java, and Go DTOs. |
+| **REST Collections** | [UseBruno](https://www.usebruno.com/) | Git-backed `.bru` collections with zero cloud lock-in. |
+| **Local Environments** | [Devcontainers](https://containers.dev/), [Docker](https://www.docker.com/) | Standardized `.devcontainer.json` workspace isolation. |
+| **Agent Protocols** | [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) | Claude Code, Antigravity, Copilot CLI, and Gemini tooling integrations. |
+| **Neural TTS** | [Piper TTS](https://github.com/rhasspy/piper) | Offline neural text-to-speech for synchronized demo video voiceovers. |

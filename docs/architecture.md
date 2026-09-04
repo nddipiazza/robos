@@ -1,13 +1,13 @@
 ---
-title: Architecture
+title: System Architecture
 layout: default
-nav_order: 6
+nav_order: 3
 ---
 
-# Architecture
+# System Architecture
 {: .no_toc }
 
-Technical design of the RobOS platform.
+The 8-pillar declarative architecture, Dual-State Knowledge Graph, and IPC communications powering RobOS.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,262 +18,77 @@ Technical design of the RobOS platform.
 
 ---
 
-## System Overview
+## The 8 Pillars of the RobOS SDLC Engine
+
+RobOS organizes the Software Delivery Lifecycle around 8 declarative linked-data pillars stored in Git:
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
-graph TB
-    subgraph Desktop["RobOS Desktop (Ubuntu 26.04 + GNOME)"]
-        subgraph Apps["Electron Apps (30+)"]
-            TB[Task Board]
-            IM[Issue Manager]
-            PR[PR Review]
-            CI[CI Monitor]
-            DC[Dev Central]
-            WS[Workspace Manager]
-            AM[AI Agent Manager]
-            DT[Dev Tools]
-            MORE[...]
-        end
-
-        subgraph Services["System Services"]
-            DM[Desktop Manager]
-            TD[Toast Daemon]
-            EB[Event Bus]
-            RE[Rule Engine]
-            AS[Agent Scheduler]
-        end
-
-        subgraph Libraries["Shared Libraries"]
-            RL[robos-lib]
-            RI[robos-icons]
-            RS[robos-store]
-            RC[robos-cli]
-        end
+graph TD
+    subgraph KnowledgeGraph [Dual-State SDLC Knowledge Graph]
+        P1[1. System Topology & Backstage C4]
+        P2[2. Human & Agent Organization Roster]
+        P3[3. Entity Schema Studio TypeSpec/Buf]
+        P4[4. API Contract & Governance Engine OpenAPI/Pact]
+        P5[5. Package & Runtime Environment Manager]
+        P6[6. Multi-Repo Workspace Orchestrator]
+        P7[7. Task Dependency DAG Dispatcher]
+        P8[8. 100% Declarative GitOps Storage .robos/]
     end
 
-    subgraph External["External Services"]
-        GH[GitHub / Jira]
-        AI[AI Providers]
-    end
-
-    Apps --> DM
-    Apps --> EB
-    DM --> TD
-    EB --> RE
-    RE --> TD
-    Apps --> GH
-    AM --> AI
-
-    style Desktop fill:#0d1117,stroke:#00bcd4,color:#fff
-    style Apps fill:#161b22,stroke:#30363d,color:#fff
-    style Services fill:#161b22,stroke:#30363d,color:#fff
-    style Libraries fill:#161b22,stroke:#30363d,color:#fff
-    style External fill:#21262d,stroke:#30363d,color:#fff
+    P1 --- P4
+    P3 --- P4
+    P2 --- P7
+    P6 --- P5
+    P7 --- P6
+    P1 --- P8
 ```
+
+1. **System Topology & Backstage C4 Graph**: Models all microservices, frontends, databases, and message brokers with upstream/downstream dependencies and blast-radius tracking.
+2. **Human & Agent Roster**: Stream-aligned team models with role bindings and MCP tool capabilities.
+3. **Entity Schema Studio**: Single source of truth in Microsoft TypeSpec compiling to TypeScript, Java, and Go domain models.
+4. **API Contract & Governance Engine**: OpenAPI 3.1, AsyncAPI, and Pact consumer-driven contract testing.
+5. **Package & Runtime Manager**: Standardized Devcontainer and Nix runtime environments.
+6. **Multi-Repo Workspace Orchestrator**: Git worktree branch checkouts sharing underlying object stores.
+7. **Task Dependency DAG Dispatcher**: Directed Acyclic Graph (DAG) task trees with automated state transitions.
+8. **100% Declarative GitOps Storage**: Everything stored in human-readable `.robos/` YAML/JSON-LD files.
 
 ---
 
-## OS Stack
+## Dual-State World Modeling (Prod vs. Future)
 
-| Layer | Technology | Purpose |
-|:------|:-----------|:--------|
-| Base OS | Ubuntu 26.04 LTS | Stable, well-supported desktop Linux |
-| Virtualization | QEMU/KVM | Host-isolated VM with `/dev/kvm` passthrough |
-| Desktop | GNOME | Panel, systray, window management |
-| Auto-login | LightDM | Passwordless desktop access |
-| Terminal | Tilix + zsh + oh-my-zsh | Developer-friendly terminal |
-| Theme | Custom dark navy/cyan | Consistent `#0d1117` / `#00bcd4` throughout |
-| Provisioning | cloud-init | Stateless first-boot setup |
+Traditional developer environments only know about the files currently on disk. RobOS introduces **Dual-State Worlds**:
 
-### VM Specs
+- **World 1 (Live Production `main`)**: Represents currently deployed production topology, active contracts, and released database schemas.
+- **World 2 (Future Feature Branch)**: Represents the state of the world when the current task or pull request is merged.
 
-| Resource | Value |
-|:---------|:------|
-| RAM | 16 GB |
-| CPUs | All host CPUs |
-| Disk | 100 GB sparse qcow2 |
-| SSH | Port 2224 |
-| VNC | Port 5910 |
-| SPICE | Port 5932 (clipboard sharing) |
+RobOS computes **Semantic Graph Diffs** between the two states:
+- Breaking API contract changes are flagged before code is written.
+- Missing database migration steps are identified during planning.
+- Required downstream service updates are automatically scheduled as dependent tasks.
 
 ---
 
-## Application Architecture
+## IPC Architecture & Shared Libraries
 
-All apps are **Electron + vanilla JavaScript** (no React/Vue/Angular). This keeps the stack simple and the bundle size small.
-
-### IPC Pattern
-
-Every app uses `contextBridge` + `ipcRenderer.invoke` — never `nodeIntegration: true`:
-
-```
-┌─────────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Renderer (HTML)   │───▶│   preload.js     │───▶│    main.js      │
-│   app.js            │    │   contextBridge   │    │    IPC handlers │
-│   style.css         │    │   ipcRenderer     │    │    Node.js APIs │
-└─────────────────────┘    └──────────────────┘    └─────────────────┘
-```
-
-### DOM Snapshot Debug Server
-
-Every app exposes an HTTP debug server (ports 19100-19135) for automated testing:
-
-| Endpoint | Method | Returns |
-|:---------|:-------|:--------|
-| `/health` | GET | `{ ok: true, appId, title }` |
-| `/snapshot` | GET | JSON DOM tree |
-| `/text-snapshot` | GET | Text accessibility tree |
-| `/screenshot` | GET | PNG image |
-| `/eval` | POST | Execute JS in renderer, return result |
-
-### Config Storage
-
-All persistent data lives in `~/.config/robos/`:
-
-```
-~/.config/robos/
-├── settings.json          # Global settings (task servers, preferences)
-├── workflows/             # Workflow definitions (YAML)
-├── journal-events.json    # Work Journal entries
-├── rules.json             # Automation Studio rules
-├── workspace-states/      # Per-workspace state files
-└── electron/              # Per-app Electron userData
-    ├── task-board/
-    ├── issue-manager/
-    └── ...
-```
-
----
-
-## Event-Driven Architecture
-
-The Event Bus is the nervous system of RobOS. Every significant action emits an event, and the Rule Engine matches events to automated actions.
+RobOS uses Electron's secure IPC bridge (`contextBridge`) with zero framework overhead:
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
 sequenceDiagram
-    participant App as Any App
-    participant EB as Event Bus
-    participant RE as Rule Engine
-    participant AR as Action Registry
-    participant TD as Toast Daemon
+    participant UI as Electron Renderer (Vanilla JS)
+    participant Preload as preload.js (contextBridge)
+    participant Main as Electron Main Process
+    participant K8s as Live Kubernetes / Docker / DB
 
-    App->>EB: emit("pr_created", {repo, number, author})
-    EB->>RE: evaluate rules
-    RE->>RE: Match: "PR created → notify reviewers"
-    RE->>AR: fire("notify", {target: "reviewer", tier: "warning"})
-    AR->>TD: send toast notification
-    RE->>AR: fire("jira_transition", {to: "in_review"})
+    UI->>Preload: window.api.deployTaskManifests({ taskId: 'PET-108' })
+    Preload->>Main: ipcRenderer.invoke('kube-deploy-task-manifests')
+    Main->>K8s: kubectl apply -f manifests/petshop-baseline/
+    K8s-->>Main: Workloads Scheduled (postgres:16-alpine)
+    Main-->>Preload: { ok: true, message: 'Deployed' }
+    Preload-->>UI: Update Live Status Pill
 ```
 
-### Event Types
-
-| Category | Events |
-|:---------|:-------|
-| Task | `task_started`, `task_completed`, `task_blocked` |
-| Code | `pr_created`, `pr_merged`, `pr_review_received` |
-| CI/CD | `ci_started`, `ci_passed`, `ci_failed`, `deploy` |
-| System | `app_launched`, `notification_sent`, `config_changed` |
-
-### Rule Structure
-
-Rules are defined in Automation Studio:
-
-```json
-{
-  "event": "ci_completed",
-  "condition": "payload.status eq failure",
-  "actions": [
-    { "type": "notify", "tier": "critical", "category": "ci_cd" }
-  ]
-}
-```
-
----
-
-## Repository Structure
-
-```
-robos/
-├── packages/
-│   ├── <app-id>/                # Each Electron app
-│   │   ├── main.js              # Electron main process
-│   │   ├── preload.js           # contextBridge IPC
-│   │   ├── renderer/            # HTML, JS, CSS
-│   │   ├── icon.svg             # 48x48 Lucide-style icon
-│   │   └── <app-id>.desktop     # freedesktop launcher entry
-│   ├── robos-lib/               # Shared utilities
-│   ├── robos-icons/             # SVG icon registry
-│   ├── robos-store/             # Distributed config store
-│   ├── robos-event-bus/         # Event pub/sub system
-│   ├── robos-rule-engine/       # Event → condition → action
-│   ├── robos-action-registry/   # Available automated actions
-│   ├── robos-scheduler/         # Cron-based agent jobs
-│   ├── robos-test/              # Test framework + harness
-│   └── robos-cli/               # CLI tools
-├── infra/
-│   └── desktop/
-│       ├── build.sh             # Build QEMU disk + cloud-init ISO
-│       ├── run.sh               # Launch VM
-│       └── cloud-init/          # Provisioning config
-└── docs/                        # This documentation site
-```
-
----
-
-## Test Architecture
-
-The test system is designed for **autonomous verification** — an AI agent can run tests and confirm features work without manual intervention.
-
-### Three Test Layers
-
-| Layer | Tool | What It Tests |
-|:------|:-----|:--------------|
-| **Unit** | `node:test` + `node:assert` | Pure logic — utilities, adapters, parsers |
-| **E2E** | Dev Harness + DOM Snapshots | App launches, data renders, interactions work |
-| **VM Smoke** | SSH + debug servers | Full deployment + health check on live VM |
-
-### Dev Harness
-
-The harness launches Electron apps in a sandboxed `$HOME` with:
-- Fake credentials (SSH keys, GitHub auth, GPG keys)
-- CLI stubs (`gh`, `git`, `pass`, `gpg`, `ssh`) returning realistic test data
-- Isolated `~/.config/robos/settings.json` per scenario
-- 17 test scenarios covering credential and config permutations
-
-### Current Coverage
-
-| Metric | Count |
-|:-------|:------|
-| Unit tests | 432 (all passing) |
-| E2E test suites | 22 apps |
-| Test scenarios | 17 |
-| CLI stubs | 8 tools, 24+ command patterns |
-| Debug server ports | 23 apps |
-
----
-
-## Design Conventions
-
-### CSS Theme Variables
-
-```css
-:root {
-  --bg-primary: #0d1117;    /* main background */
-  --bg-card: #161b22;       /* card/panel background */
-  --accent: #00bcd4;        /* primary accent (cyan) */
-}
-```
-
-### Icons
-
-All app icons are 48x48 SVG with Lucide style:
-- `stroke="#00bcd4"`
-- `stroke-width="1.5"`
-- `stroke-linecap="round"`
-- `stroke-linejoin="round"`
-
-### Commits
-
-Conventional Commits format: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`
+### Shared Libraries (`/usr/local/share/robos/`)
+- **`robos-lib`**: Desktop parsing, app categories, and DOM snapshot debug server.
+- **`robos-icons`**: Central Lucide-style SVG icon registry.
+- **`robos-graph`**: OSLC JSON-LD knowledge graph parser and diff engine.
+- **`robos-mcp-router`**: High-performance MCP tool request router.

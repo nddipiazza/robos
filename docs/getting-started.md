@@ -1,13 +1,13 @@
 ---
 title: Getting Started
 layout: default
-nav_order: 3
+nav_order: 2
 ---
 
 # Getting Started
 {: .no_toc }
 
-Install RobOS on bare metal or run it as a VM.
+Install RobOS as a suite of lightweight desktop applications on your current machine, or install the full RobOS Ubuntu Developer OS on bare metal or virtual machine.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,219 +18,99 @@ Install RobOS on bare metal or run it as a VM.
 
 ---
 
-## Option A: Install on a Laptop (Bare Metal)
+## Option 1: Install as Desktop App Suite (Linux, macOS, Windows)
 
-The recommended way to run RobOS for daily use. Works on any x86_64 machine — ThinkPads, Dell, HP, any PC. Three clicks and you're done.
+The easiest way to get started if you already have a workstation running Linux, macOS, or Windows.
 
-### The Easy Way: RobOS Installer App
+### 1. Prerequisites
+- **Node.js 20+** and **npm**
+- **Git**
+- Optional for Kubernetes workflows: **Docker / Kind** and **kubectl**
 
-Download the **RobOS Installer** for your OS from the latest [GitHub Release](https://github.com/nddipiazza/robos/releases):
-
-| Your OS | Download |
-|:--------|:---------|
-| **Linux** | `RobOS-Installer-linux.AppImage` or `.deb` |
-| **macOS** | `RobOS-Installer-mac.dmg` |
-| **Windows** | `RobOS-Installer-win.exe` |
-
-Run the installer and follow the 3-step wizard:
-
-![RobOS Installer — select your USB drive and click Flash]({{ '/assets/images/screenshots/robos-installer.png' | relative_url }})
-
-1. **Select your USB drive** — the installer detects all removable drives
-2. **Download RobOS** — automatically downloads the latest ISO with a progress bar
-3. **Flash** — writes the ISO to your USB drive (confirm before erasing)
-
-Then plug the USB into your target laptop, boot from it, and wait ~15 minutes. Done.
-
-### The Manual Way: Flash with dd/Rufus
-
-If you prefer command-line tools:
-
+### 2. Setup and Launch
 ```bash
-# Download the ISO
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.3.iso
-
-# Linux — flash with dd
-sudo dd if=robos-v0.0.3.iso of=/dev/sdX bs=4M status=progress
-
-# Or use the included CLI tool
-sudo bash scripts/flash-robos.sh /dev/sdX
-```
-
-On **macOS** use [balenaEtcher](https://etcher.balena.io/). On **Windows** use [Rufus](https://rufus.ie/).
-
-{: .warning }
-> **This will erase the target drive.** Double-check you're writing to the USB drive, not your system disk.
-
-### Boot and Wait
-
-1. Insert the USB drive and boot from it (F12 or F2 at BIOS splash for boot menu)
-2. The RobOS installer starts automatically — **no interaction needed**
-3. It installs Ubuntu 26.04, creates the `robos` user, installs GNOME + Node.js + Electron + all 30+ RobOS apps, applies the dark theme, and reboots
-4. After ~15-20 minutes (depending on internet speed), you'll see the RobOS desktop
-
-**Default credentials:** username `robos`, password `robos`
-
-{: .important }
-> The installer will **use the entire disk**. If you need dual-boot or custom partitioning, use Option B (VM) or install Ubuntu manually first, then run `robos-provision.sh` from the release.
-
----
-
-## Option B: Run as a VM (QEMU/KVM)
-
-Best for development, testing, or trying RobOS without modifying your host system.
-
-### From GitHub Releases (Fastest)
-
-Download the pre-built VM image and seed ISO from the latest [release](https://github.com/nddipiazza/robos/releases):
-
-```bash
-# Download artifacts
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2.qcow2
-wget https://github.com/nddipiazza/robos/releases/latest/download/robos-v0.0.2-seed.iso
-
-# First boot — cloud-init provisions the full RobOS desktop
-qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
-  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
-  -drive file=robos-v0.0.2-seed.iso,format=raw,if=virtio \
-  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
-  -device virtio-net-pci,netdev=net0 \
-  -display gtk
-
-# After provisioning completes and VM reboots, run without seed ISO:
-qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
-  -drive file=robos-v0.0.2.qcow2,format=qcow2,if=virtio \
-  -netdev user,id=net0,hostfwd=tcp::2224-:22 \
-  -device virtio-net-pci,netdev=net0 \
-  -display gtk
-```
-
-### From Source
-
-```bash
+# Clone the RobOS repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
-# Build the disk image and cloud-init ISO
+# Run the unified dependency audit and setup
+node scripts/install-dev-deps.js
+
+# Launch any application via harness or desktop entry
+node packages/robos-test/lib/harness.js --app dev-central
+node packages/robos-test/lib/harness.js --app db-manager
+node packages/robos-test/lib/harness.js --app topology-manager
+```
+
+### 3. Running Containerized Headless E2E Tests
+Run the full automated E2E test suite inside an isolated Docker container with Xvfb virtual framebuffers:
+```bash
+./scripts/e2e-container.sh          # Run full headless test suite
+./scripts/e2e-container.sh -i       # Interactive shell
+```
+
+---
+
+## Option 2: Install Full RobOS Ubuntu OS Distro
+
+The complete, dedicated developer environment: Ubuntu 26.04 base, customized dark GNOME desktop, ephemeral agent session daemons, Tilix terminal, LightDM auto-login, and all 30+ pre-installed SDLC apps.
+
+### Bare Metal Deployment (Flash via Rufus / Etcher / dd)
+1. Download the latest `robos-v0.1.0.iso` from [GitHub Releases](https://github.com/nddipiazza/robos/releases).
+2. Write to a USB drive:
+   - **Windows**: Use [Rufus](https://rufus.ie/) (Select GPT, UEFI).
+   - **macOS / Linux**: Use [balenaEtcher](https://etcher.balena.io/) or `dd`:
+     ```bash
+     sudo dd if=robos-v0.1.0.iso of=/dev/sdX bs=4M status=progress conv=fsync
+     ```
+3. Insert the USB drive into your target machine, boot into UEFI, and let cloud-init automatically configure the OS.
+4. Default credentials: `robos` / `robos`.
+
+### Virtual Machine (QEMU/KVM)
+```bash
+# Build the disk image + cloud-init ISO
 infra/desktop/build.sh
 
-# Launch the VM (auto-detects unprovisioned disk & attaches seed ISO on first boot)
+# Run VM (16GB RAM, host CPUs, SSH on port 2224, VNC on port 5910)
 infra/desktop/run.sh
-```
 
-### Prerequisites (VM)
-
-| Requirement | Version | Notes |
-|:------------|:--------|:------|
-| QEMU/KVM | Latest | `/dev/kvm` access required |
-| Node.js | 20+ | For building from source |
-| Host RAM | 16 GB+ | VM uses 16 GB |
-| Disk | 100 GB free | Sparse qcow2 image |
-
-### Connect to the VM
-
-```bash
-# SSH access
+# Connect via SSH
 ssh -p 2224 robos@localhost
-# Password: robos
-
-# VNC access (for GUI): port 5910
-# SPICE access (clipboard sharing): port 5932
 ```
 
-The first boot runs a 7-step provisioning sequence via cloud-init:
-1. System packages and GNOME desktop
-2. Node.js and Electron runtime
-3. Dark theme and desktop customization
-4. All 30+ RobOS Electron apps deployed to `/usr/local/share/robos/`
-5. Desktop panels, widgets, and launcher configuration
-6. LightDM auto-login setup
-7. Final reboot
+---
+
+## First-Run Onboarding & AI Provisioning
+
+When you first launch RobOS or log into the desktop, the **Unified Setup & Onboarding Wizard** guides you through:
+
+1. **Security & GPG Keys**: Initializing the GPG key store and SSH identity for GitHub / Git servers.
+2. **AI Model & MCP Configuration**: Connecting your AI API keys (Anthropic, Gemini, OpenAI) and authenticating Model Context Protocol (MCP) servers with OAuth flows.
+3. **Task Server & Git Workspace**: Connecting your Jira or GitHub issue trackers and checking out target project repositories.
+4. **Knowledge Graph Initialization**: Synthesizing the dual-state SDLC graph in `.robos/topology.yaml`.
 
 ---
 
-## First Login
+## Testing & Verifying Applications
 
-On first login, the **App Launcher** opens automatically — a searchable grid of all RobOS applications.
-
-![App Launcher]({{ '/assets/images/screenshots/app-launcher.png' | relative_url }})
-
-The recommended first steps:
-
-### 1. Security Setup
-
-Open **Security Setup** from the App Launcher. It walks you through 5 steps:
-
-![Security Setup]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
-
-1. **Pinentry** — Configure GPG pin entry
-2. **GPG Key** — Generate a new GPG key for encrypting secrets
-3. **Pass Store** — Initialize the password store
-4. **SSH Key** — Generate an SSH key
-5. **Add to GitHub** — Register the SSH key with GitHub
-
-### 2. Configure a Task Server
-
-Open **Task Servers** and add your GitHub or Jira instance:
-
-![Task Servers]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
-
-| Field | Example |
-|:------|:--------|
-| Type | GitHub |
-| Name | My Project |
-| Org | `acme-corp` |
-| Repo | `my-project` |
-| Auth | Use `gh` CLI |
-
-Click **Test Connection** to verify, then **Save**.
-
-### 3. Define Your Workflow
-
-Open **Workflow Studio** and use the AI generator:
-
-![Workflow Studio]({{ '/assets/images/screenshots/workflow-studio.png' | relative_url }})
-
-1. Describe your process: `agile software team, bugs + features, AI-first development`
-2. Click **Generate** — AI creates issue types and workflow states
-3. Review and **Save**
-
----
-
-## Testing Apps (Dev Harness)
-
-You don't need the VM to test apps during development. The dev harness runs Electron apps locally in a sandbox:
+RobOS applications include built-in DOM snapshot debug servers and automated scenario runners:
 
 ```bash
-cd packages/robos-test
-npm install
+# Run unit & scenario tests
+npm --prefix packages/robos-test test
 
-# Run all unit tests (440 tests)
-npm run test:unit
+# Run developer tools test suite
+xvfb-run -a node --test packages/robos-test/tests/developer-tools/developer-tools-suite.test.js
 
-# Run all E2E tests
-npm test
-```
-
-Test scenarios simulate different credential states (`all-good`, `fresh-install`, `no-gh-auth`, etc.) with sandbox `$HOME` isolation and CLI stubs.
-
----
-
-## Deploying Changes to the VM
-
-```bash
-# Single app update
-scp -P 2224 -r packages/task-board/* robos@localhost:/tmp/task-board/
-ssh -p 2224 robos@localhost "sudo rm -rf /usr/local/share/robos/task-board \
-  && sudo cp -r /tmp/task-board /usr/local/share/robos/task-board \
-  && sudo chmod -R a+rX /usr/local/share/robos/task-board \
-  && cd /usr/local/share/robos/task-board && sudo npm install --quiet"
+# Run full end-to-end topology & kubernetes lifecycle test
+xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle.test.js
 ```
 
 ---
 
 ## Next Steps
 
-- [**The Model Problem**]({{ site.baseurl }}{% link model-problem/index.md %}) — See how a team uses RobOS to build buildbarn-forms
-- [**App Suite**]({{ site.baseurl }}{% link apps/index.md %}) — Explore all 30+ RobOS applications
-- [**Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Understand the technical design
+- [**System Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Explore the 8-pillar SDLC architecture and Knowledge Graph.
+- [**AI Agent Review-Based Development**]({{ site.baseurl }}{% link agent-review-development.md %}) — Learn the plan-code-review-verify workflow.
+- [**App Suite Catalog**]({{ site.baseurl }}{% link apps/index.md %}) — Explore all 30+ applications.
+- [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.
