@@ -73,6 +73,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
   },
   {
+    appId: 'kube-studio',
+    label: 'Kube Studio',
+    category: 'Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 8.5 2 15.5 12 22 22 15.5 22 8.5 12 2"/><circle cx="12" cy="12" r="4"/><path d="M12 2v6"/><path d="M12 16v6"/><path d="M2 8.5l5.2 3"/><path d="M16.8 12.5l5.2 3"/><path d="M22 8.5l-5.2 3"/><path d="M7.2 12.5L2 15.5"/></svg>'
+  },
+  {
     appId: 'group-manager',
     label: 'Group Manager',
     category: 'People',

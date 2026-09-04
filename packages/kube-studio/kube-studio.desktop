@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Kube Studio
+Comment=RobOS Kubernetes, Helm, ArgoCD & Cloud Navigator
+Exec=electron /usr/local/share/robos/kube-studio/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/kube-studio/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;Cloud;RobOS;

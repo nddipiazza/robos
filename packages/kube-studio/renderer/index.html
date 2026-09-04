@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>RobOS Kube Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Top Navigation & Cluster Selector -->
+  <header id="header">
+    <div class="header-left">
+      <div class="app-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+          <circle cx="12" cy="12" r="2" fill="#00bcd4"/>
+        </svg>
+        <span class="app-name">Kube Studio</span>
+      </div>
+      <div class="cluster-context-box">
+        <span class="label">Cluster:</span>
+        <select id="cluster-select" class="select-box"></select>
+        <span id="cluster-provider-badge" class="provider-badge">AWS EKS</span>
+      </div>
+      <div class="namespace-context-box">
+        <span class="label">Namespace:</span>
+        <select id="namespace-select" class="select-box"></select>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-box">
+        <input id="resource-search" type="text" placeholder="Filter resources... (e.g. petstore-api)" autocomplete="off">
+      </div>
+      <button id="btn-refresh" class="btn-icon" title="Refresh Resources">&#8635;</button>
+    </div>
+  </header>
+
+  <!-- Navigation Bar (K9s / Cloud Flavors) -->
+  <nav id="nav-tabs">
+    <button class="nav-tab active" data-tab="pods"><span class="nav-icon">⬡</span> Pods</button>
+    <button class="nav-tab" data-tab="deployments"><span class="nav-icon">⊞</span> Deployments</button>
+    <button class="nav-tab" data-tab="services"><span class="nav-icon">⇄</span> Services</button>
+    <button class="nav-tab" data-tab="ingresses"><span class="nav-icon">⎈</span> Ingresses</button>
+    <button class="nav-tab" data-tab="helm"><span class="nav-icon">⚓</span> Helm Releases</button>
+    <button class="nav-tab" data-tab="argocd"><span class="nav-icon">🐙</span> ArgoCD GitOps</button>
+    <button class="nav-tab nav-tab-vercel" data-tab="vercel"><span class="nav-icon">▲</span> Vercel Deployments</button>
+  </nav>
+
+  <!-- Main View Area -->
+  <main id="main-view">
+    <!-- Resources Table (Pods / Deployments / Services / Ingress) -->
+    <div id="resources-view" class="view-panel active">
+      <div class="table-toolbar">
+        <div class="toolbar-stats" id="toolbar-stats">Loading cluster resources...</div>
+        <div class="toolbar-actions" id="toolbar-actions"></div>
+      </div>
+      <div class="table-container">
+        <table id="resource-table">
+          <thead><tr id="table-headers"></tr></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Helm Releases View -->
+    <div id="helm-view" class="view-panel">
+      <div class="helm-header-banner">
+        <h3>⚓ Helm Releases &amp; Chart Governance</h3>
+        <span class="helm-desc">Installed Helm charts, revisions, values matrix, and rollback controls for the active cluster namespace.</span>
+      </div>
+      <div id="helm-releases-list" class="helm-grid"></div>
+    </div>
+
+    <!-- ArgoCD GitOps View -->
+    <div id="argocd-view" class="view-panel">
+      <div class="argocd-header-banner">
+        <div class="argocd-title-row">
+          <h3>🐙 ArgoCD GitOps Applications</h3>
+          <button id="btn-argocd-sync-all" class="btn btn-accent">Sync All Applications</button>
+        </div>
+        <span class="argocd-desc">Continuous delivery manifests synced directly from infrastructure repositories to target Kubernetes clusters.</span>
+      </div>
+      <div id="argocd-apps-list" class="argocd-grid"></div>
+    </div>
+
+    <!-- Vercel Serverless View -->
+    <div id="vercel-view" class="view-panel">
+      <div class="vercel-header-banner">
+        <div class="vercel-title-row">
+          <h3>▲ Vercel Edge &amp; Serverless Platform</h3>
+          <span class="vercel-status-pill">● Enterprise Edge Connected</span>
+        </div>
+        <span class="vercel-desc">First-class serverless and Next.js frontend deployment management without requiring Kubernetes cluster hosting.</span>
+      </div>
+      <div id="vercel-projects-list" class="vercel-grid"></div>
+    </div>
+  </main>
+
+  <!-- Bottom Drawer: Logs & YAML Describe -->
+  <div id="drawer-panel" class="drawer-panel hidden">
+    <div class="drawer-header">
+      <span id="drawer-title" class="drawer-title">Pod Logs</span>
+      <div class="drawer-controls">
+        <button id="btn-drawer-copy" class="btn btn-tiny">Copy</button>
+        <button id="btn-drawer-close" class="btn-icon">&times;</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <pre id="drawer-content" class="drawer-content"></pre>
+    </div>
+  </div>
+
+  <!-- AI Infrastructure CoPilot Dock -->
+  <footer id="ai-copilot-dock">
+    <div class="copilot-header">
+      <span class="copilot-title">🤖 AI Infrastructure CoPilot</span>
+      <div class="copilot-chips">
+        <button class="chip-btn" data-prompt="Check cluster health and pod status">Cluster Health</button>
+        <button class="chip-btn" data-prompt="Inspect petstore-api mTLS handshake logs">Audit mTLS Handshake</button>
+        <button class="chip-btn" data-prompt="Show Helm release revision and values for acme-petshop">Helm Values</button>
+        <button class="chip-btn" data-prompt="Check ArgoCD GitOps synchronization status">ArgoCD Sync</button>
+        <button class="chip-btn" data-prompt="Inspect Vercel edge deployment status for petstore-web">Vercel Status</button>
+      </div>
+    </div>
+    <div id="ai-copilot-response" class="copilot-response hidden"></div>
+    <div class="copilot-input-row">
+      <robos-ai-textarea id="ai-copilot-input" show-submit="false" show-commands="false" min-height="42"
+        placeholder="Ask AI CoPilot about cluster workloads, logs, Helm values, ArgoCD, or Vercel..."></robos-ai-textarea>
+      <button id="btn-ai-copilot-send" class="btn btn-primary">Ask CoPilot</button>
+    </div>
+  </footer>
+</div>
+
+<script src="../../robos-ui/robos-ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
