@@ -40,6 +40,24 @@ document.getElementById('btn-interactive-review').addEventListener('click', star
 document.getElementById('btn-run-tests').addEventListener('click', () => showAIActionOutput('Running tests locally... (IDE integration required)'));
 document.getElementById('btn-gen-edge-test').addEventListener('click', () => showAIActionOutput('Generating edge-case test... (AI agent integration required)'));
 
+// Header quick-action triggers
+document.getElementById('header-btn-approve')?.addEventListener('click', () => {
+  const actionsTab = document.querySelector('.tab-btn[data-tab="actions"]');
+  if (actionsTab) actionsTab.click();
+  const textarea = document.getElementById('review-body');
+  if (textarea && !textarea.value.trim()) {
+    textarea.value = 'Approved! Verified mTLS client implementation against vaccine-gateway. OpenAPI contract and 14/14 Pact tests confirmed.';
+  }
+  document.getElementById('btn-approve')?.focus();
+});
+
+document.getElementById('header-btn-request-changes')?.addEventListener('click', () => {
+  const actionsTab = document.querySelector('.tab-btn[data-tab="actions"]');
+  if (actionsTab) actionsTab.click();
+  const textarea = document.getElementById('review-body');
+  if (textarea) textarea.focus();
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────
 
 async function init() {

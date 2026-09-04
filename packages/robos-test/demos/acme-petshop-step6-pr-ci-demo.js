@@ -71,10 +71,10 @@ const SCRIPT = [
     minHold: 6000,
   },
   {
-    narration: 'The developer approves the pull request with review feedback, confirming the mTLS contract and test verification.',
+    narration: 'The prominent Review & Approve action is visible in the header and tab strip. We open the Review Decision card to submit the official sign-off.',
     target: '.tab-btn[data-tab="actions"]',
     action: 'click',
-    callout: 'Approve PR & Submit Review Decision',
+    callout: 'Review & Approve Decision Sign-off',
     js: `(() => {
       const tab = document.querySelector('.tab-btn[data-tab="actions"]');
       if (tab) tab.click();

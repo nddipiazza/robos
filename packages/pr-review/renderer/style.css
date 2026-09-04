@@ -84,12 +84,12 @@ header h1 { font-size: 15px; font-weight: 600; }
 /* ── PR Detail ── */
 #pr-detail-panel { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 #detail-header {
-  display: flex; align-items: flex-start; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border);
 }
 .btn-back {
   background: var(--surface-hover); border: 1px solid var(--border); color: var(--text);
-  padding: 4px 10px; font-size: 12px; cursor: pointer; border-radius: 4px; font-family: inherit;
+  padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; font-family: inherit;
   white-space: nowrap;
 }
 .btn-back:hover { background: var(--border); }
@@ -98,18 +98,50 @@ header h1 { font-size: 15px; font-weight: 600; }
 #detail-meta { display: flex; gap: 12px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
 #detail-meta strong { color: var(--text); }
 
+#header-review-bar {
+  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+}
+
 /* ── Tabs ── */
 #detail-tabs {
-  display: flex; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 0 16px; flex-shrink: 0;
+  display: flex; gap: 4px; background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 16px; flex-shrink: 0; align-items: center;
 }
 .tab-btn {
   background: none; border: none; border-bottom: 2px solid transparent;
-  color: var(--muted); padding: 8px 14px; font-size: 12px; cursor: pointer;
-  font-family: inherit; font-weight: 500;
+  color: var(--muted); padding: 9px 14px; font-size: 12px; cursor: pointer;
+  font-family: inherit; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.15s ease;
 }
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Prominent Review & Decision tab */
+.tab-btn-decision {
+  margin-left: auto;
+  color: #3fb950;
+  background: rgba(63, 185, 80, 0.1);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-weight: 600;
+}
+.tab-btn-decision:hover {
+  background: rgba(63, 185, 80, 0.2);
+  color: #56d364;
+  border-color: rgba(63, 185, 80, 0.6);
+}
+.tab-btn-decision.active {
+  background: rgba(63, 185, 80, 0.25);
+  color: #ffffff;
+  border-color: #3fb950;
+  border-bottom: 1px solid #3fb950;
+}
+.tab-badge-icon {
+  font-weight: bold;
+  font-size: 13px;
+}
+
 .tab-content { display: none; padding: 16px; flex: 1; overflow-y: auto; }
 .tab-content.active { display: block; }
 
@@ -153,27 +185,67 @@ header h1 { font-size: 15px; font-weight: 600; }
 .check-desc { font-size: 11px; color: var(--muted); }
 
 /* ── Actions ── */
-.actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.review-decision-banner {
+  background: rgba(0, 188, 212, 0.08);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.banner-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+.actions-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; }
 .action-section {
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+}
+.review-signoff-card {
+  border-color: rgba(63, 185, 80, 0.35);
 }
 .action-section h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .action-buttons { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .btn-action {
-  border: 1px solid var(--border); padding: 6px 14px; font-size: 12px;
+  border: 1px solid var(--border); padding: 7px 16px; font-size: 12px;
   border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;
+}
+.btn-icon-symbol {
+  font-size: 13px;
+  font-weight: bold;
+}
+.btn-prominent {
+  font-size: 13px;
+  padding: 8px 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(63, 185, 80, 0.2);
 }
 .btn-approve { background: #1a3a22; color: var(--green); border-color: #2a5a32; }
-.btn-approve:hover { background: #2a4a32; }
+.btn-approve:hover { background: #235230; color: #56d364; border-color: var(--green); }
 .btn-request-changes { background: #3a2a1a; color: var(--yellow); border-color: #5a4a2a; }
 .btn-request-changes:hover { background: #4a3a2a; }
 .btn-comment { background: var(--surface-hover); color: var(--text); }
 .btn-comment:hover { background: var(--border); }
 .btn-ai { background: var(--accent-dim); color: var(--accent); border-color: rgba(0,188,212,0.3); }
 .btn-ai:hover { background: rgba(0,188,212,0.25); }
+.review-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
 #review-body {
   width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; resize: vertical;
+  border-radius: 6px; padding: 10px; font-size: 12px; font-family: inherit; resize: vertical;
 }
 #review-body:focus { border-color: var(--accent); outline: none; }
 .btn-primary {

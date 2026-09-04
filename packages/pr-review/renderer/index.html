@@ -43,6 +43,10 @@
           <h2 id="detail-title"></h2>
           <div id="detail-meta"></div>
         </div>
+        <div id="header-review-bar">
+          <button id="header-btn-approve" class="btn-action btn-approve" title="Approve & Sign Off PR"><span class="btn-icon-symbol">✓</span> Approve PR</button>
+          <button id="header-btn-request-changes" class="btn-action btn-request-changes" title="Request Changes"><span class="btn-icon-symbol">✕</span> Request Changes</button>
+        </div>
       </div>
 
       <!-- Tab navigation -->
@@ -51,7 +55,7 @@
         <button class="tab-btn" data-tab="ai-review">AI Review</button>
         <button class="tab-btn" data-tab="files">Files Changed</button>
         <button class="tab-btn" data-tab="checks">CI Checks</button>
-        <button class="tab-btn" data-tab="actions">Review Actions</button>
+        <button class="tab-btn tab-btn-decision" data-tab="actions"><span class="tab-badge-icon">✓</span> Review &amp; Approve</button>
       </div>
 
       <!-- Tab content -->
@@ -75,15 +79,20 @@
       </div>
 
       <div id="tab-actions" class="tab-content">
+        <div class="review-decision-banner">
+          <div class="banner-title">Pull Request Review &amp; Approval Decision</div>
+          <div class="banner-subtitle">Submit your formal review decision to approve, request modifications, or comment on this pull request.</div>
+        </div>
         <div class="actions-grid">
-          <div class="action-section">
-            <h3>Review Actions</h3>
+          <div class="action-section review-signoff-card">
+            <h3>Review Decision</h3>
             <div class="action-buttons">
-              <button id="btn-approve" class="btn-action btn-approve">Approve</button>
-              <button id="btn-request-changes" class="btn-action btn-request-changes">Request Changes</button>
-              <button id="btn-comment" class="btn-action btn-comment">Comment</button>
+              <button id="btn-approve" class="btn-action btn-approve btn-prominent"><span class="btn-icon-symbol">✓</span> Approve PR</button>
+              <button id="btn-request-changes" class="btn-action btn-request-changes"><span class="btn-icon-symbol">✕</span> Request Changes</button>
+              <button id="btn-comment" class="btn-action btn-comment"><span class="btn-icon-symbol">💬</span> Comment Only</button>
             </div>
-            <textarea id="review-body" placeholder="Add review comment..." rows="4"></textarea>
+            <label for="review-body" class="review-label">Review Feedback / Approval Summary</label>
+            <textarea id="review-body" placeholder="Leave review feedback or approval notes (e.g. 'Approved! Verified mTLS client implementation against vaccine-gateway.')..." rows="4"></textarea>
           </div>
           <div class="action-section">
             <h3>AI-Powered Actions</h3>
