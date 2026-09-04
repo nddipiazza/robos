@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld("api", {
   getPodLogs: (opts) => ipcRenderer.invoke("kube-get-pod-logs", opts),
   rolloutRestart: (opts) => ipcRenderer.invoke("kube-rollout-restart", opts),
   scaleDeployment: (opts) => ipcRenderer.invoke("kube-scale-deployment", opts),
+  getKGraphApps: () => ipcRenderer.invoke("kube-get-kgraph-apps"),
+  deployApp: (opts) => ipcRenderer.invoke("kube-deploy-app", opts),
   deployTaskManifests: (opts) => ipcRenderer.invoke("kube-deploy-task-manifests", opts),
   getHelmReleases: (opts) => ipcRenderer.invoke("kube-get-helm-releases", opts),
   getArgoCDApps: (opts) => ipcRenderer.invoke("kube-get-argocd-apps", opts),

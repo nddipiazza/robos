@@ -59,14 +59,20 @@
         <div class="toolbar-actions" id="toolbar-actions"></div>
       </div>
       
-      <!-- Empty State Card (Visible when namespace has no workloads) -->
+      <!-- Empty State Card / Knowledge Graph Deployable Apps List -->
       <div id="empty-namespace-card" class="empty-state-card hidden">
-        <div class="empty-icon">⬡</div>
-        <h3 id="empty-state-title">Namespace Connected — No Workloads Found</h3>
-        <p id="empty-state-desc">Connected to namespace <code id="empty-ns-name">acme-petshop-local</code> in active cluster. No active pods or deployments are currently running.</p>
-        <div class="empty-actions">
-          <button id="btn-deploy-baseline" class="btn btn-accent">🚀 Deploy Task PET-101 Baseline Manifests</button>
+        <div class="empty-header-row">
+          <div class="empty-title-block">
+            <span class="empty-icon">☊</span>
+            <div>
+              <h3>Knowledge Graph Deployable Applications</h3>
+              <p>Namespace <code id="empty-ns-name">acme-petshop-local</code> has no running workloads. Deploy applications defined in the RobOS Knowledge Graph using their referenced Git projects.</p>
+            </div>
+          </div>
+          <button id="btn-deploy-all" class="btn btn-accent">Deploy All Applications</button>
         </div>
+
+        <div id="kgraph-apps-list" class="kgraph-apps-grid"></div>
       </div>
 
       <div class="table-container" id="table-wrapper">
@@ -131,7 +137,7 @@
       <span class="copilot-title">🤖 AI Infrastructure CoPilot</span>
       <div class="copilot-chips">
         <button class="chip-btn" data-prompt="Check cluster health and pod status">Cluster Health</button>
-        <button class="chip-btn" data-prompt="Explain task PET-101 baseline deployment architecture">PET-101 Architecture</button>
+        <button class="chip-btn" data-prompt="List deployable applications in Knowledge Graph">Deployable Apps</button>
         <button class="chip-btn" data-prompt="Show Helm release revision and values for acme-petshop">Helm Values</button>
         <button class="chip-btn" data-prompt="Check ArgoCD GitOps synchronization status">ArgoCD Sync</button>
         <button class="chip-btn" data-prompt="Inspect Vercel edge deployment status for petstore-web">Vercel Status</button>

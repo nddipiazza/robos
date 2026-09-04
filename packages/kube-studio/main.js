@@ -83,6 +83,45 @@ let CLUSTERS = [
   { id: 'aks-acme-eu', name: 'Acme AKS Europe', provider: 'azure', region: 'westeurope', version: 'v1.29.4-aks', nodeCount: 8, status: 'Active', isReal: false },
 ];
 
+const KGRAPH_APPS = [
+  {
+    id: 'petstore-api',
+    name: 'Petstore API Service',
+    urn: 'urn:robos:service:petstore-api-k8s',
+    repo: 'github.com/acme/petstore-api',
+    type: 'Kubernetes Deployment',
+    image: 'acme-org/petstore-api:v1.2.0',
+    ports: '8080/TCP',
+    defaultBranch: 'main',
+    description: 'Spring Boot 3 REST microservice implementing OpenAPI 3.1 contracts with mTLS vaccine client.',
+    manifestPath: path.join(__dirname, 'manifests', 'petshop-baseline', '02-petstore-api.yaml'),
+  },
+  {
+    id: 'petstore-db',
+    name: 'PostgreSQL Database',
+    urn: 'urn:robos:service:petstore-db',
+    repo: 'github.com/acme/petstore-api',
+    type: 'Kubernetes Database',
+    image: 'postgres:16-alpine',
+    ports: '5432/TCP',
+    defaultBranch: 'main',
+    description: 'Relational database schema with Flyway migrations for pet inventory and customer records.',
+    manifestPath: path.join(__dirname, 'manifests', 'petshop-baseline', '01-postgres.yaml'),
+  },
+  {
+    id: 'vaccine-gateway',
+    name: 'Vaccine Gateway (mTLS)',
+    urn: 'urn:robos:service:vaccine-gateway-k8s',
+    repo: 'github.com/acme/vaccine-gateway',
+    type: 'Kubernetes Microservice',
+    image: 'acme-org/vaccine-gateway:v1.0.0',
+    ports: '8443/TCP (mTLS)',
+    defaultBranch: 'main',
+    description: 'Mutual TLS certificate verification microservice for rabies and veterinary records.',
+    manifestPath: path.join(__dirname, 'manifests', 'petshop-baseline', '03-vaccine-gateway.yaml'),
+  },
+];
+
 const HELM_RELEASES = [
   {
     name: 'acme-petshop',
@@ -281,17 +320,51 @@ ipcMain.handle('kube-get-resources', (_, { clusterId, namespace, kind } = {}) =>
   return { ok: true, kind: k, items: [] };
 });
 
+// ── Deploy from Knowledge Graph ─────────────────────────────────────────────
+
+ipcMain.handle('kube-get-kgraph-apps', () => {
+  return { ok: true, apps: KGRAPH_APPS };
+});
+
+ipcMain.handle('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
+  const targetNs = namespace || 'acme-petshop-local';
+  const targetBranch = (branch || 'main').trim();
+  const app = KGRAPH_APPS.find(a => a.id === appId) || KGRAPH_APPS[0];
+
+  if (app && app.manifestPath && fs.existsSync(app.manifestPath)) {
+    const res = runKubectl(`apply -f "${app.manifestPath}" -n ${targetNs}`);
+    return {
+      ok: true,
+      appId: app.id,
+      name: app.name,
+      branch: targetBranch,
+      repo: app.repo,
+      namespace: targetNs,
+      message: `✓ Deployed ${app.name} from branch '${targetBranch}' (repo: ${app.repo}) to namespace '${targetNs}'.`,
+      output: res.output || res.error,
+    };
+  }
+
+  return {
+    ok: true,
+    appId: appId || 'petstore-api',
+    branch: targetBranch,
+    namespace: targetNs,
+    message: `✓ Deployed ${appId} from branch '${targetBranch}' to namespace '${targetNs}'.`,
+  };
+});
+
 ipcMain.handle('kube-deploy-task-manifests', (_, { namespace, taskId } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const manifestDir = path.join(__dirname, 'manifests', 'petshop-baseline');
 
   if (fs.existsSync(manifestDir)) {
-    const res = runKubectl(`apply -f "${manifestDir}"`);
+    const res = runKubectl(`apply -f "${manifestDir}" -n ${targetNs}`);
     return {
       ok: true,
       taskId: taskId || 'PET-101',
       namespace: targetNs,
-      message: `✓ Task ${taskId || 'PET-101'} baseline manifests successfully deployed to namespace '${targetNs}'.`,
+      message: `✓ Deployed baseline manifests to namespace '${targetNs}'.`,
       output: res.output || res.error,
     };
   }
@@ -300,7 +373,7 @@ ipcMain.handle('kube-deploy-task-manifests', (_, { namespace, taskId } = {}) => 
     ok: true,
     taskId: taskId || 'PET-101',
     namespace: targetNs,
-    message: `✓ Task ${taskId || 'PET-101'} simulated deployment applied to namespace '${targetNs}'.`,
+    message: `✓ Simulated deployment applied to namespace '${targetNs}'.`,
   };
 });
 
@@ -314,7 +387,7 @@ ipcMain.handle('kube-get-pod-logs', (_, { podName, namespace } = {}) => {
   }
 
   const logs = [
-    `2026-09-04T15:58:12.102Z INFO [${podName || 'petstore-api'}] [main] org.acme.petstore.Application : Starting Application v1.0.0 (PET-101 baseline)`,
+    `2026-09-04T15:58:12.102Z INFO [${podName || 'petstore-api'}] [main] org.acme.petstore.Application : Starting Application v1.0.0 (branch: main)`,
     `2026-09-04T15:58:12.844Z INFO [${podName || 'petstore-api'}] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)`,
     `2026-09-04T15:58:13.204Z INFO [${podName || 'petstore-api'}] [main] org.acme.petstore.config.DatabaseConfig : Connected to PostgreSQL at petstore-db.acme-petshop-local.svc.cluster.local:5432`,
     `2026-09-04T15:58:14.012Z INFO [${podName || 'petstore-api'}] [main] org.acme.petstore.Application : Started Application in 1.91 seconds (process running for 2.488)`,
@@ -337,7 +410,6 @@ metadata:
   namespace: ${namespace || "acme-petshop-local"}
   labels:
     app: ${name || "petstore-api"}
-    robos.dev/task: PET-101
 spec:
   replicas: 2
   selector:
@@ -383,8 +455,8 @@ ipcMain.handle('kube-ask-ai', (_, { prompt, clusterId, namespace }) => {
 
   if (p.includes("restart") || p.includes("crash") || p.includes("health")) {
     reply = `Local Kind cluster '${clusterId || "kind-robos-local"}' is Healthy. In namespace '${namespace || "acme-petshop-local"}', workloads are operating with 0 restarts and instant health check responses.`;
-  } else if (p.includes("pet-101") || p.includes("baseline") || p.includes("deploy")) {
-    reply = "Task PET-101 provides baseline PostgreSQL database schema and Spring Boot REST API deployments configured with health probes, environment configs, and ClusterIP routing.";
+  } else if (p.includes("deploy") || p.includes("kgraph") || p.includes("app")) {
+    reply = "Deployable applications are queried directly from the RobOS Knowledge Graph. Each application references its Git repository project, Kubernetes manifest spec, and target branch (defaulting to 'main').";
   } else if (p.includes("helm") || p.includes("values") || p.includes("chart")) {
     reply = "Helm release governance tracks revisions and value matrices across staging and production targets with instant rollback.";
   } else if (p.includes("argocd") || p.includes("gitops") || p.includes("sync")) {

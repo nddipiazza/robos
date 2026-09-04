@@ -6,6 +6,7 @@ let activeCluster = "kind-robos-local";
 let activeNamespace = "acme-petshop-local";
 let activeTab = "pods";
 let currentResources = [];
+let kgraphApps = [];
 let helmReleases = [];
 let argocdApps = [];
 let vercelProjects = [];
@@ -23,7 +24,8 @@ const tableBody = document.getElementById("table-body");
 const toolbarStats = document.getElementById("toolbar-stats");
 const emptyCard = document.getElementById("empty-namespace-card");
 const emptyNsName = document.getElementById("empty-ns-name");
-const btnDeployBaseline = document.getElementById("btn-deploy-baseline");
+const kgraphAppsContainer = document.getElementById("kgraph-apps-list");
+const btnDeployAll = document.getElementById("btn-deploy-all");
 const drawerPanel = document.getElementById("drawer-panel");
 const drawerTitle = document.getElementById("drawer-title");
 const drawerContent = document.getElementById("drawer-content");
@@ -97,23 +99,22 @@ btnModalConnect.addEventListener("click", async () => {
   }
 });
 
-btnDeployBaseline.addEventListener("click", async () => {
-  btnDeployBaseline.disabled = true;
-  btnDeployBaseline.innerHTML = `<span class="spinner">⏳</span> Deploying PET-101 Baseline Manifests...`;
+btnDeployAll.addEventListener("click", async () => {
+  btnDeployAll.disabled = true;
+  btnDeployAll.innerHTML = `<span class="spinner">⏳</span> Deploying All KGraph Apps...`;
 
-  const res = await window.api.deployTaskManifests({
-    namespace: activeNamespace,
-    taskId: "PET-101",
-  });
-
-  if (res.ok) {
-    toolbarStats.innerHTML = `<span style="color: var(--green)">✓ ${res.message}</span>`;
-    setTimeout(() => {
-      btnDeployBaseline.disabled = false;
-      btnDeployBaseline.innerHTML = `🚀 Deploy Task PET-101 Baseline Manifests`;
-      loadResources();
-    }, 1200);
+  for (const app of kgraphApps) {
+    const branchInput = document.getElementById(`branch-input-${app.id}`);
+    const branch = branchInput ? branchInput.value.trim() : "main";
+    await window.api.deployApp({ appId: app.id, branch: branch || "main", namespace: activeNamespace });
   }
+
+  toolbarStats.innerHTML = `<span style="color: var(--green)">✓ All Knowledge Graph applications deployed to '${activeNamespace}'.</span>`;
+  setTimeout(() => {
+    btnDeployAll.disabled = false;
+    btnDeployAll.innerHTML = `Deploy All Applications`;
+    loadResources();
+  }, 1200);
 });
 
 btnDrawerClose.addEventListener("click", () => {
@@ -175,6 +176,12 @@ async function init() {
     ).join("");
     updateClusterBadge();
   }
+
+  const kappsRes = await window.api.getKGraphApps();
+  if (kappsRes.ok) {
+    kgraphApps = kappsRes.apps || [];
+  }
+
   await loadNamespaces();
 }
 
@@ -191,7 +198,6 @@ async function loadNamespaces() {
   if (nsRes.ok) {
     namespaces = nsRes.namespaces;
     
-    // Ensure activeNamespace is present or select the first
     const hasActive = namespaces.some(n => n.name === activeNamespace);
     if (!hasActive && namespaces.length > 0) {
       activeNamespace = namespaces[0].name;
@@ -237,12 +243,13 @@ function renderResourceTable() {
     items = items.filter(it => it.name.toLowerCase().includes(query) || (it.image || "").toLowerCase().includes(query));
   }
 
-  // Handle Empty State
+  // Handle Empty State with Deployable KGraph Apps
   if (items.length === 0 && !query) {
     tableWrapper.classList.add("hidden");
     emptyCard.classList.remove("hidden");
     emptyNsName.textContent = activeNamespace;
     toolbarStats.innerHTML = `Showing <strong>0</strong> ${activeTab} in <code>${activeNamespace}</code>`;
+    renderKGraphApps();
     return;
   }
 
@@ -354,6 +361,63 @@ function renderResourceTable() {
         <td>${i.age}</td>
       </tr>
     `).join("");
+  }
+}
+
+function renderKGraphApps() {
+  if (!kgraphAppsContainer) return;
+  kgraphAppsContainer.innerHTML = kgraphApps.map(app => `
+    <div class="kgraph-app-card" id="card-${app.id}">
+      <div class="kgraph-card-header">
+        <span class="kgraph-app-name">${app.name}</span>
+        <span class="kgraph-app-type">${app.type}</span>
+      </div>
+      <p class="kgraph-app-desc">${app.description}</p>
+      <div class="kgraph-app-meta">
+        <div><strong>Git Project:</strong> <code>${app.repo}</code></div>
+        <div><strong>Ports:</strong> <code>${app.ports}</code></div>
+      </div>
+      <div class="kgraph-app-deploy-row">
+        <div class="branch-input-group">
+          <span class="branch-label">Branch:</span>
+          <input type="text" id="branch-input-${app.id}" class="branch-input" value="${app.defaultBranch || 'main'}" placeholder="main">
+        </div>
+        <button class="btn btn-accent btn-tiny" onclick="deployKGraphApp('${app.id}', this)">Deploy</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function deployKGraphApp(appId, btnEl) {
+  const branchInput = document.getElementById(`branch-input-${appId}`);
+  const branch = (branchInput ? branchInput.value.trim() : "main") || "main";
+
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span class="spinner">⏳</span> Deploying...`;
+  }
+
+  const res = await window.api.deployApp({
+    appId,
+    branch,
+    namespace: activeNamespace,
+  });
+
+  if (res.ok) {
+    toolbarStats.innerHTML = `<span style="color: var(--green)">✓ ${res.message}</span>`;
+    setTimeout(() => {
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = `Deploy`;
+      }
+      loadResources();
+    }, 1200);
+  } else {
+    alert(`Deploy failed: ${res.error}`);
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = `Deploy`;
+    }
   }
 }
 
@@ -553,5 +617,6 @@ window.viewPodLogs = viewPodLogs;
 window.describeResource = describeResource;
 window.restartDeployment = restartDeployment;
 window.syncArgoCD = syncArgoCD;
+window.deployKGraphApp = deployKGraphApp;
 
 init();

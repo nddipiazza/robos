@@ -16,7 +16,7 @@ const SCRIPT = [
     minHold: 4000,
   },
   {
-    narration: "We open the Cluster Connection wizard to connect a new Cloud Provider or local cluster context with custom namespace routing.",
+    narration: "We open the Cluster Connection wizard to connect our local Kind cluster with custom namespace routing.",
     target: "#btn-add-cluster",
     action: "click",
     callout: "Connect Cloud Provider / Cluster Context",
@@ -34,10 +34,10 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "Connecting to the cluster, we see that acme-petshop-local is freshly initialized and currently contains 0 active workloads.",
+    narration: "Connecting to the cluster, we see the list of deployable applications discovered directly from the RobOS Knowledge Graph.",
     target: "#btn-modal-connect",
     action: "click",
-    callout: "Connected to Empty acme-petshop-local Namespace",
+    callout: "Knowledge Graph Deployable Applications List",
     js: `(() => {
       const btn = document.getElementById("btn-modal-connect");
       if (btn) btn.click();
@@ -45,21 +45,24 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: "To onboard our application, we deploy Task PET-101: Baseline PostgreSQL Database and Petstore API Kubernetes Manifests.",
-    target: "#btn-deploy-baseline",
-    action: "click",
-    callout: "Deploy Task PET-101 Baseline Manifests to Real Kind Cluster",
+    narration: "Each Knowledge Graph entity defines its referenced Git repository and default branch 'main'. We click Deploy on Petstore API Service.",
+    target: "#card-petstore-api",
+    action: "hover",
+    callout: "Deploy Petstore API Service (Branch: main)",
     js: `(() => {
-      const btn = document.getElementById("btn-deploy-baseline");
-      if (btn) btn.click();
+      const card = document.getElementById("card-petstore-api");
+      if (card) {
+        const btn = card.querySelector(".btn-deploy, button.btn-accent");
+        if (btn) btn.click();
+      }
     })()`,
-    minHold: 6000,
+    minHold: 5500,
   },
   {
-    narration: "The real Kind cluster executes kubectl apply, scheduling live pods for petstore-api and petstore-db in Docker with 1/1 Ready status.",
+    narration: "The real Kind cluster executes kubectl apply, scheduling live pods for petstore-api in Docker with 1/1 Ready status.",
     target: "#resource-table",
     action: "hover",
-    callout: "Live Pods Running in Docker: petstore-api & petstore-db",
+    callout: "Live Pods Running in Docker: petstore-api",
     js: `(() => {
       const btn = document.getElementById("btn-refresh");
       if (btn) btn.click();
@@ -86,16 +89,16 @@ const SCRIPT = [
     action: "hover",
     callout: "AI Infrastructure CoPilot Health Diagnostics",
     js: `(() => {
-      const chip = document.querySelector("button[data-prompt='Explain task PET-101 baseline deployment architecture']");
+      const chip = document.querySelector("button[data-prompt='List deployable applications in Knowledge Graph']");
       if (chip) chip.click();
     })()`,
     minHold: 5000,
   },
   {
-    narration: "RobOS successfully unifies task requirements, local Kind Docker clusters, live container execution, and AI infrastructure diagnostics.",
+    narration: "RobOS successfully unifies Knowledge Graph application definitions, Git project references, and live local Kubernetes execution.",
     target: "#header",
     action: "hover",
-    callout: "Real Local Kubernetes Deployment Complete",
+    callout: "Knowledge Graph App Deployment Complete",
     minHold: 4000,
   },
 ];

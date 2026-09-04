@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaccine-gateway
+  namespace: acme-petshop-local
+  labels:
+    app: vaccine-gateway
+    app.kubernetes.io/component: security-gateway
+    robos.dev/service: vaccine-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaccine-gateway
+  template:
+    metadata:
+      labels:
+        app: vaccine-gateway
+    spec:
+      containers:
+        - name: vaccine-gateway
+          image: nginx:alpine
+          ports:
+            - containerPort: 8443
+              name: https
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaccine-gateway
+  namespace: acme-petshop-local
+  labels:
+    app: vaccine-gateway
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8443
+      targetPort: 8443
+      name: https
+  selector:
+    app: vaccine-gateway
