@@ -57,6 +57,17 @@ flowchart LR
 - **Scope**: Natural language task breakdown into a directed acyclic graph (DAG) of interdependent tasks, synchronized bi-directionally with Gitea and Jira.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step1-tasks-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step1-tasks-demo.js)
 
+> **AI Architecture Goal Prompt:**
+> ```text
+> Architect and plan the Acme Petshop distributed polyglot platform:
+> - Backend: Java 21 Spring Boot 3 REST API microservice with OpenAPI 3.1 contracts
+> - Database: PostgreSQL with Flyway automated migrations for pet catalog, inventory, and orders
+> - Frontend: React 18 TypeScript single-page application for customer pet adoption & cart checkout
+> - Event Streaming: Apache Kafka topic pipeline for async pet adoption events & real-time inventory sync
+> - Compliance & Security: Dedicated rabies vaccination certification gateway validating vet health records
+> - Shared Contracts: Reusable TypeSpec models and DTO schemas for cross-service type safety
+> ```
+
 | Natural Language Goal Input | Generated Dependency DAG |
 |:---:|:---:|
 | ![AI Goal Prompt]({{ '/assets/images/screenshots/acme-petshop-step1-prompt_frame.png' | relative_url }}) | ![DAG Graph]({{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }}) |
@@ -70,6 +81,19 @@ flowchart LR
 ### Step 2: Polyglot System Topology & Backstage Catalog
 - **Scope**: Interactive C4 architecture modeling (Level 1 Context to Level 3 Components), Backstage software catalog synchronization, OpenTelemetry tracing, and blast radius calculation.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step2-topology-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step2-topology-demo.js)
+
+> **AI System Topology Prompt:**
+> ```text
+> Synthesizing architecture for Acme Petshop Platform:
+> - Java 21 Spring Boot 3 REST API microservice (petstore-api)
+> - PostgreSQL 16 relational database with Flyway (petstore-db)
+> - React 18 TypeScript web client (petstore-web)
+> - Apache Kafka event bus for async pet adoption (event-bus)
+> - Dedicated rabies vaccine certification gateway (vaccine-gateway)
+> - Reusable TypeSpec & Pact contract models (petstore-common)
+> 
+> Ask me clarifying questions via the interactive survey to refine service boundaries, event streaming, and compliance gateways.
+> ```
 
 | Polyglot C4 Architecture Canvas | Microservice Inspector & Blast Radius |
 |:---:|:---:|
@@ -85,6 +109,15 @@ flowchart LR
 - **Scope**: API contract-first design supporting OpenAPI 3.1, TypeSpec, and AsyncAPI with live Spectral linting, Prism mock servers, and automated breaking-change detection.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step3-contracts-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step3-contracts-demo.js)
 
+> **AI Contract Authoring & Governance Prompt:**
+> ```text
+> Author and compile API contracts for Acme Petshop Platform (urn:robos:project:acme-petshop-platform):
+> - Compile entities/pet.typespec into OpenAPI 3.1 contract for petstore-api (5 endpoints, AdoptionRequest)
+> - Author rabies vaccine verification contract for vaccine-gateway (mTLS security scheme)
+> - Define AsyncAPI 3.0 event streams for Apache Kafka (pet.adopted, inventory.delta)
+> - Run Spectral style governance, Pact consumer verification, and start local Prism mock server.
+> ```
+
 | Multi-Contract Studio Explorer | Event-Driven AsyncAPI Definitions |
 |:---:|:---:|
 | ![Contract Studio]({{ '/assets/images/screenshots/acme-petshop-step3-studio_open_frame.png' | relative_url }}) | ![AsyncAPI Editor]({{ '/assets/images/screenshots/acme-petshop-step3-events_asyncapi_frame.png' | relative_url }}) |
@@ -98,6 +131,18 @@ flowchart LR
 ### Step 4: Git Projects & Dev-Setup Automation
 - **Scope**: Multi-repository synchronization, AI-generated `dev-setup.sh` environment runners, GPG-encrypted secrets management, and automated IDE launch configurations.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js)
+
+> **AI Multi-Repo Scaffolding Prompt:**
+> ```text
+> Scaffold and configure all 6 Acme Petshop polyglot repositories from the project graph:
+> - petstore-web (React 18 / Vite frontend client)
+> - petstore-api (Java 21 Spring Boot 3.3 core REST microservice)
+> - petstore-common (Shared TypeSpec domain models & OpenAPI contracts)
+> - vaccine-gateway (Node.js 20 Fastify mTLS rabies certification gateway)
+> - event-bus (Apache Kafka 3.7 streaming broker & topics)
+> - petstore-db (PostgreSQL 16 relational database & Flyway migrations)
+> Include Docker devcontainers, local build instructions, and environment secrets.
+> ```
 
 | Git Projects Multi-Repo Hub | AI-Generated Dev-Setup Scripts |
 |:---:|:---:|
@@ -113,6 +158,13 @@ flowchart LR
 - **Scope**: IntelliJ IDEA workspace provisioning, local IPC bridge (port 63343), automated run configuration generation, breakpoint reproduction, and AI solution plan review.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js)
 
+> **AI Implementation Plan Prompt (Task PET-105):**
+> ```text
+> Requirement: Implement Rabies Vaccine Verification Gateway & Certification on petstore-api.
+> When adopting a puppy or kitten, verify its certificate via vaccine-gateway over mTLS before approving adoption.
+> Repro Breakpoint: Hit breakpoint in AdoptionService.java line 42 when vaccination record is missing or expired.
+> ```
+
 | IntelliJ IDEA Workspace Provisioning | Breakpoint Reproduction Hit |
 |:---:|:---:|
 | ![IDE Workspace]({{ '/assets/images/screenshots/acme-petshop-step5-ide_open_frame.png' | relative_url }}) | ![Breakpoint Hit]({{ '/assets/images/screenshots/acme-petshop-step5-breakpoint_frame.png' | relative_url }}) |
@@ -126,6 +178,14 @@ flowchart LR
 ### Step 6: PR CI Review & AI Code Analysis
 - **Scope**: Unified pull request review dashboard, AI-powered semantic diff analysis, security audit, automated CI check validation, and one-click merge approvals.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js)
+
+> **AI Code Review & Risk Analysis Prompt:**
+> ```text
+> Perform architectural and security risk analysis on PR #42 (feat: PET-105 mTLS Rabies Verification):
+> - Audit cryptographic cert parsing in VaccineGatewayClient.java
+> - Validate semantic diff against OpenAPI 3.1 AdoptionRequest schema
+> - Confirm 100% pass on Pact consumer contract verification and CI pipeline
+> ```
 
 | Active PR Queue & Status | Side-by-Side Semantic Diff |
 |:---:|:---:|
@@ -183,6 +243,11 @@ flowchart LR
 - **Scope**: Ephemeral microservice deployment upon PR merge, real-time log monitoring, and automated namespace reclamation after verification.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js)
 
+> **AI Deployment Assistant Prompt:**
+> ```text
+> Explain auto-deployment from Knowledge Graph main branch and verify ephemeral namespace reclamation after verification.
+> ```
+
 | Knowledge Graph Application Catalog | Auto-Deployed Microservice Pods |
 |:---:|:---:|
 | ![KG Apps Grid]({{ '/assets/images/screenshots/acme-petshop-step10-kgraph_apps_grid_frame.png' | relative_url }}) | ![Auto-Deployed Pods]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}) |
@@ -196,6 +261,12 @@ flowchart LR
 ### Step 11: Bruno-Powered REST API Client & `.bru` Synthesis
 - **Scope**: Git-backed REST collection editor, automatic synthesis of `.bru` files from OpenAPI specifications, environment variable management, and automated test assertions.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js)
+
+> **AI Bruno Test Generator Prompt:**
+> ```text
+> Validate mTLS Fastify headers and payload format across petstore-api and vaccine-gateway endpoints.
+> Auto-synthesize declarative .bru collection files and assertions from OpenAPI 3.1 contracts.
+> ```
 
 | Git-Backed Collection Tree | Automated `.bru` Synthesis |
 |:---:|:---:|
@@ -225,6 +296,12 @@ flowchart LR
 - **Scope**: Model Context Protocol tool server discovery, configuration, and interactive OAuth popup authentication across Anthropic Claude, Google Antigravity, Copilot CLI, and Gemini.
 - **Test File**: [`packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js)
 
+> **AI MCP Gateway Config Prompt:**
+> ```text
+> Connect Google Antigravity & Claude Code to RobOS System Topology and Task Manager MCP servers via local IPC bridge.
+> Authenticate with OAuth 2.0 PKCE and expose knowledge graph mutations directly into the agent context window.
+> ```
+
 | Google Antigravity MCP Registry | Add Custom MCP Tool Server |
 |:---:|:---:|
 | ![Antigravity MCP]({{ '/assets/images/screenshots/agent-mcp-antigravity_servers_frame.png' | relative_url }}) | ![Add Server Modal]({{ '/assets/images/screenshots/agent-mcp-add_modal_frame.png' | relative_url }}) |
@@ -239,6 +316,12 @@ flowchart LR
 - **Scope**: Knowledge Graph data sources explorer connecting PostgreSQL, MySQL, Oracle, AWS S3 storage buckets, and Kafka streaming topics with live connection handshakes and query consoles.
 - **Test File**: [`packages/robos-test/demos/data-sources-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/data-sources-demo.js)
 
+> **AI Data Source Onboarding Goal:**
+> ```text
+> Register PostgreSQL 16 petstore-db and AWS S3 analytics bucket into Knowledge Graph.
+> Perform live connection handshake, inspect schemas, and query customer pet adoption records.
+> ```
+
 | PostgreSQL Connection Overview | Live Table Schema Inspector |
 |:---:|:---:|
 | ![PostgreSQL Overview]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }}) | ![Schema Inspector]({{ '/assets/images/screenshots/data-sources-schema_inspector_frame.png' | relative_url }}) |
@@ -252,6 +335,13 @@ flowchart LR
 ### Step 16: Developer Tools Suite & Topology Database Kubernetes Lifecycle
 - **Scope**: Full lifecycle spanning developer protocol clients (Relational DB Manager, NoSQL DB Manager, gRPC Client, GraphQL Client) and adding a new PostgreSQL Analytics Database into the Knowledge Graph, auto-synthesizing Kubernetes manifests, deploying to the cluster, seeding test records, and verifying live API endpoints.
 - **Test File**: [`packages/robos-test/demos/topology-db-kube-lifecycle-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/topology-db-kube-lifecycle-demo.js)
+
+> **AI Data Architecture & K8s Lifecycle Goal:**
+> ```text
+> Add PostgreSQL 16 Analytics Warehouse data source node to Acme Petshop System Topology.
+> Auto-synthesize deployable Kubernetes StatefulSet manifests and Helm chart templates.
+> Deploy to Kind cluster, execute DDL schema, seed test adoption records, and verify REST endpoints.
+> ```
 
 | System Topology with Analytics Database | Impact & Blast Radius Inspector |
 |:---:|:---:|
