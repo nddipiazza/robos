@@ -94,6 +94,8 @@ const PORT_REGISTRY = {
   'robos-graph':       19161,
   'adapter-studio':    19167,
   'gitea-browser':     19175,
+  'kube-studio':       19176,
+  'rest-client':       19177,
 };
 
 function getPort(appId) {

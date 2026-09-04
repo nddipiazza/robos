@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS REST API Client (Bruno)</title>
+  <link rel="stylesheet" href="../../robos-ui/robos-ui.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Top Application Bar -->
+  <header id="top-bar">
+    <div class="top-left">
+      <div class="app-brand">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-title">REST Client</span>
+        <span class="brand-sub">Bruno Engine</span>
+      </div>
+      <div class="env-selector-box">
+        <span class="env-label">Env:</span>
+        <select id="env-select" class="env-dropdown"></select>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="badge-git-sync">● Git-Backed (.bru)</div>
+      <div class="badge-cluster">☸️ Kind: acme-petshop-local</div>
+    </div>
+  </header>
+
+  <div id="main-workspace">
+    <!-- Sidebar: Bruno Collections -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h4>COLLECTIONS</h4>
+        <button id="btn-add-request" class="btn-icon-tiny" title="New Request">+</button>
+      </div>
+      <div id="collections-tree" class="collections-tree"></div>
+    </aside>
+
+    <!-- Center: Request Builder & Response Pane -->
+    <main id="request-workspace">
+      <!-- Request Bar -->
+      <div class="request-bar">
+        <select id="request-method" class="method-select">
+          <option value="POST" selected>POST</option>
+          <option value="GET">GET</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+        </select>
+        <div class="url-input-wrapper">
+          <input id="request-url" class="url-input" type="text" value="http://127.0.0.1:8443/api/v1/vaccines/verify">
+        </div>
+        <button id="btn-send-request" class="btn-send">
+          <span class="send-icon">⚡</span> Send
+        </button>
+      </div>
+
+      <!-- Split Area: Request Editor on Top, Response on Bottom -->
+      <div class="split-pane">
+        <!-- Request Editor Tabs -->
+        <section class="request-editor-section">
+          <div class="editor-tabs">
+            <button class="req-tab-btn active" data-tab="body">Body (JSON)</button>
+            <button class="req-tab-btn" data-tab="headers">Headers (<span id="header-count">3</span>)</button>
+            <button class="req-tab-btn" data-tab="params">Params</button>
+            <button class="req-tab-btn" data-tab="tests">Tests / Assertions</button>
+            <button class="req-tab-btn" data-tab="bru">Bruno Source (.bru)</button>
+          </div>
+
+          <div class="req-tab-content-area">
+            <!-- Body Tab -->
+            <div id="tab-body" class="req-tab-panel active">
+              <textarea id="req-body-editor" class="code-editor" spellcheck="false">{
+  "petId": "PET-105-VAX",
+  "vaccineType": "RABIES_V1",
+  "tagNumber": "VAX-2026-9814",
+  "clinicId": "CLINIC-EAST-04"
+}</textarea>
+            </div>
+
+            <!-- Headers Tab -->
+            <div id="tab-headers" class="req-tab-panel">
+              <table class="headers-table">
+                <thead><tr><th>KEY</th><th>VALUE</th></tr></thead>
+                <tbody id="headers-tbody">
+                  <tr><td><code>Content-Type</code></td><td><code>application/json</code></td></tr>
+                  <tr><td><code>X-Client-Cert</code></td><td><code>mTLS-Verified-Client</code></td></tr>
+                  <tr><td><code>Accept</code></td><td><code>application/json</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Params Tab -->
+            <div id="tab-params" class="req-tab-panel">
+              <div class="params-empty">No query parameters defined.</div>
+            </div>
+
+            <!-- Tests Tab -->
+            <div id="tab-tests" class="req-tab-panel">
+              <textarea id="req-tests-editor" class="code-editor" spellcheck="false">test("Status code is 200 OK", function() {
+  expect(res.getStatus()).to.equal(200);
+});
+
+test("Certificate is certified and mTLS verified", function() {
+  expect(res.getBody().verified).to.be.true;
+  expect(res.getBody().status).to.equal("CERTIFIED");
+  expect(res.getBody().mtlsVerified).to.be.true;
+});</textarea>
+            </div>
+
+            <!-- Bruno Source Tab -->
+            <div id="tab-bru" class="req-tab-panel">
+              <pre id="bru-source-view" class="code-viewer"></pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Response Viewer Section -->
+        <section class="response-viewer-section">
+          <div class="response-header-bar">
+            <div class="response-meta-left">
+              <span class="response-label">Response</span>
+              <span id="res-status-pill" class="status-pill status-ready">Ready</span>
+              <span id="res-latency" class="meta-pill hidden">0 ms</span>
+              <span id="res-size" class="meta-pill hidden">0 B</span>
+            </div>
+            <div class="response-tabs">
+              <button class="res-tab-btn active" data-tab="res-body">Body</button>
+              <button class="res-tab-btn" data-tab="res-headers">Headers</button>
+              <button class="res-tab-btn" data-tab="res-tests">Test Results (<span id="test-pass-count">0</span>)</button>
+              <button id="btn-copy-response" class="btn-tiny">Copy</button>
+            </div>
+          </div>
+
+          <div class="response-content-area">
+            <!-- Response Body -->
+            <div id="tab-res-body" class="res-tab-panel active">
+              <div id="response-empty" class="response-placeholder">
+                <span class="placeholder-icon">🚀</span>
+                <p>Click <strong>Send</strong> to execute this request against the live Kubernetes microservice.</p>
+              </div>
+              <pre id="response-json-view" class="response-json hidden"></pre>
+            </div>
+
+            <!-- Response Headers -->
+            <div id="tab-res-headers" class="res-tab-panel">
+              <table class="res-headers-table">
+                <thead><tr><th>HEADER</th><th>VALUE</th></tr></thead>
+                <tbody id="res-headers-tbody"></tbody>
+              </table>
+            </div>
+
+            <!-- Response Tests -->
+            <div id="tab-res-tests" class="res-tab-panel">
+              <div id="res-tests-list" class="test-results-list"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bottom AI Dock -->
+  <footer id="ai-dock">
+    <div class="ai-dock-header">
+      <span class="ai-title">🤖 RobOS AI REST CoPilot</span>
+      <div class="ai-chips">
+        <button class="chip-btn" data-prompt="Generate Bruno request from OpenAPI vaccine-gateway contract">OpenAPI to Bruno</button>
+        <button class="chip-btn" data-prompt="Validate mTLS Fastify headers and payload format">Validate mTLS Headers</button>
+        <button class="chip-btn" data-prompt="Create automated test assertions for 200 OK certificate response">Add Assertions</button>
+      </div>
+    </div>
+    <div id="ai-response-box" class="ai-response hidden"></div>
+  </footer>
+</div>
+
+<script src="../../robos-ui/robos-ui.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

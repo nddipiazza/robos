@@ -92,6 +92,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Agent Scheduler** | Background cron-based AI agent jobs |
 | **Task Servers** | Jira / GitHub task server configuration |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
+| **REST API Client** | Bruno-powered Git-backed REST API client, collection runner, and microservice verifier |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |

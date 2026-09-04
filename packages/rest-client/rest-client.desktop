@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=REST API Client (Bruno)
+Comment=Bruno-powered Git-backed REST API Client & Collection Runner
+Exec=electron /usr/local/share/robos/rest-client/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/rest-client/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;RobOS Dev;
+StartupWMClass=rest-client

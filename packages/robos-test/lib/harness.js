@@ -90,6 +90,7 @@ const PORT_MAP = {
   'adapter-studio': 19167,
   'gitea-browser': 19175,
   'kube-studio': 19176,
+  'rest-client': 19177,
 };
 
 // Track all launched apps for process-exit cleanup

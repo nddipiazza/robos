@@ -1,0 +1,38 @@
+meta {
+  name: Verify Rabies Vaccine Certificate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/vaccines/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Client-Cert: mTLS-Verified-Client
+  Accept: application/json
+}
+
+body:json {
+  {
+    "petId": "PET-105-VAX",
+    "vaccineType": "RABIES_V1",
+    "tagNumber": "VAX-2026-9814",
+    "clinicId": "CLINIC-EAST-04"
+  }
+}
+
+tests {
+  test("Status code is 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Certificate is certified and mTLS verified", function() {
+    expect(res.getBody().verified).to.be.true;
+    expect(res.getBody().status).to.equal("CERTIFIED");
+    expect(res.getBody().mtlsVerified).to.be.true;
+  });
+}
