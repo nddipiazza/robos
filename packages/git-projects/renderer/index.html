@@ -8,7 +8,18 @@
   <link rel="stylesheet" href="../node_modules/codemirror/theme/material-darker.css"/>
   <link rel="stylesheet" href="../node_modules/highlight.js/styles/github-dark.min.css"/>
   <link rel="stylesheet" href="style.css"/>
-  <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+  <script>
+    (function() {
+      const s = document.createElement('script');
+      s.src = '../../robos-icons/builtin-apps-browser.js';
+      s.onerror = () => {
+        const s2 = document.createElement('script');
+        s2.src = '/usr/local/share/robos/robos-icons/builtin-apps-browser.js';
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
 <div id="intellij-wait-banner" class="intellij-wait-banner hidden">
@@ -488,7 +499,18 @@
 <script src="../node_modules/codemirror/mode/markdown/markdown.js"></script>
 <script src="../node_modules/marked/lib/marked.umd.js"></script>
 <script src="../node_modules/highlight.js/highlight.min.js"></script>
-<script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
+<script>
+  (function() {
+    const s = document.createElement('script');
+    s.src = '../../robos-ui/robos-ui.js';
+    s.onerror = () => {
+      const s2 = document.createElement('script');
+      s2.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  })();
+</script>
 <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
 <script src="app.js"></script>
 </body>
