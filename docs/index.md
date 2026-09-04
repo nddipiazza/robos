@@ -142,7 +142,7 @@ flowchart LR
 1. **Headless Virtual Compositor (`Xvfb + Picom`)**: The entire test suite executes in a headless 1920x1080 virtual framebuffer with full hardware compositing emulation.
 2. **Deterministic DOM Assertions**: Tests wait for DOM elements, verify table grids, test live SQL queries, and validate HTTP 200/201 response status codes.
 3. **Synchronized Video & Subtitles**: Generates complete 1080p WebM video recordings with subtitle tracks synthesized via local, offline **Piper neural text-to-speech (TTS)**.
-4. **Walkthrough Archive**: All demo recordings and transcripts are permanently archived to `~/.robos/development/walkthroughs/<slug>/` with timestamped historical logs.
+4. **Walkthrough Verification**: All demo recordings and transcripts are permanently packaged with timestamped historical logs and verified DOM assertions.
 
 ---
 

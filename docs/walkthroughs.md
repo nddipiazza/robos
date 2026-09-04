@@ -7,7 +7,7 @@ nav_order: 5
 # E2E Walkthroughs & Proof of Work
 {: .no_toc }
 
-Every RobOS capability is validated through containerized headless E2E test suites with automated video capture, neural voiceovers, and DOM snapshot inspection across 60+ verified scenario archives.
+Every RobOS capability is validated through containerized headless E2E test suites with automated video capture, neural voiceovers, and DOM snapshot inspection across verified scenario walkthroughs.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -25,7 +25,7 @@ In RobOS, tests are not an afterthought — they are the primary driver of devel
 1. **Headless Compositor (`Xvfb + Picom`)**: Runs at 1920x1080 resolution with hardware compositing emulation.
 2. **DOM Snapshot Inspection**: Evaluates DOM hierarchy via snapshot CLI ports (`19100–19182`).
 3. **Synchronized Video Generation**: Records 1080p WebM videos with WebVTT subtitle tracks generated via offline Piper neural TTS.
-4. **Walkthrough Archive**: Automatically archived to `~/.robos/development/walkthroughs/<slug>/` with timestamped historical snapshots.
+4. **Walkthrough Recordings**: Test videos, WebVTT transcripts, and DOM assertions are bundled and verified with each task execution.
 
 ---
 
@@ -55,8 +55,7 @@ flowchart LR
 
 ### Step 1: Task Planner & Gitea DAG Backlog
 - **Scope**: Natural language task breakdown into a directed acyclic graph (DAG) of interdependent tasks, synchronized bi-directionally with Gitea and Jira.
-- **Test File**: `packages/robos-test/tests/tasks/step1-tasks.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step1-tasks/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step1-tasks-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step1-tasks-demo.js)
 
 | Natural Language Goal Input | Generated Dependency DAG |
 |:---:|:---:|
@@ -70,8 +69,7 @@ flowchart LR
 
 ### Step 2: Polyglot System Topology & Backstage Catalog
 - **Scope**: Interactive C4 architecture modeling (Level 1 Context to Level 3 Components), Backstage software catalog synchronization, OpenTelemetry tracing, and blast radius calculation.
-- **Test File**: `packages/robos-test/tests/topology/step2-topology.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step2-topology/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step2-topology-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step2-topology-demo.js)
 
 | Polyglot C4 Architecture Canvas | Microservice Inspector & Blast Radius |
 |:---:|:---:|
@@ -85,8 +83,7 @@ flowchart LR
 
 ### Step 3: Contract Studio, TypeSpec & AsyncAPI
 - **Scope**: API contract-first design supporting OpenAPI 3.1, TypeSpec, and AsyncAPI with live Spectral linting, Prism mock servers, and automated breaking-change detection.
-- **Test File**: `packages/robos-test/tests/contracts/step3-contracts.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step3-contracts/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step3-contracts-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step3-contracts-demo.js)
 
 | Multi-Contract Studio Explorer | Event-Driven AsyncAPI Definitions |
 |:---:|:---:|
@@ -100,8 +97,7 @@ flowchart LR
 
 ### Step 4: Git Projects & Dev-Setup Automation
 - **Scope**: Multi-repository synchronization, AI-generated `dev-setup.sh` environment runners, GPG-encrypted secrets management, and automated IDE launch configurations.
-- **Test File**: `packages/robos-test/tests/git-projects/step4-git-projects.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step4-git-projects/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js)
 
 | Git Projects Multi-Repo Hub | AI-Generated Dev-Setup Scripts |
 |:---:|:---:|
@@ -115,8 +111,7 @@ flowchart LR
 
 ### Step 5: IDE Execution & Breakpoint Reproduction
 - **Scope**: IntelliJ IDEA workspace provisioning, local IPC bridge (port 63343), automated run configuration generation, breakpoint reproduction, and AI solution plan review.
-- **Test File**: `packages/robos-test/tests/ide-execution/step5-ide-execution.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step5-ide-execution/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js)
 
 | IntelliJ IDEA Workspace Provisioning | Breakpoint Reproduction Hit |
 |:---:|:---:|
@@ -130,8 +125,7 @@ flowchart LR
 
 ### Step 6: PR CI Review & AI Code Analysis
 - **Scope**: Unified pull request review dashboard, AI-powered semantic diff analysis, security audit, automated CI check validation, and one-click merge approvals.
-- **Test File**: `packages/robos-test/tests/pr-review/step6-pr-ci.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step6-pr-ci/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js)
 
 | Active PR Queue & Status | Side-by-Side Semantic Diff |
 |:---:|:---:|
@@ -145,8 +139,7 @@ flowchart LR
 
 ### Step 7: Deploy Tracker & Progressive Rollouts
 - **Scope**: Multi-environment deployment pipeline tracking (Development, Staging, Production), canary rollouts, DORA metrics KPI dashboards, and instant rollback triggers.
-- **Test File**: `packages/robos-test/tests/deploy-tracker/step7-deploy-tracker.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step7-deploy-tracker/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step7-deploy-tracker-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step7-deploy-tracker-demo.js)
 
 | DORA Metrics & Release KPIs | Staging Environment Deployment Filter |
 |:---:|:---:|
@@ -160,8 +153,7 @@ flowchart LR
 
 ### Step 8: Kube Studio & Cloud Infrastructure Navigator
 - **Scope**: Multi-cluster Kubernetes management (Kind, EKS, GKE, AKS), Helm release matrices, ArgoCD GitOps sync, and live container log streaming.
-- **Test File**: `packages/robos-test/tests/kube-studio/step8-kube-studio.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step8-kube-studio/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step8-kube-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step8-kube-studio-demo.js)
 
 | Real-Time Kubernetes Pods Grid | Helm Release Catalog & Versions |
 |:---:|:---:|
@@ -175,8 +167,7 @@ flowchart LR
 
 ### Step 9: Real Kubernetes Cluster Deployment
 - **Scope**: Live deployment onto local Kind clusters, cluster health discovery, live namespace provisioning, and pod lifecycle verification.
-- **Test File**: `packages/robos-test/tests/kube-studio/step9-real-kube-e2e.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step9-real-kube-e2e/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step9-real-kube-e2e-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step9-real-kube-e2e-demo.js)
 
 | Connect Live Kubernetes Cluster | Automated Task-Driven Deploy |
 |:---:|:---:|
@@ -190,8 +181,7 @@ flowchart LR
 
 ### Step 10: Continuous Deployment & Automatic Reclaim
 - **Scope**: Ephemeral microservice deployment upon PR merge, real-time log monitoring, and automated namespace reclamation after verification.
-- **Test File**: `packages/robos-test/tests/deploy-tracker/step10-continuous-deploy.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step10-continuous-deploy/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js)
 
 | Knowledge Graph Application Catalog | Auto-Deployed Microservice Pods |
 |:---:|:---:|
@@ -205,8 +195,7 @@ flowchart LR
 
 ### Step 11: Bruno-Powered REST API Client & `.bru` Synthesis
 - **Scope**: Git-backed REST collection editor, automatic synthesis of `.bru` files from OpenAPI specifications, environment variable management, and automated test assertions.
-- **Test File**: `packages/robos-test/tests/rest-client/step11-bruno-rest-client.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step11-bruno-rest-client/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js)
 
 | Git-Backed Collection Tree | Automated `.bru` Synthesis |
 |:---:|:---:|
@@ -220,8 +209,7 @@ flowchart LR
 
 ### Step 12: REST Collection Runner & PR Verification Gate
 - **Scope**: Headless and interactive REST collection suite execution, environment matrices, latency scorecards, and PR verification quality gates.
-- **Test File**: `packages/robos-test/tests/rest-client/step12-collection-runner.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step12-collection-runner/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step12-collection-runner-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step12-collection-runner-demo.js)
 
 | Multi-Request Collection Runner | Real-Time Execution Progress |
 |:---:|:---:|
@@ -235,8 +223,7 @@ flowchart LR
 
 ### Step 13: Model Context Protocol (MCP) Agent Management
 - **Scope**: Model Context Protocol tool server discovery, configuration, and interactive OAuth popup authentication across Anthropic Claude, Google Antigravity, Copilot CLI, and Gemini.
-- **Test File**: `packages/robos-test/tests/mcp-servers/agy-mcp-workflow.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/agent-mcp-management/`
+- **Test File**: [`packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js)
 
 | Google Antigravity MCP Registry | Add Custom MCP Tool Server |
 |:---:|:---:|
@@ -250,8 +237,7 @@ flowchart LR
 
 ### Step 15: RobOS Data Sources Multi-Database Explorer
 - **Scope**: Knowledge Graph data sources explorer connecting PostgreSQL, MySQL, Oracle, AWS S3 storage buckets, and Kafka streaming topics with live connection handshakes and query consoles.
-- **Test File**: `packages/robos-test/tests/data-sources/data-sources.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step15-data-sources/`
+- **Test File**: [`packages/robos-test/demos/data-sources-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/data-sources-demo.js)
 
 | PostgreSQL Connection Overview | Live Table Schema Inspector |
 |:---:|:---:|
@@ -265,8 +251,7 @@ flowchart LR
 
 ### Step 16: Developer Tools Suite & Topology Database Kubernetes Lifecycle
 - **Scope**: Full lifecycle spanning developer protocol clients (Relational DB Manager, NoSQL DB Manager, gRPC Client, GraphQL Client) and adding a new PostgreSQL Analytics Database into the Knowledge Graph, auto-synthesizing Kubernetes manifests, deploying to the cluster, seeding test records, and verifying live API endpoints.
-- **Test File**: `packages/robos-test/tests/e2e/topology-db-kube-lifecycle.test.js`
-- **Archive**: `~/.robos/development/walkthroughs/acme-petshop-step16-topology-db-e2e/`
+- **Test File**: [`packages/robos-test/demos/topology-db-kube-lifecycle-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/topology-db-kube-lifecycle-demo.js)
 
 | System Topology with Analytics Database | Impact & Blast Radius Inspector |
 |:---:|:---:|
@@ -284,11 +269,11 @@ flowchart LR
 
 ## Section 2: Core Platform Subsystems & Subagent Scenarios
 
-Beyond the reference petshop application, each RobOS core subsystem has dedicated verified scenario archives:
+Beyond the reference petshop application, each RobOS core subsystem has dedicated verified scenario test runners:
 
 ### SDLC Knowledge Graph & Dual-State Diff Engine
-- **Archives**: `~/.robos/development/walkthroughs/robos-graph/`, `graph-diff/`, `gitops-schema/`, `graph-copilot/`
 - **Scope**: OSLC Core 3.0 / W3C JSON-LD graph parsing, multi-branch world state versioning, Gherkin BDD scenario linking, and AI-assisted graph queries.
+- **Test Files**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`gitops-schema-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/gitops-schema-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
 
 | SDLC Knowledge Graph Explorer | Dual-State Graph Semantic Diff |
 |:---:|:---:|
@@ -297,8 +282,8 @@ Beyond the reference petshop application, each RobOS core subsystem has dedicate
 ---
 
 ### Ephemeral Linux Profiles & Zero-Residue Isolation
-- **Archives**: `~/.robos/development/walkthroughs/robos-profiled/`, `robos-profiled-tmpfs/`, `robos-profiled-display/`, `robos-profiled-zero-residue/`
 - **Scope**: Creation and destruction of sandboxed Linux agent profiles backed by `tmpfs` in-memory filesystems with direct host X11/Wayland display forwarding.
+- **Test Files**: [`robos-profiled-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-demo.js), [`robos-profiled-tmpfs-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-tmpfs-demo.js), [`robos-profiled-display-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-display-demo.js), [`robos-profiled-zero-residue-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-zero-residue-demo.js)
 
 | Ephemeral Profile Manager | Tmpfs Memory Mount & Zero-Residue Cleanup |
 |:---:|:---:|
@@ -307,8 +292,8 @@ Beyond the reference petshop application, each RobOS core subsystem has dedicate
 ---
 
 ### Desktop Agents Daemon & Process Supervision
-- **Archives**: `~/.robos/development/walkthroughs/robos-agentd/`, `desktop-agents/`, `agent-sidebar/`, `robos-agent-session/`
 - **Scope**: Multi-agent process lifecycle management, terminal multiplexing, agent status telemetry, and host desktop sidebar docks.
+- **Test Files**: [`robos-agentd-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-agentd-demo.js), [`desktop-agents-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/desktop-agents-demo.js), [`agent-sidebar-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-sidebar-demo.js), [`agent-session-lib-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-session-lib-demo.js)
 
 | Desktop Agent Session Console | Agent Process Supervisor |
 |:---:|:---:|
@@ -317,8 +302,8 @@ Beyond the reference petshop application, each RobOS core subsystem has dedicate
 ---
 
 ### Model Context Protocol (MCP) Infrastructure
-- **Archives**: `~/.robos/development/walkthroughs/mcp-manager/`, `robos-mcp-router/`, `robos-mcp-lib/`, `system-mcp/`, `task-manager-mcp/`, `workspace-manager-mcp/`, `ide-bridge-mcp/`, `ci-monitor-mcp/`
 - **Scope**: Universal JSON-RPC MCP routing, tools discovery, live health checks, and cross-IDE communication.
+- **Test Files**: [`mcp-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-manager-demo.js), [`mcp-router-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-router-demo.js), [`mcp-lib-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-lib-demo.js), [`system-mcp-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/system-mcp-demo.js)
 
 | MCP Router Console | Universal MCP Library Inspector |
 |:---:|:---:|
@@ -327,8 +312,8 @@ Beyond the reference petshop application, each RobOS core subsystem has dedicate
 ---
 
 ### Entity Schema Studio, People & Package Management
-- **Archives**: `~/.robos/development/walkthroughs/schema-studio/`, `people-manager/`, `package-manager/`, `workspace-orchestrator/`, `task-dispatcher/`, `oss-adapters/`
 - **Scope**: Microsoft TypeSpec schema compilation, team ownership mapping, devcontainer package runtimes, and workspace orchestrator.
+- **Test Files**: [`schema-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/schema-studio-demo.js), [`people-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/people-manager-demo.js), [`package-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/package-manager-demo.js), [`workspace-orchestrator-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/workspace-orchestrator-demo.js), [`task-dispatcher-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/task-dispatcher-demo.js), [`oss-adapters-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/oss-adapters-demo.js)
 
 | Entity Schema Studio (TypeSpec) | Human & AI Personnel Roster |
 |:---:|:---:|

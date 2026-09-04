@@ -61,7 +61,7 @@ Rather than simply claiming code works, the agent executes rigorous automated ve
 - Spawns a headless X11 virtual display (`Xvfb`).
 - Runs unit tests, API contract validations (Pact / Bruno), and UI end-to-end interactions.
 - Records a 1080p text-narrated video walkthrough with synchronized WebVTT subtitles generated via local Piper neural TTS.
-- Archives the proof-of-work bundle to `~/.robos/development/walkthroughs/<slug>/`.
+- Packages the proof-of-work bundle with video recordings, WebVTT transcripts, and DOM assertions.
 
 ### 5. Human Review & 1-Click Approval
 The human developer opens **Dev Central** or **PR Review**:
