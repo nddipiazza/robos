@@ -23,6 +23,7 @@ RobOS can be installed in two ways:
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[App Creation Flow]({{ site.baseurl }}{% link app-development-flow.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
