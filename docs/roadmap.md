@@ -166,8 +166,8 @@ Every phase is validated against the complete multi-tier Acme Petshop microservi
 2. **Step 2: Topology C4** — Polyglot architecture modeling & Backstage catalog.
 3. **Step 3: Contracts** — Contract Studio, TypeSpec & AsyncAPI governance.
 4. **Step 4: Git Projects** — Multi-repo sync & AI `dev-setup.sh` runner.
-5. **Step 5: IDE Breakpoint** — IntelliJ workspace provisioning & breakpoint reproduction.
-6. **Step 6: PR Review** — Semantic diff analysis & automated CI validation.
+5. **Step 5: AI Implementation** — Autonomous code implementation, tests, and optional breakpoint debugging.
+6. **Step 6: PR Review & IDE Hub** — Agent Code Review Platform with optional IntelliJ / VS Code PR review.
 7. **Step 7: Deploy Tracker** — Staging/Prod pipeline filtering & DORA KPIs.
 8. **Step 8: Kube Studio** — Multi-cluster Kubernetes & Helm release catalog.
 9. **Step 9: Real K8s** — Live Kind cluster deployment & container logs.

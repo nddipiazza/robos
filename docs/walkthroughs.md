@@ -38,8 +38,8 @@ flowchart LR
     S1["1. AI Task Planner"] --> S2["2. Visual Architecture"]
     S2 --> S3["3. API Contracts & Mocks"]
     S3 --> S4["4. Git Repos & Setup"]
-    S4 --> S5["5. Live Breakpoint & Plan"]
-    S5 --> S6["6. PR Review & AI Audit"]
+    S4 --> S5["5. AI Implementation & Plan"]
+    S5 --> S6["6. PR Review & IDE Hub"]
     S6 --> S7["7. Deploy Tracker"]
     S7 --> S8["8. Kubernetes Navigator"]
     S8 --> S9["9. Live Cluster Deploy"]
@@ -267,26 +267,26 @@ A software developer joins the engineering team and needs to work across all 6 p
 
 ---
 
-### Step 5: Automated Bug Reproduction & Live IDE Breakpoints
+### Step 5: Autonomous AI Task Implementation & Solution Plan Review
 
 #### The Real-World Business Scenario
-The team picks up sprint ticket **PET-105**: *"Implement Rabies Vaccine Verification Gateway on petstore-api"*. When a customer adopts a pet, the system must verify its veterinary health certificate over mTLS. If the vaccine certificate is expired or missing, adoption must be blocked with an informative error. A bug currently exists where adoption succeeds even when the certificate is invalid.
+The team picks up sprint ticket **PET-105**: *"Implement Rabies Vaccine Verification Gateway on petstore-api"*. When a customer adopts a pet, the system must verify its veterinary health certificate over mTLS. If the vaccine certificate is expired or missing, adoption must be blocked with an informative error. The AI agent formulates an implementation plan, generates the required client code, and validates it with automated tests.
 
 #### What the Test Actually Executes Step-by-Step
 1. **Task Selection**: The developer selects task **PET-105** from the sprint backlog in Task Implementer.
-2. **One-Click Workspace Provisioning**: Clicking "Launch Task Workspace" automatically checks out the feature branch (`feature/PET-105-vaccine-gateway`), provisions an isolated RAM workspace, starts the mock services, and bridges to IntelliJ IDEA via local IPC (port 63343).
-3. **Execution at Live Breakpoint**: RobOS runs an automated reproduction test that pauses execution right at line 42 of `AdoptionService.java` (a live debugger breakpoint).
-4. **Interactive Plan Review**: The developer inspects live runtime variables in the debugger and reviews the AI's proposed solution plan before authorizing code modifications.
+2. **One-Click Workspace Provisioning**: Clicking "Launch Task Workspace" automatically checks out the feature branch (`feature/PET-105-vaccine-gateway`), provisions an isolated RAM workspace, starts the mock services, and bridges to the dev environment.
+3. **Automated Implementation & Plan Presentation**: The AI generates a structured implementation plan, detailing the new `VaccineGatewayClient.java` service, OpenAPI contract links, and Kafka adoption event changes.
+4. **Interactive Breakpoint Debugging Feature**: As an optional debugging feature during investigation, RobOS agents can run a reproduction test and pause execution at a **live breakpoint** in the IDE, allowing developers to step through code and inspect variables on demand.
 - **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js)
 
 > **Ticket Requirements & AI Fix Plan (Task PET-105):**
 > ```text
 > Requirement: Implement Rabies Vaccine Verification Gateway & Certification on petstore-api.
 > When adopting a puppy or kitten, verify its certificate via vaccine-gateway over mTLS before approving adoption.
-> Repro Breakpoint: Hit breakpoint in AdoptionService.java line 42 when vaccination record is missing or expired.
+> Optional Debugging: Agents can run tests and stop at breakpoints (e.g. AdoptionService.java:42) for variable inspection.
 > ```
 
-| Instant IDE Workspace Launch | Execution Pauses at Reproduction Breakpoint |
+| Instant IDE Workspace Launch | Interactive Breakpoint Debugging Feature |
 |:---:|:---:|
 | ![IDE Workspace]({{ '/assets/images/screenshots/acme-petshop-step5-ide_open_frame.png' | relative_url }}) | ![Breakpoint Hit]({{ '/assets/images/screenshots/acme-petshop-step5-breakpoint_frame.png' | relative_url }}) |
 
@@ -296,20 +296,20 @@ The team picks up sprint ticket **PET-105**: *"Implement Rabies Vaccine Verifica
 
 ---
 
-### Step 6: Agent-Generated Code Review Platform & IDE Review Plugins
+### Step 6: PR Review Process & The IDE Review Hub
 
 #### The Real-World Business Scenario
-The AI agent has implemented the mTLS rabies certificate validation fix and opened a pull request. Before merging to `main`, the lead architect reviews the changes. RobOS provides the **Agent-Generated Code Review Platform**—an automated auditing hub that verifies cryptographic safety, API contract compliance, and CI test status, while allowing developers to launch straight into **IntelliJ IDEA** or **VS Code** with native pull request review plugins.
+The AI agent has implemented the mTLS rabies certificate validation fix and opened a pull request. The primary developer touchpoint in the RobOS workflow is the **PR Review Process**. The lead architect reviews the changes using the **Agent Code Review Platform**, with the option to open the project directly in **IntelliJ IDEA** or **VS Code** using RobOS to review the PR with all rich IDE context in tow.
 
 #### What the Test Actually Executes Step-by-Step
 1. **Pull Request Queue**: The lead engineer opens the **Agent Code Review Platform** and selects PR #42 (`feat: PET-105 mTLS Rabies Verification`).
 2. **AI Semantic Diff Audit**: The AI evaluates the code diff, checking cryptographic certificate handling in `VaccineGatewayClient.java` and verifying that the `AdoptionRequest` schema matches OpenAPI 3.1 specifications.
-3. **IDE Review Plugin Launch**:
-   - **IntelliJ IDEA Plugin**: One click on **Review in IntelliJ** signals port `63343` IPC bridge, opening the PR directly inside JetBrains' native Pull Request review tool window with interactive debugger support.
-   - **VS Code Plugin**: Clicking **Review in VS Code** launches the `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) for in-editor commenting and approval.
+3. **Optional IDE PR Review with Full Context**:
+   - **Review in IntelliJ IDEA**: One click triggers the port `63343` IPC bridge, opening the PR directly inside JetBrains' native **Pull Requests tool window** with full syntax analysis, symbol navigation, and debugger support in tow.
+   - **Review in VS Code**: Clicking **Review in VS Code** launches the official `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) for deep in-editor reviewing and inline commenting.
 4. **Automated CI Validation**: Confirms that 100% of unit tests, Pact consumer contract tests, and linting checks passed.
-5. **1-Click Merge Approval**: The lead architect reviews the findings and approves the pull request with a single click.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js)
+5. **1-Click Merge & Dual Sync**: The lead architect reviews the findings and approves the pull request with a single click, merging the Git branch and syncing the Knowledge Graph topology.
+- **Source Demo Script**: [`packages/robos-test/demos/agent-code-review-ide-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-code-review-ide-demo.js)
 
 > **AI Code Review Directive:**
 > ```text

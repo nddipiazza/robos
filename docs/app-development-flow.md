@@ -32,8 +32,8 @@ flowchart TD
     Step1 --> Step2["2. Topology Studio<br/><i>(C4 Architecture & Backstage)</i>"]
     Step2 --> Step3["3. Contract Studio<br/><i>(OpenAPI & Live Mocks)</i>"]
     Step3 --> Step4["4. Git Projects<br/><i>(Dev Setup & Multi-Repo)</i>"]
-    Step4 --> Step5["5. IDE Bridge<br/><i>(Breakpoint & AI Plan Review)</i>"]
-    Step5 --> Step6["6. Agent Code Review Platform<br/><i>(IntelliJ / VS Code PR Plugins & CI)</i>"]
+    Step4 --> Step5["5. AI Implementation<br/><i>(Autonomous Coding & Tests)</i>"]
+    Step5 --> Step6["6. PR Review & IDE Hub<br/><i>(IntelliJ / VS Code Review & AI Audit)</i>"]
     Step6 --> Step7["7. Relational DB Manager<br/><i>(SQL Console & DDL Engine)</i>"]
     Step7 --> Step8["8. REST API Client<br/><i>(Bruno Git-Backed Requests)</i>"]
     Step8 --> Step9["9. Kube Studio<br/><i>(Helm Releases & Pods)</i>"]
@@ -162,39 +162,39 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
-### Step 5: IDE Breakpoint Reproduction & AI Plan Review
+### Step 5: Autonomous AI Implementation & Automated Test Verification
 
-**Primary Application**: **`RobOS IDE Bridge`** *(IntelliJ IDEA, VS Code, or Claude Code CLI)*  
-**Category**: Development & AI Pair Programming  
-**Open Standards**: Model Context Protocol (MCP), Language Server Protocol (LSP), JetBrains IDE REST API
+**Primary Application**: **`AI Coding Agent & RobOS Swarm`** *(Claude Code, Antigravity, Copilot, Gemini)*  
+**Category**: Development & Automated Implementation  
+**Open Standards**: Model Context Protocol (MCP), Language Server Protocol (LSP), Git
 
-![IDE Breakpoint & Plan Review]({{ '/assets/images/screenshots/acme-petshop-step5-ai_plan_review_frame.png' | relative_url }})
+![AI Implementation & Plan Review]({{ '/assets/images/screenshots/acme-petshop-step5-ai_plan_review_frame.png' | relative_url }})
 
-* **What Happens**: The IDE opens directly to the active task workspace. 
-* **The App's Job**: Instead of forcing you to read hundreds of files, the **RobOS IDE Bridge**:
-  1. Checks out the correct feature branch automatically.
-  2. Brings the IDE debugger to an exact **live breakpoint where the feature or bug reproduces**.
-  3. The AI agent inspects the runtime memory and presents a **detailed Implementation Plan** in markdown.
-  4. **You review and approve the AI's plan** before any code is modified.
-* **Handoff to Next Step**: Once you approve the plan, the AI writes the verified code, runs unit tests, and prepares a Pull Request.
+* **What Happens**: The AI agent picks up the task ticket (`PET-105: Implement Vaccine Gateway`) from the backlog, provisions an isolated Git branch workspace, and formulates a concrete implementation plan.
+* **The Agent's Job**:
+  1. **Autonomous Code Generation**: Writes the required application logic, compiles TypeSpec data models, and configures endpoints (e.g. `VaccineGatewayClient.java`).
+  2. **Automated Test Generation & Execution**: Synthesizes and executes unit tests, integration tests, and consumer-driven contract tests (Pact) against live mock servers.
+  3. **Interactive Breakpoint Debugging Feature**: When reproducing a bug or investigating complex runtime state, RobOS agents can run a test and pause execution directly at a **live debugger breakpoint in the IDE**. This is a targeted developer feature that lets developers inspect live memory variables on demand during investigation.
+* **Handoff to Next Step**: Once the code compiles and all test suites pass, the agent opens a Pull Request for human review.
 
 ---
 
-### Step 6: Agent Code Review Platform & IDE Pull Request Plugins
+### Step 6: PR Review Process & The IDE Review Hub
 
-**Primary Application**: **`RobOS Agent-Generated Code Review Platform`** *(with `CI Monitor` & IDE Review Plugins)*  
-**Category**: Code Review, AI Audits & Quality Gates  
+**Primary Application**: **`RobOS Agent Code Review Platform`** *(with `CI Monitor` & IDE Review Plugins)*  
+**Category**: Human Review, Code Auditing & IDE Quality Gates  
 **Open Standards**: Unified Git Diffs, GitHub Pull Requests, JetBrains IDE REST API, VS Code URI Scheme
 
 ![Agent Code Review Platform]({{ '/assets/images/screenshots/acme-petshop-step6-overview_frame.png' | relative_url }})
 
-* **What Happens**: You review the AI-generated pull request and code changes either directly in the RobOS desktop app or inside your favorite IDE.
-* **The App's Job**:
-  1. **Autonomous AI Security & Contract Audit**: Automatically analyzes modified files, audits cryptographic certificate parsing (e.g. mTLS checks), flags security risks, and verifies contract compliance against OpenAPI specifications.
-  2. **IntelliJ IDEA Pull Request Review Plugin**: Click **Review in IntelliJ** to trigger the port `63343` IPC bridge and open the active branch directly in IntelliJ IDEA's native Pull Request tool window, complete with syntax highlighting, live debugging, and line-by-line comments.
-  3. **VS Code Pull Request Review Plugin**: Click **Review in VS Code** to trigger the `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`), enabling you to review files, run local test tasks, and submit PR approvals in VS Code.
-  4. **Side-by-Side Diff & CI Checks**: View unified color-coded diffs and real-time CI status badges (unit tests, Pact consumer contracts, linter checks).
-* **One-Click Merge**: Once you are satisfied with the implementation and tests, clicking **Approve & Merge** merges the pull request into `main` and kicks off the deployment pipeline.
+* **What Happens**: The human developer / lead architect reviews the AI-generated pull request before any code merges to `main`.
+* **The RobOS Review Experience**:
+  1. **Automated AI Security & Contract Audits**: The platform automatically audits modified code for cryptographic safety (e.g., mTLS keystore parsing), verifies 100% OpenAPI 3.1 Spectral schema compliance, and checks CI test rollups.
+  2. **Reviewing in RobOS Desktop**: View side-by-side color-coded file diffs, chat with the AI reviewer to clarify implementation decisions, and inspect Knowledge Graph architecture diffs.
+  3. **Optionally Reviewing in the IDE with Full Context in Tow**:
+     * **IntelliJ IDEA Review Plugin**: Click **Review in IntelliJ** to dispatch port `63343` IPC, opening the branch straight into IntelliJ IDEA's native **Pull Request review tool window**. The developer reviews the PR with all IDE context in tow—symbol lookups, type checking, syntax highlighting, live debugging, and inline PR comments.
+     * **VS Code Review Plugin**: Click **Review in VS Code** to trigger the standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`), providing deep in-editor review capabilities.
+* **One-Click Merge & Dual Sync**: Approving the PR merges the code into `main` and synchronizes the system Knowledge Graph topology.
 * **Handoff to Next Step**: The merged pull request triggers automated database migrations and deployment tracking.
 
 ---
@@ -277,8 +277,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 | **2. Architecture** | **Topology Studio** | C4 multi-level visual system architecture | C4 Model, Spotify Backstage | `catalog-info.yaml` |
 | **3. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
 | **4. Repositories** | **Git Projects** | Multi-repo linking & automated dev setup | Git, POSIX Shell | `dev-setup.sh` |
-| **5. Coding** | **IDE Bridge** | Live breakpoint & AI plan approval | Model Context Protocol (MCP) | Approved Implementation Plan |
-| **6. Review** | **Agent Code Review Platform** | Unified visual diffs, AI audits & IDE PR plugins | Unified Diff, GitHub PR, IntelliJ/VS Code | Merged Pull Request |
+| **5. Coding** | **AI Coding Agent** | Autonomous code implementation & automated tests | Model Context Protocol (MCP), LSP | Verified Code & Tests |
+| **6. Review** | **Agent Code Review Platform** | PR review with optional IntelliJ / VS Code review | Unified Diff, GitHub PR, IntelliJ / VS Code | Merged Pull Request |
 | **7. Databases** | **Relational DB Manager** | Schema explorer, data grid & SQL queries | ANSI SQL, PostgreSQL | Migration DDL Scripts |
 | **8. API Testing** | **REST API Client** | Git-backed request suites & batch runner | Bruno (`.bru`), HTTP/2 | `.bru` Request Collections |
 | **9. Deployment** | **Kube Studio** | Kubernetes navigator & Helm management | Kubernetes API, Helm, ArgoCD | Production Pods & Services |

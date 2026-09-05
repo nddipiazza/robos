@@ -176,21 +176,20 @@ Traditional software engineering forces developers to spend 80% of their day tra
 graph LR
     subgraph AutonomousAI [Autonomous AI Agent Team]
         T[Picks Up Task] --> R[Investigates Repos & Contracts]
-        R --> B[Reproduces Bug at Live Breakpoint]
-        B --> K[Generates Code, DBs & Cloud Manifests]
+        R --> K[Generates Code, DBs & Tests]
         K --> V[Runs Visual Tests & Records Proof Video]
     end
 
     subgraph HumanEngineer [Human Lead Architect]
-        V --> P[Reviews Plan & Challenges Edge Cases]
-        P --> M[1-Click Merge & Approval]
+        V --> P[PR Review via RobOS / IDE Reviewer]
+        P --> M[1-Click Merge & Dual Sync]
     end
 ```
 
-1. **AI Investigates & Reproduces**: When a ticket is assigned, the AI spins up an isolated workspace, reproduces the problem at a live debugger breakpoint in your IDE, and drafts a proposed solution plan.
-2. **Developer Reviews the Plan (`/grill-me`)**: The lead engineer reviews the AI's proposal, asks questions, and clarifies edge cases before any code is modified.
-3. **Autonomous Implementation & Testing**: The AI writes the code, updates API contracts, provisions databases, runs automated tests, and records a proof-of-work video.
-4. **Final 1-Click Approval**: The developer watches the quick 30-second video walkthrough, reviews the code diff, and approves the pull request with 1 click.
+1. **AI Investigates & Implements**: When a ticket is assigned, the AI spins up an isolated workspace, investigates the contracts and code, implements the solution, and generates automated tests (with an optional breakpoint debugging feature for runtime inspection).
+2. **Developer Reviews the Plan (`/grill-me`)**: The lead engineer reviews the proposal, asks questions, and clarifies edge cases before code changes are finalized.
+3. **Automated Verification**: The AI runs automated tests across unit, integration, and Pact contract suites, packaging a proof-of-work video walkthrough.
+4. **Human PR Review & IDE Integration**: The developer reviews the PR using the **Agent Code Review Platform** or **optionally opens the project in IntelliJ IDEA / VS Code** using RobOS to review with full IDE context in tow, then approves and merges with 1 click.
 
 ---
 

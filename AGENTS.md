@@ -34,34 +34,26 @@ A purpose-built Ubuntu-based Linux desktop environment where every app, panel, a
 - SSH (port 2224), VNC (port 5910), SPICE (port 5932)
 - Fully reproducible via cloud-init (stateless first-boot provisioning)
 
-### 2. RobOS IDE — AI-Powered Development Environment
+### 2. RobOS IDE & PR Review Integration
 
-RobOS IDE brings the same AI-first experience into the IDE itself. The core concept:
+RobOS seamlessly integrates with existing developer IDEs (IntelliJ IDEA, VS Code):
 
-**Task-Driven Workspaces:**
-- Each Task on the task server maps to its own IDE workspace
-- When a developer picks up a task, the workspace is automatically provisioned:
-  1. The correct branch is checked out
-  2. Dev environment is spun up (servers, databases, dependencies)
-  3. The workspace is brought to a **breakpoint where the issue reproduces**
-  4. The developer sees the reproduction, understands the problem
-  5. AI presents its analysis and proposed solution plan
-  6. The developer **reviews the AI's plan** before any code changes
-- This inverts the traditional workflow: instead of "developer investigates, then codes", it becomes "AI investigates and proposes, developer reviews and approves"
+**Autonomous Agent Execution & Breakpoint Debugging:**
+- When an AI agent investigates a task or builds a feature, it provisions the workspace, checks out the branch, and implements changes.
+- RobOS provides a breakpoint feature that allows agents to run a reproduction test and stop at a breakpoint for interactive debugging inspection when needed.
 
-**IDE Plugin (IntelliJ-based):**
-- IPC HTTP server (port 63343) for communication with RobOS desktop apps
-- Endpoints: health, status, open-project, open-file, navigate, run, stop, notify, workspace
-- Workspace tool window showing active ticket context, branch, and collaborators
-- Run configuration injection (`.idea/runConfigurations/` XML generation)
+**Pull Request Review in the IDE:**
+- The primary developer touchpoint in the workflow is the **PR Review Process**.
+- From the **RobOS Agent Code Review Platform**, developers can **optionally open the project in their IDE** (IntelliJ IDEA or VS Code) using RobOS.
+- Reviewing in the IDE provides all rich IDE context in tow: full AST/symbol navigation, type checking, local test execution, and native pull request tools (JetBrains Pull Request tool window or VS Code's `GitHub.vscode-pull-request-github` extension).
+- Developers can review diffs, leave inline comments, step through code, and submit approvals with full project awareness.
 
-Plugins and bridges that extend IDEs with RobOS capabilities:
-- **IntelliJ IDEA Plugin**: Port 63343 IPC server integration, native Pull Request review tool window, breakpoint debugger, and workspace run configurations
+**IDE Bridges & Plugins:**
+- **IntelliJ IDEA Plugin**: Port 63343 IPC server integration, native Pull Request review tool window, breakpoint debugger, and workspace run configurations (`.idea/runConfigurations/` XML generation)
 - **VS Code Pull Request Plugin**: Deep integration with `GitHub.vscode-pull-request-github` (`vscode://github.vscode-pull-request-github/open-pr`) for in-editor PR reviews, comments, and approvals
 - Task server integration (Jira, GitHub Issues)
 - AI context injection (MCP-powered)
 - Workspace provisioning automation
-- Code review and plan approval UI
 - Agent session management within the IDE
 
 ## App Suite

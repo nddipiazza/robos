@@ -38,11 +38,11 @@ RobOS Agent Review Workflow:
 
 ## The 5-Stage Development Workflow (In Plain English)
 
-### 1. Task Intake & Bug Reproduction
+### 1. Task Intake & Bug Investigation
 When a ticket is assigned (from GitHub Issues, Jira, or Dev Central), the AI agent:
 - Spins up an isolated, temporary workspace for the specific branch.
 - Launches the required databases and services automatically.
-- Runs an automated reproduction test that stops execution at the **exact line of code (breakpoint) where the bug occurs**.
+- Analyzes the codebase, reproduces test failures, and can optionally use the breakpoint debugging feature to pause execution at an exact line in the IDE for variable inspection if needed.
 
 ### 2. Interactive Plan Review (`/grill-me`)
 Before touching any source code, the agent writes a clear, structured technical plan:
@@ -63,9 +63,10 @@ Instead of simply claiming that the code works, the AI runs a complete automated
 - Records a 1080p video with spoken voiceover explanations detailing what was built and tested.
 - Packages the video, subtitles, and test results for your review.
 
-### 5. Human Review & 1-Click Approval
+### 5. Human PR Review & IDE Review Integration
 The human developer opens the review dashboard:
-- Reviews the visual code diffs and architectural changes.
+- Reviews the visual code diffs, automated security audits, and architectural changes.
+- **Optionally opens the project in their IDE (IntelliJ IDEA or VS Code) using RobOS** to review the PR directly inside the IDE with all IDE context (syntax tree, symbol lookup, type checking, local tests, and debugger) in tow.
 - Watches the 30-second narrated verification video.
 - Approves and merges the pull request with a single click.
 

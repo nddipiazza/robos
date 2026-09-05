@@ -44,12 +44,12 @@ Shipping features and solving tricky bugs without wasting hours setting up test 
 - **Task Planner & Issue Board**: Pick up tasks with automatic Git workspace and devcontainer setup.
 - **Git Projects**: Connect all your Git repos with one-click setup scripts and encrypted password management.
 - **Developer Protocol Suite**: Fast database managers (Postgres, MySQL, Oracle, MongoDB, Redis) and the Git-backed Bruno REST client.
-- **IDE Breakpoint Bridge**: Automatically opens your IDE and stops execution at the exact line of code where the bug reproduces.
+- **IDE & PR Review Bridge**: Optionally open projects and pull requests directly in IntelliJ IDEA or VS Code with full project context in tow, with interactive breakpoint debugging on demand.
 
 ### Typical Workflow
-1. **Pick Up a Ticket**: Select a task; RobOS checks out the branch, starts background services, and pauses execution at the live bug breakpoint in your IDE.
-2. **Review the AI's Fix**: Inspect and refine the AI's proposed solution plan before authorizing code generation.
-3. **Verify in Tools**: Use the Relational DB Manager and Bruno REST client to inspect live data and confirm the fix.
+1. **Pick Up a Ticket**: Select a task; RobOS provisions the isolated workspace, starts background services, and prepares the dev environment.
+2. **Review the AI's Fix & Plan**: Review the AI's proposed solution plan before authorizing code generation, using breakpoint debugging if runtime variable inspection is needed.
+3. **Review PR in IDE or RobOS**: Review diffs and automated audits in the Agent Code Review Platform or inside your IDE (IntelliJ / VS Code) with full context in tow, then approve and merge with 1 click.
 
 ---
 
