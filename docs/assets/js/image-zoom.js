@@ -1,20 +1,68 @@
 /**
- * RobOS Docs — Interactive Image Zoom & Fullscreen Lightbox
+ * RobOS Docs — Interactive Image & Flowchart Zoom Lightbox
  * Provides smooth click-to-zoom, pan, wheel-zoom, and true browser fullscreen
- * for all screenshots and architectural diagrams across documentation pages.
+ * for both screenshots and vector Mermaid flowcharts across documentation pages.
  */
 (function () {
   'use strict';
 
-  let overlay, imgContainer, activeImg, captionEl, zoomLevelEl, btnZoomIn, btnZoomOut, btnReset, btnFullscreen, btnNewTab, btnClose;
+  let overlay, contentContainer, activeImg, activeSvgTarget, captionEl, zoomLevelEl, badgeEl, btnZoomIn, btnZoomOut, btnReset, btnFullscreen, btnNewTab, btnClose;
   let currentScale = 1;
   let isDragging = false;
   let startX = 0, startY = 0;
   let translateX = 0, translateY = 0;
   let lastTranslateX = 0, lastTranslateY = 0;
-  const MIN_SCALE = 0.5;
-  const MAX_SCALE = 4.0;
+  let activeBlobUrl = null;
+  const MIN_SCALE = 0.4;
+  const MAX_SCALE = 5.0;
   const STEP_SCALE = 0.35;
+
+  // Initialize Mermaid with Bespoke Dark Obsidian & Electric Cyan Theme if loaded
+  function configureMermaid() {
+    if (typeof window !== 'undefined' && window.mermaid) {
+      try {
+        window.mermaid.initialize({
+          startOnLoad: true,
+          theme: 'base',
+          securityLevel: 'loose',
+          themeVariables: {
+            darkMode: true,
+            background: 'transparent',
+            primaryColor: '#162032',
+            primaryTextColor: '#ffffff',
+            primaryBorderColor: '#00e5ff',
+            lineColor: '#38bdf8',
+            secondaryColor: '#1e293b',
+            tertiaryColor: '#0d131f',
+            mainBkg: '#162032',
+            nodeBorder: '#00e5ff',
+            nodeTextColor: '#ffffff',
+            clusterBkg: '#0d1527',
+            clusterBorder: '#6366f1',
+            defaultLinkColor: '#38bdf8',
+            titleColor: '#00e5ff',
+            edgeLabelBackground: '#1a2333',
+            actorBorder: '#00e5ff',
+            actorBkg: '#162032',
+            actorTextColor: '#ffffff',
+            actorLineColor: '#475569',
+            signalColor: '#38bdf8',
+            signalTextColor: '#f8fafc',
+            labelBoxBkgColor: '#1a2333',
+            labelBoxBorderColor: '#00e5ff',
+            labelTextColor: '#ffffff',
+            loopTextColor: '#00e5ff',
+            noteBorderColor: '#f59e0b',
+            noteBkgColor: '#1e293b',
+            noteTextColor: '#fef08a',
+            fontFamily: 'Space Grotesk, Plus Jakarta Sans, sans-serif'
+          }
+        });
+      } catch (e) {
+        // Silently continue if already initialized
+      }
+    }
+  }
 
   function createLightboxDOM() {
     if (document.getElementById('robos-lightbox-overlay')) return;
@@ -24,12 +72,12 @@
     overlay.className = 'robos-lightbox-overlay';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Image preview and zoom');
+    overlay.setAttribute('aria-label', 'Interactive image and flowchart preview and zoom');
 
     overlay.innerHTML = `
       <div class="robos-lightbox-header">
         <div class="robos-lightbox-title-wrap">
-          <span class="robos-lightbox-badge">RobOS HD View</span>
+          <span id="robos-lightbox-badge" class="robos-lightbox-badge">RobOS HD View</span>
           <span id="robos-lightbox-zoom-level" class="robos-lightbox-zoom-badge">100%</span>
         </div>
         <div class="robos-lightbox-controls">
@@ -55,7 +103,8 @@
       </div>
       <div class="robos-lightbox-viewport" id="robos-lightbox-viewport">
         <div class="robos-lightbox-img-wrapper" id="robos-lightbox-img-wrapper">
-          <img id="robos-lightbox-active-img" src="" alt="" draggable="false" />
+          <img id="robos-lightbox-active-img" src="" alt="" draggable="false" style="display: none;" />
+          <div id="robos-lightbox-svg-target" class="robos-lightbox-svg-container" style="display: none;"></div>
         </div>
       </div>
       <div class="robos-lightbox-footer">
@@ -68,10 +117,12 @@
 
     document.body.appendChild(overlay);
 
-    imgContainer = document.getElementById('robos-lightbox-img-wrapper');
+    contentContainer = document.getElementById('robos-lightbox-img-wrapper');
     activeImg = document.getElementById('robos-lightbox-active-img');
+    activeSvgTarget = document.getElementById('robos-lightbox-svg-target');
     captionEl = document.getElementById('robos-lightbox-caption');
     zoomLevelEl = document.getElementById('robos-lightbox-zoom-level');
+    badgeEl = document.getElementById('robos-lightbox-badge');
     btnZoomIn = document.getElementById('robos-btn-zoom-in');
     btnZoomOut = document.getElementById('robos-btn-zoom-out');
     btnReset = document.getElementById('robos-btn-reset');
@@ -83,16 +134,16 @@
   }
 
   function updateTransform() {
-    if (!imgContainer) return;
-    imgContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    if (!contentContainer) return;
+    contentContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
     if (zoomLevelEl) {
       zoomLevelEl.textContent = `${Math.round(currentScale * 100)}%`;
     }
-    if (imgContainer) {
+    if (contentContainer) {
       if (currentScale > 1.05) {
-        imgContainer.style.cursor = isDragging ? 'grabbing' : 'grab';
+        contentContainer.style.cursor = isDragging ? 'grabbing' : 'grab';
       } else {
-        imgContainer.style.cursor = 'zoom-in';
+        contentContainer.style.cursor = 'zoom-in';
       }
     }
   }
@@ -125,6 +176,16 @@
   function openLightbox(imgSrc, imgAlt) {
     if (!overlay) createLightboxDOM();
 
+    if (activeBlobUrl) {
+      URL.revokeObjectURL(activeBlobUrl);
+      activeBlobUrl = null;
+    }
+
+    badgeEl.textContent = 'RobOS HD Screenshot';
+    activeImg.style.display = 'block';
+    activeSvgTarget.style.display = 'none';
+    activeSvgTarget.innerHTML = '';
+
     activeImg.src = imgSrc;
     activeImg.alt = imgAlt || 'Screenshot Preview';
     btnNewTab.href = imgSrc;
@@ -140,6 +201,54 @@
     document.body.classList.add('robos-lightbox-open');
   }
 
+  function openLightboxDiagram(svgElement, title) {
+    if (!overlay) createLightboxDOM();
+
+    if (activeBlobUrl) {
+      URL.revokeObjectURL(activeBlobUrl);
+      activeBlobUrl = null;
+    }
+
+    badgeEl.textContent = 'RobOS Flowchart HD';
+    activeImg.style.display = 'none';
+    activeSvgTarget.style.display = 'block';
+    activeSvgTarget.innerHTML = '';
+
+    // Cleanly clone SVG
+    const clonedSvg = svgElement.cloneNode(true);
+    clonedSvg.removeAttribute('id');
+    clonedSvg.classList.add('robos-lightbox-rendered-svg');
+    
+    // Ensure responsive vector viewBox
+    const origWidth = svgElement.getAttribute('width') || svgElement.getBoundingClientRect().width || 800;
+    const origHeight = svgElement.getAttribute('height') || svgElement.getBoundingClientRect().height || 600;
+    if (!clonedSvg.getAttribute('viewBox')) {
+      clonedSvg.setAttribute('viewBox', `0 0 ${origWidth} ${origHeight}`);
+    }
+    clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    activeSvgTarget.appendChild(clonedSvg);
+
+    // Create SVG Blob for New Tab button
+    try {
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(clonedSvg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      activeBlobUrl = URL.createObjectURL(svgBlob);
+      btnNewTab.href = activeBlobUrl;
+    } catch (e) {
+      btnNewTab.href = '#';
+    }
+
+    const displayTitle = title || 'Interactive Architecture Flowchart & Dependency Graph';
+    captionEl.textContent = displayTitle;
+    captionEl.style.display = 'block';
+
+    resetZoom();
+    overlay.classList.add('active');
+    document.body.classList.add('robos-lightbox-open');
+  }
+
   function closeLightbox() {
     if (!overlay) return;
     overlay.classList.remove('active');
@@ -149,6 +258,11 @@
     }
     setTimeout(() => {
       if (activeImg) activeImg.src = '';
+      if (activeSvgTarget) activeSvgTarget.innerHTML = '';
+      if (activeBlobUrl) {
+        URL.revokeObjectURL(activeBlobUrl);
+        activeBlobUrl = null;
+      }
       resetZoom();
     }, 200);
   }
@@ -198,8 +312,8 @@
       }
     });
 
-    // Toggle 100% / 180% zoom on image double click or single click when at scale 1
-    activeImg.addEventListener('click', (e) => {
+    // Toggle 100% / 180% zoom on double click or single click when at scale 1
+    contentContainer.addEventListener('click', (e) => {
       e.stopPropagation();
       if (isDragging) return;
       if (currentScale <= 1.05) {
@@ -225,7 +339,7 @@
       isDragging = true;
       startX = e.clientX - lastTranslateX;
       startY = e.clientY - lastTranslateY;
-      imgContainer.style.transition = 'none';
+      contentContainer.style.transition = 'none';
     };
 
     const onMouseMove = (e) => {
@@ -240,11 +354,11 @@
       isDragging = false;
       lastTranslateX = translateX;
       lastTranslateY = translateY;
-      imgContainer.style.transition = 'transform 0.15s ease-out';
+      contentContainer.style.transition = 'transform 0.15s ease-out';
       updateTransform();
     };
 
-    imgContainer.addEventListener('mousedown', onMouseDown);
+    contentContainer.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 
@@ -299,7 +413,6 @@
       img.classList.add('robos-zoomable-img');
       img.setAttribute('title', img.getAttribute('title') || 'Click to zoom and view fullscreen');
 
-      // Add click handler
       img.onclick = function (e) {
         const parentLink = img.closest('a');
         if (parentLink) {
@@ -316,11 +429,106 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindDocImages);
-  } else {
-    bindDocImages();
+  function findNearestHeading(element) {
+    let curr = element;
+    while (curr && curr !== document.body) {
+      let sibling = curr.previousElementSibling;
+      while (sibling) {
+        if (/^H[1-6]$/i.test(sibling.tagName)) {
+          return sibling.textContent.replace(/^#+\s*/, '').trim();
+        }
+        sibling = sibling.previousElementSibling;
+      }
+      curr = curr.parentElement;
+    }
+    return 'Architecture Flowchart';
   }
 
-  window.addEventListener('load', bindDocImages);
+  function bindDocDiagrams() {
+    createLightboxDOM();
+
+    // Select all mermaid containers and generated SVGs
+    const mermaidContainers = document.querySelectorAll(
+      '.mermaid, pre.mermaid, div.mermaid, .language-mermaid, svg[id^="mermaid-"]'
+    );
+
+    mermaidContainers.forEach((container) => {
+      if (container.dataset.robosDiagramReady === 'true') return;
+
+      // Check if container has rendered SVG or is an SVG itself
+      let svgEl = container.tagName.toLowerCase() === 'svg' ? container : container.querySelector('svg');
+      
+      // If SVG not rendered yet by mermaid, wait for observer
+      if (!svgEl) return;
+
+      container.dataset.robosDiagramReady = 'true';
+
+      // If not already inside a robos-diagram-card, wrap it
+      let cardWrapper = container.closest('.robos-diagram-card');
+      if (!cardWrapper) {
+        cardWrapper = document.createElement('div');
+        cardWrapper.className = 'robos-diagram-card';
+        container.parentNode.insertBefore(cardWrapper, container);
+
+        const header = document.createElement('div');
+        header.className = 'robos-diagram-header';
+        header.innerHTML = `
+          <div class="robos-diagram-badge">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h10M12 7v10"/></svg>
+            <span>Interactive Architecture Flowchart</span>
+          </div>
+          <div class="robos-diagram-hint">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+            <span>Click to Zoom & Pan (Fullscreen)</span>
+          </div>
+        `;
+        cardWrapper.appendChild(header);
+        cardWrapper.appendChild(container);
+      }
+
+      cardWrapper.classList.add('robos-zoomable-diagram');
+      cardWrapper.setAttribute('title', 'Click to open interactive flowchart zoom & fullscreen view');
+
+      const diagramTitle = findNearestHeading(cardWrapper);
+
+      cardWrapper.onclick = function (e) {
+        // Prevent click if clicking inside links within SVG
+        if (e.target.tagName.toLowerCase() === 'a' || e.target.closest('a')) return;
+        e.preventDefault();
+        const currentSvg = cardWrapper.querySelector('svg') || svgEl;
+        if (currentSvg) {
+          openLightboxDiagram(currentSvg, diagramTitle);
+        }
+      };
+    });
+  }
+
+  function init() {
+    configureMermaid();
+    bindDocImages();
+    bindDocDiagrams();
+
+    // Observe dynamic changes (e.g. async Mermaid SVG injection)
+    const observer = new MutationObserver(() => {
+      bindDocImages();
+      bindDocDiagrams();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.addEventListener('load', () => {
+    configureMermaid();
+    bindDocImages();
+    bindDocDiagrams();
+  });
 })();

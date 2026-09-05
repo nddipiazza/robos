@@ -396,6 +396,297 @@ body.robos-lightbox-open {
   display: block;
 }
 
+.robos-lightbox-svg-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: #0d1424;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 229, 255, 0.15);
+}
+
+.robos-lightbox-rendered-svg {
+  max-width: 85vw !important;
+  max-height: 72vh !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
+}
+
+/* ==========================================================================
+   RobOS Interactive Flowchart & Diagram Card Component
+   ========================================================================== */
+
+.robos-diagram-card {
+  background: linear-gradient(180deg, #0d1424 0%, #090e1a 100%) !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 10px !important;
+  margin: 2rem 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.22s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.robos-diagram-card:hover {
+  border-color: #00e5ff !important;
+  box-shadow: 0 12px 36px rgba(0, 229, 255, 0.18), 0 0 0 1px rgba(0, 229, 255, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+.robos-zoomable-diagram {
+  cursor: zoom-in !important;
+}
+
+.robos-diagram-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1.1rem;
+  background: #121a2d;
+  border-bottom: 1px solid #1e293b;
+  user-select: none;
+}
+
+.robos-diagram-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #00e5ff;
+}
+
+.robos-diagram-badge svg {
+  stroke: #00e5ff;
+}
+
+.robos-diagram-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(0, 229, 255, 0.08);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  transition: all 0.15s ease;
+}
+
+.robos-diagram-card:hover .robos-diagram-hint {
+  color: #ffffff;
+  background: rgba(0, 229, 255, 0.2);
+  border-color: #00e5ff;
+}
+
+/* ==========================================================================
+   Mermaid Flowchart Deep Theme & High Contrast Styling
+   Ensures crystal-clear contrast between dark backgrounds and all lines/nodes
+   ========================================================================== */
+
+.mermaid, .robos-diagram-card .mermaid, div.mermaid, pre.mermaid {
+  background: transparent !important;
+  padding: 1.5rem 1rem !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.mermaid svg, .robos-diagram-card svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Connecting lines & flow chart links (Bright Ice Sky Blue for max visibility) */
+.mermaid .edgePath .path,
+.mermaid .flowchart-link,
+.mermaid path.flowchart-link,
+.mermaid path.link,
+.mermaid .edge-thickness-normal,
+.mermaid .edge-pattern-solid,
+.robos-lightbox-rendered-svg .edgePath .path,
+.robos-lightbox-rendered-svg .flowchart-link,
+.robos-lightbox-rendered-svg path.flowchart-link,
+.robos-lightbox-rendered-svg path.link {
+  stroke: #38bdf8 !important;
+  stroke-width: 2.2px !important;
+  stroke-opacity: 1 !important;
+  opacity: 1 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Arrowheads & Markers */
+.mermaid marker path,
+.mermaid .marker,
+.mermaid #arrowheadHD path,
+.mermaid #flowchart-pointEnd path,
+.mermaid #flowchart-circleEnd path,
+.mermaid #flowchart-crossEnd path,
+.mermaid defs marker path,
+.robos-lightbox-rendered-svg marker path,
+.robos-lightbox-rendered-svg .marker,
+.robos-lightbox-rendered-svg #arrowheadHD path,
+.robos-lightbox-rendered-svg defs marker path {
+  fill: #38bdf8 !important;
+  stroke: #38bdf8 !important;
+  stroke-opacity: 1 !important;
+  opacity: 1 !important;
+}
+
+/* Flowchart Nodes */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path,
+.robos-lightbox-rendered-svg .node rect,
+.robos-lightbox-rendered-svg .node circle,
+.robos-lightbox-rendered-svg .node ellipse,
+.robos-lightbox-rendered-svg .node polygon,
+.robos-lightbox-rendered-svg .node path {
+  fill: #162032 !important;
+  stroke: #00e5ff !important;
+  stroke-width: 1.8px !important;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Node Text Labels */
+.mermaid .node .label,
+.mermaid .nodeLabel,
+.mermaid .node text,
+.mermaid .node tspan,
+.robos-lightbox-rendered-svg .node .label,
+.robos-lightbox-rendered-svg .nodeLabel,
+.robos-lightbox-rendered-svg .node text,
+.robos-lightbox-rendered-svg .node tspan {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+}
+
+/* Edge Labels */
+.mermaid .edgeLabel,
+.mermaid .edgeLabel rect,
+.mermaid .edgeLabel span,
+.robos-lightbox-rendered-svg .edgeLabel,
+.robos-lightbox-rendered-svg .edgeLabel rect,
+.robos-lightbox-rendered-svg .edgeLabel span {
+  background-color: #1a2333 !important;
+  fill: #1a2333 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #38bdf8 !important;
+  border-radius: 4px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  padding: 2px 6px !important;
+}
+
+/* Clusters / Subgraphs */
+.mermaid .cluster rect,
+.mermaid .subgraph rect,
+.robos-lightbox-rendered-svg .cluster rect,
+.robos-lightbox-rendered-svg .subgraph rect {
+  fill: #0b111e !important;
+  stroke: #6366f1 !important;
+  stroke-width: 1.6px !important;
+  stroke-dasharray: 4 4 !important;
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Cluster Titles */
+.mermaid .cluster text,
+.mermaid .cluster-label text,
+.mermaid .cluster span,
+.robos-lightbox-rendered-svg .cluster text,
+.robos-lightbox-rendered-svg .cluster-label text,
+.robos-lightbox-rendered-svg .cluster span {
+  fill: #00e5ff !important;
+  color: #00e5ff !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 14.5px !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Sequence Diagrams */
+.mermaid rect.actor,
+.robos-lightbox-rendered-svg rect.actor {
+  fill: #162032 !important;
+  stroke: #00e5ff !important;
+  stroke-width: 1.8px !important;
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+.mermaid text.actor,
+.robos-lightbox-rendered-svg text.actor {
+  fill: #ffffff !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+}
+
+.mermaid .actor-line,
+.robos-lightbox-rendered-svg .actor-line {
+  stroke: #475569 !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 4 4 !important;
+}
+
+.mermaid .messageLine0,
+.mermaid .messageLine1,
+.mermaid line.messageLine0,
+.mermaid line.messageLine1,
+.robos-lightbox-rendered-svg .messageLine0,
+.robos-lightbox-rendered-svg .messageLine1 {
+  stroke: #38bdf8 !important;
+  stroke-width: 2.2px !important;
+}
+
+.mermaid .messageText,
+.robos-lightbox-rendered-svg .messageText {
+  fill: #f8fafc !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+.mermaid rect.note,
+.robos-lightbox-rendered-svg rect.note {
+  fill: #1e293b !important;
+  stroke: #f59e0b !important;
+  stroke-width: 1.5px !important;
+  rx: 4px !important;
+}
+
+.mermaid text.noteText,
+.robos-lightbox-rendered-svg text.noteText {
+  fill: #fef08a !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 500 !important;
+}
+
 .robos-lightbox-footer {
   width: 100%;
   padding: 0.85rem 1.5rem 1.25rem;
