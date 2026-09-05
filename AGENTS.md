@@ -55,9 +55,9 @@ RobOS IDE brings the same AI-first experience into the IDE itself. The core conc
 - Workspace tool window showing active ticket context, branch, and collaborators
 - Run configuration injection (`.idea/runConfigurations/` XML generation)
 
-### 3. RobOS IDE Plugins
-
-Plugins that extend the IDE with RobOS capabilities:
+Plugins and bridges that extend IDEs with RobOS capabilities:
+- **IntelliJ IDEA Plugin**: Port 63343 IPC server integration, native Pull Request review tool window, breakpoint debugger, and workspace run configurations
+- **VS Code Pull Request Plugin**: Deep integration with `GitHub.vscode-pull-request-github` (`vscode://github.vscode-pull-request-github/open-pr`) for in-editor PR reviews, comments, and approvals
 - Task server integration (Jira, GitHub Issues)
 - AI context injection (MCP-powered)
 - Workspace provisioning automation
@@ -99,6 +99,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **gRPC Client** | BloomRPC & Kreya-inspired Protobuf gRPC microservice testing client |
 | **GraphQL Client** | GraphiQL & Altair-inspired GraphQL schema explorer, query editor, and variables runner |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
+| **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
 
 
 | **Claude Console** | Enhanced Claude Code GUI |

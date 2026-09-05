@@ -39,8 +39,10 @@ document.getElementById("btn-approve").addEventListener("click", () => submitRev
 document.getElementById("btn-request-changes").addEventListener("click", () => submitReview("request-changes"));
 document.getElementById("btn-comment").addEventListener("click", () => submitReview("comment"));
 document.getElementById("btn-interactive-review").addEventListener("click", startInteractiveReview);
-document.getElementById("btn-run-tests").addEventListener("click", () => showAIActionOutput("Running tests locally... (IDE integration required)"));
-document.getElementById("btn-gen-edge-test").addEventListener("click", () => showAIActionOutput("Generating edge-case test... (AI agent integration required)"));
+document.getElementById("btn-open-intellij")?.addEventListener("click", () => openInIDE("intellij"));
+document.getElementById("btn-open-vscode")?.addEventListener("click", () => openInIDE("vscode"));
+document.getElementById("btn-action-intellij")?.addEventListener("click", () => openInIDE("intellij"));
+document.getElementById("btn-action-vscode")?.addEventListener("click", () => openInIDE("vscode"));
 document.getElementById("btn-ai-chat-send").addEventListener("click", sendAIChatMessage);
 
 // Header quick-action triggers
@@ -247,8 +249,75 @@ function renderFiles(files) {
   el.innerHTML = `<div class="file-count">${files.length} files changed in Git repository</div>` +
     files.map(f => {
       const ext = f.split(".").pop();
-      return `<div class="file-item"><span class="file-ext">.${esc(ext)}</span> <span class="file-path">${esc(f)}</span></div>`;
+      return `
+        <div class="file-item">
+          <div class="file-item-left">
+            <span class="file-ext">.${esc(ext)}</span>
+            <span class="file-path">${esc(f)}</span>
+          </div>
+          <div class="file-item-ide-actions">
+            <button class="btn-file-ide btn-file-intellij" onclick="openFileInIDE('intellij', '${esc(f)}')">
+              IntelliJ
+            </button>
+            <button class="btn-file-ide btn-file-vscode" onclick="openFileInIDE('vscode', '${esc(f)}')">
+              VS Code
+            </button>
+          </div>
+        </div>
+      `;
     }).join("");
+}
+
+window.openFileInIDE = function(ide, filePath) {
+  openInIDE(ide, filePath);
+};
+
+async function openInIDE(ide, filePath) {
+  if (!selectedPR) return;
+  const targetFile = filePath || (prDetail?.changedFiles?.[0]) || "";
+
+  let result;
+  if (ide === "intellij") {
+    result = await window.api.openInIntelliJ({
+      repo: selectedPR.repo,
+      number: selectedPR.number,
+      headBranch: selectedPR.headBranch,
+      changedFiles: prDetail ? prDetail.changedFiles : [],
+      filePath: targetFile,
+      line: 34,
+    });
+  } else {
+    result = await window.api.openInVSCode({
+      repo: selectedPR.repo,
+      number: selectedPR.number,
+      headBranch: selectedPR.headBranch,
+      changedFiles: prDetail ? prDetail.changedFiles : [],
+      filePath: targetFile,
+      line: 34,
+    });
+  }
+
+  if (result.ok) {
+    const stepsHtml = (result.steps || []).map(s => `<div class="step-item">${esc(s)}</div>`).join("");
+    showAIActionOutput(`
+      <div class="ide-launch-output">
+        <div class="ide-launch-header">
+          <span class="ide-launch-badge">${esc(result.ide)} Pull Request Review</span>
+          <span class="ide-launch-plugin">${esc(result.plugin)}</span>
+        </div>
+        <p class="ide-launch-msg">${esc(result.message)}</p>
+        <div class="ide-launch-steps">${stepsHtml}</div>
+      </div>
+    `);
+
+    // Switch to review decision tab if not already on it
+    const actionsTab = document.querySelector('.tab-btn[data-tab="actions"]');
+    if (actionsTab && !actionsTab.classList.contains("active")) {
+      actionsTab.click();
+    }
+  } else {
+    showAIActionOutput(`<div class="error-text">Failed to launch IDE: ${esc(result.error)}</div>`);
+  }
 }
 
 function renderKGraphDiff(kg) {

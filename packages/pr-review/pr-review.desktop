@@ -2,8 +2,8 @@
 X-RobOS-App=true
 X-RobOS-Category=Development
 Type=Application
-Name=PR Review Board
-Comment=AI-assisted pull request review with breakpoint debugging
+Name=Agent Code Review Platform
+Comment=World-class agent-generated code review platform with IDE integrations, automated security audits, contract verification, and interactive breakpoint reviews
 Exec=/usr/bin/electron /usr/local/share/robos/pr-review/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
 Icon=/usr/local/share/robos/pr-review/icon.svg
 Terminal=false

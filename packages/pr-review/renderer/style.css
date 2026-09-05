@@ -448,6 +448,245 @@ header h1 { font-size: 15px; font-weight: 600; }
 
 .hidden { display: none !important; }
 
+/* ── Rebranded Agent Code Review Platform Styles ── */
+.header-branding {
+  display: flex;
+  flex-direction: column;
+}
+.header-branding h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+.platform-subtag {
+  font-size: 10px;
+  color: #00e5ff;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ide-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #121927;
+  border: 1px solid #1e293b;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.ide-status-dot {
+  font-size: 10px;
+}
+.ide-intellij { color: #f59e0b; }
+.ide-vscode { color: #38bdf8; }
+
+.ide-quick-launch-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+}
+.btn-ide svg {
+  flex-shrink: 0;
+}
+
+.btn-ide-intellij {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.btn-ide-intellij:hover {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-ide-vscode {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.btn-ide-vscode:hover {
+  background: rgba(56, 189, 248, 0.35);
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ── Files tab with IDE chips ── */
+.files-tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1e293b;
+}
+.files-tab-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.files-tab-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  transition: border-color 0.15s;
+}
+.file-item:hover {
+  border-color: #00bcd4;
+}
+.file-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+}
+.file-item-ide-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-file-ide {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.12s ease;
+}
+.btn-file-ide.btn-file-intellij {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.btn-file-ide.btn-file-intellij:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #fbbf24;
+}
+.btn-file-ide.btn-file-vscode {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.btn-file-ide.btn-file-vscode:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+}
+
+/* ── IDE Plugins Card in Decision Tab ── */
+.ide-plugins-card {
+  background: #0f1624;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 16px;
+}
+.ide-plugins-card h3 {
+  font-size: 14px;
+  color: #00e5ff;
+  margin-bottom: 6px;
+}
+.ide-plugins-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+.ide-plugin-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ide-plugin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #162032;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.ide-plugin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ide-plugin-info strong {
+  font-size: 12.5px;
+  color: #ffffff;
+}
+.ide-plugin-info span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ── IDE Launch Feedback ── */
+.ide-launch-output {
+  margin-top: 14px;
+  background: #090e1a;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 6px;
+  padding: 12px;
+}
+.ide-launch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.ide-launch-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00e5ff;
+  text-transform: uppercase;
+}
+.ide-launch-plugin {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+.ide-launch-msg {
+  font-size: 12px;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+}
+.ide-launch-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 @media (max-width: 800px) {
   .actions-grid { grid-template-columns: 1fr; }
 }

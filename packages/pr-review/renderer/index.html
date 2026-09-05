@@ -3,17 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
-  <title>RobOS PR Review Board</title>
+  <title>RobOS Agent-Generated Code Review Platform</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
   <header>
     <div class="header-left">
-      <h1>PR Review Board</h1>
+      <div class="header-branding">
+        <h1>Agent Code Review Platform</h1>
+        <span class="platform-subtag">Autonomous PR Auditor &amp; IDE Review Hub</span>
+      </div>
       <span id="server-name" class="server-badge"></span>
     </div>
     <div class="header-right">
+      <div class="ide-status-pill">
+        <span class="ide-status-dot ide-intellij" title="IntelliJ IDEA Bridge: Ready">&#9679;</span> IntelliJ
+        <span class="ide-status-dot ide-vscode" title="VS Code PR Extension: Ready">&#9679;</span> VS Code
+      </div>
       <div class="filter-bar">
         <select id="filter-state">
           <option value="open">Open</option>
@@ -43,16 +50,26 @@
           <h2 id="detail-title"></h2>
           <div id="detail-meta"></div>
         </div>
+        <div class="ide-quick-launch-bar">
+          <button id="btn-open-intellij" class="btn-ide btn-ide-intellij" title="Review in IntelliJ IDEA Pull Request tool window">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+            Review in IntelliJ
+          </button>
+          <button id="btn-open-vscode" class="btn-ide btn-ide-vscode" title="Review in VS Code using GitHub Pull Requests extension">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            Review in VS Code
+          </button>
+        </div>
       </div>
 
       <!-- Tab navigation -->
       <div id="detail-tabs">
         <button class="tab-btn active" data-tab="overview">Overview</button>
-        <button class="tab-btn" data-tab="ai-review">PR Review</button>
+        <button class="tab-btn" data-tab="ai-review">Agent Review</button>
         <button class="tab-btn" data-tab="files">Files Changed</button>
         <button class="tab-btn" data-tab="kgraph"><span class="kgraph-tab-icon">☊</span> Knowledge Graph</button>
         <button class="tab-btn" data-tab="checks">CI Checks</button>
-        <button class="tab-btn tab-btn-decision" data-tab="actions"><span class="tab-badge-icon">✓</span> Review Decision</button>
+        <button class="tab-btn tab-btn-decision" data-tab="actions"><span class="tab-badge-icon">✓</span> Review &amp; IDE Plugins</button>
       </div>
 
       <!-- Tab content -->
@@ -64,7 +81,7 @@
         <div id="ai-review-content">
           <div id="ai-summary">
             <div class="ai-loading-placeholder">
-              <span class="spinner">⏳</span> Generating automated AI code &amp; security review...
+              <span class="spinner">⏳</span> Generating automated AI agent code &amp; security review...
             </div>
           </div>
 
@@ -84,6 +101,10 @@
       </div>
 
       <div id="tab-files" class="tab-content">
+        <div class="files-tab-header">
+          <span class="files-tab-title">Modified Files in Pull Request</span>
+          <span class="files-tab-hint">Click any file to inspect diff or open directly in IntelliJ or VS Code</span>
+        </div>
         <div id="files-list"></div>
       </div>
 
@@ -118,12 +139,32 @@
             <label for="review-body" class="review-label">Review Feedback / Approval Summary</label>
             <textarea id="review-body" placeholder="Leave review feedback or approval notes (e.g. 'Approved! Verified mTLS client implementation against vaccine-gateway.')..." rows="4"></textarea>
           </div>
-          <div class="action-section">
-            <h3>AI-Powered Actions</h3>
-            <div class="action-buttons">
-              <button id="btn-interactive-review" class="btn-action btn-ai">Interactive Review (Breakpoints)</button>
-              <button id="btn-run-tests" class="btn-action btn-ai">Run Tests Locally</button>
-              <button id="btn-gen-edge-test" class="btn-action btn-ai">Generate Edge-Case Test</button>
+          
+          <div class="action-section ide-plugins-card">
+            <h3>IDE Pull Request Review Plugins</h3>
+            <p class="ide-plugins-desc">Seamlessly jump into your preferred IDE's native Pull Request review tool window without losing agent context or breakpoints:</p>
+            <div class="ide-plugin-options">
+              <div class="ide-plugin-row">
+                <div class="ide-plugin-info">
+                  <strong>IntelliJ IDEA Pull Requests Plugin</strong>
+                  <span>JetBrains native Pull Requests tool window with side-by-side diffs &amp; debug breakpoints (Port 63343)</span>
+                </div>
+                <button id="btn-action-intellij" class="btn-ide btn-ide-intellij">Open in IntelliJ</button>
+              </div>
+              <div class="ide-plugin-row">
+                <div class="ide-plugin-info">
+                  <strong>VS Code Pull Requests &amp; Issues Extension</strong>
+                  <span>Official Microsoft extension (<code>GitHub.vscode-pull-request-github</code>) with inline comments &amp; suggested changes</span>
+                </div>
+                <button id="btn-action-vscode" class="btn-ide btn-ide-vscode">Open in VS Code</button>
+              </div>
+              <div class="ide-plugin-row">
+                <div class="ide-plugin-info">
+                  <strong>Interactive Agent Breakpoint Session</strong>
+                  <span>Synthesizes runtime tests and sets debug breakpoints at change sites</span>
+                </div>
+                <button id="btn-interactive-review" class="btn-action btn-ai">Launch Breakpoints</button>
+              </div>
             </div>
             <div id="ai-action-output" class="hidden"></div>
           </div>

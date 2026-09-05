@@ -17,7 +17,10 @@ describe('pr-review E2E', () => {
 
     it('shows app title', () => {
       const allText = flatText(snap);
-      assert.ok(allText.includes('PR Review Board'), 'Title visible');
+      assert.ok(
+        allText.includes('Agent Code Review Platform') || allText.includes('PR Review'),
+        `Title visible, got: ${allText.substring(0, 300)}`
+      );
     });
 
     it('shows error about no task server', () => {

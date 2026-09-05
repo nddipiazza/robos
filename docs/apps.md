@@ -71,8 +71,10 @@ Explore all your company's databases, AWS S3 cloud storage buckets, and Kafka st
 
 ## 3. Code Review, Testing & Cloud Infrastructure
 
-### Pull Request Review Board
-AI-assisted code review with visual side-by-side diffs, automated security audits, contract compatibility checks, and one-click approvals.
+### RobOS Agent-Generated Code Review Platform
+Autonomous AI-driven code review and audit hub for pull requests. Analyzes pull requests created by AI agents or human developers, provides side-by-side color-coded diffs, runs automatic security audits, tests OpenAPI contract compatibility, and connects directly with your preferred IDE via native plugins:
+- **IntelliJ IDEA Pull Request Review Plugin**: Communicates over RobOS port `63343` IPC bridge and native JetBrains CLI integration to jump straight to modified files, set live breakpoints at change sites, and launch JetBrains' native Pull Request review tool window.
+- **VS Code Pull Request Review Plugin**: Deeply integrates with the industry-standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) to review diffs, leave inline line comments, and approve PRs right inside Visual Studio Code.
 ![PR Review]({{ '/assets/images/screenshots/acme-petshop-step6-files_diff_frame.png' | relative_url }})
 
 ### Kube Studio & Cloud Infrastructure Navigator

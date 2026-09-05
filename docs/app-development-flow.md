@@ -33,7 +33,7 @@ flowchart TD
     Step2 --> Step3["3. Contract Studio<br/><i>(OpenAPI & Live Mocks)</i>"]
     Step3 --> Step4["4. Git Projects<br/><i>(Dev Setup & Multi-Repo)</i>"]
     Step4 --> Step5["5. IDE Bridge<br/><i>(Breakpoint & AI Plan Review)</i>"]
-    Step5 --> Step6["6. PR Review Board<br/><i>(Side-by-Side Diff & CI)</i>"]
+    Step5 --> Step6["6. Agent Code Review Platform<br/><i>(IntelliJ / VS Code PR Plugins & CI)</i>"]
     Step6 --> Step7["7. Relational DB Manager<br/><i>(SQL Console & DDL Engine)</i>"]
     Step7 --> Step8["8. REST API Client<br/><i>(Bruno Git-Backed Requests)</i>"]
     Step8 --> Step9["9. Kube Studio<br/><i>(Helm Releases & Pods)</i>"]
@@ -180,18 +180,22 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
-### Step 6: PR Code Review Board & Automated Security Audits
+### Step 6: Agent Code Review Platform & IDE Pull Request Plugins
 
-**Primary Application**: **`Pull Request Review Board`** *(with `CI Monitor`)*  
-**Category**: Code Review & Quality Gates  
-**Open Standards**: Unified Git Diffs, GitHub Pull Requests, SonarQube Quality Gates
+**Primary Application**: **`RobOS Agent-Generated Code Review Platform`** *(with `CI Monitor` & IDE Review Plugins)*  
+**Category**: Code Review, AI Audits & Quality Gates  
+**Open Standards**: Unified Git Diffs, GitHub Pull Requests, JetBrains IDE REST API, VS Code URI Scheme
 
-![PR Code Review]({{ '/assets/images/screenshots/acme-petshop-step6-overview_frame.png' | relative_url }})
+![Agent Code Review Platform]({{ '/assets/images/screenshots/acme-petshop-step6-overview_frame.png' | relative_url }})
 
-* **What Happens**: You review the AI-generated code changes on a unified visual dashboard.
-* **The App's Job**: Displays side-by-side color-coded file diffs, runs static security audits, checks contract compatibility against OpenAPI specifications, and streams automated continuous integration (CI) test results.
-* **One-Click Merge**: Once you are satisfied with the implementation, clicking **Approve & Merge** merges the branch into `main` and triggers the deployment pipeline.
-* **Handoff to Next Step**: The merged code triggers the database migration and deployment phase.
+* **What Happens**: You review the AI-generated pull request and code changes either directly in the RobOS desktop app or inside your favorite IDE.
+* **The App's Job**:
+  1. **Autonomous AI Security & Contract Audit**: Automatically analyzes modified files, audits cryptographic certificate parsing (e.g. mTLS checks), flags security risks, and verifies contract compliance against OpenAPI specifications.
+  2. **IntelliJ IDEA Pull Request Review Plugin**: Click **Review in IntelliJ** to trigger the port `63343` IPC bridge and open the active branch directly in IntelliJ IDEA's native Pull Request tool window, complete with syntax highlighting, live debugging, and line-by-line comments.
+  3. **VS Code Pull Request Review Plugin**: Click **Review in VS Code** to trigger the `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`), enabling you to review files, run local test tasks, and submit PR approvals in VS Code.
+  4. **Side-by-Side Diff & CI Checks**: View unified color-coded diffs and real-time CI status badges (unit tests, Pact consumer contracts, linter checks).
+* **One-Click Merge**: Once you are satisfied with the implementation and tests, clicking **Approve & Merge** merges the pull request into `main` and kicks off the deployment pipeline.
+* **Handoff to Next Step**: The merged pull request triggers automated database migrations and deployment tracking.
 
 ---
 
@@ -274,7 +278,7 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 | **3. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
 | **4. Repositories** | **Git Projects** | Multi-repo linking & automated dev setup | Git, POSIX Shell | `dev-setup.sh` |
 | **5. Coding** | **IDE Bridge** | Live breakpoint & AI plan approval | Model Context Protocol (MCP) | Approved Implementation Plan |
-| **6. Review** | **PR Review Board** | Unified visual diffs & automated audits | Unified Diff, GitHub PR | Merged Pull Request |
+| **6. Review** | **Agent Code Review Platform** | Unified visual diffs, AI audits & IDE PR plugins | Unified Diff, GitHub PR, IntelliJ/VS Code | Merged Pull Request |
 | **7. Databases** | **Relational DB Manager** | Schema explorer, data grid & SQL queries | ANSI SQL, PostgreSQL | Migration DDL Scripts |
 | **8. API Testing** | **REST API Client** | Git-backed request suites & batch runner | Bruno (`.bru`), HTTP/2 | `.bru` Request Collections |
 | **9. Deployment** | **Kube Studio** | Kubernetes navigator & Helm management | Kubernetes API, Helm, ArgoCD | Production Pods & Services |

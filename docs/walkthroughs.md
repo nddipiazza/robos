@@ -296,16 +296,19 @@ The team picks up sprint ticket **PET-105**: *"Implement Rabies Vaccine Verifica
 
 ---
 
-### Step 6: Pull Request Review & AI Code Quality Inspection
+### Step 6: Agent-Generated Code Review Platform & IDE Review Plugins
 
 #### The Real-World Business Scenario
-The developer has implemented the mTLS rabies certificate validation fix. Before merging to `main`, the lead architect must review the pull request. Rather than scanning thousands of lines manually, the team needs an automated audit that verifies cryptographic safety, API contract compliance, and CI test results.
+The AI agent has implemented the mTLS rabies certificate validation fix and opened a pull request. Before merging to `main`, the lead architect reviews the changes. RobOS provides the **Agent-Generated Code Review Platform**—an automated auditing hub that verifies cryptographic safety, API contract compliance, and CI test status, while allowing developers to launch straight into **IntelliJ IDEA** or **VS Code** with native pull request review plugins.
 
 #### What the Test Actually Executes Step-by-Step
-1. **Pull Request Queue**: The lead engineer opens **PR Review Board** and selects PR #42 (`feat: PET-105 mTLS Rabies Verification`).
+1. **Pull Request Queue**: The lead engineer opens the **Agent Code Review Platform** and selects PR #42 (`feat: PET-105 mTLS Rabies Verification`).
 2. **AI Semantic Diff Audit**: The AI evaluates the code diff, checking cryptographic certificate handling in `VaccineGatewayClient.java` and verifying that the `AdoptionRequest` schema matches OpenAPI 3.1 specifications.
-3. **Automated CI Validation**: Confirms that 100% of unit tests, Pact consumer contract tests, and linting checks passed.
-4. **1-Click Merge Approval**: The lead architect reviews the findings and approves the pull request with a single click.
+3. **IDE Review Plugin Launch**:
+   - **IntelliJ IDEA Plugin**: One click on **Review in IntelliJ** signals port `63343` IPC bridge, opening the PR directly inside JetBrains' native Pull Request review tool window with interactive debugger support.
+   - **VS Code Plugin**: Clicking **Review in VS Code** launches the `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) for in-editor commenting and approval.
+4. **Automated CI Validation**: Confirms that 100% of unit tests, Pact consumer contract tests, and linting checks passed.
+5. **1-Click Merge Approval**: The lead architect reviews the findings and approves the pull request with a single click.
 - **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step6-pr-ci-demo.js)
 
 > **AI Code Review Directive:**
@@ -314,6 +317,7 @@ The developer has implemented the mTLS rabies certificate validation fix. Before
 > - Audit cryptographic cert parsing in VaccineGatewayClient.java
 > - Validate semantic diff against OpenAPI 3.1 AdoptionRequest schema
 > - Confirm 100% pass on Pact consumer contract verification and CI pipeline
+> - Synchronize review status with IntelliJ IDEA (port 63343) and VS Code PR extension
 > ```
 
 | Active Pull Request Queue & Status | Side-by-Side Visual Code Diff |
