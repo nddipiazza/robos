@@ -631,6 +631,11 @@ body.robos-lightbox-open {
 
 /* Sequence Diagrams */
 .mermaid rect.actor,
+.mermaid rect[class*="actor"],
+.mermaid .actor-top rect,
+.mermaid .actor-bottom rect,
+svg[id^="mermaid-"] rect.actor,
+svg[id^="mermaid-"] rect[class*="actor"],
 .robos-lightbox-rendered-svg rect.actor {
   fill: #162032 !important;
   stroke: #00e5ff !important;
@@ -640,6 +645,9 @@ body.robos-lightbox-open {
 }
 
 .mermaid text.actor,
+.mermaid text[class*="actor"],
+svg[id^="mermaid-"] text.actor,
+svg[id^="mermaid-"] text[class*="actor"],
 .robos-lightbox-rendered-svg text.actor {
   fill: #ffffff !important;
   font-family: 'Space Grotesk', sans-serif !important;
@@ -648,6 +656,10 @@ body.robos-lightbox-open {
 }
 
 .mermaid .actor-line,
+.mermaid line.actor-line,
+.mermaid line[class*="actor-line"],
+svg[id^="mermaid-"] .actor-line,
+svg[id^="mermaid-"] line.actor-line,
 .robos-lightbox-rendered-svg .actor-line {
   stroke: #475569 !important;
   stroke-width: 1.5px !important;
@@ -658,6 +670,12 @@ body.robos-lightbox-open {
 .mermaid .messageLine1,
 .mermaid line.messageLine0,
 .mermaid line.messageLine1,
+.mermaid path.messageLine0,
+.mermaid path.messageLine1,
+svg[id^="mermaid-"] .messageLine0,
+svg[id^="mermaid-"] .messageLine1,
+svg[id^="mermaid-"] line.messageLine0,
+svg[id^="mermaid-"] line.messageLine1,
 .robos-lightbox-rendered-svg .messageLine0,
 .robos-lightbox-rendered-svg .messageLine1 {
   stroke: #38bdf8 !important;
@@ -665,6 +683,9 @@ body.robos-lightbox-open {
 }
 
 .mermaid .messageText,
+.mermaid text.messageText,
+svg[id^="mermaid-"] .messageText,
+svg[id^="mermaid-"] text.messageText,
 .robos-lightbox-rendered-svg .messageText {
   fill: #f8fafc !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -673,6 +694,8 @@ body.robos-lightbox-open {
 }
 
 .mermaid rect.note,
+.mermaid .note rect,
+svg[id^="mermaid-"] rect.note,
 .robos-lightbox-rendered-svg rect.note {
   fill: #1e293b !important;
   stroke: #f59e0b !important;
@@ -681,10 +704,33 @@ body.robos-lightbox-open {
 }
 
 .mermaid text.noteText,
+.mermaid .noteText,
+svg[id^="mermaid-"] text.noteText,
 .robos-lightbox-rendered-svg text.noteText {
   fill: #fef08a !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-weight: 500 !important;
+}
+
+/* Table of Contents */
+#markdown-toc, ul#markdown-toc, .toc, nav.toc {
+  background-color: #0f1624 !important;
+  border: 1px solid #1e293b !important;
+  border-left: 4px solid #00e5ff !important;
+  border-radius: 8px !important;
+  padding: 1.25rem 1.5rem 1.25rem 2.25rem !important;
+  margin: 1.5rem 0 2rem 0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+#markdown-toc a, ul#markdown-toc a, .toc a {
+  color: #38bdf8 !important;
+  font-weight: 500 !important;
+}
+
+#markdown-toc a:hover, ul#markdown-toc a:hover, .toc a:hover {
+  color: #00e5ff !important;
+  text-decoration: underline !important;
 }
 
 .robos-lightbox-footer {

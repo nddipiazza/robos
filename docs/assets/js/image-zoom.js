@@ -444,6 +444,107 @@
     return 'Architecture Flowchart';
   }
 
+  function applyHighContrastToSvg(svg) {
+    if (!svg) return;
+
+    // Clean up outer background rects
+    svg.querySelectorAll('rect.background, rect[fill="#ffffff"], rect[fill="white"], rect[fill="#fff"], rect[fill="#ffffde"], rect[fill="rgb(255, 255, 222)"]').forEach((r) => {
+      r.setAttribute('fill', 'transparent');
+      r.style.fill = 'transparent';
+    });
+
+    // Subgraph / Cluster rects
+    svg.querySelectorAll('.cluster rect, .subgraph rect, [class*="cluster"] rect, g.cluster rect').forEach((r) => {
+      r.setAttribute('fill', '#0c1322');
+      r.setAttribute('stroke', '#6366f1');
+      r.style.fill = '#0c1322';
+      r.style.stroke = '#6366f1';
+      r.style.strokeWidth = '1.6px';
+      r.style.strokeDasharray = '4 4';
+    });
+
+    // Subgraph titles
+    svg.querySelectorAll('.cluster text, .cluster-label text, .cluster span, g.cluster text').forEach((t) => {
+      t.setAttribute('fill', '#00e5ff');
+      t.style.fill = '#00e5ff';
+      t.style.fontWeight = '700';
+    });
+
+    // Flowchart Nodes
+    svg.querySelectorAll('.node rect, .node circle, .node ellipse, .node polygon, .node path, [class*="node"] rect, g.node rect').forEach((r) => {
+      r.setAttribute('fill', '#162032');
+      r.setAttribute('stroke', '#00e5ff');
+      r.style.fill = '#162032';
+      r.style.stroke = '#00e5ff';
+      r.style.strokeWidth = '1.8px';
+    });
+
+    // Node & Actor Text Labels
+    svg.querySelectorAll('.node text, .node tspan, .nodeLabel, .node .label, text.node-text, .actor text, text.actor').forEach((t) => {
+      t.setAttribute('fill', '#ffffff');
+      t.style.fill = '#ffffff';
+    });
+
+    // Flowchart Paths, Lines & Undirected Links
+    svg.querySelectorAll('.edgePath path, .flowchart-link, path.flowchart-link, path.link, path.edge-thickness-normal, path[id^="L-"]').forEach((p) => {
+      p.setAttribute('stroke', '#38bdf8');
+      p.style.stroke = '#38bdf8';
+      p.style.strokeWidth = '2.2px';
+      p.style.opacity = '1';
+    });
+
+    // Markers / Arrowheads
+    svg.querySelectorAll('marker path, .marker, #arrowheadHD path, #flowchart-pointEnd path, #flowchart-circleEnd path, #flowchart-crossEnd path, defs marker path, marker#arrowhead path, marker#crosshead path').forEach((m) => {
+      m.setAttribute('fill', '#38bdf8');
+      m.setAttribute('stroke', '#38bdf8');
+      m.style.fill = '#38bdf8';
+      m.style.stroke = '#38bdf8';
+    });
+
+    // Sequence Actors
+    svg.querySelectorAll('rect.actor, [class*="actor"] rect, .actor-top rect, .actor-bottom rect').forEach((r) => {
+      r.setAttribute('fill', '#162032');
+      r.setAttribute('stroke', '#00e5ff');
+      r.style.fill = '#162032';
+      r.style.stroke = '#00e5ff';
+      r.style.strokeWidth = '1.8px';
+    });
+
+    // Sequence Lifelines
+    svg.querySelectorAll('.actor-line, line.actor-line, [class*="actor-line"]').forEach((l) => {
+      l.setAttribute('stroke', '#475569');
+      l.style.stroke = '#475569';
+      l.style.strokeWidth = '1.5px';
+      l.style.strokeDasharray = '4 4';
+    });
+
+    // Sequence Messages / Signals
+    svg.querySelectorAll('.messageLine0, .messageLine1, line.messageLine0, line.messageLine1, path.messageLine0, path.messageLine1').forEach((l) => {
+      l.setAttribute('stroke', '#38bdf8');
+      l.style.stroke = '#38bdf8';
+      l.style.strokeWidth = '2.2px';
+    });
+
+    // Sequence Message Text
+    svg.querySelectorAll('.messageText, text.messageText').forEach((t) => {
+      t.setAttribute('fill', '#f8fafc');
+      t.style.fill = '#f8fafc';
+    });
+
+    // Sequence Notes
+    svg.querySelectorAll('rect.note, .note rect').forEach((r) => {
+      r.setAttribute('fill', '#1e293b');
+      r.setAttribute('stroke', '#f59e0b');
+      r.style.fill = '#1e293b';
+      r.style.stroke = '#f59e0b';
+    });
+
+    svg.querySelectorAll('.noteText, text.noteText').forEach((t) => {
+      t.setAttribute('fill', '#fef08a');
+      t.style.fill = '#fef08a';
+    });
+  }
+
   function bindDocDiagrams() {
     createLightboxDOM();
 
@@ -462,6 +563,7 @@
       if (!svgEl) return;
 
       container.dataset.robosDiagramReady = 'true';
+      applyHighContrastToSvg(svgEl);
 
       // If not already inside a robos-diagram-card, wrap it
       let cardWrapper = container.closest('.robos-diagram-card');
@@ -497,6 +599,7 @@
         e.preventDefault();
         const currentSvg = cardWrapper.querySelector('svg') || svgEl;
         if (currentSvg) {
+          applyHighContrastToSvg(currentSvg);
           openLightboxDiagram(currentSvg, diagramTitle);
         }
       };
