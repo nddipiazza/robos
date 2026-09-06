@@ -30,66 +30,12 @@ Every time you switch between these separate tools, context is lost:
 
 **RobOS changes this fundamentally.** RobOS provides a unified desktop operating system and application suite where **every tool shares the same underlying Git-backed architecture knowledge graph (`.robos/knowledge-graph.jsonld`)**.
 
-```mermaid
-flowchart TD
-    subgraph P0 ["Phase 0: Organization & Identity Foundation"]
-        P0_A["RobOS Group Manager & Security Setup<br/><i>(Enterprise Directory SCIM/LDAP Sync or Greenfield Bootstrap)</i>"]
-    end
-
-    subgraph P1 ["Phase 1: Component Scaffolding or Codebase Ingestion"]
-        P1_A["RobOS App Wizard<br/><i>(Path A: 6 Archetypes Scaffolding | Path B: Deep Inspection with AI Refinement)</i>"]
-    end
-
-    subgraph P2 ["Phase 2: Task Planning & Visual System Architecture"]
-        P2_A["Task Planner & Issue Manager<br/><i>(AI Prompt to OSLC 3.0 DAG & Issue Tickets)</i>"]
-        P2_B["Topology Studio<br/><i>(C4 Architecture Model & Spotify Backstage catalog-info.yaml)</i>"]
-        P2_A --> P2_B
-    end
-
-    subgraph P3 ["Phase 3: API Contracts & Live Mock Testing"]
-        P3_A["Contract Studio<br/><i>(OpenAPI 3.1, Microsoft TypeSpec & Prism Mock Servers)</i>"]
-    end
-
-    subgraph P4 ["Phase 4: Multi-Repo Hub & Automated Dev Setup"]
-        P4_A["Git Projects & GPG-Vaulted Environment<br/><i>(dev-setup.sh, GPG commit signing & pass vault)</i>"]
-    end
-
-    subgraph P5 ["Phase 5: Autonomous AI Implementation & Breakpoint Debugging"]
-        P5_A["AI Coding Agent Swarms<br/><i>(Autonomous Implementation Plans, Test Verification & Breakpoint Debugger)</i>"]
-    end
-
-    subgraph P6 ["Phase 6: PR Review Process & The IDE Review Hub"]
-        P6_A["RobOS Agent Code Review Platform<br/><i>(Automated AI Audits + Optional Review in IntelliJ / VS Code with Full Context)</i>"]
-    end
-
-    subgraph P7 ["Phase 7: Live Database Schema & Query Consoles"]
-        P7_A["Relational DB Manager & NoSQL DB Manager<br/><i>(SQL Console, Data Grids & Automated DDL Migrations)</i>"]
-    end
-
-    subgraph P8 ["Phase 8: Git-Backed REST API Verification"]
-        P8_A["REST API Client & Collection Runner<br/><i>(Bruno .bru Plain-Text Requests & Batch Verification)</i>"]
-    end
-
-    subgraph P9 ["Phase 9: Kubernetes & Cloud Infrastructure Navigator"]
-        P9_A["Kube Studio & Deploy Tracker<br/><i>(Helm Releases, Pod Metrics, Live Logs & Canary Rollouts)</i>"]
-    end
-
-    subgraph P10 ["Phase 10: Runtime Operations & Autonomous Agent Swarms"]
-        P10_A["Workflow Studio & Agents Manager<br/><i>(Dynamic Feature Flags, Cron Swarms & Automated Defect Ingestion)</i>"]
-    end
-
-    P0 --> P1
-    P1 --> P2
-    P2 --> P3
-    P3 --> P4
-    P4 --> P5
-    P5 --> P6
-    P6 --> P7
-    P7 --> P8
-    P8 --> P9
-    P9 --> P10
-    P10 -.->|"Defect Tickets & Tech Debt Sync"| P2_A
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-lifecycle-overview.jpg' | relative_url }}" alt="The RobOS End-to-End Application Lifecycle Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Complete Application Lifecycle Pipeline</strong>: How native RobOS applications orchestrate software development from Day-1 foundation through runtime operations with continuous defect feedback. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 Below is the complete walkthrough of how developers and engineering teams use RobOS to build enterprise applications—illustrated by the real-world **Acme Pet Store Platform**—from Day-1 organization onboarding to live cloud operations.
 
@@ -99,18 +45,12 @@ Below is the complete walkthrough of how developers and engineering teams use Ro
 
 Before planning features or scaffolding microservices, RobOS establishes your cryptographic developer identity, organization structure, and team boundaries. RobOS never relies on hardcoded assumptions—it identifies you and your team through two top-level enterprise workflows:
 
-```mermaid
-flowchart TD
-    Choice{"Organization Type?"}
-    Choice -->|"Existing Enterprise"| PathExist["Existing Company Setup<br/><i>(SCIM 2.0 / Azure AD / Okta / LDAP Sync)</i>"]
-    Choice -->|"New Greenfield Startup"| PathNew["New Company Setup<br/><i>(1-Click Company Bootstrap & Stream-Aligned Teams)</i>"]
-
-    PathExist --> SyncTeams["Map Teams to Team Topologies<br/><i>(.robos/teams.yaml)</i>"]
-    PathNew --> SyncTeams
-
-    SyncTeams --> SecSetup["Security Setup<br/><i>(GPG Keypair, SSH Keys, pass Vault)</i>"]
-    SecSetup --> Ready["Day-1 Developer Foundation Ready"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-org-foundation.jpg' | relative_url }}" alt="Phase 0: Organization & Identity Foundation Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Phase 0 Decision Flowchart</strong>: Onboarding via Existing Enterprise directory sync vs. New Greenfield company bootstrap. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Existing Company Setup (Enterprise Directory Sync)
 If joining or setting up an established enterprise, developers launch **RobOS Group Manager** (`packages/group-manager`):
@@ -134,18 +74,12 @@ If launching a new company or startup from scratch:
 
 With organization and team identities established, developers provision their applications using the **RobOS App Wizard** (`packages/app-wizard`). Developers follow one of two standardized paths:
 
-```mermaid
-flowchart TD
-    AppChoice{"Application Origin?"}
-    AppChoice -->|"Brand New Project"| NewApp["Path A: Develop a New App<br/><i>(Greenfield Scaffolding across 6 Archetypes)</i>"]
-    AppChoice -->|"Existing Codebase"| ImpApp["Path B: Import Existing Codebase<br/><i>(Brownfield Deep Inspection & AI Refinement)</i>"]
-
-    NewApp --> GenMeta["Generate Backstage catalog-info.yaml<br/>& dev-setup.sh"]
-    ImpApp --> AIInspect["Interactive Deep Inspection<br/><i>(Prompt Refinement with &lt;robos-ai-textarea&gt;)</i>"]
-    AIInspect --> GenMeta
-
-    GenMeta --> KGraphReg["Register in .robos/packages.yaml<br/>& Dual-State Knowledge Graph"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}" alt="Phase 1: Component Scaffolding or Codebase Ingestion Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Phase 1 Decision Flowchart</strong>: Greenfield scaffolding across 6 archetypes vs. Brownfield deep codebase inspection with AI refinement. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Path A: Develop a New App (Greenfield Scaffolding)
 Developers generate a production-ready repository skeleton across **6 core multi-app archetypes**:
