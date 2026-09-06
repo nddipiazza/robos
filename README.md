@@ -12,6 +12,8 @@
 
 ## 🧬 The Core Paradigm: KGraph-First Application Generation
 
+![Knowledge Graph-First Application Generation and Agent Review-Based Software Development](docs/assets/images/kgraph-autogen-architecture.jpg)
+
 In modern software engineering, developers rely on contracts to eliminate manual boilerplate:
 - An **OpenAPI 3.1 specification** automatically generates typed REST client SDKs, server stubs, and API gateway routing.
 - A **Protobuf definition** automatically generates gRPC client/server stubs and binary serializers.

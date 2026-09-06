@@ -20,6 +20,13 @@ RobOS is the developer operating system and native 30+ desktop application suite
 
 {: .fs-6 .fw-300 }
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/kgraph-autogen-architecture.jpg' | relative_url }}" alt="Knowledge Graph-First Application Generation and Agent Review-Based Software Development Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The 4-Stage Lifecycle</strong>: 1) Human Lead Architect & KGraph Blueprint ──▶ 2) RobOS Synthesis Engine & Autonomous Swarms ──▶ 3) Ephemeral In-Memory Sandbox Verification ──▶ 4) Agent Review & Human Approval. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
 {: .note }
 > **Built on Battle-Tested Open Standards.** RobOS invents no proprietary locks or closed SaaS silos. Everything is backed by plain-text files in your Git repository under `.robos/` and built on open industry standards: **OASIS OSLC 3.0**, **W3C JSON-LD**, **Spotify Backstage**, **C4 Architecture Model**, **Microsoft TypeSpec**, **Pact Consumer Contracts**, **Kubernetes & Helm**, and **Model Context Protocol (MCP)**.
 
