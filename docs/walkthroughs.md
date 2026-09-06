@@ -1,7 +1,7 @@
 ---
 title: E2E Walkthroughs & Proof of Work
 layout: default
-nav_order: 10
+nav_order: 11
 ---
 
 # Real-World Walkthroughs & Proof of Work

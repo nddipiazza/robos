@@ -1,7 +1,7 @@
 ---
 title: System Architecture
 layout: default
-nav_order: 11
+nav_order: 12
 ---
 
 # System Architecture (How RobOS Works Under the Hood)

@@ -33,6 +33,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [The 4 Pillars]({{ site.baseurl }}{% link four-pillars.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
@@ -117,30 +118,18 @@ RobOS is built around 4 core innovations that separate a true AI-first operating
 
 ## A Day in the Life: From Business Idea to Production
 
-Here is how a real engineering team uses RobOS to deliver a new capability—from initial concept to verified production deployment:
+RobOS coordinates its 30+ native applications into an orchestrated lifecycle—taking a raw business requirement through automated planning, visual architecture, contract design, ephemeral agent implementation, multi-protocol verification, and IDE review, all the way to live cloud operations.
 
-### 1. Visual Architecture & Dependency Mapping
-An engineer outlines a new requirement in the Task Planner. RobOS maps the dependency graph, visualizes services across C4 zoom levels (System Context, Container, Component), and calculates affected services before any code is written.
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/day-in-the-life-flowchart.jpg' | relative_url }}" alt="RobOS Lifecycle: From Business Idea to Production Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Complete Application Lifecycle Flowchart</strong>: How native RobOS apps connect from planning through production. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
-![Visual Architecture Studio]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
-
-### 2. Multi-Protocol Data & API Management
-The agent provisions the required data sources, establishes API contracts, and executes migration scripts. Engineers inspect database schemas, view live table data grids, and run multi-tab SQL console queries with sub-millisecond execution metrics.
-
-![RobOS Relational DB Manager]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
-
-### 3. Native In-IDE Pull Request Review
-When the agent finishes implementation and video verification, the human lead architect opens the pull request. Review diffs and security audits inside the RobOS Agent Code Review Platform, or **open the project directly in your preferred IDE**:
-
-- **IntelliJ IDEA Plugin**: Jumps straight to modified lines over the local IPC bridge (`port 63343`), loads run configurations, and integrates with the native JetBrains Pull Request tool window.
-- **VS Code Integration**: Opens the pull request directly in VS Code (`vscode://github.vscode-pull-request-github/open-pr`) with full inline comments, symbol navigation, and language servers.
-
-![Pull Request Review Platform]({{ '/assets/images/screenshots/agent-review-files-diff_frame.png' | relative_url }})
-
-### 4. GitOps Cloud Deployment & Live Operations
-Once approved with a single click, the change merges to `main`. Kube Studio tracks the rollout across Kubernetes clusters, displaying live container health, ArgoCD sync status, and streaming pod logs.
-
-![Kube Studio Cloud Infrastructure]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }})
+<div style="text-align: center; margin: 1.5rem 0 2.5rem;">
+  <a href="{{ site.baseurl }}{% link day-in-the-life.md %}" class="btn btn-primary fs-5">Explore A Day in the Life in Depth →</a>
+</div>
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: User Personas
 layout: default
-nav_order: 13
+nav_order: 14
 ---
 
 # User Personas & Real-World Workflows
