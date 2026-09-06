@@ -2,9 +2,9 @@
 
 This file provides guidance to AI coding agents (Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, Gemini CLI, Cursor, etc.) when working with code in this repository.
 
-# RobOS — AI-First Software Development Operating System
+# RobOS — AI-First Developer Operating System & Application Suite
 
-RobOS is a developer-first operating system and IDE ecosystem that automates the entire Software Delivery Lifecycle (SDLC) using AI. From the moment you log in, every surface is optimized for AI-assisted software development.
+RobOS is a developer-first operating system, 30+ native application suite, and IDE ecosystem that automates the entire Software Delivery Lifecycle (SDLC) using AI. From the moment you log in or launch an application, every surface is optimized for AI-assisted software development.
 
 ## Vision
 
@@ -78,13 +78,14 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Context Manager** | Curate AI context sources (files, URLs, repos, tickets) |
 | **Tech Workbench** | Technical spike research with AI assistance |
 | **Work Journal** | Git-backed developer journal with AI activity feed |
-| **Group Manager** | Manage GitHub organizations and teams — view members, roles, and repo access |
+| **Group Manager** | Manage organizations, teams, enterprise directory sync (Okta, Azure AD SCIM, LDAP), company bootstrap, and Team Topologies |
+| **App Wizard** | Greenfield application scaffolding and brownfield codebase ingestion wizard across 6 multi-app archetypes |
 | **Pass Manager** | GUI for GPG-encrypted password store |
 | **Workflow Studio** | Workflow and issue lifecycle management |
 | **Agent Scheduler** | Background cron-based AI agent jobs |
 | **Task Servers** | Jira / GitHub task server configuration |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
-| **REST API Client** | Bruno-powered Git-backed REST API client, collection runner, and microservice verifier |
+| **REST API Client** | Git-backed REST API client, collection runner, and microservice verifier |
 | **Data Sources** | Knowledge Graph data sources explorer, database schema inspector, and interactive query console |
 | **Relational DB Manager** | DBeaver & DataGrip-inspired SQL database manager, schema explorer, and query console |
 | **NoSQL DB Manager** | MongoDB Compass & RedisInsight-inspired NoSQL document and key-value store manager |
@@ -92,6 +93,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **GraphQL Client** | GraphiQL & Altair-inspired GraphQL schema explorer, query editor, and variables runner |
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
 | **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
+| **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
 
 
 | **Claude Console** | Enhanced Claude Code GUI |
@@ -205,6 +207,26 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **Secrets**: Environment variables only, validated with `zod`; never hardcode credentials
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
+### Knowledge Graph (KGraph), Multi-App Archetypes & Living Documentation Sync
+RobOS maintains a centralized Dual-State SDLC Knowledge Graph located in `.robos/knowledge-graph.jsonld` (with declarative GitOps files in `.robos/topology.yaml`, `.robos/teams.yaml`, `.robos/packages.yaml`, and `.robos/elearning.yaml`). All RobOS development skills (`e2e-driven-dev`, `create-robos-app`, `sync-kgraph-docs`) ensure that the KGraph is constantly kept up to date whenever apps, services, contracts, requirements, or eLearning modules evolve.
+
+**Multi-App Archetypes**:
+- **Microservices & Web APIs** (`robos:Microservice`): Backend services implementing OpenAPI 3.1 YAML, Protobuf gRPC, or GraphQL contracts.
+- **Desktop Applications** (`robos:DesktopApp`): Workstation desktop programs (Electron, Qt, GTK, Tauri) running locally on developer or end-user machines.
+- **Console & CLI Tools** (`robos:ConsoleApp`): Command-line terminal utilities (Go Cobra, Rust Clap, Python Click, Node Commander) with subcommands and flag specifications.
+- **Mobile Applications** (`robos:MobileApp`): iOS, Android, React Native, and Flutter mobile clients.
+- **Data Pipelines & Workers** (`robos:DataPipeline`): Stream and batch processing jobs (Kafka Streams, Celery, Spark).
+- **Libraries & SDKs** (`robos:Library`): Reusable client SDKs, common modules, and packages.
+
+**Git Projects Auto-Synchronization**:
+Every repository registered in RobOS Git Projects (`~/.config/robos/git-projects.json`) is automatically ingested into the Knowledge Graph upon addition and continuously updated on `git pull` on the `main` branch.
+
+**Cardinal Rule for KGraph Updates & Documentation Sync**:
+Whenever Knowledge Graph objects are updated (added, altered, or deleted), the AI must be prompted to discern any noticeable updates to system documentation and to update the documentation accordingly:
+1. **Analyze Graph Deltas**: Inspect newly added or modified nodes (Microservices, Desktop Apps, Console Apps, Mobile Apps, Data Pipelines, Libraries, Contracts, Requirements, eLearning courses, Teams, Projects).
+2. **Discern Noticeable Documentation Impacts**: Check user-facing documentation (`docs/index.md`, `README.md`, `docs/project-plan/`, API specs, and feature specs) for any necessary updates reflecting the changed architecture or capabilities.
+3. **Synchronize Living Docs**: Automatically apply the corresponding documentation updates so that documentation and the Knowledge Graph remain in continuous lockstep.
+
 ### CSS Theme Variables
 All apps share a consistent dark theme:
 - `--bg-primary: #0d1117` — main background
@@ -224,6 +246,7 @@ When adding, renaming, or removing an app, update ALL of these locations. Use th
 7. `packages/desktop-shell/install.sh` — install block
 8. `<app-id>.desktop` file
 9. `AGENTS.md` App Suite table
+10. `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml` — Register or update the application node in the dual-state SDLC knowledge graph and GitOps tree, and prompt documentation synchronization.
 
 **Note:** Some checklist targets (desktop-manager, icon-lib, task-manager, desktop-shell) may not exist yet. Only update files that exist.
 

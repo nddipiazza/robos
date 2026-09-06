@@ -1,5 +1,5 @@
 ---
-title: RobOS — AI-First Software Development Operating System
+title: RobOS — AI-First Developer Operating System & Application Suite
 layout: home
 nav_order: 1
 nav_exclude: false
@@ -7,101 +7,136 @@ nav_exclude: false
 
 # RobOS
 
-## The AI-First Operating System for Software Engineering Teams
+## The Developer Operating System for the AI Era: Where Agents Code and Humans Lead
 {: .fs-9 }
 
-RobOS is a complete developer operating system and desktop ecosystem engineered for **AI Agent Review-Based Software Development**. Autonomous AI agents plan, write code, run deep unit and visual tests, provision databases, and configure Kubernetes infrastructure — while human developers act as Lead Architects, Reviewers, and Approvers.
+The way software is built has fundamentally changed. Autonomous AI agents can now investigate complex bugs, scaffold multi-service architectures, write code across polyglot repositories, and spin up local infrastructure.
 
-RobOS can be installed in two ways:
-1. **Desktop Suite**: 30+ lightweight, native developer applications running on your existing Linux, macOS, or Windows desktop.
-2. **RobOS Ubuntu Distro**: A full-featured Ubuntu-based developer OS that can be run in a virtual machine (QEMU/KVM) or installed directly onto physical hardware.
+Yet our developer environments are still stuck in the past. Engineers are drowning in disconnected browser tabs, fragmented CLI tools, mystery YAML, and AI assistants that dump untested code onto local machines—leaving humans to spend hours untangling broken dependencies, mystery regressions, and invisible blast radiuses.
+
+**RobOS was created to solve this.**
+
+RobOS is a developer operating system and native 30+ desktop application suite engineered for **AI Agent Review-Based Software Development**. It flips the software delivery lifecycle: autonomous agent swarms handle the heavy lifting in isolated, clutter-free environments, while human developers step up into their true role: **Lead Architects, Reviewers, and Approvers**.
 
 {: .fs-6 .fw-300 }
 
 {: .note }
-> **Built on Battle-Tested Open Standards.** RobOS invents no proprietary locks. It is built entirely on open specifications: **OASIS OSLC 3.0**, **W3C JSON-LD**, **Spotify Backstage**, **C4 Architecture Model**, **Microsoft TypeSpec**, **Pact Consumer Contracts**, **Bruno REST Collections**, and **Model Context Protocol (MCP)**.
+> **Built on Battle-Tested Open Standards.** RobOS invents no proprietary locks or closed SaaS silos. Everything is backed by plain-text files in your Git repository under `.robos/` and built on open industry standards: **OASIS OSLC 3.0**, **W3C JSON-LD**, **Spotify Backstage**, **C4 Architecture Model**, **Microsoft TypeSpec**, **Pact Consumer Contracts**, **Kubernetes & Helm**, and **Model Context Protocol (MCP)**.
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[App Creation Flow]({{ site.baseurl }}{% link app-development-flow.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
+[Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
+
+<div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+  <a href="{{ site.baseurl }}{% link new-company-setup.md %}" class="btn fs-3">🚀 New Company Setup</a>
+  <a href="{{ site.baseurl }}{% link existing-company-setup.md %}" class="btn fs-3">🏢 Existing Company Setup</a>
+  <a href="{{ site.baseurl }}{% link new-app-wizard.md %}" class="btn fs-3">✨ Develop a New App</a>
+  <a href="{{ site.baseurl }}{% link app-import-wizard.md %}" class="btn fs-3">📥 Import Existing Apps</a>
+</div>
 
 ---
 
-## The 4 Big Wins (What Sets RobOS Apart)
+## The Story: Why We Built RobOS
 
-RobOS introduces 4 major innovations that traditional code editors and operating systems cannot do:
+### The 3 Growing Pains of Modern AI Development
+
+Today's AI coding tools are designed as simple add-ons: an autocomplete extension in your editor or a chat sidebar in a browser. While they generate code quickly, they introduce three severe bottlenecks:
+
+1. **Context Blindness & Invisible Blast Radiuses**  
+   An AI assistant looking at a single file or directory has no awareness of the surrounding system. It doesn't know that renaming a database column breaks a downstream analytics pipeline, or that modifying an API response payload violates a frontend contract. The developer is left to manually trace the ripple effects across dozens of repositories.
+
+2. **Workstation Clutter & The Machine Pollution Problem**  
+   When autonomous agents run shell commands directly in your home directory, they leave behind orphaned node modules, temporary build artifacts, stray Docker containers, and conflicting background processes. Worse, they risk exposing personal credentials or overwriting uncommitted work.
+
+3. **Hallucinations & Review Fatigue ("Trust Me, It Works")**  
+   Current agents claim "Task complete!" without proving anything. They don't verify if buttons click, if schemas migrate cleanly, or if containers start. Reviewing raw walls of AI-generated diffs without language servers, symbol lookup, or execution context forces developers into exhausting manual verification loops.
+
+```
+Traditional Workflow (The Typing Bottleneck):
+[Developer Investigates Bug] ──▶ [Developer Writes Code] ──▶ [Developer Runs Tests] ──▶ [Developer Files PR]
+
+RobOS Paradigm (Lead Architect & Reviewer):
+[AI Swarm Investigates & Plans] ──▶ [Proactive Human Alignment & Plan Review] ──▶ [AI Executes in Isolated RAM]
+                                                                                               │
+[1-Click Merge & GitOps Deploy] ◀── [Lead Reviews in Native IDE + Proof Video] ◀── [AI Proves Work with E2E Video]
+```
+
+### The Solution: Agent Review-Based Development
+
+RobOS turns the developer into a **Lead Architect**. You don't spend your day writing repetitive boilerplate or setting up test databases. Instead:
+
+- **AI Agents Grounded in the Knowledge Graph**: Agents inspect the full architecture map, identify dependencies across microservices and schemas, reproduce bugs, and draft structured technical proposals.
+- **Continuous Human-in-the-Loop Alignment**: Rather than making assumptions in a black box, RobOS workflows actively pick and probe at the human architect—clarifying ambiguities, challenging design trade-offs, and ensuring the lead engineer is intimately in the know before any code is generated.
+- **Agents Execute in Ephemeral Sandboxes**: Code is written and tested in temporary memory environments that leave zero residue on your workstation.
+- **AI Proves Its Work**: Agents execute real end-to-end tests on an isolated virtual screen, capturing high-definition video walkthroughs and neural voiceovers proving every assertion.
+- **You Review With Full IDE Context**: Review pull requests in the dedicated RobOS PR Platform or jump straight into **IntelliJ IDEA** or **VS Code** with full AST navigation, symbol lookup, and local debugging tools.
+
+---
+
+## The 4 Architectural Pillars of RobOS
+
+RobOS is built around 4 core innovations that separate a true AI-first operating system from traditional coding environments:
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
 
 <div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
-<h3 style="margin-top: 0; color: #00bcd4;"><a href="#win-1-live-architecture--project-map" style="color: #00bcd4; text-decoration: none;">🧠 1. Live Architecture & Project Map (Today vs. Tomorrow)</a></h3>
-<p>Unlike regular code editors that only see plain text files, RobOS maintains a live interactive map of your entire system (services, databases, API contracts, repos, and team ownership). It tracks two versions at once: <strong>Live Production</strong> (how things run today) vs <strong>Proposed Feature Branch</strong> (how things will look after your changes), instantly showing what other services could break.</p>
+<h3 style="margin-top: 0; color: #00bcd4;">🧠 1. Dual-State Living Architecture</h3>
+<p>RobOS maintains a linked knowledge graph comparing <strong>World 1 (Live Production)</strong> against <strong>World 2 (Your Feature Branch)</strong>. It calculates the exact blast radius of every change across microservices, schemas, and contracts <em>before</em> any code is merged.</p>
 </div>
 
 <div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
-<h3 style="margin-top: 0; color: #8b5cf6;"><a href="#win-2-clean-isolated-ai-workspaces" style="color: #8b5cf6; text-decoration: none;">👤 2. Clean, Isolated AI Workspaces (Zero Clutter)</a></h3>
-<p>When AI agents work on code, they don't pollute your personal user account. Each agent gets a temporary workspace stored in high-speed RAM (memory). When the task finishes, the memory is wiped clean with zero leftover temporary files or rogue background processes.</p>
+<h3 style="margin-top: 0; color: #8b5cf6;">👤 2. Ephemeral In-Memory Agent Sandboxes</h3>
+<p>AI agents run in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual X11 displays. When the task finishes, the memory is wiped clean with zero leftover temporary files, stray ports, or rogue background processes.</p>
 </div>
 
 <div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #10b981;">
-<h3 style="margin-top: 0; color: #10b981;"><a href="#win-3-automated-video-proof-of-work" style="color: #10b981; text-decoration: none;">🎥 3. Automated Video Proof-of-Work (AI Proves Its Code Works)</a></h3>
-<p>AI assistants shouldn't just claim their code compiles. In RobOS, AI agents run real end-to-end tests on a virtual screen, record 1080p video walkthroughs, and synthesize spoken voiceovers explaining what they built before asking for your approval.</p>
+<h3 style="margin-top: 0; color: #10b981;">🎥 3. Automated Video Proof-of-Work</h3>
+<p>No code change reaches human review without automated visual proof. Agents run end-to-end verifications, click real buttons, query real databases, and record 1080p narrated videos so you can review complex features in under 30 seconds.</p>
 </div>
 
 <div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #f59e0b;">
-<h3 style="margin-top: 0; color: #f59e0b;"><a href="#win-4-automatic-kubernetes--cloud-files" style="color: #f59e0b; text-decoration: none;">⚡ 4. Automatic Kubernetes & Cloud Files (No YAML Headaches)</a></h3>
-<p>System topology, data sources, and contracts are saved in clean, human-readable Git files. When you add a new database or service in the visual architecture map, RobOS automatically generates ready-to-deploy <strong>Kubernetes manifests and Helm charts</strong> without manual YAML wrangling.</p>
+<h3 style="margin-top: 0; color: #f59e0b;">⚡ 4. Zero-YAML Declarative GitOps</h3>
+<p>System topology, data sources, and contracts are saved in clean, human-readable Git files under <code>.robos/</code>. Adding a database or service to your visual architecture automatically synthesizes ready-to-deploy <strong>Kubernetes manifests and Helm charts</strong>.</p>
 </div>
 
 </div>
 
----
+### Pillar 1: Dual-State Living Architecture (Today vs. Tomorrow)
 
-## Detailed Breakdown of the 4 Core Innovations
-
-### Win 1: Live Architecture & Project Map (Comparing Today vs. Tomorrow)
-
-Traditional IDEs and AI coding tools only understand individual source files in a single folder. They have no idea what other microservices, database schemas, or API contracts depend on the file you are editing.
-
-RobOS maintains a linked architecture knowledge graph based on open standards (**OASIS OSLC 3.0** and **W3C JSON-LD**):
+Traditional code editors only understand plain text files in a single folder. RobOS maintains a connected architecture knowledge graph based on **OASIS OSLC 3.0** and **W3C JSON-LD**:
 
 ```mermaid
 graph TD
     subgraph World1 [World 1: Live Production State]
         P_Topo[Current System Architecture]
-        P_Contract[Active REST & Event Contracts]
+        P_Contract[Active API & Event Contracts]
         P_Schema[Production Data Models]
-        P_DB[Live Database Instances]
+        P_DB[Live Database Clusters]
     end
 
     subgraph World2 [World 2: Proposed Feature Changes]
         F_Topo[Proposed Analytics Database Node]
-        F_Contract[New /analytics REST Endpoints]
+        F_Contract[New /analytics API Endpoints]
         F_Schema[Updated Data Transfer Models]
-        F_DB[Generated K8s Analytics Database]
+        F_DB[Generated K8s Analytics Manifests]
     end
 
     Diff{Comparison & Validation Engine}
     World1 --> Diff
     World2 --> Diff
-    Diff --> Radius[Blast Radius & Impact Report: What Could Break]
+    Diff --> Radius[Blast Radius & Impact Report: Flag Potential Breaches Upfront]
 ```
 
-#### How the Dual-State Comparison Works in Plain English:
-1. **World 1 (Live Production `main`)**: Represents the active running state of your software — what services are deployed, what API endpoints exist, and what database tables are live.
-2. **World 2 (Your Feature Branch)**: Represents what the system will look like once your new feature, pull request, or architectural spike is merged.
-3. **Automated Impact Analysis (Blast Radius)**: Whenever you or an AI agent change an API endpoint or database column, RobOS calculates exactly which frontend apps or downstream services are affected **before any code is written**.
-4. **Clean Git-Backed Files**: The entire architecture map is saved in plain text under `.robos/knowledge-graph.jsonld` inside your Git repository.
+- **World 1 (Live Production `main`)**: Tracks deployed services, active API contracts, and live database tables.
+- **World 2 (Feature Branch)**: Models what the system will look like once your pull request or spike is merged.
+- **Automated Blast Radius**: When an AI agent or developer modifies an endpoint or schema, RobOS immediately flags which downstream services, mobile apps, or web frontends are affected before coding even begins.
+- **Continuous Documentation Sync**: When architecture nodes change, RobOS automatically prompts and synchronizes system documentation (`docs/`) and training curriculums in lockstep.
 
----
+### Pillar 2: Ephemeral In-Memory Agent Sandboxes (Zero Machine Clutter)
 
-### Win 2: Clean, Isolated AI Workspaces (Zero Desktop Clutter)
-
-Standard AI coding tools run commands directly inside your personal user profile, creating risks of credential leaks, port collisions, and cluttering your machine with orphaned processes.
-
-RobOS spins up **temporary, isolated agent workspaces** backed by RAM memory:
+Instead of letting agents execute commands directly in your primary desktop user account, RobOS dynamically spawns **hermetic, disposable agent sandboxes**:
 
 ```mermaid
 sequenceDiagram
@@ -110,163 +145,167 @@ sequenceDiagram
     participant Agent as Temporary Agent Sandbox (RAM)
     participant App as Target App (e.g. Relational DB Manager)
 
-    Host->>Supervisor: Assign Task "Add Analytics Database"
-    Supervisor->>Agent: Create temporary user + mount memory folder in RAM
-    Supervisor->>Agent: Bridge virtual display + attach AI tool connections
-    Agent->>App: Launch DB Manager & run test SQL queries
+    Host->>Supervisor: Assign Task: "Add Analytics Database"
+    Supervisor->>Agent: Mount ephemeral memory folder in RAM (tmpfs)
+    Supervisor->>Agent: Bridge virtual display (Xvfb) + attach AI tool connections
+    Agent->>App: Launch DB Manager & run verification queries
     App-->>Agent: Render live data grid and schema tables
-    Agent->>Supervisor: Verify UI state & record video frame
-    Supervisor->>Agent: Delete temporary user & wipe RAM clean (Zero Leftover Clutter)
+    Agent->>Supervisor: Verify UI state & capture video proof frame
+    Supervisor->>Agent: Destroy sandbox & wipe RAM clean (Zero Leftover Clutter)
 ```
 
-#### Why This Matters to Developers:
-- **Zero-Leftover RAM Mounts**: When an AI agent runs, its workspace lives in temporary system RAM (`tmpfs`). Once the task is finished, the memory is released completely.
-- **Visual Desktop Bridging**: AI agents aren't just command-line bots; they can open graphical applications, test user interfaces, and verify that buttons and forms look right.
-- **Accurate UI Inspection**: Agents inspect live visual elements through dedicated local inspection ports (`19100–19182`), ensuring test assertions verify real user interface state.
+- **Zero-Residue Storage**: Agent workspaces live entirely in high-speed RAM (`tmpfs`). When a task is complete or cancelled, the memory is reclaimed instantly.
+- **Virtual Display Isolation**: Automated visual tests run on private headless displays (`Xvfb + Picom`), leaving your active monitor completely uninterrupted.
+- **Live DOM & UI Inspection**: Dedicated debug ports (`19100–19183`) allow agents to inspect real DOM trees and verify user interfaces with sub-pixel precision.
 
----
+### Pillar 3: Automated Video Proof-of-Work (AI Proves Its Code Works)
 
-### Win 3: Automated Video Proof-of-Work (AI Proves Its Code Works)
-
-AI models can easily produce code that looks correct at first glance but crashes at runtime. RobOS enforces a clear standard: **no code change is presented for human review without automated visual verification and video proof-of-work**.
+In RobOS, no code reaches human review on trust alone. Every pull request comes with an automated, verifiable **proof-of-work package**:
 
 ```mermaid
 flowchart LR
     A["Developer Submits Goal"] --> B["Headless 1080p Virtual Screen"]
     B --> C["Automated UI & API Assertions"]
-    C --> D["Spoken Voiceover Generation"]
+    C --> D["Piper Neural Voiceover Synthesis"]
     D --> E["1080p Video + Subtitles Package"]
-    E --> F["1-Click Lead Engineer Approval"]
+    E --> F["Lead Architect 30-Second Review"]
 ```
 
-#### How the Automated Verification Fabric Works:
-1. **Headless Virtual Desktop (`Xvfb + Picom`)**: The entire test suite runs on an isolated 1920x1080 virtual display so your active screen is never hijacked.
-2. **Real Visual & Network Tests**: Tests click real buttons, query real databases, and verify HTTP success responses.
-3. **Recorded Video & Spoken Voiceovers**: Generates a 1080p video with spoken voiceover explanations (synthesized using offline, local neural text-to-speech) detailing every step of the verification.
-4. **One-Click Approval Package**: The lead developer receives the video walkthrough, code diffs, and test results for 30-second review and approval.
+1. **Deterministic Assertions**: The test fabric waits for real DOM elements, tests interactive forms, queries live databases, and verifies HTTP status codes.
+2. **Synchronized 1080p Video**: Records a smooth 1080p video demonstrating the application running end-to-end.
+3. **Local Neural Voiceovers**: Generates spoken explanations using offline, private neural text-to-speech (Piper TTS) with synchronized WebVTT subtitles.
+4. **Fast Approvals**: Lead architects watch a 30-second video walkthrough rather than spending 20 minutes manually cloning, building, and seeding test data.
+
+### Pillar 4: Zero-YAML Declarative GitOps
+
+RobOS stores your entire architecture in standard, human-readable Git files under `.robos/`. When you design or modify services visually, RobOS manages the underlying infrastructure automatically:
+
+- **Instant Cloud Manifests**: Adding a PostgreSQL, MySQL, Redis, or Kafka node to the visual architecture canvas generates ready-to-deploy Kubernetes StatefulSets, Deployments, and Helm charts.
+- **Local & Enterprise Clusters**: Connect to local Kind clusters for instant development, or target enterprise clouds (AWS EKS, Google Cloud GKE, Azure AKS) with real-time pod log streaming and ArgoCD GitOps sync.
+- **Git-Backed API Testing**: API endpoints and test suites are stored directly in your repository as plain-text files, versioned alongside your application code.
 
 ---
 
-### Win 4: Automatic Kubernetes & Cloud Files (No YAML Headaches)
+## A Day in the Life: From Business Idea to Production
 
-Many modern platforms force you into proprietary cloud consoles. RobOS stores your entire architecture in standard, human-readable Git files under `.robos/`.
+Here is how a real engineering team uses RobOS to deliver a new capability—from initial concept to verified production deployment:
 
-```mermaid
-flowchart TD
-    UI["Visual Architecture Studio (Canvas)"] -->|Add Node| KGraph[".robos/knowledge-graph.jsonld"]
-    KGraph -->|Auto-Generate| K8s["Kubernetes YAML Deployment Files"]
-    KGraph -->|Auto-Generate| Helm["Helm Chart Templates"]
-    K8s -->|Deploy| Cluster["Local Kind / EKS / GKE / AKS Cluster"]
-    Cluster -->|Connect| DBM["RobOS Relational DB Manager"]
-    DBM -->|Verify| REST["RobOS Bruno REST API Client"]
-```
+### 1. Visual Architecture & Dependency Mapping
+An engineer outlines a new requirement in the Task Planner. RobOS maps the dependency graph, visualizes services across C4 zoom levels (System Context, Container, Component), and calculates affected services before any code is written.
 
-#### Automated Cloud Infrastructure:
-- **Instant Deployment Files**: Adding a PostgreSQL, MySQL, Redis, or Kafka node to your visual architecture canvas automatically generates ready-to-deploy Kubernetes YAML manifests and Helm charts.
-- **Works with Local and Cloud Clusters**: Connect to local Kind clusters on your laptop or enterprise clouds (AWS EKS, Google Cloud GKE, Azure AKS) with live container log streaming and GitOps sync.
-- **Git-Backed API Collections**: REST endpoints and microservices are automatically saved as plain text `.bru` files for easy testing with the open-source Bruno REST client.
+![Visual Architecture Studio]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
----
+### 2. Multi-Protocol Data & API Management
+The agent provisions the required data sources, establishes API contracts, and executes migration scripts. Engineers inspect database schemas, view live table data grids, and run multi-tab SQL console queries with sub-millisecond execution metrics.
 
-## AI Agent Review-Based Development
-
-Traditional software engineering forces developers to spend 80% of their day tracking down bugs, configuring environments, and writing repetitive boilerplate. **RobOS flips this model**:
-
-```mermaid
-graph LR
-    subgraph AutonomousAI [Autonomous AI Agent Team]
-        T[Picks Up Task] --> R[Investigates Repos & Contracts]
-        R --> K[Generates Code, DBs & Tests]
-        K --> V[Runs Visual Tests & Records Proof Video]
-    end
-
-    subgraph HumanEngineer [Human Lead Architect]
-        V --> P[PR Review via RobOS / IDE Reviewer]
-        P --> M[1-Click Merge & Dual Sync]
-    end
-```
-
-1. **AI Investigates & Implements**: When a ticket is assigned, the AI spins up an isolated workspace, investigates the contracts and code, implements the solution, and generates automated tests (with an optional breakpoint debugging feature for runtime inspection).
-2. **Developer Reviews the Plan (`/grill-me`)**: The lead engineer reviews the proposal, asks questions, and clarifies edge cases before code changes are finalized.
-3. **Automated Verification**: The AI runs automated tests across unit, integration, and Pact contract suites, packaging a proof-of-work video walkthrough.
-4. **Human PR Review & IDE Integration**: The developer reviews the PR using the **Agent Code Review Platform** or **optionally opens the project in IntelliJ IDEA / VS Code** using RobOS to review with full IDE context in tow, then approves and merges with 1 click.
-
----
-
-## Visual Tour of the RobOS Suite
-
-### System Topology & Visual Architecture Studio
-Visually design and manage your entire system architecture without writing tedious infrastructure boilerplate:
-- **C4 Architecture Zoom (Levels 1–3)**: Zoom from high-level user personas (**Level 1: System Context**), down into microservices and databases (**Level 2: Containers**), to internal code modules (**Level 3: Components**).
-- **Backstage Catalog Integration**: Automatically synchronizes your team's `catalog-info.yaml` software catalogs so services, API contracts, and team ownership are always up to date.
-- **Instant Kubernetes & Helm Generation**: Adding a new database or service to the canvas automatically creates the Kubernetes deployment YAML and Helm charts.
-![RobOS System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
-
-### RobOS Relational DB Manager (PostgreSQL, Oracle, MySQL)
-Inspect live database schemas, view data grids, run multi-tab SQL console queries with sub-millisecond latency, and generate database creation scripts:
 ![RobOS Relational DB Manager]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
 
-### RobOS Data Sources & Database Hub
-Connect and inspect SQL, NoSQL, Object Storage (AWS S3), and Kafka streaming data sources with live connection testing:
-![RobOS Data Sources]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
+### 3. Native In-IDE Pull Request Review
+When the agent finishes implementation and video verification, the human lead architect opens the pull request. Review diffs and security audits inside the RobOS Agent Code Review Platform, or **open the project directly in your preferred IDE**:
 
-### RobOS REST API Client (Bruno-Powered)
-Git-backed REST collections, batch test runners, environment matrices, and automated response assertions:
-![RobOS REST API Client]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }})
+- **IntelliJ IDEA Plugin**: Jumps straight to modified lines over the local IPC bridge (`port 63343`), loads run configurations, and integrates with the native JetBrains Pull Request tool window.
+- **VS Code Integration**: Opens the pull request directly in VS Code (`vscode://github.vscode-pull-request-github/open-pr`) with full inline comments, symbol navigation, and language servers.
 
-### Kube Studio & Cloud Infrastructure Navigator
-Multi-cluster Kubernetes, ArgoCD GitOps sync status, Helm release management, and live container log streaming:
-![Kube Studio]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }})
+![Pull Request Review Platform]({{ '/assets/images/screenshots/agent-review-files-diff_frame.png' | relative_url }})
+
+### 4. GitOps Cloud Deployment & Live Operations
+Once approved with a single click, the change merges to `main`. Kube Studio tracks the rollout across Kubernetes clusters, displaying live container health, ArgoCD sync status, and streaming pod logs.
+
+![Kube Studio Cloud Infrastructure]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }})
 
 ---
 
-## Installation Options
+## The Complete Native Application Suite
 
-### ⭐️ Primary Option: Install on Current Ubuntu GNOME Desktop
-Install all 30+ RobOS desktop applications, GNOME launchers, and shared libraries directly onto your existing Ubuntu machine (Ubuntu 22.04, 24.04, or 26.04):
+RobOS provides over 30 native developer applications designed with zero web-framework bloat (Electron + vanilla JavaScript), sharing a unified dark theme and local system services:
+
+### 🏗️ Architecture & Scaffolding
+- **App Wizard**: Greenfield scaffolding and brownfield codebase ingestion across 6 application archetypes (`Microservice`, `DesktopApp`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
+- **System Topology Studio**: Interactive visual canvas for C4 architecture modeling, dependency mapping, and automatic Kubernetes/Helm manifest generation.
+- **Group Manager**: Enterprise directory synchronization (Okta, Azure AD SCIM, Google Workspace, OpenLDAP) and declarative Team Topologies management (`.robos/teams.yaml`).
+- **Dev Central**: Your daily developer dashboard with sprint tracking, PR health, calendar, AI standup notes, and blocker radar.
+
+### 🗄️ Databases & Multi-Protocol Testing
+- **Relational DB Manager**: Professional multi-database manager (PostgreSQL, MySQL, Oracle) with schema browsing, interactive data grids, and SQL consoles.
+- **NoSQL DB Manager**: Document and key-value store manager for MongoDB and Redis with live TTL inspection.
+- **REST API Client**: Git-backed API client storing plain-text `.bru` request files directly in your repository with automated contract synthesis.
+- **gRPC Client**: Protobuf microservice testing client with server reflection and stream inspection.
+- **GraphQL Client**: Interactive schema explorer, query editor, and variable runner.
+- **Data Sources Explorer**: Centralized hub connecting relational databases, object stores (AWS S3), and Kafka streaming topics.
+
+### 🔍 Code Review, Quality & Cloud Ops
+- **Agent Code Review Platform**: Autonomous AI pull request auditor, semantic diff viewer, and IDE review bridge (IntelliJ IDEA & VS Code plugins).
+- **Kube Studio**: Multi-cluster Kubernetes navigator, Helm release manager, and live container log streaming console.
+- **CI Monitor**: Real-time pipeline monitoring with automated AI root-cause analysis for broken builds.
+- **Deploy Tracker**: Multi-environment deployment tracking across Development, Staging, and Production with DORA metrics.
+
+### 🤖 AI Orchestration & Developer Tools
+- **Agents Manager & MCP Router**: Manage local AI agents (Claude Code, Google Antigravity, GitHub Copilot, Google Gemini) via standardized Model Context Protocol tools.
+- **Knowledge Graph Explorer**: Dual-state linked data browser with SHACL validation and living documentation sync.
+- **Contract Studio**: OpenAPI 3.1 and AsyncAPI contract designer with instant mock servers.
+- **Pass Manager**: Encrypted local password and secret vault backed by GPG.
+
+---
+
+## Built on Battle-Tested Open Standards ("Reinvent Nothing!")
+
+RobOS is built entirely on open, industry-standard specifications. Instead of inventing proprietary formats, RobOS connects proven technologies into a unified developer operating system:
+
+| Standard / Technology | Industry Purpose | How RobOS Uses It |
+|:---|:---|:---|
+| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global standard for linking software lifecycle data across disparate tools. | **Dual-State Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Links microservices, schemas, contracts, repositories, tasks, and training courses into a unified graph. Powers blast radius analysis and documentation synchronization. |
+| **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal catalog for service and team ownership. | **Zero-Config Architecture Discovery**: Reads existing `catalog-info.yaml` files across Git repositories to automatically populate the visual topology canvas. |
+| **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework across 4 zoom levels. | **Visual Topology Studio**: Renders software systems across Level 1 (Context), Level 2 (Containers & DBs), and Level 3 (Components) with exportable Structurizr diagrams. |
+| **[Microsoft TypeSpec](https://typespec.io/) & [Buf / Protobuf](https://buf.build/)** | Single-source schema definition languages for domain models and DTOs. | **Schema Studio**: Define data models once in TypeSpec; RobOS automatically compiles matching TypeScript types, Java Records, and Go structs. |
+| **[OpenAPI 3.1](https://www.openapis.org/) & [AsyncAPI](https://www.asyncapi.com/)** | Global specifications for RESTful APIs and asynchronous message streams. | **Contract Studio & Mock Servers**: Validates contracts with Spectral linting, powers local mock servers, and detects breaking changes upfront. |
+| **[Pact](https://pact.io/) Consumer Contracts** | Consumer-driven contract testing framework guaranteeing service compatibility. | **Automated Merge Quality Gates**: Guarantees that code changes made by AI agents or developers do not break downstream consumers before merging. |
+| **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** | Universal open protocol connecting AI models to external developer tools. | **Unified Multi-Agent Tool Router**: Exposes system capabilities (Knowledge Graph, IDE Breakpoints, Kubernetes Deployments, Database Consoles) to Claude Code, Google Antigravity, Copilot CLI, and Gemini. |
+| **[Kubernetes & Helm](https://kubernetes.io/)** | Cloud-native container orchestration and package management. | **Declarative GitOps Infrastructure**: Visual architecture nodes automatically generate deployable Kubernetes manifests and Helm charts stored in `.robos/`. |
+| **[Piper Neural TTS](https://github.com/rhasspy/piper)** | Fast, lightweight, offline neural text-to-speech synthesis engine. | **Automated Video Proof-of-Work Voiceovers**: Synthesizes natural spoken voiceovers and WebVTT subtitles for all 1080p verification walkthroughs. |
+
+---
+
+## Installation & Getting Started
+
+Choose the installation method that fits your workflow:
+
+### ⭐️ Primary Option: Install on Your Current Ubuntu GNOME Desktop
+Deploy all 30+ RobOS applications, GNOME desktop launchers, and shared libraries directly onto your existing Ubuntu machine (Ubuntu 22.04, 24.04, or 26.04):
+
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
-# Audit & install dependencies
+# 2. Audit and install developer dependencies
 node scripts/install-dev-deps.js
 
-# Install all apps and desktop integration to /usr/local/share/robos/
+# 3. Install all applications and desktop integration to /usr/local/share/robos/
 sudo bash packages/desktop-shell/install.sh
 ```
 
-### Option 2: Install Full RobOS Ubuntu OS Distro (Bare Metal & Virtual Machine)
-Build a dedicated bootable ISO image (flashable to USB via Rufus or Etcher) or run inside a local QEMU/KVM virtual machine:
+### Option 2: Dedicated RobOS Ubuntu Distro (Virtual Machine or Bare Metal)
+Build a complete bootable Ubuntu developer OS image (flashable to USB via Rufus or Etcher) or launch inside a local QEMU/KVM virtual machine:
+
 ```bash
-# Build disk image + cloud-init ISO
+# Build the disk image + cloud-init ISO
 infra/desktop/build.sh
 
-# Run virtual machine (16GB RAM, all host CPUs, SSH port 2224)
+# Run local VM (16 GB RAM, all host CPUs, SSH port 2224, VNC port 5910)
 infra/desktop/run.sh
 ```
 
-### Option 3: Cross-Platform Desktop App Suite (Windows & macOS Coming Soon)
-- **Linux (Available Now)**: Run all 30+ Electron developer apps directly with Node.js 20+.
-- **macOS / OS X (Coming Soon)**: Universal `.dmg` installer and Homebrew Cask with native Apple Silicon (M1–M4) support.
-- **Windows (Coming Soon)**: One-click installer with WSL2 integration for isolated agent workspaces.
+### Option 3: Cross-Platform Roadmap
+- **Linux (Available Now)**: Run all 30+ native Electron developer applications with Node.js 20+.
+- **macOS (Coming Soon)**: Universal `.dmg` installer and Homebrew Cask with native Apple Silicon support and menu bar launcher.
+- **Windows (Coming Soon)**: One-click installer with WSL2 integration for isolated agent memory sandboxes.
 
 ---
 
-## Open-Source Standards Integrated ("Reinvent Nothing!")
+## Next Steps
 
-RobOS is built entirely on established, battle-tested open standards. Instead of inventing proprietary formats, RobOS connects leading open-source specifications into a cohesive operating system:
-
-| Standard / Technology | Industry Purpose | What RobOS Uses It For |
-|:---|:---|:---|
-| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global standard for linking software development lifecycle data across tools. | **Live Architecture Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Links microservices, schemas, contracts, Git repositories, and tasks into a unified graph. Powers visual comparisons between Live Production (`main`) and Future feature states. |
-| **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal format for tracking service ownership. | **Zero-Config Architecture Discovery**: Automatically reads your existing Backstage `catalog-info.yaml` files across Git repositories to populate the visual architecture canvas without manual entry. |
-| **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework across 4 zooming levels. | **Visual Architecture Studio & Blast Radius Inspector**: Renders software architectures across Level 1 (System Context), Level 2 (Containers & DBs), and Level 3 (Components), and exports C4 Structurizr diagrams. |
-| **[Microsoft TypeSpec](https://typespec.io/) & [Buf / Protobuf](https://buf.build/)** | Single-source schema definition languages for domain models and data objects. | **Data Model Studio (`schema-studio`)**: Define data models once in TypeSpec; RobOS automatically generates matching TypeScript, Java Records, and Go structs. |
-| **[OpenAPI 3.1](https://www.openapis.org/) & [AsyncAPI](https://www.asyncapi.com/)** | Global standards for documenting RESTful APIs and asynchronous message streams. | **Contract Studio & Mock Servers (`contract-studio`)**: Edit and validate API contracts, run local mock servers, and detect breaking API changes before code generation. |
-| **[Pact](https://pact.io/) Consumer Contracts** | Consumer-driven contract testing framework guaranteeing microservice compatibility. | **Automated Merge Quality Gates**: Guarantees that changes made by AI agents or developers do not break downstream consumers before pull requests can be merged. |
-| **[UseBruno](https://www.usebruno.com/) (`.bru`)** | Git-backed, open-source REST client storing plain-text `.bru` files in repositories. | **REST API Client & Test Runner**: Automatically creates `.bru` test files from OpenAPI specs, runs batch tests, and tracks endpoint latency with zero cloud lock-in. |
-| **[Devcontainers](https://containers.dev/) & [Docker / Kind](https://kind.sigs.k8s.io/)** | Standardized container specifications for isolated developer environments. | **One-Click Workspaces & Local Test Fabrics**: Automatically spins up local Kind Kubernetes clusters with pre-seeded databases and mock dependencies for instant testing. |
-| **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** | Universal open protocol connecting AI models to external tools and databases. | **Universal AI Tool Router (`robos-mcp-router`)**: Exposes system capabilities (Knowledge Graph, IDE Breakpoints, Kubernetes Deployments, Database Console) to Claude Code, Google Antigravity, Copilot CLI, and Gemini. |
-| **[Piper Neural TTS](https://github.com/rhasspy/piper)** | Fast, lightweight, offline neural text-to-speech synthesis engine. | **Automated Video Proof-of-Work Voiceovers**: Generates natural voiceovers and subtitle tracks for all 1080p demo walkthrough videos generated during testing. |
-| **DBeaver & DataGrip SQL Paradigms** | Professional multi-database management interfaces with schema explorers and data grids. | **Relational DB Manager (`db-manager`)**: Multi-tab SQL query consoles, table data grids, fast execution metrics, and DDL generators for PostgreSQL, MySQL, and Oracle. |
+- **[Get Started Guide]({{ site.baseurl }}{% link getting-started.md %})**: Set up your development environment and launch your first RobOS app.
+- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Learn the complete end-to-end development cycle.
+- **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Dive deep into the 8 architectural pillars and the Dual-State Comparison Engine.
+- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
+- **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch high-definition video walkthroughs of real-world engineering scenarios.

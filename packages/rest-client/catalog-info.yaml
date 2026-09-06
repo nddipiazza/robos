@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rest-client
+  title: "rest-client"
+  description: "Imported into RobOS via App Import Wizard"
+spec:
+  type: library
+  lifecycle: production
+  owner: founding-core

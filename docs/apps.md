@@ -1,7 +1,7 @@
 ---
 title: App Suite
 layout: default
-nav_order: 7
+nav_order: 11
 ---
 
 # RobOS App Suite
@@ -19,6 +19,23 @@ nav_order: 7
 ---
 
 ## 1. Planning & Visual Architecture
+
+### RobOS App Wizard (Greenfield & Brownfield Multi-App Scaffolding)
+Scaffold brand-new applications or import existing repositories across 6 multi-app archetypes:
+- **6 Supported Archetypes**: `robos:Microservice`, `robos:DesktopApp`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, and `robos:Library`.
+- **Greenfield Scaffolding**: Automatically generates runnable `dev-setup.sh`, Spotify Backstage `catalog-info.yaml`, CI/CD pipelines, Spectral-linted API contracts, and dual-state Knowledge Graph registrations.
+- **Brownfield Codebase Ingestion**: Automatically scans existing directories, infers tech stacks (`package.json`, `pom.xml`, `go.mod`, `Cargo.toml`, `pyproject.toml`), and maps components into `.robos/packages.yaml` without manual YAML editing.
+- **Dedicated Guides**: [Develop a New App]({{ '/new-app-wizard.html' | relative_url }}) and [Import Existing Apps]({{ '/app-import-wizard.html' | relative_url }}).
+![RobOS App Wizard]({{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }})
+
+### RobOS Group Manager (Teams, Organizations & Enterprise Directory Sync)
+Manage organizations, squads, enterprise directory sync, and user access control:
+- **Enterprise Directory Sync**: Connects to Okta, Microsoft Entra ID (Azure AD), Google Workspace, and OpenLDAP via SCIM 2.0 and LDAP protocols.
+- **Greenfield Startup Bootstrap**: Spin up brand-new tenants from scratch with root administrator setup, token vaulting, and automated VCS org provisioning.
+- **Team Topologies**: First-class support for stream-aligned, platform, enablement, and complicated-subsystem squads saved to `.robos/teams.yaml`.
+- **Active Identity Card**: Displays active signed-in user, roles, permissions, and company tenant status at all times.
+- **Dedicated Guides**: [Existing Company Setup]({{ '/existing-company-setup.html' | relative_url }}) and [New Company Setup]({{ '/new-company-setup.html' | relative_url }}).
+![RobOS Group Manager]({{ '/assets/images/screenshots/existing-company-directory-sync_frame.png' | relative_url }})
 
 ### System Topology & Visual Architecture Studio
 A visual whiteboard for mapping your entire engineering architecture:
@@ -55,8 +72,8 @@ A fast database manager (inspired by DBeaver & DataGrip) with live table schema 
 Inspect JSON documents, query collections, and explore Redis key-value stores with live TTL expiration monitoring.
 ![NoSQL DB Manager]({{ '/assets/images/screenshots/dev-tools-db_manager_overview_frame.png' | relative_url }})
 
-### RobOS REST API Client (Bruno-Powered)
-A Git-backed API testing client (powered by open-source Bruno). Stores plain text `.bru` request files directly in your Git repository with automated request synthesis from OpenAPI contracts.
+### RobOS REST API Client
+A Git-backed API testing client storing plain-text `.bru` request files directly in your Git repository with automated request synthesis from OpenAPI contracts.
 ![REST API Client]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }})
 
 ### RobOS REST Collection Runner

@@ -1,13 +1,13 @@
 ---
 title: App Development Flow
 layout: default
-nav_order: 4
+nav_order: 7
 ---
 
 # The Flow of RobOS Apps Used to Create an Application
 {: .no_toc }
 
-The complete step-by-step journey: from running the initial First-Run Setup Wizard to progressively using each RobOS application to plan, design, code, test, and deploy a full-stack web application.
+The complete step-by-step developer journey: from establishing your organization identity in Group Manager, scaffolding or importing codebases in App Wizard, through visual architecture, breakpoint debugging, IDE pull request reviews, and live cloud deployment.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -20,86 +20,164 @@ The complete step-by-step journey: from running the initial First-Run Setup Wiza
 
 ## Overview: The Power of an Integrated App Lifecycle
 
-In traditional software development, building a new application requires juggling a dozen disconnected browser tabs, desktop windows, and terminal tools: Jira or GitHub for tickets, Figma or Miro for architecture sketches, Postman for API testing, DBeaver for database queries, IntelliJ or VS Code for writing code, terminal scripts for Docker/Kubernetes, and cloud web consoles for monitoring deployments. 
+In traditional software development, engineering teams juggle a fragmented maze of disconnected browser tabs, desktop windows, and terminal tools: Jira or GitHub for tickets, Figma or Miro for architecture sketches, Postman for API testing, DBeaver for database queries, IntelliJ or VS Code for writing code, terminal scripts for Docker/Kubernetes, and cloud web consoles for monitoring deployments. 
 
-Every time you switch between these separate tools, context is lost. Information entered in a ticket never makes it to the API designer; database changes made in a local console don't update the architecture diagram; and AI assistants only see isolated code snippets without understanding the bigger picture.
+Every time you switch between these separate tools, context is lost:
+- Information entered in a task ticket never makes it to the API contract designer.
+- Database schema changes made in a local console don't update the architecture diagram.
+- AI coding assistants only see isolated file snippets without understanding system topology.
+- Code reviews happen in web browsers disconnected from IDE symbol indexes and debugger breakpoints.
 
-**RobOS changes this entirely.** RobOS provides a synchronized desktop suite where **every application shares the same underlying Git-backed architecture knowledge graph**. 
+**RobOS changes this fundamentally.** RobOS provides a unified desktop operating system and application suite where **every tool shares the same underlying Git-backed architecture knowledge graph (`.robos/knowledge-graph.jsonld`)**.
 
 ```mermaid
 flowchart TD
-    Setup["0. First-Run Setup Wizard<br/><i>(Security, GPG, Git & AI Hub)</i>"] --> Step1["1. Task Planner<br/><i>(AI Project Breakdown & DAG)</i>"]
-    Step1 --> Step2["2. Topology Studio<br/><i>(C4 Architecture & Backstage)</i>"]
-    Step2 --> Step3["3. Contract Studio<br/><i>(OpenAPI & Live Mocks)</i>"]
-    Step3 --> Step4["4. Git Projects<br/><i>(Dev Setup & Multi-Repo)</i>"]
-    Step4 --> Step5["5. AI Implementation<br/><i>(Autonomous Coding & Tests)</i>"]
-    Step5 --> Step6["6. PR Review & IDE Hub<br/><i>(IntelliJ / VS Code Review & AI Audit)</i>"]
-    Step6 --> Step7["7. Relational DB Manager<br/><i>(SQL Console & DDL Engine)</i>"]
-    Step7 --> Step8["8. REST API Client<br/><i>(Bruno Git-Backed Requests)</i>"]
-    Step8 --> Step9["9. Kube Studio<br/><i>(Helm Releases & Pods)</i>"]
-    Step9 --> Step10["10. Workflow Studio<br/><i>(Feature Flags & MCP Swarm)</i>"]
+    subgraph P0 ["Phase 0: Organization & Identity Foundation"]
+        P0_A["RobOS Group Manager & Security Setup<br/><i>(Enterprise Directory SCIM/LDAP Sync or Greenfield Bootstrap)</i>"]
+    end
+
+    subgraph P1 ["Phase 1: Component Scaffolding or Codebase Ingestion"]
+        P1_A["RobOS App Wizard<br/><i>(Path A: 6 Archetypes Scaffolding | Path B: Deep Inspection with AI Refinement)</i>"]
+    end
+
+    subgraph P2 ["Phase 2: Task Planning & Visual System Architecture"]
+        P2_A["Task Planner & Issue Manager<br/><i>(AI Prompt to OSLC 3.0 DAG & Issue Tickets)</i>"]
+        P2_B["Topology Studio<br/><i>(C4 Architecture Model & Spotify Backstage catalog-info.yaml)</i>"]
+        P2_A --> P2_B
+    end
+
+    subgraph P3 ["Phase 3: API Contracts & Live Mock Testing"]
+        P3_A["Contract Studio<br/><i>(OpenAPI 3.1, Microsoft TypeSpec & Prism Mock Servers)</i>"]
+    end
+
+    subgraph P4 ["Phase 4: Multi-Repo Hub & Automated Dev Setup"]
+        P4_A["Git Projects & GPG-Vaulted Environment<br/><i>(dev-setup.sh, GPG commit signing & pass vault)</i>"]
+    end
+
+    subgraph P5 ["Phase 5: Autonomous AI Implementation & Breakpoint Debugging"]
+        P5_A["AI Coding Agent Swarms<br/><i>(Autonomous Implementation Plans, Test Verification & Breakpoint Debugger)</i>"]
+    end
+
+    subgraph P6 ["Phase 6: PR Review Process & The IDE Review Hub"]
+        P6_A["RobOS Agent Code Review Platform<br/><i>(Automated AI Audits + Optional Review in IntelliJ / VS Code with Full Context)</i>"]
+    end
+
+    subgraph P7 ["Phase 7: Live Database Schema & Query Consoles"]
+        P7_A["Relational DB Manager & NoSQL DB Manager<br/><i>(SQL Console, Data Grids & Automated DDL Migrations)</i>"]
+    end
+
+    subgraph P8 ["Phase 8: Git-Backed REST API Verification"]
+        P8_A["REST API Client & Collection Runner<br/><i>(Bruno .bru Plain-Text Requests & Batch Verification)</i>"]
+    end
+
+    subgraph P9 ["Phase 9: Kubernetes & Cloud Infrastructure Navigator"]
+        P9_A["Kube Studio & Deploy Tracker<br/><i>(Helm Releases, Pod Metrics, Live Logs & Canary Rollouts)</i>"]
+    end
+
+    subgraph P10 ["Phase 10: Runtime Operations & Autonomous Agent Swarms"]
+        P10_A["Workflow Studio & Agents Manager<br/><i>(Dynamic Feature Flags, Cron Swarms & Automated Defect Ingestion)</i>"]
+    end
+
+    P0 --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+    P5 --> P6
+    P6 --> P7
+    P7 --> P8
+    P8 --> P9
+    P9 --> P10
+    P10 -.->|"Defect Tickets & Tech Debt Sync"| P2_A
 ```
 
-Below is the complete walkthrough of how you use RobOS to build a real-world enterprise application—such as the **Acme Pet Store Web Platform**—starting with your very first login.
+Below is the complete walkthrough of how developers and engineering teams use RobOS to build enterprise applications—illustrated by the real-world **Acme Pet Store Platform**—from Day-1 organization onboarding to live cloud operations.
 
 ---
 
-## Part 1: The RobOS Setup Wizard (Your Day-1 Launchpad)
+## Phase 0: Organization & Identity Foundation
 
-Before you write your first line of code or launch an AI agent swarm, the **RobOS First-Run Setup Wizard** establishes a secure, encrypted, and fully configured engineering environment on your machine.
-
-![Security & Setup Wizard]({{ '/assets/images/screenshots/security-setup.png' | relative_url }})
-
-### Why the Setup Wizard is Critical
-
-Setting up a new development machine usually takes days of troubleshooting. Developers have to generate SSH keys, configure GPG commit signing, setup `.env` secrets, configure cloud credentials, and connect AI coding tokens.
-
-The **RobOS Setup Wizard** consolidates this entire onboarding process into a single 3-minute guided workflow:
+Before planning features or scaffolding microservices, RobOS establishes your cryptographic developer identity, organization structure, and team boundaries. RobOS never relies on hardcoded assumptions—it identifies you and your team through two top-level enterprise workflows:
 
 ```mermaid
-graph LR
-    subgraph Wizard [RobOS First-Run Setup Wizard]
-        W1[1. GPG & SSH Crypto Keys] --> W2[2. Task Server Credentials]
-        W2 --> W3[3. Git Profile & Team Directory]
-        W3 --> W4[4. AI Model Providers & MCP Tools]
-        W4 --> W5[5. Local Container & K8s Engine]
-    end
+flowchart TD
+    Choice{"Organization Type?"}
+    Choice -->|"Existing Enterprise"| PathExist["Existing Company Setup<br/><i>(SCIM 2.0 / Azure AD / Okta / LDAP Sync)</i>"]
+    Choice -->|"New Greenfield Startup"| PathNew["New Company Setup<br/><i>(1-Click Company Bootstrap & Stream-Aligned Teams)</i>"]
+
+    PathExist --> SyncTeams["Map Teams to Team Topologies<br/><i>(.robos/teams.yaml)</i>"]
+    PathNew --> SyncTeams
+
+    SyncTeams --> SecSetup["Security Setup<br/><i>(GPG Keypair, SSH Keys, pass Vault)</i>"]
+    SecSetup --> Ready["Day-1 Developer Foundation Ready"]
 ```
 
-### What the Setup Wizard Configures:
+### 1. Existing Company Setup (Enterprise Directory Sync)
+If joining or setting up an established enterprise, developers launch **RobOS Group Manager** (`packages/group-manager`):
+* Connects via **SCIM 2.0, Okta, Azure Active Directory, or LDAP**.
+* Ingests corporate departments, roles, and developer memberships in real time.
+* Organizes squads according to **Team Topologies** principles (*Stream-aligned, Platform, Enabling, Complicated-subsystem*) and writes directly to `.robos/teams.yaml`.
+* Configures role-based access control (RBAC) and reviewer groups.
+* [👉 **Read the Full Existing Company Setup Guide**]({{ site.baseurl }}{% link existing-company-setup.md %})
 
-1. **Cryptographic Identity & Commit Signing (`security-setup`)**:
-   * Generates or imports your personal **GPG keypair** and **SSH keys**.
-   * Integrates with the standard Unix `pass` encrypted password manager so passwords, database credentials, and API tokens are never saved in plaintext.
-   * Enables automatic, hardware-verified Git commit signing so every pull request created by you or your AI agents is cryptographically authenticated.
-
-2. **Task Server Integration (`task-servers`)**:
-   * Connects directly to your organization's issue tracking system (**GitHub Issues**, **Gitea**, **GitLab**, or **Jira**).
-   * Authenticates using secure OAuth or API tokens, enabling RobOS to fetch sprint backlogs, assign issue tickets, and update Kanban task boards in real time.
-
-3. **Git Identity & Organization Permissions (`group-manager` / `git-login-manager`)**:
-   * Sets up your global Git author name, email, and branch signing rules.
-   * Pulls team rosters, repository write permissions, and reviewer group policies.
-
-4. **Universal AI Hub & MCP Tool Routing (`robos-preferences` / `agents-manager`)**:
-   * Configures API keys and model preferences for your AI engines (**Claude 3.7 / 3.5 Sonnet**, **Google Antigravity / Gemini 2.0 Flash**, **OpenAI GPT-4o / Codex**, or **Local Offline Ollama Models**).
-   * Registers local **Model Context Protocol (MCP)** tool servers (`system-mcp`, `task-manager-mcp`, `workspace-manager-mcp`, `ide-bridge-mcp`) so AI assistants can safely inspect system resources and execute commands under human oversight.
-
-5. **Local Cloud & Container Engine (`kube-studio` / Docker / Kind)**:
-   * Verifies local Docker socket connectivity and initializes a lightweight local Kubernetes development cluster (Kind/K3s) with Helm package management ready to deploy microservices.
-
-6. **Project Workspace Bootstrap**:
-   * Initializes the `.robos/` project metadata folder in your workspace repository, creating the initial **Dual-State Knowledge Graph (`.robos/knowledge-graph.jsonld`)**.
+### 2. New Company Setup (Greenfield Bootstrap)
+If launching a new company or startup from scratch:
+* **Group Manager** provides a one-click **Company Bootstrap Wizard**.
+* Instantly initializes the organization tenant, Git author identity, and foundational squads (*Order Stream Squad, Catalog Stream Squad, Core Platform Squad*).
+* Automatically generates `.robos/topology.yaml` and `.robos/teams.yaml`.
+* Pairs with **Security Setup** (`security-setup`) to generate personal GPG/SSH keypairs for hardware-verified Git commit signing and standard Unix `pass` vault integration.
+* [👉 **Read the Full New Company Setup Guide**]({{ site.baseurl }}{% link new-company-setup.md %})
 
 ---
 
-## Part 2: The Progressive Sequence of RobOS Apps
+## Phase 1: Component Scaffolding or Codebase Ingestion
 
-Once the Setup Wizard completes, you build the **Acme Pet Store Web Application** by stepping through the specialized RobOS applications in a structured, progressive sequence.
+With organization and team identities established, developers provision their applications using the **RobOS App Wizard** (`packages/app-wizard`). Developers follow one of two standardized paths:
 
-Here is the exact sequence of applications used to turn a product idea into a running cloud system:
+```mermaid
+flowchart TD
+    AppChoice{"Application Origin?"}
+    AppChoice -->|"Brand New Project"| NewApp["Path A: Develop a New App<br/><i>(Greenfield Scaffolding across 6 Archetypes)</i>"]
+    AppChoice -->|"Existing Codebase"| ImpApp["Path B: Import Existing Codebase<br/><i>(Brownfield Deep Inspection & AI Refinement)</i>"]
+
+    NewApp --> GenMeta["Generate Backstage catalog-info.yaml<br/>& dev-setup.sh"]
+    ImpApp --> AIInspect["Interactive Deep Inspection<br/><i>(Prompt Refinement with &lt;robos-ai-textarea&gt;)</i>"]
+    AIInspect --> GenMeta
+
+    GenMeta --> KGraphReg["Register in .robos/packages.yaml<br/>& Dual-State Knowledge Graph"]
+```
+
+### Path A: Develop a New App (Greenfield Scaffolding)
+Developers generate a production-ready repository skeleton across **6 core multi-app archetypes**:
+1. **Microservice & Web API** (`robos:Microservice`): Java Spring Boot, Node Fastify/Express, Go Gin, Python FastAPI. Includes OpenAPI 3.1 / TypeSpec contracts and Dockerfiles.
+2. **Desktop Application** (`robos:DesktopApp`): Electron, Qt, GTK, or Tauri desktop clients.
+3. **Console & CLI Tool** (`robos:ConsoleApp`): Go Cobra, Rust Clap, Node Commander terminal utilities.
+4. **Mobile Application** (`robos:MobileApp`): React Native, Flutter, native iOS/Android.
+5. **Data Pipeline & Worker** (`robos:DataPipeline`): Kafka Streams, Apache Spark, Celery workers.
+6. **Library & SDK** (`robos:Library`): Reusable client SDKs, utility packages, and shared UI components.
+
+The wizard creates Spotify Backstage `catalog-info.yaml`, Docker build manifests, `dev-setup.sh`, and maps the component to your team in `.robos/teams.yaml`.
+* [👉 **Read the Full Develop a New App Guide**]({{ site.baseurl }}{% link new-app-wizard.md %})
+
+### Path B: Import Existing Apps (Deep Inspection & AI Refinement)
+For existing repositories, the **App Import Wizard** performs automated deep codebase inspection:
+* Analyzes build manifests (`pom.xml`, `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`).
+* Detects API specifications (`openapi.yaml`, `schema.graphql`, `*.proto`) and database migrations (Flyway, Liquibase, Prisma).
+* **Interactive AI Prompt Refinement (`<robos-ai-textarea>`)**:
+  
+  ![Deep Inspection & AI Prompt Refinement]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }})
+
+  Developers can enter natural language instructions directly into the `<robos-ai-textarea>` prompt bar to refine detected configurations:
+  - *"Treat this as a Microservice using Spring Boot instead of a library"*
+  - *"Change the runtime stack to Node 20 with Fastify and TypeScript"*
+  - *"Assign this component to team core-platform with package slug auth-gateway"*
+* Clicking **Apply AI Refinement** updates the detected archetype, stack, and team assignment instantly before generating configuration files.
+* Synthesizes missing Backstage `catalog-info.yaml`, `dev-setup.sh`, and registers the package in `.robos/packages.yaml`.
+* [👉 **Read the Full Import Existing Apps Guide**]({{ site.baseurl }}{% link app-import-wizard.md %})
 
 ---
+
+## Phase 2: Task Planning & Visual System Architecture
 
 ### Step 1: AI Task Planner & Backlog Breakdown
 
@@ -133,6 +211,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
+## Phase 3: API Contracts & Live Mock Testing
+
 ### Step 3: Contract Studio & Live API Mock Testing
 
 **Primary Application**: **`Contract Studio`**  
@@ -148,6 +228,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
+## Phase 4: Multi-Repo Hub & Automated Dev Setup
+
 ### Step 4: Multi-Repo Git Hub & Automated Dev Setup
 
 **Primary Application**: **`Git Projects`**  
@@ -162,6 +244,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
+## Phase 5: Autonomous AI Implementation & Breakpoint Debugging
+
 ### Step 5: Autonomous AI Implementation & Automated Test Verification
 
 **Primary Application**: **`AI Coding Agent & RobOS Swarm`** *(Claude Code, Antigravity, Copilot, Gemini)*  
@@ -174,10 +258,12 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 * **The Agent's Job**:
   1. **Autonomous Code Generation**: Writes the required application logic, compiles TypeSpec data models, and configures endpoints (e.g. `VaccineGatewayClient.java`).
   2. **Automated Test Generation & Execution**: Synthesizes and executes unit tests, integration tests, and consumer-driven contract tests (Pact) against live mock servers.
-  3. **Interactive Breakpoint Debugging Feature**: When reproducing a bug or investigating complex runtime state, RobOS agents can run a test and pause execution directly at a **live debugger breakpoint in the IDE**. This is a targeted developer feature that lets developers inspect live memory variables on demand during investigation.
+  3. **Interactive Breakpoint Debugging Feature**: When reproducing a bug or investigating complex runtime state, RobOS agents can run a test and pause execution directly at a **live debugger breakpoint in the IDE**. This allows human engineers and autonomous agents to inspect live memory variables, stack traces, and local variables interactively.
 * **Handoff to Next Step**: Once the code compiles and all test suites pass, the agent opens a Pull Request for human review.
 
 ---
+
+## Phase 6: PR Review Process & The IDE Review Hub
 
 ### Step 6: PR Review Process & The IDE Review Hub
 
@@ -192,22 +278,24 @@ Here is the exact sequence of applications used to turn a product idea into a ru
   1. **Automated AI Security & Contract Audits**: The platform automatically audits modified code for cryptographic safety (e.g., mTLS keystore parsing), verifies 100% OpenAPI 3.1 Spectral schema compliance, and checks CI test rollups.
   2. **Reviewing in RobOS Desktop**: View side-by-side color-coded file diffs, chat with the AI reviewer to clarify implementation decisions, and inspect Knowledge Graph architecture diffs.
   3. **Optionally Reviewing in the IDE with Full Context in Tow**:
-     * **IntelliJ IDEA Review Plugin**: Click **Review in IntelliJ** to dispatch port `63343` IPC, opening the branch straight into IntelliJ IDEA's native **Pull Request review tool window**. The developer reviews the PR with all IDE context in tow—symbol lookups, type checking, syntax highlighting, live debugging, and inline PR comments.
+     * **IntelliJ IDEA Review Plugin**: Click **Review in IntelliJ** to dispatch port `63343` IPC, opening the branch straight into IntelliJ IDEA's native **Pull Request review tool window**. The developer reviews the PR with all rich IDE context in tow—symbol lookups, type checking, syntax highlighting, live debugging, and inline PR comments.
      * **VS Code Review Plugin**: Click **Review in VS Code** to trigger the standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`), providing deep in-editor review capabilities.
-* **One-Click Merge & Dual Sync**: Approving the PR merges the code into `main` and synchronizes the system Knowledge Graph topology.
+* **One-Click Merge & Dual Sync**: Approving the PR merges the code into `main` and automatically synchronizes the system Knowledge Graph topology.
 * **Handoff to Next Step**: The merged pull request triggers automated database migrations and deployment tracking.
 
 ---
 
-### Step 7: Relational DB Manager & Schema Console
+## Phase 7: Live Database Schema & Query Consoles
 
-**Primary Application**: **`Relational DB Manager`** *(with `Data Sources Explorer`)*  
+### Step 7: Relational & NoSQL Database Consoles
+
+**Primary Application**: **`Relational DB Manager`** *(with `NoSQL DB Manager` & `Data Sources Explorer`)*  
 **Category**: Database Management & Data Modeling  
-**Open Standards**: ANSI SQL, PostgreSQL Wire Protocol, JDBC
+**Open Standards**: ANSI SQL, PostgreSQL Wire Protocol, MongoDB Wire Protocol, Redis RESP
 
 ![Relational DB Manager]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
 
-* **What Happens**: You inspect and manage the live database backing the Acme Pet Store.
+* **What Happens**: You inspect and manage the live databases backing the Acme Pet Store.
 * **The App's Job**: Provides a responsive SQL console and table inspector (inspired by DBeaver and DataGrip):
   * Inspect table columns, foreign keys, and indexes for `pets`, `vaccination_records`, and `orders`.
   * Browse and edit table rows in an interactive data grid.
@@ -216,6 +304,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 * **Handoff to Next Step**: With the database schema active and populated with seed data, the live API endpoints can be tested.
 
 ---
+
+## Phase 8: Git-Backed REST API Verification
 
 ### Step 8: Bruno-Powered REST API Client & Collection Runner
 
@@ -233,6 +323,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 * **Handoff to Next Step**: With API endpoints verified, the application is packaged for containerized cloud deployment.
 
 ---
+
+## Phase 9: Kubernetes & Cloud Infrastructure Navigator
 
 ### Step 9: Kube Studio & Cloud Infrastructure Navigator
 
@@ -252,6 +344,8 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ---
 
+## Phase 10: Runtime Operations & Autonomous Agent Swarms
+
 ### Step 10: Workflow Studio & MCP Agent Swarms
 
 **Primary Application**: **`Workflow Studio`** *(with `Agents Manager`)*  
@@ -270,27 +364,32 @@ Here is the exact sequence of applications used to turn a product idea into a ru
 
 ## Summary Table: The Complete Application Pipeline
 
-| Sequence | RobOS Application | Primary Purpose | Key Open Standard | Output Artifact |
+| Phase | RobOS Application | Primary Purpose | Key Open Standard | Output Artifact |
 |:---|:---|:---|:---|:---|
-| **0. Setup** | **Setup Wizard** (`security-setup`) | Cryptographic keys, Git identity & AI Hub | GPG, SSH, `pass` | `~/.config/robos/`, GPG Keyring |
-| **1. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap | OSLC 3.0, GitHub Issues | `.robos/knowledge-graph.jsonld` |
-| **2. Architecture** | **Topology Studio** | C4 multi-level visual system architecture | C4 Model, Spotify Backstage | `catalog-info.yaml` |
-| **3. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
-| **4. Repositories** | **Git Projects** | Multi-repo linking & automated dev setup | Git, POSIX Shell | `dev-setup.sh` |
-| **5. Coding** | **AI Coding Agent** | Autonomous code implementation & automated tests | Model Context Protocol (MCP), LSP | Verified Code & Tests |
-| **6. Review** | **Agent Code Review Platform** | PR review with optional IntelliJ / VS Code review | Unified Diff, GitHub PR, IntelliJ / VS Code | Merged Pull Request |
-| **7. Databases** | **Relational DB Manager** | Schema explorer, data grid & SQL queries | ANSI SQL, PostgreSQL | Migration DDL Scripts |
-| **8. API Testing** | **REST API Client** | Git-backed request suites & batch runner | Bruno (`.bru`), HTTP/2 | `.bru` Request Collections |
-| **9. Deployment** | **Kube Studio** | Kubernetes navigator & Helm management | Kubernetes API, Helm, ArgoCD | Production Pods & Services |
-| **10. Operations** | **Workflow Studio** | Feature toggles & AI agent scheduler | OpenFeature, MCP | Live Feature Flags |
+| **0. Foundation** | **Group Manager** (`group-manager` & `security-setup`) | Enterprise directory SCIM/LDAP sync, team topologies, GPG/SSH crypto keys | SCIM 2.0, LDAP, GPG, SSH, `pass` | `.robos/teams.yaml`, `~/.config/robos/` |
+| **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across 6 archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
+| **2. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap & DAG | OASIS OSLC 3.0, GitHub Issues, Jira | `.robos/knowledge-graph.jsonld` |
+| **3. Architecture** | **Topology Studio** | C4 multi-level visual system architecture & blast radius analysis | C4 Model, Spotify Backstage | `catalog-info.yaml` |
+| **4. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
+| **5. Repositories** | **Git Projects** | Multi-repo linking & automated dev setup | Git, POSIX Shell, GPG Vault | `dev-setup.sh` |
+| **6. Coding** | **AI Coding Agent Swarm** | Autonomous code implementation, tests & live IDE breakpoint debugging | Model Context Protocol (MCP), LSP | Verified Code, Unit & Contract Tests |
+| **7. Review** | **Agent Code Review Platform** | PR review with optional native IntelliJ / VS Code review with full context | Unified Diff, GitHub PR, JetBrains / VS Code | Merged Pull Request & KGraph Sync |
+| **8. Databases** | **Relational DB Manager** | Schema explorer, data grid & SQL queries (PostgreSQL / MySQL / NoSQL) | ANSI SQL, JDBC, Redis | Migration DDL Scripts |
+| **9. API Testing** | **REST API Client** | Git-backed request suites & batch runner | Bruno (`.bru`), HTTP/2 | `.bru` Plain-Text Collections |
+| **10. Deployment** | **Kube Studio** | Kubernetes navigator, Helm management & canary rollouts | Kubernetes API, Helm, ArgoCD | Production Pods & Services |
+| **11. Operations** | **Workflow Studio** | Feature toggles & autonomous background agent swarms | OpenFeature, MCP | Live Feature Flags & Automated Issues |
 
 ---
 
 ## What to Explore Next
 
-Now that you understand how the RobOS application suite flows together, see this exact sequence executed with real test code, high-definition videos, and spoken audio walkthroughs:
+Follow the four foundational onboarding and application provisioning guides, or see the entire sequence executed live in our video walkthroughs:
 
+* [🏢 **Existing Company Setup Guide** (SCIM 2.0, LDAP, Team Topologies)]({{ site.baseurl }}{% link existing-company-setup.md %})
+* [🚀 **New Company Setup Guide** (Greenfield Bootstrap & Tenant Init)]({{ site.baseurl }}{% link new-company-setup.md %})
+* [✨ **Develop a New App Guide** (App Wizard & 6 Archetypes)]({{ site.baseurl }}{% link new-app-wizard.md %})
+* [📦 **Import Existing Apps Guide** (Deep Inspection & AI Refinement)]({{ site.baseurl }}{% link app-import-wizard.md %})
 * [👉 **Real-World E2E Walkthroughs & Proof of Work (The 16-Step Acme Petshop)**]({{ site.baseurl }}{% link walkthroughs.md %})
 * [🏗️ **System Architecture & The Dual-State Comparison Engine**]({{ site.baseurl }}{% link architecture.md %})
 * [🤖 **AI Agent Review-Based Software Development (The 5-Stage Lifecycle)**]({{ site.baseurl }}{% link agent-review-development.md %})
-* [📦 **Browse All 30+ Applications in the RobOS Suite**]({{ site.baseurl }}{% link apps.md %})
+* [💻 **Browse All 30+ Applications in the RobOS Suite**]({{ site.baseurl }}{% link apps.md %})

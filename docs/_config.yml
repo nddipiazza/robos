@@ -1,6 +1,6 @@
 title: RobOS
-tagline: AI-First Software Development Operating System
-description: "The developer-first operating system and desktop ecosystem engineered for AI Agent Review-Based Development. Autonomous agent swarms plan, code, test, and verify software while human developers act as Lead Architects and Reviewers."
+tagline: AI-First Developer Operating System & Application Suite
+description: "The developer-first operating system and 30+ desktop application suite engineered for AI Agent Review-Based Development. Autonomous agent swarms plan, code, test, and verify software while human developers act as Lead Architects and Reviewers."
 url: "https://nddipiazza.github.io"
 baseurl: "/robos"
 
@@ -28,7 +28,7 @@ nav_sort: case_insensitive
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "RobOS &mdash; AI-First Software Development Operating System. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>."
+footer_content: "RobOS &mdash; AI-First Developer Operating System & Application Suite. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>."
 
 mermaid:
   version: "10.9.0"

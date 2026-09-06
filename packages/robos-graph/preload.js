@@ -22,4 +22,10 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   dispatchFabric: (method, path, body) => ipcRenderer.invoke('graph-fabric-dispatch', { method, path, body }),
   runEDD: (config) => ipcRenderer.invoke('graph-edd-run', config),
   getEDDStatus: () => ipcRenderer.invoke('graph-edd-status'),
+  generateELearning: (prompt) => ipcRenderer.invoke('graph-generate-elearning', prompt),
+  bulkImportRepos: (repos) => ipcRenderer.invoke('graph-bulk-import-repos', repos),
+  importGitProjects: () => ipcRenderer.invoke('graph-import-git-projects'),
+  requestAppDocUpdate: (payload) => ipcRenderer.invoke('graph-request-app-doc-update', payload),
+  getDocSyncPrompt: () => ipcRenderer.invoke('graph-doc-sync-prompt'),
+  applyDocUpdates: (updates) => ipcRenderer.invoke('graph-apply-doc-updates', updates),
 });

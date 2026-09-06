@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-gateway-api
+  title: "Payment Gateway API"
+  description: "RobOS Scaffolding"
+  tags: [microservice, java-21---spring-boot-3]
+spec:
+  type: microservice
+  lifecycle: experimental
+  owner: founding-core

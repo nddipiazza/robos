@@ -4,9 +4,10 @@ const fs   = require('fs');
 const os   = require('os');
 const cp   = require('child_process');
 
-const DATA_FILE       = path.join(os.homedir(), '.config', 'robos', 'git-projects.json');
-const GROUPS_DIR      = path.join(os.homedir(), '.config', 'robos', 'groups');
-const REPO_CACHE_FILE = path.join(os.homedir(), '.config', 'robos', 'gh-repos-cache.json');
+const HOME_DIR        = process.env.HOME || os.homedir();
+const DATA_FILE       = path.join(HOME_DIR, '.config', 'robos', 'git-projects.json');
+const GROUPS_DIR      = path.join(HOME_DIR, '.config', 'robos', 'groups');
+const REPO_CACHE_FILE = path.join(HOME_DIR, '.config', 'robos', 'gh-repos-cache.json');
 
 // Debug server (optional) — same resolution order as every other RobOS app.
 let _debugServer = null;
@@ -43,6 +44,31 @@ function writeProjects(data) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
   buildGitReposIndex(); // keep search index in sync
+  syncToKnowledgeGraph(data.projects); // keep RobOS Knowledge Graph in sync
+}
+
+function syncToKnowledgeGraph(projects) {
+  try {
+    const robosGraphPaths = [
+      path.resolve(__dirname, '..', 'robos-graph', 'lib', 'graph-store'),
+      '/usr/local/share/robos/robos-graph/lib/graph-store',
+    ];
+    let SDLCKnowledgeGraphStore = null;
+    for (const p of robosGraphPaths) {
+      try { SDLCKnowledgeGraphStore = require(p).SDLCKnowledgeGraphStore; if (SDLCKnowledgeGraphStore) break; } catch {}
+    }
+    if (SDLCKnowledgeGraphStore) {
+      const store = new SDLCKnowledgeGraphStore();
+      const projList = projects || (readProjects ? (readProjects().projects || []) : []);
+      const res = store.bulkImportRepositories(projList);
+      log.info('kgraph-synced', `Synchronized ${projList.length} Git project(s) to RobOS Knowledge Graph`);
+      return res;
+    }
+    return { ok: false, error: 'SDLCKnowledgeGraphStore not found' };
+  } catch (err) {
+    log.warn('kgraph-sync-failed', 'Could not sync Git projects to KGraph: ' + err.message);
+    return { ok: false, error: err.message };
+  }
 }
 
 function buildGitReposIndex() {
@@ -156,8 +182,12 @@ ipcMain.handle('pull', async (event, { localPath }) => {
     proc.stdout.on('data', d => { out += d; event.sender.send('clone-output', d.toString()); });
     proc.stderr.on('data', d => { out += d; event.sender.send('clone-output', d.toString()); });
     proc.on('close', code => {
-      if (code === 0) resolve({ ok: true, message: out.trim() || 'Already up to date' });
-      else            resolve({ ok: false, error: out.slice(-300) });
+      if (code === 0) {
+        syncToKnowledgeGraph();
+        resolve({ ok: true, message: out.trim() || 'Already up to date' });
+      } else {
+        resolve({ ok: false, error: out.slice(-300) });
+      }
     });
   });
 });
@@ -940,3 +970,15 @@ ipcMain.handle('list-groups', () => {
     return { ok: false, error: e.message, groups: [] };
   }
 });
+
+// ── Knowledge Graph Ingestion ────────────────────────────────────────────────
+ipcMain.handle('sync-to-knowledge-graph', async (event, projects) => {
+  return syncToKnowledgeGraph(projects);
+});
+
+module.exports = {
+  readProjects,
+  writeProjects,
+  syncToKnowledgeGraph,
+  parseGitUrl,
+};

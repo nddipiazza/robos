@@ -1,7 +1,7 @@
 ---
 title: AI Agent Review-Based Development
 layout: default
-nav_order: 6
+nav_order: 8
 ---
 
 # AI Agent Review-Based Development
@@ -44,11 +44,11 @@ When a ticket is assigned (from GitHub Issues, Jira, or Dev Central), the AI age
 - Launches the required databases and services automatically.
 - Analyzes the codebase, reproduces test failures, and can optionally use the breakpoint debugging feature to pause execution at an exact line in the IDE for variable inspection if needed.
 
-### 2. Interactive Plan Review (`/grill-me`)
-Before touching any source code, the agent writes a clear, structured technical plan:
+### 2. Proactive Human Alignment & Plan Review
+Before touching any source code, the agent drafts a clear, structured technical plan grounded in the Knowledge Graph:
 - Lists all API endpoints, database tables, and configuration files that need updates.
 - Identifies any downstream services that could be impacted (blast radius).
-- Lets you review the proposal, ask questions, and challenge edge cases (`/grill-me`) before execution begins.
+- The workflow actively picks and probes at the human architect—clarifying design trade-offs, testing edge cases, and ensuring you are intimately involved in what is being built before execution begins.
 
 ### 3. Autonomous Code Implementation & Infrastructure Generation
 Once you approve the plan:
@@ -93,4 +93,4 @@ RobOS equips all AI coding assistants (Claude Code, Google Antigravity, GitHub C
 - **API Contract Tool**: Validate OpenAPI and TypeSpec data models.
 - **Workspace Tool**: Automatically create, switch, and manage Git branches.
 - **Cloud & Kubernetes Tool**: Trigger container deployments and stream live server logs.
-- **Database & REST Tool**: Run live SQL queries and execute Bruno API test suites.
+- **Database & REST Tool**: Run live SQL queries and execute REST API test suites.

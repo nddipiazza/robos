@@ -1,23 +1,23 @@
-# RobOS — AI-First Software Development Operating System
+# RobOS — AI-First Developer Operating System & Application Suite
 
 [![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)
 [![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen)](packages/robos-test)
 [![Standards](https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue)](https://nddipiazza.github.io/robos/)
 
-> **RobOS is the developer-first operating system and desktop ecosystem engineered for AI Agent Review-Based Development.** Autonomous AI agent swarms investigate issues, plan fixes, write code, run deep E2E test fabrics, provision databases, and synthesize Kubernetes Helm infrastructure — while human developers act as Lead Architects, Reviewers, and Approvers.
+> **RobOS is the developer-first operating system and standalone 30+ application suite engineered for AI Agent Review-Based Development.** Autonomous AI agent swarms investigate issues, plan fixes, write code, run deep E2E test fabrics, provision databases, and synthesize Kubernetes Helm infrastructure — while human developers act as Lead Architects, Reviewers, and Approvers.
 
 ---
 
 ## 🚀 The Big Wins (Why RobOS?)
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system**:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite**:
 
-- 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
+- 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Desktop Apps, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
 - 👤 **Ephemeral Linux Agent Profiles & X11 Display Bridging**: AI agents run in isolated ephemeral Linux accounts (`/home/agent-...`) on in-memory `tmpfs` storage with zero residue, rendering UI directly to real/headless X11 displays for visual verification.
 - 🎥 **Autonomous E2E-Driven Dev with Video Proof-of-Work**: Every task is validated in headless `Xvfb` compositors, generating timestamped DOM assertions, 1080p video walkthroughs, and synchronized neural voiceover subtitles (Piper TTS) before asking for human approval.
 - ⚡ **100% Declarative GitOps Storage (`.robos/`)**: Topology, contracts, schemas, and data sources are stored in standard Git repositories, automatically synthesizing deployable Kubernetes manifests and Helm charts.
-- 🗄️ **Comprehensive Developer Protocol & Database Suite**: DBeaver-inspired Relational DB Manager (Postgres, Oracle, MySQL), MongoDB/Redis NoSQL Manager, gRPC Client with Protobuf reflection, GraphQL Introspection Client, and Bruno-powered Git-backed REST client.
+- 🗄️ **Comprehensive Developer Protocol & Database Suite**: DBeaver-inspired Relational DB Manager (Postgres, Oracle, MySQL), MongoDB/Redis NoSQL Manager, gRPC Client with Protobuf reflection, GraphQL Introspection Client, and Git-backed REST client.
 
 ---
 
@@ -35,7 +35,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 *Connect and query relational databases, document stores, AWS S3 contract vaults, and Kafka streaming topics:*
 ![Data Sources Explorer](docs/assets/images/screenshots/data-sources-postgres_overview_frame.png)
 
-### 4. REST API Client & Collection Runner (Bruno)
+### 4. REST API Client & Collection Runner
 *Git-backed REST collections (`.bru`), collection runner, environment matrices, and automated test assertions:*
 ![REST API Client](docs/assets/images/screenshots/data-sources-test_connection_frame.png)
 
@@ -57,7 +57,7 @@ graph LR
     end
 
     subgraph HumanArchitect [Human Lead Architect]
-        P --> G[Interactive /grill-me Interview]
+        P --> G[Proactive Alignment & Plan Review]
         G --> K
         V --> R2[Visual Review & Approval]
         R2 --> M[1-Click Merge & Deploy]
@@ -65,7 +65,7 @@ graph LR
 ```
 
 1. **AI Investigates & Reproduces**: When a task is picked up, the AI provisions an isolated workspace, reproduces the problem at a live breakpoint, and drafts a concrete architectural plan.
-2. **Interactive Plan Review (`/grill-me`)**: The lead architect reviews the plan, grills the AI on edge cases, and adjusts requirements before any code is written.
+2. **Proactive Human Alignment & Plan Review**: Grounded in the Knowledge Graph, RobOS workflows actively probe the lead architect on edge cases, constraints, and requirements—keeping humans intimately in the know before code is generated.
 3. **Autonomous Implementation & Verification**: The AI implements code, runs unit tests, updates API contracts, provisions databases, and runs headless E2E verifications.
 4. **Human Final Approval**: The human reviews the PR, visual diffs, and narrated video walkthrough, then approves with 1 click.
 
@@ -124,7 +124,7 @@ RobOS is built entirely upon established, battle-tested open standards. Instead 
 
 | Standard / Technology | Industry Purpose | What RobOS Uses It For |
 |:---|:---|:---|
-| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global ISO/OASIS linked-data standard for software lifecycle tool integration. | **Dual-State SDLC Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Links microservices, schemas, contracts, Git repositories, and tasks into a unified linked-data graph. Powers semantic graph diffs between Live Production (`main`) and Future feature states with SHACL constraint validation. |
+| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global ISO/OASIS linked-data standard for software lifecycle tool integration. | **Dual-State SDLC Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Links microservices, schemas, contracts, Git repositories, tasks, and interactive eLearning courses into a unified linked-data graph. Powers semantic graph diffs, AI interactive eLearning generation with GitOps storage (`.robos/elearning.yaml`), and continuous AI living documentation synchronization whenever graph objects are updated. |
 | **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal catalog format for service and API ownership. | **Zero-Config System Topology Discovery**: RobOS parses your existing Backstage `catalog-info.yaml` files across Git repositories to automatically populate the System Topology canvas without manual data entry. |
 | **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework across 4 zooming levels. | **Visual Topology Studio & Blast Radius Inspector**: Renders polyglot microservice architectures across Level 1 (System Context), Level 2 (Containers & DBs), and Level 3 (Components), and exports C4 Structurizr PlantUML diagrams. |
 | **[Microsoft TypeSpec](https://typespec.io/) & [Buf / Protobuf](https://buf.build/)** | Single-source-of-truth schema definition languages for domain models and DTOs. | **Entity Schema Studio (`schema-studio`)**: Developers and AI agents define entity schemas in TypeSpec once; RobOS compiles them into multi-language TypeScript, Java Records, and Go struct packages automatically. |

@@ -1,0 +1,23 @@
+Idea: First-Class Knowledge Graph Object for Prompt & SDLC Prompt Run Logging
+
+Add a new first-class RobOS Knowledge Graph object for "Prompt" (robos:Prompt) and log every AI prompt executed across the system into the KGraph and Git store.
+
+Taxonomy of Prompt Origins to Label & Track:
+1. From RobOS via <robos-ai-textarea> with user input:
+   - Interactive prompts typed/submitted by developers in RobOS Electron apps (Task Planner, Dev Central, Issue Manager, Context Manager, etc.) with explicit user input, instructions, and @-mentions.
+
+2. From RobOS with no user input (Autonomous / Scheduled):
+   - Autonomous background tasks, agent schedulers, cron-driven audits, living documentation syncs, automated PR review agents, and triage bots running without immediate human prompting.
+
+3. From user terminal or external app without RobOS:
+   - Prompts dispatched directly by the developer via terminal CLI (Tilix, zsh, bash running `gh copilot`, `gemini`, `claude`, `agy`) or external IDE extensions outside the RobOS desktop shell.
+
+4. Other (Sub-agent delegation, synthetic benchmarks, MCP tools):
+   - Internal agent-to-agent delegation prompts, recursive sub-agent spawns, synthetic benchmark runs, and external webhook/MCP triggered prompts.
+
+Key Capabilities:
+- OASIS OSLC Core 3.0 & W3C JSON-LD / SHACL entity schema (`robos:Prompt`, `PromptShape`).
+- Comprehensive metadata: verbatim prompt text, system prompt, context attachments (@-files, git diffs, KGraph nodes), model identifier, token counts, latency, and outcome status.
+- Bi-directional linking to downstream artifacts: generated implementation plans (`robos:ImplementationPlan`), created tasks (`oslc_cm:ChangeRequest`), and commit SHAs.
+- Git store persistence (.robos/prompts/ or journal) versioned under Git.
+- Prompt analytics, audit trail, and filtering UI in RobOS Dev Central and Knowledge Graph Explorer.

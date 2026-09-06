@@ -153,6 +153,42 @@ projects:
         defaultBranch: "main"
         path: "."`,
   },
+  elearning: {
+    name: 'elearning.yaml',
+    schema: 'schemas/elearning.schema.json',
+    desc: 'Declarative eLearning courses, interactive developer curriculums, and lab exercises',
+    parsed: {
+      type: 'eLearning & Training Catalog',
+      title: 'Interactive Developer Curriculums',
+      items: [
+        { label: '🎓 Building Event-Driven Microservices', detail: 'Topic: Microservices & Contracts &middot; 45 mins &middot; Difficulty: Intermediate' },
+        { label: '🧪 Module 1: OpenAPI 3.1 & Mock Stubs', detail: 'Prism mock on :18081 &middot; contracts/forms-api-v1.yaml' },
+        { label: '🧪 Module 2: Gherkin BDD Specs', detail: 'specs/features/multi-step-form.feature &middot; Red-Green Guards' },
+        { label: '🧪 Module 3: GitOps Topology Delivery', detail: '.robos/topology.yaml &middot; Automated Reconciler' },
+      ],
+    },
+    content: `version: "1.0"
+kind: ELearningCatalog
+courses:
+  - id: "microservices-contracts"
+    title: "Building Event-Driven Microservices with OpenAPI & Gherkin BDD"
+    topic: "Microservices & Contracts"
+    difficulty: "Intermediate"
+    duration: "45 minutes"
+    gitopsFile: ".robos/elearning.yaml"
+    targetService: "urn:robos:service:forms-api"
+    targetContract: "urn:robos:contract:forms-api-v1"
+    modules:
+      - id: "mod-01-openapi"
+        title: "Module 1: OpenAPI 3.1 Contract-First Design"
+        durationMinutes: 15
+      - id: "mod-02-gherkin"
+        title: "Module 2: Gherkin BDD Specifications & Red-Green Verification"
+        durationMinutes: 15
+      - id: "mod-03-gitops"
+        title: "Module 3: GitOps Topology & Continuous Delivery Reconciler"
+        durationMinutes: 15`,
+  },
 };
 
 async function load() {
@@ -179,6 +215,12 @@ function isBDDNode(n) {
 function getNodeCategory(n) {
   if (!n) return 'other';
   const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+  if (types.some(t => t.includes('ELearning') || t.includes('Course'))) return 'elearning';
+  if (types.some(t => t.includes('DesktopApp'))) return 'desktop-app';
+  if (types.some(t => t.includes('ConsoleApp'))) return 'console-app';
+  if (types.some(t => t.includes('DataPipeline'))) return 'data-pipeline';
+  if (types.some(t => t.includes('MobileApp'))) return 'mobile-app';
+  if (types.some(t => t.includes('Library'))) return 'library';
   if (types.some(t => t.includes('Project'))) return 'project';
   if (types.some(t => t.includes('Feature') || t.includes('Scenario'))) return 'bdd';
   if (types.some(t => t.includes('Microservice') || t.includes('Container'))) return 'service';
@@ -190,6 +232,12 @@ function getNodeCategory(n) {
 function getTypeBadge(n) {
   const cat = getNodeCategory(n);
   switch (cat) {
+    case 'elearning': return { label: '🎓 eLearning', cls: 'type-elearning' };
+    case 'desktop-app': return { label: '🖥️ Desktop App', cls: 'type-desktop-app' };
+    case 'console-app': return { label: '⌨️ Console CLI', cls: 'type-console-app' };
+    case 'data-pipeline': return { label: '🔄 Data Pipeline', cls: 'type-data-pipeline' };
+    case 'mobile-app': return { label: '📱 Mobile App', cls: 'type-mobile-app' };
+    case 'library': return { label: '📦 Library', cls: 'type-library' };
     case 'project': return { label: '📁 Project', cls: 'type-team' };
     case 'bdd': return { label: '🥒 BDD Feature', cls: 'type-bdd' };
     case 'service': return { label: 'Microservice', cls: 'type-service' };
@@ -265,11 +313,12 @@ function renderNodeList() {
   }).join('');
 }
 
-window.selectNode = async function(id) {
+async function selectNode(id) {
   selectedNodeId = id;
   renderNodeList();
   renderInspector();
-};
+}
+window.selectNode = selectNode;
 
 async function renderInspector() {
   const container = document.getElementById('inspector-content');
@@ -313,6 +362,11 @@ async function renderInspector() {
 
           <div class="gitops-file-item ${activeGitOpsFile === 'projects' ? 'active' : ''}" id="gitops-file-projects" onclick="window.selectGitOpsFile('projects')">
             <span class="gitops-file-name">📄 projects.yaml</span>
+            <span class="gitops-file-badge">VALID</span>
+          </div>
+
+          <div class="gitops-file-item ${activeGitOpsFile === 'elearning' ? 'active' : ''}" id="gitops-file-elearning" onclick="window.selectGitOpsFile('elearning')">
+            <span class="gitops-file-name">📄 elearning.yaml</span>
             <span class="gitops-file-badge">VALID</span>
           </div>
 
@@ -793,9 +847,264 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
             <div class="field-value"><span class="status-tag-pass">3 HTTP Endpoints Mocked in Test Fabric</span></div>
           </div>
         </div>
-        <div style="margin-top: 8px;">
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
           <button class="btn btn-primary" id="btn-open-fabric-service" onclick="window.openFabricForService()">🧪 Open Local Test Fabric for ${node['dcterms:title']}</button>
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
         </div>
+      </div>
+    `;
+  } else if (cat === 'elearning') {
+    const modules = node['robos:modules'] || [];
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🎓 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'AI-synthesized interactive developer training curriculum.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Topic Domain</div>
+            <div class="field-value"><strong>${node['robos:topic'] || 'Architecture'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Difficulty & Duration</div>
+            <div class="field-value"><span class="type-badge type-contract">${node['robos:difficulty'] || 'Intermediate'} &middot; ${node['robos:estimatedDuration'] || '30 mins'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Target Audience</div>
+            <div class="field-value"><code>${node['robos:targetAudience'] || 'Engineers'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">GitOps Storage Location</div>
+            <div class="field-value"><code>${node['robos:gitopsFile'] || '.robos/elearning.yaml'}</code></div>
+          </div>
+          ${node['robos:teachesService'] ? `
+            <div>
+              <div class="field-label">Target Microservice</div>
+              <div class="field-value"><span class="type-badge type-service">${node['robos:teachesService'].replace(/.*:/, '')}</span></div>
+            </div>
+          ` : ''}
+          ${node['robos:teachesContract'] ? `
+            <div>
+              <div class="field-label">Enforced Contract</div>
+              <div class="field-value"><span class="type-badge type-contract">${node['robos:teachesContract'].replace(/.*:/, '')}</span></div>
+            </div>
+          ` : ''}
+        </div>
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.viewInGitOpsTab('elearning')">📁 View in .robos/ GitOps Tab</button>
+          <button class="btn btn-primary" onclick="console.log('Starting interactive lab session for: ' + ${JSON.stringify(node['dcterms:title'])})">🚀 Launch Interactive Lab</button>
+        </div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>📚 Curriculum Modules & Hands-On Exercises (${modules.length})</span>
+          <span class="status-tag-pass">100% SHACL VERIFIED</span>
+        </div>
+        ${modules.map((m, idx) => `
+          <div class="elearning-module-card">
+            <div class="elearning-module-header">
+              <span class="elearning-module-title">${m.title || `Module ${idx + 1}`}</span>
+              <span class="elearning-module-duration">⏱️ ${m.durationMinutes || 15} mins</span>
+            </div>
+            ${m.overview ? `<div class="elearning-module-overview">${m.overview}</div>` : ''}
+            ${Array.isArray(m.labSteps) && m.labSteps.length > 0 ? `
+              <div class="elearning-lab-box">
+                <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);">🧪 Hands-On Lab Instructions:</div>
+                ${m.labSteps.map((step, sIdx) => `
+                  <div class="elearning-lab-step">
+                    <span class="elearning-lab-step-num">${sIdx + 1}.</span>
+                    <span>${step}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${Array.isArray(m.quiz) && m.quiz.length > 0 ? `
+              <div class="elearning-quiz-box">
+                <div style="font-weight: 700; margin-bottom: 4px; color: var(--purple);">💡 Knowledge Check:</div>
+                ${m.quiz.map(q => `
+                  <div><strong>Q:</strong> ${q.question}</div>
+                  <div style="color: var(--success); font-size: 10px; margin-top: 2px;"><strong>A:</strong> ${q.answer}</div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else if (cat === 'desktop-app') {
+    const winCfg = node['robos:windowConfig'] || {};
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🖥️ ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Local workstation desktop application.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Desktop Framework</div>
+            <div class="field-value"><strong>${node['robos:desktopFramework'] || 'Electron'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Technology Stack</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'Node.js'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Executable Binary</div>
+            <div class="field-value"><code>${node['robos:executableName'] || 'app-gui'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Window Dimensions</div>
+            <div class="field-value">${winCfg.defaultWidth || 1200} &times; ${winCfg.defaultHeight || 800} px</div>
+          </div>
+          <div>
+            <div class="field-label">Desktop Category</div>
+            <div class="field-value">${node['robos:desktopCategory'] || 'Development'}</div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="console.log('Launching desktop app: ' + ${JSON.stringify(node['dcterms:title'])})">🚀 Launch Desktop App</button>
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
+        </div>
+      </div>
+    `;
+  } else if (cat === 'console-app') {
+    const subcmds = node['robos:subcommands'] || [];
+    const flags = node['robos:globalFlags'] || [];
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>⌨️ ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Terminal CLI application.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">CLI Command</div>
+            <div class="field-value"><code>${node['robos:cliCommand'] || 'cli'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Technology Stack</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'Go / Cobra'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Owner Team</div>
+            <div class="field-value"><span class="type-badge type-team">${(node['robos:ownerTeam'] || 'core-platform').replace(/.*:/, '')}</span></div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
+        </div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>Subcommands & Operations (${subcmds.length})</span>
+        </div>
+        <table class="matrix-table" style="width: 100%;">
+          <thead>
+            <tr><th>Command</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            ${subcmds.map(s => `
+              <tr>
+                <td><code>${node['robos:cliCommand'] || 'cli'} ${s.name}</code></td>
+                <td>${s.description}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      ${flags.length > 0 ? `
+        <div class="inspector-card">
+          <div class="card-title">
+            <span>Global Flags & Options (${flags.length})</span>
+          </div>
+          <table class="matrix-table" style="width: 100%;">
+            <thead>
+              <tr><th>Flag</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              ${flags.map(f => `
+                <tr>
+                  <td><code>${f.flag}</code></td>
+                  <td>${f.description}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+    `;
+  } else if (cat === 'contract' && node['robos:contractYaml']) {
+    const endpoints = node['robos:endpoints'] || [];
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>📄 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Protocol</div>
+            <div class="field-value"><strong>${node['robos:protocol'] || 'OpenAPI 3.1'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Specification Path</div>
+            <div class="field-value"><code>${node['robos:specFile'] || 'specs/contracts/api.yaml'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+        </div>
+      </div>
+
+      ${endpoints.length > 0 ? `
+        <div class="inspector-card">
+          <div class="card-title">
+            <span>REST API Endpoints (${endpoints.length})</span>
+          </div>
+          <table class="matrix-table" style="width: 100%;">
+            <thead>
+              <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              ${endpoints.map(e => `
+                <tr>
+                  <td><span class="type-badge ${e.method === 'GET' ? 'type-service' : 'type-contract'}">${e.method}</span></td>
+                  <td><code>${e.path}</code></td>
+                  <td>${e.description}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>OpenAPI 3.1 YAML Definition</span>
+        </div>
+        <pre class="json-pre">${node['robos:contractYaml']}</pre>
       </div>
     `;
   } else {
@@ -973,6 +1282,10 @@ window.applyCoPilot = async function() {
 
   document.getElementById('btn-copilot-apply').disabled = true;
 
+  if (res && res.docSyncPrompt) {
+    window.showDocSyncBanner(res.docSyncPrompt);
+  }
+
   if (nodes.length > 0) {
     selectNode(nodes[nodes.length - 1]['@id']);
   }
@@ -1122,4 +1435,224 @@ document.getElementById('btn-validate-shacl').addEventListener('click', () => {
   window.validateSHACL();
 });
 
+// ── eLearning Generator & Documentation Synchronization ─────────────────────
+
+let currentDocSyncPrompt = null;
+
+window.viewInGitOpsTab = function(fileKey = 'elearning') {
+  currentTab = 'gitops';
+  activeGitOpsFile = fileKey;
+  updateTabUI();
+  renderInspector();
+};
+
+window.openELearningModal = function() {
+  const modal = document.getElementById('elearning-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const status = document.getElementById('elearning-modal-status');
+    if (status) status.style.display = 'none';
+  }
+};
+
+window.closeELearningModal = function() {
+  const modal = document.getElementById('elearning-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.submitELearning = async function(customPrompt) {
+  const textarea = document.getElementById('elearning-prompt');
+  let prompt = customPrompt;
+  if (!prompt && textarea) {
+    prompt = textarea.value || (textarea._inner ? textarea._inner.innerText : '') || '';
+  }
+  if (!prompt || !prompt.trim()) {
+    prompt = 'Building Event-Driven Microservices with OpenAPI & Gherkin BDD';
+  }
+
+  const statusEl = document.getElementById('elearning-modal-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = `<span style="color: var(--accent);">🔍 Checking Knowledge Graph for existing eLearning or creating new curriculum…</span>`;
+  }
+
+  try {
+    const res = await window.sdlcGraph.generateELearning(prompt);
+    nodes = await window.sdlcGraph.getAllNodes();
+    renderNodeList();
+
+    if (res.docSyncPrompt) {
+      window.showDocSyncBanner(res.docSyncPrompt);
+    }
+
+    if (res.node) {
+      selectNode(res.node['@id']);
+    }
+
+    currentTab = 'visual';
+    updateTabUI();
+    renderInspector();
+
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color: var(--success);">${res.message}</span>`;
+      setTimeout(() => {
+        window.closeELearningModal();
+      }, 1200);
+    } else {
+      window.closeELearningModal();
+    }
+
+    return res;
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color: var(--danger);">Error: ${err.message}</span>`;
+    }
+    return { ok: false, error: err.message };
+  }
+};
+
+window.showDocSyncBanner = function(promptObj) {
+  currentDocSyncPrompt = promptObj;
+  const banner = document.getElementById('doc-sync-banner');
+  const desc = document.getElementById('doc-sync-desc');
+  if (banner && desc) {
+    desc.textContent = `Noticeable updates detected in ${promptObj.nodeTitle || 'KGraph'} (${promptObj.changeType || 'updated'}). AI prompted to discern documentation updates across ${((promptObj.suggestedFiles || []).join(', ')) || 'docs/'}.`;
+    banner.style.display = 'flex';
+  }
+};
+
+window.hideDocSyncBanner = function() {
+  const banner = document.getElementById('doc-sync-banner');
+  if (banner) banner.style.display = 'none';
+};
+
+window.viewDocPrompt = function() {
+  if (!currentDocSyncPrompt) return;
+  console.log('[DocSync Prompt]', currentDocSyncPrompt.aiPrompt);
+  const desc = document.getElementById('doc-sync-desc');
+  if (desc) {
+    desc.textContent = `Prompt: ${currentDocSyncPrompt.aiPrompt}`;
+  }
+};
+
+window.syncDocsAction = async function() {
+  if (!currentDocSyncPrompt) return { ok: true, noop: true };
+  const res = await window.sdlcGraph.applyDocUpdates(currentDocSyncPrompt);
+  console.log('[DocSync Applied]', res);
+  window.hideDocSyncBanner();
+  return res;
+};
+
+const btnOpenELearning = document.getElementById('btn-open-elearning-modal');
+if (btnOpenELearning) btnOpenELearning.addEventListener('click', () => window.openELearningModal());
+
+const btnCloseELearning = document.getElementById('btn-close-elearning-modal');
+if (btnCloseELearning) btnCloseELearning.addEventListener('click', () => window.closeELearningModal());
+
+const btnCancelELearning = document.getElementById('btn-cancel-elearning');
+if (btnCancelELearning) btnCancelELearning.addEventListener('click', () => window.closeELearningModal());
+
+const btnSubmitELearning = document.getElementById('btn-submit-elearning');
+if (btnSubmitELearning) btnSubmitELearning.addEventListener('click', () => window.submitELearning());
+
+const btnViewDocPrompt = document.getElementById('btn-view-doc-prompt');
+if (btnViewDocPrompt) btnViewDocPrompt.addEventListener('click', () => window.viewDocPrompt());
+
+const btnSyncDocsAction = document.getElementById('btn-sync-docs-action');
+if (btnSyncDocsAction) btnSyncDocsAction.addEventListener('click', () => window.syncDocsAction());
+
+const btnCloseDocBanner = document.getElementById('btn-close-doc-banner');
+if (btnCloseDocBanner) btnCloseDocBanner.addEventListener('click', () => window.hideDocSyncBanner());
+
+// ── Git Projects Sync ─────────────────────────────────────────────────────────
+window.syncFromGitProjects = async function() {
+  const res = await window.sdlcGraph.importGitProjects();
+  if (res && res.ok) {
+    nodes = await window.sdlcGraph.getAllNodes();
+    renderNodeList();
+    if (res.docSyncPrompt) {
+      window.showDocSyncBanner(res.docSyncPrompt);
+    }
+  }
+  return res;
+};
+
+// ── Per-App Documentation Update Modal Handlers ───────────────────────────────
+let currentAppDocNodeId = null;
+
+window.openAppDocModal = function(nodeId) {
+  const node = nodes.find(n => n['@id'] === (nodeId || selectedNodeId)) || nodes[0];
+  if (!node) return;
+  currentAppDocNodeId = node['@id'];
+
+  const titleEl = document.getElementById('app-doc-modal-title');
+  if (titleEl) {
+    titleEl.textContent = `Request Documentation Updates: ${node['dcterms:title'] || node['@id']}`;
+  }
+
+  const modal = document.getElementById('app-doc-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeAppDocModal = function() {
+  const modal = document.getElementById('app-doc-modal');
+  if (modal) modal.style.display = 'none';
+  const status = document.getElementById('app-doc-modal-status');
+  if (status) status.style.display = 'none';
+};
+
+window.submitAppDocUpdates = async function(customPrompt) {
+  let prompt = customPrompt;
+  if (!prompt) {
+    const textarea = document.getElementById('app-doc-prompt');
+    prompt = textarea ? (textarea.value || (textarea._inner ? textarea._inner.innerText : '') || '') : '';
+  }
+  if (!prompt || !prompt.trim()) {
+    prompt = 'Update architecture and usage documentation for this application.';
+  }
+
+  const status = document.getElementById('app-doc-modal-status');
+  if (status) {
+    status.textContent = 'Generating tailored documentation update prompt…';
+    status.style.display = 'block';
+  }
+
+  try {
+    const res = await window.sdlcGraph.requestAppDocUpdate({
+      appId: currentAppDocNodeId,
+      userPrompt: prompt,
+    });
+
+    if (window.showDocSyncBanner) {
+      window.showDocSyncBanner({
+        nodeTitle: res.appTitle,
+        changeType: 'doc-request',
+        aiPrompt: res.aiPrompt,
+        suggestedFiles: res.suggestedFiles,
+      });
+    }
+
+    if (status) {
+      status.textContent = res.message || 'Documentation change request applied!';
+    }
+
+    window.closeAppDocModal();
+    return res;
+  } catch (err) {
+    console.error('App doc update error:', err);
+    if (status) status.textContent = 'Error: ' + err.message;
+    return { ok: false, error: err.message };
+  }
+};
+
+const btnCloseAppDoc = document.getElementById('btn-close-app-doc-modal');
+if (btnCloseAppDoc) btnCloseAppDoc.addEventListener('click', () => window.closeAppDocModal());
+
+const btnCancelAppDoc = document.getElementById('btn-cancel-app-doc');
+if (btnCancelAppDoc) btnCancelAppDoc.addEventListener('click', () => window.closeAppDocModal());
+
+const btnSubmitAppDoc = document.getElementById('btn-submit-app-doc');
+if (btnSubmitAppDoc) btnSubmitAppDoc.addEventListener('click', () => window.submitAppDocUpdates());
+
 load();
+

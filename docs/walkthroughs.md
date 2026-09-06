@@ -1,7 +1,7 @@
 ---
 title: E2E Walkthroughs & Proof of Work
 layout: default
-nav_order: 5
+nav_order: 9
 ---
 
 # Real-World Walkthroughs & Proof of Work
@@ -34,21 +34,46 @@ In traditional software engineering, developers write code and hope their unit t
 The **Acme Petshop Platform** is a reference distributed polyglot microservice application designed to mirror complex enterprise software delivery. It spans a Java Spring Boot backend, a PostgreSQL relational database, a React TypeScript frontend, an Apache Kafka event streaming pipeline, an mTLS rabies vaccination verification gateway, and a dedicated analytics warehouse.
 
 ```mermaid
-flowchart LR
-    S1["1. AI Task Planner"] --> S2["2. Visual Architecture"]
-    S2 --> S3["3. API Contracts & Mocks"]
-    S3 --> S4["4. Git Repos & Setup"]
-    S4 --> S5["5. AI Implementation & Plan"]
-    S5 --> S6["6. PR Review & IDE Hub"]
-    S6 --> S7["7. Deploy Tracker"]
-    S7 --> S8["8. Kubernetes Navigator"]
-    S8 --> S9["9. Live Cluster Deploy"]
-    S9 --> S10["10. Auto-Deploy & Clean"]
-    S10 --> S11["11. REST API Client"]
-    S11 --> S12["12. Automated API Tests"]
-    S12 --> S13["13. AI Tool Connections"]
-    S13 --> S15["15. Database Explorer"]
-    S15 --> S16["16. Full Cloud Lifecycle"]
+flowchart TD
+    subgraph Phase1 ["Phase 1: Architecture & Specification"]
+        S1["Step 1: AI Task Planner & Automated Project Breakdown"]
+        S2["Step 2: Visual Architecture & C4 Service Map"]
+        S3["Step 3: API Contracts & Live Mock Servers"]
+        S4["Step 4: Multi-Repo Hub & Automated Dev Setup"]
+        S1 --> S2 --> S3 --> S4
+    end
+
+    subgraph Phase2 ["Phase 2: Autonomous Implementation & Review"]
+        S5["Step 5: Autonomous AI Task Implementation & Solution Plan"]
+        S6["Step 6: PR Review Process & IDE Review Hub"]
+        S5 --> S6
+    end
+
+    subgraph Phase3 ["Phase 3: Continuous Deployment & Cloud Infrastructure"]
+        S7["Step 7: Deployment Tracker & Progressive Rollouts"]
+        S8["Step 8: Kubernetes & Cloud Infrastructure Navigator"]
+        S9["Step 9: One-Click Live Kubernetes Cluster Deployment"]
+        S10["Step 10: Automatic Deploy on Merge & Zero-Waste Cleanup"]
+        S7 --> S8 --> S9 --> S10
+    end
+
+    subgraph Phase4 ["Phase 4: API Testing & Quality Gates"]
+        S11["Step 11: Git-Backed REST API Client (Bruno Engine)"]
+        S12["Step 12: Automated API Test Runner & Merge Gates"]
+        S11 --> S12
+    end
+
+    subgraph Phase5 ["Phase 5: Agent Connections & Full Data Lifecycle"]
+        S13["Step 13: Universal AI Tool Connections (MCP Router)"]
+        S15["Step 15: Multi-Database Explorer (PostgreSQL, Kafka, S3)"]
+        S16["Step 16: Complete Database & Cloud Lifecycle"]
+        S13 --> S15 --> S16
+    end
+
+    S4 --> S5
+    S6 --> S7
+    S10 --> S11
+    S12 --> S13
 ```
 
 ---
@@ -634,6 +659,148 @@ When building cross-language microservices (Java backend, TypeScript frontend, G
 
 ---
 
+## Section 3: Company Setup & App Developer Wizards (Hardened Workflows)
+
+RobOS provides purpose-built wizards and governance engines for enterprise onboarding and rapid application scaffolding. Each workflow is verified end-to-end with real processes, live directory synchronization, and zero mocking.
+
+```mermaid
+flowchart TD
+    subgraph Organization Onboarding
+        A[Existing Enterprise] -->|Directory Sync & SCIM| B[RobOS Group Manager]
+        C[New Startup] -->|Tenant Bootstrap| B
+        B --> D[Team Topologies & RBAC]
+    end
+    subgraph Developer Scaffolding
+        E[Develop New App] -->|Contract-First Scaffolding| F[RobOS App Wizard]
+        G[Import Existing Codebase] -->|Deep Heuristic Inspection| F
+        F --> H[Backstage Catalog & dev-setup.sh]
+        H --> I[Dual-State Knowledge Graph]
+    end
+    D -.->|Assign Ownership| H
+```
+
+---
+
+### Step 17: Existing Company Setup & Directory Sync (Okta, Azure AD, LDAP)
+
+#### The Real-World Business Scenario
+An established enterprise with 500+ engineers across multiple divisions needs to onboard their entire organization onto RobOS without manual user provisioning. They need automated directory synchronization via SCIM/LDAP (Okta, Microsoft Entra/Azure AD, Google Workspace), GitHub/GitLab team mapping, Team Topologies classification (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), and role-based access control (RBAC).
+
+#### What the Test Actually Executes Step-by-Step
+1. **Inspect Unlinked Identity**: Opens **RobOS Group Manager** and inspects the active developer identity badge (`Guest / Unlinked`).
+2. **Open Enterprise Directory Sync Modal**: Clicks **🏢 Sync Directory** to launch the onboarding wizard.
+3. **Configure Developer Credentials**: Enters `Sarah Connor`, `sarah.connor@acmeglobal.com`, GitHub handle `sconnor`, enterprise organization `Acme Enterprise Global`, and directory provider `Okta SCIM 2.0`.
+4. **Execute Directory Synchronization**: Ingests enterprise user rosters, sets global git author credentials, and binds active identity in `~/.config/robos/identity.json`.
+5. **Verify Activated Identity**: Asserts updated active badge showing `Sarah Connor · Lead Architect & Approver · core-platform`.
+6. **Inspect Team Topologies & Members**: Verifies Core Platform team and cryptographic GPG commit signers.
+7. **GitOps & Knowledge Graph Sync**: Persists team definitions to `.robos/teams.yaml` and synchronizes developer/team nodes into `.robos/knowledge-graph.jsonld`.
+- **Source Demo Script**: [`packages/robos-test/demos/existing-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/existing-company-setup-demo.js)
+- **Dedicated Documentation**: [Existing Company Setup Guide]({{ '/existing-company-setup.html' | relative_url }})
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/existing-company-setup-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| Enterprise Organization Structure | Okta & SCIM Directory Synchronization |
+|:---:|:---:|
+| ![Enterprise Structure]({{ '/assets/images/screenshots/existing-company-sidebar_frame.png' | relative_url }}) | ![Directory Sync]({{ '/assets/images/screenshots/existing-company-directory-sync_frame.png' | relative_url }}) |
+
+| Team Topologies (.robos/teams.yaml) | Role-Based Access Control (RBAC) |
+|:---:|:---:|
+| ![Teams Mapped]({{ '/assets/images/screenshots/existing-company-teams-mapped_frame.png' | relative_url }}) | ![Members RBAC]({{ '/assets/images/screenshots/existing-company-members-rbac_frame.png' | relative_url }}) |
+
+---
+
+### Step 18: New Company Setup & Greenfield Startup Bootstrap
+
+#### The Real-World Business Scenario
+A greenfield startup or new engineering division is setting up their software delivery ecosystem from scratch. They need an instant, turnkey foundation: provisioning root administrator credentials, initializing primary VCS organizations (GitHub, GitLab, Gitea), creating foundational engineering squads, establishing GPG/SSH security keyrings, and configuring shared AI coding models.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Inspect Greenfield State**: Opens **RobOS Group Manager** displaying an unlinked workspace (`No Tenant / Unlinked`).
+2. **Open Greenfield Bootstrap Wizard**: Clicks **🚀 Bootstrap** to launch organization initialization.
+3. **Configure Company & Root Administrator**: Enters company legal entity `Acme Cloud Innovations`, domain `acmecloud.io`, root administrator `Alex Rivera`, and role `Chief Architect & VP Engineering`.
+4. **Execute Bootstrap**: Provisions company tenant in `~/.config/robos/company.json`, generates administrator keyrings in `~/.gnupg`, and activates root identity in `~/.config/robos/identity.json`.
+5. **Verify Activated Root Admin**: Asserts updated active badge showing `Alex Rivera · Chief Architect & VP Engineering · founding-core`.
+6. **Inspect Foundational Squads**: Validates `Founding Core Engineering` and `Cloud Platform` teams in `.robos/teams.yaml`.
+7. **Security Baselines & Knowledge Graph Registration**: Materializes administrator and squad nodes into `.robos/knowledge-graph.jsonld` and registers corporate AI models.
+- **Source Demo Script**: [`packages/robos-test/demos/new-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/new-company-setup-demo.js)
+- **Dedicated Documentation**: [New Company Setup Guide]({{ '/new-company-setup.html' | relative_url }})
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/new-company-setup-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| Greenfield Bootstrap Modal | Organization & Admin Configuration |
+|:---:|:---:|
+| ![Bootstrap Init]({{ '/assets/images/screenshots/new-company-bootstrap-init_frame.png' | relative_url }}) | ![Tenant Config]({{ '/assets/images/screenshots/new-company-tenant-configured_frame.png' | relative_url }}) |
+
+| Foundational Teams Scaffolding | Security & AI Provider Baseline |
+|:---:|:---:|
+| ![Teams Scaffolding]({{ '/assets/images/screenshots/new-company-teams-scaffolded_frame.png' | relative_url }}) | ![Security Baseline]({{ '/assets/images/screenshots/new-company-security-baseline_frame.png' | relative_url }}) |
+
+---
+
+### Step 19: Develop a New App — RobOS App Creation Wizard
+
+#### The Real-World Business Scenario
+An engineer is tasked with building a new microservice or desktop utility. Instead of spending hours writing boilerplate build configurations, Dockerfiles, and CI scripts, the developer launches the **RobOS App Wizard**. The wizard guides the developer through archetype selection, API contract definition (OpenAPI 3.1, TypeSpec, Protobuf, GraphQL), team ownership assignment, and synthesizes an executable developer environment (`dev-setup.sh`) and Spotify Backstage catalog.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Launch App Wizard**: Opens **RobOS App Wizard** in Greenfield App Creation mode.
+2. **Select Multi-App Archetype**: Selects `Microservice` from 6 core archetypes (`DesktopApp`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`).
+3. **App Identity & Team Ownership**: Names the service `Payment Gateway`, sets technology to `Node.js 20 / TypeScript`, and binds ownership to `Core Platform Team`.
+4. **Contract Specification**: Chooses OpenAPI 3.1 specification for contract-first API development.
+5. **Generate Scaffolding**: Synthesizes `catalog-info.yaml`, Dockerfile, runnable `dev-setup.sh`, and automatically registers the application node in `.robos/packages.yaml` and the Knowledge Graph.
+- **Source Demo Script**: [`packages/robos-test/demos/new-app-wizard-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/new-app-wizard-demo.js)
+- **Dedicated Documentation**: [New App Wizard Guide]({{ '/new-app-wizard.html' | relative_url }})
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/new-app-wizard-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| 6 Multi-App Archetypes Selection | App Identity & Team Assignment |
+|:---:|:---:|
+| ![Archetypes]({{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }}) | ![App Identity]({{ '/assets/images/screenshots/new-app-identity-team_frame.png' | relative_url }}) |
+
+| API Contract Specification (OpenAPI 3.1) | Scaffolding & Knowledge Graph Registration |
+|:---:|:---:|
+| ![Contract Spec]({{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}) | ![Scaffold Complete]({{ '/assets/images/screenshots/new-app-scaffold-complete_frame.png' | relative_url }}) |
+
+---
+
+### Step 20: Import Existing Apps — Codebase Ingestion & Archetype Detection
+
+#### The Real-World Business Scenario
+An engineering organization adopting RobOS has dozens of existing legacy and brownfield repositories across GitHub and internal GitLab servers. They need to import these codebases into the RobOS ecosystem effortlessly: auto-detecting language runtimes, identifying framework dependencies, extracting existing API contracts, assigning team ownership, and generating Backstage catalog manifests without manual YAML editing.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Switch to Import Mode**: Switches RobOS App Wizard to **Import Existing App** mode.
+2. **Deep Automated Codebase Inspection**: Scans source directory files (`package.json`, `pom.xml`, `go.mod`, etc.) without mocking.
+3. **Heuristic Archetype & Stack Inference**: Accurately infers archetype (`robos:DesktopApp`), Node.js 20 runtime, Electron framework, and Bruno REST capabilities.
+4. **Team Topology Mapping**: Assigns team ownership to Core Platform Team in `.robos/teams.yaml`.
+5. **Catalog & Dev-Setup Synthesis**: Generates `catalog-info.yaml`, creates executable `dev-setup.sh`, updates `~/.config/robos/git-projects.json`, and links the component into the SDLC Knowledge Graph.
+- **Source Demo Script**: [`packages/robos-test/demos/app-import-wizard-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/app-import-wizard-demo.js)
+- **Dedicated Documentation**: [App Import Wizard Guide]({{ '/app-import-wizard.html' | relative_url }})
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/app-import-wizard-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| Source Selection & Git Repository Scan | Deep Dependency & Runtime Inspection |
+|:---:|:---:|
+| ![Source Select]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}) | ![Deep Inspection]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}) |
+
+| Team Ownership Assignment | Ingestion & Backstage Catalog Synthesis |
+|:---:|:---:|
+| ![Team Assignment]({{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }}) | ![Ingest Complete]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}) |
+
+---
+
 ## How to Run Walkthroughs Yourself
 
 You can run any of these automated walkthroughs in headless mode to regenerate the videos and voiceovers on your own machine:
@@ -641,6 +808,18 @@ You can run any of these automated walkthroughs in headless mode to regenerate t
 ```bash
 # Run the complete Acme Petshop end-to-end lifecycle walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/topology-db-kube-lifecycle-demo.js
+
+# Run the Existing Company Setup & SCIM Directory Sync walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/existing-company-setup-demo.js
+
+# Run the New Company Setup & Greenfield Startup Bootstrap walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-company-setup-demo.js
+
+# Run the Develop a New App (App Creation Wizard) walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-wizard-demo.js
+
+# Run the Import Existing Apps (Codebase Ingestion) walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/app-import-wizard-demo.js
 
 # Run the Data Sources explorer walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/data-sources-demo.js

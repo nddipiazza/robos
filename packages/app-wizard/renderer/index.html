@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RobOS App Wizard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="../../robos-ui/robos-ui.js"></script>
+  <script>
+    if (!customElements.get('robos-ai-textarea')) {
+      const s = document.createElement('script');
+      s.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+      document.head.appendChild(s);
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m19 11-8-8-8.5 8.5a2.12 2.12 0 0 0 3 3L12 8l6.5 6.5a2.12 2.12 0 0 0 3-3L19 11Z"/>
+        <path d="m5 2 5 5"/><path d="M2 5l5 5"/><path d="M22 19l-3-3"/><path d="m19 22 3-3"/>
+        <circle cx="19" cy="5" r="2"/>
+      </svg>
+      <div>
+        <div class="brand-title">RobOS App Wizard</div>
+        <div class="brand-subtitle">Develop New Apps & Import Existing Repositories</div>
+      </div>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-mode-new" data-mode="new">Develop New App</button>
+      <button class="mode-btn" id="btn-mode-import" data-mode="import">Import Existing App</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar-nav">
+      <!-- Injected by app.js -->
+    </aside>
+
+    <main class="main-view">
+      <!-- MODE: NEW APP PANELS -->
+      <section class="step-panel active" id="panel-new-1">
+        <h2>Select Application Archetype</h2>
+        <div class="subtitle">Choose the architectural template tailored to your software artifact.</div>
+        <div class="archetype-grid">
+          <div class="archetype-card selected" data-archetype="robos:Microservice" id="card-arch-microservice">
+            <div class="arch-icon">⚡</div>
+            <div class="arch-title">Microservice / Web API</div>
+            <div class="arch-desc">RESTful backend, Java Spring Boot, Go Gin, Python FastAPI with OpenAPI 3.1 contracts.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:DesktopApp" id="card-arch-desktop">
+            <div class="arch-icon">🖥️</div>
+            <div class="arch-title">Desktop Application</div>
+            <div class="arch-desc">Electron, Tauri, or Qt workstation app integrated into RobOS app launcher & panels.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:ConsoleApp" id="card-arch-cli">
+            <div class="arch-icon">⌨️</div>
+            <div class="arch-title">Console & CLI Tool</div>
+            <div class="arch-desc">Command-line terminal utilities using Go Cobra, Rust Clap, Python Click, or Node.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:MobileApp" id="card-arch-mobile">
+            <div class="arch-icon">📱</div>
+            <div class="arch-title">Mobile Application</div>
+            <div class="arch-desc">iOS, Android, React Native, or Flutter client applications.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:DataPipeline" id="card-arch-pipeline">
+            <div class="arch-icon">🌊</div>
+            <div class="arch-title">Data Pipeline / Worker</div>
+            <div class="arch-desc">Stream and batch processing jobs with Apache Kafka, Celery, or Spark.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:Library" id="card-arch-library">
+            <div class="arch-icon">📦</div>
+            <div class="arch-title">Library / SDK</div>
+            <div class="arch-desc">Reusable client SDKs, domain modules, and packages published across registries.</div>
+          </div>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" id="btn-next-new-1">Next: App Identity →</button>
+        </div>
+      </section>
+
+      <section class="step-panel" id="panel-new-2">
+        <h2>App Identity & Ownership</h2>
+        <div class="subtitle">Specify naming, package identifier URN, technology, and team ownership.</div>
+        <div class="form-group">
+          <label for="new-app-name">Application Name</label>
+          <input type="text" id="new-app-name" value="Payment Gateway API" placeholder="e.g. Payment Gateway API">
+        </div>
+        <div class="form-group">
+          <label for="new-app-slug">Package Identifier Slug</label>
+          <input type="text" id="new-app-slug" value="payment-gateway-api" placeholder="e.g. payment-gateway-api">
+        </div>
+        <div class="form-group">
+          <label for="new-app-tech">Technology Stack & Language</label>
+          <select id="new-app-tech">
+            <option value="Java 21 / Spring Boot 3">Java 21 / Spring Boot 3</option>
+            <option value="Node.js 20 / TypeScript / Express">Node.js 20 / TypeScript / Express</option>
+            <option value="Go 1.22 / Gin">Go 1.22 / Gin</option>
+            <option value="Python 3.11 / FastAPI">Python 3.11 / FastAPI</option>
+            <option value="Electron 29 / Vanilla JS">Electron 29 / Vanilla JS</option>
+            <option value="Rust / Tokio">Rust / Tokio</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-app-team">Team Ownership (.robos/teams.yaml)</label>
+          <select id="new-app-team">
+            <!-- Populated via IPC -->
+          </select>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="btn-back-new-2">← Back</button>
+          <button class="btn btn-primary" id="btn-next-new-2">Next: API Contracts →</button>
+        </div>
+      </section>
+
+      <section class="step-panel" id="panel-new-3">
+        <h2>Contract & API Specification</h2>
+        <div class="subtitle">Define the API contract specification for consumer contract verification.</div>
+        <div class="form-group">
+          <label for="new-contract-type">Specification Type</label>
+          <select id="new-contract-type">
+            <option value="openapi">OpenAPI 3.1 (REST API)</option>
+            <option value="typespec">Microsoft TypeSpec (.tsp)</option>
+            <option value="protobuf">Protobuf gRPC (.proto)</option>
+            <option value="graphql">GraphQL Schema (.graphql)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-contract-content">Contract Preview (OpenAPI 3.1)</label>
+          <textarea id="new-contract-content" rows="8">openapi: 3.1.0
+info:
+  title: Payment Gateway API
+  version: 1.0.0
+paths:
+  /v1/payments:
+    post:
+      summary: Process payment
+  /v1/refunds:
+    post:
+      summary: Process refund</textarea>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="btn-back-new-3">← Back</button>
+          <button class="btn btn-primary" id="btn-next-new-3">Next: Scaffold & Generate →</button>
+        </div>
+      </section>
+
+      <section class="step-panel" id="panel-new-4">
+        <h2>Scaffolding Generation & Registration</h2>
+        <div class="subtitle">Review the configuration and execute automated project bootstrapping.</div>
+        <div class="summary-box" id="new-summary-box">
+          <!-- Populated by app.js -->
+        </div>
+        <div class="console-output" id="new-console-output">Ready to scaffold application...</div>
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="btn-back-new-4">← Back</button>
+          <button class="btn btn-primary" id="btn-generate-new">Scaffold Application ⚡</button>
+        </div>
+      </section>
+
+      <!-- MODE: IMPORT APP PANELS -->
+      <section class="step-panel" id="panel-import-1">
+        <h2>Select Repository or Source Codebase</h2>
+        <div class="subtitle">Specify the local path or Git URL of the application to import into RobOS.</div>
+        <div class="form-group">
+          <label for="import-source-path">Local Directory Path or Git URL</label>
+          <input type="text" id="import-source-path" placeholder="/home/user/my-existing-app">
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary" id="btn-scan-import">Deep Inspect Codebase 🔍</button>
+        </div>
+      </section>
+
+      <section class="step-panel" id="panel-import-2">
+        <h2>Codebase Inspection Results</h2>
+        <div class="subtitle">Automated archetype, language, framework, and contract detection.</div>
+        <div class="summary-box" id="import-inspection-results">
+          <!-- Populated by app.js -->
+        </div>
+
+        <!-- AI Prompt Refinement Section -->
+        <div class="ai-refine-box" style="margin-top: 16px; background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); margin: 0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+              AI Prompt Refinement
+            </label>
+            <span style="font-size: 11px; color: var(--text-secondary);">Use AI to adjust detected archetype, stack, naming, or team mapping</span>
+          </div>
+          <robos-ai-textarea
+            id="ai-inspection-refine-prompt"
+            show-submit="false"
+            show-commands="false"
+            placeholder="Instruct AI to refine or change detected settings (e.g. 'Change archetype to robos:ConsoleApp, set runtime to Go 1.22, and assign to Core Platform Team')…"
+            min-height="72">
+          </robos-ai-textarea>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+            <div id="ai-refine-status" style="font-size: 12px; color: var(--accent); min-height: 18px;"></div>
+            <button class="btn btn-secondary" id="btn-apply-ai-refinement" disabled style="display: flex; align-items: center; gap: 6px;">
+              <span>✦</span> Refine with AI Prompt
+            </button>
+          </div>
+        </div>
+
+        <!-- Editable Fields Grid -->
+        <div class="edit-detected-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
+          <div class="form-group">
+            <label for="import-app-name">Package Identifier / Name</label>
+            <input type="text" id="import-app-name" placeholder="Package name">
+          </div>
+          <div class="form-group">
+            <label for="import-app-archetype">Application Archetype</label>
+            <select id="import-app-archetype">
+              <option value="robos:Microservice">Microservice / Web API</option>
+              <option value="robos:DesktopApp">Desktop Application</option>
+              <option value="robos:ConsoleApp">Console & CLI Tool</option>
+              <option value="robos:MobileApp">Mobile Application</option>
+              <option value="robos:DataPipeline">Data Pipeline / Worker</option>
+              <option value="robos:Library">Library / SDK</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="import-app-tech">Technology Stack</label>
+            <input type="text" id="import-app-tech" placeholder="e.g. Node.js 20 / Electron">
+          </div>
+          <div class="form-group">
+            <label for="import-app-team">Assign Team Ownership (.robos/teams.yaml)</label>
+            <select id="import-app-team"></select>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="btn-back-import-2">← Rescan</button>
+          <button class="btn btn-primary" id="btn-next-import-2">Next: Catalog & Dev Setup →</button>
+        </div>
+      </section>
+
+      <section class="step-panel" id="panel-import-3">
+        <h2>Synthesize Backstage Catalog & Ingest</h2>
+        <div class="subtitle">Generate catalog-info.yaml, dev-setup.sh, and register in Knowledge Graph.</div>
+        <div class="summary-box" id="import-synth-box">
+          <!-- Populated by app.js -->
+        </div>
+        <div class="console-output" id="import-console-output">Ready to ingest application...</div>
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="btn-back-import-3">← Back</button>
+          <button class="btn btn-primary" id="btn-execute-import">Complete Ingestion & Map ⚡</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

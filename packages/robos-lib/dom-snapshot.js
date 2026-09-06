@@ -402,16 +402,19 @@ function startDebugServer(win, port, appId) {
 
       // ── Health ───────────────────────────────────────────────────────────
       } else if (url === '/health' && req.method === 'GET') {
+        const title = (win && typeof win.getTitle === 'function') ? win.getTitle() : '';
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, appId, title: win.getTitle() }));
+        res.end(JSON.stringify({ ok: true, appId, title }));
 
       } else {
         res.writeHead(404);
         res.end('Not found');
       }
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
     }
   });
 

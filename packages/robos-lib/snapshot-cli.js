@@ -101,6 +101,7 @@ const PORT_REGISTRY = {
   'nosql-manager':     19180,
   'grpc-client':       19181,
   'graphql-client':    19182,
+  'app-wizard':        19183,
 };
 
 

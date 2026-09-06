@@ -594,6 +594,30 @@ const AGY_SESSIONS_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'brai
 ipcMain.handle('antigravity-sessions', () => {
   const sessions = [];
   try {
+    const robosSessionDir = path.join(os.homedir(), '.config', 'robos', 'agent-sessions');
+    if (fs.existsSync(robosSessionDir)) {
+      const files = fs.readdirSync(robosSessionDir).filter(f => f.endsWith('.json'));
+      for (const f of files) {
+        try {
+          const sess = JSON.parse(fs.readFileSync(path.join(robosSessionDir, f), 'utf8'));
+          sessions.push({
+            session_id: sess.id,
+            name: sess.task || sess.id,
+            cwd: '/home/ndipiazza/source/robos',
+            created_at: typeof sess.startedAt === 'number' ? new Date(sess.startedAt).toISOString() : (sess.startedAt || new Date().toISOString()),
+            updated_at: typeof sess.stoppedAt === 'number' ? new Date(sess.stoppedAt).toISOString() : (sess.stoppedAt || new Date().toISOString()),
+            first_message: sess.task || 'Knowledge Graph Ingestion Job',
+            model: sess.agentId || 'kgraph-ingestion-agent',
+            status: sess.status || 'completed',
+            mcp_connected: true,
+            active_task: sess.task || 'Ingestion',
+          });
+        } catch {}
+      }
+    }
+  } catch {}
+
+  try {
     if (fs.existsSync(AGY_SESSIONS_DIR)) {
       const ids = fs.readdirSync(AGY_SESSIONS_DIR);
       for (const id of ids) {
@@ -630,6 +654,17 @@ ipcMain.handle('antigravity-sessions', () => {
     });
   }
   return sessions;
+});
+
+ipcMain.handle('robos-agent-sessions', () => {
+  const sessionDir = path.join(os.homedir(), '.config', 'robos', 'agent-sessions');
+  if (!fs.existsSync(sessionDir)) return [];
+  try {
+    const files = fs.readdirSync(sessionDir).filter(f => f.endsWith('.json'));
+    return files.map(f => {
+      try { return JSON.parse(fs.readFileSync(path.join(sessionDir, f), 'utf8')); } catch { return null; }
+    }).filter(Boolean);
+  } catch { return []; }
 });
 
 ipcMain.handle('antigravity-fetch-models', async () => {

@@ -43,6 +43,8 @@ graph LR
 | **RobOS File Storage & MCP Agent-Driven File Sharing** | [raw note](inbox/robos-file-storage-and-agent-sharing.txt) | [feature spec](specs/robos-file-storage-and-agent-sharing.md) | Draft | `packages/file-storage`, `robos-file-storage-mcp`, `people-directory`, `group-manager` |
 | **RobOS Learning Management System (LMS) & SDLC Course Player** | [raw note](inbox/robos-learning-management-system.txt) | [feature spec](specs/robos-learning-management-system.md) | Draft | `packages/robos-lms`, `packages/context-manager`, `packages/workspace-manager`, `packages/people-directory` |
 | **Local Open-Source Task Server & RobOS Task Servers Integration** | [raw note](inbox/local-open-source-task-server.txt) | [feature spec](specs/local-open-source-task-server.md) | Draft | `packages/task-servers`, `packages/robos-task-client`, `packages/task-board`, MCP Tools |
+| **AI-Generated Implementation Plan as First-Class Knowledge Graph Object** | [raw note](inbox/ai-generated-implementation-plan.txt) | [feature spec](specs/ai-generated-implementation-plan.md) | Draft | `packages/task-planner`, `packages/robos-graph`, `packages/dev-central`, Git Store (`.robos/plans/`, `.robos/knowledge-graph.jsonld`) |
+| **First-Class Knowledge Graph Object for Prompt & SDLC Prompt Run Logging** | [raw note](inbox/prompt-knowledge-graph-logging.txt) | [feature spec](specs/prompt-knowledge-graph-logging.md) | Draft | `packages/robos-graph`, `packages/ai-prompt`, `packages/dev-central`, `packages/desktop-agents`, Tilix/Shell hooks, Git Store (`.robos/prompts/`, `.robos/knowledge-graph.jsonld`) |
 
 ## Working with AI Agents
 

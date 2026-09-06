@@ -14,9 +14,25 @@
     <aside id="groups-sidebar">
       <div class="sidebar-head">
         <span class="app-logo" id="app-logo-icon"></span>
-      <span class="logo">Groups</span>
+        <span class="logo">Groups</span>
         <button id="btn-new-group" title="New group">＋</button>
       </div>
+
+      <!-- Active developer identity in RobOS -->
+      <div id="active-identity-card" class="active-identity-badge" title="Active Logged-In Identity in RobOS">
+        <div class="identity-avatar">👤</div>
+        <div class="identity-info">
+          <div id="identity-user-name" class="identity-name">Not Identified</div>
+          <div id="identity-user-role" class="identity-role">Guest / Unlinked</div>
+        </div>
+      </div>
+
+      <!-- Quick action row for onboarding & company setup -->
+      <div class="head-action-row">
+        <button id="btn-open-directory-sync" class="btn-head-action" title="Link identity and sync enterprise directory (Okta/SCIM)">🏢 Sync Directory</button>
+        <button id="btn-open-bootstrap-company" class="btn-head-action" title="Bootstrap greenfield company and root admin">🚀 Bootstrap</button>
+      </div>
+
       <input id="group-search" type="text" placeholder="Search groups…">
       <ul id="group-list"></ul>
 
@@ -125,7 +141,95 @@
     </div>
   </div>
 
-  
+  <!-- Enterprise Directory Sync & Identity Modal -->
+  <div id="directory-sync-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title-main">🏢 Enterprise Directory Sync & Identity Setup</div>
+          <div class="modal-subtitle">Configure your developer identity and synchronize enterprise teams from Okta / Azure AD</div>
+        </div>
+        <button id="directory-sync-modal-close" class="modal-close-btn">✕</button>
+      </div>
+      <div class="form-row">
+        <label>Developer Full Name *</label>
+        <input id="sync-user-name" type="text" placeholder="e.g. Sarah Connor" value="Sarah Connor">
+      </div>
+      <div class="form-row">
+        <label>Corporate Email *</label>
+        <input id="sync-user-email" type="email" placeholder="e.g. sarah.connor@acmeglobal.com" value="sarah.connor@acmeglobal.com">
+      </div>
+      <div class="form-row">
+        <label>VCS / GitHub Username</label>
+        <input id="sync-user-handle" type="text" placeholder="e.g. sconnor" value="sconnor">
+      </div>
+      <div class="form-row">
+        <label>Enterprise Organization *</label>
+        <input id="sync-company-name" type="text" placeholder="e.g. Acme Enterprise Global" value="Acme Enterprise Global">
+      </div>
+      <div class="form-row">
+        <label>Identity Directory Provider</label>
+        <select id="sync-provider">
+          <option value="Okta SCIM 2.0" selected>Okta SCIM 2.0 (SAML / OAuth2)</option>
+          <option value="Microsoft Entra / Azure AD">Microsoft Entra / Azure AD SCIM</option>
+          <option value="LDAP / Active Directory">LDAP / Corporate Active Directory</option>
+          <option value="GitHub Enterprise Teams">GitHub Enterprise Teams</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Primary Assigned Team</label>
+        <select id="sync-team">
+          <option value="core-platform" selected>Core Platform & Infrastructure (Lead)</option>
+          <option value="order-processing">Order Processing & Payments</option>
+          <option value="architecture-guild">Enterprise Architecture Guild</option>
+        </select>
+      </div>
+      <div id="sync-status-box" class="status-steps-box hidden"></div>
+      <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-secondary" id="btn-cancel-directory-sync">Cancel</button>
+        <button class="btn-primary" id="btn-execute-directory-sync">Sync Directory & Activate Identity</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Greenfield Company & Root Admin Bootstrap Modal -->
+  <div id="company-bootstrap-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title-main">🚀 New Company Setup & Greenfield Bootstrap</div>
+          <div class="modal-subtitle">Initialize your company tenant, provision root admin identity, and establish team topologies</div>
+        </div>
+        <button id="company-bootstrap-modal-close" class="modal-close-btn">✕</button>
+      </div>
+      <div class="form-row">
+        <label>Company / Legal Entity Name *</label>
+        <input id="boot-company-name" type="text" placeholder="e.g. Acme Cloud Innovations" value="Acme Cloud Innovations">
+      </div>
+      <div class="form-row">
+        <label>Domain Name / Tenant Slug *</label>
+        <input id="boot-domain" type="text" placeholder="e.g. acmecloud.io" value="acmecloud.io">
+      </div>
+      <div class="form-row">
+        <label>Root Administrator Full Name *</label>
+        <input id="boot-admin-name" type="text" placeholder="e.g. Alex Rivera" value="Alex Rivera">
+      </div>
+      <div class="form-row">
+        <label>Root Administrator Corporate Email *</label>
+        <input id="boot-admin-email" type="email" placeholder="e.g. alex@acmecloud.io" value="alex@acmecloud.io">
+      </div>
+      <div class="form-row">
+        <label>Root Admin Role</label>
+        <input id="boot-admin-role" type="text" placeholder="e.g. Chief Architect & VP Engineering" value="Chief Architect & VP Engineering">
+      </div>
+      <div id="boot-status-box" class="status-steps-box hidden"></div>
+      <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-secondary" id="btn-cancel-company-bootstrap">Cancel</button>
+        <button class="btn-primary" id="btn-execute-company-bootstrap">Bootstrap Organization & Activate Admin</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>

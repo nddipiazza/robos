@@ -81,8 +81,13 @@ Examples:
    - `narration`: Text explanation describing the purpose and outcome of the step.
    - `minHold`: Display duration (1500–3500ms) providing ample time to observe the on-screen action and text callout.
 
-> [!IMPORTANT]
-> **No Hidden Functionality**: Smart callouts are automatically positioned above, below, or to the side of the target element's bounding rect with `pointer-events: none` and translucent styling, ensuring the callout never covers or hides the interactive element or underlying functionality.
+> [!CAUTION]
+> ### THE CARDINAL LAW OF E2E DEMOS: 100% VISUAL GROUNDING
+> **NEVER write a narration or click action that refers to a concept, file, or feature unless that exact item is rendered and visually visible on screen!**
+> 1. **No Phantom Narrations**: If the narration talks about `topology.yaml` or `teams.yaml`, the UI MUST be rendering that file or a dedicated card for it—NEVER point to an unrelated search bar or generic table while narrating about a different concept.
+> 2. **Explicit View / Tab Activation First**: Before targeting components within sub-panels or tabs, the demo script must explicitly activate the target view first (e.g. `action: 'click', target: '#tab-btn-gitops'`).
+> 3. **Explicit Semantic IDs**: Always use explicit semantic IDs (`#gitops-file-topology`, `#btn-probe-acme-tax`, `#chapter-item-3`) rather than ambiguous positional selectors (`tr:first-child`).
+> 4. **Smart Callout Positioning**: Callouts are automatically positioned adjacent to the target element's bounding rect with `pointer-events: none` and translucent styling, ensuring the callout never covers or hides the interactive element or underlying functionality.
 
 ---
 
@@ -153,6 +158,17 @@ Implement the application code across the standard RobOS layers:
 1. **Preload (`packages/<app-id>/preload.js`)**: Expose IPC bindings via `contextBridge`.
 2. **Main Process (`packages/<app-id>/main.js`)**: Register `ipcMain.handle()` handlers for data operations.
 3. **Renderer HTML/CSS/JS (`packages/<app-id>/renderer/`)**: Add UI components adhering to RobOS dark theme (`--bg-primary: #0d1117`, `--accent: #00bcd4`).
+
+#### Phase 3b — Knowledge Graph & GitOps Continuous Synchronization
+RobOS development skills strictly ensure the Knowledge Graph is kept up to date:
+- Register or update all affected entities in `.robos/knowledge-graph.jsonld` (services, contracts, requirements, eLearning courses).
+- Ensure declarative GitOps files under `.robos/` (`topology.yaml`, `teams.yaml`, `packages.yaml`, `elearning.yaml`) reflect the state.
+
+#### Phase 3c — Documentation Synchronization Prompt
+**Cardinal Rule**: Whenever Knowledge Graph objects are updated, the AI coding agent must be prompted to discern any noticeable updates to system documentation and update the documentation accordingly:
+1. Examine what was added or altered in `.robos/knowledge-graph.jsonld`.
+2. Discern any noticeable updates needed across `docs/index.md`, `README.md`, `docs/project-plan/`, and specs.
+3. Automatically update the corresponding documentation files to maintain perfect documentation alignment.
 
 ---
 

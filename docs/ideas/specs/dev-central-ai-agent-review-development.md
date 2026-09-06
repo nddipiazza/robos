@@ -26,9 +26,10 @@ graph TD
     B --> C[Agent Autonomous Research]
     C --> D[Implementation Plan Proposal: implementation_plan.md]
     D --> E{Dev Central: Plan Review Hub}
-    E -->|Grill / Refine / Reject| C
+    E -->|Probe / Refine / Align| C
     E -->|Approved| F[Agent Swarm Execution in Workspace]
-    F --> G[Subagents: Research, Coding, Test Runner]
+    G[Subagents: Research, Coding, Test Runner]
+    F --> G
     G --> H[Proof-of-Work & Walkthrough: walkthrough.md]
     H --> I{Dev Central: Walkthrough Review}
     I -->|Changes Requested| F
@@ -42,7 +43,7 @@ graph TD
 - **As a Lead Developer / Engineering Manager**, I want to manage my organization hierarchy, team spaces, repositories, and global AI agent rules (`AGENTS.md`) so that all spawned agents adhere to company standards and security policies.
 - **As a Lead Architect**, I want to map out multiple applications, services, and shared libraries within project graphs, defining architectural boundaries and test suites for agents to target.
 - **As a Lead Developer**, I want to dispatch high-level prompts and goals (`/goal`) with Planning Mode enforced, ensuring agents produce a structured `implementation_plan.md` with explicit architectural trade-offs before modifying source code.
-- **As a Technical Reviewer**, I want a dedicated **Plan Review Hub** to inspect AI implementation plans, grill assumptions (`/grill-me`), request revisions, or approve execution with a single click.
+- **As a Technical Reviewer**, I want a dedicated **Plan Review Hub** to inspect AI implementation plans, probe assumptions and edge cases, request revisions, or approve execution with a single click.
 - **As a Lead Developer**, I want a **Live Agent Swarm Monitor** showing active subagents, running tool calls, token budgets, and live session links to peek into IDE workspaces or desktop agent sessions.
 - **As a Quality Lead**, I want agents to submit rich **Proof-of-Work Walkthroughs** containing test execution logs, visual DOM snapshots, and live web previews for interactive verification before committing code.
 - **As a Developer**, I want a **Blocker & Escalation Radar** that alerts me whenever an agent requires clarification, hits ambiguity, or requests permissions, allowing me to unblock agents instantly.
@@ -81,7 +82,7 @@ graph TD
   - Impacted files table with categorized badges (`[NEW]`, `[MODIFY]`, `[DELETE]`).
   - Verification & testing strategy breakdown.
   - Open Questions section highlighting decisions requiring human input.
-- **Interactive Plan Grilling (`/grill-me`)**: Chat drawer to challenge design assumptions, ask "what-if" questions, or instruct the agent to modify specific phases of the plan.
+- **Proactive Human Alignment & Probing Engine**: Chat drawer grounded in the Knowledge Graph that actively probes design assumptions, presents "what-if" trade-offs, and lets the human architect refine specific phases of the plan before execution.
 - **Review Actions**: `Approve & Execute`, `Request Revision`, `Edit Plan Manually`, `Fork Plan`, `Reject`.
 
 #### 5. Live Agent Swarm & Subagent Telemetry
@@ -146,7 +147,7 @@ ipcRenderer.invoke('dc-stop-agent-session', sessionId);
 ipcRenderer.invoke('dc-get-pending-plans');
 ipcRenderer.invoke('dc-get-plan-details', planId);
 ipcRenderer.invoke('dc-submit-plan-review', { planId, action: 'approve'|'revise'|'reject', feedback });
-ipcRenderer.invoke('dc-send-plan-chat', { planId, message }); // /grill-me
+ipcRenderer.invoke('dc-send-plan-chat', { planId, message }); // Proactive alignment & clarification chat
 
 // Proof-of-Work & Walkthroughs
 ipcRenderer.invoke('dc-get-pending-walkthroughs');
@@ -183,7 +184,7 @@ ipcRenderer.invoke('dc-resolve-blocker', { blockerId, resolution });
 | 🚨 Blocker Radar (1)  |  +-----------------------------------------------------+  |
 | ⚙️ Agent Governance   |  |  📋 Priority Plan Review Queue                      |  |
 |                       |  |  - JIRA-402: Auth Refactor (Awaiting Lead Approval)  |  |
-|                       |  |  - GH-88: Payment Gateway Integration (Grill Mode)  |  |
+|                       |  |  - GH-88: Payment Gateway (Proactive Alignment)     |  |
 |                       |  +-----------------------------------------------------+  |
 |                       |                                                           |
 |                       |  +-----------------------------------------------------+  |
@@ -207,7 +208,7 @@ ipcRenderer.invoke('dc-resolve-blocker', { blockerId, resolution });
 ### Phase 2: Goal Dispatcher & Planning Mode Review Hub
 - Integrate `<robos-ai-textarea>` into the Goal Dispatcher with `@`-mention search for repos, files, and issues.
 - Build the Implementation Plan Reviewer: Markdown renderer with callouts, Mermaid diagrams, file change summary badges, and testing strategy checklists.
-- Implement `/grill-me` interactive chat interface for challenging AI assumptions and refining plans prior to execution approval.
+- Implement proactive human-in-the-loop alignment and probing interface for clarifying AI assumptions and refining plans prior to execution approval.
 
 ### Phase 3: Swarm Telemetry & Proof-of-Work Walkthrough Viewer
 - Implement real-time agent swarm visualizer displaying agent trees, subagent lifecycles, and tool call logs.
@@ -228,7 +229,7 @@ ipcRenderer.invoke('dc-resolve-blocker', { blockerId, resolution });
 - [ ] Lead developers can register multi-app project portfolios with repository paths, build targets, and test commands.
 - [ ] Goal Dispatcher allows typing prompts with `@`-mentions and triggers agent planning mode.
 - [ ] Implementation Plan Review Hub displays pending plans with callouts, Mermaid diagrams, file diff targets, and open questions.
-- [ ] Interactive `/grill-me` chat allows developers to refine implementation plans before approving them.
+- [ ] Interactive human alignment chat allows developers to probe and refine implementation plans before approving them.
 - [ ] Approving a plan dispatches the agent swarm into execution mode with live tool call streaming.
 - [ ] Swarm Monitor displays active subagent hierarchies and execution states in real-time.
 - [ ] Walkthrough Review Hub allows verifying test runs, DOM snapshots, and signing off on PR merges.

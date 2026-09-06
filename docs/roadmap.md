@@ -1,13 +1,13 @@
 ---
 title: Project Plan & Roadmap
 layout: default
-nav_order: 9
+nav_order: 13
 ---
 
 # RobOS Project Plan & Engineering Roadmap
 {: .no_toc }
 
-The phased engineering architecture, dependency waves, and delivery roadmap for RobOS — the AI-First Software Development Operating System.
+The phased engineering architecture, dependency waves, and delivery roadmap for RobOS — the AI-First Developer Operating System & Application Suite.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -36,7 +36,7 @@ graph TD
         AF[App Framework & Shared Libraries]
         DT[Software Center & Dev Tools]
         SA[Security Setup & GPG Secrets]
-        SU[Unified Onboarding Wizard]
+        SU[Unified Onboarding Wizard & Group Manager]
     end
 
     subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
@@ -49,8 +49,8 @@ graph TD
     subgraph Phase2 [Phase 2: World State Modeling & GitOps Schema]
         KG[Dual-State SDLC Knowledge Graph]
         SLOS[8-Pillar Declarative SDLC Engine]
-        PG[Contract-Driven Project Graph]
-        EK[Engineering Knowledge Graph]
+        PG[Contract-Driven Project Graph & Archetypes]
+        EK[Engineering Knowledge Graph & Living Docs]
     end
 
     subgraph Phase3 [Phase 3: Work Items, Multi-Repo Workspaces & Review Hub]
@@ -91,10 +91,11 @@ graph TD
 | Subsystem | Core Capabilities |
 |:---|:---|
 | **Desktop Foundation** | QEMU/KVM VM build system, cloud-init automated provisioning, GNOME dark navy/cyan theme, Tilix terminal, LightDM auto-login. |
-| **App Framework** | App launcher, `robos-lib` desktop parsers, `robos-icons` central SVG registry, snapshot debug server (ports 19100–19182). |
+| **App Framework** | App launcher, `robos-lib` desktop parsers, `robos-icons` central SVG registry, snapshot debug server (ports 19100–19183). |
 | **Software Center** | One-click installation and management for JetBrains IDEs, VS Code, CLI utilities, and language runtimes. |
 | **Security & Auth** | GPG-encrypted password vault (`pass-manager`), SSH key initialization, and Git credential safety net. |
 | **Unified Setup Wizard** | First-boot onboarding wizard (`packages/robos-onboarding`), missing credential checks, and automated project provisioner. |
+| **Enterprise Directory Sync** | RobOS Group Manager (`packages/group-manager`): SCIM 2.0 and LDAP directory synchronization (Okta, Azure AD, OpenLDAP), Team Topologies (`.robos/teams.yaml`), and greenfield startup bootstrap mode. |
 
 ---
 
@@ -117,7 +118,8 @@ graph TD
 |:---|:---|
 | **Dual-State Knowledge Graph** | OASIS OSLC Core 3.0 & W3C JSON-LD + SHACL knowledge graph engine. Multi-branch world states (`main` = Prod, `feature/*` = Future) with semantic graph diffing and blast radius calculation. |
 | **8-Pillar SDLC Engine** | Declarative GitOps schema covering System Topology, HR/Agents, Entity Schemas (TypeSpec/Buf), API Contracts (OpenAPI/Pact), Packages, Projects, Tasks, and `.robos/` Git storage. |
-| **Contract-Driven Project Graph** | Interactive C4 architecture modeling (Level 1 Context to Level 3 Components), Backstage software catalog sync, and automated Kubernetes/Helm manifest synthesis. |
+| **Multi-App Archetypes & App Wizard** | RobOS App Wizard (`packages/app-wizard`): 6 core application archetypes (`Microservice`, `DesktopApp`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`), Spotify Backstage `catalog-info.yaml` synthesis, runnable `dev-setup.sh`, and brownfield codebase ingestion. |
+| **Living Documentation Sync** | Automated documentation sync (`sync-kgraph-docs`) keeping user docs in lockstep with Knowledge Graph updates, and interactive eLearning course generation (`.robos/elearning.yaml`). |
 | **Developer Protocol Suite** | Relational DB Manager (Postgres, MySQL, Oracle), NoSQL DB Manager (MongoDB, Redis), gRPC Client, GraphQL Client, and Bruno REST Client. |
 
 ---
@@ -141,7 +143,7 @@ graph TD
 |:---|:---|
 | **App Test Framework** | Scenario-based Electron application testing with headless virtual framebuffers (`Xvfb + Picom`). |
 | **Interactive Reviewer & Video Studio** | Multi-modal video generation, timestamped DOM state assertions, and synchronized neural voiceovers via offline Piper TTS. |
-| **AI Agent Integration** | Context Manager token curation, AI planning interviews (`/grill-me`), breakpoint reproduction, and draft PR generation. |
+| **AI Agent Integration** | Context Manager token curation, proactive planning alignment & probing, breakpoint reproduction, and draft PR generation. |
 | **PR Review Board & CI Monitor** | AI-assisted code review, semantic file diffs, risk assessment, automated CI failure root-cause diagnosis, and 1-click merge approvals. |
 
 ---
@@ -158,9 +160,9 @@ graph TD
 
 ---
 
-## 16-Step Reference Lifecycle (Acme Petshop E2E)
+## 20-Step Reference Lifecycle & Enterprise Onboarding (E2E)
 
-Every phase is validated against the complete multi-tier Acme Petshop microservice reference application:
+Every phase is validated against complete multi-tier enterprise applications and real-world onboarding workflows:
 
 1. **Step 1: Tasks DAG** — Natural language backlog planning & Gitea sync.
 2. **Step 2: Topology C4** — Polyglot architecture modeling & Backstage catalog.
@@ -177,3 +179,7 @@ Every phase is validated against the complete multi-tier Acme Petshop microservi
 13. **Step 13: MCP OAuth** — Model Context Protocol tool registry & OAuth popups.
 14. **Step 15: Data Sources** — Knowledge Graph multi-database explorer (SQL, NoSQL, S3, Kafka).
 15. **Step 16: DB to K8s Lifecycle** — Analytics Postgres addition, auto-synthesizing K8s manifests, SQL data seeding, and live API verification.
+16. **Step 17: Existing Company Setup** — Enterprise SCIM 2.0 / LDAP directory sync (Okta, Azure AD, OpenLDAP), Team Topologies, and role-based access control.
+17. **Step 18: New Company Setup** — Greenfield startup bootstrap, tenant isolation, root admin provisioning, and core squad configuration.
+18. **Step 19: Develop a New App** — RobOS App Wizard greenfield scaffolding across 6 archetypes, Spectral contract linting, and runnable `dev-setup.sh`.
+19. **Step 20: Import Existing Apps** — Brownfield codebase ingestion, heuristic runtime/manifest detection, Backstage `catalog-info.yaml` synthesis, and automated KGraph synchronization.

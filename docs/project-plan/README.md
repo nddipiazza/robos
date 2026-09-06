@@ -4,7 +4,7 @@ nav_exclude: true
 
 # RobOS Project Plan — Agentic Review-Based Engineering OS
 
-RobOS is the developer-first operating system and desktop ecosystem engineered for **Agentic Review-Based Software Development**. By consolidating open-source standards (OASIS OSLC, Backstage, TypeSpec, Pact, Devcontainers, C4 Model, Team Topologies, MCP, Piper TTS, and Gherkin BDD), RobOS enables autonomous AI agent swarms to plan, build, test, and demonstrate software while human developers act as Lead Architects and Code Reviewers.
+RobOS is the developer-first operating system and 30+ native application suite engineered for **Agentic Review-Based Software Development**. By consolidating open-source standards (OASIS OSLC, Backstage, TypeSpec, Pact, Devcontainers, C4 Model, Team Topologies, MCP, Piper TTS, and Gherkin BDD), RobOS enables autonomous AI agent swarms to plan, build, test, and demonstrate software while human developers act as Lead Architects and Code Reviewers.
 
 ---
 
@@ -29,6 +29,10 @@ graph TD
         DT[Developer Tool Center ✅]
         SA[Security & Secrets Distribution ✅]
         SU[Unified Setup Wizard & Project Provisioner ✅]
+        EC[Existing Company Setup & Directory Sync]
+        NC[New Company Greenfield Bootstrap]
+        NA[New App Development Wizard]
+        IA[Existing App Import Wizard]
     end
 
     subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
@@ -87,6 +91,10 @@ graph TD
 | **Dev Tools** | [dev-tools/](dev-tools/epic.md) | **Done** | Software Center tool registry, JetBrains & VS Code installers, streaming logs. |
 | **Security & Auth** | [security-auth/](security-auth/epic.md) | **Done** | Security Setup (GPG/SSH keys), Pass Manager (encrypted secrets store). |
 | **Unified Setup Wizard** | [unified-setup-and-ai-provisioning/](unified-setup-and-ai-provisioning/epic.md) | **Done** | First-boot onboarding wizard (`packages/robos-onboarding`), missing credential guard, automated project provisioner. |
+| **Existing Company Setup** | [existing-company-setup/](existing-company-setup/epic.md) | In Progress | Enterprise identity, directory sync (Okta/SAML/LDAP), Team Topologies (`.robos/teams.yaml`), Jira migration, secrets vault bridge, and multi-cluster ingestion. |
+| **New Company Greenfield Setup** | [new-company-setup/](new-company-setup/epic.md) | In Progress | 5-minute startup bootstrap wizard, root admin setup, foundational team topologies, VCS org creation, central AI provider & shared MCP catalog. |
+| **New App Development Wizard** | [new-app-wizard/](new-app-wizard/epic.md) | In Progress | Guided GUI wizard (`packages/app-wizard`) for scaffolding new apps across 6 archetypes (Desktop, Microservice, CLI, Mobile, Pipeline, Library) with contracts and dev-setup.sh. |
+| **Existing App Import Wizard** | [app-import-wizard/](app-import-wizard/epic.md) | In Progress | Guided GUI wizard for importing existing codebases, deep inspection, heuristic archetype detection, Backstage catalog-info.yaml, and dev-setup.sh synthesis. |
 
 ---
 
@@ -122,7 +130,7 @@ graph TD
 | **Task Management** | [task-management/](task-management/epic.md) | Not started | Task servers (Jira/GitHub Issues), Workflow Studio, Beads DAG task graphs, automated state transitions. |
 | **Workspace Management** | [workspace-management/](workspace-management/epic.md) | Not started | Multi-repo Git worktree isolation, automated dev server startup, IDE bridge (IntelliJ port 63343 & VS Code). |
 | **Event Engine** | [event-engine/](event-engine/epic.md) | Not started | System event bus, rule engine, automated task status transitions, background agent scheduler. |
-| **Dev Central Review Hub** | [dev-central-review-hub/](dev-central-review-hub/epic.md) | Not started | Rebranded Dev Central command center, Planning Mode goal dispatcher, interactive `/grill-me` design grilling, real-time agent telemetry, and blocker radar. |
+| **Dev Central Review Hub** | [dev-central-review-hub/](dev-central-review-hub/epic.md) | Not started | Rebranded Dev Central command center, Planning Mode goal dispatcher, proactive human alignment & plan probing, real-time agent telemetry, and blocker radar. |
 
 ---
 

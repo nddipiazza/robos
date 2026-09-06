@@ -49,6 +49,7 @@ const PORT_MAP = {
   'pr-review': 19129,
   'ci-monitor': 19130,
   'stage-demo': 19131,
+  'group-manager': 19132,
   'deploy-tracker': 19132,
   'desktop-customizer': 19136,
   'dev-central': 19133,
@@ -96,6 +97,7 @@ const PORT_MAP = {
   'nosql-manager': 19180,
   'grpc-client': 19181,
   'graphql-client': 19182,
+  'app-wizard': 19183,
 };
 
 

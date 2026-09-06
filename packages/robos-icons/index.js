@@ -31,6 +31,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>'
   },
   {
+    appId: 'app-wizard',
+    label: 'App Wizard',
+    category: 'Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.5 8.5a2.12 2.12 0 0 0 3 3L12 8l6.5 6.5a2.12 2.12 0 0 0 3-3L19 11Z"/><path d="m5 2 5 5"/><path d="M2 5l5 5"/><path d="M22 19l-3-3"/><path d="m19 22 3-3"/><circle cx="19" cy="5" r="2"/></svg>'
+  },
+  {
     appId: 'automation-studio',
     label: 'Automation Studio',
     category: 'Development',

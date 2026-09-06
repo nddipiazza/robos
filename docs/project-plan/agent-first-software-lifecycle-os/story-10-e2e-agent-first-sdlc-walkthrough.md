@@ -13,7 +13,7 @@ To prove that the 8 pillars of modern software development work together seamles
 ### Verified Capabilities
 1. **Topology & Team Definition**: Load `.robos/topology.yaml` and `.robos/teams.yaml` for Acme Petshop (`petstore-api`, `petstore-web`, `petstore-common`).
 2. **Schema & Contract Authoring**: Author `entities/pet.typespec` and contract in `contracts/petstore-api.openapi.yaml`, compiling Java 21 Jackson DTOs and TypeScript Zod schemas.
-3. **Task Planning & Grill Me**: Dispatch task `PET-102` to an AI agent, review implementation plan with interactive **Grill Me** architectural interview, and approve.
+3. **Task Planning & Proactive Alignment**: Dispatch task `PET-102` to an AI agent, review implementation plan with proactive architectural probing and alignment, and approve.
 4. **Hermetic Git & Workspace Execution**: Agent provisions multi-repo Git worktrees and devcontainers, commits and pushes to the local **Gitea Git Forge** (`http://127.0.0.1:3000/acme-org/petstore-api.git`).
 5. **Contract Verification & Full-Desktop Proof Video**: Automated Pact test gate passes (14/14), agent generates proof-of-work walkthrough video of the entire 1920×1080 desktop, and PR is merged in Dev Central.
 
@@ -35,7 +35,7 @@ sequenceDiagram
     UI->>Forge: Read Topology, Schemas, Contracts from Git
     UI->>Agent: Launch in Planning Mode
     Agent->>UI: Submit implementation_plan.md
-    Dev->>UI: Review & Interactive Grill Me Session
+    Dev->>UI: Review & Proactive Alignment Session
     Dev->>UI: Approve Implementation Plan
     UI->>Env: Provision Multi-Repo Worktrees & Devcontainers
     UI->>Agent: Execute Plan

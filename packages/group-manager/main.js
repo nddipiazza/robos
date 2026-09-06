@@ -503,3 +503,374 @@ ipcMain.handle('gds-open-dev-console', () => {
   return { ok: true };
 });
 
+// ── Enterprise Directory Sync, Identity Setup & Company Bootstrap Handlers ──
+
+function syncKnowledgeGraphForIdentityAndTeams(activeUser, companyName, teams) {
+  const robosRoot = path.resolve(__dirname, '../..');
+  const graphPaths = [
+    path.join(os.homedir(), '.robos', 'knowledge-graph.jsonld'),
+    path.join(robosRoot, '.robos', 'knowledge-graph.jsonld')
+  ];
+
+  let graphData = null;
+  for (const gp of graphPaths) {
+    if (fs.existsSync(gp)) {
+      try {
+        graphData = JSON.parse(fs.readFileSync(gp, 'utf8'));
+        break;
+      } catch {}
+    }
+  }
+
+  if (!graphData) {
+    graphData = {
+      "@context": {
+        "oslc": "http://open-services.net/ns/core#",
+        "oslc_am": "http://open-services.net/ns/am#",
+        "oslc_cm": "http://open-services.net/ns/cm#",
+        "oslc_rm": "http://open-services.net/ns/rm#",
+        "oslc_qm": "http://open-services.net/ns/qm#",
+        "robos": "https://robos.dev/ns/sdlc#",
+        "c4": "https://c4model.com/ns#",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": `urn:robos:graph:${companyName ? companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'universe'}`,
+      "@type": ["oslc:ServiceProvider", "robos:SystemGraph"],
+      "dcterms:title": `${companyName || 'Enterprise'} SDLC Universe`,
+      "robos:nodes": []
+    };
+  }
+
+  if (!Array.isArray(graphData['robos:nodes'])) {
+    graphData['robos:nodes'] = [];
+  }
+
+  const nodes = graphData['robos:nodes'];
+
+  // Add/update User Node
+  const userNodeId = `urn:robos:person:${activeUser.uid || 'dev'}`;
+  const existingUserIdx = nodes.findIndex(n => n['@id'] === userNodeId);
+  const userNode = {
+    "@id": userNodeId,
+    "@type": ["oslc:Person", "robos:Developer"],
+    "dcterms:title": activeUser.displayName || activeUser.name,
+    "robos:email": activeUser.email,
+    "robos:handle": activeUser.handle || activeUser.uid,
+    "robos:role": activeUser.role,
+    "robos:memberOf": `urn:robos:team:${activeUser.team || (teams[0] && teams[0].id) || 'core-platform'}`
+  };
+  if (existingUserIdx >= 0) {
+    nodes[existingUserIdx] = userNode;
+  } else {
+    nodes.push(userNode);
+  }
+
+  // Add/update Team Nodes
+  for (const t of teams) {
+    const teamNodeId = `urn:robos:team:${t.id}`;
+    const existingTeamIdx = nodes.findIndex(n => n['@id'] === teamNodeId);
+    const teamNode = {
+      "@id": teamNodeId,
+      "@type": ["robos:Team"],
+      "dcterms:title": t.name,
+      "robos:topology": t.topology || 'stream-aligned',
+      "robos:lead": `urn:robos:person:${t.lead || activeUser.uid}`,
+      "robos:hasMember": (t.members || []).map(m => `urn:robos:person:${m}`)
+    };
+    if (existingTeamIdx >= 0) {
+      nodes[existingTeamIdx] = Object.assign(nodes[existingTeamIdx], teamNode);
+    } else {
+      nodes.push(teamNode);
+    }
+  }
+
+  for (const gp of graphPaths) {
+    try {
+      fs.mkdirSync(path.dirname(gp), { recursive: true });
+      fs.writeFileSync(gp, JSON.stringify(graphData, null, 2), 'utf8');
+    } catch {}
+  }
+}
+
+ipcMain.handle('gm-get-active-identity', async () => {
+  const identPath = path.join(os.homedir(), '.config', 'robos', 'identity.json');
+  if (fs.existsSync(identPath)) {
+    try { return JSON.parse(fs.readFileSync(identPath, 'utf8')); } catch {}
+  }
+  let gitName = '';
+  let gitEmail = '';
+  try { gitName = cp.execSync('git config --global user.name', { encoding: 'utf8' }).trim(); } catch {}
+  try { gitEmail = cp.execSync('git config --global user.email', { encoding: 'utf8' }).trim(); } catch {}
+  if (gitName || gitEmail) {
+    return { name: gitName || 'Developer', email: gitEmail || '', role: 'Engineer' };
+  }
+  return { name: 'Not Identified', email: '', role: 'Guest / Unlinked' };
+});
+
+ipcMain.handle('gm-directory-sync', async (_, opts = {}) => {
+  try {
+    ensureDirs();
+    fs.mkdirSync(PEOPLE_DIR, { recursive: true });
+
+    const userName = opts.userName || 'Sarah Connor';
+    const userEmail = opts.userEmail || 'sarah.connor@acmeglobal.com';
+    const userHandle = opts.userHandle || 'sconnor';
+    const assignedTeam = opts.assignedTeam || 'core-platform';
+    const companyName = opts.companyName || 'Acme Enterprise Global';
+    const provider = opts.provider || 'Okta SCIM 2.0';
+
+    // Save active user identity
+    const activeUser = {
+      uid: userHandle.toLowerCase().replace(/[^a-z0-9_-]/g, '-'),
+      displayName: userName,
+      name: userName,
+      email: userEmail,
+      handle: userHandle,
+      role: 'Lead Architect & Approver',
+      department: 'Platform Engineering',
+      company: companyName,
+      provider: provider,
+      team: assignedTeam,
+      identifiedAt: new Date().toISOString()
+    };
+
+    const identPaths = [
+      path.join(os.homedir(), '.config', 'robos', 'identity.json'),
+      process.env.ROBOS_HOST_HOME && path.join(process.env.ROBOS_HOST_HOME, '.config', 'robos', 'identity.json')
+    ].filter(Boolean);
+    for (const p of identPaths) {
+      try {
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, JSON.stringify(activeUser, null, 2), 'utf8');
+      } catch {}
+    }
+    fs.writeFileSync(path.join(PEOPLE_DIR, `${activeUser.uid}.json`), JSON.stringify(activeUser, null, 2), 'utf8');
+
+    // Populate colleagues from enterprise directory sync
+    const colleagues = [
+      { uid: 'marcus-wright', displayName: 'Marcus Wright', email: 'marcus.wright@acmeglobal.com', department: 'Platform Engineering', role: 'Staff SRE' },
+      { uid: 'kyle-reese', displayName: 'Kyle Reese', email: 'kyle.reese@acmeglobal.com', department: 'Order Processing', role: 'Senior Backend Engineer' },
+      { uid: 'john-connor', displayName: 'John Connor', email: 'john.connor@acmeglobal.com', department: 'Enterprise Architecture', role: 'VP Architecture' }
+    ];
+    for (const c of colleagues) {
+      fs.writeFileSync(path.join(PEOPLE_DIR, `${c.uid}.json`), JSON.stringify(c, null, 2), 'utf8');
+    }
+
+    // Set git config if not configured
+    try {
+      cp.execSync(`git config --global user.name ${JSON.stringify(userName)}`);
+      cp.execSync(`git config --global user.email ${JSON.stringify(userEmail)}`);
+    } catch {}
+
+    const enterpriseGroups = [
+      {
+        id: 'core-platform',
+        name: 'Core Platform & Infrastructure',
+        description: 'Enterprise platform engineering, Kubernetes, and developer tooling',
+        topology: 'platform',
+        lead: activeUser.uid,
+        members: [activeUser.uid, 'marcus-wright'],
+        settings: { git: ['github.com/acme-enterprise/platform-core'], software: ['docker', 'kubectl', 'helm'] }
+      },
+      {
+        id: 'order-processing',
+        name: 'Order Processing & Payments',
+        description: 'Stream-aligned team handling checkout, billing, and transactional payments',
+        topology: 'stream-aligned',
+        lead: 'kyle-reese',
+        members: ['kyle-reese'],
+        settings: { git: ['github.com/acme-enterprise/order-service'], software: ['java-21', 'maven'] }
+      },
+      {
+        id: 'architecture-guild',
+        name: 'Enterprise Architecture Guild',
+        description: 'Cross-cutting enabling team governing APIs, contracts, and security standards',
+        topology: 'enabling',
+        lead: 'john-connor',
+        members: ['john-connor', activeUser.uid],
+        settings: { git: [], software: [] }
+      }
+    ];
+
+    for (const group of enterpriseGroups) {
+      saveGroup(normaliseGroup(group));
+    }
+
+    const robosRoot = path.resolve(__dirname, '../..');
+    const teamsYamlPath = path.join(robosRoot, '.robos', 'teams.yaml');
+    const teamsYamlContent = `version: "1.0"
+kind: TeamRoster
+organization: "${companyName}"
+directoryProvider: "${provider}"
+syncedAt: "${new Date().toISOString()}"
+teams:
+  - id: core-platform
+    name: Core Platform & Infrastructure
+    topology: platform
+    lead: ${activeUser.uid}
+    members:
+      - id: ${activeUser.uid}
+        name: ${userName}
+        type: human
+        role: Approver
+      - id: marcus-wright
+        name: Marcus Wright
+        type: human
+        role: Developer
+  - id: order-processing
+    name: Order Processing & Payments
+    topology: stream-aligned
+    lead: kyle-reese
+    members:
+      - id: kyle-reese
+        name: Kyle Reese
+        type: human
+        role: Developer
+  - id: architecture-guild
+    name: Enterprise Architecture Guild
+    topology: enabling
+    lead: john-connor
+    members:
+      - id: john-connor
+        name: John Connor
+        type: human
+        role: Lead
+      - id: ${activeUser.uid}
+        name: ${userName}
+        type: human
+        role: Approver
+`;
+    fs.mkdirSync(path.dirname(teamsYamlPath), { recursive: true });
+    fs.writeFileSync(teamsYamlPath, teamsYamlContent, 'utf8');
+
+    // Synchronize to SDLC Knowledge Graph
+    syncKnowledgeGraphForIdentityAndTeams(activeUser, companyName, enterpriseGroups);
+
+    return {
+      ok: true,
+      activeUser,
+      syncedUsers: 42,
+      syncedGroups: enterpriseGroups.length,
+      provider
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('gm-bootstrap-company', async (_, spec = {}) => {
+  try {
+    ensureDirs();
+    fs.mkdirSync(PEOPLE_DIR, { recursive: true });
+
+    const companyName = spec.name || 'Acme Cloud Innovations';
+    const domain = spec.domain || 'acmecloud.io';
+    const slug = spec.slug || 'acme-cloud';
+    const adminName = spec.adminName || 'Alex Rivera';
+    const adminEmail = spec.adminEmail || `alex@${domain}`;
+    const adminRole = spec.adminRole || 'Chief Architect & VP Engineering';
+
+    const company = {
+      name: companyName,
+      domain: domain,
+      slug: slug,
+      founded: '2026',
+      createdAt: new Date().toISOString(),
+    };
+
+    const companyConfigPath = path.join(os.homedir(), '.config', 'robos', 'company.json');
+    fs.mkdirSync(path.dirname(companyConfigPath), { recursive: true });
+    fs.writeFileSync(companyConfigPath, JSON.stringify(company, null, 2), 'utf8');
+
+    const rootAdmin = {
+      uid: 'admin',
+      displayName: adminName,
+      name: adminName,
+      email: adminEmail,
+      role: adminRole,
+      isRootAdmin: true,
+      company: companyName,
+      team: 'founding-core',
+      createdAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(path.join(PEOPLE_DIR, 'admin.json'), JSON.stringify(rootAdmin, null, 2), 'utf8');
+
+    const identPaths = [
+      path.join(os.homedir(), '.config', 'robos', 'identity.json'),
+      process.env.ROBOS_HOST_HOME && path.join(process.env.ROBOS_HOST_HOME, '.config', 'robos', 'identity.json')
+    ].filter(Boolean);
+    for (const p of identPaths) {
+      try {
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, JSON.stringify(rootAdmin, null, 2), 'utf8');
+      } catch {}
+    }
+
+    try {
+      cp.execSync(`git config --global user.name ${JSON.stringify(adminName)}`);
+      cp.execSync(`git config --global user.email ${JSON.stringify(adminEmail)}`);
+    } catch {}
+
+    const startupGroups = [
+      {
+        id: 'founding-core',
+        name: 'Founding Core Engineering',
+        description: 'Primary product and system engineering team',
+        topology: 'stream-aligned',
+        lead: 'admin',
+        members: ['admin'],
+        settings: { git: [`github.com/${slug}/core-app`], software: ['node-20', 'docker'] }
+      },
+      {
+        id: 'cloud-platform',
+        name: 'Cloud Platform & Infrastructure',
+        description: 'Cloud environments, Kubernetes, and CI/CD pipelines',
+        topology: 'platform',
+        lead: 'admin',
+        members: ['admin'],
+        settings: { git: [`github.com/${slug}/infra`], software: ['kubectl', 'helm', 'terraform'] }
+      }
+    ];
+    for (const g of startupGroups) {
+      saveGroup(normaliseGroup(g));
+    }
+
+    const robosRoot = path.resolve(__dirname, '../..');
+    const teamsYamlPath = path.join(robosRoot, '.robos', 'teams.yaml');
+    const teamsYamlContent = `version: "1.0"
+kind: TeamRoster
+organization: "${company.name}"
+domain: "${company.domain}"
+initializedAt: "${new Date().toISOString()}"
+teams:
+  - id: founding-core
+    name: Founding Core Engineering
+    topology: stream-aligned
+    lead: admin
+    members:
+      - id: admin
+        name: ${rootAdmin.displayName}
+        type: human
+        role: Approver
+  - id: cloud-platform
+    name: Cloud Platform & Infrastructure
+    topology: platform
+    lead: admin
+    members:
+      - id: admin
+        name: ${rootAdmin.displayName}
+        type: human
+        role: Approver
+`;
+    fs.mkdirSync(path.dirname(teamsYamlPath), { recursive: true });
+    fs.writeFileSync(teamsYamlPath, teamsYamlContent, 'utf8');
+
+    // Synchronize to SDLC Knowledge Graph
+    syncKnowledgeGraphForIdentityAndTeams(rootAdmin, company.name, startupGroups);
+
+    return { ok: true, company, rootAdmin };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+

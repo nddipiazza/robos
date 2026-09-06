@@ -7,12 +7,14 @@ description: Add the standard <robos-ai-textarea> widget with auto-resize, strea
 
 Add the standard `<robos-ai-textarea>` widget to any RobOS Electron app.
 
-## When to use this skill
+## Core Rules & Principles
 
-Use this skill whenever you need to add an AI-powered text input to a RobOS app. **Never create a plain `<textarea>` or `<input type="text">` for AI prompts** — always use `<robos-ai-textarea>`.
+1. **Always Multi-Line**: `<robos-ai-textarea>` is **strictly a multi-line expandable input** (typically `min-height="100"` to `min-height="120"`). **Never use a single-line text input for AI prompts.** Prompts in RobOS require rich, multi-line architectural descriptions, acceptance criteria, and context.
+2. **Adjacent Action Button**: The action button (`✦ Plan using AI Prompt`, `✦ Generate with AI`, etc.) is placed directly adjacent to or alongside the `<robos-ai-textarea>`.
+3. **Starts Disabled**: The action button **must start disabled** (`disabled` attribute in HTML). It only enables once the developer enters non-empty text into the multi-line textarea.
 
 The `<robos-ai-textarea>` component provides:
-- Auto-resize, dark theme, streaming display
+- Multi-line auto-resize, dark theme, streaming display
 - `/slash` command palette (optional)
 - `@mention` file typeahead (via search index)
 - `Ctrl+Enter` submit shortcut
@@ -127,18 +129,30 @@ ipcMain.handle('<app-prefix>-list-path', (_, prefix) => {
 
 ---
 
-## Step 4 — Renderer JS (`renderer/app.js`)
+### Get/set value & dynamic button state
+The AI Action / Plan button placed adjacent to `<robos-ai-textarea>` **must start disabled** (`disabled` attribute in HTML). It should only enable when non-empty text is typed into the textarea.
 
-### Get/set value
 ```javascript
-const prompt = document.getElementById('prompt-input').value.trim();
-document.getElementById('prompt-input').value = '';
+const promptEl = document.getElementById('prompt-input');
+const genBtn   = document.getElementById('btn-generate');
+
+function updateButtonState() {
+  const val = (promptEl.value || '').trim();
+  if (genBtn) genBtn.disabled = !val;
+}
+
+promptEl.addEventListener('input', updateButtonState);
+promptEl.addEventListener('change', updateButtonState);
+promptEl.addEventListener('keyup', updateButtonState);
 ```
 
 ### Wire Ctrl+Enter submit
 ```javascript
-document.getElementById('prompt-input').addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSubmit();
+promptEl.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    const val = (promptEl.value || '').trim();
+    if (val) handleSubmit();
+  }
 });
 ```
 
@@ -165,8 +179,11 @@ if (typeof customElements !== 'undefined') {
 
 - [ ] `robos-ui.js` script tag appears before `app.js` in `index.html`
 - [ ] `<robos-ai-textarea>` replaces any plain `<textarea>` or `<input type="text">` used for AI
+- [ ] The submit / plan button is placed directly adjacent to `<robos-ai-textarea>` and **starts `disabled`**
+- [ ] Typing into `<robos-ai-textarea>` dynamically toggles the button's `disabled` state
 - [ ] `searchIndex` exposed in `preload.js`
 - [ ] `<app-prefix>-list-path` IPC handler added in `main.js`
 - [ ] `robos-path-query` event wired in `renderer/app.js`
 - [ ] `.value` used to get/set text
 - [ ] `robos-ui` deployed to VM at `/usr/local/share/robos/robos-ui/`
+

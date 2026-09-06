@@ -19,7 +19,7 @@ In the era of generative AI, software engineering has fundamentally evolved. Dev
 4. **Contracts & API Interfaces** (OpenAPI 3.1, AsyncAPI, Pact consumer-driven contract testing, gRPC definitions, breaking-change drift detection)
 5. **Applications & Package Lifecycles** (Electron desktop applications, daemons, backend microservices, containers, runtime manifests)
 6. **Development Projects & Multi-Repo Workspaces** (Git worktrees, polyrepo/monorepo graphs, containerized dev environments)
-7. **Work Items, Tasks & AI Goal Dispatching** (DAG task graphs, epic breakdowns, Planning Mode review gates with `/grill-me`, automated lifecycle transitions)
+7. **Work Items, Tasks & AI Goal Dispatching** (DAG task graphs, epic breakdowns, Planning Mode review gates with proactive human probing, automated lifecycle transitions)
 8. **Git-Backed Single Source of Truth (GitOps for SDLC)** (100% declarative files stored in `.robos/`, zero proprietary database lock-in, PR-reviewed changesets)
 
 **Core Mandate: "Reinvent Nothing! Steal from OSS!"**
@@ -39,7 +39,7 @@ The entire RobOS desktop environment and application suite acts as the command c
 
 - **As a Lead Architect**, I want to define and visualize our system topology, microservice boundaries, and API contracts in Git-backed declarative files, so that any configured RobOS Agent can autonomously build features without violating architectural boundaries or breaking contracts.
 - **As an Engineering Manager**, I want a unified Human & Agent Roster where human devs and AI agents are assigned to specific team topologies (stream-aligned, platform, enabling), so that task assignments and permission boundaries are crystal clear.
-- **As a Developer / Code Reviewer**, I want to interact with agents via a structured review workflow (Planning Mode -> Interactive `/grill-me` -> Execution -> Proof-of-Work Walkthrough verification), so that I approve designs before code is modified and verify results through reproducible evidence.
+- **As a Developer / Code Reviewer**, I want to interact with agents via a structured review workflow (Planning Mode -> Proactive Human Alignment & Probing -> Execution -> Proof-of-Work Walkthrough verification), so that I approve designs before code is modified and verify results through reproducible evidence.
 - **As a DevOps / Platform Engineer**, I want all entity schemas, contracts, project graphs, and task states to be committed directly into Git repositories (`.robos/`), so that our team has total version history, zero vendor lock-in, and full auditability via standard Git PRs.
 
 ---
@@ -54,7 +54,7 @@ The entire RobOS desktop environment and application suite acts as the command c
 - [x] **API Contract & Governance Engine**: OpenAPI 3.1 & AsyncAPI editor, Pact consumer-driven contract testing integration, and automated PR breaking-change gates.
 - [x] **App & Package Runtime Manager**: Devcontainer lifecycle management, mise/asdf runtime detection, and Electron application registry.
 - [x] **Multi-Repo Workspace Orchestrator**: Git worktree branch isolation, automated dev server startup, and multi-repo project graph coordination.
-- [x] **Task Graph & AI Planning Dispatcher**: DAG-based task dependency viewer, Planning Mode prompt dispatcher, interactive `/grill-me` design review hub, and automated PR generation.
+- [x] **Task Graph & AI Planning Dispatcher**: DAG-based task dependency viewer, Planning Mode prompt dispatcher, interactive human alignment & plan review hub, and automated PR generation.
 - [x] **OSS Ecosystem Adapters**: Turnkey adapters importing and exporting Backstage catalogs, C4 diagrams, Pact contracts, Buf protobuf registries, and Devcontainers.
 
 ### Out of Scope
@@ -88,7 +88,7 @@ graph TD
     end
 
     subgraph AgentLayer [RobOS Agent Execution Engine]
-        PlanEng[Planning Mode & /grill-me]
+        PlanEng[Planning Mode & Human Alignment]
         ExecEng[Agent Swarm Executor]
         GateEng[Pact & Buf Verification Gate]
         WalkEng[Proof-of-Work Walkthrough]
@@ -130,7 +130,7 @@ The implementation is tracked under **Epic 31: RobOS — Agent-First Software Li
 5. **Story 05**: API Contract & Governance Engine (OpenAPI 3.1, AsyncAPI, Pact)
 6. **Story 06**: App, Package & Runtime Manager (Devcontainers, Mise, Nix)
 7. **Story 07**: Multi-Repo Project Workspace Orchestrator (Git Worktrees)
-8. **Story 08**: Task Graph & AI Planning Dispatcher (DAGs, Planning Mode, `/grill-me`)
+8. **Story 08**: Task Graph & AI Planning Dispatcher (DAGs, Planning Mode, Proactive Alignment)
 9. **Story 09**: Open-Source Ecosystem Adapter Suite (Backstage, Pact, Buf, Devcontainer bridges)
 10. **Story 10**: End-to-End Agent-First SDLC Walkthrough & Test Suite
 

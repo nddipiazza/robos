@@ -1,0 +1,6 @@
+{
+  "name": "robos-app-wizard",
+  "version": "0.1.0",
+  "description": "RobOS App Wizard — Develop New Apps or Import Existing Repositories across 6 Multi-App Archetypes",
+  "main": "main.js"
+}

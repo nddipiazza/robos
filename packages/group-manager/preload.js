@@ -16,4 +16,7 @@ contextBridge.exposeInMainWorld('api', {
   listPath:        (prefix)            => ipcRenderer.invoke('gm-list-path', prefix),
   logsSearch:      (opts)              => ipcRenderer.invoke('logs-search', opts),
   logsListApps:    ()                  => ipcRenderer.invoke('logs-list-apps'),
+  directorySync:   (opts)              => ipcRenderer.invoke('gm-directory-sync', opts),
+  bootstrapCompany:(spec)              => ipcRenderer.invoke('gm-bootstrap-company', spec),
+  getActiveIdentity: ()                => ipcRenderer.invoke('gm-get-active-identity'),
 });

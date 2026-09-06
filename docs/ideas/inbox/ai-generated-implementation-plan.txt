@@ -1,0 +1,23 @@
+Idea: Track a New RobOS KGraph First-Class Object — AI Generated Implementation Plan
+
+Overview:
+When the RobOS Task Planner runs, it should not merely push discrete tickets to external issue trackers (Jira, GitHub Issues) or keep ephemeral local state. Instead, it should generate an "AI Generated Implementation Plan" as a first-class entity in the RobOS Knowledge Graph (KGraph) and save it directly as a version-controlled artifact in the Git store (.robos/plans/).
+
+Key Elements:
+1. First-Class KGraph Entity:
+   - Introduce `robos:ImplementationPlan` conforming to OASIS OSLC Core 3.0 linked data standards and W3C JSON-LD / SHACL shapes.
+   - Connected via semantic edges to Requirements (`oslc_rm:Requirement`), Features (`robos:Feature`), Microservices/Apps (`robos:Microservice`, `robos:DesktopApp`), Contracts (`robos:Contract`), Epics/Tasks (`oslc_cm:ChangeRequest`), and Test Plans (`oslc_qm:TestPlan`).
+
+2. Automatic Artifact Generation by Task Planner:
+   - When the RobOS Task Planner (`packages/task-planner`) processes a user prompt, architectural requirement, or epic, it synthesizes a structured implementation plan artifact.
+   - Generates both machine-readable linked data (`.robos/plans/<plan-id>.jsonld`) and human-readable executive markdown (`.robos/plans/<plan-id>.md`).
+
+3. Version-Controlled in Git Store:
+   - Plans are saved directly into the Git repository under `.robos/plans/` alongside `.robos/knowledge-graph.jsonld`.
+   - Leverages RobOS dual-state world representation: implementation plans live on feature/pilot branches and can be semantically diffed against `main`.
+   - Immutable audit trail of how an implementation strategy evolved from prompt to verified code.
+
+4. Plan Lifecycle & Execution Handoff:
+   - Plan states: Draft -> UnderReview -> Approved -> InExecution -> Verified -> Superseded.
+   - AI agents (Dev Central, Agents Manager) consume the implementation plan DAG to execute tasks in dependency order, running verification gates at each step.
+   - Visual inspection and interactive review in RobOS Task Planner, Knowledge Graph Explorer (`robos-graph`), and Dev Central.

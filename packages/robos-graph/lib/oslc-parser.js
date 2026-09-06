@@ -60,6 +60,10 @@ class OSLCGraphParser {
         'robos:tracksEpic',
         'robos:enforcesContract',
         'robos:managedByTeam',
+        'robos:teachesService',
+        'robos:teachesContract',
+        'robos:hasELearning',
+        'robos:linkedNodes',
       ];
 
       for (const k of refKeys) {

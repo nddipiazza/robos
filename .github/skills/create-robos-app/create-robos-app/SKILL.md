@@ -97,7 +97,12 @@ Add an entry to the `BUILTIN_APPS` array (in alphabetical order by appId):
 
 Add the new app to the appropriate section in the App Suite tables in `AGENTS.md`.
 
-### 4. Deploy to VM
+### 4. Register in Knowledge Graph & Prompt Documentation Synchronization
+
+1. Add package node to `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml`.
+2. **Documentation Synchronization Prompt**: When KGraph objects are updated, discern noticeable updates to system documentation (`docs/index.md`, `README.md`, `docs/project-plan/`) and update them accordingly.
+
+### 5. Deploy to VM
 
 After creating the app locally, deploy it to the running RobOS VM. Use `-o StrictHostKeyChecking=no` for all SSH/SCP commands.
 

@@ -33,6 +33,7 @@
         </div>
       </div>
       <div class="header-right">
+        <button class="btn btn-secondary" id="btn-open-elearning-modal">🎓 Generate eLearning</button>
         <button class="btn btn-secondary" id="btn-run-diff">⚖️ Semantic Diff</button>
         <button class="btn btn-primary" id="btn-validate-shacl">🛡️ Validate SHACL</button>
       </div>
@@ -75,6 +76,20 @@
       </div>
     </div>
 
+    <!-- Documentation Synchronization Advisory Banner -->
+    <div id="doc-sync-banner" class="doc-sync-banner" style="display: none;">
+      <div class="doc-sync-icon">📝</div>
+      <div class="doc-sync-body">
+        <div class="doc-sync-title">Knowledge Graph Updated &middot; Living Documentation Prompt Generated</div>
+        <div class="doc-sync-desc" id="doc-sync-desc">The AI is prompted to discern any noticeable updates to documentation (docs/index.md, README.md, specs) and update them accordingly.</div>
+      </div>
+      <div class="doc-sync-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-view-doc-prompt">View AI Prompt</button>
+        <button class="btn btn-primary btn-sm" id="btn-sync-docs-action">⚡ Auto-Sync Docs</button>
+        <button class="doc-sync-close" id="btn-close-doc-banner">&times;</button>
+      </div>
+    </div>
+
     <!-- Main Workspace Split -->
     <main class="main-content">
       <div class="workspace-grid">
@@ -89,6 +104,12 @@
               <input type="text" id="node-search-input" class="node-search-input" placeholder="🔍 Search nodes..." />
               <select id="node-type-filter" class="filter-type-select">
                 <option value="all">All Types</option>
+                <option value="elearning">🎓 eLearning</option>
+                <option value="desktop-app">🖥️ Desktop Apps</option>
+                <option value="console-app">⌨️ Console CLIs</option>
+                <option value="data-pipeline">🔄 Data Pipelines</option>
+                <option value="mobile-app">📱 Mobile Apps</option>
+                <option value="library">📦 Libraries</option>
                 <option value="bdd">🥒 BDD</option>
                 <option value="service">Services</option>
                 <option value="contract">Contracts</option>
@@ -97,6 +118,12 @@
             </div>
             <div class="filter-pills-wrap">
               <button class="filter-pill active" data-filter="all">All</button>
+              <button class="filter-pill" data-filter="elearning">🎓 eLearning</button>
+              <button class="filter-pill" data-filter="desktop-app">🖥️ Desktop</button>
+              <button class="filter-pill" data-filter="console-app">⌨️ Console</button>
+              <button class="filter-pill" data-filter="data-pipeline">🔄 Pipeline</button>
+              <button class="filter-pill" data-filter="mobile-app">📱 Mobile</button>
+              <button class="filter-pill" data-filter="library">📦 Library</button>
               <button class="filter-pill" data-filter="bdd">🥒 BDD</button>
               <button class="filter-pill" data-filter="service">Services</button>
               <button class="filter-pill" data-filter="contract">Contracts</button>
@@ -124,6 +151,76 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <!-- eLearning Generator Modal Overlay -->
+  <div id="elearning-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🎓</span>
+          <div>
+            <h2>RobOS eLearning Generator</h2>
+            <div class="modal-subtitle">AI-Synthesized Interactive Curriculum &middot; GitOps .robos/elearning.yaml</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-elearning-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Tell the AI what eLearning course to create for you. The engine will look for existing courses in the Knowledge Graph or synthesize a new interactive curriculum and commit it to GitOps.
+        </p>
+        <div class="elearning-textarea-container">
+          <robos-ai-textarea id="elearning-prompt"
+            show-submit="false"
+            show-commands="false"
+            show-agent="false"
+            min-height="80"
+            placeholder="Tell the AI what eLearning course to create for you… (e.g. 'Build an interactive course on Microservices and Contracts with OpenAPI and BDD Gherkin verification')">
+          </robos-ai-textarea>
+        </div>
+        <div class="elearning-modal-actions">
+          <button class="btn btn-secondary" id="btn-cancel-elearning">Cancel</button>
+          <button class="btn btn-primary btn-elearning-generate" id="btn-submit-elearning">⚡ Generate & Save Course</button>
+        </div>
+        <div id="elearning-modal-status" class="elearning-modal-status" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-App Documentation Prompt Modal Overlay -->
+  <div id="app-doc-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📝</span>
+          <div>
+            <h2 id="app-doc-modal-title">Request Documentation Updates</h2>
+            <div class="modal-subtitle" id="app-doc-modal-subtitle">AI-assisted documentation mutation for this application</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-app-doc-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" id="app-doc-modal-desc">
+          Tell the AI what documentation changes should be made for this application (e.g. update getting started instructions, document new CLI flags, or update API contract endpoints).
+        </p>
+        <div class="elearning-textarea-container">
+          <robos-ai-textarea id="app-doc-prompt"
+            show-submit="false"
+            show-commands="false"
+            show-agent="false"
+            min-height="80"
+            placeholder="Tell the AI what documentation changes to make for this application…">
+          </robos-ai-textarea>
+        </div>
+        <div class="elearning-modal-actions">
+          <button class="btn btn-secondary" id="btn-cancel-app-doc">Cancel</button>
+          <button class="btn btn-primary" id="btn-submit-app-doc">⚡ Apply Documentation Changes</button>
+        </div>
+        <div id="app-doc-modal-status" class="elearning-modal-status" style="display: none;"></div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

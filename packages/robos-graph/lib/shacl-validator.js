@@ -48,6 +48,65 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'dcterms:title', minCount: 1, message: 'Epic must have a title.' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:ELearningShape',
+    targetClass: 'robos:ELearning',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'eLearning course must have a title.' },
+      { path: 'robos:topic', minCount: 1, message: 'eLearning course must specify a topic domain.' },
+      { path: 'robos:modules', minCount: 1, message: 'eLearning course must have at least one learning module.' },
+      { path: 'robos:gitopsFile', minCount: 1, message: 'eLearning course must declare its GitOps file location (.robos/elearning.yaml).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DesktopAppShape',
+    targetClass: 'robos:DesktopApp',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Desktop App must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Desktop App must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Desktop App must specify technology stack.' },
+      { path: 'robos:desktopFramework', minCount: 1, message: 'Desktop App must declare desktop framework (Electron, Tauri, Qt, GTK).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ConsoleAppShape',
+    targetClass: 'robos:ConsoleApp',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Console App must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Console App must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Console App must specify technology stack.' },
+      { path: 'robos:cliCommand', minCount: 1, message: 'Console App must declare executable CLI command name.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MobileAppShape',
+    targetClass: 'robos:MobileApp',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Mobile App must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Mobile App must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Mobile App must specify technology stack.' },
+      { path: 'robos:platform', minCount: 1, message: 'Mobile App must specify mobile platform(s).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DataPipelineShape',
+    targetClass: 'robos:DataPipeline',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Data Pipeline must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Data Pipeline must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Data Pipeline must specify technology stack.' },
+      { path: 'robos:pipelineEngine', minCount: 1, message: 'Data Pipeline must declare execution engine (Kafka Streams, Spark, Celery).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:LibraryShape',
+    targetClass: 'robos:Library',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Library must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Library must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Library must specify technology stack.' },
+    ],
+  },
 ];
 
 class SHACLValidator {

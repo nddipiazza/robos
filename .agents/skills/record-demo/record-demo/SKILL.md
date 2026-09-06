@@ -34,6 +34,15 @@ Capture a full text-narrated walkthrough demo of a RobOS Electron app on **local
 - `minHold` per cue: **2000–4000 ms** (sufficient for reading on-screen text callouts)
 - Confirm DOM selectors exist in `packages/<app-id>/renderer/` before running.
 
+> [!CAUTION]
+> ### THE CARDINAL LAW OF E2E DEMOS: 100% VISUAL GROUNDING
+> **NEVER write a narration or click action that refers to a concept, file, or feature unless that exact item is rendered and visually visible on screen!**
+> 1. **No Phantom Narrations**: If the narration talks about `topology.yaml` or `teams.yaml`, the UI MUST be rendering that file or a dedicated card for it—NEVER point to an unrelated search bar or generic table while narrating about a different concept.
+> 2. **Explicit View / Tab Activation First**: Before interacting with components within a specific panel or tab, your script MUST explicitly click the tab button first (e.g. `#tab-btn-gitops`, `#tab-btn-video`), allowing the renderer to paint the active view before targeting its child elements.
+> 3. **Explicit Semantic IDs**: Prefer explicit element IDs (`#gitops-file-topology`, `#btn-probe-acme-tax`, `#chapter-item-3`) over generic pseudo-selectors (`tr:first-child`, `.card:first-child`) to ensure pointer ripples and callouts land precisely on the intended UI element.
+> 4. **Async State Settle**: When triggering async operations (e.g. running an EDD cycle, probing a mock stub, or running a schema validation), include adequate `minHold` (3000ms+) or an intermediate settle step so the DOM is fully rendered before inspecting result cards.
+> 5. **Screenshot Extraction Timestamp**: When capturing preview frame screenshots with `ffmpeg -ss <timestamp>`, select a timestamp (e.g. `-ss 00:00:15`) during the active demonstration when all cards and data tables are populated, never `-ss 00:00:00`.
+
 ### 1. Check or Create Demo Script
 Follow template in `packages/robos-test/demos/<app-id>-demo.js`.
 
