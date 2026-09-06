@@ -52,27 +52,12 @@ RobOS is built around 4 architectural pillars that separate a true AI-first deve
 
 Traditional code editors only understand plain text files in a single folder. RobOS maintains an executable, connected architecture knowledge graph based on **OASIS OSLC 3.0** and **W3C JSON-LD**:
 
-```mermaid
-graph TD
-    subgraph World1 [World 1: Live Production State]
-        P_Topo[Current System Architecture]
-        P_Contract[Active API & Event Contracts]
-        P_Schema[Production Data Models]
-        P_DB[Live Database Clusters]
-    end
-
-    subgraph World2 [World 2: Proposed Feature Changes]
-        F_Topo[Proposed Analytics Database Node]
-        F_Contract[New /analytics API Endpoints]
-        F_Schema[Updated Data Transfer Models]
-        F_DB[Generated K8s Analytics Manifests]
-    end
-
-    Diff{Comparison & Validation Engine}
-    World1 --> Diff
-    World2 --> Diff
-    Diff --> Radius[Blast Radius & Impact Report: Flag Potential Breaches Upfront]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/pillar1-dual-state-architecture.jpg' | relative_url }}" alt="Pillar 1: Dual-State Living Architecture (World 1 vs World 2)" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Pillar 1 Architecture Diagram</strong>: Dual-State Living Architecture comparing Live Production State against Feature Changes with automated blast radius analysis. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Key Capabilities
 - **World 1 (Live Production `main`)**: Tracks deployed services, active API contracts, and live database tables.
@@ -87,21 +72,12 @@ graph TD
 
 Instead of letting agents execute commands directly in your primary desktop user account, RobOS dynamically spawns **hermetic, disposable agent sandboxes**:
 
-```mermaid
-sequenceDiagram
-    participant Host as RobOS Desktop (Host)
-    participant Supervisor as Agent Supervisor Daemon
-    participant Agent as Temporary Agent Sandbox (RAM)
-    participant App as Target App (e.g. Relational DB Manager)
-
-    Host->>Supervisor: Assign Task: "Add Analytics Database"
-    Supervisor->>Agent: Mount ephemeral memory folder in RAM (tmpfs)
-    Supervisor->>Agent: Bridge virtual display (Xvfb) + attach AI tool connections
-    Agent->>App: Launch DB Manager & run verification queries
-    App-->>Agent: Render live data grid and schema tables
-    Agent->>Supervisor: Verify UI state & capture video proof frame
-    Supervisor->>Agent: Destroy sandbox & wipe RAM clean (Zero Leftover Clutter)
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/pillar2-ephemeral-sandboxes.jpg' | relative_url }}" alt="Pillar 2: Ephemeral In-Memory Agent Sandboxes (Zero Machine Clutter)" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Pillar 2 Sequence & Lifecycle</strong>: Hermetic agent execution in high-speed RAM (<code>tmpfs</code>) with virtual display isolation and instant memory wipe. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Key Capabilities
 - **Zero-Residue Storage**: Agent workspaces live entirely in high-speed RAM (`tmpfs`). When a task is complete or cancelled, the memory is reclaimed instantly. No orphaned `node_modules`, stray Docker containers, or lingering cache files.
@@ -115,14 +91,12 @@ sequenceDiagram
 
 In RobOS, no code reaches human review on trust alone. Every pull request comes with an automated, verifiable **proof-of-work package**:
 
-```mermaid
-flowchart LR
-    A["Developer Submits Goal"] --> B["Headless 1080p Virtual Screen"]
-    B --> C["Automated UI & API Assertions"]
-    C --> D["Piper Neural Voiceover Synthesis"]
-    D --> E["1080p Video + Subtitles Package"]
-    E --> F["Lead Architect 30-Second Review"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/pillar3-video-proof-of-work.jpg' | relative_url }}" alt="Pillar 3: Automated Video Proof-of-Work (AI Proves Its Code Works)" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Pillar 3 Flowchart</strong>: From developer goal through headless assertions and neural voiceovers to 30-second video reviews. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Key Capabilities
 1. **Deterministic Assertions**: The test fabric waits for real DOM elements, tests interactive forms, queries live databases, and verifies HTTP status codes.
@@ -135,6 +109,13 @@ flowchart LR
 ## Pillar 4: Zero-YAML Declarative GitOps
 
 RobOS stores your entire architecture in standard, human-readable Git files under `.robos/`. When you design or modify services visually, RobOS manages the underlying infrastructure automatically:
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/pillar4-declarative-gitops.jpg' | relative_url }}" alt="Pillar 4: Zero-YAML Declarative GitOps" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Pillar 4 Flowchart</strong>: Visual Architecture Canvas synthesizes Git-backed definitions into automated Kubernetes and Helm deployments across clouds. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Key Capabilities
 - **Instant Cloud Manifests**: Adding a PostgreSQL, MySQL, Redis, or Kafka node to the visual architecture canvas generates ready-to-deploy Kubernetes StatefulSets, Deployments, and Helm charts.
