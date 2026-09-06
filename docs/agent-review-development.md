@@ -24,15 +24,12 @@ Traditional AI coding assistants (autocomplete plugins and sidebar chat boxes) o
 
 **RobOS changes your role from code typist to Lead Architect:**
 
-```
-Traditional Workflow:
-[Developer Investigates Bug] ──▶ [Developer Writes Code] ──▶ [Developer Runs Tests] ──▶ [Developer Files PR]
-
-RobOS Agent Review Workflow:
-[AI Agent Investigates & Reproduces] ──▶ [AI Agent Plans Fix] ──▶ [Human Architect Reviews & Approves Plan] 
-                                                                               │
-[1-Click Merge & Deploy] ◀── [Human Watches 30s Proof Video] ◀── [AI Implements Code & Runs Visual Tests]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}" alt="Traditional Workflow vs. RobOS Agent Review Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Workflow Comparison</strong>: How RobOS shifts engineering from manual code typing bottlenecks to high-leverage architectural review and automated video proof. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
