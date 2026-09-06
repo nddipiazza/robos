@@ -1,7 +1,7 @@
 ---
 title: New Company Greenfield Setup
 layout: default
-nav_order: 4
+nav_order: 5
 ---
 
 # New Company Greenfield Setup in RobOS

@@ -1,7 +1,7 @@
 ---
 title: Existing Company Setup
 layout: default
-nav_order: 3
+nav_order: 4
 ---
 
 # Existing Company Setup & Enterprise Onboarding
