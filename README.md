@@ -1,4 +1,4 @@
-# RobOS — AI-First Developer Operating System & Application Suite
+# RobOS — Knowledge Graph-First Developer OS & Application Suite
 
 [![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)

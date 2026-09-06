@@ -1,5 +1,5 @@
 ---
-title: RobOS — AI-First Developer Operating System & Application Suite
+title: RobOS — Knowledge Graph-First Developer OS & Application Suite
 layout: home
 nav_order: 1
 nav_exclude: false
@@ -7,16 +7,16 @@ nav_exclude: false
 
 # RobOS
 
-## The Developer Operating System for the AI Era: Where Agents Code and Humans Lead
+## Knowledge Graph-First Application Generation: Build the KGraph, Auto-Generate the Apps
 {: .fs-9 }
 
-The way software is built has fundamentally changed. Autonomous AI agents can now investigate complex bugs, scaffold multi-service architectures, write code across polyglot repositories, and spin up local infrastructure.
+The way software is built has fundamentally changed. Just as an OpenAPI contract automatically generates a typed REST web service client, a RobOS Knowledge Graph adhering to our schema enables full applications to become, for all intents and purposes, **auto-generated**.
 
-Yet our developer environments are still stuck in the past. Engineers are drowning in disconnected browser tabs, fragmented CLI tools, mystery YAML, and AI assistants that dump untested code onto local machines—leaving humans to spend hours untangling broken dependencies, mystery regressions, and invisible blast radiuses.
+Autonomous AI agent swarms can now investigate complex bugs, scaffold multi-service architectures, write code across polyglot repositories, and spin up local infrastructure. Yet traditional developer environments are still stuck in the past—engineers are drowning in disconnected browser tabs, fragmented CLI tools, mystery YAML, and AI assistants that dump untested code onto local machines, leaving humans to spend hours untangling broken dependencies and invisible blast radiuses.
 
 **RobOS was created to solve this.**
 
-RobOS is a developer operating system and native 30+ desktop application suite engineered for **Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Software Development**. Just as an OpenAPI contract automatically generates a typed REST web service client, a RobOS Knowledge Graph adhering to our schema enables full applications to become, for all intents and purposes, **auto-generated**. Autonomous agent swarms handle the heavy lifting in isolated, clutter-free environments, while human developers step up into their true role: **Lead Architects, Reviewers, and Approvers**.
+RobOS is the developer operating system and native 30+ desktop application suite engineered for **Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Software Development**. Human engineers act as **Lead System Architects** designing and evolving the Knowledge Graph, while autonomous agent swarms synthesize source code, databases, and infrastructure in isolated, clutter-free environments.
 
 {: .fs-6 .fw-300 }
 
