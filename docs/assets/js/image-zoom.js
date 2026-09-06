@@ -13,6 +13,7 @@
   let translateX = 0, translateY = 0;
   let lastTranslateX = 0, lastTranslateY = 0;
   let activeBlobUrl = null;
+  let closeTimer = null;
   const MIN_SCALE = 0.4;
   const MAX_SCALE = 5.0;
   const STEP_SCALE = 0.35;
@@ -174,6 +175,10 @@
   }
 
   function openLightbox(imgSrc, imgAlt) {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     if (!overlay) createLightboxDOM();
 
     if (activeBlobUrl) {
@@ -202,6 +207,10 @@
   }
 
   function openLightboxDiagram(svgElement, title) {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     if (!overlay) createLightboxDOM();
 
     if (activeBlobUrl) {
@@ -211,23 +220,43 @@
 
     badgeEl.textContent = 'RobOS Flowchart HD';
     activeImg.style.display = 'none';
-    activeSvgTarget.style.display = 'block';
+    activeSvgTarget.style.display = 'flex';
     activeSvgTarget.innerHTML = '';
 
     // Cleanly clone SVG
     const clonedSvg = svgElement.cloneNode(true);
-    clonedSvg.removeAttribute('id');
+    // Retain ID so Mermaid's scoped stylesheet rules continue to apply to cloned nodes
+    if (svgElement.id) {
+      clonedSvg.id = svgElement.id;
+    }
     clonedSvg.classList.add('robos-lightbox-rendered-svg');
     
     // Ensure responsive vector viewBox
-    const origWidth = svgElement.getAttribute('width') || svgElement.getBoundingClientRect().width || 800;
-    const origHeight = svgElement.getAttribute('height') || svgElement.getBoundingClientRect().height || 600;
-    if (!clonedSvg.getAttribute('viewBox')) {
+    const origViewBox = svgElement.getAttribute('viewBox');
+    let origWidth = 800;
+    let origHeight = 600;
+    if (origViewBox) {
+      const parts = origViewBox.trim().split(/[\s,]+/);
+      if (parts.length === 4) {
+        origWidth = parseFloat(parts[2]) || 800;
+        origHeight = parseFloat(parts[3]) || 600;
+      }
+    } else {
+      origWidth = parseFloat(svgElement.getAttribute('width')) || svgElement.getBoundingClientRect().width || 800;
+      origHeight = parseFloat(svgElement.getAttribute('height')) || svgElement.getBoundingClientRect().height || 600;
       clonedSvg.setAttribute('viewBox', `0 0 ${origWidth} ${origHeight}`);
     }
     clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
+    // Ensure responsive scaling: set container width to fit diagram aspect ratio
+    activeSvgTarget.style.width = `min(88vw, ${Math.max(origWidth + 64, 500)}px)`;
+    clonedSvg.style.width = '100%';
+    clonedSvg.style.height = 'auto';
+    clonedSvg.style.maxWidth = '100%';
+    clonedSvg.style.maxHeight = '72vh';
+
     activeSvgTarget.appendChild(clonedSvg);
+    applyHighContrastToSvg(clonedSvg);
 
     // Create SVG Blob for New Tab button
     try {
@@ -256,14 +285,21 @@
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
-    setTimeout(() => {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+    }
+    closeTimer = setTimeout(() => {
       if (activeImg) activeImg.src = '';
-      if (activeSvgTarget) activeSvgTarget.innerHTML = '';
+      if (activeSvgTarget) {
+        activeSvgTarget.innerHTML = '';
+        activeSvgTarget.style.width = '';
+      }
       if (activeBlobUrl) {
         URL.revokeObjectURL(activeBlobUrl);
         activeBlobUrl = null;
       }
       resetZoom();
+      closeTimer = null;
     }, 200);
   }
 
@@ -597,7 +633,9 @@
         // Prevent click if clicking inside links within SVG
         if (e.target.tagName.toLowerCase() === 'a' || e.target.closest('a')) return;
         e.preventDefault();
-        const currentSvg = cardWrapper.querySelector('svg') || svgEl;
+        const currentSvg = (container.tagName && container.tagName.toLowerCase() === 'svg' ? container : container.querySelector('svg')) ||
+                           cardWrapper.querySelector('.mermaid svg, svg[id^="mermaid-"]') ||
+                           svgEl;
         if (currentSvg) {
           applyHighContrastToSvg(currentSvg);
           openLightboxDiagram(currentSvg, diagramTitle);

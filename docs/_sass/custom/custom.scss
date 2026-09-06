@@ -440,12 +440,13 @@ body.robos-lightbox-open {
   border-radius: 10px;
   padding: 2rem;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 229, 255, 0.15);
+  box-sizing: border-box;
 }
 
 .robos-lightbox-rendered-svg {
-  max-width: 85vw !important;
+  max-width: 100% !important;
   max-height: 72vh !important;
-  width: auto !important;
+  width: 100% !important;
   height: auto !important;
   display: block !important;
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
