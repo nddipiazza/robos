@@ -60,15 +60,12 @@ Today's AI coding tools are designed as simple add-ons: an autocomplete extensio
 3. **Hallucinations & Review Fatigue ("Trust Me, It Works")**  
    Current agents claim "Task complete!" without proving anything. They don't verify if buttons click, if schemas migrate cleanly, or if containers start. Reviewing raw walls of AI-generated diffs without language servers, symbol lookup, or execution context forces developers into exhausting manual verification loops.
 
-```
-Traditional Workflow (The Typing Bottleneck):
-[Developer Investigates Bug] ──▶ [Developer Writes Code] ──▶ [Developer Runs Tests] ──▶ [Developer Files PR]
-
-RobOS Paradigm (Lead Architect & Reviewer):
-[AI Swarm Investigates & Plans] ──▶ [Proactive Human Alignment & Plan Review] ──▶ [AI Executes in Isolated RAM]
-                                                                                               │
-[1-Click Merge & GitOps Deploy] ◀── [Lead Reviews in Native IDE + Proof Video] ◀── [AI Proves Work with E2E Video]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/typing-bottleneck.jpg' | relative_url }}" alt="The Typing Bottleneck in Traditional Software Development" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Typing Bottleneck</strong>: Huge streams of user stories, feature requests, and architecture requirements funneling down into a lone developer manually typing code character-by-character amid repetitive boilerplate and syntax errors.
+  </div>
+</div>
 
 ### The Solution: KGraph-First Application Generation & Agent Review
 
