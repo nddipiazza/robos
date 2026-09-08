@@ -246,7 +246,126 @@ The engine inspects build manifests (`package.json`, `pom.xml`, `go.mod`, `Cargo
 
 ---
 
-## 8. Video Walkthroughs & Proof of Work
+## 8. Git Project Organizations & Organization-Wide Agent Rules
+
+In enterprise environments and open-source ecosystems, software projects do not exist in isolation. Hundreds of repositories are governed by organizational policies, common licensing requirements, compliance standards, and architectural conventions.
+
+RobOS establishes **`robos:GitProjectOrganization`** (alias **`robos:GitOrganization`**) as a first-class schema object in the `organization` package store (`robos.org`). 
+
+### Dual-State Metadata & Policy Inheritance
+
+A Git Project Organization captures both external forge metadata and living internal policies:
+
+1. **Forge Metadata**: Tracks public or enterprise forge state: handle/slug (`robos:orgName`), forge type (`robos:forgeType` e.g., GitHub, GitLab, Bitbucket), URL, avatar, member count, repository count, and member repository lists (`robos:hasRepository`).
+2. **Documentation Context (`robos:documentation`)**: Preserves canonical documentation hubs (`docsUrl`), documentation paths (`docsPaths`), corporate/foundation licensing (`license`), and high-level architectural guidelines (`architectureGuidelines`).
+3. **Organization-Wide Agent Rules (`robos:agentRules`)**: Declares standard rules, constraints, and severity levels (e.g., license header requirements, consensus tracing, dependency hygiene) enforced across all child repositories.
+
+```mermaid
+graph TD
+    subgraph OrgBox ["Git Project Organization: Apache (urn:robos:git-org:apache)"]
+        Org["robos:GitProjectOrganization<br/>Apache Software Foundation<br/>github.com/apache"]
+        Docs["robos:documentation<br/>docsUrl: apache.org/dev/<br/>guidelines: The Apache Way"]
+        Rules["robos:agentRules<br/>• RULE-APACHE-001 (License Header)<br/>• RULE-APACHE-002 (Consensus Tracing)<br/>• RULE-APACHE-003 (Semantic Commits)<br/>• RULE-APACHE-004 (Supply Chain Security)"]
+        Org --> Docs
+        Org --> Rules
+    end
+
+    subgraph ReposBox ["Governed Member Repositories"]
+        Kafka["Kafka Service<br/>github.com/apache/kafka"]
+        Spark["Spark Data Pipeline<br/>github.com/apache/spark"]
+        Lucene["Lucene Core<br/>github.com/apache/lucene"]
+    end
+
+    Org --> Kafka
+    Org --> Spark
+    Org --> Lucene
+    Kafka -.-> Rules
+    Spark -.-> Rules
+    Lucene -.-> Rules
+```
+
+### Automatic Rule Inheritance for AI Agents
+
+Whenever an AI agent is dispatched to investigate an issue, craft a feature, or perform code review in any repository, RobOS automatically computes the effective organizational rules via `store.getEffectiveAgentRulesForRepository(repoUrlOrSlug)` and documentation via `store.getEffectiveDocumentationForRepository(repoUrlOrSlug)`.
+
+Rules are dynamically resolved across three pathways:
+- **Repository URL slug match**: Resolving `https://github.com/apache/kafka` -> organization `apache`.
+- **Direct linkage**: Checking if a component declares `robos:inOrganization: urn:robos:git-org:apache`.
+- **Organization repository roster**: Checking if the organization lists the repository in `robos:hasRepository`.
+
+### Canonical Example: Apache Software Foundation (`package.jsonld`)
+
+```json
+{
+  "@id": "urn:robos:git-org:apache",
+  "@type": [
+    "robos:GitProjectOrganization",
+    "robos:GitOrganization",
+    "schema:Organization",
+    "oslc:Resource"
+  ],
+  "dcterms:title": "Apache Software Foundation",
+  "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
+  "robos:orgName": "apache",
+  "robos:url": "https://github.com/apache",
+  "robos:forgeType": "github",
+  "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
+  "robos:visibility": "public",
+  "robos:isEnterprise": false,
+  "robos:verified": true,
+  "robos:defaultBranch": "main",
+  "robos:memberCount": 1100,
+  "robos:repoCount": 350,
+  "robos:hasRepository": [
+    "github.com/apache/kafka",
+    "github.com/apache/spark",
+    "github.com/apache/lucene",
+    "github.com/apache/airflow",
+    "github.com/apache/arrow"
+  ],
+  "robos:documentation": {
+    "docsUrl": "https://www.apache.org/dev/",
+    "docsPaths": [
+      "docs/index.md",
+      "README.md",
+      "CONTRIBUTING.md",
+      "GOVERNANCE.md",
+      "SECURITY.md"
+    ],
+    "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
+    "license": "Apache-2.0"
+  },
+  "robos:agentRules": [
+    {
+      "ruleId": "RULE-APACHE-001",
+      "title": "ASF License Header & Notice Verification",
+      "severity": "mandatory",
+      "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
+      "ruleFile": "AGENTS.md",
+      "enforcement": "pre-commit"
+    },
+    {
+      "ruleId": "RULE-APACHE-002",
+      "title": "Public Discussion & Consensus Tracing",
+      "severity": "mandatory",
+      "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
+      "ruleFile": "docs/governance.md",
+      "enforcement": "agent-review"
+    }
+  ],
+  "robos:agentRulesDoc": "AGENTS.md",
+  "robos:package": "organization",
+  "robos:namespace": "robos.org"
+}
+```
+
+### SHACL Shape Conformance
+
+Every `robos:GitProjectOrganization` is validated against `urn:robos:shape:GitProjectOrganizationShape`, ensuring mandatory title, forge URL, organization handle/slug, and forge type are present before mutations are committed to the graph.
+
+---
+
+## 9. Video Walkthroughs & Proof of Work
 
 All Knowledge Graph workflows are validated end-to-end with automated, headless 1080p video recordings and simulated DOM interactions:
 
@@ -270,7 +389,7 @@ All Knowledge Graph workflows are validated end-to-end with automated, headless 
 
 ---
 
-## 9. How to Explore the KGraph Locally
+## 10. How to Explore the KGraph Locally
 
 ### Launch the Desktop GUI
 Open the RobOS Knowledge Graph Explorer from your terminal or app launcher:

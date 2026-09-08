@@ -1155,6 +1155,198 @@ Apply the requested updates to the targeted documentation files, ensuring accura
 
     return docUpdateResult;
   }
+
+  // ── Git Project Organization Management ─────────────────────────────────────
+  createGitProjectOrganization(data = {}) {
+    const slug = (data.orgName || data.slug || 'unnamed-org').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:git-org:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || (slug.charAt(0).toUpperCase() + slug.slice(1));
+    const url = data['robos:url'] || data.url || `https://github.com/${slug}`;
+    const forgeType = data['robos:forgeType'] || data.forgeType || 'github';
+
+    const orgNode = {
+      '@id': id,
+      '@type': ['robos:GitProjectOrganization', 'robos:GitOrganization', 'schema:Organization', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `Git project organization for ${title}.`,
+      'robos:orgName': slug,
+      'robos:url': url,
+      'robos:forgeType': forgeType,
+      'robos:avatarUrl': data['robos:avatarUrl'] || data.avatarUrl || null,
+      'robos:billingEmail': data['robos:billingEmail'] || data.billingEmail || null,
+      'robos:visibility': data['robos:visibility'] || data.visibility || 'public',
+      'robos:isEnterprise': Boolean(data['robos:isEnterprise'] !== undefined ? data['robos:isEnterprise'] : data.isEnterprise),
+      'robos:verified': Boolean(data['robos:verified'] !== undefined ? data['robos:verified'] : data.verified),
+      'robos:defaultBranch': data['robos:defaultBranch'] || data.defaultBranch || 'main',
+      'robos:memberCount': data['robos:memberCount'] || data.memberCount || 0,
+      'robos:repoCount': data['robos:repoCount'] || data.repoCount || (Array.isArray(data.hasRepository || data['robos:hasRepository']) ? (data.hasRepository || data['robos:hasRepository']).length : 0),
+      'robos:hasRepository': data['robos:hasRepository'] || data.hasRepository || [],
+      'robos:hasProject': data['robos:hasProject'] || data.hasProject || null,
+      'robos:ownerTeam': data['robos:ownerTeam'] || data.ownerTeam || 'urn:robos:team:core-platform',
+      'robos:documentation': data['robos:documentation'] || data.documentation || {
+        docsUrl: data.docsUrl || `${url}`,
+        docsPaths: data.docsPaths || ['docs/index.md', 'README.md', 'CONTRIBUTING.md'],
+        architectureGuidelines: data.architectureGuidelines || null,
+        license: data.license || 'Apache-2.0',
+      },
+      'robos:agentRules': data['robos:agentRules'] || data.agentRules || [],
+      'robos:agentRulesDoc': data['robos:agentRulesDoc'] || data.agentRulesDoc || 'AGENTS.md',
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    // Validate with SHACL
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [orgNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Git Project Organization: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(orgNode);
+    return {
+      ok: true,
+      node: orgNode,
+      message: `Successfully created Git Project Organization: ${title} (${id})`,
+    };
+  }
+
+  getGitProjectOrganizations() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('GitProjectOrganization') || t.includes('GitOrganization'));
+    });
+  }
+
+  getGitProjectOrganization(idOrSlugOrUrl) {
+    if (!idOrSlugOrUrl) return null;
+    const query = String(idOrSlugOrUrl).trim().toLowerCase();
+    return this.getGitProjectOrganizations().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['robos:orgName'] && n['robos:orgName'].toLowerCase() === query) return true;
+      if (n['robos:url'] && n['robos:url'].toLowerCase().replace(/\/$/, '') === query.replace(/\/$/, '')) return true;
+      return false;
+    }) || null;
+  }
+
+  addAgentRuleToOrganization(orgIdOrSlug, rule = {}) {
+    const org = this.getGitProjectOrganization(orgIdOrSlug);
+    if (!org) {
+      return { ok: false, error: `Organization not found: ${orgIdOrSlug}` };
+    }
+
+    if (!Array.isArray(org['robos:agentRules'])) {
+      org['robos:agentRules'] = [];
+    }
+
+    const ruleObj = {
+      ruleId: rule.ruleId || `RULE-${(org['robos:orgName'] || 'ORG').toUpperCase()}-${String(org['robos:agentRules'].length + 1).padStart(3, '0')}`,
+      title: rule.title || 'General Agent Standard',
+      severity: rule.severity || 'mandatory',
+      description: rule.description || '',
+      ruleFile: rule.ruleFile || org['robos:agentRulesDoc'] || 'AGENTS.md',
+      enforcement: rule.enforcement || 'agent-review',
+    };
+
+    org['robos:agentRules'].push(ruleObj);
+    org['robos:updatedAt'] = new Date().toISOString();
+    this.save();
+    this.latestDocSyncPrompt = this.discernDocUpdates({ action: 'updated', node: org });
+
+    return {
+      ok: true,
+      org,
+      rule: ruleObj,
+      message: `Added rule "${ruleObj.title}" (${ruleObj.ruleId}) to organization "${org['dcterms:title']}"`,
+    };
+  }
+
+  getEffectiveAgentRulesForRepository(repoUrlOrSlug) {
+    if (!repoUrlOrSlug) return [];
+    const normalized = repoUrlOrSlug.toLowerCase().replace(/^https?:\/\//, '').replace(/\.git$/, '');
+    const parts = normalized.split('/');
+    let targetOrgSlug = null;
+    if (parts.length >= 2) {
+      targetOrgSlug = parts[0].includes('.') ? parts[1] : parts[0];
+    } else {
+      targetOrgSlug = parts[0];
+    }
+
+    let org = this.getGitProjectOrganization(targetOrgSlug);
+
+    if (!org) {
+      const directNode = this.getNode(repoUrlOrSlug);
+      if (directNode && directNode['robos:inOrganization']) {
+        org = this.getGitProjectOrganization(directNode['robos:inOrganization']);
+      }
+    }
+
+    if (!org) {
+      const repoNode = this.parser.nodes.find(n => {
+        const repoVal = (n['robos:repository'] || '').toLowerCase();
+        return repoVal.includes(normalized) || normalized.includes(repoVal);
+      });
+      if (repoNode && repoNode['robos:inOrganization']) {
+        org = this.getGitProjectOrganization(repoNode['robos:inOrganization']);
+      }
+    }
+
+    if (!org) {
+      org = this.getGitProjectOrganizations().find(o => {
+        const repos = Array.isArray(o['robos:hasRepository']) ? o['robos:hasRepository'] : [];
+        return repos.some(r => r.toLowerCase().includes(normalized) || normalized.includes(r.toLowerCase()));
+      });
+    }
+
+    if (!org) return [];
+    return Array.isArray(org['robos:agentRules']) ? org['robos:agentRules'] : [];
+  }
+
+  getEffectiveDocumentationForRepository(repoUrlOrSlug) {
+    if (!repoUrlOrSlug) return null;
+    const normalized = repoUrlOrSlug.toLowerCase().replace(/^https?:\/\//, '').replace(/\.git$/, '');
+    const parts = normalized.split('/');
+    let targetOrgSlug = null;
+    if (parts.length >= 2) {
+      targetOrgSlug = parts[0].includes('.') ? parts[1] : parts[0];
+    } else {
+      targetOrgSlug = parts[0];
+    }
+
+    let org = this.getGitProjectOrganization(targetOrgSlug);
+    if (!org) {
+      const directNode = this.getNode(repoUrlOrSlug);
+      if (directNode && directNode['robos:inOrganization']) {
+        org = this.getGitProjectOrganization(directNode['robos:inOrganization']);
+      }
+    }
+    if (!org) {
+      const repoNode = this.parser.nodes.find(n => {
+        const repoVal = (n['robos:repository'] || '').toLowerCase();
+        return repoVal.includes(normalized) || normalized.includes(repoVal);
+      });
+      if (repoNode && repoNode['robos:inOrganization']) {
+        org = this.getGitProjectOrganization(repoNode['robos:inOrganization']);
+      }
+    }
+    if (!org) {
+      org = this.getGitProjectOrganizations().find(o => {
+        const repos = Array.isArray(o['robos:hasRepository']) ? o['robos:hasRepository'] : [];
+        return repos.some(r => r.toLowerCase().includes(normalized) || normalized.includes(r.toLowerCase()));
+      });
+    }
+
+    return org ? (org['robos:documentation'] || null) : null;
+  }
 }
 
 module.exports = { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA, SAMPLE_GHERKIN_FEATURE };

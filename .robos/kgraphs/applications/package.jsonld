@@ -33,5 +33,18 @@
       "robos:package": "applications",
       "robos:namespace": "robos.applications"
     }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:app:billing-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp"
+      ],
+      "dcterms:title": "Billing Web Portal",
+      "robos:framework": "React 19 / Vite",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    }
   ]
 }

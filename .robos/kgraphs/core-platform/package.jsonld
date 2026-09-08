@@ -13,8 +13,7 @@
   "@id": "urn:robos:package:core-platform",
   "@type": [
     "oslc:ServiceProvider",
-    "robos:Package",
-    "robos:SystemGraph"
+    "robos:Package"
   ],
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
@@ -22,6 +21,20 @@
   "dcterms:title": "RobOS Platform Core & Base SDLC Architecture",
   "dcterms:description": "Foundational architectural graph, system roots, and platform configuration.",
   "robos:nodes": [
+    {
+      "@id": "urn:robos:graph:root",
+      "@type": [
+        "oslc:ServiceProvider",
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Acme Enterprise Global SDLC Universe",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:version": "1.0.0",
+      "robos:status": "active"
+    }
+  ],
+  "@graph": [
     {
       "@id": "urn:robos:graph:root",
       "@type": [

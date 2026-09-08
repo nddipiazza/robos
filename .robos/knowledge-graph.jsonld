@@ -7,6 +7,7 @@
     "oslc_qm": "http://open-services.net/ns/qm#",
     "robos": "https://robos.dev/ns/sdlc#",
     "c4": "https://c4model.com/ns#",
+    "pact": "https://pact.io/ns#",
     "dcterms": "http://purl.org/dc/terms/",
     "schema": "https://schema.org/"
   },
@@ -18,6 +19,58 @@
   "dcterms:title": "Acme Enterprise Global SDLC Universe",
   "robos:nodes": [
     {
+      "@id": "urn:robos:app:billing-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp"
+      ],
+      "dcterms:title": "Billing Web Portal",
+      "robos:framework": "React 19 / Vite",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    },
+    {
+      "@id": "urn:robos:graph:root",
+      "@type": [
+        "oslc:ServiceProvider",
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Acme Enterprise Global SDLC Universe",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:version": "1.0.0",
+      "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:devops:github:enterprise",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:DevOpsIntegration"
+      ],
+      "dcterms:title": "GitHub Enterprise Server",
+      "robos:category": "source-control",
+      "robos:categoryName": "Source Control & Git",
+      "robos:provider": "github",
+      "robos:providerName": "GitHub Cloud & Enterprise",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:elearning:course:sdlc-fundamentals",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse"
+      ],
+      "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+      "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:level": "Intermediate",
+      "robos:modulesCount": 4,
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning"
+    },
+    {
       "@id": "urn:robos:person:sconnor",
       "@type": [
         "oslc:Person",
@@ -27,7 +80,9 @@
       "robos:email": "sarah.connor@acmeglobal.com",
       "robos:handle": "sconnor",
       "robos:role": "Lead Architect & Approver",
-      "robos:memberOf": "urn:robos:team:core-platform"
+      "robos:memberOf": "urn:robos:team:core-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:team:core-platform",
@@ -40,7 +95,9 @@
       "robos:hasMember": [
         "urn:robos:person:sconnor",
         "urn:robos:person:marcus-wright"
-      ]
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:team:order-processing",
@@ -52,7 +109,9 @@
       "robos:lead": "urn:robos:person:kyle-reese",
       "robos:hasMember": [
         "urn:robos:person:kyle-reese"
-      ]
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:team:architecture-guild",
@@ -65,7 +124,9 @@
       "robos:hasMember": [
         "urn:robos:person:john-connor",
         "urn:robos:person:sconnor"
-      ]
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:person:admin",
@@ -77,7 +138,9 @@
       "robos:email": "alex@acmecloud.io",
       "robos:handle": "admin",
       "robos:role": "Chief Architect & VP Engineering",
-      "robos:memberOf": "urn:robos:team:founding-core"
+      "robos:memberOf": "urn:robos:team:founding-core",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:team:founding-core",
@@ -89,7 +152,9 @@
       "robos:lead": "urn:robos:person:admin",
       "robos:hasMember": [
         "urn:robos:person:admin"
-      ]
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
@@ -101,7 +166,337 @@
       "robos:lead": "urn:robos:person:admin",
       "robos:hasMember": [
         "urn:robos:person:admin"
-      ]
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:apache",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Apache Software Foundation",
+      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
+      "robos:orgName": "apache",
+      "robos:url": "https://github.com/apache",
+      "robos:forgeType": "github",
+      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
+      "robos:visibility": "public",
+      "robos:isEnterprise": false,
+      "robos:verified": true,
+      "robos:defaultBranch": "main",
+      "robos:memberCount": 1100,
+      "robos:repoCount": 350,
+      "robos:hasRepository": [
+        "github.com/apache/kafka",
+        "github.com/apache/spark",
+        "github.com/apache/lucene",
+        "github.com/apache/airflow",
+        "github.com/apache/arrow"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://www.apache.org/dev/",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md",
+          "GOVERNANCE.md",
+          "SECURITY.md"
+        ],
+        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [
+        {
+          "ruleId": "RULE-APACHE-001",
+          "title": "ASF License Header & Notice Verification",
+          "severity": "mandatory",
+          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
+          "ruleFile": "AGENTS.md",
+          "enforcement": "pre-commit"
+        },
+        {
+          "ruleId": "RULE-APACHE-002",
+          "title": "Public Discussion & Consensus Tracing",
+          "severity": "mandatory",
+          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
+          "ruleFile": "docs/governance.md",
+          "enforcement": "agent-review"
+        },
+        {
+          "ruleId": "RULE-APACHE-003",
+          "title": "Cryptographic Commit Signing",
+          "severity": "mandatory",
+          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
+          "enforcement": "git-commit"
+        },
+        {
+          "ruleId": "RULE-APACHE-004",
+          "title": "Backward-Compatible SemVer Contracts",
+          "severity": "recommended",
+          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
+          "enforcement": "pr-audit"
+        }
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:service:billing-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Billing API Service",
+      "robos:technology": "Go 1.22 / Gin",
+      "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:app:billing-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp"
+      ],
+      "dcterms:title": "Billing Web Portal",
+      "robos:framework": "React 19 / Vite",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    },
+    {
+      "@id": "urn:robos:graph:root",
+      "@type": [
+        "oslc:ServiceProvider",
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Acme Enterprise Global SDLC Universe",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:version": "1.0.0",
+      "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:devops:github:enterprise",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:DevOpsIntegration"
+      ],
+      "dcterms:title": "GitHub Enterprise Server",
+      "robos:category": "source-control",
+      "robos:categoryName": "Source Control & Git",
+      "robos:provider": "github",
+      "robos:providerName": "GitHub Cloud & Enterprise",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:elearning:course:sdlc-fundamentals",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse"
+      ],
+      "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+      "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:level": "Intermediate",
+      "robos:modulesCount": 4,
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning"
+    },
+    {
+      "@id": "urn:robos:person:sconnor",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Sarah Connor",
+      "robos:email": "sarah.connor@acmeglobal.com",
+      "robos:handle": "sconnor",
+      "robos:role": "Lead Architect & Approver",
+      "robos:memberOf": "urn:robos:team:core-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:core-platform",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Core Platform & Infrastructure",
+      "robos:topology": "platform",
+      "robos:lead": "urn:robos:person:sconnor",
+      "robos:hasMember": [
+        "urn:robos:person:sconnor",
+        "urn:robos:person:marcus-wright"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:order-processing",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Order Processing & Payments",
+      "robos:topology": "stream-aligned",
+      "robos:lead": "urn:robos:person:kyle-reese",
+      "robos:hasMember": [
+        "urn:robos:person:kyle-reese"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:architecture-guild",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Enterprise Architecture Guild",
+      "robos:topology": "enabling",
+      "robos:lead": "urn:robos:person:john-connor",
+      "robos:hasMember": [
+        "urn:robos:person:john-connor",
+        "urn:robos:person:sconnor"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:person:admin",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Alex Rivera",
+      "robos:email": "alex@acmecloud.io",
+      "robos:handle": "admin",
+      "robos:role": "Chief Architect & VP Engineering",
+      "robos:memberOf": "urn:robos:team:founding-core",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:founding-core",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Founding Core Engineering",
+      "robos:topology": "stream-aligned",
+      "robos:lead": "urn:robos:person:admin",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:cloud-platform",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Cloud Platform & Infrastructure",
+      "robos:topology": "platform",
+      "robos:lead": "urn:robos:person:admin",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:apache",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Apache Software Foundation",
+      "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
+      "robos:orgName": "apache",
+      "robos:url": "https://github.com/apache",
+      "robos:forgeType": "github",
+      "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
+      "robos:visibility": "public",
+      "robos:isEnterprise": false,
+      "robos:verified": true,
+      "robos:defaultBranch": "main",
+      "robos:memberCount": 1100,
+      "robos:repoCount": 350,
+      "robos:hasRepository": [
+        "github.com/apache/kafka",
+        "github.com/apache/spark",
+        "github.com/apache/lucene",
+        "github.com/apache/airflow",
+        "github.com/apache/arrow"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://www.apache.org/dev/",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md",
+          "GOVERNANCE.md",
+          "SECURITY.md"
+        ],
+        "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [
+        {
+          "ruleId": "RULE-APACHE-001",
+          "title": "ASF License Header & Notice Verification",
+          "severity": "mandatory",
+          "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
+          "ruleFile": "AGENTS.md",
+          "enforcement": "pre-commit"
+        },
+        {
+          "ruleId": "RULE-APACHE-002",
+          "title": "Public Discussion & Consensus Tracing",
+          "severity": "mandatory",
+          "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
+          "ruleFile": "docs/governance.md",
+          "enforcement": "agent-review"
+        },
+        {
+          "ruleId": "RULE-APACHE-003",
+          "title": "Cryptographic Commit Signing",
+          "severity": "mandatory",
+          "description": "All git commits generated by agents must be GPG signed with verified committer keys.",
+          "enforcement": "git-commit"
+        },
+        {
+          "ruleId": "RULE-APACHE-004",
+          "title": "Backward-Compatible SemVer Contracts",
+          "severity": "recommended",
+          "description": "Public APIs must not break binary or source compatibility without a documented deprecation cycle across at least one minor release.",
+          "enforcement": "pr-audit"
+        }
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:service:billing-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Billing API Service",
+      "robos:technology": "Go 1.22 / Gin",
+      "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
     }
   ]
 }

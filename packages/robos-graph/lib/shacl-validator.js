@@ -139,11 +139,31 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:platform', minCount: 1, message: 'Mobile Game must specify mobile platform(s) (iOS, Android).' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:GitProjectOrganizationShape',
+    targetClass: 'robos:GitProjectOrganization',
+    targetClasses: ['robos:GitProjectOrganization', 'robos:GitOrganization'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Git Project Organization must have a title or display name.' },
+      { path: 'robos:url', minCount: 1, message: 'Git Project Organization must specify forge URL (e.g. https://github.com/apache).' },
+      { path: 'robos:orgName', minCount: 1, message: 'Git Project Organization must specify organization handle/slug.' },
+      { path: 'robos:forgeType', minCount: 1, message: 'Git Project Organization must declare forge type (github, gitlab, bitbucket, etc.).' },
+    ],
+  },
 ];
 
 class SHACLValidator {
   constructor(shapes = BUILTIN_SHACL_SHAPES) {
     this.shapes = shapes;
+  }
+
+  validate(target) {
+    if (!target) return { conforms: true, shapesEvaluated: this.shapes.length, nodesEvaluated: 0, resultsCount: 0, results: [] };
+    if (target.nodes && Array.isArray(target.nodes)) {
+      return this.validateGraph(target);
+    }
+    const nodes = Array.isArray(target) ? target : [target];
+    return this.validateGraph({ nodes });
   }
 
   validateGraph(parser) {
@@ -153,7 +173,11 @@ class SHACLValidator {
       const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
       
       for (const shape of this.shapes) {
-        const matchesClass = types.some(t => t === shape.targetClass || t.endsWith(`:${shape.targetClass}`));
+        const matchesClass = types.some(t => 
+          t === shape.targetClass || 
+          t.endsWith(`:${shape.targetClass}`) ||
+          (Array.isArray(shape.targetClasses) && shape.targetClasses.some(tc => t === tc || t.endsWith(`:${tc}`)))
+        );
         if (!matchesClass) continue;
 
         for (const propRule of shape.properties) {
@@ -165,6 +189,7 @@ class SHACLValidator {
               focusNode: node['@id'],
               shapeId: shape.shapeId,
               resultPath: propRule.path,
+              path: propRule.path,
               severity: 'sh:Violation',
               resultMessage: propRule.message || `Property ${propRule.path} violates minCount ${propRule.minCount}`,
             });
@@ -175,6 +200,7 @@ class SHACLValidator {
               focusNode: node['@id'],
               shapeId: shape.shapeId,
               resultPath: propRule.path,
+              path: propRule.path,
               severity: 'sh:Violation',
               resultMessage: propRule.message || `Property ${propRule.path} exceeds maxCount ${propRule.maxCount}`,
             });
@@ -189,6 +215,7 @@ class SHACLValidator {
       nodesEvaluated: parser.nodes.length,
       resultsCount: results.length,
       results,
+      violations: results,
     };
   }
 }

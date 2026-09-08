@@ -72,7 +72,7 @@ class KGraphPackageManager {
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
     const typeStr = types.join(' ');
 
-    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team')) {
+    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('Company')) {
       return 'organization';
     }
     if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider')) {

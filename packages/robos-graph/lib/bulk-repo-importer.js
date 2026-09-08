@@ -543,6 +543,9 @@ class BulkRepoImporter {
       }
 
       if (appNode) {
+        if (parsed.org && parsed.org !== 'acme-org') {
+          appNode['robos:inOrganization'] = `urn:robos:git-org:${parsed.org.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}`;
+        }
         // Link Git Projects metadata if localPath exists
         if (localPath) {
           appNode['robos:localPath'] = localPath;
@@ -551,6 +554,51 @@ class BulkRepoImporter {
           appNode['robos:gitProjectId'] = repoInput.id;
         }
         generatedNodes.push(appNode);
+      }
+    }
+
+    // Synthesize GitProjectOrganization nodes for discovered forge organizations
+    const orgsMap = new Map();
+    for (const node of generatedNodes) {
+      if (node['robos:inOrganization']) {
+        const orgId = node['robos:inOrganization'];
+        if (!orgsMap.has(orgId)) {
+          const orgSlug = orgId.replace('urn:robos:git-org:', '');
+          orgsMap.set(orgId, {
+            '@id': orgId,
+            '@type': ['robos:GitProjectOrganization', 'robos:GitOrganization', 'schema:Organization', 'oslc:Resource'],
+            'dcterms:title': orgSlug.charAt(0).toUpperCase() + orgSlug.slice(1),
+            'dcterms:description': `Git Project Organization for ${orgSlug}.`,
+            'robos:orgName': orgSlug,
+            'robos:url': `https://github.com/${orgSlug}`,
+            'robos:forgeType': 'github',
+            'robos:visibility': 'public',
+            'robos:hasRepository': [],
+            'robos:documentation': {
+              docsUrl: `https://github.com/${orgSlug}`,
+              docsPaths: ['docs/index.md', 'README.md', 'CONTRIBUTING.md'],
+              license: 'Apache-2.0',
+            },
+            'robos:agentRules': [],
+            'robos:agentRulesDoc': 'AGENTS.md',
+            'robos:package': 'organization',
+            'robos:namespace': 'robos.org',
+          });
+        }
+        if (node['robos:repository']) {
+          const orgObj = orgsMap.get(orgId);
+          if (!orgObj['robos:hasRepository'].includes(node['robos:repository'])) {
+            orgObj['robos:hasRepository'].push(node['robos:repository']);
+          }
+        }
+      }
+    }
+
+    summary.organizations = orgsMap.size;
+    if (this.createOrganizations !== false) {
+      for (const orgNode of orgsMap.values()) {
+        orgNode['robos:repoCount'] = orgNode['robos:hasRepository'].length;
+        generatedNodes.push(orgNode);
       }
     }
 

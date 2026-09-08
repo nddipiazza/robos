@@ -34,5 +34,20 @@
       "robos:package": "learning",
       "robos:namespace": "robos.learning"
     }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:elearning:course:sdlc-fundamentals",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse"
+      ],
+      "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+      "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:level": "Intermediate",
+      "robos:modulesCount": 4,
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning"
+    }
   ]
 }

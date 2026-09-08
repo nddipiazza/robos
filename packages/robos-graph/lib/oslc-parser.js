@@ -65,6 +65,11 @@ class OSLCGraphParser {
         'robos:teachesContract',
         'robos:hasELearning',
         'robos:linkedNodes',
+        'robos:hasOrganization',
+        'robos:inOrganization',
+        'robos:hasAgentRule',
+        'robos:governedBy',
+        'robos:hasDocumentation',
       ];
 
       for (const k of refKeys) {

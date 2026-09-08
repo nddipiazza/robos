@@ -38,5 +38,23 @@
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
     }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:devops:github:enterprise",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:DevOpsIntegration"
+      ],
+      "dcterms:title": "GitHub Enterprise Server",
+      "robos:category": "source-control",
+      "robos:categoryName": "Source Control & Git",
+      "robos:provider": "github",
+      "robos:providerName": "GitHub Cloud & Enterprise",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    }
   ]
 }

@@ -214,11 +214,14 @@ RobOS maintains a modular, packaged Dual-State SDLC Knowledge Graph. Rather than
 
 **Standard RobOS Packages & Namespaces**:
 - **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, databases, and container definitions.
-- **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas, and directory sync.
+- **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas, Git project organizations (`robos:GitProjectOrganization`), and directory sync.
 - **`services`** (`robos.services`): Microservices, OpenAPI 3.1 contracts, Protobuf gRPC stubs, and BDD verification features.
 - **`applications`** (`robos.apps`): Client applications, frontend SPAs, desktop apps, mobile apps, PC/mobile games, and CLI tools.
 - **`devops`** (`robos.devops`): Connected cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG pass credentials.
 - **`learning`** (`robos.learning`): Interactive developer eLearning courses, labs, and architectural knowledge modules.
+
+**Git Project Organizations & Agent Rules Inheritance (`robos:GitProjectOrganization`)**:
+Git forge organizations (e.g. `https://github.com/apache`) are first-class schema objects in `robos.org`. They track forge metadata (`robos:orgName`, `robos:forgeType`, `robos:hasRepository`), living documentation context (`robos:documentation`), and organization-wide agent rules (`robos:agentRules`). All AI agents working on any member repository automatically inherit and obey these organization-wide rules and architectural guidelines via `store.getEffectiveAgentRulesForRepository()` and `store.getEffectiveDocumentationForRepository()`.
 
 **Multi-Repo Knowledge Graph Dependencies & Git-Tag Versioning**:
 RobOS supports multi-repo knowledge graph composition. In addition to the local workspace repository (`local`), developers can register external GitHub/Git repositories with semantic versioning tied to Git tags (e.g. `v1.2.0`). External KGraph repositories are cloned and cached into `~/.robos/cache/kgraphs/<repo-id>@<git-tag>/` with on-demand synchronization.
