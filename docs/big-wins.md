@@ -230,7 +230,7 @@ Proprietary coding assistants trap engineering teams in closed vendor ecosystems
 
 ### Key Capabilities
 - **Global Open Standards**: Built entirely on OASIS OSLC Core 3.0, W3C JSON-LD 1.1, W3C SHACL, Model Context Protocol (MCP), OpenAPI 3.1, Protobuf, and UNIX `pass`.
-- **Right Agent for the Right Task**: Dynamic task-to-value routing assigns lightweight tasks (linting, test stubs) to ultra-fast models (Gemini Flash, Claude Haiku, local Ollama) and complex architectural refactors to frontier reasoning models (Claude Sonnet, OpenAI Reasoning), optimizing value and slashing token costs.
+- **Right Agent for the Right Task**: Dynamic task-to-value routing assigns lightweight tasks (linting, test stubs) to ultra-fast models (Gemini 2.5 Flash, Claude Haiku 4.5, local Ollama) and complex architectural refactors to frontier reasoning models (Claude Sonnet 5, OpenAI o3 / Reasoning), optimizing value and slashing token costs.
 - **Universal Skill Marketplace**: Skills in `plugins/robos/skills/` follow cross-agent standards, executing identically in Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot CLI, Gemini CLI, Cursor, and Windsurf.
 - **Sovereign & Air-Gapped Execution**: Connect to local Ollama or vLLM backends with zero external network telemetry for strict regulatory compliance.
 

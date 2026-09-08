@@ -47,9 +47,9 @@ RobOS structures AI agent execution into three specialized intelligence tiers. E
 
 | Tier | Primary Capabilities | Typical Models | Optimal SDLC Tasks in RobOS | Cost Profile | Latency |
 |:---|:---|:---|:---|:---|:---|
-| **Tier 1: Fast Utility & Local** | Ultra-low latency, regex-like speed, offline execution, strict format following | Gemini 2.0 Flash, Claude 3.5 Haiku, Local Ollama (`qwen2.5-coder:7b`, `llama3.2:3b`) | Commit messages, AST symbol search, SHACL shape validation, boilerplate test stubs, JSON/YAML reformatting, air-gapped tasks | <$0.10 / M tokens (or $0 on workstation GPU) | 100ms – 500ms |
-| **Tier 2: Workhorse Implementation** | Strong coding acumen, multi-file comprehension, tool execution, unit test synthesis | Claude 3.7 Sonnet, GPT-4o, Gemini 2.5 Pro | Feature implementation, REST/gRPC API controllers, database migrations, Gherkin BDD scenarios, PR code reviews | $3.00 – $15.00 / M tokens | 1s – 4s |
-| **Tier 3: Frontier Deep Reasoning** | Extended thinking tokens, backtracking search, deep architectural synthesis, formal verification | OpenAI o3-mini, o1, Claude 3.7 Sonnet (Thinking), DeepSeek R1 | Monorepo architecture design, distributed deadlock debugging, cross-microservice schema migration plans, security threat modeling | $15.00 – $60.00 / M tokens | 5s – 30s |
+| **Tier 1: Fast Utility & Local** | Ultra-low latency, regex-like speed, offline execution, strict format following | Gemini 2.5 Flash, Claude Haiku 4.5, Local Ollama (`qwen2.5-coder:7b`, `llama3.3:8b`) | Commit messages, AST symbol search, SHACL shape validation, boilerplate test stubs, JSON/YAML reformatting, air-gapped tasks | <$0.10 / M tokens (or $0 on workstation GPU) | 100ms – 500ms |
+| **Tier 2: Workhorse Implementation** | Strong coding acumen, multi-file comprehension, tool execution, unit test synthesis | Claude Sonnet 5, GPT-5, Gemini 2.5 Pro | Feature implementation, REST/gRPC API controllers, database migrations, Gherkin BDD scenarios, PR code reviews | $3.00 – $15.00 / M tokens | 1s – 4s |
+| **Tier 3: Frontier Deep Reasoning** | Extended thinking tokens, backtracking search, deep architectural synthesis, formal verification | OpenAI o3, o3-mini, Claude Opus 5 (Thinking), DeepSeek R1 | Monorepo architecture design, distributed deadlock debugging, cross-microservice schema migration plans, security threat modeling | $15.00 – $60.00 / M tokens | 5s – 30s |
 
 ---
 
@@ -110,7 +110,7 @@ As multi-agent swarms execute hundreds of continuous sub-tasks throughout the da
   └───────────────┘           └───────────────┘            └───────────────┘
          │                            │                            │
          ▼                            ▼                            ▼
-  [ Local / Haiku ]           [ Sonnet / GPT ]             [ o3-mini / o1 ]
+  [ Local / Haiku 4.5 ]       [ Sonnet 5 / GPT-5 ]         [ o3 / Opus 5 ]
 ```
 
 ---
@@ -225,9 +225,9 @@ Navigate to the **Agent Tiers & Prompt Optimization** section in the left sideba
 <div style="margin: 2rem 0; padding: 1.5rem; border: 1px solid #30363d; border-radius: 10px; background: #161b22;">
   <h4 style="margin-top: 0; color: #58a6ff;">⚙️ RobOS Preferences — Agent Tiers Schema</h4>
   <ul>
-    <li><strong>Tier 1 Model (Fast Utility & Local)</strong>: Model identifier for utility tasks (default: <code>claude-3-5-haiku-20241022</code>, <code>gemini-2.0-flash</code>, or local <code>ollama/qwen2.5-coder:7b</code>).</li>
-    <li><strong>Tier 2 Model (Workhorse Implementation)</strong>: Primary coding model (default: <code>claude-3-7-sonnet-20250219</code> or <code>gpt-4o</code>).</li>
-    <li><strong>Tier 3 Model (Frontier Deep Reasoning)</strong>: High-reasoning model for system architecture (default: <code>o3-mini</code> or <code>claude-3-opus</code>).</li>
+    <li><strong>Tier 1 Model (Fast Utility & Local)</strong>: Model identifier for utility tasks (default: <code>claude-haiku-4-5</code>, <code>gemini-2.5-flash</code>, or local <code>ollama/qwen2.5-coder:7b</code>).</li>
+    <li><strong>Tier 2 Model (Workhorse Implementation)</strong>: Primary coding model (default: <code>claude-sonnet-5</code> or <code>gpt-5</code>).</li>
+    <li><strong>Tier 3 Model (Frontier Deep Reasoning)</strong>: High-reasoning model for system architecture (default: <code>o3</code> or <code>claude-opus-5</code>).</li>
     <li><strong>Enable Caveman Prompt Compression</strong>: Toggle algorithmic token pruning (checkbox).</li>
     <li><strong>Caveman Compression Mode</strong>: Select compression aggressiveness (<code>standard</code>, <code>aggressive</code>, <code>extreme</code>).</li>
     <li><strong>Caveman Target Tiers</strong>: Scope compression to specific tiers (<code>tier1</code>, <code>tier1_and_tier2</code>, <code>all_tiers</code>).</li>

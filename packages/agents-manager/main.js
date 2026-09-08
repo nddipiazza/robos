@@ -529,6 +529,9 @@ ipcMain.handle('set-active-provider', (_, providerId) => {
 
 ipcMain.handle('claude-fetch-models', async () => {
   const KNOWN_CLAUDE_MODELS = [
+    { id: 'claude-sonnet-5',            label: 'Claude Sonnet 5' },
+    { id: 'claude-opus-5',              label: 'Claude Opus 5' },
+    { id: 'claude-haiku-5',             label: 'Claude Haiku 5' },
     { id: 'claude-opus-4-5',            label: 'Claude Opus 4.5' },
     { id: 'claude-sonnet-4-5',          label: 'Claude Sonnet 4.5' },
     { id: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5' },

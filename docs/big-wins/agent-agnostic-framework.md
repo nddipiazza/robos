@@ -90,9 +90,9 @@ RobOS incorporates a **Task-to-Value Dispatch Matrix**, routing tasks to the opt
 
 | Tier | Typical Models | Optimal SDLC Tasks | Cost Profile |
 |:---|:---|:---|:---|
-| **Tier 1: Fast Utility & Local** | Gemini Flash, Claude Haiku, Local Ollama (Llama, DeepSeek) | Commit message generation, lint fixing, schema validation, test stub boilerplate, and offline air-gapped tasks. | Ultra-low cost (<$0.10/M tokens) or $0 (Local GPU). |
-| **Tier 2: Workhorse Implementation** | Claude Sonnet, GPT, Gemini Pro | Feature implementation, REST/gRPC API controllers, database migrations, and component unit tests. | Balanced efficiency ($3–$15/M tokens). |
-| **Tier 3: Frontier Deep Reasoning** | Claude Thinking / Opus, OpenAI Reasoning, DeepSeek | Multi-app architectural synthesis, cross-microservice refactoring, distributed consensus tracing, and security audits. | Premium high-reasoning tier ($15–$60/M tokens). |
+| **Tier 1: Fast Utility & Local** | Gemini 2.5 Flash, Claude Haiku 4.5, Local Ollama (Llama, DeepSeek) | Commit message generation, lint fixing, schema validation, test stub boilerplate, and offline air-gapped tasks. | Ultra-low cost (<$0.10/M tokens) or $0 (Local GPU). |
+| **Tier 2: Workhorse Implementation** | Claude Sonnet 5, GPT-5, Gemini 2.5 Pro | Feature implementation, REST/gRPC API controllers, database migrations, and component unit tests. | Balanced efficiency ($3–$15/M tokens). |
+| **Tier 3: Frontier Deep Reasoning** | Claude Opus 5 / Thinking, OpenAI o3, DeepSeek R1 | Multi-app architectural synthesis, cross-microservice refactoring, distributed consensus tracing, and security audits. | Premium high-reasoning tier ($15–$60/M tokens). |
 
 {: .highlight }
 > 📘 **Looking for the deep dive?** Read the comprehensive guide: **[Agent Tiers, Model Dispatch & Prompt Optimization (Caveman & DSPy)]({{ site.baseurl }}{% link agent-tiers.md %})** for detailed tier breakdowns, token reduction algorithms, and Settings Console configuration.

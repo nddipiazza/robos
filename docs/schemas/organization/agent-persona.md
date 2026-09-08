@@ -72,7 +72,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Agen
   "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
   "robos:role": "Autonomous Pull Request Auditor",
   "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-  "robos:modelPreference": "claude-3-5-sonnet",
+  "robos:modelPreference": "claude-sonnet-5",
   "robos:assignedTeam": "urn:robos:team:core-platform",
   "robos:usesMCPServer": [
     "urn:robos:mcp:context-engine",
@@ -106,7 +106,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
         "robos:role": "Autonomous Pull Request Auditor",
         "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-        "robos:modelPreference": "claude-3-5-sonnet",
+        "robos:modelPreference": "claude-sonnet-5",
         "robos:assignedTeam": "urn:robos:team:core-platform",
         "robos:usesMCPServer": [
             "urn:robos:mcp:context-engine",

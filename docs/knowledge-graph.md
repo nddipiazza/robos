@@ -384,7 +384,7 @@ RobOS eliminates generic, ungrounded AI prompts by modeling specialized agent pe
 
 - **AI Agent Personas (`robos:AgentPersona` / `robos:AIAgent`)**:
   - Enforced by `urn:robos:shape:AgentPersonaShape`.
-  - Properties: `dcterms:title`, `robos:role` (e.g. "Autonomous Pull Request Auditor", "Architecture Guardian", "SRE Incident Triager"), `robos:systemPrompt` (directive), `robos:modelPreference` (Claude 3.5 Sonnet, Gemini 2.5 Pro), and squad assignment (`robos:assignedTeam`).
+  - Properties: `dcterms:title`, `robos:role` (e.g. "Autonomous Pull Request Auditor", "Architecture Guardian", "SRE Incident Triager"), `robos:systemPrompt` (directive), `robos:modelPreference` (Claude Sonnet 5, Gemini 2.5 Pro), and squad assignment (`robos:assignedTeam`).
 - **Model Context Protocol Servers (`robos:MCPServer` / `robos:ToolProvider`)**:
   - Enforced by `urn:robos:shape:MCPServerShape`.
   - Properties: `dcterms:title`, `robos:transport` (`stdio`, `sse`), `robos:command` or `robos:endpointUrl`, `robos:toolsProvided` (e.g. `["ast_search", "symbol_lookup", "query_nodes"]`).
@@ -398,7 +398,7 @@ RobOS eliminates generic, ungrounded AI prompts by modeling specialized agent pe
   "dcterms:title": "RobOS Autonomous PR Code Reviewer",
   "robos:role": "Autonomous Pull Request Auditor",
   "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-  "robos:modelPreference": "claude-3-5-sonnet",
+  "robos:modelPreference": "claude-sonnet-5",
   "robos:assignedTeam": "urn:robos:team:core-platform",
   "robos:usesMCPServer": ["urn:robos:mcp:context-engine", "urn:robos:mcp:kgraph-navigator"],
   "robos:package": "organization"

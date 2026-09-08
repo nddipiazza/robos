@@ -148,9 +148,9 @@ RobOS connects to your Git hosting provider:
 
 Individual API keys scattered across developer machines lead to billing headaches and security risks. RobOS centralizes AI model management:
 - **Central Model Providers**: Configures shared corporate keys for:
-  - **Anthropic Claude** (Claude Sonnet / Claude Opus)
-  - **Google Gemini & Antigravity** (Gemini Flash / Gemini Pro)
-  - **OpenAI** (GPT / Codex)
+  - **Anthropic Claude** (Claude Sonnet 5 / Claude Opus 5)
+  - **Google Gemini & Antigravity** (Gemini 2.5 Flash / Gemini 2.5 Pro)
+  - **OpenAI** (GPT-5 / o3 / Codex)
   - **Local Ollama** (offline DeepSeek, Llama)
 - **Shared MCP Tool Registry**: Configures local Model Context Protocol servers:
   - `system-mcp`: OS and system resource management.
