@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ELea
 - **SHACL Shape ID**: `urn:robos:shape:ELearningShape`
 - **Governing Package**: [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`)
 - **Namespace**: `robos.learning`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Course](https://schema.org/Course)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Course](https://schema.org/Course)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ELearning`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -80,7 +89,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ELea
       "labFile": "labs/01.md"
     }
   ],
-  "robos:gitopsFile": ".robos/elearning.yaml"
+  "robos:gitopsFile": ".robos/elearning.yaml",
+  "robos:refersFrom": "https://schema.org/Course"
 }
 ```
 
@@ -113,7 +123,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
                 "labFile": "labs/01.md"
             }
         ],
-        "robos:gitopsFile": ".robos/elearning.yaml"
+        "robos:gitopsFile": ".robos/elearning.yaml",
+        "robos:refersFrom": "https://schema.org/Course"
     }
   ],
 }));

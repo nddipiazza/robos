@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Spri
 - **SHACL Shape ID**: `urn:robos:shape:SprintShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Sprint`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +84,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Spri
   "robos:namespace": "robos.org",
   "robos:status": "active",
   "robos:startDate": "2026-10-01",
-  "robos:endDate": "2026-10-15"
+  "robos:endDate": "2026-10-15",
+  "robos:refersFrom": "https://schema.org/Action"
 }
 ```
 
@@ -103,7 +113,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.org",
         "robos:status": "active",
         "robos:startDate": "2026-10-01",
-        "robos:endDate": "2026-10-15"
+        "robos:endDate": "2026-10-15",
+        "robos:refersFrom": "https://schema.org/Action"
     }
   ],
 }));

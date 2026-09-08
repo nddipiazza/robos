@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:DocS
 - **SHACL Shape ID**: `urn:robos:shape:DocSectionShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Article](https://schema.org/Article)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Article](https://schema.org/Article)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DocSection`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:DocS
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
   "robos:sectionId": "overview",
-  "robos:docPage": "urn:robos:doc:architecture-overview"
+  "robos:docPage": "urn:robos:doc:architecture-overview",
+  "robos:refersFrom": "https://schema.org/Article"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "documentation",
         "robos:namespace": "robos.docs",
         "robos:sectionId": "overview",
-        "robos:docPage": "urn:robos:doc:architecture-overview"
+        "robos:docPage": "urn:robos:doc:architecture-overview",
+        "robos:refersFrom": "https://schema.org/Article"
     }
   ],
 }));

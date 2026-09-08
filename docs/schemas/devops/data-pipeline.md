@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DataPipelineShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DataPipeline`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +84,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
   "robos:namespace": "robos.devops",
   "robos:repository": "github.com/acme/sample-repo",
   "robos:technology": "Node.js / TypeScript",
-  "robos:pipelineEngine": "Kafka Streams"
+  "robos:pipelineEngine": "Kafka Streams",
+  "robos:refersFrom": "https://schema.org/DataFeed"
 }
 ```
 
@@ -103,7 +113,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.devops",
         "robos:repository": "github.com/acme/sample-repo",
         "robos:technology": "Node.js / TypeScript",
-        "robos:pipelineEngine": "Kafka Streams"
+        "robos:pipelineEngine": "Kafka Streams",
+        "robos:refersFrom": "https://schema.org/DataFeed"
     }
   ],
 }));

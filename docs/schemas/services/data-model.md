@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DataModelShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Class](https://schema.org/Class)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Class](https://schema.org/Class)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DataModel`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -71,7 +80,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
   "dcterms:description": "Canonical reference instance for robos:DataModel.",
   "robos:package": "services",
   "robos:namespace": "robos.services",
-  "robos:modelName": "SampleModel"
+  "robos:modelName": "SampleModel",
+  "robos:refersFrom": "https://schema.org/Class"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:DataModel.",
         "robos:package": "services",
         "robos:namespace": "robos.services",
-        "robos:modelName": "SampleModel"
+        "robos:modelName": "SampleModel",
+        "robos:refersFrom": "https://schema.org/Class"
     }
   ],
 }));

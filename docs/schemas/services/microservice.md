@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Micr
 - **SHACL Shape ID**: `urn:robos:shape:MicroserviceShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Microservice`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 

@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPP
 - **SHACL Shape ID**: `urn:robos:shape:MCPPromptShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Text](https://schema.org/Text)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Text](https://schema.org/Text)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MCPPrompt`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPP
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
   "robos:promptName": "sample_prompt",
-  "robos:mcpServer": "urn:robos:mcp:context-engine"
+  "robos:mcpServer": "urn:robos:mcp:context-engine",
+  "robos:refersFrom": "https://schema.org/Text"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
         "robos:promptName": "sample_prompt",
-        "robos:mcpServer": "urn:robos:mcp:context-engine"
+        "robos:mcpServer": "urn:robos:mcp:context-engine",
+        "robos:refersFrom": "https://schema.org/Text"
     }
   ],
 }));

@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 - **SHACL Shape ID**: `urn:robos:shape:ContextSourceShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ContextSource`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -70,7 +79,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
   "dcterms:title": "Sample Context Source",
   "dcterms:description": "Canonical reference instance for robos:ContextSource.",
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:refersFrom": "https://schema.org/DataFeed"
 }
 ```
 
@@ -95,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:title": "Sample Context Source",
         "dcterms:description": "Canonical reference instance for robos:ContextSource.",
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:refersFrom": "https://schema.org/DataFeed"
     }
   ],
 }));

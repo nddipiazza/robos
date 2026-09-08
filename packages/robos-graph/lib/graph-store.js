@@ -4194,6 +4194,396 @@ Apply the requested updates to the targeted documentation files, ensuring accura
         (n['robos:database'] === databaseId || n['robos:db'] === databaseId);
     });
   }
+
+  registerBuildSystem(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.buildTool || 'build-system')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:build-system:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Build System (${slug})`;
+    const buildTool = data['robos:buildTool'] || data.buildTool || 'maven';
+    const configFile = data['robos:configFile'] || data.configFile || (buildTool === 'maven' ? 'pom.xml' : buildTool === 'gradle' ? 'build.gradle.kts' : buildTool === 'cargo' ? 'Cargo.toml' : buildTool === 'go' ? 'go.mod' : 'package.json');
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:BuildSystem', 'robos:MonorepoBuild', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:buildTool': buildTool,
+      'robos:configFile': configFile,
+      'robos:buildCommand': data['robos:buildCommand'] || data.buildCommand || undefined,
+      'robos:repository': data['robos:repository'] || data.repository || undefined,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://schema.org/SoftwareApplication',
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.platform',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:buildTool'] = buildTool;
+    node['robos:configFile'] = configFile;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for BuildSystem: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered BuildSystem: ${title} (${id})` };
+  }
+
+  registerTestingLibrary(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'test-lib')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:test-lib:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Testing Library`;
+    const testingType = data['robos:testingType'] || data.testingType || 'unit';
+    const language = data['robos:language'] || data.language || 'polyglot';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:TestingLibrary', 'robos:TestFramework', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:testingType': testingType,
+      'robos:language': language,
+      'robos:configFile': data['robos:configFile'] || data.configFile || undefined,
+      'robos:buildCommand': data['robos:buildCommand'] || data.buildCommand || undefined,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://schema.org/SoftwareApplication',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:testingType'] = testingType;
+    node['robos:language'] = language;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for TestingLibrary: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered TestingLibrary: ${title} (${id})` };
+  }
+
+  registerGherkinFeature(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'gherkin-feature')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:gherkin-feature:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Feature`;
+    const featureFile = data['robos:featureFile'] || data.featureFile || `specs/features/${slug}.feature`;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:GherkinFeature', 'robos:BDDFeature', 'oslc_rm:Requirement'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:featureFile': featureFile,
+      'robos:tags': data['robos:tags'] || data.tags || [],
+      'robos:targetService': data['robos:targetService'] || data.targetService || data['robos:testsService'] || data.testsService || undefined,
+      'robos:testsService': data['robos:testsService'] || data.testsService || data['robos:targetService'] || data.targetService || undefined,
+      'robos:refersFrom': data['robos:refersFrom'] || 'http://open-services.net/ns/rm#Requirement',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:featureFile'] = featureFile;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for GherkinFeature: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered GherkinFeature: ${title} (${id})` };
+  }
+
+  registerGherkinBackground(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'background')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:background:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Background: ${slug}`;
+    const steps = data['robos:steps'] || data.steps || [{ keyword: 'Given', stepText: 'the system is initialized' }];
+    const inFeature = data['robos:inFeature'] || data.inFeature || data.feature;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:GherkinBackground', 'robos:Background'],
+      'dcterms:title': title,
+      'robos:steps': steps,
+      'robos:inFeature': inFeature,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://cucumber.io/docs/gherkin/reference/#background',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:steps'] = steps;
+    node['robos:inFeature'] = inFeature;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for GherkinBackground: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered GherkinBackground: ${title} (${id})` };
+  }
+
+  registerGherkinRule(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'rule')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:rule:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Rule: ${slug}`;
+    const inFeature = data['robos:inFeature'] || data.inFeature || data.feature;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:GherkinRule', 'robos:Rule'],
+      'dcterms:title': title,
+      'robos:inFeature': inFeature,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://cucumber.io/docs/gherkin/reference/#rule',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:inFeature'] = inFeature;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for GherkinRule: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered GherkinRule: ${title} (${id})` };
+  }
+
+  registerScenarioOutline(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'outline')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:scenario-outline:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Scenario Outline: ${slug}`;
+    const steps = data['robos:steps'] || data.steps || [{ keyword: 'Given', stepText: 'user has <credits> credits' }];
+    const examplesTable = data['robos:examplesTable'] || data.examplesTable || `urn:robos:examples:${slug}`;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:ScenarioOutline', 'robos:Scenario', 'oslc_qm:TestCase'],
+      'dcterms:title': title,
+      'robos:steps': steps,
+      'robos:examplesTable': examplesTable,
+      'robos:inFeature': data['robos:inFeature'] || data.inFeature || undefined,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://cucumber.io/docs/gherkin/reference/#scenario-outline',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:steps'] = steps;
+    node['robos:examplesTable'] = examplesTable;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for ScenarioOutline: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered ScenarioOutline: ${title} (${id})` };
+  }
+
+  registerExamplesTable(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'examples')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:examples:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Examples: ${slug}`;
+    const tableHeaders = data['robos:tableHeaders'] || data.tableHeaders || ['input', 'expected'];
+    const tableRows = data['robos:tableRows'] || data.tableRows || [['val1', 'res1']];
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:ExamplesTable'],
+      'dcterms:title': title,
+      'robos:tableHeaders': tableHeaders,
+      'robos:tableRows': tableRows,
+      'robos:inScenarioOutline': data['robos:inScenarioOutline'] || data.inScenarioOutline || undefined,
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://cucumber.io/docs/gherkin/reference/#examples',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:tableHeaders'] = tableHeaders;
+    node['robos:tableRows'] = tableRows;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for ExamplesTable: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered ExamplesTable: ${title} (${id})` };
+  }
+
+  registerStepDefinition(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'step-def')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:step-def:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `StepDef: ${slug}`;
+    const regexPattern = data['robos:regexPattern'] || data.regexPattern || '^the user is logged in$';
+    const codeFile = data['robos:codeFile'] || data.codeFile || 'step-definitions/auth.steps.ts';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:StepDefinition', 'robos:CodeBinding'],
+      'dcterms:title': title,
+      'robos:regexPattern': regexPattern,
+      'robos:codeFile': codeFile,
+      'robos:language': data['robos:language'] || data.language || 'typescript',
+      'robos:refersFrom': data['robos:refersFrom'] || 'https://cucumber.io/docs/cucumber/step-definitions/',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:regexPattern'] = regexPattern;
+    node['robos:codeFile'] = codeFile;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for StepDefinition: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered StepDefinition: ${title} (${id})` };
+  }
+
+  registerTestExecutionRecord(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'test-exec')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:test-exec:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `Execution: ${slug}`;
+    const executionStatus = data['oslc_qm:executionStatus'] || data.executionStatus || 'PASS';
+    const reportsOnTestCase = data['oslc_qm:reportsOnTestCase'] || data.reportsOnTestCase || data.testCase || 'urn:robos:scenario:default';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:TestExecutionRecord', 'oslc_qm:TestExecutionRecord'],
+      'dcterms:title': title,
+      'oslc_qm:executionStatus': executionStatus,
+      'oslc_qm:reportsOnTestCase': reportsOnTestCase,
+      'robos:durationMs': data['robos:durationMs'] || data.durationMs || 120,
+      'robos:executedAt': data['robos:executedAt'] || data.executedAt || new Date().toISOString(),
+      'robos:refersFrom': data['robos:refersFrom'] || 'http://open-services.net/ns/qm#TestExecutionRecord',
+      'robos:package': 'testing',
+      'robos:namespace': 'robos.testing',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['oslc_qm:executionStatus'] = executionStatus;
+    node['oslc_qm:reportsOnTestCase'] = reportsOnTestCase;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for TestExecutionRecord: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered TestExecutionRecord: ${title} (${id})` };
+  }
+
+  getTestingLibraries(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isTestLib = types.some(t => t.includes('TestingLibrary') || t.includes('TestFramework'));
+      if (!isTestLib) return false;
+      if (filter.testingType && n['robos:testingType'] !== filter.testingType) return false;
+      if (filter.language && n['robos:language'] !== filter.language) return false;
+      return true;
+    });
+  }
+
+  getBuildSystems(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isBuildSys = types.some(t => t.includes('BuildSystem'));
+      if (!isBuildSys) return false;
+      if (filter.buildTool && n['robos:buildTool'] !== filter.buildTool) return false;
+      return true;
+    });
+  }
+
+  getGherkinFeaturesForService(serviceId) {
+    if (!serviceId) return [];
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isGherkin = types.some(t => t.includes('GherkinFeature') || t.includes('BDDFeature'));
+      return isGherkin && (n['robos:testsService'] === serviceId || n['robos:targetService'] === serviceId || n['robos:service'] === serviceId);
+    });
+  }
+
+  getScenariosForFeature(featureId) {
+    if (!featureId) return [];
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isScenario = types.some(t => t.includes('Scenario'));
+      return isScenario && (n['robos:inFeature'] === featureId || n['robos:feature'] === featureId);
+    });
+  }
 }
 
 module.exports = { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA, SAMPLE_GHERKIN_FEATURE };

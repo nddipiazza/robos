@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CLIC
 - **SHACL Shape ID**: `urn:robos:shape:CLICommandShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:CLICommand`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CLIC
   "robos:package": "applications",
   "robos:namespace": "robos.apps",
   "robos:commandName": "validate",
-  "robos:app": "urn:robos:app:dev-central"
+  "robos:app": "urn:robos:app:dev-central",
+  "robos:refersFrom": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "applications",
         "robos:namespace": "robos.apps",
         "robos:commandName": "validate",
-        "robos:app": "urn:robos:app:dev-central"
+        "robos:app": "urn:robos:app:dev-central",
+        "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

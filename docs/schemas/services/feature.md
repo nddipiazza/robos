@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Feat
 - **SHACL Shape ID**: `urn:robos:shape:FeatureShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Feature`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -67,7 +76,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Feat
   "dcterms:title": "Sample Feature",
   "dcterms:description": "Canonical reference instance for robos:Feature.",
   "robos:package": "services",
-  "robos:namespace": "robos.services"
+  "robos:namespace": "robos.services",
+  "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
 }
 ```
 
@@ -93,7 +103,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:title": "Sample Feature",
         "dcterms:description": "Canonical reference instance for robos:Feature.",
         "robos:package": "services",
-        "robos:namespace": "robos.services"
+        "robos:namespace": "robos.services",
+        "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
     }
   ],
 }));

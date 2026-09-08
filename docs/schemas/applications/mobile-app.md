@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mobi
 - **SHACL Shape ID**: `urn:robos:shape:MobileAppShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/MobileApplication](https://schema.org/MobileApplication)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/MobileApplication](https://schema.org/MobileApplication)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MobileApp`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +84,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mobi
   "robos:namespace": "robos.apps",
   "robos:repository": "github.com/acme/sample-repo",
   "robos:technology": "Node.js / TypeScript",
-  "robos:platform": "iOS / Android"
+  "robos:platform": "iOS / Android",
+  "robos:refersFrom": "https://schema.org/MobileApplication"
 }
 ```
 
@@ -103,7 +113,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.apps",
         "robos:repository": "github.com/acme/sample-repo",
         "robos:technology": "Node.js / TypeScript",
-        "robos:platform": "iOS / Android"
+        "robos:platform": "iOS / Android",
+        "robos:refersFrom": "https://schema.org/MobileApplication"
     }
   ],
 }));

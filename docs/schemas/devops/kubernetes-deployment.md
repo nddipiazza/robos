@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesDeploymentShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesDeployment`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -71,7 +80,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
   "dcterms:description": "Canonical reference instance for robos:KubernetesDeployment.",
   "robos:package": "devops",
   "robos:namespace": "robos.devops",
-  "robos:image": "registry.acme.com/apps/sample:v1.0.0"
+  "robos:image": "registry.acme.com/apps/sample:v1.0.0",
+  "robos:refersFrom": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -97,7 +107,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:KubernetesDeployment.",
         "robos:package": "devops",
         "robos:namespace": "robos.devops",
-        "robos:image": "registry.acme.com/apps/sample:v1.0.0"
+        "robos:image": "registry.acme.com/apps/sample:v1.0.0",
+        "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

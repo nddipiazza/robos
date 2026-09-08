@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:APIE
 - **SHACL Shape ID**: `urn:robos:shape:APIEndpointShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:APIEndpoint`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -73,7 +82,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:APIE
   "robos:package": "services",
   "robos:namespace": "robos.services",
   "robos:pathPattern": "/api/v1/samples",
-  "robos:httpMethod": "GET"
+  "robos:httpMethod": "GET",
+  "robos:refersFrom": "https://schema.org/EntryPoint"
 }
 ```
 
@@ -101,7 +111,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "services",
         "robos:namespace": "robos.services",
         "robos:pathPattern": "/api/v1/samples",
-        "robos:httpMethod": "GET"
+        "robos:httpMethod": "GET",
+        "robos:refersFrom": "https://schema.org/EntryPoint"
     }
   ],
 }));

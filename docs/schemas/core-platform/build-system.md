@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Buil
 - **SHACL Shape ID**: `urn:robos:shape:BuildSystemShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:BuildSystem`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -53,8 +62,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Buil
 | Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
 |---|---|---|---|---|
 | **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Build System must have a title. |
-| **`robos:buildTool`** | Build Tool | `1..*` | `xsd:string` | Build System must declare build tool (bazel, buck2, pants, please). |
-| **`robos:configFile`** | Config File | `1..*` | `xsd:string` | Build System must specify configuration file (.bazelrc, .buckconfig). |
+| **`robos:buildTool`** | Build Tool | `1..*` | `xsd:string` | Build System must declare build tool (maven, gradle, cargo, go, pnpm, npm, cmake, bazel, buck2, pants). |
+| **`robos:configFile`** | Config File | `1..*` | `xsd:string` | Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig). |
 
 ---
 
@@ -79,7 +88,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Buil
     "ISA": "x86-64"
   },
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:refersFrom": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -113,7 +123,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "ISA": "x86-64"
         },
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

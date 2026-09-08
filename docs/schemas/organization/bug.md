@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Bug`
 - **SHACL Shape ID**: `urn:robos:shape:BugShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Bug`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,7 +83,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Bug`
   "robos:package": "organization",
   "robos:namespace": "robos.org",
   "robos:severity": "major",
-  "robos:status": "active"
+  "robos:status": "active",
+  "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
 }
 ```
 
@@ -103,7 +113,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "organization",
         "robos:namespace": "robos.org",
         "robos:severity": "major",
-        "robos:status": "active"
+        "robos:status": "active",
+        "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
     }
   ],
 }));

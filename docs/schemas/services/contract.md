@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 - **SHACL Shape ID**: `urn:robos:shape:ContractShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Contract`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 

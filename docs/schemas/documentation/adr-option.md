@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADRO
 - **SHACL Shape ID**: `urn:robos:shape:ADROptionShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ADROption`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -69,7 +78,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADRO
   "dcterms:description": "Canonical reference instance for robos:ADROption.",
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
-  "robos:adr": "urn:robos:adr:001-modular-kgraph"
+  "robos:adr": "urn:robos:adr:001-modular-kgraph",
+  "robos:refersFrom": "https://schema.org/ChooseAction"
 }
 ```
 
@@ -95,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:ADROption.",
         "robos:package": "documentation",
         "robos:namespace": "robos.docs",
-        "robos:adr": "urn:robos:adr:001-modular-kgraph"
+        "robos:adr": "urn:robos:adr:001-modular-kgraph",
+        "robos:refersFrom": "https://schema.org/ChooseAction"
     }
   ],
 }));

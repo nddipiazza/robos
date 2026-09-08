@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mess
 - **SHACL Shape ID**: `urn:robos:shape:MessageBrokerShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MessageBroker`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 

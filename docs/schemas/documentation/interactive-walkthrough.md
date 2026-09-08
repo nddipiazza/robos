@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Inte
 - **SHACL Shape ID**: `urn:robos:shape:InteractiveWalkthroughShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Guide](https://schema.org/Guide)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Guide](https://schema.org/Guide)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:InteractiveWalkthrough`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 

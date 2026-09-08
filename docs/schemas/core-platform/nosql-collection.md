@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 - **SHACL Shape ID**: `urn:robos:shape:NoSQLCollectionShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Collection](https://schema.org/Collection)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Collection](https://schema.org/Collection)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:NoSQLCollection`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
   "robos:collectionName": "sample_collection",
-  "robos:database": "urn:robos:db:acme-orders-postgres"
+  "robos:database": "urn:robos:db:acme-orders-postgres",
+  "robos:refersFrom": "https://schema.org/Collection"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
         "robos:collectionName": "sample_collection",
-        "robos:database": "urn:robos:db:acme-orders-postgres"
+        "robos:database": "urn:robos:db:acme-orders-postgres",
+        "robos:refersFrom": "https://schema.org/Collection"
     }
   ],
 }));

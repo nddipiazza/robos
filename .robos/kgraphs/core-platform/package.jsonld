@@ -51,7 +51,8 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
@@ -71,7 +72,99 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-services-maven",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
+      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
+      "robos:buildTool": "maven",
+      "robos:configFile": "pom.xml",
+      "robos:repository": "github.com/acme/enterprise-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-backend-gradle",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
+      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
+      "robos:buildTool": "gradle",
+      "robos:configFile": "build.gradle.kts",
+      "robos:repository": "github.com/acme/kotlin-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-systems-cargo",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
+      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
+      "robos:buildTool": "cargo",
+      "robos:configFile": "Cargo.toml",
+      "robos:repository": "github.com/acme/crypto-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-cloud-go",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+      "robos:buildTool": "go",
+      "robos:configFile": "go.mod",
+      "robos:repository": "github.com/acme/k8s-operator",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
+      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
+      "robos:buildTool": "pnpm",
+      "robos:configFile": "pnpm-workspace.yaml",
+      "robos:repository": "github.com/acme/web-portal",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-native-cmake",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Native Video Engine (CMake)",
+      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
+      "robos:buildTool": "cmake",
+      "robos:configFile": "CMakeLists.txt",
+      "robos:repository": "github.com/acme/video-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",

@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesIngressShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesIngress`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,7 +83,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
   "robos:package": "devops",
   "robos:namespace": "robos.devops",
   "robos:ingressName": "sample-ingress",
-  "robos:host": "api.acme.internal"
+  "robos:host": "api.acme.internal",
+  "robos:refersFrom": "https://schema.org/EntryPoint"
 }
 ```
 
@@ -101,7 +111,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "devops",
         "robos:namespace": "robos.devops",
         "robos:ingressName": "sample-ingress",
-        "robos:host": "api.acme.internal"
+        "robos:host": "api.acme.internal",
+        "robos:refersFrom": "https://schema.org/EntryPoint"
     }
   ],
 }));

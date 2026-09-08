@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `oslc_rm:Re
 - **SHACL Shape ID**: `urn:robos:shape:RequirementShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `oslc_rm:Requirement`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -69,7 +78,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `oslc_rm:Re
   "dcterms:description": "Canonical reference instance for oslc_rm:Requirement.",
   "robos:package": "services",
   "robos:namespace": "robos.services",
-  "robos:featureFile": "tests/bdd/sample.feature"
+  "robos:featureFile": "tests/bdd/sample.feature",
+  "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
 }
 ```
 
@@ -95,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for oslc_rm:Requirement.",
         "robos:package": "services",
         "robos:namespace": "robos.services",
-        "robos:featureFile": "tests/bdd/sample.feature"
+        "robos:featureFile": "tests/bdd/sample.feature",
+        "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
     }
   ],
 }));

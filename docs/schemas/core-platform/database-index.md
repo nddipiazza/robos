@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DatabaseIndexShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Index](https://schema.org/Index)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Index](https://schema.org/Index)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DatabaseIndex`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
   "robos:indexName": "idx_sample_column",
-  "robos:table": "urn:robos:db-table:sample-table"
+  "robos:table": "urn:robos:db-table:sample-table",
+  "robos:refersFrom": "https://schema.org/Index"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
         "robos:indexName": "idx_sample_column",
-        "robos:table": "urn:robos:db-table:sample-table"
+        "robos:table": "urn:robos:db-table:sample-table",
+        "robos:refersFrom": "https://schema.org/Index"
     }
   ],
 }));

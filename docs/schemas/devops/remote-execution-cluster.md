@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Remo
 - **SHACL Shape ID**: `urn:robos:shape:RemoteExecutionClusterShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:RemoteExecutionCluster`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 

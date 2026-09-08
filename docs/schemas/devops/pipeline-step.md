@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pipe
 - **SHACL Shape ID**: `urn:robos:shape:PipelineStepShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:PipelineStep`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pipe
   "robos:package": "devops",
   "robos:namespace": "robos.devops",
   "robos:stepName": "run-linter",
-  "robos:job": "urn:robos:job:unit-tests"
+  "robos:job": "urn:robos:job:unit-tests",
+  "robos:refersFrom": "https://schema.org/Action"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "devops",
         "robos:namespace": "robos.devops",
         "robos:stepName": "run-linter",
-        "robos:job": "urn:robos:job:unit-tests"
+        "robos:job": "urn:robos:job:unit-tests",
+        "robos:refersFrom": "https://schema.org/Action"
     }
   ],
 }));

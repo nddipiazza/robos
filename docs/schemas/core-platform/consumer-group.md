@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cons
 - **SHACL Shape ID**: `urn:robos:shape:ConsumerGroupShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Audience](https://schema.org/Audience)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Audience](https://schema.org/Audience)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ConsumerGroup`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cons
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
   "robos:groupId": "sample-consumer-group",
-  "robos:topic": "Distributed Architecture"
+  "robos:topic": "Distributed Architecture",
+  "robos:refersFrom": "https://schema.org/Audience"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
         "robos:groupId": "sample-consumer-group",
-        "robos:topic": "Distributed Architecture"
+        "robos:topic": "Distributed Architecture",
+        "robos:refersFrom": "https://schema.org/Audience"
     }
   ],
 }));

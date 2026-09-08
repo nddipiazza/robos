@@ -568,6 +568,106 @@ const PROPERTY_METADATA = {
     type: 'URI (robos:CLICommand)',
     description: 'URI reference linking a flag to its parent command.',
   },
+  'robos:refersFrom': {
+    name: 'Refers From (Upstream Schema)',
+    type: 'URI',
+    description: 'Canonical upstream schema URL (e.g. Schema.org, OASIS OSLC, C4 Model, Cucumber) that this RobOS schema adapts or directly derives from.',
+  },
+  'robos:hasBackground': {
+    name: 'Has Background',
+    type: 'URI (robos:GherkinBackground)',
+    description: 'Prerequisite background context shared across scenarios in a Gherkin feature.',
+  },
+  'robos:inBackground': {
+    name: 'In Background',
+    type: 'URI (robos:GherkinBackground)',
+    description: 'Reference to parent Gherkin background context.',
+  },
+  'robos:hasRule': {
+    name: 'Has Rule',
+    type: 'Array of URIs (robos:GherkinRule)',
+    description: 'Business rule grouping related BDD scenarios within a feature.',
+  },
+  'robos:inRule': {
+    name: 'In Rule',
+    type: 'URI (robos:GherkinRule)',
+    description: 'Reference to parent Gherkin business rule constraint.',
+  },
+  'robos:hasScenarioOutline': {
+    name: 'Has Scenario Outline',
+    type: 'Array of URIs (robos:ScenarioOutline)',
+    description: 'Parameterized scenario outlines within a Gherkin feature.',
+  },
+  'robos:examplesTable': {
+    name: 'Examples Table',
+    type: 'URI (robos:ExamplesTable)',
+    description: 'Parameter data matrix bound to a scenario outline.',
+  },
+  'robos:tableHeaders': {
+    name: 'Table Headers',
+    type: 'Array of xsd:string',
+    description: 'Column header names for an examples or data table.',
+  },
+  'robos:tableRows': {
+    name: 'Table Rows',
+    type: 'Array of Arrays',
+    description: '2D matrix of row cell values for an examples or data table.',
+  },
+  'robos:regexPattern': {
+    name: 'Regex Pattern',
+    type: 'xsd:string',
+    description: 'Regular expression matching step text in Gherkin scenarios.',
+  },
+  'robos:codeFile': {
+    name: 'Code File',
+    type: 'xsd:string',
+    description: 'Path to source code implementing a step definition or test suite.',
+  },
+  'robos:dataTable': {
+    name: 'Data Table',
+    type: 'URI (robos:DataTable)',
+    description: 'Embedded 2D data table attached to a scenario step.',
+  },
+  'robos:docString': {
+    name: 'Doc String',
+    type: 'URI (robos:DocString)',
+    description: 'Multi-line text payload or JSON string attached to a scenario step.',
+  },
+  'robos:testingType': {
+    name: 'Testing Paradigm',
+    type: 'xsd:string',
+    description: 'Testing category (bdd, unit, e2e, contract, performance, mocking, api).',
+  },
+  'robos:testFramework': {
+    name: 'Testing Framework',
+    type: 'xsd:string',
+    description: 'Test runner or framework identifier (cucumber, jest, vitest, playwright, etc.).',
+  },
+  'robos:inTestPlan': {
+    name: 'In Test Plan',
+    type: 'URI (robos:TestPlan)',
+    description: 'Parent quality test plan governing this test suite.',
+  },
+  'robos:inTestSuite': {
+    name: 'In Test Suite',
+    type: 'URI (robos:TestSuite)',
+    description: 'Parent test suite executing this test run.',
+  },
+  'oslc_qm:executionStatus': {
+    name: 'Execution Status',
+    type: 'xsd:string',
+    description: 'Test execution outcome (PASS, FAIL, BLOCKED, SKIPPED).',
+  },
+  'oslc_qm:reportsOnTestCase': {
+    name: 'Reports On Test Case',
+    type: 'URI (robos:Scenario | oslc_qm:TestCase)',
+    description: 'Target scenario or test case verified by this execution record.',
+  },
+  'robos:testsService': {
+    name: 'Tests Service',
+    type: 'URI (robos:Microservice)',
+    description: 'Microservice or backend API verified by this test plan or feature.',
+  },
 };
 
 // Package display titles for Just the Docs navigation
@@ -579,6 +679,7 @@ const PACKAGE_DISPLAY_TITLES = {
   'devops': 'DevOps & Cloud (robos.devops)',
   'learning': 'eLearning Curriculums (robos.learning)',
   'documentation': 'Documentation & Diagrams (robos.docs)',
+  'testing': 'Testing, Quality & BDD (robos.testing)',
 };
 
 // Explicit slug and display title overrides for acronyms, multi-capital terms, and compound tech names
@@ -598,6 +699,18 @@ const ENTITY_OVERRIDES = {
   'PCGame': { slug: 'pc-game', title: 'PC Game' },
   'GitOpsDeployment': { slug: 'gitops-deployment', title: 'GitOps Deployment' },
   'ELearning': { slug: 'elearning', title: 'eLearning Course' },
+  'GherkinFeature': { slug: 'gherkin-feature', title: 'Gherkin Feature' },
+  'GherkinBackground': { slug: 'gherkin-background', title: 'Gherkin Background' },
+  'GherkinRule': { slug: 'gherkin-rule', title: 'Gherkin Rule' },
+  'ScenarioOutline': { slug: 'scenario-outline', title: 'Scenario Outline' },
+  'ExamplesTable': { slug: 'examples-table', title: 'Examples Table' },
+  'StepDefinition': { slug: 'step-definition', title: 'Step Definition' },
+  'DataTable': { slug: 'data-table', title: 'Data Table' },
+  'DocString': { slug: 'doc-string', title: 'Doc String' },
+  'TestingLibrary': { slug: 'testing-library', title: 'Testing Library' },
+  'TestPlan': { slug: 'test-plan', title: 'Test Plan' },
+  'TestSuite': { slug: 'test-suite', title: 'Test Suite' },
+  'TestExecutionRecord': { slug: 'test-execution-record', title: 'Test Execution Record' },
 };
 
 class SchemaDocGenerator {
@@ -914,9 +1027,20 @@ class SchemaDocGenerator {
       `- **SHACL Shape ID**: \`${shape.shapeId}\``,
       `- **Governing Package**: [${pkg.displayTitle}]({{ '/schemas/${pkg.id}.html' | relative_url }}) (\`${pkg.id}\`)`,
       `- **Namespace**: \`${pkg.namespace}\``,
+      shape.refersFrom ? `- **Upstream Schema Basis (Refers From)**: [${shape.refersFrom}](${shape.refersFrom})` : '',
       '',
       '---',
       '',
+      ...(shape.refersFrom ? [
+        '## Upstream Schema Basis (Refers From)',
+        '',
+        `This RobOS schema is modeled after and directly expands upon the upstream canonical standard:`,
+        `- **Canonical Reference**: [${shape.refersFrom}](${shape.refersFrom})`,
+        `- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of \`${shape.targetClass}\`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.`,
+        '',
+        '---',
+        '',
+      ] : []),
       '## Entity Relationship & Schema Context',
       '',
       '<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">',
@@ -1140,6 +1264,23 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:commandName') sample[prop.path] = 'validate';
       else if (prop.path === 'robos:flagName') sample[prop.path] = '--output';
       else if (prop.path === 'robos:command') sample[prop.path] = 'urn:robos:cli:validate';
+      else if (prop.path === 'robos:inFeature') sample[prop.path] = 'urn:robos:gherkin:sample-feature';
+      else if (prop.path === 'robos:examplesTable') sample[prop.path] = 'urn:robos:examples:sample-table';
+      else if (prop.path === 'robos:tableHeaders') sample[prop.path] = ['col1', 'col2'];
+      else if (prop.path === 'robos:tableRows') sample[prop.path] = [['val1', 'val2']];
+      else if (prop.path === 'robos:regexPattern') sample[prop.path] = '^user clicks (.*)$';
+      else if (prop.path === 'robos:codeFile') sample[prop.path] = 'tests/steps/sample_steps.js';
+      else if (prop.path === 'robos:step') sample[prop.path] = 'urn:robos:step:sample-step';
+      else if (prop.path === 'robos:content') sample[prop.path] = 'sample docstring content';
+      else if (prop.path === 'robos:testingType') sample[prop.path] = 'bdd';
+      else if (prop.path === 'robos:testFramework') sample[prop.path] = 'cucumber';
+      else if (prop.path === 'oslc_qm:executionStatus') sample[prop.path] = 'PASS';
+      else if (prop.path === 'oslc_qm:reportsOnTestCase') sample[prop.path] = 'urn:robos:scenario:sample-scenario';
+      else if (prop.path === 'robos:testsService') sample[prop.path] = 'urn:robos:service:billing-api';
+    }
+
+    if (shape.refersFrom) {
+      sample['robos:refersFrom'] = shape.refersFrom;
     }
 
     return sample;

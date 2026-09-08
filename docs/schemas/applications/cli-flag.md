@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CLIF
 - **SHACL Shape ID**: `urn:robos:shape:CLIFlagShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:CLIFlag`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CLIF
   "robos:package": "applications",
   "robos:namespace": "robos.apps",
   "robos:flagName": "--output",
-  "robos:command": "urn:robos:cli:validate"
+  "robos:command": "urn:robos:cli:validate",
+  "robos:refersFrom": "https://schema.org/PropertyValue"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "applications",
         "robos:namespace": "robos.apps",
         "robos:flagName": "--output",
-        "robos:command": "urn:robos:cli:validate"
+        "robos:command": "urn:robos:cli:validate",
+        "robos:refersFrom": "https://schema.org/PropertyValue"
     }
   ],
 }));

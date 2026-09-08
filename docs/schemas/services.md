@@ -26,7 +26,7 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 - **Package Store ID**: `services`
 - **Ontology Namespace**: `robos.services`
 - **GitOps Package File**: `.robos/kgraphs/services/package.jsonld`
-- **Schemas Defined**: 10
+- **Schemas Defined**: 8
 
 ---
 
@@ -42,8 +42,6 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 | [**Feature** (`robos:Feature`)]({{ '/schemas/services/feature.html' | relative_url }}) | `urn:robos:shape:FeatureShape` | `dcterms:title` | [View Schema &rarr;]({{ '/schemas/services/feature.html' | relative_url }}) |
 | [**API Endpoint** (`robos:APIEndpoint`)]({{ '/schemas/services/api-endpoint.html' | relative_url }}) | `urn:robos:shape:APIEndpointShape` | `dcterms:title`, `robos:pathPattern`, `robos:httpMethod` | [View Schema &rarr;]({{ '/schemas/services/api-endpoint.html' | relative_url }}) |
 | [**Data Model** (`robos:DataModel`)]({{ '/schemas/services/data-model.html' | relative_url }}) | `urn:robos:shape:DataModelShape` | `dcterms:title`, `robos:modelName` | [View Schema &rarr;]({{ '/schemas/services/data-model.html' | relative_url }}) |
-| [**Scenario** (`robos:Scenario`)]({{ '/schemas/services/scenario.html' | relative_url }}) | `urn:robos:shape:ScenarioShape` | `dcterms:title`, `robos:steps` | [View Schema &rarr;]({{ '/schemas/services/scenario.html' | relative_url }}) |
-| [**Scenario Step** (`robos:ScenarioStep`)]({{ '/schemas/services/scenario-step.html' | relative_url }}) | `urn:robos:shape:ScenarioStepShape` | `robos:keyword`, `robos:stepText` | [View Schema &rarr;]({{ '/schemas/services/scenario-step.html' | relative_url }}) |
 
 ---
 

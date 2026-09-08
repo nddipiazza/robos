@@ -62,3 +62,9 @@ packages:
     title: "Living Documentation, Visual Architecture & Flow Diagrams"
     description: "Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations."
     path: "kgraphs/documentation/package.jsonld"
+
+  - id: "testing"
+    namespace: "robos.testing"
+    title: "Testing Frameworks, Gherkin BDD & Quality Ontology"
+    description: "First-class Gherkin features, scenarios, step definitions, test execution records, and 16+ testing framework integrations."
+    path: "kgraphs/testing/package.jsonld"

@@ -73,12 +73,13 @@ RobOS decomposes the Knowledge Graph into **modular, namespaced package stores**
 | **`devops`** | `robos.devops` | Kubernetes clusters (`robos:KubernetesCluster`), cloud environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
 | **`learning`** | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
 | **`documentation`** | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
+| **`testing`** | `robos.testing` | First-class Gherkin features (`robos:GherkinFeature`), backgrounds (`robos:GherkinBackground`), business rules (`robos:GherkinRule`), scenarios (`robos:Scenario`), outlines (`robos:ScenarioOutline`), examples tables (`robos:ExamplesTable`), step definitions (`robos:StepDefinition`), data tables (`robos:DataTable`), docstrings (`robos:DocString`), test plans (`robos:TestPlan`), test suites (`robos:TestSuite`), execution records (`robos:TestExecutionRecord`), and 16+ major testing frameworks (`robos:TestingLibrary`). |
 
 ### Backwards-Compatible Aggregation
 
 While each package is stored in its own isolated file, RobOS automatically maintains an aggregated view in `.robos/knowledge-graph.jsonld` whenever packages are saved. This ensures existing scripts, Backstage catalog importers, and legacy tools continue to function without changes.
 
-| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (7 Namespaces) |
+| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (8 Namespaces) |
 |:---:|:---:|
 | ![Stat Bar]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}) | ![Packages Modal]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}) |
 
@@ -527,9 +528,27 @@ Modern monorepos and polyglot architectures rely on distributed compilation, rem
    - **Provider Independence**: Supports **Buildbarn** (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), **NativeLink** (Rust), **BuildGrid** (Python), and **BuildBuddy** via the `robos:provider` attribute. Switching providers requires zero schema alterations.
 
 2. **`robos:BuildSystem`** (`core-platform` package: `robos.platform`):
-   - Captures monorepo build tools such as **Bazel** (`.bazelrc`) and Meta **Buck2** (`.buckconfig`).
-   - Links client repositories to REAPI clusters via `robos:hasRemoteExecution`.
+   - Captures monorepo and polyglot build tools: **Bazel** (`.bazelrc`), Meta **Buck2** (`.buckconfig`), Apache **Maven** (`pom.xml`), **Gradle** (`build.gradle.kts`), Rust **Cargo** (`Cargo.toml`), **Go Modules** (`go.mod`), **pnpm** (`pnpm-workspace.yaml`), and **CMake** (`CMakeLists.txt`).
+   - Links client repositories to REAPI distributed build clusters via `robos:hasRemoteExecution`.
+   - Formally anchored upstream via `robos:refersFrom: "https://schema.org/SoftwareApplication"`.
    - Strictly enforced by `urn:robos:shape:BuildSystemShape`.
+
+### Upstream Schema Provenance (`robos:refersFrom`)
+
+RobOS establishes complete semantic traceability and provenance for all 91 schema definitions. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
+
+- **W3C & Schema.org**: `https://schema.org/SoftwareApplication`, `https://schema.org/WebApplication`, `https://schema.org/VideoGame`, `https://schema.org/Organization`, `https://schema.org/Person`, `https://schema.org/Dataset`, `https://schema.org/DataCatalog`.
+- **OASIS OSLC (Open Services for Lifecycle Collaboration)**:
+  - Architecture Management (OSLC AM): `http://open-services.net/ns/am#Resource` (Microservices, Desktop Apps, Console Apps).
+  - Requirements Management (OSLC RM): `http://open-services.net/ns/rm#Requirement` (Epics, Features, User Stories, Gherkin Features).
+  - Change Management (OSLC CM): `http://open-services.net/ns/cm#ChangeRequest` (Tasks, Subtasks, Bugs, Pull Requests).
+  - Quality Management (OSLC QM): `http://open-services.net/ns/qm#TestPlan`, `http://open-services.net/ns/qm#TestSuite`, `http://open-services.net/ns/qm#TestCase` (Scenarios, Outlines), `http://open-services.net/ns/qm#TestExecutionRecord`.
+  - Core & Configuration Management: `http://open-services.net/ns/core#ServiceProvider`, `http://open-services.net/ns/config#ConfigurationItem`.
+- **C4 Model**: `https://c4model.com/ns#Container`, `https://c4model.com/ns#Component`, `https://c4model.com/ns#System`.
+- **Cucumber & Gherkin Reference**: `https://cucumber.io/docs/gherkin/reference/#background`, `https://cucumber.io/docs/gherkin/reference/#rule`, `https://cucumber.io/docs/gherkin/reference/#scenario-outline`, `https://cucumber.io/docs/gherkin/reference/#examples`, `https://cucumber.io/docs/gherkin/reference/#data-tables`, `https://cucumber.io/docs/gherkin/reference/#doc-strings`, `https://cucumber.io/docs/cucumber/step-definitions/`.
+
+**Cardinal Agent Generation Rule**:
+When autonomous agents generate or extend KGraph schemas or instances, they ground their representations in these upstream canonical references, maintaining interoperability while expanding upon them with RobOS-specific SDLC properties.
 
 ### JSON-LD Node Example
 

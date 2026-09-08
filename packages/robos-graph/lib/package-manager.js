@@ -48,6 +48,12 @@ const DEFAULT_PACKAGES = [
     title: 'Living Documentation, Visual Architecture & Flow Diagrams',
     description: 'Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations.',
   },
+  {
+    id: 'testing',
+    namespace: 'robos.testing',
+    title: 'Testing, Quality & Behavior-Driven Development (BDD)',
+    description: 'First-class Gherkin features, scenarios, step definitions, test execution records, and major testing frameworks.',
+  },
 ];
 
 class KGraphPackageManager {
@@ -78,10 +84,13 @@ class KGraphPackageManager {
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
     const typeStr = types.join(' ');
 
+    if (typeStr.includes('Gherkin') || typeStr.includes('Scenario') || typeStr.includes('ScenarioStep') || typeStr.includes('ScenarioOutline') || typeStr.includes('ExamplesTable') || typeStr.includes('StepDefinition') || typeStr.includes('DataTable') || typeStr.includes('DocString') || typeStr.includes('TestPlan') || typeStr.includes('TestCase') || typeStr.includes('TestExecution') || typeStr.includes('TestExecutionRecord') || typeStr.includes('TestSuite') || typeStr.includes('TestingLibrary') || typeStr.includes('TestFramework') || typeStr.includes('BDDFeature')) {
+      return 'testing';
+    }
     if (typeStr.includes('FlowDiagram') || typeStr.includes('DocumentationPage') || typeStr.includes('DocArticle') || typeStr.includes('DocSection') || typeStr.includes('ArchitectureDecisionRecord') || typeStr.includes('ADR') || typeStr.includes('ADROption') || typeStr.includes('InteractiveWalkthrough') || typeStr.includes('CodeSnippet') || typeStr.includes('CodeSample') || typeStr.includes('ApiGuide')) {
       return 'documentation';
     }
-    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('GitRepository') || typeStr.includes('GitBranch') || typeStr.includes('PullRequest') || typeStr.includes('MergeRequest') || typeStr.includes('GitCommit') || typeStr.includes('CommitRef') || typeStr.includes('GitTag') || typeStr.includes('Company') || typeStr.includes('AgentPersona') || typeStr.includes('AIAgent') || typeStr.includes('TaskServer') || typeStr.includes('Project') || typeStr.includes('Milestone') || typeStr.includes('Sprint') || typeStr.includes('Epic') || typeStr.includes('UserStory') || typeStr.includes('Story') || typeStr.includes('Task') || typeStr.includes('Subtask') || typeStr.includes('Bug') || typeStr.includes('Defect') || typeStr.includes('ChangeRequest') || typeStr.includes('CommunicationChannel')) {
+    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('GitRepository') || typeStr.includes('GitBranch') || typeStr.includes('PullRequest') || typeStr.includes('MergeRequest') || typeStr.includes('GitCommit') || typeStr.includes('CommitRef') || typeStr.includes('GitTag') || typeStr.includes('Company') || typeStr.includes('AgentPersona') || typeStr.includes('AIAgent') || typeStr.includes('TaskServer') || typeStr.includes('Project') || typeStr.includes('Milestone') || typeStr.includes('Sprint') || typeStr.includes('Epic') || (typeStr.includes('UserStory') && !typeStr.includes('Gherkin')) || (typeStr.includes('Story') && !typeStr.includes('Gherkin')) || typeStr.includes('Task') || typeStr.includes('Subtask') || typeStr.includes('Bug') || typeStr.includes('Defect') || typeStr.includes('ChangeRequest') || typeStr.includes('CommunicationChannel')) {
       return 'organization';
     }
     if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider') || typeStr.includes('RemoteExecutionCluster') || typeStr.includes('RemoteBuildCluster') || typeStr.includes('KubernetesCluster') || typeStr.includes('K8sCluster') || typeStr.includes('KubernetesNamespace') || typeStr.includes('KubernetesNodePool') || (typeStr.includes('KubernetesDeployment') && !typeStr.includes('Microservice')) || typeStr.includes('KubernetesService') || typeStr.includes('KubernetesIngress') || typeStr.includes('Environment') || typeStr.includes('DeploymentEnvironment') || typeStr.includes('GitOpsDeployment') || typeStr.includes('GitOpsSyncPolicy') || typeStr.includes('ArgoCDApplication') || typeStr.includes('CICDPipeline') || typeStr.includes('PipelineStage') || typeStr.includes('PipelineJob') || typeStr.includes('PipelineStep') || typeStr.includes('Pipeline')) {
@@ -93,7 +102,7 @@ class KGraphPackageManager {
     if (typeStr.includes('FrontEndApp') || typeStr.includes('PCGame') || typeStr.includes('MobileGame') || typeStr.includes('DesktopApp') || typeStr.includes('ConsoleApp') || typeStr.includes('MobileApp') || typeStr.includes('DataPipeline') || typeStr.includes('Library') || typeStr.includes('WebApplication') || typeStr.includes('VideoGame') || typeStr.includes('WebRoute') || typeStr.includes('UIComponent') || typeStr.includes('DesktopWindow') || typeStr.includes('IPCEndpoint') || typeStr.includes('CLICommand') || typeStr.includes('CLIFlag') || typeStr.includes('MobileScreen') || typeStr.includes('DeepLink') || typeStr.includes('GameScene') || typeStr.includes('GameAsset') || typeStr.includes('ExportedModule')) {
       return 'applications';
     }
-    if (typeStr.includes('Microservice') || typeStr.includes('Contract') || typeStr.includes('ProtobufContract') || typeStr.includes('GRPCContract') || typeStr.includes('GraphQLContract') || typeStr.includes('GraphQLSchema') || typeStr.includes('Requirement') || typeStr.includes('Feature') || typeStr.includes('Scenario') || typeStr.includes('ScenarioStep') || typeStr.includes('APIEndpoint') || typeStr.includes('APIOperation') || typeStr.includes('DataModel') || typeStr.includes('SchemaModel') || typeStr.includes('DomainEntity') || typeStr.includes('DataSource')) {
+    if (typeStr.includes('Microservice') || typeStr.includes('Contract') || typeStr.includes('ProtobufContract') || typeStr.includes('GRPCContract') || typeStr.includes('GraphQLContract') || typeStr.includes('GraphQLSchema') || typeStr.includes('Requirement') || typeStr.includes('Feature') || typeStr.includes('APIEndpoint') || typeStr.includes('APIOperation') || typeStr.includes('DataModel') || typeStr.includes('SchemaModel') || typeStr.includes('DomainEntity') || typeStr.includes('DataSource')) {
       return 'services';
     }
     if (typeStr.includes('ELearning') || typeStr.includes('LearningModule') || typeStr.includes('LearningLesson') || typeStr.includes('HandsOnLab') || typeStr.includes('QuizAssessment') || typeStr.includes('Tutorial') || typeStr.includes('Course')) {

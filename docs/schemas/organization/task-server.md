@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Task
 - **SHACL Shape ID**: `urn:robos:shape:TaskServerShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:TaskServer`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -71,7 +80,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Task
   "dcterms:description": "Canonical reference instance for robos:TaskServer.",
   "robos:package": "organization",
   "robos:namespace": "robos.org",
-  "robos:url": "https://github.com/acme"
+  "robos:url": "https://github.com/acme",
+  "robos:refersFrom": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -97,7 +107,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:TaskServer.",
         "robos:package": "organization",
         "robos:namespace": "robos.org",
-        "robos:url": "https://github.com/acme"
+        "robos:url": "https://github.com/acme",
+        "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

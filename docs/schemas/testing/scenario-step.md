@@ -1,16 +1,16 @@
 ---
 title: Scenario Step
 layout: default
-parent: Services & Contracts (robos.services)
+parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 10
-permalink: /schemas/services/scenario-step.html
+nav_order: 2
+permalink: /schemas/testing/scenario-step.html
 ---
 
 # Schema: `robos:ScenarioStep`
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ScenarioStep` in the `services` package store.
+Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ScenarioStep` in the `testing` package store.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -26,8 +26,17 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Scen
 - **RDF / OWL Class**: `robos:ScenarioStep`
 - **Aliases / Target Classes**: `robos:ScenarioStep`
 - **SHACL Shape ID**: `urn:robos:shape:ScenarioStepShape`
-- **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
-- **Namespace**: `robos.services`
+- **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
+- **Namespace**: `robos.testing`
+- **Upstream Schema Basis (Refers From)**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ScenarioStep`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -38,7 +47,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Scen
     <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Scenario Step</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ScenarioStep</span>
   </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ScenarioStepShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
+  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ScenarioStepShape</code> within the <strong>Testing, Quality & BDD (robos.testing)</strong> (<code>robos.testing</code>) package store.</p>
   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:keyword</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:stepText</code></span>
@@ -60,17 +69,16 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Scen
 
 ```json
 {
-  "@id": "urn:robos:services:scenario-step-sample",
+  "@id": "urn:robos:step:checkout-add-item-with-table",
   "@type": [
-    "robos:ScenarioStep",
-    "oslc:Resource"
+    "robos:ScenarioStep"
   ],
-  "dcterms:title": "Sample Scenario Step",
-  "dcterms:description": "Canonical reference instance for robos:ScenarioStep.",
-  "robos:package": "services",
-  "robos:namespace": "robos.services",
-  "robos:keyword": "Given",
-  "robos:stepText": "the system is initialized"
+  "robos:keyword": "When",
+  "robos:stepText": "the customer adds items to cart with configuration",
+  "robos:dataTable": "urn:robos:datatable:cart-items",
+  "robos:package": "testing",
+  "robos:namespace": "robos.testing",
+  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
 }
 ```
 
@@ -87,17 +95,16 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:services:scenario-step-sample",
+        "@id": "urn:robos:step:checkout-add-item-with-table",
         "@type": [
-            "robos:ScenarioStep",
-            "oslc:Resource"
+            "robos:ScenarioStep"
         ],
-        "dcterms:title": "Sample Scenario Step",
-        "dcterms:description": "Canonical reference instance for robos:ScenarioStep.",
-        "robos:package": "services",
-        "robos:namespace": "robos.services",
-        "robos:keyword": "Given",
-        "robos:stepText": "the system is initialized"
+        "robos:keyword": "When",
+        "robos:stepText": "the customer adds items to cart with configuration",
+        "robos:dataTable": "urn:robos:datatable:cart-items",
+        "robos:package": "testing",
+        "robos:namespace": "robos.testing",
+        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
     }
   ],
 }));

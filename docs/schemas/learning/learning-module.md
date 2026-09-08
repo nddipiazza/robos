@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Lear
 - **SHACL Shape ID**: `urn:robos:shape:LearningModuleShape`
 - **Governing Package**: [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`)
 - **Namespace**: `robos.learning`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/CourseInstance](https://schema.org/CourseInstance)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/CourseInstance](https://schema.org/CourseInstance)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:LearningModule`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -69,7 +78,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Lear
   "dcterms:description": "Canonical reference instance for robos:LearningModule.",
   "robos:package": "learning",
   "robos:namespace": "robos.learning",
-  "robos:course": "urn:robos:elearning:microservices-contracts"
+  "robos:course": "urn:robos:elearning:microservices-contracts",
+  "robos:refersFrom": "https://schema.org/CourseInstance"
 }
 ```
 
@@ -95,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:LearningModule.",
         "robos:package": "learning",
         "robos:namespace": "robos.learning",
-        "robos:course": "urn:robos:elearning:microservices-contracts"
+        "robos:course": "urn:robos:elearning:microservices-contracts",
+        "robos:refersFrom": "https://schema.org/CourseInstance"
     }
   ],
 }));

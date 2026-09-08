@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mobi
 - **SHACL Shape ID**: `urn:robos:shape:MobileGameShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MobileGame`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -78,7 +87,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mobi
   "robos:repository": "github.com/acme/sample-repo",
   "robos:technology": "Node.js / TypeScript",
   "robos:gameEngine": "Unreal Engine 5",
-  "robos:platform": "iOS / Android"
+  "robos:platform": "iOS / Android",
+  "robos:refersFrom": "https://schema.org/VideoGame"
 }
 ```
 
@@ -107,7 +117,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:repository": "github.com/acme/sample-repo",
         "robos:technology": "Node.js / TypeScript",
         "robos:gameEngine": "Unreal Engine 5",
-        "robos:platform": "iOS / Android"
+        "robos:platform": "iOS / Android",
+        "robos:refersFrom": "https://schema.org/VideoGame"
     }
   ],
 }));

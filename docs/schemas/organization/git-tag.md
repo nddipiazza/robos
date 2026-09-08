@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GitT
 - **SHACL Shape ID**: `urn:robos:shape:GitTagShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:GitTag`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +81,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GitT
   "robos:package": "organization",
   "robos:namespace": "robos.org",
   "robos:tagName": "v1.0.0",
-  "robos:commitSha": "4a8f9c1b2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a"
+  "robos:commitSha": "4a8f9c1b2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a",
+  "robos:refersFrom": "https://schema.org/SoftwareSourceCode"
 }
 ```
 
@@ -99,7 +109,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "organization",
         "robos:namespace": "robos.org",
         "robos:tagName": "v1.0.0",
-        "robos:commitSha": "4a8f9c1b2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a"
+        "robos:commitSha": "4a8f9c1b2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a",
+        "robos:refersFrom": "https://schema.org/SoftwareSourceCode"
     }
   ],
 }));

@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pull
 - **SHACL Shape ID**: `urn:robos:shape:PullRequestShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:PullRequest`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -79,7 +88,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pull
   "robos:prNumber": 142,
   "robos:sourceBranch": "feat/new-feature",
   "robos:targetBranch": "main",
-  "robos:status": "active"
+  "robos:status": "active",
+  "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
 }
 ```
 
@@ -109,7 +119,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:prNumber": 142,
         "robos:sourceBranch": "feat/new-feature",
         "robos:targetBranch": "main",
-        "robos:status": "active"
+        "robos:status": "active",
+        "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
     }
   ],
 }));

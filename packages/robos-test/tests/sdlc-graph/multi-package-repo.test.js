@@ -21,9 +21,9 @@ describe('Multi-Package & Multi-Repo Knowledge Graph (Epic 1) Test Suite', () =>
     const pkgMgr = new KGraphPackageManager({ rootDir: tmpDir });
 
     const packages = pkgMgr.listPackages();
-    assert.strictEqual(packages.length, 7, 'Should supply all 7 standard packages');
+    assert.strictEqual(packages.length, 8, 'Should supply all 8 standard packages');
 
-    const expectedIds = ['core-platform', 'organization', 'services', 'applications', 'devops', 'learning', 'documentation'];
+    const expectedIds = ['core-platform', 'organization', 'services', 'applications', 'devops', 'learning', 'documentation', 'testing'];
     for (const id of expectedIds) {
       const pkg = pkgMgr.getPackage(id);
       assert.ok(pkg, `Package "${id}" must exist`);
@@ -136,7 +136,7 @@ describe('Multi-Package & Multi-Repo Knowledge Graph (Epic 1) Test Suite', () =>
 
     // Verify packages
     const pkgs = store.listPackages();
-    assert.strictEqual(pkgs.length, 7);
+    assert.strictEqual(pkgs.length, 8);
 
     // Verify repos
     const repos = store.listRepos();

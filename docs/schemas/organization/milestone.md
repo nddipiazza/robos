@@ -28,6 +28,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mile
 - **SHACL Shape ID**: `urn:robos:shape:MilestoneShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
+
+---
+
+## Upstream Schema Basis (Refers From)
+
+This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+- **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
+- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Milestone`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
 
 ---
 
@@ -69,7 +78,8 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mile
   "dcterms:description": "Canonical reference instance for robos:Milestone.",
   "robos:package": "organization",
   "robos:namespace": "robos.org",
-  "robos:targetDate": "2026-11-01"
+  "robos:targetDate": "2026-11-01",
+  "robos:refersFrom": "https://schema.org/Action"
 }
 ```
 
@@ -95,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:description": "Canonical reference instance for robos:Milestone.",
         "robos:package": "organization",
         "robos:namespace": "robos.org",
-        "robos:targetDate": "2026-11-01"
+        "robos:targetDate": "2026-11-01",
+        "robos:refersFrom": "https://schema.org/Action"
     }
   ],
 }));
