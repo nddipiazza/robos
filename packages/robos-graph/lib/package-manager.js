@@ -75,8 +75,11 @@ class KGraphPackageManager {
     if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('Company')) {
       return 'organization';
     }
-    if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider')) {
+    if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider') || typeStr.includes('RemoteExecutionCluster') || typeStr.includes('RemoteBuildCluster')) {
       return 'devops';
+    }
+    if (typeStr.includes('BuildSystem') || typeStr.includes('MonorepoBuild')) {
+      return 'core-platform';
     }
     if (typeStr.includes('FrontEndApp') || typeStr.includes('PCGame') || typeStr.includes('MobileGame') || typeStr.includes('DesktopApp') || typeStr.includes('ConsoleApp') || typeStr.includes('MobileApp') || typeStr.includes('DataPipeline') || typeStr.includes('Library') || typeStr.includes('WebApplication') || typeStr.includes('VideoGame')) {
       return 'applications';

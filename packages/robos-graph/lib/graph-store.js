@@ -1347,6 +1347,370 @@ Apply the requested updates to the targeted documentation files, ensuring accura
 
     return org ? (org['robos:documentation'] || null) : null;
   }
+
+  // ── Remote Execution API (REAPI v2) & Build System Management ────────────────
+  createRemoteExecutionCluster(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'reapi-cluster')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:remote-execution:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || 'REAPI Distributed Build Cluster';
+    const protocol = data['robos:protocol'] || data.protocol || 'REAPI_v2';
+    const provider = data['robos:provider'] || data.provider || 'buildbarn';
+    const instanceName = data['robos:instanceName'] || data.instanceName || 'main';
+    const executionEndpoint = data['robos:executionEndpoint'] || data.executionEndpoint || 'grpc://re-execution.buildbarn.internal:8980';
+    const casEndpoint = data['robos:casEndpoint'] || data.casEndpoint || 'grpc://re-cas.buildbarn.internal:8980';
+    const actionCacheEndpoint = data['robos:actionCacheEndpoint'] || data.actionCacheEndpoint || casEndpoint;
+    const assetEndpoint = data['robos:assetEndpoint'] || data.assetEndpoint || null;
+    const browserEndpoint = data['robos:browserEndpoint'] || data.browserEndpoint || 'http://re-browser.buildbarn.internal:7984';
+    const tlsEnabled = Boolean(data['robos:tlsEnabled'] !== undefined ? data['robos:tlsEnabled'] : data.tlsEnabled);
+
+    const defaultWorkerPools = [
+      {
+        name: 'linux-x86_64-standard',
+        osFamily: 'linux',
+        isa: 'x86-64',
+        containerImage: 'docker://gcr.io/cloud-marketplace/google/debian11:latest',
+        concurrency: 32,
+      },
+    ];
+
+    const clusterNode = {
+      '@id': id,
+      '@type': ['robos:RemoteExecutionCluster', 'robos:RemoteBuildCluster', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `Remote Execution API v2 Cluster backed by ${provider}.`,
+      'robos:protocol': protocol,
+      'robos:provider': provider,
+      'robos:instanceName': instanceName,
+      'robos:executionEndpoint': executionEndpoint,
+      'robos:casEndpoint': casEndpoint,
+      'robos:actionCacheEndpoint': actionCacheEndpoint,
+      'robos:assetEndpoint': assetEndpoint,
+      'robos:browserEndpoint': browserEndpoint,
+      'robos:tlsEnabled': tlsEnabled,
+      'robos:workerPools': data['robos:workerPools'] || data.workerPools || defaultWorkerPools,
+      'robos:cacheSettings': data['robos:cacheSettings'] || data.cacheSettings || {
+        maxSizeBytes: '100GB',
+        retentionDays: 14,
+        evictionPolicy: 'lru',
+      },
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    // SHACL validation
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [clusterNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Remote Execution Cluster: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(clusterNode);
+    return {
+      ok: true,
+      node: clusterNode,
+      message: `Successfully registered Remote Execution Cluster: ${title} (${id})`,
+    };
+  }
+
+  getRemoteExecutionClusters() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('RemoteExecutionCluster') || t.includes('RemoteBuildCluster'));
+    });
+  }
+
+  getRemoteExecutionCluster(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getRemoteExecutionClusters().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  createBuildSystem(data = {}) {
+    const buildTool = data['robos:buildTool'] || data.buildTool || 'bazel';
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || `${buildTool}-build`)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:build-system:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${buildTool.toUpperCase()} Build Configuration`;
+    const configFile = data['robos:configFile'] || data.configFile || (buildTool === 'buck2' ? '.buckconfig' : '.bazelrc');
+
+    const buildSystemNode = {
+      '@id': id,
+      '@type': ['robos:BuildSystem', 'robos:MonorepoBuild', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `Build system configuration for ${buildTool}.`,
+      'robos:buildTool': buildTool,
+      'robos:configFile': configFile,
+      'robos:repository': data['robos:repository'] || data.repository || 'github.com/acme/monorepo',
+      'robos:hasRemoteExecution': data['robos:hasRemoteExecution'] || data.hasRemoteExecution || null,
+      'robos:defaultExecProperties': data['robos:defaultExecProperties'] || data.defaultExecProperties || {
+        OSFamily: 'linux',
+        ISA: 'x86-64',
+      },
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.platform',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    // SHACL validation
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [buildSystemNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Build System: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(buildSystemNode);
+    return {
+      ok: true,
+      node: buildSystemNode,
+      message: `Successfully registered Build System: ${title} (${id})`,
+    };
+  }
+
+  getBuildSystems() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('BuildSystem') || t.includes('MonorepoBuild'));
+    });
+  }
+
+  getBuildSystem(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getBuildSystems().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  generateBazelrc(clusterOrId) {
+    const cluster = typeof clusterOrId === 'object' && clusterOrId !== null
+      ? clusterOrId
+      : (this.getRemoteExecutionCluster(clusterOrId) || this.getRemoteExecutionClusters()[0] || {});
+
+    const provider = cluster['robos:provider'] || 'buildbarn';
+    const instance = cluster['robos:instanceName'] || 'main';
+    const execEndpoint = cluster['robos:executionEndpoint'] || 'grpc://re-execution.buildbarn.internal:8980';
+    const casEndpoint = cluster['robos:casEndpoint'] || 'grpc://re-cas.buildbarn.internal:8980';
+    const workerPool = (cluster['robos:workerPools'] && cluster['robos:workerPools'][0]) || {
+      osFamily: 'linux',
+      containerImage: 'docker://gcr.io/cloud-marketplace/google/debian11:latest',
+    };
+
+    return [
+      `# RobOS Remote Execution Configuration for Bazel (REAPI v2)`,
+      `# Backend Provider: ${provider} (Standard: build.bazel.remote.execution.v2)`,
+      `# Generated autonomously by RobOS Remote Execution Studio`,
+      ``,
+      `# Remote Execution & Remote Caching`,
+      `build:remote --remote_executor=${execEndpoint}`,
+      `build:remote --remote_cache=${casEndpoint}`,
+      `build:remote --remote_instance_name=${instance}`,
+      `build:remote --remote_default_exec_properties=OSFamily=${workerPool.osFamily || 'linux'}`,
+      workerPool.containerImage ? `build:remote --remote_default_exec_properties=container-image=${workerPool.containerImage}` : null,
+      `build:remote --remote_download_minimal`,
+      `build:remote --nolegacy_important_outputs`,
+      `build:remote --remote_upload_local_results=true`,
+      `build:remote --jobs=100`,
+      ``,
+      `# Remote Caching Only (Local Compilation + Remote Cache Upload)`,
+      `build:cache --remote_cache=${casEndpoint}`,
+      `build:cache --remote_instance_name=${instance}`,
+      `build:cache --remote_upload_local_results=true`,
+      ``,
+    ].filter(line => line !== null).join('\n');
+  }
+
+  generateBuckconfig(clusterOrId) {
+    const cluster = typeof clusterOrId === 'object' && clusterOrId !== null
+      ? clusterOrId
+      : (this.getRemoteExecutionCluster(clusterOrId) || this.getRemoteExecutionClusters()[0] || {});
+
+    const provider = cluster['robos:provider'] || 'buildbarn';
+    const instance = cluster['robos:instanceName'] || 'main';
+    const execEndpoint = (cluster['robos:executionEndpoint'] || 're-execution.buildbarn.internal:8980')
+      .replace(/^grpc:\/\//, '')
+      .replace(/^grpcs:\/\//, '');
+    const casEndpoint = (cluster['robos:casEndpoint'] || 're-cas.buildbarn.internal:8980')
+      .replace(/^grpc:\/\//, '')
+      .replace(/^grpcs:\/\//, '');
+    const actionCacheEndpoint = (cluster['robos:actionCacheEndpoint'] || casEndpoint)
+      .replace(/^grpc:\/\//, '')
+      .replace(/^grpcs:\/\//, '');
+    const useTls = Boolean(cluster['robos:tlsEnabled']);
+
+    return [
+      `# RobOS Remote Execution Configuration for Buck2 (REAPI v2)`,
+      `# Backend Provider: ${provider} (Standard: build.bazel.remote.execution.v2)`,
+      `# Generated autonomously by RobOS Remote Execution Studio`,
+      ``,
+      `[buck2_re_client]`,
+      `engine_address = ${execEndpoint}`,
+      `action_cache_address = ${actionCacheEndpoint}`,
+      `cas_address = ${casEndpoint}`,
+      `instance_name = ${instance}`,
+      `use_tls = ${useTls}`,
+      ``,
+      `[buck2]`,
+      `remote_execution = true`,
+      ``,
+    ].join('\n');
+  }
+
+  generateBuildbarnConfigs(clusterOrId) {
+    const cluster = typeof clusterOrId === 'object' && clusterOrId !== null
+      ? clusterOrId
+      : (this.getRemoteExecutionCluster(clusterOrId) || this.getRemoteExecutionClusters()[0] || {});
+
+    const instance = cluster['robos:instanceName'] || 'main';
+    const casHost = (cluster['robos:casEndpoint'] || 're-cas.buildbarn.internal:8980')
+      .replace(/^grpc:\/\//, '')
+      .replace(/^grpcs:\/\//, '');
+    const execHost = (cluster['robos:executionEndpoint'] || 're-execution.buildbarn.internal:8980')
+      .replace(/^grpc:\/\//, '')
+      .replace(/^grpcs:\/\//, '');
+
+    return {
+      storage: {
+        contentAddressableStorage: {
+          circular: {
+            directory: '/var/cache/buildbarn/cas',
+            minimumSize: 1048576,
+            maximumSize: 107374182400,
+          },
+        },
+        actionCache: {
+          completenessChecking: {
+            circular: {
+              directory: '/var/cache/buildbarn/ac',
+              minimumSize: 1048576,
+              maximumSize: 10737418240,
+            },
+          },
+        },
+        grpcServers: [
+          {
+            listenAddresses: [':8980'],
+            authenticationPolicy: { allow: {} },
+          },
+        ],
+      },
+      scheduler: {
+        client: {
+          listenAddresses: [':8982'],
+          authenticationPolicy: { allow: {} },
+        },
+        worker: {
+          listenAddresses: [':8983'],
+          authenticationPolicy: { allow: {} },
+        },
+        contentAddressableStorage: {
+          endpoint: { address: casHost },
+        },
+      },
+      worker: {
+        blobstore: {
+          contentAddressableStorage: {
+            endpoint: { address: casHost },
+          },
+        },
+        scheduler: {
+          endpoint: { address: execHost.replace(/:[0-9]+$/, ':8983') },
+        },
+        buildDirectories: [
+          {
+            native: {
+              runPath: '/tmp/buildbarn/run',
+              cacheDirectory: '/tmp/buildbarn/cache',
+            },
+          },
+        ],
+        runner: {
+          endpoint: { address: 'unix:///tmp/buildbarn/runner.sock' },
+        },
+        concurrency: 16,
+        platform: {
+          properties: [
+            { name: 'OSFamily', value: 'linux' },
+            { name: 'ISA', value: 'x86-64' },
+          ],
+        },
+      },
+      runner: {
+        listenPath: '/tmp/buildbarn/runner.sock',
+        chrootDirectory: '/tmp/buildbarn/chroot',
+        concurrency: 16,
+      },
+      browser: {
+        listenAddress: ':7984',
+        contentAddressableStorage: {
+          endpoint: { address: casHost },
+        },
+        actionCache: {
+          endpoint: { address: casHost },
+        },
+      },
+    };
+  }
+
+  generateNativeLinkConfig(clusterOrId) {
+    return {
+      cas: {
+        main: {
+          filesystem: {
+            content_path: '/var/cache/nativelink/cas',
+            eviction_policy: { max_bytes: 107374182400 },
+          },
+        },
+      },
+      ac: {
+        main: {
+          filesystem: {
+            content_path: '/var/cache/nativelink/ac',
+            eviction_policy: { max_bytes: 10737418240 },
+          },
+        },
+      },
+      servers: [
+        {
+          listen_address: '0.0.0.0:8980',
+          services: {
+            cas: { main: 'main' },
+            ac: { main: 'main' },
+            execution: { scheduler: 'main' },
+          },
+        },
+      ],
+    };
+  }
 }
 
 module.exports = { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA, SAMPLE_GHERKIN_FEATURE };

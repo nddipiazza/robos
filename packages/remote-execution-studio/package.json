@@ -1,0 +1,22 @@
+{
+  "name": "remote-execution-studio",
+  "version": "1.0.0",
+  "description": "RobOS REAPI v2 Distributed Build Clusters, Bazel, Buck2 & Buildbarn Configuration Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": [
+    "robos",
+    "reapi",
+    "bazel",
+    "buck2",
+    "buildbarn",
+    "nativelink",
+    "remote-execution",
+    "remote-cache",
+    "kgraph"
+  ],
+  "author": "RobOS Core Platform",
+  "license": "Apache-2.0"
+}

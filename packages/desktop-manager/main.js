@@ -99,6 +99,7 @@ const APPS = [
   { id: 'tech-workbench',          label: 'TPS Workbench',          icon: '🛠️', desc: 'Technical problem solver',        category: 'RobOS Dev' },
   { id: 'kube-studio',             label: 'Kube Studio',            icon: '☸️', desc: 'Multi-cluster Kubernetes & GitOps navigator', category: 'RobOS Dev' },
   { id: 'rest-client',             label: 'REST API Client (Bruno)', icon: '⚡', desc: 'Bruno-powered REST API Client & Collection Runner', category: 'RobOS Dev' },
+  { id: 'remote-execution-studio',  label: 'Remote Execution Studio', icon: '🏗️', desc: 'REAPI v2 Distributed Build Clusters & Buildbarn Manager', category: 'RobOS Dev' },
   // People
   { id: 'people-directory',         label: 'People Directory',       icon: '👤', desc: 'Team people directory',             category: 'RobOS People' },
   // AI
@@ -154,6 +155,7 @@ const APP_BINS = {
   'tech-workbench':          mkBin('tech-workbench'),
   'kube-studio':             mkBin('kube-studio'),
   'rest-client':             mkBin('rest-client'),
+  'remote-execution-studio': mkBin('remote-execution-studio'),
   // AI
   'agent-scheduler':         mkBin('agent-scheduler'),
   'agents-manager':          mkBin('agents-manager'),

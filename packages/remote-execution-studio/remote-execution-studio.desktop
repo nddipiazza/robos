@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Remote Execution Studio
+Comment=REAPI v2 Distributed Build Clusters, Bazel, Buck2 & Buildbarn Configuration Manager
+Exec=/usr/local/share/robos/remote-execution-studio/node_modules/.bin/electron /usr/local/share/robos/remote-execution-studio --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/remote-execution-studio/icon.svg
+Terminal=false
+Type=Application
+Categories=Development;Building;
+StartupWMClass=remote-execution-studio

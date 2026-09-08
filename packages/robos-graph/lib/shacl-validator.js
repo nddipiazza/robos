@@ -150,6 +150,28 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:forgeType', minCount: 1, message: 'Git Project Organization must declare forge type (github, gitlab, bitbucket, etc.).' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:RemoteExecutionClusterShape',
+    targetClass: 'robos:RemoteExecutionCluster',
+    targetClasses: ['robos:RemoteExecutionCluster', 'robos:RemoteBuildCluster'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Remote Execution Cluster must have a title.' },
+      { path: 'robos:protocol', minCount: 1, message: 'Remote Execution Cluster must declare protocol standard (e.g. REAPI_v2).' },
+      { path: 'robos:provider', minCount: 1, message: 'Remote Execution Cluster must declare backend provider engine (e.g. buildbarn, nativelink, buildgrid).' },
+      { path: 'robos:executionEndpoint', minCount: 1, message: 'Remote Execution Cluster must specify execution endpoint URI.' },
+      { path: 'robos:casEndpoint', minCount: 1, message: 'Remote Execution Cluster must specify Content Addressable Storage (CAS) endpoint URI.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:BuildSystemShape',
+    targetClass: 'robos:BuildSystem',
+    targetClasses: ['robos:BuildSystem', 'robos:MonorepoBuild'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Build System must have a title.' },
+      { path: 'robos:buildTool', minCount: 1, message: 'Build System must declare build tool (bazel, buck2, pants, please).' },
+      { path: 'robos:configFile', minCount: 1, message: 'Build System must specify configuration file (.bazelrc, .buckconfig).' },
+    ],
+  },
 ];
 
 class SHACLValidator {

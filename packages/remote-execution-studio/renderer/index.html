@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RobOS Remote Execution Studio</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+
+  <!-- Top Header -->
+  <header id="header">
+    <div class="header-left">
+      <div id="app-logo-icon" class="header-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="6" height="6" rx="1"/>
+          <rect x="16" y="2" width="6" height="6" rx="1"/>
+          <rect x="9" y="16" width="6" height="6" rx="1"/>
+          <path d="M5 8v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/>
+          <path d="M12 13v3"/>
+          <circle cx="12" cy="7" r="1"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="header-title">RobOS Remote Execution Studio</h1>
+        <div class="header-subtitle">REAPI v2 Distributed Build Clusters, Bazel, Buck2 & Buildbarn Configuration Manager</div>
+      </div>
+      <span class="reapi-badge">
+        <span class="pulse-dot"></span>
+        REAPI Standard v2.2 Active
+      </span>
+    </div>
+
+    <div class="header-right">
+      <button class="btn btn-secondary btn-sm" id="btn-sync-kgraph">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+        Sync KGraph
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-add-cluster">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        + New REAPI Cluster
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div id="main-layout">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-heading">REAPI Build Clusters</div>
+        <div class="cluster-list" id="cluster-list">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Monorepo Build Systems</div>
+        <div class="buildsystem-list" id="buildsystem-list">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <div class="sidebar-section provider-badge-section">
+        <div class="sidebar-heading">Supported REAPI Standards</div>
+        <div class="standards-tags">
+          <span class="tech-tag">REAPI v2.2</span>
+          <span class="tech-tag">Action Cache</span>
+          <span class="tech-tag">CAS Bytestream</span>
+          <span class="tech-tag">Remote Asset API</span>
+        </div>
+        <div class="standards-tags" style="margin-top:6px;">
+          <span class="provider-tag buildbarn">Buildbarn</span>
+          <span class="provider-tag nativelink">NativeLink</span>
+          <span class="provider-tag buildgrid">BuildGrid</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="kgraph-link-text">
+          <div style="font-weight:600;color:#c9d1d9;font-size:12px;">Open Standard First</div>
+          <div style="font-size:11px;color:#8b949e;line-height:1.4;">Provider-agnostic REAPI schemas synchronized with <code>.robos/kgraphs/devops/</code></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main id="content-panel">
+
+      <!-- Navigation Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-overview-btn" data-tab="overview">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Cluster Overview
+        </button>
+        <button class="tab-btn" id="tab-clients-btn" data-tab="clients">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Build Clients (Bazel & Buck2)
+        </button>
+        <button class="tab-btn" id="tab-provider-btn" data-tab="provider">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Provider Configurations (Buildbarn)
+        </button>
+        <button class="tab-btn" id="tab-kgraph-btn" data-tab="kgraph">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Knowledge Graph & SHACL
+        </button>
+      </div>
+
+      <!-- Tab 1: Cluster Overview -->
+      <section class="tab-pane active" id="pane-overview">
+        <div class="pane-header">
+          <div>
+            <h2 id="cluster-detail-title" class="pane-title">Acme Production Buildbarn REAPI Cluster</h2>
+            <div id="cluster-detail-desc" class="pane-desc">High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.</div>
+          </div>
+          <div class="pane-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-test-endpoints">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Test REAPI Endpoints
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-open-browser" style="display:inline-flex;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open Web Browser
+            </button>
+          </div>
+        </div>
+
+        <!-- Endpoints Grid -->
+        <div class="card-grid">
+          <div class="metric-card">
+            <div class="card-label">Remote Execution Endpoint</div>
+            <div class="card-value-mono" id="endpoint-exec">grpc://re-execution.buildbarn.internal:8980</div>
+            <div class="card-subtext">Protocol: <code>build.bazel.remote.execution.v2.Execution</code></div>
+          </div>
+          <div class="metric-card">
+            <div class="card-label">Content Addressable Storage (CAS)</div>
+            <div class="card-value-mono" id="endpoint-cas">grpc://re-cas.buildbarn.internal:8980</div>
+            <div class="card-subtext">Protocol: <code>google.bytestream.ByteStream / CAS</code></div>
+          </div>
+          <div class="metric-card">
+            <div class="card-label">Action Cache (AC) Endpoint</div>
+            <div class="card-value-mono" id="endpoint-ac">grpc://re-cas.buildbarn.internal:8980</div>
+            <div class="card-subtext">Protocol: <code>build.bazel.remote.execution.v2.ActionCache</code></div>
+          </div>
+          <div class="metric-card">
+            <div class="card-label">Build Observation Web UI</div>
+            <div class="card-value-mono" id="endpoint-browser">http://re-browser.buildbarn.internal:7984</div>
+            <div class="card-subtext">Component: <code>bb-browser / NativeLink Web</code></div>
+          </div>
+        </div>
+
+        <!-- Worker Pools and Cache Stats -->
+        <div class="two-col-section">
+          <div class="section-card">
+            <div class="card-header-row">
+              <h3 class="section-card-title">Worker Pools & Platform Constraints</h3>
+              <span class="badge-blue" id="worker-pool-count">2 Pools Active</span>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="workers-table">
+                <thead>
+                  <tr>
+                    <th>Pool Name</th>
+                    <th>OS Family</th>
+                    <th>ISA</th>
+                    <th>Container Image</th>
+                    <th>Concurrency</th>
+                  </tr>
+                </thead>
+                <tbody id="workers-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="card-header-row">
+              <h3 class="section-card-title">Cache Performance & Settings</h3>
+              <span class="badge-green">High Efficiency</span>
+            </div>
+            <div class="cache-metrics-list">
+              <div class="cache-stat-item">
+                <span class="cache-stat-label">CAS Hit Ratio:</span>
+                <span class="cache-stat-value" id="stat-cas-hit">89.4%</span>
+              </div>
+              <div class="cache-stat-item">
+                <span class="cache-stat-label">Action Cache Hit Ratio:</span>
+                <span class="cache-stat-value" id="stat-ac-hit">72.1%</span>
+              </div>
+              <div class="cache-stat-item">
+                <span class="cache-stat-label">Storage Capacity:</span>
+                <span class="cache-stat-value" id="stat-capacity">500GB (Circular CAS)</span>
+              </div>
+              <div class="cache-stat-item">
+                <span class="cache-stat-label">Eviction Policy:</span>
+                <span class="cache-stat-value">LRU (Least Recently Used)</span>
+              </div>
+              <div class="cache-stat-item">
+                <span class="cache-stat-label">Backend Provider Engine:</span>
+                <span class="cache-stat-value" id="stat-provider">Buildbarn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Probe Results Area -->
+        <div id="probe-results-card" class="probe-card hidden">
+          <div class="probe-header">
+            <span class="probe-title">REAPI Endpoint Connectivity Probe</span>
+            <span class="badge-green" id="probe-status">ALL ENDPOINTS HEALTHY</span>
+          </div>
+          <div class="probe-body" id="probe-details">
+            <!-- Populated on probe -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Build Clients (Bazel & Buck2) -->
+      <section class="tab-pane" id="pane-clients">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">Client Build Configuration Generator</h2>
+            <div class="pane-desc">Generate production build configurations for Bazel and Buck2 targeting the active REAPI cluster.</div>
+          </div>
+          <div class="pane-actions">
+            <div class="button-group">
+              <button class="btn btn-toggle active" id="btn-toggle-bazel">Bazel (.bazelrc)</button>
+              <button class="btn btn-toggle" id="btn-toggle-buck2">Buck2 (.buckconfig)</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-copy-client-config">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Config
+            </button>
+          </div>
+        </div>
+
+        <div class="code-box-container">
+          <div class="code-box-header">
+            <span class="file-name" id="client-config-filename">.bazelrc</span>
+            <span class="syntax-badge" id="client-config-syntax">INI / Bazelrc</span>
+          </div>
+          <pre class="code-block"><code id="client-config-code"># Loading client configuration...</code></pre>
+        </div>
+
+        <div class="guide-box">
+          <div class="guide-title">How to Use This Configuration:</div>
+          <ul class="guide-list" id="client-usage-guide">
+            <li>Place this file at the root of your workspace or repository.</li>
+            <li>Run <code>bazel build //... --config=remote</code> for distributed build execution and remote caching.</li>
+            <li>Run <code>bazel test //... --config=remote</code> for parallel test execution across remote workers.</li>
+            <li>Run <code>bazel build //... --config=cache</code> for local compilation with remote action caching.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Tab 3: Provider Configurations (Buildbarn & NativeLink) -->
+      <section class="tab-pane" id="pane-provider">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">Provider Infrastructure Configurations</h2>
+            <div class="pane-desc">Synthesize and inspect cluster microservice configurations without vendor lock-in.</div>
+          </div>
+          <div class="pane-actions">
+            <div class="provider-switch">
+              <label for="provider-select">Provider:</label>
+              <select id="provider-select" class="form-select">
+                <option value="buildbarn" selected>Buildbarn Suite (Modular Go Services)</option>
+                <option value="nativelink">NativeLink (High-Performance Rust)</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-copy-provider-config">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Buildbarn Component Sub-tabs -->
+        <div class="subtab-bar" id="buildbarn-subtabs">
+          <button class="subtab-btn active" data-component="storage">bb-storage (CAS & AC)</button>
+          <button class="subtab-btn" data-component="scheduler">bb-scheduler (Queue)</button>
+          <button class="subtab-btn" data-component="worker">bb-worker (Executor)</button>
+          <button class="subtab-btn" data-component="runner">bb-runner (Chroot)</button>
+          <button class="subtab-btn" data-component="browser">bb-browser (Web UI)</button>
+        </div>
+
+        <div class="code-box-container">
+          <div class="code-box-header">
+            <span class="file-name" id="provider-config-filename">bb-storage.json</span>
+            <span class="syntax-badge">JSON</span>
+          </div>
+          <pre class="code-block"><code id="provider-config-code">// Loading provider configuration...</code></pre>
+        </div>
+      </section>
+
+      <!-- Tab 4: Knowledge Graph & SHACL -->
+      <section class="tab-pane" id="pane-kgraph">
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-title">Knowledge Graph OSLC / JSON-LD & SHACL Validation</h2>
+            <div class="pane-desc">Dual-state SDLC Knowledge Graph node representation and structural constraint validation.</div>
+          </div>
+          <div class="pane-actions">
+            <button class="btn btn-primary btn-sm" id="btn-validate-shacl">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Validate SHACL Constraints
+            </button>
+          </div>
+        </div>
+
+        <div class="shacl-banner success" id="shacl-banner">
+          <div class="shacl-banner-icon">✓</div>
+          <div>
+            <div class="shacl-banner-title">SHACL Validation: CONFORMS</div>
+            <div class="shacl-banner-desc" id="shacl-banner-desc">Target Class: <code>robos:RemoteExecutionCluster</code> complies with shape <code>urn:robos:shape:RemoteExecutionClusterShape</code>.</div>
+          </div>
+        </div>
+
+        <div class="code-box-container">
+          <div class="code-box-header">
+            <span class="file-name">Target Package: .robos/kgraphs/devops/package.jsonld</span>
+            <span class="syntax-badge">JSON-LD</span>
+          </div>
+          <pre class="code-block"><code id="kgraph-jsonld-code">// Loading JSON-LD node...</code></pre>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+</div>
+
+<!-- Modal for New REAPI Cluster -->
+<div id="modal-new-cluster" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">Register Remote Execution Cluster</h3>
+      <button class="btn-close" id="btn-close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="form-title">Cluster Title</label>
+        <input type="text" id="form-title" class="form-control" placeholder="e.g. Acme Dev REAPI Build Cluster" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group col">
+          <label for="form-provider">Provider Engine</label>
+          <select id="form-provider" class="form-control">
+            <option value="buildbarn">Buildbarn</option>
+            <option value="nativelink">NativeLink</option>
+            <option value="buildgrid">BuildGrid</option>
+            <option value="buildbuddy">BuildBuddy</option>
+          </select>
+        </div>
+        <div class="form-group col">
+          <label for="form-instance">Instance Name</label>
+          <input type="text" id="form-instance" class="form-control" value="main"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="form-exec">Remote Execution Endpoint (gRPC)</label>
+        <input type="text" id="form-exec" class="form-control" value="grpc://re-execution.buildbarn.internal:8980"/>
+      </div>
+      <div class="form-group">
+        <label for="form-cas">Content Addressable Storage (CAS) Endpoint</label>
+        <input type="text" id="form-cas" class="form-control" value="grpc://re-cas.buildbarn.internal:8980"/>
+      </div>
+      <div class="form-group">
+        <label for="form-browser">Browser / Web UI Endpoint</label>
+        <input type="text" id="form-browser" class="form-control" value="http://re-browser.buildbarn.internal:7984"/>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="form-tls"/> Enable TLS / mTLS Encryption
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-cluster">Save & Sync to KGraph</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

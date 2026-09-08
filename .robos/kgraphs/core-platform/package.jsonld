@@ -32,6 +32,46 @@
       "robos:namespace": "robos.platform",
       "robos:version": "1.0.0",
       "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
     }
   ],
   "@graph": [
@@ -46,6 +86,46 @@
       "robos:namespace": "robos.platform",
       "robos:version": "1.0.0",
       "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
     }
   ]
 }

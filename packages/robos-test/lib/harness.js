@@ -98,6 +98,7 @@ const PORT_MAP = {
   'grpc-client': 19181,
   'graphql-client': 19182,
   'app-wizard': 19183,
+  'remote-execution-studio': 19184,
 };
 
 

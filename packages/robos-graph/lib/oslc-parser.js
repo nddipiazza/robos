@@ -70,6 +70,10 @@ class OSLCGraphParser {
         'robos:hasAgentRule',
         'robos:governedBy',
         'robos:hasDocumentation',
+        'robos:hasRemoteExecution',
+        'robos:usesBuildSystem',
+        'robos:hasWorkerPool',
+        'robos:buildConfig',
       ];
 
       for (const k of refKeys) {

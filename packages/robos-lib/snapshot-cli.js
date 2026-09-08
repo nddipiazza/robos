@@ -102,6 +102,7 @@ const PORT_REGISTRY = {
   'grpc-client':       19181,
   'graphql-client':    19182,
   'app-wizard':        19183,
+  'remote-execution-studio': 19184,
 };
 
 
@@ -202,9 +203,13 @@ async function main() {
     console.error(`Cannot connect to ${appId} debug server at ${base}`);
     console.error('Make sure the app is running with debug server enabled.');
     console.error(`SSH port-forward hint: ssh -L ${port}:localhost:${port} -p 2224 robos@localhost`);
-    process.exit(1);
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = { PORT_REGISTRY, getPort };
+
 

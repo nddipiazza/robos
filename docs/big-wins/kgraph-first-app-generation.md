@@ -145,15 +145,15 @@ In large engineering organizations, storing an entire enterprise architecture in
 ├── kgraph.yaml                      # Master package manifest & registry
 └── kgraphs/
     ├── core-platform/
-    │   └── package.jsonld          # robos.core: C4 topology, databases, queues
+    │   └── package.jsonld          # robos.core: C4 topology, databases, build systems (Bazel, Buck2)
     ├── organization/
-    │   └── package.jsonld          # robos.org: Team Topologies, members, GPG keys
+    │   └── package.jsonld          # robos.org: Team Topologies, members, GPG keys, Git project orgs
     ├── services/
     │   └── package.jsonld          # robos.services: Microservices, OpenAPI, stubs
     ├── applications/
     │   └── package.jsonld          # robos.apps: Frontends, desktop apps, CLIs
     ├── devops/
-    │   └── package.jsonld          # robos.devops: Cloud providers, CI/CD, pass credentials
+    │   └── package.jsonld          # robos.devops: Cloud providers, CI/CD, REAPI build clusters (Buildbarn, NativeLink)
     └── learning/
         └── package.jsonld          # robos.learning: eLearning courses, interactive labs
 ```

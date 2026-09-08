@@ -37,6 +37,41 @@
       "robos:status": "connected",
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:instanceName": "main",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:tlsEnabled": false,
+      "robos:status": "active",
+      "robos:workerPools": [
+        {
+          "name": "linux-x86_64-large",
+          "osFamily": "linux",
+          "isa": "x86-64",
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "concurrency": 64
+        }
+      ],
+      "robos:cacheSettings": {
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14,
+        "evictionPolicy": "lru"
+      },
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
     }
   ],
   "@graph": [
@@ -53,6 +88,41 @@
       "robos:providerName": "GitHub Cloud & Enterprise",
       "robos:endpointUrl": "https://github.internal.acme.com",
       "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:instanceName": "main",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:tlsEnabled": false,
+      "robos:status": "active",
+      "robos:workerPools": [
+        {
+          "name": "linux-x86_64-large",
+          "osFamily": "linux",
+          "isa": "x86-64",
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "concurrency": 64
+        }
+      ],
+      "robos:cacheSettings": {
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14,
+        "evictionPolicy": "lru"
+      },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
     }

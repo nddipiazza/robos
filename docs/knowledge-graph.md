@@ -431,8 +431,64 @@ node --test --test-concurrency=1 \
   packages/robos-test/tests/sdlc-graph/devops-integrations.test.js \
   packages/robos-test/tests/sdlc-graph/bulk-repo-import.test.js \
   packages/robos-test/tests/sdlc-graph/robos-graph.test.js \
-  packages/robos-test/tests/sdlc-graph/elearning-doc-sync.test.js
+  packages/robos-test/tests/sdlc-graph/elearning-doc-sync.test.js \
+  packages/robos-test/tests/remote-execution/remote-execution-kgraph.test.js \
+  packages/robos-test/tests/remote-execution/smoke.test.js
 ```
+
+---
+
+## 9. Remote Execution Clusters (REAPI v2) & Monorepo Build Systems
+
+Modern monorepos and polyglot architectures rely on distributed compilation, remote action caching, and test execution engines. Rather than locking RobOS into any single proprietary vendor or hardcoding specific tools, RobOS anchors build cluster management in the open-source **Remote Execution API (REAPI v2)** standard (`build.bazel.remote.execution.v2`), standardized by the Linux Foundation and Bazel community.
+
+### Open-Standard Ontologies & SHACL Constraints
+
+1. **`robos:RemoteExecutionCluster`** (`devops` package: `robos.devops`):
+   - Captures distributed build execution clusters, content-addressable storage (CAS), action caches, and worker pools.
+   - Strictly enforced by `urn:robos:shape:RemoteExecutionClusterShape`.
+   - **Provider Independence**: Supports **Buildbarn** (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), **NativeLink** (Rust), **BuildGrid** (Python), and **BuildBuddy** via the `robos:provider` attribute. Switching providers requires zero schema alterations.
+
+2. **`robos:BuildSystem`** (`core-platform` package: `robos.platform`):
+   - Captures monorepo build tools such as **Bazel** (`.bazelrc`) and Meta **Buck2** (`.buckconfig`).
+   - Links client repositories to REAPI clusters via `robos:hasRemoteExecution`.
+   - Strictly enforced by `urn:robos:shape:BuildSystemShape`.
+
+### JSON-LD Node Example
+
+```json
+{
+  "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+  "@type": ["robos:RemoteExecutionCluster", "robos:RemoteBuildCluster", "oslc:Resource"],
+  "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+  "robos:protocol": "REAPI_v2",
+  "robos:provider": "buildbarn",
+  "robos:instanceName": "main",
+  "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+  "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+  "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+  "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+  "robos:workerPools": [
+    {
+      "name": "linux-x86_64-large",
+      "osFamily": "linux",
+      "isa": "x86-64",
+      "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+      "concurrency": 64
+    }
+  ],
+  "robos:package": "devops",
+  "robos:namespace": "robos.devops"
+}
+```
+
+### Autonomous Client Configuration Synthesis
+
+From the single source of truth in the Knowledge Graph, the companion desktop application (**Remote Execution Studio**) synthesizes:
+- **Bazel `.bazelrc` flags**: `--remote_executor`, `--remote_cache`, `--remote_instance_name`, `--remote_default_exec_properties`, `--remote_download_minimal`.
+- **Buck2 `.buckconfig` settings**: `[buck2_re_client]` with `engine_address`, `cas_address`, `action_cache_address`.
+- **Buildbarn Component Configurations**: Generates validated JSON configurations for `bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, and `bb-browser`.
+- **NativeLink Configuration**: Generates validated `nativelink.json` configurations for Rust-powered edge caching.
 
 ---
 

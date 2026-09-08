@@ -42,6 +42,46 @@
       "robos:status": "active"
     },
     {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
       "@id": "urn:robos:devops:github:enterprise",
       "@type": [
         "oslc_config:ConfigurationItem",
@@ -54,6 +94,41 @@
       "robos:providerName": "GitHub Cloud & Enterprise",
       "robos:endpointUrl": "https://github.internal.acme.com",
       "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:instanceName": "main",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:tlsEnabled": false,
+      "robos:status": "active",
+      "robos:workerPools": [
+        {
+          "name": "linux-x86_64-large",
+          "osFamily": "linux",
+          "isa": "x86-64",
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "concurrency": 64
+        }
+      ],
+      "robos:cacheSettings": {
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14,
+        "evictionPolicy": "lru"
+      },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
     },
@@ -283,6 +358,46 @@
       "robos:status": "active"
     },
     {
+      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
+      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
+      "robos:buildTool": "bazel",
+      "robos:configFile": ".bazelrc",
+      "robos:repository": "github.com/acme/buildbarn-forms",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
+      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
+      "robos:buildTool": "buck2",
+      "robos:configFile": ".buckconfig",
+      "robos:repository": "github.com/acme/buildbarn-tasks",
+      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "robos:defaultExecProperties": {
+        "OSFamily": "linux",
+        "ISA": "x86-64"
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
       "@id": "urn:robos:devops:github:enterprise",
       "@type": [
         "oslc_config:ConfigurationItem",
@@ -295,6 +410,41 @@
       "robos:providerName": "GitHub Cloud & Enterprise",
       "robos:endpointUrl": "https://github.internal.acme.com",
       "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
+      "@type": [
+        "robos:RemoteExecutionCluster",
+        "robos:RemoteBuildCluster",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
+      "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
+      "robos:protocol": "REAPI_v2",
+      "robos:provider": "buildbarn",
+      "robos:instanceName": "main",
+      "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
+      "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
+      "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
+      "robos:tlsEnabled": false,
+      "robos:status": "active",
+      "robos:workerPools": [
+        {
+          "name": "linux-x86_64-large",
+          "osFamily": "linux",
+          "isa": "x86-64",
+          "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
+          "concurrency": 64
+        }
+      ],
+      "robos:cacheSettings": {
+        "maxSizeBytes": "500GB",
+        "retentionDays": 14,
+        "evictionPolicy": "lru"
+      },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
     },

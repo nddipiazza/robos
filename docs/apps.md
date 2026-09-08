@@ -84,6 +84,9 @@ Run entire suites of API requests in sequence, benchmark endpoint latency, test 
 Explore all your company's databases, AWS S3 cloud storage buckets, and Kafka streaming topics with live connection testing and schema viewers.
 ![Data Sources]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
 
+### RobOS Remote Execution Studio
+Manage open-standard Remote Execution API (REAPI v2) distributed build clusters, synthesize client configuration flags for **Bazel** (`.bazelrc`) and **Buck2** (`.buckconfig`), configure modular **Buildbarn** microservices (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), and seamlessly switch to alternative REAPI providers like **NativeLink** or **BuildGrid** with zero vendor lock-in.
+
 ---
 
 ## 3. Code Review, Testing & Cloud Infrastructure
