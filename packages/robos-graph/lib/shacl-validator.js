@@ -358,6 +358,16 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:location', minCount: 1, message: 'Context Source must specify location path, URL, or repository identifier.' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:PromptStrategyShape',
+    targetClass: 'robos:PromptStrategy',
+    targetClasses: ['robos:PromptStrategy', 'robos:PromptOptimizer', 'robos:PromptCompiler', 'robos:AIPromptTechnique'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Prompt Strategy must have a title or display name.' },
+      { path: 'robos:strategyType', minCount: 1, message: 'Prompt Strategy must declare strategy type (compression, teleprompter-optimization, few-shot-compilation).' },
+      { path: 'robos:engine', minCount: 1, message: 'Prompt Strategy must declare optimization engine (caveman, dspy, standard).' },
+    ],
+  },
 ];
 
 class SHACLValidator {

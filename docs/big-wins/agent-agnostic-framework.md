@@ -94,6 +94,9 @@ RobOS incorporates a **Task-to-Value Dispatch Matrix**, routing tasks to the opt
 | **Tier 2: Workhorse Implementation** | Claude Sonnet, GPT, Gemini Pro | Feature implementation, REST/gRPC API controllers, database migrations, and component unit tests. | Balanced efficiency ($3–$15/M tokens). |
 | **Tier 3: Frontier Deep Reasoning** | Claude Thinking / Opus, OpenAI Reasoning, DeepSeek | Multi-app architectural synthesis, cross-microservice refactoring, distributed consensus tracing, and security audits. | Premium high-reasoning tier ($15–$60/M tokens). |
 
+{: .highlight }
+> 📘 **Looking for the deep dive?** Read the comprehensive guide: **[Agent Tiers, Model Dispatch & Prompt Optimization (Caveman & DSPy)]({{ site.baseurl }}{% link agent-tiers.md %})** for detailed tier breakdowns, token reduction algorithms, and Settings Console configuration.
+
 ---
 
 ## Universal Cross-Agent Skill Marketplace

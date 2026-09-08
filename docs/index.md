@@ -38,6 +38,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [KGraph Schemas]({{ site.baseurl }}{% link schemas.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[Agent Tiers & Optimization]({{ site.baseurl }}{% link agent-tiers.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [RobOS Skills]({{ site.baseurl }}{% link robos-skills.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
@@ -45,6 +46,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
   <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="btn fs-3" style="border-color: #5865F2; color: #a5b4fc;">💬 Discord Server</a>
   <a href="https://discord.com/channels/1546926331193725029/" target="_blank" rel="noopener" class="btn fs-3">🗣️ #general Discussion</a>
+  <a href="{{ site.baseurl }}{% link agent-tiers.md %}" class="btn fs-3">🤖 Agent Tiers & DSPy</a>
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link schemas.md %}" class="btn fs-3">📐 KGraph Schemas</a>
   <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Big Wins</a>

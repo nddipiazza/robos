@@ -1,4 +1,18 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+let app, BrowserWindow, ipcMain;
+try {
+  ({ app, BrowserWindow, ipcMain } = require('electron'));
+} catch {
+  app = {
+    requestSingleInstanceLock: () => true,
+    commandLine: { appendSwitch: () => {} },
+    setName: () => {},
+    whenReady: () => new Promise(() => {}),
+    on: () => {},
+    quit: () => {},
+  };
+  BrowserWindow = class {};
+  ipcMain = { handle: () => {} };
+}
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -34,6 +48,60 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
+let SDLCKnowledgeGraphStore = null;
+try {
+  const mod = require('../robos-graph');
+  SDLCKnowledgeGraphStore = mod.SDLCKnowledgeGraphStore;
+} catch {
+  try {
+    const mod = require('/usr/local/share/robos/robos-graph');
+    SDLCKnowledgeGraphStore = mod.SDLCKnowledgeGraphStore;
+  } catch {}
+}
+
+function syncSettingsToKGraph(settings) {
+  if (!SDLCKnowledgeGraphStore) return;
+  try {
+    const store = new SDLCKnowledgeGraphStore();
+    if (settings.enable_caveman !== undefined) {
+      store.createPromptStrategy({
+        slug: 'caveman-compression',
+        title: 'Caveman Algorithmic Prompt Compression',
+        strategyType: 'compression',
+        engine: 'caveman',
+        mode: settings.caveman_mode || 'standard',
+        enabled: Boolean(settings.enable_caveman),
+        targetTiers: settings.caveman_target_tiers === 'tier1' ? ['tier1'] : settings.caveman_target_tiers === 'tier1_and_tier2' ? ['tier1', 'tier2'] : ['tier1', 'tier2', 'tier3'],
+        parameters: {
+          stripFillers: true,
+          terseDirectives: true,
+          preserveCodeBlocks: true,
+          preservePaths: true,
+        },
+      });
+    }
+    if (settings.enable_dspy !== undefined) {
+      store.createPromptOptimizer({
+        slug: 'dspy-teleprompter',
+        title: 'Stanford DSPy Teleprompter Optimizer',
+        strategyType: 'teleprompter-optimization',
+        engine: 'dspy',
+        teleprompter: settings.dspy_optimizer || 'MIPROv2',
+        metric: settings.dspy_metric || 'shacl_validation',
+        enabled: Boolean(settings.enable_dspy),
+        targetTiers: ['tier2', 'tier3'],
+        parameters: {
+          teleprompter: settings.dspy_optimizer || 'MIPROv2',
+          metric: settings.dspy_metric || 'shacl_validation',
+          autoCompileOnSave: Boolean(settings.dspy_compile_on_save),
+        },
+      });
+    }
+  } catch (err) {
+    // Non-blocking KGraph sync
+  }
+}
+
 // Settings schema with defaults and sections
 const SETTINGS_SCHEMA = {
   sections: [
@@ -46,6 +114,22 @@ const SETTINGS_SCHEMA = {
         { key: 'openai_api_key', label: 'OpenAI API Key', type: 'password', default: '' },
         { key: 'gemini_api_key', label: 'Google Gemini API Key', type: 'password', default: '' },
         { key: 'ai_model', label: 'Default AI Model', type: 'text', default: 'claude-sonnet-4-20250514' },
+      ],
+    },
+    {
+      id: 'agent_tiers',
+      label: 'Agent Tiers & Prompt Optimization',
+      fields: [
+        { key: 'tier1_model', label: 'Tier 1 Model (Fast Utility & Local)', type: 'text', default: 'claude-3-5-haiku-20241022' },
+        { key: 'tier2_model', label: 'Tier 2 Model (Workhorse Implementation)', type: 'text', default: 'claude-3-7-sonnet-20250219' },
+        { key: 'tier3_model', label: 'Tier 3 Model (Frontier Deep Reasoning)', type: 'text', default: 'o3-mini' },
+        { key: 'enable_caveman', label: 'Enable Caveman Prompt Compression', type: 'checkbox', default: true },
+        { key: 'caveman_mode', label: 'Caveman Compression Mode', type: 'select', options: ['standard', 'aggressive', 'extreme'], default: 'standard' },
+        { key: 'caveman_target_tiers', label: 'Caveman Target Tiers', type: 'select', options: ['tier1', 'tier1_and_tier2', 'all_tiers'], default: 'tier1_and_tier2' },
+        { key: 'enable_dspy', label: 'Enable Stanford DSPy Teleprompter Optimization', type: 'checkbox', default: true },
+        { key: 'dspy_optimizer', label: 'DSPy Teleprompter Optimizer', type: 'select', options: ['MIPROv2', 'BootstrapFewShot', 'COPRO', 'LabeledFewShot'], default: 'MIPROv2' },
+        { key: 'dspy_metric', label: 'DSPy Optimization Metric', type: 'select', options: ['shacl_validation', 'unit_tests_pass', 'ast_syntax_check', 'exact_match'], default: 'shacl_validation' },
+        { key: 'dspy_compile_on_save', label: 'Auto-compile DSPy Prompts on Save', type: 'checkbox', default: false },
       ],
     },
     {
@@ -146,6 +230,7 @@ ipcMain.handle('save-settings', (_, data) => {
   const current = loadSettings();
   const merged = { ...current, ...data };
   saveSettings(merged);
+  syncSettingsToKGraph(merged);
   return { ok: true, settings: merged };
 });
 

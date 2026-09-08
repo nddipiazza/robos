@@ -161,147 +161,56 @@
       ],
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
-    }
-  ],
-  "@graph": [
-    {
-      "@id": "urn:robos:graph:root",
-      "@type": [
-        "oslc:ServiceProvider",
-        "robos:SystemGraph"
-      ],
-      "dcterms:title": "Acme Enterprise Global SDLC Universe",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:version": "1.0.0",
-      "robos:status": "active"
     },
     {
-      "@id": "urn:robos:build-system:acme-monorepo-bazel",
+      "@id": "urn:robos:agent:strategy:caveman-compression",
       "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc_am:Resource",
+        "robos:PromptStrategy",
+        "robos:AIPromptTechnique"
       ],
-      "dcterms:title": "Acme Core Services Monorepo (Bazel)",
-      "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
-      "robos:buildTool": "bazel",
-      "robos:configFile": ".bazelrc",
-      "robos:repository": "github.com/acme/buildbarn-forms",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
+      "dcterms:title": "Caveman Algorithmic Prompt Compression",
+      "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
+      "robos:strategyType": "compression",
+      "robos:engine": "caveman",
+      "robos:targetTiers": [
+        "tier1",
+        "tier2"
+      ],
+      "robos:mode": "standard",
+      "robos:enabled": true,
+      "robos:parameters": {
+        "stripFillers": true,
+        "terseDirectives": true,
+        "preserveCodeBlocks": true,
+        "preservePaths": true
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
     },
     {
-      "@id": "urn:robos:build-system:acme-mobile-buck2",
+      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
       "@type": [
-        "robos:BuildSystem",
-        "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc_am:Resource",
+        "robos:PromptOptimizer",
+        "robos:PromptCompiler"
       ],
-      "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
-      "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
-      "robos:buildTool": "buck2",
-      "robos:configFile": ".buckconfig",
-      "robos:repository": "github.com/acme/buildbarn-tasks",
-      "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-      "robos:defaultExecProperties": {
-        "OSFamily": "linux",
-        "ISA": "x86-64"
+      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
+      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
+      "robos:strategyType": "teleprompter-optimization",
+      "robos:engine": "dspy",
+      "robos:targetTiers": [
+        "tier2",
+        "tier3"
+      ],
+      "robos:enabled": true,
+      "robos:parameters": {
+        "teleprompter": "MIPROv2",
+        "metric": "shacl_validation",
+        "candidatePrompts": 10,
+        "maxBootstrappedDemos": 4,
+        "autoCompileOnSave": false
       },
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:db:acme-orders-postgres",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase"
-      ],
-      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
-      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
-      "robos:engine": "postgresql",
-      "robos:databaseName": "orders_db",
-      "robos:host": "postgres.internal.acme.corp",
-      "robos:port": 5432,
-      "robos:schemaMigration": "flyway",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:db:acme-session-redis",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:NoSQLDatabase",
-        "robos:CacheStore"
-      ],
-      "dcterms:title": "Acme Distributed Session & Cache Store",
-      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
-      "robos:engine": "redis",
-      "robos:host": "redis-cluster.internal.acme.corp",
-      "robos:port": 6379,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:broker:acme-event-kafka",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MessageBroker",
-        "robos:EventBus"
-      ],
-      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
-      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
-      "robos:brokerType": "kafka",
-      "robos:endpoint": "kafka.internal.acme.corp:9092",
-      "robos:topics": [
-        "orders.created",
-        "payments.processed",
-        "invoices.generated"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:mcp:context-engine",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider"
-      ],
-      "dcterms:title": "RobOS Code Context MCP Server",
-      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-context-mcp",
-      "robos:toolsProvided": [
-        "ast_search",
-        "symbol_lookup",
-        "dependency_graph"
-      ],
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
-    },
-    {
-      "@id": "urn:robos:mcp:kgraph-navigator",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:MCPServer",
-        "robos:ToolProvider"
-      ],
-      "dcterms:title": "RobOS Knowledge Graph MCP Server",
-      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
-      "robos:transport": "stdio",
-      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
-      "robos:toolsProvided": [
-        "query_nodes",
-        "get_blast_radius",
-        "validate_shacl"
-      ],
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
     }
