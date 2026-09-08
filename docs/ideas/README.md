@@ -45,6 +45,8 @@ graph LR
 | **Local Open-Source Task Server & RobOS Task Servers Integration** | [raw note](inbox/local-open-source-task-server.txt) | [feature spec](specs/local-open-source-task-server.md) | Draft | `packages/task-servers`, `packages/robos-task-client`, `packages/task-board`, MCP Tools |
 | **AI-Generated Implementation Plan as First-Class Knowledge Graph Object** | [raw note](inbox/ai-generated-implementation-plan.txt) | [feature spec](specs/ai-generated-implementation-plan.md) | Draft | `packages/task-planner`, `packages/robos-graph`, `packages/dev-central`, Git Store (`.robos/plans/`, Modular KGraph Packages) |
 | **First-Class Knowledge Graph Object for Prompt & SDLC Prompt Run Logging** | [raw note](inbox/prompt-knowledge-graph-logging.txt) | [feature spec](specs/prompt-knowledge-graph-logging.md) | Draft | `packages/robos-graph`, `packages/ai-prompt`, `packages/dev-central`, `packages/desktop-agents`, Tilix/Shell hooks, Git Store (`.robos/prompts/`, Modular KGraph Packages) |
+| **Terraform & OpenTofu Infrastructure as Code (IaC) Synthesis** | [raw note](inbox/terraform-opentofu-iac-synthesis.txt) | [feature spec](specs/terraform-opentofu-iac-synthesis.md) | Draft | `packages/kube-studio`, `packages/devops`, `packages/robos-graph`, `packages/dev-central`, Git Store (`.robos/terraform/`) |
+| **Search Studio — OpenSearch, Elasticsearch, Solr, Vector & Log Analytics** | [raw note](inbox/search-engine-and-log-analytics-studio.txt) | [feature spec](specs/search-engine-and-log-analytics-studio.md) | Draft | `packages/search-studio`, `packages/robos-graph`, `packages/data-sources`, Desktop Shell, Git Store (`.robos/searches.yaml`) |
 
 ## Working with AI Agents
 

@@ -1,0 +1,24 @@
+Idea: First-Class Search Engine Support (OpenSearch, Elasticsearch, Solr, Vector DBs) & RobOS Search Studio
+
+Overview:
+Nearly every enterprise and production software system relies on asynchronous logging and full-text/vector search: OpenSearch, Elasticsearch, Apache Solr, Qdrant, Milvus, and Grafana/Kibana log visualization pipelines. Services stream structured logs asynchronously via Fluent Bit, Logstash, or OpenTelemetry to OpenSearch/Elasticsearch clusters, and search clusters power user-facing text and semantic search.
+RobOS currently has Relational DB Manager and NoSQL DB Manager, but lacks first-class support for search engines and asynchronous log sinks in both the Knowledge Graph and native desktop applications.
+
+Key Elements:
+1. First-Class Knowledge Graph Search & Log Ontologies:
+   - Introduce `robos:SearchCluster`, `robos:SearchIndex`, `robos:LogAnalyticsSink`, and `robos:VectorStore` into the RobOS ontology and Modular KGraph Packages (`services` and `core-platform`).
+   - Define index mappings, shard/replica topology, tokenizers/analyzers, dense vector dimensions, and log retention policies.
+   - Connect microservices and data pipelines via semantic edges (`robos:streamsLogsTo`, `robos:indexesDocument`, `robos:queriesIndex`).
+
+2. New RobOS Native Desktop App: Search Studio (`search-studio`):
+   - A unified, dark-themed Electron desktop application inspired by OpenSearch Dashboards, Kibana, Cerebro, and Solr Admin.
+   - Multi-Cluster Navigator: Connect to local Kind/Docker clusters, AWS OpenSearch, Elastic Cloud, on-prem Solr, or Qdrant/Milvus.
+   - Index & Shard Inspector: Live health metrics (green/yellow/red), primary/replica shards, document counts, and disk footprints.
+   - Mappings & Schema Browser: Interactive JSON mapping tree with field type definitions and dense vector configurations.
+   - Query DSL & Lucene Console: Monaco editor with auto-completion for Elasticsearch/OpenSearch Query DSL, Solr query parameters (`q=`, `fq=`, `fl=`), and SQL-for-OpenSearch with latency metrics.
+   - Real-Time Asynchronous Log Streamer: Tail microservice application logs in real-time with regex filtering, severity highlighting (ERROR, WARN, INFO), and trace ID correlation.
+   - Vector Similarity Playground: Test k-NN queries and dense vector similarity distances.
+
+3. KGraph Synchronization & Auto-Discovery:
+   - 1-click discovery: Inspect an active OpenSearch/Elasticsearch cluster and auto-generate validated KGraph package nodes for all discovered indices, aliases, and pipelines.
+   - Keep `.robos/` GitOps catalogs in sync with live search infrastructure.

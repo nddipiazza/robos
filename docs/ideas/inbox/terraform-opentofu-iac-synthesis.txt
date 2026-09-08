@@ -1,0 +1,24 @@
+Idea: Terraform & OpenTofu Infrastructure as Code (IaC) Synthesis and Cloud Resource Studio
+
+Overview:
+Currently, RobOS synthesizes Kubernetes workloads and Helm charts from its visual topology canvas, but real-world cloud architectures require infrastructure underneath and around Kubernetes: VPCs, subnets, transit gateways, managed RDS/Cloud SQL instances, S3 contract vaults, IAM roles/policies, KMS encryption keys, OpenSearch domains, and CloudFront/Route 53 DNS.
+We should incorporate Terraform and OpenTofu (the open-source MPL-2.0 fork) into RobOS to achieve true end-to-end cloud infrastructure provisioning from the Knowledge Graph.
+
+Key Elements:
+1. First-Class KGraph Cloud Infrastructure Nodes:
+   - Introduce `robos:CloudResource`, `robos:VPC`, `robos:Subnet`, `robos:ManagedDatabase`, `robos:ObjectStorageBucket`, `robos:IAMRole`, and `robos:DNSZone` into the RobOS ontology.
+   - Connected via semantic edges to microservices (`robos:runsInVPC`, `robos:usesBucket`, `robos:assumesRole`).
+
+2. Automated IaC HCL Synthesis:
+   - Compile KGraph cloud resource definitions into modular, production-ready Terraform/OpenTofu code under `.robos/terraform/` (modules for VPC, EKS/GKE, RDS, S3, IAM).
+   - Support AWS, Google Cloud (GCP), and Azure with standard remote state backends (S3+DynamoDB, GCS, Azure Blob).
+
+3. In-Memory Agent Execution & Plan Review:
+   - Agents run `tofu plan` in ephemeral sandboxes, parsing the plan into structured JSON.
+   - Dev Central provides a visual "Infrastructure Blast Radius" diff showing added, modified, and destroyed resources before changes are applied.
+
+4. Secrets & Password Store Integration:
+   - Provider API keys and AWS/GCP credentials are authenticated securely via the UNIX password store (`pass`) GPG integration without plaintext tokens in the codebase.
+
+5. Visual IaC Management:
+   - Provide an IaC management and execution tab within Kube Studio / DevOps Studio with 1-click `tofu plan` and `tofu apply` and live output streaming.
