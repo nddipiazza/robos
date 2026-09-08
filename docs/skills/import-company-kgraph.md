@@ -5,8 +5,13 @@ parent: RobOS Skills
 nav_order: 2
 ---
 
-# Company KGraph Import Skill (`import-company-kgraph`)
+# Company KGraph Import Skill
 {: .no_toc }
+
+<div style="margin-top: -0.5rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+  <span style="font-family: 'Fira Code', monospace; font-size: 1.15rem; color: #00e5ff; background: #162032; padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.35); font-weight: 600;">import-company-kgraph</span>
+  <span class="label label-blue">AI Agent Skill</span>
+</div>
 
 Deep guide on using the `import-company-kgraph` AI agent skill to ingest an entire organization's repository inventory across HTTP REST APIs, AWS S3 buckets, local file trees, or Git forges into RobOS Knowledge Graph package stores.
 {: .fs-6 .fw-300 }

@@ -4,8 +4,13 @@ layout: default
 nav_order: 14
 ---
 
-# Front End Applications (`robos:FrontEndApp`)
+# Front End Applications
 {: .no_toc }
+
+<div style="margin-top: -0.5rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+  <span style="font-family: 'Fira Code', monospace; font-size: 1.15rem; color: #00e5ff; background: #162032; padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.35); font-weight: 600;">robos:FrontEndApp</span>
+  <span class="label label-blue">SDLC Archetype</span>
+</div>
 
 Architect, scaffold, and verify modern single-page (SPA) and server-side rendered (SSR) web applications in RobOS aligned with Schema.org `schema:WebApplication`.
 {: .fs-6 .fw-300 }
