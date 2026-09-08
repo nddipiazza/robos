@@ -22,26 +22,12 @@ The 8 architectural pillars, the Dual-State Comparison Engine, multi-app archety
 
 RobOS structures all development lifecycle information into 8 connected, plain-text categories stored directly in your Git repositories:
 
-```mermaid
-graph TD
-    subgraph KnowledgeGraph [Live Architecture & Dual-State SDLC Knowledge Graph]
-        P1[1. Visual Architecture & Service Map]
-        P2[2. Team Roster & Team Topologies]
-        P3[3. Data Model Studio TypeSpec]
-        P4[4. API Contracts & Mock Servers]
-        P5[5. Multi-App Archetypes & Packages]
-        P6[6. Multi-Repo Workspace Hub]
-        P7[7. Step-by-Step Task Roadmap]
-        P8[8. Clean Git-Backed Files .robos/]
-    end
-
-    P1 --- P4
-    P3 --- P4
-    P2 --- P7
-    P6 --- P5
-    P7 --- P6
-    P1 --- P8
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="The 8 Architectural Pillars of RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The 8 Architectural Pillars of RobOS</strong>: How connected Git-backed standards (C4 maps, Team Topologies, TypeSpec models, API contracts, multi-app archetypes, multi-repo workspaces, and DAG task roadmaps) converge into a unified SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 1. **Visual Architecture & Service Map**: Visualizes all microservices, frontends, databases, and message queues with live dependency maps and blast radius impact tracking.
 2. **Team Roster & Team Topologies**: Clear directory of engineering squads (stream-aligned, platform, enablement, complicated-subsystem), service ownership, and enterprise directory sync (Okta, Azure AD, LDAP) stored in `.robos/teams.yaml`.
@@ -76,20 +62,12 @@ RobOS automatically computes the difference between the two states:
 
 RobOS applications are built using lightweight vanilla JavaScript and Electron, communicating through secure desktop channels:
 
-```mermaid
-sequenceDiagram
-    participant UI as Desktop App UI
-    participant Bridge as Secure Desktop Bridge
-    participant Backend as RobOS Background Engine
-    participant Cloud as Local Kubernetes / Docker / DB
-
-    UI->>Bridge: Deploy Analytics Database (Task PET-108)
-    Bridge->>Backend: Forward verified request
-    Backend->>Cloud: Apply generated Kubernetes manifests
-    Cloud-->>Backend: Database container started & healthy
-    Backend-->>Bridge: Success response
-    Bridge-->>UI: Update green status badge on UI
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/secure-desktop-bridge-architecture.jpg' | relative_url }}" alt="Secure Desktop Bridge & Execution Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Secure Desktop Bridge & Execution Architecture</strong>: The 4-tier communication pipeline from isolated Vanilla JS desktop apps through hardened Electron contextBridge IPC to the background daemon and local/cloud runtime infrastructure. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Shared System Libraries (`/usr/local/share/robos/`)
 - **`robos-lib`**: Desktop application management, `.desktop` file parsers, and live visual testing tools (`snapshot-cli.js`).
