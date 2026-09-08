@@ -949,3 +949,217 @@ svg[id^="mermaid-"] text.noteText,
   margin-top: 4rem !important;
   padding-top: 1.75rem !important;
 }
+
+/* ==========================================================================
+   RobOS App Suite - Official Categorized Directory
+   ========================================================================== */
+
+.robos-app-directory-wrap {
+  margin: 2rem 0 3rem 0;
+}
+
+.robos-app-nav-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.25rem;
+  padding: 1rem 1.15rem;
+  background: #0b101b;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+}
+
+.robos-app-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.85rem;
+  background: #111827;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  border-radius: 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #cbd5e1 !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.robos-app-nav-pill:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: #00e5ff;
+  color: #00e5ff !important;
+  transform: translateY(-1px);
+}
+
+.robos-app-nav-pill .pill-count {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.72rem;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.15);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.robos-cat-group {
+  margin-bottom: 2.75rem;
+  scroll-margin-top: 2rem;
+}
+
+.robos-cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.robos-cat-title {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.robos-cat-badge {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 9999px;
+  padding: 2px 10px;
+}
+
+.robos-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1rem;
+}
+
+.robos-app-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.95rem;
+  background: #0d131f;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  text-decoration: none !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.robos-app-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.robos-app-card:hover {
+  background: #131c2d;
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.robos-app-card:hover::before {
+  background: #00e5ff;
+}
+
+.robos-app-icon-wrap {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 229, 255, 0.04);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.robos-app-card:hover .robos-app-icon-wrap {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: #00e5ff;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.3);
+}
+
+.robos-app-icon-wrap img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  display: block;
+}
+
+.robos-app-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.robos-app-name {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  transition: color 0.15s ease;
+}
+
+.robos-app-card:hover .robos-app-name {
+  color: #00e5ff !important;
+}
+
+.robos-app-pkg {
+  font-family: 'Fira Code', monospace !important;
+  font-size: 0.7rem !important;
+  color: #38bdf8 !important;
+  opacity: 0.85;
+  display: block;
+  margin-top: 1px;
+  margin-bottom: 5px;
+}
+
+.robos-app-desc {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.8rem !important;
+  line-height: 1.45 !important;
+  color: #94a3b8 !important;
+  margin: 0 !important;
+}
+
+.robos-app-link-badge {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  color: #00e5ff;
+  opacity: 0.85;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 500;
+}
+
+.robos-app-card:hover .robos-app-link-badge {
+  opacity: 1;
+  text-decoration: underline;
+}
+

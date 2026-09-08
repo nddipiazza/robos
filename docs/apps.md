@@ -7,10 +7,615 @@ nav_order: 13
 # RobOS App Suite
 {: .no_toc }
 
-30+ native developer desktop applications covering the complete software delivery lifecycle with zero framework overhead.
+The complete suite of 50 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
 {: .fs-6 .fw-300 }
 
-## Table of contents
+## Official Application Directory
+{: .no_toc }
+
+<div class="robos-app-directory-wrap">
+  <div class="robos-app-nav-pills">
+    <a href="#core-desktop" class="robos-app-nav-pill">Core Desktop & Command Center <span class="pill-count">16</span></a>
+    <a href="#ai-agents" class="robos-app-nav-pill">Autonomous AI & Agent Workflows <span class="pill-count">7</span></a>
+    <a href="#arch-planning" class="robos-app-nav-pill">Software Architecture & Planning <span class="pill-count">8</span></a>
+    <a href="#code-review" class="robos-app-nav-pill">Code, Repositories & Review <span class="pill-count">3</span></a>
+    <a href="#databases-streams" class="robos-app-nav-pill">Databases & Event Streams <span class="pill-count">3</span></a>
+    <a href="#apis-testing" class="robos-app-nav-pill">APIs, Contracts & Testing <span class="pill-count">3</span></a>
+    <a href="#devops-cloud" class="robos-app-nav-pill">DevOps, Cloud & Distributed Build <span class="pill-count">5</span></a>
+    <a href="#security-vault" class="robos-app-nav-pill">Security, Credentials & Pass Vault <span class="pill-count">5</span></a>
+  </div>
+  <div id="core-desktop" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Core Desktop & Command Center</h3>
+      <span class="robos-cat-badge">16 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/app-launcher.svg' | relative_url }}" width="38" height="38" alt="App Launcher icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">App Launcher</div>
+          <span class="robos-app-pkg">robos:app-launcher</span>
+          <p class="robos-app-desc">Searchable application grid, category filters, and fast launch dock for all installed RobOS apps.</p>
+        </div>
+      </div>
+      <a href="#dev-central-developer-command-center" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/dev-central.svg' | relative_url }}" width="38" height="38" alt="Dev Central icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Dev Central</div>
+          <span class="robos-app-pkg">robos:dev-central</span>
+          <p class="robos-app-desc">Daily developer engineering command center: sprint burndown, PR health, calendar, and AI standup.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-desktop.svg' | relative_url }}" width="38" height="38" alt="Desktop Shell icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Desktop Shell</div>
+          <span class="robos-app-pkg">robos:robos-desktop</span>
+          <p class="robos-app-desc">Wayland/X11 desktop taskbar, panel launchers, and system tray status notifications.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/desktop-manager.svg' | relative_url }}" width="38" height="38" alt="Desktop Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Desktop Manager</div>
+          <span class="robos-app-pkg">robos:desktop-manager</span>
+          <p class="robos-app-desc">Session lifecycle manager, GNOME panel extension bridge, and multi-display workspace organizer.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/desktop-dashboard.svg' | relative_url }}" width="38" height="38" alt="Desktop Dashboard icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Desktop Dashboard</div>
+          <span class="robos-app-pkg">robos:desktop-dashboard</span>
+          <p class="robos-app-desc">Real-time system diagnostics, CPU/memory stats, active workspaces, and quick launch shortcuts.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/manager-dashboard.svg' | relative_url }}" width="38" height="38" alt="Manager Dashboard icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Manager Dashboard</div>
+          <span class="robos-app-pkg">robos:manager-dashboard</span>
+          <p class="robos-app-desc">High-level engineering KPIs, sprint velocity, cross-team blockers, and delivery health metrics.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/workspace-manager.svg' | relative_url }}" width="38" height="38" alt="Workspace Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Workspace Manager</div>
+          <span class="robos-app-pkg">robos:workspace-manager</span>
+          <p class="robos-app-desc">Auto-discover, configure, switch, and provision local repository workspaces in any IDE.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/software-center.svg' | relative_url }}" width="38" height="38" alt="Software Center icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Software Center</div>
+          <span class="robos-app-pkg">robos:software-center</span>
+          <p class="robos-app-desc">Developer tool store to install and manage IDEs, compilers, language runtimes, and cloud CLI SDKs.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/search-index.svg' | relative_url }}" width="38" height="38" alt="Search Indexer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Search Indexer</div>
+          <span class="robos-app-pkg">robos:search-index</span>
+          <p class="robos-app-desc">High-performance filesystem and AST symbol indexer powering fuzzy @-mentions across all apps.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/desktop-customizer.svg' | relative_url }}" width="38" height="38" alt="Desktop Customizer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Desktop Customizer</div>
+          <span class="robos-app-pkg">robos:desktop-customizer</span>
+          <p class="robos-app-desc">Configure themes, obsidian/cyan color accents, panel layouts, fonts, and window decorations.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/desktop-widgets.svg' | relative_url }}" width="38" height="38" alt="Desktop Widgets icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Desktop Widgets</div>
+          <span class="robos-app-pkg">robos:desktop-widgets</span>
+          <p class="robos-app-desc">Floating desktop HUD widgets for active sprint tasks, PR review health, and blocker radar.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/icon-manager.svg' | relative_url }}" width="38" height="38" alt="Icon Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Icon Manager</div>
+          <span class="robos-app-pkg">robos:icon-manager</span>
+          <p class="robos-app-desc">Vector SVG icon browser, custom asset manager, and desktop launcher icon customizer.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-preferences.svg' | relative_url }}" width="38" height="38" alt="RobOS Preferences icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">RobOS Preferences</div>
+          <span class="robos-app-pkg">robos:robos-preferences</span>
+          <p class="robos-app-desc">System-wide developer settings, LLM provider endpoints, GPG keyrings, and editor keybindings.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/notifications.svg' | relative_url }}" width="38" height="38" alt="Notifications Center icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Notifications Center</div>
+          <span class="robos-app-pkg">robos:notifications</span>
+          <p class="robos-app-desc">Central notification history, agent alert center, and system event feed.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-toast.svg' | relative_url }}" width="38" height="38" alt="Toast Daemon icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Toast Daemon</div>
+          <span class="robos-app-pkg">robos:robos-toast</span>
+          <p class="robos-app-desc">Non-blocking translucent system overlay toast broadcaster for AI agents and build completions.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-logs.svg' | relative_url }}" width="38" height="38" alt="System Logs Viewer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">System Logs Viewer</div>
+          <span class="robos-app-pkg">robos:robos-logs</span>
+          <p class="robos-app-desc">Centralized Pino JSON log viewer, error stack-trace inspector, and Electron diagnostic console.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="ai-agents" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Autonomous AI & Agent Workflows</h3>
+      <span class="robos-cat-badge">7 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#agents-manager--universal-ai-tool-connections-mcp" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" width="38" height="38" alt="Agents Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Agents Manager</div>
+          <span class="robos-app-pkg">robos:agents-manager</span>
+          <p class="robos-app-desc">Orchestrate Claude Code, Google Antigravity, Copilot CLI, and Gemini agent sessions.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/ai-prompt.svg' | relative_url }}" width="38" height="38" alt="AI Prompt Studio icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">AI Prompt Studio</div>
+          <span class="robos-app-pkg">robos:ai-prompt</span>
+          <p class="robos-app-desc">Context-aware prompt engineering with DSPy automated optimization and Caveman token compression.</p>
+        </div>
+      </div>
+      <a href="#task-planner--project-breakdown" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/task-planner.svg' | relative_url }}" width="38" height="38" alt="Task Planner icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Task Planner</div>
+          <span class="robos-app-pkg">robos:task-planner</span>
+          <p class="robos-app-desc">AI-assisted project breakdown with 66+ domain-specific web templates for epics and stories.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/task-implementer.svg' | relative_url }}" width="38" height="38" alt="Task Implementer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Task Implementer</div>
+          <span class="robos-app-pkg">robos:task-implementer</span>
+          <p class="robos-app-desc">Autonomous multi-file code generator, diff reviewer, test execution runner, and patch applier.</p>
+        </div>
+      </div>
+      <a href="#agents-manager--universal-ai-tool-connections-mcp" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/mcp-manager.svg' | relative_url }}" width="38" height="38" alt="MCP Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">MCP Manager</div>
+          <span class="robos-app-pkg">robos:mcp-manager</span>
+          <p class="robos-app-desc">Model Context Protocol server registry, interactive tool testbench, and OAuth connector.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/context-manager.svg' | relative_url }}" width="38" height="38" alt="Context Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Context Manager</div>
+          <span class="robos-app-pkg">robos:context-manager</span>
+          <p class="robos-app-desc">Curate files, web URLs, Git repos, and Jira tickets for high-signal AI agent context.</p>
+        </div>
+      </div>
+      <a href="{{ '/robos-skills.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/skills-manager.svg' | relative_url }}" width="38" height="38" alt="Skills Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Skills Manager</div>
+          <span class="robos-app-pkg">robos:skills-manager</span>
+          <p class="robos-app-desc">Cross-agent AI skills marketplace and catalog supporting Claude, Codex, Antigravity, and Gemini.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div id="arch-planning" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Software Architecture & Planning</h3>
+      <span class="robos-cat-badge">8 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#robos-app-wizard-greenfield--brownfield-multi-app-scaffolding" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/app-wizard.svg' | relative_url }}" width="38" height="38" alt="RobOS App Wizard icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">RobOS App Wizard</div>
+          <span class="robos-app-pkg">robos:app-wizard</span>
+          <p class="robos-app-desc">Greenfield scaffolding and brownfield codebase ingestion across 9 multi-app archetypes.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#robos-group-manager-teams-organizations--enterprise-directory-sync" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/group-manager.svg' | relative_url }}" width="38" height="38" alt="RobOS Group Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">RobOS Group Manager</div>
+          <span class="robos-app-pkg">robos:group-manager</span>
+          <p class="robos-app-desc">Enterprise directory sync (Okta/SCIM/LDAP), company tenant onboarding, and Team Topologies.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/people-directory.svg' | relative_url }}" width="38" height="38" alt="People Directory icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">People Directory</div>
+          <span class="robos-app-pkg">robos:people-directory</span>
+          <p class="robos-app-desc">Visual engineering team tree, squad ownership, and contributor contact directory.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/issue-manager.svg' | relative_url }}" width="38" height="38" alt="Issue Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Issue Manager</div>
+          <span class="robos-app-pkg">robos:issue-manager</span>
+          <p class="robos-app-desc">GitHub & Gitea Issues client with drag-and-drop Kanban board and AI ticket breakdown.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/task-board.svg' | relative_url }}" width="38" height="38" alt="Task Board icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Task Board</div>
+          <span class="robos-app-pkg">robos:task-board</span>
+          <p class="robos-app-desc">Interactive sprint Kanban board with swimlanes, custom status columns, and WIP limits.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" width="38" height="38" alt="Task Servers icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Task Servers</div>
+          <span class="robos-app-pkg">robos:task-servers</span>
+          <p class="robos-app-desc">Connect and authenticate Jira, GitHub Enterprise, and Linear task management servers.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" width="38" height="38" alt="Workflow Studio icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Workflow Studio</div>
+          <span class="robos-app-pkg">robos:workflow-studio</span>
+          <p class="robos-app-desc">Visual issue lifecycle designer, status transitions, condition gates, and validation rules.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/automation-studio.svg' | relative_url }}" width="38" height="38" alt="Automation Studio icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Automation Studio</div>
+          <span class="robos-app-pkg">robos:automation-studio</span>
+          <p class="robos-app-desc">Low-code SDLC event triggers, Git webhook actions, and automated agent runbooks.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="code-review" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Code, Repositories & Review</h3>
+      <span class="robos-cat-badge">3 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#git-projects-multi-repo-hub" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/git-projects.svg' | relative_url }}" width="38" height="38" alt="Git Projects Multi-Repo Hub icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Git Projects Multi-Repo Hub</div>
+          <span class="robos-app-pkg">robos:git-projects</span>
+          <p class="robos-app-desc">Central repository hub with one-click dev-setup.sh scripts, Monaco editor, and branch management.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#robos-agent-generated-code-review-platform" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/pr-review.svg' | relative_url }}" width="38" height="38" alt="Agent Code Review Platform icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Agent Code Review Platform</div>
+          <span class="robos-app-pkg">robos:pr-review</span>
+          <p class="robos-app-desc">Autonomous AI pull request auditor, semantic diffs, and IntelliJ IDEA / VS Code review bridges.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/big-wins/video-proof-of-work.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/stage-demo.svg' | relative_url }}" width="38" height="38" alt="Stage Demo icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Stage Demo</div>
+          <span class="robos-app-pkg">robos:stage-demo</span>
+          <p class="robos-app-desc">Record text-narrated video walkthroughs, synthesize WebVTT captions, and archive feature demos.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div id="databases-streams" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Databases & Event Streams</h3>
+      <span class="robos-cat-badge">3 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#robos-relational-db-manager-postgresql-mysql-oracle" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/db-manager.svg' | relative_url }}" width="38" height="38" alt="Relational DB Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Relational DB Manager</div>
+          <span class="robos-app-pkg">robos:db-manager</span>
+          <p class="robos-app-desc">DBeaver/DataGrip-inspired SQL database explorer, schema navigator, and multi-tab query console.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#robos-nosql-db-manager-mongodb--redis" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/nosql-manager.svg' | relative_url }}" width="38" height="38" alt="NoSQL DB Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">NoSQL DB Manager</div>
+          <span class="robos-app-pkg">robos:nosql-manager</span>
+          <p class="robos-app-desc">MongoDB document inspector & Redis key-value store explorer with live TTL expirations.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#robos-data-sources-explorer" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/data-sources.svg' | relative_url }}" width="38" height="38" alt="Data Sources Explorer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Data Sources Explorer</div>
+          <span class="robos-app-pkg">robos:data-sources</span>
+          <p class="robos-app-desc">Central catalog for corporate databases, AWS S3 storage buckets, and Kafka event streams.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div id="apis-testing" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">APIs, Contracts & Testing</h3>
+      <span class="robos-cat-badge">3 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#robos-rest-api-client" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/rest-client.svg' | relative_url }}" width="38" height="38" alt="REST API Client & Runner icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">REST API Client & Runner</div>
+          <span class="robos-app-pkg">robos:rest-client</span>
+          <p class="robos-app-desc">Git-backed Bruno-compatible REST client, OpenAPI request synthesis, and sequential runner.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/big-wins/api-and-web-clients.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/grpc-client.svg' | relative_url }}" width="38" height="38" alt="gRPC Microservice Client icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">gRPC Microservice Client</div>
+          <span class="robos-app-pkg">robos:grpc-client</span>
+          <p class="robos-app-desc">BloomRPC/Kreya-inspired Protobuf schema loader, unary & streaming gRPC invocation tool.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/big-wins/api-and-web-clients.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/graphql-client.svg' | relative_url }}" width="38" height="38" alt="GraphQL Client & Explorer icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">GraphQL Client & Explorer</div>
+          <span class="robos-app-pkg">robos:graphql-client</span>
+          <p class="robos-app-desc">GraphiQL/Altair-inspired GraphQL introspection schema browser, query editor, and runner.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div id="devops-cloud" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">DevOps, Cloud & Distributed Build</h3>
+      <span class="robos-cat-badge">5 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="#robos-remote-execution-studio" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/remote-execution-studio.svg' | relative_url }}" width="38" height="38" alt="Remote Execution Studio icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Remote Execution Studio</div>
+          <span class="robos-app-pkg">robos:remote-execution-studio</span>
+          <p class="robos-app-desc">REAPI v2 distributed build control room, Bazel/Buck2 client synthesis, and Buildbarn management.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#kube-studio--cloud-infrastructure-navigator" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/kube-studio.svg' | relative_url }}" width="38" height="38" alt="Kube Studio & Cloud Navigator icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Kube Studio & Cloud Navigator</div>
+          <span class="robos-app-pkg">robos:kube-studio</span>
+          <p class="robos-app-desc">Multi-cluster Kubernetes navigator, Helm release inspector, ArgoCD GitOps, and live pod logs.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#ci-monitor" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/ci-monitor.svg' | relative_url }}" width="38" height="38" alt="CI Monitor icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">CI Monitor</div>
+          <span class="robos-app-pkg">robos:ci-monitor</span>
+          <p class="robos-app-desc">Real-time CI/CD pipeline monitor with AI root-cause failure analysis and one-click reruns.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#deploy-tracker" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/deploy-tracker.svg' | relative_url }}" width="38" height="38" alt="Deploy Tracker icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Deploy Tracker</div>
+          <span class="robos-app-pkg">robos:deploy-tracker</span>
+          <p class="robos-app-desc">Multi-environment deployment dashboard with DORA metrics, canary rollouts, and rollbacks.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/report-builder.svg' | relative_url }}" width="38" height="38" alt="Report Builder icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Report Builder</div>
+          <span class="robos-app-pkg">robos:report-builder</span>
+          <p class="robos-app-desc">Automated sprint recap generator, engineering metrics aggregator, and stakeholder reports.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="security-vault" class="robos-cat-group">
+    <div class="robos-cat-header">
+      <h3 class="robos-cat-title">Security, Credentials & Pass Vault</h3>
+      <span class="robos-cat-badge">5 Apps</span>
+    </div>
+    <div class="robos-apps-grid">
+      <a href="{{ '/big-wins/devops-security-pass.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/pass-manager.svg' | relative_url }}" width="38" height="38" alt="Pass Manager Vault icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Pass Manager Vault</div>
+          <span class="robos-app-pkg">robos:pass-manager</span>
+          <p class="robos-app-desc">Native GUI for UNIX standard password store (pass) with GPG encryption and zero plaintext keys.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/big-wins/devops-security-pass.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/pass-unlock.svg' | relative_url }}" width="38" height="38" alt="Pass Unlock Daemon icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Pass Unlock Daemon</div>
+          <span class="robos-app-pkg">robos:pass-unlock</span>
+          <p class="robos-app-desc">Secure GPG passphrase caching agent, pinentry bridge, and session credential keyring.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/big-wins/devops-security-pass.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/security-setup.svg' | relative_url }}" width="38" height="38" alt="Security Setup Wizard icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Security Setup Wizard</div>
+          <span class="robos-app-pkg">robos:security-setup</span>
+          <p class="robos-app-desc">First-run GPG master keypair generation, SSH keypair initialization, and Git signing setup.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/git-login-manager.svg' | relative_url }}" width="38" height="38" alt="Git Login Manager icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Git Login Manager</div>
+          <span class="robos-app-pkg">robos:git-login-manager</span>
+          <p class="robos-app-desc">GitHub, GitLab, and Gitea OAuth 2.0 authenticator and Personal Access Token (PAT) manager.</p>
+        </div>
+      </div>
+      <div class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-onboarding.svg' | relative_url }}" width="38" height="38" alt="RobOS Setup Wizard icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">RobOS Setup Wizard</div>
+          <span class="robos-app-pkg">robos:robos-onboarding</span>
+          <p class="robos-app-desc">First-boot developer workstation initialization, dotfiles synchronization, and profile setup.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+---
+
+## Detailed Guides & Architecture Walkthroughs
 {: .no_toc .text-delta }
 
 1. TOC
