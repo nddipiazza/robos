@@ -130,7 +130,9 @@ When an autonomous AI agent executes a build or deployment in an ephemeral RAM s
 
 ## Next Steps
 
-- **[Explore All RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how ephemeral Linux accounts isolate agents from host keys.
-- **[Modular Knowledge Graph Packages]({{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %})**: Read about the 6 standard namespaced package stores.
+- **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Read about the 6 standard namespaced package stores and 9 application archetypes.
 - **[Existing Company Setup Guide]({{ site.baseurl }}{% link existing-company-setup.md %})**: Walk through configuring enterprise SSO and directory synchronization.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

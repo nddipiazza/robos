@@ -107,7 +107,9 @@ Even though the agent operates on an isolated virtual display, the human develop
 
 ## Next Steps
 
-- **[Explore All RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Autonomous Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Discover how sandboxed agents record 1080p walkthrough videos and neural voiceovers.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual topologies compile into cloud-ready Kubernetes manifests.
 - **[Feature Spec: Ephemeral Agent User Profiles]({{ site.baseurl }}{% link ideas/specs/ephemeral-agent-user-profiles.md %})**: Review the deep architectural specification.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

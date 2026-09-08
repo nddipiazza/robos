@@ -129,7 +129,7 @@ Access 74+ parameterized system, Git, and Docker diagnostic commands alongside s
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural innovations and strategic advantages.
 - **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

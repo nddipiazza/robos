@@ -123,7 +123,8 @@ graph TD
 
 ## Next Steps
 
-- **[Explore All RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
-- **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Discover RobOS's unified client suite for REST, gRPC, and GraphQL.
+- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Connect microservice clients with database persistence.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual databases compile into Kubernetes StatefulSets.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Inspect detailed specifications for the entire application suite.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

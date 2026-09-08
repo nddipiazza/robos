@@ -159,7 +159,7 @@ graph LR
 
 ## Next Steps
 
-- **[Explore All RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
-- **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Learn about RobOS's relational, NoSQL, and cloud database suite.
+- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Connect and explore databases alongside API contracts.
 - **[Interactive Task Planning Studio]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**: Explore 66+ default task templates and structured planning.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: View detailed specifications for the REST API Client, gRPC Client, and GraphQL Client.

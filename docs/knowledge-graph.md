@@ -438,6 +438,6 @@ node --test --test-concurrency=1 \
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural advantages powering RobOS.
-- **[A Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %})**: Trace a feature from business concept to production deployment.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural advantages powering RobOS.
+- **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

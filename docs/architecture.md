@@ -85,7 +85,7 @@ RobOS applications are built using lightweight vanilla JavaScript and Electron, 
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural innovations and strategic advantages.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

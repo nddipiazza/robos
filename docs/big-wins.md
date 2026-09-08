@@ -11,7 +11,7 @@ redirect_from:
 # RobOS Big Wins: Core Innovations & Strategic Advantages
 {: .no_toc }
 
-The 11 architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering from manual boilerplate into visual proof-of-work, open standards, and Knowledge Graph-First generation.
+The 10 architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering from manual boilerplate into visual proof-of-work, open standards, and Knowledge Graph-First generation.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -29,7 +29,7 @@ Traditional IDEs and AI coding tools give you autocompletions, chat sidebars, an
 2. **Vendor Lock-In & Model Capture**: Workflows are trapped within proprietary LLM silos with incompatible prompt rules and rigid pricing.
 3. **Context Blindness & Machine Pollution**: Tools lack awareness of system-wide contracts, while autonomous agents litter developer workstations with leftover files and stray ports.
 
-RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **11 Big Wins** prioritized from immediate developer experience to foundational semantic compilation:
+RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **10 Big Wins** prioritized from immediate developer experience to foundational semantic compilation:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
@@ -96,11 +96,11 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 8. KGraph-First App Generation -->
+<!-- 8. KGraph-First App Generation & Modular Architecture -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 8. KGraph-First App Generation</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Auto-generates full applications across 9 archetypes from schema-validated, modular namespaced package stores (<code>.robos/kgraphs/</code>) with multi-repo composition and Git-tag version pinning.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
@@ -114,19 +114,10 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 10. Modular Namespaces & Multi-Repo KGraph -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 10. Modular Namespaces & Multi-Repo KGraph</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %}" style="color: #6366f1; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 11. Declarative GitOps Storage -->
+<!-- 10. Declarative GitOps Storage -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 11. 100% Declarative GitOps Storage</h3>
+<h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 10. 100% Declarative GitOps Storage</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %}" style="color: #f59e0b; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
@@ -280,7 +271,7 @@ Managing credentials and cloud access across multi-cloud environments is notorio
 
 ---
 
-## 8. 🧬 KGraph-First Application Generation Across 9 Archetypes
+## 8. 🧬 KGraph-First Application Generation & Modular Architecture
 
 In modern software engineering, developers rely on contracts to eliminate manual boilerplate:
 - An **OpenAPI 3.1 specification** generates typed REST client SDKs, server stubs, and API gateway routing.
@@ -299,12 +290,12 @@ In modern software engineering, developers rely on contracts to eliminate manual
 </div>
 
 ### How It Works
-1. **Architect the System in the KGraph**: Define or import application nodes into **Modular KGraph Packages** (`.robos/packages.yaml` and `.robos/topology.yaml`) adhering to the RobOS OSLC/SHACL ontology.
+1. **Architect the System in Modular Package Stores**: Define or import application nodes into **Modular KGraph Packages** under `.robos/kgraphs/<pkg>/package.jsonld` indexed by `.robos/kgraph.yaml` (`core-platform`, `services`, `applications`, `organization`, `devops`, `learning`). Eliminates Git merge conflicts and supports multi-repo composition with Git-tag version pinning (e.g. `v1.2.0`).
 2. **Declare Archetypes, Contracts, and Schemas**: Specify the archetype across 9 supported classes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`), data entities in Microsoft TypeSpec, and database connections.
 3. **Auto-Generate the Application**: The RobOS synthesis engine and autonomous agent swarms compile the graph into idiomatic polyglot project scaffolding, domain models, controllers, migrations, devcontainers, and consumer contract tests.
 4. **Agent Review-Based Governance**: The human lead architect reviews the synthesized application diffs against KGraph requirements and inspects the narrated video proof-of-work before approving deployment.
 
-👉 **[Read the Complete Guide: KGraph-First Application Generation →]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**
+👉 **[Read the Complete Guide: KGraph-First Application Generation & Modular Architecture →]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**
 
 ---
 
@@ -331,37 +322,7 @@ Traditional developer tools are myopic: they only understand isolated source fil
 
 ---
 
-## 10. 📦 Modular Namespaces & Multi-Repo Knowledge Graph
-
-Monolithic architecture repositories don't scale across large engineering divisions. RobOS partitions the Knowledge Graph into **modular, namespaced package stores** indexed by `.robos/kgraph.yaml`:
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}" alt="Modular Packages Studio in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Modular Packages Studio</strong>: Managing isolated, namespaced package stores and registering external Git-tag versioned KGraph dependencies. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-### Standard RobOS Namespaces
-| Package ID | Namespace | Scope |
-|------------|-----------|-------|
-| **`core-platform`** | `robos.core` | Core platform architecture, C4 topology, databases, and shared messaging queues. |
-| **`organization`** | `robos.org` | Team Topologies, human architects, AI agent personas, and enterprise directory sync. |
-| **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 contracts, Protobuf stubs, and BDD features. |
-| **`applications`** | `robos.apps` | Frontend SPAs, desktop applications, mobile clients, games, and CLI tools. |
-| **`devops`** | `robos.devops` | Cloud providers, CI/CD pipelines, container registries, OAuth apps, and credentials. |
-| **`learning`** | `robos.learning` | Interactive developer eLearning courses, labs, and architectural knowledge modules. |
-
-### Multi-Repo Composition & Git-Tag Versioning
-- **External KGraph Dependencies**: Register external GitHub or Git forge repositories pinned to semantic versions (e.g. `v1.2.0`).
-- **Local Caching**: External KGraph repositories are cloned and cached into `~/.robos/cache/kgraphs/<repo>@<tag>/` with on-demand sync.
-- **Backwards-Compatible Aggregation**: Automatically maintains an aggregated view for legacy tools while preserving package boundary isolation.
-
-👉 **[Read the Complete Guide: Modular KGraph Packages & Multi-Repo Composition →]({{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %})**
-
----
-
-## 11. ⚡ 100% Declarative GitOps Storage & Zero-YAML Synthesis (`.robos/`)
+## 10. ⚡ 100% Declarative GitOps Storage & Zero-YAML Synthesis (`.robos/`)
 
 RobOS eliminates YAML sprawl and configuration fragility. All architecture, contracts, topologies, and data sources live in standard, human-readable Git files under `.robos/`:
 
@@ -386,18 +347,17 @@ RobOS eliminates YAML sprawl and configuration fragility. All architecture, cont
 
 | Capability | Traditional IDEs & AI Plugins | RobOS Autonomous Developer OS |
 |:---|:---|:---|
-| **Verification & Review** | "Trust me, it works" walls of text | **Headless 1080p Video Proof-of-Work & Neural Voice** |
-| **Task Planning** | Ad-hoc tickets or markdown checklists | **66+ Interactive Templates & Phased DAG Planning** |
-| **Web & API Clients** | SaaS-locked apps (Postman, Insomnia) | **Universal Web, API & Microservice Suite (REST, gRPC, GraphQL)** |
-| **Data Source Management** | Heavy external tools (DBeaver, DataGrip) | **Native Relational DB, NoSQL, & Data Sources Manager** |
-| **AI Model & Agent Freedom** | Locked to a single proprietary LLM/vendor | **Universal Agent-Agnostic Framework (OSLC, MCP, Open Standards)** |
-| **Agent Execution Safety** | Host user directory pollution | **Hermetic In-Memory RAM Sandboxes (`tmpfs`)** |
-| **Credential Security** | Plaintext `.env` and config files | **GPG-Encrypted UNIX Password Store (`pass`)** |
-| **Core Paradigm** | Code Autocompletions & Chat Prompts | **KGraph-First Application Generation (9 Archetypes)** |
-| **System Understanding** | Single file or repo folder | **Dual-State SDLC Knowledge Graph (OSLC 3.0)** |
-| **Blast Radius Detection** | Manual grep & broken build alerts | **Automated Pre-Code Semantic Diffing** |
-| **Architecture Scalability** | Monolithic configuration files | **Modular Namespaced & Multi-Repo Package Stores** |
-| **Infrastructure Deployment** | Manual YAML writing & copy-pasting | **100% Declarative Zero-YAML GitOps Synthesis** |
+| **1. Verification & Review** | "Trust me, it works" walls of text | **Headless 1080p Video Proof-of-Work & Neural Voice** |
+| **2. Task Planning** | Ad-hoc tickets or markdown checklists | **66+ Interactive Templates & Phased DAG Planning** |
+| **3. Web & API Clients** | SaaS-locked apps (Postman, Insomnia) | **Universal Web, API & Microservice Suite (REST, gRPC, GraphQL)** |
+| **4. Data Source Management** | Heavy external tools (DBeaver, DataGrip) | **Native Relational DB, NoSQL, & Data Sources Manager** |
+| **5. AI Model & Agent Freedom** | Locked to a single proprietary LLM/vendor | **Universal Agent-Agnostic Framework (OSLC, MCP, Open Standards)** |
+| **6. Agent Execution Safety** | Host user directory pollution | **Hermetic In-Memory RAM Sandboxes (`tmpfs`)** |
+| **7. Credential Security** | Plaintext `.env` and config files | **GPG-Encrypted UNIX Password Store (`pass`)** |
+| **8. Core Paradigm & Scale** | Code Autocompletions & Chat Prompts | **KGraph-First App Generation (9 Archetypes) & Modular Package Stores** |
+| **9. System Understanding** | Single file or repo folder | **Dual-State SDLC Knowledge Graph & Automated Blast Radius (OSLC 3.0)** |
+| **10. Infrastructure Deployment** | Manual YAML writing & copy-pasting | **100% Declarative Zero-YAML GitOps Synthesis** |
+
 
 ---
 

@@ -218,7 +218,9 @@ RobOS builds upon established, battle-tested open standards rather than propriet
 
 ## Next Steps
 
-- **[Explore All RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Understand automated headless screen recordings and neural voiceovers.
 - **[Dedicated Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %})**: Read the full technical specification for RobOS Knowledge Graph packages and schemas.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
