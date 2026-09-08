@@ -1,7 +1,7 @@
 ---
 title: Video Proof-of-Work
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 1
 permalink: /big-wins/video-proof-of-work.html
 ---
@@ -96,7 +96,7 @@ In **RobOS Dev Central** (`packages/dev-central`), pull requests are presented w
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[100% Declarative GitOps Storage]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual topologies compile into cloud-ready Kubernetes manifests.
 - **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Discover RobOS's integrated relational and NoSQL database suite.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch recorded video walkthroughs and view sample test suites.

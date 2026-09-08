@@ -1,7 +1,7 @@
 ---
 title: Dual-State SDLC Knowledge Graph
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 10
 permalink: /big-wins/dual-state-knowledge-graph.html
 ---
@@ -180,7 +180,7 @@ RobOS builds upon established, battle-tested open standards rather than propriet
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Understand automated headless screen recordings and neural voiceovers.
 - **[Dedicated Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %})**: Read the full technical specification for RobOS Knowledge Graph packages and schemas.

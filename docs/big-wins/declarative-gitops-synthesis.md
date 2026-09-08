@@ -1,7 +1,7 @@
 ---
 title: Declarative GitOps Synthesis
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 11
 permalink: /big-wins/declarative-gitops-synthesis.html
 ---
@@ -121,7 +121,7 @@ RobOS seamlessly spans the entire spectrum from single-developer laptops to mult
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Explore the native relational, NoSQL, and cloud storage management suite.
 - **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Learn about Git-backed REST, gRPC, and GraphQL verification tooling.
 - **[Multi-Cluster Kube Studio]({{ site.baseurl }}{% link apps.md %})**: Read the application guide for Kube Studio.

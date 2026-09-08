@@ -33,7 +33,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [💬 Join Discord](https://discord.gg/6PjxzkHujE){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [KGraph Schemas]({{ site.baseurl }}{% link schemas.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -49,7 +49,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
   <a href="{{ site.baseurl }}{% link agent-tiers.md %}" class="btn fs-3">🤖 Agent Tiers & DSPy</a>
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link schemas.md %}" class="btn fs-3">📐 KGraph Schemas</a>
-  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Big Wins</a>
+  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Main Wins</a>
   <a href="{{ site.baseurl }}{% link new-company-setup.md %}" class="btn fs-3">🚀 New Company Setup</a>
   <a href="{{ site.baseurl }}{% link existing-company-setup.md %}" class="btn fs-3">🏢 Existing Company Setup</a>
   <a href="{{ site.baseurl }}{% link new-app-wizard.md %}" class="btn fs-3">✨ Develop a New App</a>
@@ -94,9 +94,9 @@ RobOS turns the developer into a **Lead Architect**. Just as OpenAPI specificati
 
 ---
 
-## RobOS Big Wins: Core Innovations & Strategic Advantages
+## RobOS Main Wins: Core Innovations & Strategic Advantages
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 10 core breakthroughs:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around core architectural breakthroughs:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
@@ -193,7 +193,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 </div>
 
 <div style="text-align: center; margin: 1.5rem 0 2.5rem;">
-  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn btn-primary fs-5">Explore All 10 RobOS Big Wins in Depth →</a>
+  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn btn-primary fs-5">Explore RobOS Main Wins in Depth →</a>
 </div>
 
 ---

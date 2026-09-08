@@ -1,7 +1,7 @@
 ---
 title: Ephemeral In-Memory Sandboxes
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 6
 permalink: /big-wins/ephemeral-agent-sandboxes.html
 ---
@@ -88,7 +88,7 @@ Even though the agent operates on an isolated virtual display, the human develop
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Autonomous Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Discover how sandboxed agents record 1080p walkthrough videos and neural voiceovers.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual topologies compile into cloud-ready Kubernetes manifests.
 - **[Feature Spec: Ephemeral Agent User Profiles]({{ site.baseurl }}{% link ideas/specs/ephemeral-agent-user-profiles.md %})**: Review the deep architectural specification.

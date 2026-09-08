@@ -9,6 +9,6 @@ permalink: /four-pillars.html
 
 # Redirecting...
 
-The architectural pillars of RobOS have been expanded into the comprehensive **[RobOS Big Wins: Core Innovations & Strategic Advantages]({{ site.baseurl }}{% link big-wins.md %})**.
+The architectural pillars of RobOS have been expanded into the comprehensive **[RobOS Main Wins: Core Innovations & Strategic Advantages]({{ site.baseurl }}{% link big-wins.md %})**.
 
-[Click here to view RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .btn-primary }
+[Click here to view RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .btn-primary }

@@ -88,4 +88,4 @@ The agent will run the `create-feature-spec` skill to produce a validated specif
 
 - **[Browse Raw Ideas on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas/inbox)**: Read unformatted notes and community feature brainstorms.
 - **[View All Feature Specs on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas/specs)**: Inspect detailed architectural specifications.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover the 11 core architectural advantages powering RobOS.
+- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.

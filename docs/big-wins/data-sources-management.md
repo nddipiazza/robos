@@ -1,7 +1,7 @@
 ---
 title: Unified Data Sources Management
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 4
 permalink: /big-wins/data-sources-management.html
 ---
@@ -96,7 +96,7 @@ Unlike isolated third-party tools, RobOS connects live data sources directly int
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Connect microservice clients with database persistence.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual databases compile into Kubernetes StatefulSets.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Inspect detailed specifications for the entire application suite.

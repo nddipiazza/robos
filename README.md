@@ -1,6 +1,6 @@
 # RobOS — Knowledge Graph-First Developer OS & Application Suite
 
-📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Big Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
+📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Main Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
 
 [![Documentation](https://img.shields.io/badge/docs-nddipiazza.github.io%2Frobos-blue?style=flat&logo=read-the-docs&logoColor=white)](https://nddipiazza.github.io/robos/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/6PjxzkHujE)
@@ -46,9 +46,9 @@ In modern software engineering, developers rely on contracts to eliminate manual
 
 ---
 
-## 🚀 The 10 Big Wins (Why RobOS?)
+## 🚀 RobOS Main Wins (Why RobOS?)
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 10 strategic breakthroughs:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around core strategic breakthroughs:
 
 - 🧬 **KGraph-First Application Generation**: Applications are generated from the Knowledge Graph just as web clients are generated from OpenAPI contracts. By defining system topology, entity models, and contracts in the RobOS schema, full production applications (across 9 archetypes) are synthesized automatically with zero boilerplate.
 - 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Front End Web Apps, Desktop Apps, PC Games, Mobile Games, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
@@ -182,7 +182,7 @@ RobOS is built entirely upon established, battle-tested open standards. Instead 
 Visit the official documentation portal for complete guides, architecture specifications, and walkthrough archives:
 👉 **[https://nddipiazza.github.io/robos/](https://nddipiazza.github.io/robos/)**
 
-- 🏆 **[RobOS Big Wins: Core Innovations & Strategic Advantages](https://nddipiazza.github.io/robos/big-wins.html)** — The 9 architectural breakthroughs separating RobOS from traditional IDEs and coding assistants.
+- 🏆 **[RobOS Main Wins: Core Innovations & Strategic Advantages](https://nddipiazza.github.io/robos/big-wins.html)** — The core architectural breakthroughs separating RobOS from traditional IDEs and coding assistants.
 - 🌐 **[SDLC Knowledge Graph Specification](https://nddipiazza.github.io/robos/knowledge-graph.html)** — OASIS OSLC Core 3.0, W3C JSON-LD, and SHACL standards engine.
 - ⚡ **[RobOS Skills & AI Capabilities](https://nddipiazza.github.io/robos/robos-skills.html)** — Cross-agent marketplace skills for Claude, Codex, Antigravity, Copilot, and Gemini.
 - 🏢 **[Existing Company Setup](https://nddipiazza.github.io/robos/existing-company-setup.html)** — Enterprise directory sync (Okta, Azure AD, LDAP) and Team Topologies.

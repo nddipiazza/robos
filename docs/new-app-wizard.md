@@ -247,6 +247,6 @@ electron packages/app-wizard
 ## Next Steps
 
 - **[Import Existing Apps Guide]({{ site.baseurl }}{% link app-import-wizard.md %})**: Ingest brownfield codebases with automatic archetype detection.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

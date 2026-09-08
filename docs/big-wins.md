@@ -1,5 +1,5 @@
 ---
-title: RobOS Big Wins
+title: RobOS Main Wins
 layout: default
 nav_order: 2
 has_children: true
@@ -8,10 +8,10 @@ redirect_from:
   - /four-pillars.html
 ---
 
-# RobOS Big Wins: Core Innovations & Strategic Advantages
+# RobOS Main Wins: Core Innovations & Strategic Advantages
 {: .no_toc }
 
-The 11 architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering from manual boilerplate into visual proof-of-work, open standards, and Knowledge Graph-First generation.
+The core architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering from manual boilerplate into visual proof-of-work, open standards, and Knowledge Graph-First generation.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -29,7 +29,7 @@ Traditional IDEs and AI coding tools give you autocompletions, chat sidebars, an
 2. **Vendor Lock-In & Model Capture**: Workflows are trapped within proprietary LLM silos with incompatible prompt rules and rigid pricing.
 3. **Context Blindness & Machine Pollution**: Tools lack awareness of system-wide contracts, while autonomous agents litter developer workstations with leftover files and stray ports.
 
-RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **11 Big Wins** prioritized from immediate developer experience to foundational semantic compilation:
+RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **RobOS Main Wins** prioritized from immediate developer experience to foundational semantic compilation:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 

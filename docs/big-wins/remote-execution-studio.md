@@ -1,7 +1,7 @@
 ---
 title: Remote Execution Studio & REAPI v2
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 8
 permalink: /big-wins/remote-execution-studio.html
 ---
@@ -166,7 +166,7 @@ If an engineer attempts to register a cluster without a valid CAS endpoint or wi
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Remote Execution Cluster Schema]({{ site.baseurl }}{% link schemas/devops/remote-execution-cluster.md %})**: Inspect the formal W3C SHACL shape and JSON-LD schema specification.
 - **[DevOps Security & Password Store]({{ site.baseurl }}{% link big-wins/devops-security-pass.md %})**: Learn how credentials are encrypted in UNIX `pass`.
 - **[Declarative GitOps Storage]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Discover how architecture compiles into Kubernetes manifests.

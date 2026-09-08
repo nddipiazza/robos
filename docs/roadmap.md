@@ -143,7 +143,7 @@ Every phase is validated against complete multi-tier enterprise applications and
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[Real-World E2E Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch all 20 reference lifecycle steps executed live.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

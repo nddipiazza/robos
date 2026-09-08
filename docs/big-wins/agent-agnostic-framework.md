@@ -1,7 +1,7 @@
 ---
 title: Agent-Agnostic Open Framework
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 5
 permalink: /big-wins/agent-agnostic-framework.html
 ---
@@ -136,7 +136,7 @@ For enterprises with strict data sovereignty, GDPR, HIPAA, or defense compliance
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Explore Git-backed REST, gRPC, and GraphQL client tools.
 - **[RobOS Skills Catalog]({{ site.baseurl }}{% link robos-skills.md %})**: Review the open catalog of cross-agent developer skills.

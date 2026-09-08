@@ -1,7 +1,7 @@
 ---
 title: KGraph-First App Generation & Modular Architecture
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 9
 permalink: /big-wins/kgraph-first-app-generation.html
 ---
@@ -204,7 +204,7 @@ Auto-generation without rigorous governance leads to chaos. RobOS wraps the enti
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Dual-State SDLC Knowledge Graph]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**: Discover how RobOS models World 1 vs. World 2 and detects blast radius.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[New App Development Wizard]({{ site.baseurl }}{% link new-app-wizard.md %})**: Walk through scaffolding a greenfield application step-by-step.

@@ -599,7 +599,7 @@ In RobOS, **all application operational data across the 30+ desktop app suite is
 ## Next Steps
 
 - **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 18+ SHACL constraint shapes across the 6 standard RobOS package stores.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural advantages powering RobOS.
+- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

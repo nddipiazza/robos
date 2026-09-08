@@ -129,7 +129,7 @@ After approval and merge, RobOS automates deployment and tracks production healt
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Learn about the 11 core architectural innovations and strategic advantages powering this lifecycle.
+- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Learn about the core architectural innovations and strategic advantages powering this lifecycle.
 - **[Installation & Getting Started]({{ site.baseurl }}{% link getting-started.md %})**: Install RobOS and configure your development environment.
 - **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial using the reference Acme Pet Store Platform.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.

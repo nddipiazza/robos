@@ -1,7 +1,7 @@
 ---
 title: Interactive Planning & 66+ Templates
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 2
 permalink: /big-wins/interactive-task-planning.html
 ---
@@ -84,7 +84,7 @@ RobOS bridges the gap between local GitOps planning and enterprise issue trackin
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Discover how RobOS partitions architectures into namespaced packages and synthesizes full applications.
 - **[DevOps Security & Password Store]({{ site.baseurl }}{% link big-wins/devops-security-pass.md %})**: Learn about GPG-encrypted credential management.
 - **[Task Planner Application Guide]({{ site.baseurl }}{% link apps.md %})**: Read the complete manual for the Task Planner desktop app.

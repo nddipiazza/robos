@@ -1,7 +1,7 @@
 ---
 title: DevOps Security & Password Store
 layout: default
-parent: RobOS Big Wins
+parent: RobOS Main Wins
 nav_order: 7
 permalink: /big-wins/devops-security-pass.html
 ---
@@ -103,7 +103,7 @@ When an autonomous AI agent executes a build or deployment in an ephemeral RAM s
 
 ## Next Steps
 
-- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how ephemeral Linux accounts isolate agents from host keys.
 - **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Read about the 6 standard namespaced package stores and 9 application archetypes.
 - **[Existing Company Setup Guide]({{ site.baseurl }}{% link existing-company-setup.md %})**: Walk through configuring enterprise SSO and directory synchronization.
