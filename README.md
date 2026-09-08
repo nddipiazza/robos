@@ -1,6 +1,6 @@
 # RobOS — Knowledge Graph-First Developer OS & Application Suite
 
-📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Main Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
+📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 🌱 **[About RobOS](https://nddipiazza.github.io/robos/about.html)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Main Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
 
 [![Documentation](https://img.shields.io/badge/docs-nddipiazza.github.io%2Frobos-blue?style=flat&logo=read-the-docs&logoColor=white)](https://nddipiazza.github.io/robos/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/6PjxzkHujE)
@@ -183,11 +183,22 @@ Visit the official documentation portal for complete guides, architecture specif
 👉 **[https://nddipiazza.github.io/robos/](https://nddipiazza.github.io/robos/)**
 
 - 🏆 **[RobOS Main Wins: Core Innovations & Strategic Advantages](https://nddipiazza.github.io/robos/big-wins.html)** — The core architectural breakthroughs separating RobOS from traditional IDEs and coding assistants.
+- 🌱 **[About RobOS: Origin Lore & Multi-Agent Co-Creation](https://nddipiazza.github.io/robos/about.html)** — Why "RobOS" (*row-bose*), the *Chrono Trigger* Robo 400-year devotion lore, and equal contributions across Copilot, Claude, Codex, and Gemini.
 - 🌐 **[SDLC Knowledge Graph Specification](https://nddipiazza.github.io/robos/knowledge-graph.html)** — OASIS OSLC Core 3.0, W3C JSON-LD, and SHACL standards engine.
 - ⚡ **[RobOS Skills & AI Capabilities](https://nddipiazza.github.io/robos/robos-skills.html)** — Cross-agent marketplace skills for Claude, Codex, Antigravity, Copilot, and Gemini.
 - 🏢 **[Existing Company Setup](https://nddipiazza.github.io/robos/existing-company-setup.html)** — Enterprise directory sync (Okta, Azure AD, LDAP) and Team Topologies.
 - 🚀 **[New Company Greenfield Setup](https://nddipiazza.github.io/robos/new-company-setup.html)** — Company bootstrap, administrator keyrings, and C4 starter topology.
 - 📦 **[App Suite Catalog](https://nddipiazza.github.io/robos/apps.html)** — Detailed specifications for all 30+ native desktop applications.
+
+---
+
+## 🤖 About RobOS (*row-bose*)
+
+- **Pronunciation**: **RobOS** is pronounced **"row-bose"** (`/ˈroʊboʊs/`), rhyming with *rose*.
+- **The Namesake**: Named after **Robo** (R-66Y / Prometheus) from the 1995 RPG classic *Chrono Trigger*. In the story, Robo spends **400 years** tilling and irrigating Fiona's scorched desert so it can blossom into a flourishing forest. RobOS does the same for developers: our autonomous agents tirelessly carry out the grueling background labor of the SDLC (boilerplate, contracts, migrations, ephemeral testing) so human architects can thrive.
+- **Built by Agents**: **GitHub Copilot**, **Anthropic Claude**, **OpenAI Codex**, and **Google Gemini** all contributed equally to creating RobOS via agentic workflows, proving that diverse AI models excel when collaborating as peers under open standards.
+
+👉 **[Read the full backstory, lore, and legal statement on the About RobOS page →](https://nddipiazza.github.io/robos/about.html)**
 
 ---
 

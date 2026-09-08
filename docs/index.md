@@ -32,6 +32,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [💬 Join Discord](https://discord.gg/6PjxzkHujE){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
+[About RobOS]({{ site.baseurl }}{% link about.md %}){: .btn .btn-blue .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -44,6 +45,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+  <a href="{{ site.baseurl }}{% link about.md %}" class="btn fs-3" style="border-color: #38bdf8; color: #38bdf8;">🌱 About RobOS</a>
   <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="btn fs-3" style="border-color: #5865F2; color: #a5b4fc;">💬 Discord Server</a>
   <a href="https://discord.com/channels/1546926331193725029/" target="_blank" rel="noopener" class="btn fs-3">🗣️ #general Discussion</a>
   <a href="{{ site.baseurl }}{% link agent-tiers.md %}" class="btn fs-3">🤖 Agent Tiers & DSPy</a>
@@ -289,6 +291,49 @@ RobOS is built entirely on open, industry-standard specifications. Instead of in
 | **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** | Universal open protocol connecting AI models to external developer tools. | **Unified Multi-Agent Tool Router**: Exposes system capabilities (Knowledge Graph, IDE Breakpoints, Kubernetes Deployments, Database Consoles) to Claude Code, Google Antigravity, Copilot CLI, and Gemini. |
 | **[Kubernetes & Helm](https://kubernetes.io/)** | Cloud-native container orchestration and package management. | **Declarative GitOps Infrastructure**: Visual architecture nodes automatically generate deployable Kubernetes manifests and Helm charts stored in `.robos/`. |
 | **[Piper Neural TTS](https://github.com/rhasspy/piper)** | Fast, lightweight, offline neural text-to-speech synthesis engine. | **Automated Video Proof-of-Work Voiceovers**: Synthesizes natural spoken voiceovers and WebVTT subtitles for all 1080p verification walkthroughs. |
+
+---
+
+## About RobOS: The Name, The Mission & The Multi-Agent Origin
+
+### How do you pronounce RobOS?
+> **Pronounced "row-bose"** (`/ˈroʊboʊs/`), rhyming with *rose* (or spoken like "Robo-S").
+
+### Why "RobOS"? Named after Robo in Chrono Trigger
+RobOS is named in loving tribute to **Robo** (serial designation **R-66Y**, real name **Prometheus**), the selfless robotic companion from Square's 1995 RPG classic *Chrono Trigger*. 
+
+In the story, when Fiona's dream of resurrecting a barren, scorched desert into a verdant forest seems impossible for human lifetimes, **Robo stays behind and works tirelessly for 400 continuous years** (from 600 AD to 1000 AD) tilling soil, planting seeds, and clearing roots. When the party returns four centuries later, they find a flourishing, vibrant paradise.
+
+```
+       Barren Desert (600 AD)                     Vibrant Paradise (1000 AD)
+ ┌────────────────────────────────┐         ┌────────────────────────────────┐
+ │  Parched soil, scorching sun,  │  400    │  Lush canopy, sacred trees,    │
+ │  endless manual weeding and    │  Years  │  crystal streams, and thriving │
+ │  backbreaking physical toil.   │ ──────▶ │  biodiverse ecosystem.         │
+ └────────────────────────────────┘         └────────────────────────────────┘
+                 ▲                                          ▲
+                 │                                          │
+                 └─────────── [ Robo: R-66Y ] ──────────────┘
+                    Tireless, 400-year selfless labor
+```
+
+**RobOS is your engineering team's Robo**: doing the grueling, relentless background labor of the SDLC—scaffolding polyglot boilerplate, validating contracts, generating migrations, running ephemeral sandboxes, and proving test assertions with video—so human architects can build in a lush, flourishing developer ecosystem.
+
+<div style="margin: 1.5rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-width: 720px;">
+  <img src="{{ '/assets/images/robo-chrono-trigger.jpg' | relative_url }}" alt="Artistic tribute to Robo in Fiona's lush forest" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.6rem 1rem; font-size: 0.82rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Homage to Prometheus (R-66Y / Robo)</strong>: Devotion, empathy, and tireless labor in service of human builders. <em>(Original tribute illustration)</em>
+  </div>
+</div>
+
+### Built by Agents: Equal Contributions Across Frontier AI
+RobOS was created and refined through equal agentic collaboration among all four leading frontier AI coding models:
+- 🤖 **GitHub Copilot**: Contract synthesis, OpenAPI 3.1 scaffolding, and Monaco editor integration.
+- 🧠 **Anthropic Claude**: C4 topology modeling, living documentation sync, and reasoning pipelines.
+- ⚡ **OpenAI Codex**: Dynamic REST/GraphQL/gRPC clients, TypeSpec compilation, and synthetic test suites.
+- 🌐 **Google Gemini**: Ephemeral sandboxes, multimodal UI verification, and W3C SHACL shape validation.
+
+👉 **[Read the complete story, lore, and multi-agent breakdown on the About RobOS page →]({{ site.baseurl }}{% link about.md %})**
 
 ---
 
