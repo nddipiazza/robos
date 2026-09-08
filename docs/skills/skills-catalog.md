@@ -8,7 +8,7 @@ nav_order: 1
 # Complete Skills Catalog & Reference
 {: .no_toc }
 
-Comprehensive reference of all 24+ AI Agent Skills in the RobOS Plugin Marketplace and their execution parameters, companion engines, and verification methods.
+Comprehensive reference of all 34+ AI Agent Skills in the RobOS Plugin Marketplace and their execution parameters, companion engines, and verification methods.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -19,10 +19,110 @@ Comprehensive reference of all 24+ AI Agent Skills in the RobOS Plugin Marketpla
 
 ---
 
-## 1. Knowledge Graph & Architecture Ingestion
+## 1. Knowledge Graph (KGraph) Skills Suite
 
-### `import-company-kgraph`
-- **Slash Command**: `/import-company-kgraph`
+The RobOS SDLC Knowledge Graph is the executable blueprint of your entire engineering system. This comprehensive skill suite allows AI agents and developers to search, query, insert, update, delete, validate, diff, export, visualize, and import graph components across all modular package stores (`.robos/kgraphs/`).
+
+### `kgraph-search`
+- **Slash Command**: `/kgraph-search <query>`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js search <query> [options]`
+- **Arguments**:
+  - `<query>`: Search string matching titles, descriptions, IDs, roles, or tags.
+  - `--type <type>`: Filter by RDF/SHACL type (e.g. `robos:Microservice`, `robos:Database`, `robos:MCPServer`).
+  - `--package <pkg>`: Filter by modular package (e.g. `services`, `applications`, `devops`, `core-platform`).
+  - `--owner-team <teamId>`: Filter by owning engineering squad.
+  - `--json`: Output raw JSON-LD node array.
+- **Description**: Rapidly searches components, databases, contracts, pipelines, and agents across all modular package stores.
+
+### `kgraph-insert`
+- **Slash Command**: `/kgraph-insert <json-string-or-file>`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js insert [options]`
+- **Arguments**:
+  - `[json-string]`: Raw JSON-LD entity definition.
+  - `--file <path>`: Path to a JSON or JSON-LD file containing the node.
+  - `--id <id>`: Explicit URI (e.g. `urn:robos:service:billing-api`).
+  - `--type <type>`: RDF type (e.g. `robos:Microservice`).
+  - `--title <title>`: Human-readable entity title.
+  - `--package <pkg>`: Target package (`services`, `applications`, `devops`, etc.).
+  - `--no-validate`: Bypass SHACL validation gate (not recommended).
+- **Description**: Registers a newly designed or synthesized component into the Knowledge Graph, automatically enforcing W3C SHACL shape validation before persistence.
+
+### `kgraph-delete`
+- **Slash Command**: `/kgraph-delete <node-id>`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js delete <node-id> [--cascade]`
+- **Arguments**:
+  - `<node-id>`: Target entity URI (e.g. `urn:robos:service:legacy-auth`).
+  - `--cascade`: Automatically prune referencing edges from dependent nodes across all packages.
+- **Description**: Safely decommissions an application, service, contract, or infrastructure node and cleans up relational edges without corrupting package JSON-LD manifests.
+
+### `kgraph-update`
+- **Slash Command**: `/kgraph-update <node-id> [json-patch]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js update <node-id> [options]`
+- **Arguments**:
+  - `<node-id>`: Target entity URI to modify.
+  - `[json-patch]`: JSON string with fields to update.
+  - `--file <path>`: JSON file containing updated properties.
+  - `--set <key=value>`: Direct property update (e.g. `--set robos:ownerTeam=urn:robos:team:platform`).
+- **Description**: Modifies existing nodes in-place, updates package stores, and re-validates against SHACL constraints while logging living documentation impact advisories.
+
+### `kgraph-query`
+- **Slash Command**: `/kgraph-query [filters]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js query [options]`
+- **Arguments**:
+  - `--type <type>`: Filter nodes by RDF type.
+  - `--package <pkg>`: Filter by package store.
+  - `--path-from <id> --path-to <id>`: BFS graph traversal tracing connection path between two entities across microservices and contracts.
+  - `--search <text>`: Text substring match.
+  - `--json`: Output raw query results.
+- **Description**: Executes multi-criteria graph queries and traces reference paths across microservice boundaries.
+
+### `kgraph-impact-analysis`
+- **Slash Command**: `/kgraph-impact-analysis <node-id>`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js impact <node-id> [--depth <n>]`
+- **Arguments**:
+  - `<node-id>`: Focused entity URI (e.g. `urn:robos:service:auth-service`).
+  - `--depth <n>`: Maximum hop traversal depth (default 3).
+  - `--json`: Output structured blast radius report.
+- **Description**: Recursively traverses inbound and outbound dependency edges to evaluate the blast radius before code edits, API schema mutations, or database migrations.
+
+### `kgraph-validate`
+- **Slash Command**: `/kgraph-validate [package-id]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js validate [package-id]`
+- **Arguments**:
+  - `[package-id]`: Specific package (`services`, `devops`, etc.) or omit to validate all packages.
+  - `--strict`: Treat warnings as fatal validation failures.
+  - `--json`: Output full SHACL validation report.
+- **Description**: Enforces 100% W3C SHACL shape conformance, verifying mandatory properties, valid URIs, and structural constraints across all nodes.
+
+### `kgraph-diff`
+- **Slash Command**: `/kgraph-diff [target-branch]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js diff [target-branch] [--base main]`
+- **Arguments**:
+  - `[target-branch]`: Feature branch or working tree state (defaults to current feature branch).
+  - `--base <branch>`: Base comparison branch (defaults to `main`).
+- **Description**: Computes semantic blast radius diffs between World 1 (Production `main`) and World 2 (feature branch), identifying added, modified, or removed components and breaking changes.
+
+### `kgraph-export`
+- **Slash Command**: `/kgraph-export [--format <jsonld|ttl|nt>]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js export [options]`
+- **Arguments**:
+  - `--format <jsonld|ttl|nt>`: Serialization format (JSON-LD 1.1, Turtle `.ttl`, or N-Triples).
+  - `--package <pkg>`: Target package to export (or omit for entire aggregated graph).
+  - `--output <file>`: Destination file path.
+- **Description**: Exports the Knowledge Graph to industry-standard RDF formats for ingestion into external graph databases (Neo4j, Amazon Neptune, GraphDB) or semantic pipelines.
+
+### `kgraph-visualize`
+- **Slash Command**: `/kgraph-visualize [id-or-package]`
+- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js visualize [id-or-package] [options]`
+- **Arguments**:
+  - `[id-or-package]`: Focused node URI or package name (e.g. `services`).
+  - `--direction <TD|LR>`: Mermaid layout orientation (Top-Down or Left-to-Right).
+  - `--max-nodes <n>`: Node limit (default 40).
+  - `--output <file>`: Save Mermaid syntax to file.
+- **Description**: Generates executable Mermaid diagram syntax or C4 component dependency visualizations for any subsystem or node in the graph.
+
+### `import-company-kgraph` (Alias: `/kgraph-import`)
+- **Slash Command**: `/import-company-kgraph`, `/kgraph-import`
 - **Companion CLI**: `node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js`
 - **Arguments**:
   - `--source <path|url|s3-uri>`: Ingestion endpoint (HTTP REST API, AWS S3 bucket URI, local filesystem directory or manifest, or list of Git URLs).
@@ -35,8 +135,8 @@ Comprehensive reference of all 24+ AI Agent Skills in the RobOS Plugin Marketpla
 - **Description**: Automatically ingests enterprise repositories from HTTP REST endpoints (Backstage `catalog-entities.json`), AWS S3 buckets, local directories, or Git URLs. Classifies components into 9 multi-app archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files.
 - **Documentation**: [Company KGraph Import Skill Guide]({{ site.baseurl }}{% link skills/import-company-kgraph.md %})
 
-### `sync-kgraph-docs`
-- **Slash Command**: `/sync-kgraph-docs`
+### `sync-kgraph-docs` (Alias: `/kgraph-sync-docs`)
+- **Slash Command**: `/sync-kgraph-docs`, `/kgraph-sync-docs`
 - **Description**: Monitors additions, updates, or removals in **Modular KGraph Packages** and `.robos/packages.yaml`. Automatically discerns impacts across system documentation, architecture diagrams, and API guides, and synchronizes documentation in lockstep.
 
 ---

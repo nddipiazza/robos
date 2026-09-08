@@ -58,15 +58,34 @@ RobOS provides two complementary layers of skills designed for developer product
 
 The RobOS Plugin Marketplace ships with standard skills categorized across the entire Software Delivery Lifecycle:
 
-### 1. Knowledge Graph & Architecture Ingestion
+### 1. Knowledge Graph (KGraph) Skills Suite
 
 | Skill | Slash Command | Description | What It Accomplishes |
 |:---|:---|:---|:---|
-| **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company repository catalogs from HTTP, FileSystem, AWS S3, or Git forges | Scans company inventories across HTTP REST APIs (Spotify Backstage), AWS S3 buckets, or local directory clones. Auto-classifies components into 9 archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files ready to import directly into RobOS. |
-| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Synchronize living documentation with Knowledge Graph object updates | Monitors additions, modifications, or deletions in **Modular KGraph Packages** and `.robos/packages.yaml`. Discovers impacted user documentation, architecture diagrams, and API guides, and automatically updates documentation in lockstep. |
+| **`kgraph-search`** | `/kgraph-search <query>` | Semantic search across KGraph packages | Searches components, databases, contracts, pipelines, and agent personas by keywords, types, or tags. |
+| **`kgraph-insert`** | `/kgraph-insert <node>` | Insert architectural node with SHACL validation | Registers new services, databases, or contracts into modular package stores (`.robos/kgraphs/`) with enforced SHACL validation. |
+| **`kgraph-delete`** | `/kgraph-delete <nodeId>` | Safely delete node with cascade reference cleanup | Decommissions deprecated microservices or databases and cleans up referencing edges across packages. |
+| **`kgraph-update`** | `/kgraph-update <nodeId>` | In-place node mutation and property updates | Updates OpenAPI contracts, database connections, or squad ownership with automatic SHACL re-validation. |
+| **`kgraph-query`** | `/kgraph-query [filters]` | Graph query and multi-hop path traversal | Queries nodes by RDF type or traces connection paths between two entities across microservices and contracts. |
+| **`kgraph-impact-analysis`** | `/kgraph-impact-analysis <nodeId>` | Trace blast radius and dependent nodes | Recursively analyzes inbound/outbound dependency edges to calculate blast radius before code or schema changes. |
+| **`kgraph-validate`** | `/kgraph-validate [package]` | Enforce 100% W3C SHACL shape conformance | Validates all packages in `.robos/kgraphs/` against formal SHACL constraint shapes to guarantee 0 violations. |
+| **`kgraph-diff`** | `/kgraph-diff [branch]` | Semantic blast radius diff (World 1 vs World 2) | Compares Production `main` against feature branches to detect added, modified, or breaking architectural changes. |
+| **`kgraph-export`** | `/kgraph-export [options]` | Export graph to standard RDF formats | Exports Knowledge Graph packages to W3C JSON-LD 1.1, Turtle (`.ttl`), or N-Triples for external graph engines. |
+| **`kgraph-visualize`** | `/kgraph-visualize [target]` | Generate Mermaid and C4 diagrams | Produces executable Mermaid diagram syntax or component trees for any package or focused subsystem. |
+| **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company repository catalogs from HTTP, S3, or Git | Ingests enterprise inventories from HTTP REST APIs, AWS S3 buckets, local directories, or Git forges into KGraph packages. |
+| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Synchronize living documentation with graph updates | Monitors graph mutations in `.robos/` and automatically synchronizes markdown documentation and diagrams. |
 
-#### Ingesting Company Architecture Example:
+#### Knowledge Graph CLI & Skill Invocation Examples:
 ```bash
+# Search for microservices matching 'orders'
+node packages/robos-graph/bin/kgraph-cli.js search "orders" --type robos:Microservice
+
+# Trace blast radius and dependent components before editing a service
+node packages/robos-graph/bin/kgraph-cli.js impact "urn:robos:service:forms-api" --depth 3
+
+# Validate 100% SHACL conformance across all packages
+node packages/robos-graph/bin/kgraph-cli.js validate
+
 # Ingest an entire company repository catalog from an AWS S3 bucket
 node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
   --source s3://company-cloud-bucket/inventories/repos.json \

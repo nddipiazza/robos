@@ -181,6 +181,16 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `e2e-driven-dev` — Execute task development using text-narrated E2E tests and video generation
 - `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
+- `kgraph-delete` — Safely remove an entity node from the Knowledge Graph with optional cascade reference pruning
+- `kgraph-diff` — Semantic blast radius diff comparing World 1 (main) against World 2 (feature branch)
+- `kgraph-export` — Export Knowledge Graph to standard RDF formats (JSON-LD 1.1, Turtle .ttl, N-Triples)
+- `kgraph-impact-analysis` — Trace transitive blast radius and dependent nodes before code or schema changes
+- `kgraph-insert` — Insert or register a new architectural node with W3C SHACL shape validation gate
+- `kgraph-query` — Query Knowledge Graph nodes by RDF type or trace multi-hop connection paths between entities
+- `kgraph-search` — Semantic search across all Modular KGraph Packages by text, type, or tags
+- `kgraph-update` — Update properties on existing Knowledge Graph nodes with automatic SHACL re-validation
+- `kgraph-validate` — Run full W3C SHACL shape validation across all Modular KGraph Packages
+- `kgraph-visualize` — Generate executable Mermaid diagram syntax or C4 component dependency visualizations
 - `manage-robos-skill` — Add, update, or remove a RobOS skill in the plugin marketplace
 - `read-error-logs` — Inspect RobOS failure logs and Electron errors
 - `record-demo` — Record text-narrated video walkthrough script

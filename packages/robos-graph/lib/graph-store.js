@@ -982,10 +982,242 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
     } else {
       this.parser.nodes.push(node);
     }
+    this.packageManager.upsertNode(node);
     this.parser.loadNodes(this.parser.nodes);
     this.save();
     this.latestDocSyncPrompt = this.discernDocUpdates({ action: exists ? 'updated' : 'added', node });
     return node;
+  }
+
+  updateNode(nodeId, partialData = {}) {
+    const existing = this.getNode(nodeId);
+    if (!existing) return null;
+    const merged = { ...existing, ...partialData, '@id': nodeId };
+    return this.addNode(merged);
+  }
+
+  removeNode(nodeId, { cascade = false } = {}) {
+    const existingNode = this.getNode(nodeId);
+    if (!existingNode) return false;
+
+    // 1. Remove from package manager
+    this.packageManager.removeNode(nodeId);
+
+    // 2. Cascade remove references if requested
+    if (cascade) {
+      const refKeys = [
+        'robos:implementsContract', 'robos:usesEntity', 'robos:ownerTeam', 'robos:dependsOn',
+        'robos:service', 'robos:targetNode', 'robos:hasProject', 'robos:hasFeature',
+        'robos:hasEpic', 'robos:hasTask', 'robos:hasRepository', 'robos:usesDatabase',
+        'robos:usesMessageBroker', 'robos:publishesTo', 'robos:subscribesTo', 'robos:usesMCPServer',
+        'robos:deployedTo', 'robos:targetCluster', 'robos:inEnvironment', 'robos:hasPipeline',
+        'robos:consumesContract', 'robos:assignedTeam', 'robos:hasCredential'
+      ];
+      for (const node of this.parser.nodes) {
+        let changed = false;
+        for (const k of refKeys) {
+          if (Array.isArray(node[k])) {
+            const before = node[k].length;
+            node[k] = node[k].filter(ref => ref !== nodeId);
+            if (node[k].length !== before) changed = true;
+          } else if (node[k] === nodeId) {
+            delete node[k];
+            changed = true;
+          }
+        }
+        if (changed) {
+          this.packageManager.upsertNode(node);
+        }
+      }
+    }
+
+    // 3. Filter from parser.nodes
+    this.parser.nodes = this.parser.nodes.filter(n => n['@id'] !== nodeId);
+    this.parser.loadNodes(this.parser.nodes);
+    this.packageManager.saveDirtyPackages(this.filePath);
+
+    this.latestDocSyncPrompt = this.discernDocUpdates({ action: 'deleted', node: existingNode });
+    return true;
+  }
+
+  deleteNode(nodeId, options) {
+    return this.removeNode(nodeId, options);
+  }
+
+  searchNodes(searchQuery = '', filter = {}) {
+    const q = (searchQuery || '').toLowerCase().trim();
+    return this.parser.nodes.filter(node => {
+      if (filter.type) {
+        const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+        const match = types.some(t => t === filter.type || t.endsWith(`:${filter.type}`));
+        if (!match) return false;
+      }
+      if (filter.package) {
+        const pkg = this.packageManager.nodeToPackage.get(node['@id']) || node['robos:package'];
+        if (pkg !== filter.package) return false;
+      }
+      if (filter.ownerTeam && node['robos:ownerTeam'] !== filter.ownerTeam && node['robos:assignedTeam'] !== filter.ownerTeam) {
+        return false;
+      }
+      if (!q) return true;
+      const title = (node['dcterms:title'] || '').toLowerCase();
+      const desc = (node['dcterms:description'] || '').toLowerCase();
+      const id = (node['@id'] || '').toLowerCase();
+      const role = (node['robos:role'] || '').toLowerCase();
+      const tags = Array.isArray(node['robos:tags']) ? node['robos:tags'].join(' ').toLowerCase() : '';
+      return title.includes(q) || desc.includes(q) || id.includes(q) || role.includes(q) || tags.includes(q);
+    });
+  }
+
+  findPath(startId, endId, maxDepth = 6) {
+    if (!this.getNode(startId) || !this.getNode(endId)) return null;
+    if (startId === endId) return [{ id: startId, node: this.getNode(startId) }];
+
+    const queue = [[startId]];
+    const visited = new Set([startId]);
+
+    while (queue.length > 0) {
+      const currentPath = queue.shift();
+      const currentId = currentPath[currentPath.length - 1];
+
+      if (currentPath.length > maxDepth) continue;
+
+      const outbound = this.parser.outgoingRefs.get(currentId) || new Set();
+      for (const nextId of outbound) {
+        if (nextId === endId) {
+          const fullPathIds = [...currentPath, nextId];
+          return fullPathIds.map(id => ({ id, node: this.getNode(id) }));
+        }
+        if (!visited.has(nextId)) {
+          visited.add(nextId);
+          queue.push([...currentPath, nextId]);
+        }
+      }
+    }
+    return null;
+  }
+
+  generateMermaidGraph({ rootId = null, packageId = null, maxNodes = 50, direction = 'TD' } = {}) {
+    let targetNodes = [];
+    if (rootId) {
+      const root = this.getNode(rootId);
+      if (!root) return `graph ${direction}\n  empty["Node not found: ${rootId}"]`;
+      const visited = new Set([rootId]);
+      targetNodes.push(root);
+
+      const outbound = this.parser.outgoingRefs.get(rootId) || new Set();
+      for (const outId of outbound) {
+        if (!visited.has(outId) && targetNodes.length < maxNodes) {
+          visited.add(outId);
+          const n = this.getNode(outId);
+          if (n) targetNodes.push(n);
+        }
+      }
+      const inbound = this.parser.incomingRefs.get(rootId) || new Set();
+      for (const inId of inbound) {
+        if (!visited.has(inId) && targetNodes.length < maxNodes) {
+          visited.add(inId);
+          const n = this.getNode(inId);
+          if (n) targetNodes.push(n);
+        }
+      }
+    } else if (packageId) {
+      const pkg = this.packageManager.packages.get(packageId);
+      targetNodes = (pkg ? pkg.nodes : []).slice(0, maxNodes);
+    } else {
+      targetNodes = this.parser.nodes.slice(0, maxNodes);
+    }
+
+    const nodeIds = new Set(targetNodes.map(n => n['@id']));
+    const sanitize = (id) => id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    let lines = [`graph ${direction}`];
+
+    // Group by package in subgraphs
+    const packageGroups = new Map();
+    for (const node of targetNodes) {
+      const pkg = this.packageManager.nodeToPackage.get(node['@id']) || node['robos:package'] || 'core';
+      if (!packageGroups.has(pkg)) packageGroups.set(pkg, []);
+      packageGroups.get(pkg).push(node);
+    }
+
+    for (const [pkg, nodes] of packageGroups) {
+      lines.push(`  subgraph sub_${sanitize(pkg)}["${pkg}"]`);
+      for (const n of nodes) {
+        const title = (n['dcterms:title'] || n['@id']).replace(/["[\]()]/g, '');
+        const typeStr = Array.isArray(n['@type']) ? n['@type'][n['@type'].length - 1] : (n['@type'] || 'Node');
+        const shortType = typeStr.split(':').pop();
+        lines.push(`    ${sanitize(n['@id'])}["${title}<br/><small><i>${shortType}</i></small>"]`);
+      }
+      lines.push('  end');
+    }
+
+    // Connect edges between present nodes
+    const edgeSet = new Set();
+    for (const node of targetNodes) {
+      const fromId = node['@id'];
+      const outbound = this.parser.outgoingRefs.get(fromId) || new Set();
+      for (const toId of outbound) {
+        if (nodeIds.has(toId)) {
+          const edgeKey = `${fromId}->${toId}`;
+          if (!edgeSet.has(edgeKey)) {
+            edgeSet.add(edgeKey);
+            lines.push(`  ${sanitize(fromId)} --> ${sanitize(toId)}`);
+          }
+        }
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  exportGraph(format = 'jsonld', packageId = null) {
+    if (format === 'jsonld' || format === 'json') {
+      if (packageId) {
+        const pkg = this.packageManager.packages.get(packageId);
+        return JSON.stringify(pkg ? {
+          '@context': pkg.context || this.parser.context,
+          '@id': `urn:robos:package:${pkg.id}`,
+          'robos:package': pkg.id,
+          'dcterms:title': pkg.title,
+          'robos:nodes': pkg.nodes
+        } : {}, null, 2);
+      }
+      return JSON.stringify(this.parser.toJSONLD(), null, 2);
+    }
+
+    if (format === 'ttl' || format === 'turtle' || format === 'nt' || format === 'ntriples') {
+      const lines = [];
+      lines.push('@prefix oslc: <http://open-services.net/ns/core#> .');
+      lines.push('@prefix robos: <https://robos.dev/ns/sdlc#> .');
+      lines.push('@prefix dcterms: <http://purl.org/dc/terms/> .');
+      lines.push('@prefix schema: <https://schema.org/> .\n');
+
+      const nodesToExport = packageId && this.packageManager.packages.has(packageId)
+        ? this.packageManager.packages.get(packageId).nodes
+        : this.parser.nodes;
+
+      for (const node of nodesToExport) {
+        const s = `<${node['@id']}>`;
+        const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+        for (const t of types) {
+          if (t) lines.push(`${s} a <${t.startsWith('http') ? t : 'https://robos.dev/ns/sdlc#' + t.split(':').pop()}> .`);
+        }
+        if (node['dcterms:title']) {
+          lines.push(`${s} <http://purl.org/dc/terms/title> "${node['dcterms:title'].replace(/"/g, '\\"')}" .`);
+        }
+        if (node['dcterms:description']) {
+          lines.push(`${s} <http://purl.org/dc/terms/description> "${node['dcterms:description'].replace(/"/g, '\\"')}" .`);
+        }
+        const outbound = this.parser.outgoingRefs.get(node['@id']) || new Set();
+        for (const targetId of outbound) {
+          lines.push(`${s} <https://robos.dev/ns/sdlc#relatesTo> <${targetId}> .`);
+        }
+      }
+      return lines.join('\n');
+    }
+
+    return JSON.stringify(this.parser.toJSONLD(), null, 2);
   }
 
   bulkImportRepositories(repositories = [], options = {}) {
