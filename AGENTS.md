@@ -131,14 +131,11 @@ Run isolated E2E tests in a Docker container with Xvfb virtual framebuffer and P
 ./scripts/e2e-container.sh -i                      # Drop into interactive container shell
 ```
 
-### Testing Apps (Dev Harness)
-Run apps outside the VM or container:
+### Running Apps
+Launch any application from the **RobOS App Launcher** (the searchable application grid in the panel/dock) or run it directly from the terminal via Electron:
 ```bash
-node packages/robos-test/lib/harness.js --app <app-id> --scenario <scenario>
-node packages/robos-test/lib/harness.js --list-apps
-node packages/robos-test/lib/harness.js --list-scenarios
+electron packages/<app-id>
 ```
-Scenarios: `all-good`, `no-gh-auth`, `no-ssh-key`, `ssh-not-on-github`, `scope-missing`, `git-config-missing`, `all-broken`
 
 ### Building & Resetting the VM
 ```bash

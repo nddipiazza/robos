@@ -31,15 +31,16 @@ cd robos
 
 The repo is a monorepo of independent packages — there is **no root `package.json`**. Each app in `packages/` is self-contained.
 
-### Run an app locally (dev harness)
+### Run an app locally
 
-The easiest way to test an app without a VM:
+Launch any RobOS application from the **RobOS App Launcher** in the desktop environment, or launch it directly from the terminal using Electron:
 
 ```bash
-cd packages/robos-test
-npm install
-node harness.js --list-apps        # see all apps
-node harness.js --app dev-central  # run an app in a mocked environment
+# Launch Dev Central daily dashboard (or open from RobOS App Launcher)
+electron packages/dev-central
+
+# Launch any app by package directory
+electron packages/<app-id>
 ```
 
 ### Run tests

@@ -41,26 +41,26 @@ sudo bash packages/desktop-shell/install.sh
 ```
 
 ### 3. Launching Applications
-Once installed, all RobOS applications appear directly in your standard GNOME App Launcher, application grid, and system menu. You can also launch any application directly from the CLI or dev harness:
+All RobOS applications are accessible directly from the **RobOS App Launcher** (the searchable application grid in the desktop dock and top panel). Alternatively, you can launch any application directly from the command line:
 
 ```bash
-# Launch Dev Central daily command center
-node packages/robos-test/lib/harness.js --app dev-central
+# Launch Dev Central daily command center (or open "Dev Central" in RobOS App Launcher)
+electron packages/dev-central
 
-# Launch RobOS App Wizard (Greenfield Scaffolding & Codebase Ingestion)
-node packages/robos-test/lib/harness.js --app app-wizard
+# Launch RobOS App Wizard (or open "RobOS App Wizard" in RobOS App Launcher)
+electron packages/app-wizard
 
-# Launch RobOS Group Manager (Teams & Enterprise Directory Sync)
-node packages/robos-test/lib/harness.js --app group-manager
+# Launch RobOS Group Manager (or open "Group Manager" in RobOS App Launcher)
+electron packages/group-manager
 
-# Launch Relational DB Manager
-node packages/robos-test/lib/harness.js --app db-manager
+# Launch Relational DB Manager (or open "Relational DB Manager" in RobOS App Launcher)
+electron packages/db-manager
 
-# Launch System Topology Studio
-node packages/robos-test/lib/harness.js --app topology-manager
+# Launch System Topology Studio (or open "System Topology" in RobOS App Launcher)
+electron packages/topology-manager
 
-# Launch Bruno REST API Client
-node packages/robos-test/lib/harness.js --app rest-client
+# Launch Bruno REST API Client (or open "REST API Client" in RobOS App Launcher)
+electron packages/rest-client
 ```
 
 ---

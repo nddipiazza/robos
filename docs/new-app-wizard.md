@@ -57,9 +57,9 @@ The following walkthrough demonstrates scaffolding a production-ready **Payment 
 
 ### Step 1: Select Application Archetype
 
-Launch the App Wizard from the desktop dock or terminal:
+Launch the App Wizard from the **RobOS App Launcher** (search for "App Wizard" in the application grid or desktop dock), or launch it from the terminal:
 ```bash
-node packages/robos-test/lib/harness.js --app app-wizard
+electron packages/app-wizard
 ```
 
 The developer chooses between the 9 available archetypes. Clicking an archetype card immediately selects the corresponding architectural archetype and configures downstream options:
@@ -238,8 +238,8 @@ Execute the automated test and headless walkthrough recording with:
 # Run the live E2E video demo recording with audio narration:
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-wizard-demo.js
 
-# Launch the App Wizard interactively in the RobOS Dev Harness:
-node packages/robos-test/lib/harness.js --app app-wizard --scenario all-good
+# Launch the App Wizard directly from the terminal (or open "App Wizard" in RobOS App Launcher):
+electron packages/app-wizard
 ```
 
 ---

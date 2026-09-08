@@ -80,8 +80,8 @@ Every skill registered in the Skills Manager is automatically wired into the `<r
 ## How to Launch and Test
 
 ```bash
-# Launch the Skills Manager in the RobOS Dev Harness:
-node packages/robos-test/lib/harness.js --app skills-manager
+# Launch the Skills Manager (or open "Skills Manager" in RobOS App Launcher):
+electron packages/skills-manager
 
 # Run the automated smoke test suite:
 node --test packages/robos-test/tests/skills-manager/smoke.test.js

@@ -223,10 +223,9 @@ In addition to AI agent skills, RobOS includes the **Skills Manager** applicatio
 - **Custom Skill Creation**: Add personal terminal macros and scripts stored in `~/.config/robos/skills.json`.
 - **Integration with `<robos-ai-textarea>`**: Every skill in the manager is available via `@`-mention typeahead in AI prompt boxes throughout RobOS applications.
 
-To launch the Skills Manager:
+To launch the Skills Manager, open **Skills Manager** from the **RobOS App Launcher** (searchable application grid in the panel/dock), or launch it from the terminal:
 ```bash
-# Launch from terminal or desktop dock:
-node packages/robos-test/lib/harness.js --app skills-manager
+electron packages/skills-manager
 ```
 
 ---
