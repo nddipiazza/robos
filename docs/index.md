@@ -32,7 +32,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[The 4 Pillars]({{ site.baseurl }}{% link four-pillars.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -42,6 +42,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
+  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Big Wins</a>
   <a href="{{ site.baseurl }}{% link new-company-setup.md %}" class="btn fs-3">🚀 New Company Setup</a>
   <a href="{{ site.baseurl }}{% link existing-company-setup.md %}" class="btn fs-3">🏢 Existing Company Setup</a>
   <a href="{{ site.baseurl }}{% link new-app-wizard.md %}" class="btn fs-3">✨ Develop a New App</a>
@@ -86,36 +87,61 @@ RobOS turns the developer into a **Lead Architect**. Just as OpenAPI specificati
 
 ---
 
-## The 4 Architectural Pillars of RobOS
+## RobOS Big Wins: Core Innovations & Strategic Advantages
 
-RobOS is built around 4 core innovations that separate a true AI-first operating system from traditional coding environments:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 9 core breakthroughs:
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #00bcd4;">
-<h3 style="margin-top: 0; color: #00bcd4;">🧠 1. Dual-State Living Architecture & KGraph Generation</h3>
-<p>RobOS maintains a linked knowledge graph comparing <strong>World 1 (Live Production)</strong> against <strong>World 2 (Your Feature Branch)</strong>. It serves as both the master blueprint from which applications are auto-generated and the semantic engine calculating the exact blast radius of every change across microservices, schemas, and contracts <em>before</em> any code is merged.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4;">
+<h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 1. KGraph-First App Generation</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #8b5cf6;">
-<h3 style="margin-top: 0; color: #8b5cf6;">👤 2. Ephemeral In-Memory Agent Sandboxes</h3>
-<p>AI agents run in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual X11 displays. When the task finishes, the memory is wiped clean with zero leftover temporary files, stray ports, or rogue background processes.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6;">
+<h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🧠 2. Dual-State SDLC Knowledge Graph</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #10b981;">
-<h3 style="margin-top: 0; color: #10b981;">🎥 3. Automated Video Proof-of-Work</h3>
-<p>No code change reaches human review without automated visual proof. Agents run end-to-end verifications, click real buttons, query real databases, and record 1080p narrated videos so you can review complex features in under 30 seconds.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6;">
+<h3 style="margin-top: 0; color: #3b82f6; font-size: 1.1rem;">👤 3. Ephemeral In-Memory Sandboxes</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.5rem; border-top: 4px solid #f59e0b;">
-<h3 style="margin-top: 0; color: #f59e0b;">⚡ 4. Zero-YAML Declarative GitOps</h3>
-<p>System topology, data sources, and contracts are saved in clean, human-readable Git files under <code>.robos/</code>. Adding a database or service to your visual architecture automatically synthesizes ready-to-deploy <strong>Kubernetes manifests and Helm charts</strong>.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981;">
+<h3 style="margin-top: 0; color: #10b981; font-size: 1.1rem;">🎥 4. Video Proof-of-Work</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b;">
+<h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 5. 100% Declarative GitOps Storage</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899;">
+<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 6. Native Protocol & Database Suite</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Integrated DBeaver-grade SQL console (Postgres, Oracle, MySQL), NoSQL DB Manager (Mongo, Redis), gRPC Client with Protobuf reflection, GraphQL explorer, and Git-backed REST client.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6;">
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 7. Interactive Planning & 66+ Templates</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1;">
+<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 8. Modular Namespaces & Multi-Repo KGraph</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308;">
+<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 9. DevOps Integrations & GPG Password Store</h3>
+<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in the KGraph: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
 </div>
 
 </div>
 
 <div style="text-align: center; margin: 1.5rem 0 2.5rem;">
-  <a href="{{ site.baseurl }}{% link four-pillars.md %}" class="btn btn-primary fs-5">Explore the 4 Architectural Pillars in Depth →</a>
+  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn btn-primary fs-5">Explore All 9 RobOS Big Wins in Depth →</a>
 </div>
 
 ---
