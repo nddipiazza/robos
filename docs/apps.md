@@ -21,8 +21,8 @@ nav_order: 13
 ## 1. Planning & Visual Architecture
 
 ### RobOS App Wizard (Greenfield & Brownfield Multi-App Scaffolding)
-Scaffold brand-new applications or import existing repositories across 6 multi-app archetypes:
-- **6 Supported Archetypes**: `robos:Microservice`, `robos:DesktopApp`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, and `robos:Library`.
+Scaffold brand-new applications or import existing repositories across 9 multi-app archetypes:
+- **9 Supported Archetypes**: `robos:Microservice`, `robos:FrontEndApp` (`schema:WebApplication`), `robos:DesktopApp`, `robos:PCGame` (`schema:VideoGame`), `robos:MobileGame` (`schema:VideoGame`), `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, and `robos:Library`.
 - **Greenfield Scaffolding**: Automatically generates runnable `dev-setup.sh`, Spotify Backstage `catalog-info.yaml`, CI/CD pipelines, Spectral-linted API contracts, and dual-state Knowledge Graph registrations.
 - **Brownfield Codebase Ingestion**: Automatically scans existing directories, infers tech stacks (`package.json`, `pom.xml`, `go.mod`, `Cargo.toml`, `pyproject.toml`), and maps components into `.robos/packages.yaml` without manual YAML editing.
 - **Dedicated Guides**: [Develop a New App]({{ '/new-app-wizard.html' | relative_url }}) and [Import Existing Apps]({{ '/app-import-wizard.html' | relative_url }}).
@@ -45,7 +45,7 @@ A visual whiteboard for mapping your entire engineering architecture:
 ![System Topology]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }})
 
 ### Task Planner & Project Breakdown
-Tell the AI what you want to build in plain English. RobOS breaks your goal down into an ordered, step-by-step roadmap of tasks and automatically synchronizes tickets to GitHub Issues, Gitea, or Jira.
+Tell the AI what you want to build in plain English, or choose from a library of **66+ interactive task templates** spanning Services & APIs, Front-End Applications, Game Development (Godot, Unity, Unreal), Mobile Apps (React Native, Flutter), Libraries, Knowledge Graph & Schemas, Cloud Infrastructure, and DevOps. Each template provides an interactive web form tailored to the target domain, and developers can author and persist custom task templates in `~/.config/robos/task-planner/custom-templates/`. RobOS breaks goals down into structured Epics and child stories, synchronizing tickets to GitHub Issues, Gitea, or Jira.
 ![Task Planner]({{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }})
 
 ### Contract Studio & Live API Mocks
@@ -121,3 +121,7 @@ Explore the full connected map of your software ecosystem with visual comparison
 ### Data Model Studio (TypeSpec)
 Define your domain models once in Microsoft TypeSpec; RobOS automatically generates matching TypeScript interfaces, Java Records, and Go structs.
 ![Schema Studio]({{ '/assets/images/screenshots/schema-studio-frame_01.png' | relative_url }})
+
+### Skills Manager & Cross-Agent AI Skills Library
+Access 74+ parameterized system, Git, and Docker diagnostic commands alongside standardized cross-agent AI skills for Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. Read the full [RobOS Skills Guide]({{ site.baseurl }}{% link robos-skills.md %}).
+

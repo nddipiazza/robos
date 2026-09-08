@@ -14,6 +14,9 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 const SETTINGS_FILE   = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 const PROJECTS_DIR    = path.join(os.homedir(), '.config', 'robos', 'task-planner', 'projects');
 
+const { TemplateManager } = require('./lib/template-manager');
+const templateManager = new TemplateManager();
+
 function ensureProjectsDir() {
   fs.mkdirSync(PROJECTS_DIR, { recursive: true });
 }
@@ -85,13 +88,16 @@ function getActiveServer(settings) {
   const s = settings || readSettings();
   const servers = s.task_servers || [];
   if (!servers.length) {
-    return {
-      id: 'gitea-local',
-      name: 'Gitea (Local OSS Forge)',
-      type: 'gitea',
-      url: 'http://127.0.0.1:3000',
-      repo: 'robos/acme-petshop',
-    };
+    if (process.env.ROBOS_DEMO_SHOW === '1') {
+      return {
+        id: 'gitea-local',
+        name: 'Gitea (Local OSS Forge)',
+        type: 'gitea',
+        url: 'http://127.0.0.1:3000',
+        repo: 'robos/acme-petshop',
+      };
+    }
+    return null;
   }
   const activeId = s.active_task_server;
   return servers.find(ts => ts.id === activeId) || servers[0];
@@ -658,6 +664,50 @@ ipcMain.handle('delete-project', (_, id) => {
     if (fs.existsSync(fp)) fs.unlinkSync(fp);
     return { ok: true };
   } catch (e) { return { ok: false, error: e.message }; }
+});
+
+// ── Templates ─────────────────────────────────────────────────────────────────
+ipcMain.handle('list-task-templates', () => {
+  try {
+    const templates = templateManager.listTemplates();
+    return { ok: true, templates };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('get-task-template', (_, id) => {
+  try {
+    const template = templateManager.getTemplate(id);
+    if (!template) return { ok: false, error: `Template "${id}" not found.` };
+    return { ok: true, template };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('save-custom-template', (_, template) => {
+  try {
+    return templateManager.saveCustomTemplate(template);
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('delete-custom-template', (_, id) => {
+  try {
+    return templateManager.deleteCustomTemplate(id);
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('generate-template-plan', (_, { id, answers }) => {
+  try {
+    return templateManager.generatePlan(id, answers);
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 });
 
 // ── Sync a single task to the task server ─────────────────────────────────────

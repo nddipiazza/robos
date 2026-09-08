@@ -91,16 +91,34 @@
             <select id="parent-epic-select" class="epic-select"></select>
           </section>
 
+          <!-- Task Templates Quick-Access & Browser Bar -->
+          <section id="templates-banner" class="card templates-banner">
+            <div class="templates-banner-header">
+              <div class="templates-banner-title">
+                <span class="templates-icon">✦</span>
+                <h2>Task Templates</h2>
+                <span class="templates-count-badge" id="templates-count-badge">50+ Available</span>
+              </div>
+              <div class="templates-banner-actions">
+                <button class="btn btn-sm btn-outline" id="btn-open-custom-builder">＋ Create Custom Template</button>
+                <button class="btn btn-sm btn-accent" id="btn-browse-templates">Browse All Templates →</button>
+              </div>
+            </div>
+            <div class="template-quick-pills" id="template-quick-pills">
+              <!-- Dynamically populated quick template pills -->
+            </div>
+          </section>
+
           <section class="prompt-section card">
             <div class="prompt-header-row">
-              <h2>Describe the architecture, feature, or tasks to plan</h2>
+              <h2>Describe the tasks and architecture you want to plan</h2>
             </div>
             <div class="prompt-row">
               <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
                 placeholder="e.g. Create Acme Petshop polyglot platform with Java 21 Spring Boot REST API, React 18 web adoption portal, and TypeSpec shared library. Ask me questions to refine the design." min-height="120"></robos-ai-textarea>
               <div class="prompt-actions">
                 <button class="btn btn-accent" id="btn-generate" disabled>
-                  <span id="btn-generate-text">✦ Plan using AI Prompt</span>
+                  <span id="btn-generate-text">✦ Generate with AI</span>
                   <span id="btn-generate-spinner" class="spinner" style="display:none"></span>
                 </button>
                 <span id="generate-status" class="status-text"></span>
@@ -172,6 +190,86 @@
       <div class="modal-actions">
         <button class="btn btn-accent" id="save-modal-ok">Save</button>
         <button class="btn btn-outline" id="save-modal-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Task Template Browser Modal ────────────────────────────────────── -->
+  <div id="template-browser-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span class="templates-icon">✦</span>
+          <h3>Task Templates Library</h3>
+          <span class="templates-count-badge" id="modal-template-count">50+ Templates</span>
+        </div>
+        <button class="modal-close-btn" id="btn-close-browser">✕</button>
+      </div>
+      <div class="template-search-bar">
+        <input type="text" id="template-search-input" class="template-search-input" placeholder="Search 50+ task templates (e.g. backend, react, godot, kgraph, java, mobile, k8s)..." />
+        <button class="btn btn-outline btn-sm" id="btn-modal-create-custom">＋ New Custom Template</button>
+      </div>
+      <div class="template-category-bar" id="template-category-filters"></div>
+      <div class="template-grid" id="template-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── Interactive Template Form Modal ─────────────────────────────────── -->
+  <div id="template-form-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-box modal-md">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span id="form-template-icon" class="form-template-icon">📋</span>
+          <div>
+            <h3 id="form-template-title">Template Title</h3>
+            <span id="form-template-category" class="template-badge">Category</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-form">✕</button>
+      </div>
+      <p id="form-template-desc" class="template-form-desc">Description of the task template.</p>
+      <form id="template-interactive-form" class="template-interactive-form" onsubmit="return false;">
+        <div id="template-form-fields" class="template-form-fields"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="btn-cancel-template-form">Cancel</button>
+          <button type="button" class="btn btn-accent" id="btn-submit-template-form">✦ Generate Task Plan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Custom Template Builder Modal ──────────────────────────────────── -->
+  <div id="custom-template-builder-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-box modal-md">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span class="templates-icon">⭐</span>
+          <h3>Create Custom Task Template</h3>
+        </div>
+        <button class="modal-close-btn" id="btn-close-custom-builder">✕</button>
+      </div>
+      <div class="custom-builder-form">
+        <div class="meta-field">
+          <label>Template Title</label>
+          <input type="text" id="custom-tpl-title" class="meta-input" placeholder="e.g. Plan to build custom AI workflow" />
+        </div>
+        <div class="meta-field">
+          <label>Category</label>
+          <input type="text" id="custom-tpl-category" class="meta-input" placeholder="e.g. Custom Templates" />
+        </div>
+        <div class="meta-field">
+          <label>Description</label>
+          <textarea id="custom-tpl-desc" class="meta-input" rows="2" placeholder="Brief summary of what this template plans..."></textarea>
+        </div>
+        <div class="meta-field">
+          <label>Interactive Form Fields (JSON or leave empty for standard fields)</label>
+          <textarea id="custom-tpl-fields-json" class="meta-input code-font" rows="5" placeholder='[{"id":"targetName","label":"Target Name","type":"text","default":"my-service","required":true}]'></textarea>
+          <span class="field-hint">Specify an array of field objects or leave empty for default inputs.</span>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="btn-cancel-custom-builder">Cancel</button>
+          <button type="button" class="btn btn-success" id="btn-save-custom-builder">💾 Save Template</button>
+        </div>
       </div>
     </div>
   </div>

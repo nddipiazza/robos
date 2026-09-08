@@ -1,0 +1,58 @@
+version: "1.0.0"
+title: "RobOS SDLC Knowledge Graph Catalog"
+description: "Multi-package, multi-repo knowledge graph specification with git-tag versioning."
+
+# Registered KGraph Repositories
+repositories:
+  - id: "local"
+    name: "Workspace Knowledge Graph"
+    path: ".robos"
+    default: true
+    version: "1.0.0"
+    packagesPath: "kgraphs"
+
+# Remote KGraph Dependencies (pulled by GitHub URL & Git Tag)
+dependencies:
+  - repository: "github.com/robos-os/kgraph-standard-library"
+    tag: "v1.0.0"
+    packages:
+      - "core-platform"
+      - "devops"
+
+# Standard Packages supplied by RobOS
+packages:
+  - id: "core-platform"
+    namespace: "robos.platform"
+    title: "RobOS Platform & Base SDLC Ontology"
+    description: "System graph roots, base architectural styles, and foundational metadata."
+    path: "kgraphs/core-platform/package.jsonld"
+
+  - id: "organization"
+    namespace: "robos.org"
+    title: "Organization, Teams & Developer Personas"
+    description: "Team topologies (platform, stream-aligned, enabling), developer personas, and ownership mapping."
+    path: "kgraphs/organization/package.jsonld"
+
+  - id: "services"
+    namespace: "robos.services"
+    title: "Microservices, REST APIs & gRPC Contracts"
+    description: "Backend services, OpenAPI 3.1 contracts, gRPC stubs, and consumer contract tests."
+    path: "kgraphs/services/package.jsonld"
+
+  - id: "applications"
+    namespace: "robos.apps"
+    title: "Client Applications, Web Frontends & Games"
+    description: "Front-end web apps, desktop apps, PC games, mobile games, mobile clients, and console CLIs."
+    path: "kgraphs/applications/package.jsonld"
+
+  - id: "devops"
+    namespace: "robos.devops"
+    title: "DevOps Accounts, Cloud Infrastructure & Pass Credentials"
+    description: "Cloud providers, CI/CD pipelines, container engines, artifact registries, domains, and GPG pass secrets."
+    path: "kgraphs/devops/package.jsonld"
+
+  - id: "learning"
+    namespace: "robos.learning"
+    title: "Interactive eLearning Curriculums & Living Docs"
+    description: "Interactive courses, tutorials, architectural guides, and living documentation."
+    path: "kgraphs/learning/package.jsonld"

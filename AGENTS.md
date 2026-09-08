@@ -79,11 +79,12 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Tech Workbench** | Technical spike research with AI assistance |
 | **Work Journal** | Git-backed developer journal with AI activity feed |
 | **Group Manager** | Manage organizations, teams, enterprise directory sync (Okta, Azure AD SCIM, LDAP), company bootstrap, and Team Topologies |
-| **App Wizard** | Greenfield application scaffolding and brownfield codebase ingestion wizard across 6 multi-app archetypes |
+| **App Wizard** | Greenfield application scaffolding and brownfield codebase ingestion wizard across 9 multi-app archetypes |
 | **Pass Manager** | GUI for GPG-encrypted password store |
 | **Workflow Studio** | Workflow and issue lifecycle management |
 | **Agent Scheduler** | Background cron-based AI agent jobs |
 | **Task Servers** | Jira / GitHub task server configuration |
+| **Task Planner** | AI task plan generator and issue creator with 66+ template web forms and custom template builder |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
 | **REST API Client** | Git-backed REST API client, collection runner, and microservice verifier |
 | **Data Sources** | Knowledge Graph data sources explorer, database schema inspector, and interactive query console |
@@ -182,6 +183,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `create-test` — Create a test file using the robos-test framework
 - `deploy-to-vm` — Deploy packages to running VM
 - `e2e-driven-dev` — Execute task development using text-narrated E2E tests and video generation
+- `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 - `manage-robos-skill` — Add, update, or remove a RobOS skill in the plugin marketplace
 - `read-error-logs` — Inspect RobOS failure logs and Electron errors
@@ -191,6 +193,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `report-issue` — Convert raw issue reports or prompts into structured issue specifications in `docs/issues/reported/`
 - `restart-taskbar` — Restart the `robos-desktop` taskbar dock and `desktop-manager`
 - `start-vm`, `stop-vm`, `vm-status`, `vm-ssh` — VM lifecycle management
+- `sync-kgraph-docs` — Inspect RobOS Knowledge Graph object updates, discern documentation impacts, and synchronize living docs
 - `test-container` — Run containerized headless E2E tests in Docker + Xvfb
 - `update-app-icon` — Update an app's SVG icon
 
@@ -204,15 +207,34 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **Config storage**: All persistent data in `~/.config/robos/`
 - **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
 - **Logging**: `pino` JSON logging
-- **Secrets**: Environment variables only, validated with `zod`; never hardcode credentials
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
-### Knowledge Graph (KGraph), Multi-App Archetypes & Living Documentation Sync
-RobOS maintains a centralized Dual-State SDLC Knowledge Graph located in `.robos/knowledge-graph.jsonld` (with declarative GitOps files in `.robos/topology.yaml`, `.robos/teams.yaml`, `.robos/packages.yaml`, and `.robos/elearning.yaml`). All RobOS development skills (`e2e-driven-dev`, `create-robos-app`, `sync-kgraph-docs`) ensure that the KGraph is constantly kept up to date whenever apps, services, contracts, requirements, or eLearning modules evolve.
+### Knowledge Graph (KGraph), Multi-Package Architecture, Multi-Repo Dependencies & Living Docs Sync
+RobOS maintains a modular, packaged Dual-State SDLC Knowledge Graph. Rather than storing the universe in a single monolithic file, the Knowledge Graph is organized into namespaced, multi-file packages under `.robos/kgraphs/<package-id>/package.jsonld` indexed by `.robos/kgraph.yaml` (while maintaining backwards-compatible aggregated synchronization to `.robos/knowledge-graph.jsonld`).
+
+**Standard RobOS Packages & Namespaces**:
+- **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, databases, and container definitions.
+- **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas, and directory sync.
+- **`services`** (`robos.services`): Microservices, OpenAPI 3.1 contracts, Protobuf gRPC stubs, and BDD verification features.
+- **`applications`** (`robos.apps`): Client applications, frontend SPAs, desktop apps, mobile apps, PC/mobile games, and CLI tools.
+- **`devops`** (`robos.devops`): Connected cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG pass credentials.
+- **`learning`** (`robos.learning`): Interactive developer eLearning courses, labs, and architectural knowledge modules.
+
+**Multi-Repo Knowledge Graph Dependencies & Git-Tag Versioning**:
+RobOS supports multi-repo knowledge graph composition. In addition to the local workspace repository (`local`), developers can register external GitHub/Git repositories with semantic versioning tied to Git tags (e.g. `v1.2.0`). External KGraph repositories are cloned and cached into `~/.robos/cache/kgraphs/<repo-id>@<git-tag>/` with on-demand synchronization.
+
+**DevOps Account Integrations & GPG Password Store (`pass`)**:
+RobOS provides interactive onboarding wizards across 7 categories (Source Control, Cloud Infrastructure, CI/CD & GitOps, Package & Artifact Registries, Containers & Virtualization, OAuth & Identity, Domains & DNS Providers) covering 25+ providers (GitHub, GitLab, Bitbucket, AWS, GCP, Azure, OpenShift, Jenkins, Artifactory, Docker, Podman, Kubernetes, VMware, Okta, GoDaddy).
+- **Zero Plaintext Credentials in KGraph**: Sensitive API tokens, private keys, and passwords are never written to the Knowledge Graph.
+- **GPG Password Store Integration**: Secrets are encrypted and saved directly into the local UNIX password store (`pass`) at `~/.password-store/devops/<category>/<provider>/<account-slug>/<key>.gpg`.
+- **First-Class Reference Nodes**: The KGraph stores first-class `robos:PassCredential` reference nodes declaring the `robos:passPath`, linked to `robos:DevOpsIntegration` nodes via `robos:hasCredential`.
 
 **Multi-App Archetypes**:
 - **Microservices & Web APIs** (`robos:Microservice`): Backend services implementing OpenAPI 3.1 YAML, Protobuf gRPC, or GraphQL contracts.
+- **Front End Applications** (`robos:FrontEndApp` / `schema:WebApplication`): Single-page and SSR web client applications (React, Vite, Next.js, Vue, Svelte) running in modern browsers.
 - **Desktop Applications** (`robos:DesktopApp`): Workstation desktop programs (Electron, Qt, GTK, Tauri) running locally on developer or end-user machines.
+- **PC Games** (`robos:PCGame` / `schema:VideoGame`): Interactive desktop video games (Unreal Engine 5, Unity 6, Godot, Bevy) targeting Windows, Linux, and macOS with DirectX 12 and Vulkan graphics.
+- **Mobile Games** (`robos:MobileGame` / `schema:VideoGame` + `schema:MobileApplication`): Mobile video games (Unity, Unreal, Godot) targeting iOS and Android devices.
 - **Console & CLI Tools** (`robos:ConsoleApp`): Command-line terminal utilities (Go Cobra, Rust Clap, Python Click, Node Commander) with subcommands and flag specifications.
 - **Mobile Applications** (`robos:MobileApp`): iOS, Android, React Native, and Flutter mobile clients.
 - **Data Pipelines & Workers** (`robos:DataPipeline`): Stream and batch processing jobs (Kafka Streams, Celery, Spark).
@@ -223,7 +245,7 @@ Every repository registered in RobOS Git Projects (`~/.config/robos/git-projects
 
 **Cardinal Rule for KGraph Updates & Documentation Sync**:
 Whenever Knowledge Graph objects are updated (added, altered, or deleted), the AI must be prompted to discern any noticeable updates to system documentation and to update the documentation accordingly:
-1. **Analyze Graph Deltas**: Inspect newly added or modified nodes (Microservices, Desktop Apps, Console Apps, Mobile Apps, Data Pipelines, Libraries, Contracts, Requirements, eLearning courses, Teams, Projects).
+1. **Analyze Graph Deltas**: Inspect newly added or modified nodes (Microservices, Desktop Apps, Console Apps, Mobile Apps, Data Pipelines, Libraries, Contracts, Requirements, eLearning courses, Teams, Projects, DevOps Integrations).
 2. **Discern Noticeable Documentation Impacts**: Check user-facing documentation (`docs/index.md`, `README.md`, `docs/project-plan/`, API specs, and feature specs) for any necessary updates reflecting the changed architecture or capabilities.
 3. **Synchronize Living Docs**: Automatically apply the corresponding documentation updates so that documentation and the Knowledge Graph remain in continuous lockstep.
 

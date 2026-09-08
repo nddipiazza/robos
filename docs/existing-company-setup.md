@@ -24,36 +24,12 @@ When an existing software organization adopts RobOS, they rarely start from a bl
 
 RobOS is built on open standards (**OASIS OSLC 3.0**, **Team Topologies**, **SCIM 2.0**, **Backstage**, and **POSIX**) so that migrating an established organization requires no proprietary lock-in:
 
-```mermaid
-flowchart TD
-    subgraph Identity [Enterprise Identity & Directory Sync]
-        Okta["Okta / Azure AD Entra"]
-        LDAP["Corporate LDAP / Active Directory"]
-        GHTeams["GitHub Enterprise Teams"]
-    end
-
-    subgraph RobOSEngine [RobOS Identity & Governance Engine]
-        SyncAdapter["Directory Sync Adapter (SCIM 2.0)"]
-        PeopleStore["RobOS User Profiles<br/><code>~/.config/robos/people/&lt;uid&gt;.json</code>"]
-        GroupStore["RobOS Group Manager<br/><code>~/.config/robos/groups/&lt;gid&gt;.json</code>"]
-        TeamsYaml["Declarative GitOps Team Roster<br/><code>.robos/teams.yaml</code>"]
-    end
-
-    subgraph OrgResources [Enterprise Resources Ingestion]
-        Jira["Jira Cloud / Server & GitHub Projects"]
-        Vault["HashiCorp Vault & AWS Secrets Manager"]
-        K8s["Multi-Cluster Kubernetes & ArgoCD GitOps"]
-    end
-
-    Okta & LDAP & GHTeams --> SyncAdapter
-    SyncAdapter --> PeopleStore
-    SyncAdapter --> GroupStore
-    GroupStore --> TeamsYaml
-
-    TeamsYaml --> Jira
-    GroupStore --> Vault
-    TeamsYaml --> K8s
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}" alt="Zero-Friction Enterprise Migration Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Zero-Friction Enterprise Migration Architecture</strong>: How enterprise directory providers (Okta, Azure AD, LDAP, GitHub Teams) ingest into RobOS identity and governance engines to orchestrate downstream task trackers, secrets vaults, and multi-cluster Kubernetes environments. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -61,16 +37,12 @@ flowchart TD
 
 When joining an existing enterprise using RobOS, developers do not need to wait for IT tickets or manually copy config files. RobOS provides a direct **Enterprise Directory Sync & Identity Onboarding Wizard** in **Group Manager** (`packages/group-manager`):
 
-```mermaid
-flowchart LR
-    Dev["Developer Desktop<br/><i>(Guest / Unlinked)</i>"] --> SyncBtn["Click '🏢 Sync Directory'"]
-    SyncBtn --> Modal["Directory Sync Modal<br/><i>(Name, Email, VCS Handle, Okta SCIM)</i>"]
-    Modal --> Engine["RobOS Identity Engine"]
-    Engine --> Ident["Local Identity<br/><code>~/.config/robos/identity.json</code>"]
-    Engine --> People["Enterprise Rosters<br/><code>~/.config/robos/people/*.json</code>"]
-    Engine --> Teams["Team Topologies<br/><code>.robos/teams.yaml</code>"]
-    Engine --> KGraph["SDLC Knowledge Graph<br/><code>.robos/knowledge-graph.jsonld</code>"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}" alt="Developer Directory & Identity Synchronization Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Developer Directory & Identity Synchronization Workflow</strong>: Step-by-step onboarding flow from unlinked developer desktop to synchronized local identity, enterprise rosters, Team Topologies, and SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Developer Identity Input & Onboarding Wizard
 1. **Inspect Identity Badge**: Upon launching Group Manager, the sidebar **Active Identity Card** displays the current developer status (initially `Not Identified / Guest / Unlinked`).
@@ -188,8 +160,35 @@ This enables autonomous AI coding agents, PR review platforms, and IDE bridges t
 
 ## Step 3: Enterprise VCS & Task Tracker Migration
 
-### Bulk Git Repository Ingestion
-Organizations with dozens of microservices can bulk-import repositories using RobOS Git Projects (`~/.config/robos/git-projects.json`):
+### Generating Company Knowledge Graph Entries with AI Agent (`import-company-kgraph`)
+
+When onboarding an existing company or engineering organization with dozens or hundreds of repositories across GitHub, GitLab, HTTP service portals, or AWS S3 inventories, developers should tell their autonomous AI agent to use the **`import-company-kgraph`** skill:
+
+```bash
+# Ingest company repository inventory from an AWS S3 bucket
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --source s3://acme-cloud-governance/sdlc-catalog/enterprise-repos.json \
+  --company-name "Acme Global" \
+  --company-slug "acme" \
+  --import-to-robos
+
+# Or ingest from an internal HTTP service portal / Backstage catalog
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --source https://developer.internal.acme.com/api/catalog-entities.json \
+  --company-name "Acme Global" \
+  --output ./acme-kgraph.jsonld
+
+# Or scan local directories of cloned workspaces
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --source /home/developer/source/repos \
+  --company-name "Acme Global" \
+  --import-to-robos
+```
+
+The skill deeply analyzes every repository, detects archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`), synthesizes OpenAPI 3.1 contracts, and automatically generates valid OSLC JSON-LD package files ready to import directly into RobOS.
+
+### Bulk Git Repository Ingestion & Git Projects Linking
+Once the Knowledge Graph entries are generated, RobOS Git Projects (`~/.config/robos/git-projects.json`) links all repositories into the multi-repo explorer:
 ```bash
 # Ingest all repositories under an enterprise GitHub / Gitea organization
 node packages/robos-cli/bin/robos.js git import --org acme-enterprise --vcs github-enterprise

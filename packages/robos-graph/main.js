@@ -116,3 +116,20 @@ ipcMain.handle('graph-import-git-projects', async () => store.importGitProjectsC
 ipcMain.handle('graph-request-app-doc-update', async (_, payload) => store.requestAppDocUpdate(payload));
 ipcMain.handle('graph-get-doc-sync-prompt', async () => store.latestDocSyncPrompt || store.discernDocUpdates({ action: 'inspect', node: store.parser.nodes[0] }));
 ipcMain.handle('graph-apply-doc-updates', async (_, updates) => ({ ok: true, message: 'Documentation updated successfully in accordance with KGraph synchronization.' }));
+
+// ── Multi-Package & Multi-Repo IPC ──────────────────────────────────────────
+ipcMain.handle('kgraph-list-packages', async () => store.listPackages());
+ipcMain.handle('kgraph-get-package', async (_, pkgId) => store.getPackage(pkgId));
+ipcMain.handle('kgraph-list-repos', async () => store.listRepos());
+ipcMain.handle('kgraph-add-repo', async (_, repoData) => store.addRepo(repoData));
+ipcMain.handle('kgraph-remove-repo', async (_, repoId) => store.removeRepo(repoId));
+ipcMain.handle('kgraph-sync-remote', async (_, repoId) => store.syncRemoteRepo(repoId));
+
+// ── DevOps Integrations IPC ─────────────────────────────────────────────────
+ipcMain.handle('devops-get-categories', async () => store.getDevOpsCategories());
+ipcMain.handle('devops-get-providers', async (_, categoryId) => store.getDevOpsProviders(categoryId));
+ipcMain.handle('devops-list-integrations', async () => store.listDevOpsIntegrations());
+ipcMain.handle('devops-save-integration', async (_, payload) => store.saveDevOpsIntegration(payload));
+ipcMain.handle('devops-test-connection', async (_, payload) => store.testDevOpsConnection(payload));
+ipcMain.handle('devops-delete-integration', async (_, id) => store.deleteDevOpsIntegration(id));
+

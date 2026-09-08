@@ -107,6 +107,38 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:technology', minCount: 1, message: 'Library must specify technology stack.' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:FrontEndAppShape',
+    targetClass: 'robos:FrontEndApp',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Front End App must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Front End App must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Front End App must specify technology stack.' },
+      { path: 'robos:frontendFramework', minCount: 1, message: 'Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:PCGameShape',
+    targetClass: 'robos:PCGame',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'PC Game must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'PC Game must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'PC Game must specify technology stack.' },
+      { path: 'robos:gameEngine', minCount: 1, message: 'PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy).' },
+      { path: 'robos:targetPlatform', minCount: 1, message: 'PC Game must specify target PC platform(s) (Windows, Linux, macOS).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MobileGameShape',
+    targetClass: 'robos:MobileGame',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Mobile Game must have a title.' },
+      { path: 'robos:repository', minCount: 1, message: 'Mobile Game must define a repository.' },
+      { path: 'robos:technology', minCount: 1, message: 'Mobile Game must specify technology stack.' },
+      { path: 'robos:gameEngine', minCount: 1, message: 'Mobile Game must specify game engine (Unity, Unreal Engine, Godot).' },
+      { path: 'robos:platform', minCount: 1, message: 'Mobile Game must specify mobile platform(s) (iOS, Android).' },
+    ],
+  },
 ];
 
 class SHACLValidator {

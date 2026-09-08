@@ -100,7 +100,12 @@ ipcMain.handle('app-wizard:scan-source', async (_, { sourcePath }) => {
       } else if (allDeps['react-native'] || files.includes('app.json')) {
         language = 'TypeScript';
         framework = 'React Native';
-        archetype = 'robos:MobileApp';
+        archetype = path.basename(sourcePath).toLowerCase().includes('game') ? 'robos:MobileGame' : 'robos:MobileApp';
+      } else if (allDeps['vite'] || allDeps['next'] || allDeps['nuxt'] || allDeps['vue'] || allDeps['svelte'] || allDeps['@angular/core'] || allDeps['react-scripts'] || (allDeps['react'] && !allDeps['express'])) {
+        language = 'TypeScript';
+        framework = allDeps['vue'] ? 'Vue' : allDeps['next'] ? 'Next.js' : allDeps['svelte'] ? 'Svelte' : allDeps['@angular/core'] ? 'Angular' : 'React';
+        archetype = 'robos:FrontEndApp';
+        port = 3000;
       } else if (allDeps['express'] || allDeps['fastify'] || allDeps['koa']) {
         language = 'Node.js 20';
         framework = 'Express';
@@ -111,6 +116,10 @@ ipcMain.handle('app-wizard:scan-source', async (_, { sourcePath }) => {
         framework = 'Library';
         archetype = 'robos:Library';
       }
+    } else if (files.some(f => f.endsWith('.uproject')) || files.includes('project.godot')) {
+      language = 'C++ / GDScript';
+      framework = files.includes('project.godot') ? 'Godot' : 'Unreal Engine';
+      archetype = path.basename(sourcePath).toLowerCase().includes('mobile') ? 'robos:MobileGame' : 'robos:PCGame';
     } else if (files.includes('go.mod')) {
       language = 'Go 1.22';
       framework = 'Gin';
@@ -160,7 +169,16 @@ ipcMain.handle('app-wizard:refine-inspection', async (_, { inspectionData, promp
   const p = prompt.toLowerCase();
 
   // 1. Archetype detection
-  if (p.includes('console') || p.includes('cli') || p.includes('terminal')) {
+  if (p.includes('mobile game') || p.includes('game mobile')) {
+    refined.archetype = 'robos:MobileGame';
+    changes.push('Archetype -> robos:MobileGame');
+  } else if (p.includes('pc game') || (p.includes('game') && !p.includes('mobile'))) {
+    refined.archetype = 'robos:PCGame';
+    changes.push('Archetype -> robos:PCGame');
+  } else if (p.includes('front end') || p.includes('frontend') || p.includes('web app') || p.includes('spa')) {
+    refined.archetype = 'robos:FrontEndApp';
+    changes.push('Archetype -> robos:FrontEndApp');
+  } else if (p.includes('console') || p.includes('cli') || p.includes('terminal')) {
     refined.archetype = 'robos:ConsoleApp';
     changes.push('Archetype -> robos:ConsoleApp');
   } else if (p.includes('desktop') || p.includes('electron') || p.includes('tauri') || p.includes('gui')) {

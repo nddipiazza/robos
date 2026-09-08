@@ -2,6 +2,13 @@
 
 let serverInfo = null;
 let tasks = [];
+try {
+  Object.defineProperty(window, 'tasks', {
+    get() { return tasks; },
+    set(val) { tasks = val; },
+    configurable: true
+  });
+} catch (_) {}
 let existingEpics = [];
 let parentEpicKey = null;
 
@@ -63,6 +70,7 @@ async function init() {
   }
 
   await loadProjectsList();
+  await loadTaskTemplates();
 }
 
 async function loadExistingEpics() {
@@ -499,8 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-clear').addEventListener('click', () => {
     tasks = [];
+    window.tasks = tasks;
     renderTasks();
     updateCount();
+    document.getElementById('preview-section').style.display = 'none';
   });
 
   document.getElementById('btn-save-project').addEventListener('click', saveToProject);
@@ -521,6 +531,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (prevQBtn) prevQBtn.addEventListener('click', handlePrevQuestion);
   const submitQBtn = document.getElementById('btn-question-submit');
   if (submitQBtn) submitQBtn.addEventListener('click', handleSubmitAnswers);
+
+  // Template Browser & Modal wiring
+  const browseBtn = document.getElementById('btn-browse-templates');
+  if (browseBtn) browseBtn.addEventListener('click', openTemplateBrowser);
+  const closeBrowserBtn = document.getElementById('btn-close-browser');
+  if (closeBrowserBtn) closeBrowserBtn.addEventListener('click', closeTemplateBrowser);
+
+  const searchInput = document.getElementById('template-search-input');
+  if (searchInput) searchInput.addEventListener('input', renderTemplateGrid);
+
+  const closeFormBtn = document.getElementById('btn-close-form');
+  if (closeFormBtn) closeFormBtn.addEventListener('click', closeTemplateForm);
+  const cancelFormBtn = document.getElementById('btn-cancel-template-form');
+  if (cancelFormBtn) cancelFormBtn.addEventListener('click', closeTemplateForm);
+  const submitFormBtn = document.getElementById('btn-submit-template-form');
+  if (submitFormBtn) submitFormBtn.addEventListener('click', submitTemplateForm);
+
+  const openCustomBtn = document.getElementById('btn-open-custom-builder');
+  if (openCustomBtn) openCustomBtn.addEventListener('click', openCustomTemplateBuilder);
+  const modalCustomBtn = document.getElementById('btn-modal-create-custom');
+  if (modalCustomBtn) modalCustomBtn.addEventListener('click', () => { closeTemplateBrowser(); openCustomTemplateBuilder(); });
+  const closeCustomBtn = document.getElementById('btn-close-custom-builder');
+  if (closeCustomBtn) closeCustomBtn.addEventListener('click', closeCustomTemplateBuilder);
+  const cancelCustomBtn = document.getElementById('btn-cancel-custom-builder');
+  if (cancelCustomBtn) cancelCustomBtn.addEventListener('click', closeCustomTemplateBuilder);
+  const saveCustomBtn = document.getElementById('btn-save-custom-builder');
+  if (saveCustomBtn) saveCustomBtn.addEventListener('click', saveCustomTemplateFromBuilder);
 });
 
 function getPromptValue() {
@@ -635,9 +672,392 @@ async function handleGenerate() {
   if (!prompt) { showGenerateStatus('Please enter a description.', true); return; }
   if (!serverInfo) { showGenerateStatus('No task server connected.', true); return; }
 
-  showGenerateStatus('AI is analyzing requirements — please answer the architecture questions below.');
-  startQuestionWizard();
+  // If prompt explicitly requests questions/clarification, run wizard
+  if (prompt.toLowerCase().includes('ask me question') || prompt.toLowerCase().includes('clarif')) {
+    showGenerateStatus('AI is analyzing requirements — please answer the architecture questions below.');
+    startQuestionWizard();
+    return;
+  }
+
+  setGenerating(true);
+  showGenerateStatus('AI agent is synthesizing finalized task breakdown from prompt…');
+
+  const result = await window.robos.generateTasks({ prompt, serverInfo });
+  setGenerating(false);
+
+  if (!result.ok) {
+    showGenerateStatus('Error: ' + (result.error || 'Failed to generate tasks'), true);
+    return;
+  }
+
+  tasks = (result.tasks || []).map(t => ({
+    title:          t.title || '',
+    body:           t.body || t.description || '',
+    labels:         Array.isArray(t.labels) ? t.labels : [],
+    isEpic:         !!t.isEpic,
+    epicName:       t.epicName || '',
+    parentEpicIdx:  typeof t.parentEpicIndex === 'number' ? t.parentEpicIndex : (typeof t.parentEpicIdx === 'number' ? t.parentEpicIdx : null),
+    issueType:      t.issueType || (t.isEpic ? 'Epic' : 'Story'),
+    epicKey:        t.epicKey || null,
+    ticketKey:      null,
+    ticketUrl:      null,
+    ticketStatus:   null,
+  }));
+
+  renderTasks();
+  updateCount();
+  document.getElementById('preview-section').style.display = 'block';
+  document.getElementById('results-section').style.display = 'none';
+  showGenerateStatus(`Generated ${tasks.length} task${tasks.length !== 1 ? 's' : ''}. Review and edit below.`);
 }
+
+// ── Task Templates State & Functions ─────────────────────────────────────────
+let allTemplates = [];
+let activeTemplateCategory = 'All';
+let currentSelectedTemplate = null;
+
+async function loadTaskTemplates() {
+  try {
+    const result = await window.robos.listTaskTemplates();
+    allTemplates = result.ok ? (result.templates || []) : [];
+  } catch (_) {
+    allTemplates = [];
+  }
+  const countBadge = document.getElementById('templates-count-badge');
+  if (countBadge) countBadge.textContent = `${allTemplates.length} Available`;
+  const modalCount = document.getElementById('modal-template-count');
+  if (modalCount) modalCount.textContent = `${allTemplates.length} Templates`;
+  renderQuickPills();
+}
+
+function renderQuickPills() {
+  const container = document.getElementById('template-quick-pills');
+  if (!container) return;
+  const featuredIds = [
+    'backend-web-service',
+    'frontend-web-app',
+    'godot-game',
+    'java-library',
+    'mobile-app',
+    'react-frontend-app',
+    'create-resource',
+    'kgraph-schema'
+  ];
+  
+  const customTpls = allTemplates.filter(t => t.isCustom);
+  const featured = allTemplates.filter(t => featuredIds.includes(t.id));
+  const toShow = [...customTpls, ...featured].slice(0, 10);
+
+  container.innerHTML = toShow.map(t => `
+    <button class="template-pill" data-id="${escHtml(t.id)}" title="${escHtml(t.description || t.title)}">
+      <span class="template-pill-icon">${t.icon || '📋'}</span>
+      <span>${escHtml(t.title.replace(/^Plan to (Create|Add to) (a |an )?/i, ''))}</span>
+      ${t.isCustom ? '<span class="template-badge custom">Custom</span>' : ''}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.template-pill').forEach(btn => {
+    btn.addEventListener('click', () => openTemplateForm(btn.dataset.id));
+  });
+}
+
+function openTemplateBrowser() {
+  const overlay = document.getElementById('template-browser-overlay');
+  if (!overlay) return;
+  activeTemplateCategory = 'All';
+  const searchInput = document.getElementById('template-search-input');
+  if (searchInput) searchInput.value = '';
+  renderCategoryFilterBar();
+  renderTemplateGrid();
+  overlay.style.display = 'flex';
+}
+
+function closeTemplateBrowser() {
+  const overlay = document.getElementById('template-browser-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function renderCategoryFilterBar() {
+  const container = document.getElementById('template-category-filters');
+  if (!container) return;
+  const categories = ['All'];
+  allTemplates.forEach(t => {
+    if (t.category && !categories.includes(t.category)) categories.push(t.category);
+  });
+  if (!categories.includes('Custom Templates') && allTemplates.some(t => t.isCustom)) {
+    categories.push('Custom Templates');
+  }
+
+  container.innerHTML = categories.map(cat => `
+    <button class="template-cat-btn ${cat === activeTemplateCategory ? 'active' : ''}" data-cat="${escHtml(cat)}">
+      ${escHtml(cat)}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.template-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTemplateCategory = btn.dataset.cat;
+      renderCategoryFilterBar();
+      renderTemplateGrid();
+    });
+  });
+}
+
+function renderTemplateGrid() {
+  const grid = document.getElementById('template-grid');
+  if (!grid) return;
+  const searchInput = document.getElementById('template-search-input');
+  const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+  const filtered = allTemplates.filter(t => {
+    const matchesCat = activeTemplateCategory === 'All' ||
+      (activeTemplateCategory === 'Custom Templates' ? t.isCustom : t.category === activeTemplateCategory);
+    if (!matchesCat) return false;
+    if (!query) return true;
+    return (t.title || '').toLowerCase().includes(query) ||
+           (t.description || '').toLowerCase().includes(query) ||
+           (t.category || '').toLowerCase().includes(query) ||
+           (t.id || '').toLowerCase().includes(query);
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-plan-placeholder" style="grid-column: 1/-1;">No task templates match your search.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => `
+    <div class="template-card" data-id="${escHtml(t.id)}">
+      <div class="template-card-header">
+        <span class="template-card-icon">${t.icon || '📋'}</span>
+        <div class="template-card-title-col">
+          <div class="template-card-title">${escHtml(t.title)}</div>
+          <span class="template-badge ${t.isCustom ? 'custom' : ''}">${escHtml(t.category)}</span>
+        </div>
+      </div>
+      <div class="template-card-desc">${escHtml(t.description || '')}</div>
+      <div class="template-card-footer">
+        <span class="field-hint">${(t.fields || []).length} form field${(t.fields || []).length === 1 ? '' : 's'}</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${t.isCustom ? `<button class="template-del-btn" data-id="${escHtml(t.id)}" title="Delete Custom Template">Delete</button>` : ''}
+          <button class="btn btn-sm btn-accent template-use-btn" data-id="${escHtml(t.id)}">Use Template →</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.template-use-btn, .template-card').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.classList.contains('template-del-btn')) return;
+      const id = el.dataset.id;
+      if (id) {
+        closeTemplateBrowser();
+        openTemplateForm(id);
+      }
+    });
+  });
+
+  grid.querySelectorAll('.template-del-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const ok = await nativeConfirm(`Delete custom template "${id}"?`);
+      if (!ok) return;
+      await window.robos.deleteCustomTemplate(id);
+      await loadTaskTemplates();
+      renderTemplateGrid();
+    });
+  });
+}
+
+function findTemplateById(templateId) {
+  if (!templateId) return null;
+  let template = allTemplates.find(t => t.id === templateId);
+  if (!template && typeof templateId === 'string') {
+    const normalized = templateId.toLowerCase().replace(/^(create|add|plan-to-create|plan-to-add)-/, '');
+    template = allTemplates.find(t => {
+      const tNorm = t.id.toLowerCase().replace(/^(create|add|plan-to-create|plan-to-add)-/, '');
+      return t.id === normalized || tNorm === normalized;
+    });
+  }
+  return template || null;
+}
+
+function openTemplateForm(templateId) {
+  const template = findTemplateById(templateId);
+  if (!template) return;
+  currentSelectedTemplate = template;
+
+  const overlay = document.getElementById('template-form-overlay');
+  if (!overlay) return;
+
+  const iconEl = document.getElementById('form-template-icon');
+  if (iconEl) iconEl.textContent = template.icon || '📋';
+  const titleEl = document.getElementById('form-template-title');
+  if (titleEl) titleEl.textContent = template.title;
+  const catEl = document.getElementById('form-template-category');
+  if (catEl) {
+    catEl.textContent = template.category;
+    catEl.className = `template-badge ${template.isCustom ? 'custom' : ''}`;
+  }
+  const descEl = document.getElementById('form-template-desc');
+  if (descEl) descEl.textContent = template.description || '';
+
+  const fieldsContainer = document.getElementById('template-form-fields');
+  if (fieldsContainer) {
+    fieldsContainer.innerHTML = (template.fields || []).map(f => {
+      let inputHtml = '';
+      if (f.type === 'select') {
+        inputHtml = `
+          <select class="field-select" name="${escHtml(f.id)}">
+            ${(f.options || []).map(o => `
+              <option value="${escHtml(o.value)}" ${o.value === f.default ? 'selected' : ''}>${escHtml(o.label || o.value)}</option>
+            `).join('')}
+          </select>
+        `;
+      } else if (f.type === 'textarea') {
+        inputHtml = `<textarea class="field-textarea" name="${escHtml(f.id)}" rows="3" placeholder="${escHtml(f.placeholder || '')}">${escHtml(f.default || '')}</textarea>`;
+      } else if (f.type === 'number') {
+        inputHtml = `<input type="number" class="field-input" name="${escHtml(f.id)}" value="${escHtml(f.default || 0)}" />`;
+      } else {
+        inputHtml = `<input type="text" class="field-input" name="${escHtml(f.id)}" value="${escHtml(f.default || '')}" placeholder="${escHtml(f.placeholder || '')}" />`;
+      }
+
+      return `
+        <div class="form-field">
+          <label class="field-label">${escHtml(f.label)} ${f.required ? '<span style="color:#f87171">*</span>' : ''}</label>
+          ${f.help ? `<span class="field-help">${escHtml(f.help)}</span>` : ''}
+          ${inputHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  overlay.style.display = 'flex';
+}
+
+function closeTemplateForm() {
+  const overlay = document.getElementById('template-form-overlay');
+  if (overlay) overlay.style.display = 'none';
+  currentSelectedTemplate = null;
+}
+
+async function submitTemplateForm() {
+  if (!currentSelectedTemplate) return;
+  const templateToGenerate = currentSelectedTemplate;
+  const form = document.getElementById('template-interactive-form');
+  const answers = {};
+  if (form) {
+    const elements = form.querySelectorAll('input, select, textarea');
+    elements.forEach(el => {
+      if (el.name) answers[el.name] = el.value;
+    });
+  }
+
+  closeTemplateForm();
+  showGenerateStatus(`Generating task plan from template "${templateToGenerate.title}"…`);
+
+  try {
+    const result = await window.robos.generateTemplatePlan({
+      id: templateToGenerate.id,
+      answers
+    });
+
+    if (!result.ok) {
+      showGenerateStatus('Failed to generate template plan: ' + (result.error || 'Unknown error'), true);
+      return;
+    }
+
+    if (result.prompt) {
+      const promptEl = document.getElementById('prompt-input');
+      if (promptEl) {
+        promptEl.value = result.prompt;
+        promptEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+
+    tasks = (result.tasks || []).map(t => ({
+      title:         t.title || '',
+      body:          t.body || t.description || '',
+      labels:        Array.isArray(t.labels) ? t.labels : [],
+      isEpic:        !!t.isEpic,
+      epicName:      t.epicName || '',
+      parentEpicIdx: typeof t.parentEpicIndex === 'number' ? t.parentEpicIndex : (typeof t.parentEpicIdx === 'number' ? t.parentEpicIdx : null),
+      issueType:     t.issueType || (t.isEpic ? 'Epic' : 'Story'),
+      ticketKey:     t.ticketKey || null,
+      ticketUrl:     t.ticketUrl || null,
+      ticketStatus:  t.ticketStatus || null,
+    }));
+
+    renderTasks();
+    updateCount();
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+    showGenerateStatus(`Successfully generated ${tasks.length} task${tasks.length === 1 ? '' : 's'} from "${currentSelectedTemplate.title}". Review and edit below.`);
+  } catch (err) {
+    showGenerateStatus('Error generating plan: ' + err.message, true);
+  }
+}
+
+function openCustomTemplateBuilder() {
+  const overlay = document.getElementById('custom-template-builder-overlay');
+  if (!overlay) return;
+  document.getElementById('custom-tpl-title').value = '';
+  document.getElementById('custom-tpl-category').value = 'Custom Templates';
+  document.getElementById('custom-tpl-desc').value = '';
+  document.getElementById('custom-tpl-fields-json').value = '';
+  overlay.style.display = 'flex';
+}
+
+function closeCustomTemplateBuilder() {
+  const overlay = document.getElementById('custom-template-builder-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+async function saveCustomTemplateFromBuilder() {
+  const title = (document.getElementById('custom-tpl-title').value || '').trim();
+  const category = (document.getElementById('custom-tpl-category').value || '').trim() || 'Custom Templates';
+  const description = (document.getElementById('custom-tpl-desc').value || '').trim();
+  const fieldsRaw = (document.getElementById('custom-tpl-fields-json').value || '').trim();
+
+  if (!title) {
+    showGenerateStatus('Please enter a template title.', true);
+    return;
+  }
+
+  let fields = null;
+  if (fieldsRaw) {
+    try {
+      fields = JSON.parse(fieldsRaw);
+    } catch {
+      showGenerateStatus('Invalid JSON for form fields. Please provide a valid JSON array or leave empty.', true);
+      return;
+    }
+  }
+
+  const result = await window.robos.saveCustomTemplate({
+    title,
+    category,
+    description,
+    fields,
+  });
+
+  if (!result.ok) {
+    showGenerateStatus('Failed to save template: ' + (result.error || 'Unknown error'), true);
+    return;
+  }
+
+  closeCustomTemplateBuilder();
+  await loadTaskTemplates();
+  showGenerateStatus(`Custom template "${title}" saved successfully!`);
+}
+
+window.openTemplateForm = openTemplateForm;
+window.closeTemplateForm = closeTemplateForm;
+window.openTemplateBrowser = openTemplateBrowser;
+window.closeTemplateBrowser = closeTemplateBrowser;
+window.openCustomTemplateBuilder = openCustomTemplateBuilder;
+window.closeCustomTemplateBuilder = closeCustomTemplateBuilder;
+window.loadTaskTemplates = loadTaskTemplates;
 
 async function handleSubmitAnswers() {
   const card = document.getElementById('ai-questions-card');
@@ -898,6 +1318,7 @@ async function handleSyncAll() {
 
   const epicKeyByIndex = {};
   let successCount = 0, failCount = 0;
+  const results = [];
 
   const orderedIndices = [];
   tasks.forEach((t, i) => { if (t.isEpic && t.title.trim()) orderedIndices.push(i); });
@@ -912,14 +1333,24 @@ async function handleSyncAll() {
       tasks[idx].ticketStatus = 'open';
       epicKeyByIndex[idx] = result.key;
       successCount++;
+      results.push({ ok: true, title: tasks[idx].title, key: result.key, url: result.url, isEpic: tasks[idx].isEpic });
       showCreateStatus(`Synced ${successCount}/${orderedIndices.length}…`);
       renderTasks();
-    } else { failCount++; }
+    } else {
+      failCount++;
+      results.push({ ok: false, title: tasks[idx].title, error: result.error, isEpic: tasks[idx].isEpic });
+    }
   }
 
   setCreating(false);
   const msg = `✓ Synced ${successCount} task${successCount !== 1 ? 's' : ''}` + (failCount ? `, ${failCount} failed` : '');
   showCreateStatus(msg, failCount > 0);
+
+  if (results.length > 0) {
+    renderResults(results);
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+  }
 
   if (currentProjectId) {
     await window.robos.saveProject({ id: currentProjectId, name: currentProjectName, prompt: getPromptValue(), parentEpicKey: parentEpicKey || null, serverId: serverInfo ? serverInfo.id : null, tasks });
@@ -950,7 +1381,7 @@ function renderResults(results) {
       <span class="result-icon">${r.ok ? '✓' : '✗'}</span>
       ${r.isEpic ? '<span class="result-epic-badge">Epic</span>' : ''}
       <span class="result-title">${escHtml(r.title || '(untitled)')}</span>
-      ${r.ok && r.url ? `<a class="result-link" href="${escHtml(r.url)}" id="link-${encodeURIComponent(r.url)}">${escHtml(r.key || r.url)}</a>` : ''}
+      ${r.ok && r.url ? `<a class="result-link" href="${escHtml(r.url)}" id="link-${encodeURIComponent(r.url)}">${escHtml(r.url)}</a>` : ''}
       ${!r.ok ? `<span class="result-error">${escHtml(r.error)}</span>` : ''}
     </div>
   `).join('');

@@ -77,18 +77,21 @@ With organization and team identities established, developers provision their ap
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}" alt="Phase 1: Component Scaffolding or Codebase Ingestion Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Phase 1 Decision Flowchart</strong>: Greenfield scaffolding across 6 archetypes vs. Brownfield deep codebase inspection with AI refinement. <em>(Click image to zoom full screen)</em>
+    <strong>Phase 1 Decision Flowchart</strong>: Greenfield scaffolding across 9 archetypes vs. Brownfield deep codebase inspection with AI refinement. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 ### Path A: Develop a New App (Greenfield Scaffolding)
-Developers generate a production-ready repository skeleton across **6 core multi-app archetypes**:
+Developers generate a production-ready repository skeleton across **9 core multi-app archetypes**:
 1. **Microservice & Web API** (`robos:Microservice`): Java Spring Boot, Node Fastify/Express, Go Gin, Python FastAPI. Includes OpenAPI 3.1 / TypeSpec contracts and Dockerfiles.
-2. **Desktop Application** (`robos:DesktopApp`): Electron, Qt, GTK, or Tauri desktop clients.
-3. **Console & CLI Tool** (`robos:ConsoleApp`): Go Cobra, Rust Clap, Node Commander terminal utilities.
-4. **Mobile Application** (`robos:MobileApp`): React Native, Flutter, native iOS/Android.
-5. **Data Pipeline & Worker** (`robos:DataPipeline`): Kafka Streams, Apache Spark, Celery workers.
-6. **Library & SDK** (`robos:Library`): Reusable client SDKs, utility packages, and shared UI components.
+2. **Front End Application** (`robos:FrontEndApp` / `schema:WebApplication`): Single-page and SSR web clients with React 18, Vite, Next.js, Vue, or Svelte.
+3. **Desktop Application** (`robos:DesktopApp`): Electron, Qt, GTK, or Tauri desktop clients.
+4. **PC Game** (`robos:PCGame` / `schema:VideoGame`): Interactive desktop games with Unreal Engine 5, Unity 6, Godot, or Bevy.
+5. **Mobile Game** (`robos:MobileGame` / `schema:VideoGame` + `schema:MobileApplication`): Interactive mobile video games for iOS and Android.
+6. **Console & CLI Tool** (`robos:ConsoleApp`): Go Cobra, Rust Clap, Node Commander terminal utilities.
+7. **Mobile Application** (`robos:MobileApp`): React Native, Flutter, native iOS/Android.
+8. **Data Pipeline & Worker** (`robos:DataPipeline`): Kafka Streams, Apache Spark, Celery workers.
+9. **Library & SDK** (`robos:Library`): Reusable client SDKs, utility packages, and shared UI components.
 
 The wizard creates Spotify Backstage `catalog-info.yaml`, Docker build manifests, `dev-setup.sh`, and maps the component to your team in `.robos/teams.yaml`.
 * [👉 **Read the Full Develop a New App Guide**]({{ site.baseurl }}{% link new-app-wizard.md %})
@@ -301,7 +304,7 @@ For existing repositories, the **App Import Wizard** performs automated deep cod
 | Phase | RobOS Application | Primary Purpose | Key Open Standard | Output Artifact |
 |:---|:---|:---|:---|:---|
 | **0. Foundation** | **Group Manager** (`group-manager` & `security-setup`) | Enterprise directory SCIM/LDAP sync, team topologies, GPG/SSH crypto keys | SCIM 2.0, LDAP, GPG, SSH, `pass` | `.robos/teams.yaml`, `~/.config/robos/` |
-| **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across 6 archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
+| **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across 9 archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
 | **2. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap & DAG | OASIS OSLC 3.0, GitHub Issues, Jira | `.robos/knowledge-graph.jsonld` |
 | **3. Architecture** | **Topology Studio** | C4 multi-level visual system architecture & blast radius analysis | C4 Model, Spotify Backstage | `catalog-info.yaml` |
 | **4. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |

@@ -33,16 +33,20 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [The 4 Pillars]({{ site.baseurl }}{% link four-pillars.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[RobOS Skills]({{ site.baseurl }}{% link robos-skills.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+  <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link new-company-setup.md %}" class="btn fs-3">🚀 New Company Setup</a>
   <a href="{{ site.baseurl }}{% link existing-company-setup.md %}" class="btn fs-3">🏢 Existing Company Setup</a>
   <a href="{{ site.baseurl }}{% link new-app-wizard.md %}" class="btn fs-3">✨ Develop a New App</a>
   <a href="{{ site.baseurl }}{% link app-import-wizard.md %}" class="btn fs-3">📥 Import Existing Apps</a>
+  <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="btn fs-3">⚡ RobOS Skills</a>
 </div>
 
 ---
@@ -138,7 +142,7 @@ RobOS coordinates its 30+ native applications into an orchestrated lifecycle—t
 RobOS provides over 30 native developer applications designed with zero web-framework bloat (Electron + vanilla JavaScript), sharing a unified dark theme and local system services:
 
 ### 🏗️ Architecture & Scaffolding
-- **App Wizard**: Greenfield scaffolding and brownfield codebase ingestion across 6 application archetypes (`Microservice`, `DesktopApp`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
+- **App Wizard**: Greenfield scaffolding and brownfield codebase ingestion across 9 application archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
 - **System Topology Studio**: Interactive visual canvas for C4 architecture modeling, dependency mapping, and automatic Kubernetes/Helm manifest generation.
 - **Group Manager**: Enterprise directory synchronization (Okta, Azure AD SCIM, Google Workspace, OpenLDAP) and declarative Team Topologies management (`.robos/teams.yaml`).
 - **Dev Central**: Your daily developer dashboard with sprint tracking, PR health, calendar, AI standup notes, and blocker radar.
@@ -159,9 +163,50 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 
 ### 🤖 AI Orchestration & Developer Tools
 - **Agents Manager & MCP Router**: Manage local AI agents (Claude Code, Google Antigravity, GitHub Copilot, Google Gemini) via standardized Model Context Protocol tools.
-- **Knowledge Graph Explorer**: Dual-state linked data browser with SHACL validation and living documentation sync.
+- **Knowledge Graph Explorer**: Modular multi-file package browser (`.robos/kgraphs/`), multi-repo dependency manager with Git-tag versioning, DevOps onboarding wizards across 7 categories, and SHACL validation.
 - **Contract Studio**: OpenAPI 3.1 and AsyncAPI contract designer with instant mock servers.
-- **Pass Manager**: Encrypted local password and secret vault backed by GPG.
+- **Pass Manager**: Encrypted local password and secret vault backed by GPG (`pass`), integrated with KGraph DevOps integrations for zero-plaintext secret references (`robos:PassCredential`).
+
+---
+
+## RobOS Skills: Cross-Agent AI Capabilities & Shell Marketplace
+
+In addition to 30+ native applications and the SDLC Knowledge Graph, RobOS introduces a standardized cross-platform **Skills Standard** that empowers autonomous AI coding agents—Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI—to execute complex software engineering operations deterministically with zero hallucination.
+
+Instead of writing vendor-locked prompt instructions, RobOS skills are packaged as open, plain-text markdown specifications (`SKILL.md`) and companion CLI engines stored in `plugins/robos/skills/` and `.agents/skills/`.
+
+```mermaid
+flowchart LR
+    subgraph Repo ["RobOS Skills Standard (plugins/robos/)"]
+        Skills["📄 24+ AI Agent Skills<br/><i>(SKILL.md & CLI engines)</i>"]
+        Shell["💻 74+ Shell Skills<br/><i>(Skills Manager App)</i>"]
+    end
+
+    Sync["🔄 ./plugins/install.sh --sync"]
+    Repo --> Sync
+
+    subgraph Agents ["All Modern AI Agent Platforms"]
+        Claude["🟣 Claude Code"]
+        Codex["🟢 OpenAI Codex"]
+        AGY["🔵 Antigravity"]
+        Copilot["⚫ GitHub Copilot"]
+        Gemini["🟡 Gemini CLI"]
+    end
+
+    Sync --> Agents
+```
+
+### Key Skill Capabilities
+- **Enterprise Knowledge Graph Ingestion (`import-company-kgraph`)**: Extracts complete company repository inventories from HTTP REST endpoints (Spotify Backstage), AWS S3 buckets, local directories, or Git forge URLs, classifying components across 9 archetypes and auto-synthesizing OpenAPI 3.1 contracts.
+- **Living Documentation Synchronization (`sync-kgraph-docs`)**: Automatically updates system architecture diagrams, user guides, and API specs whenever Knowledge Graph objects are updated in `.robos/`.
+- **Greenfield App Generation (`create-robos-app`)**: Scaffolds production-grade desktop applications with complete IPC bridges, Lucide icons, and DOM snapshot debug servers.
+- **Automated E2E Proof-of-Work (`e2e-driven-dev`, `record-demo`)**: Runs headless tests and captures 1080p narrated video walkthroughs with neural voiceovers (Piper TTS) and WebVTT captions.
+- **VM Lifecycle Management (`build-vm`, `start-vm`, `deploy-to-vm`)**: Provisions cloud-init developer virtual machines with zero manual steps.
+- **74+ Desktop Shell Macros**: Instant parameterized shell commands for Git, Docker, network diagnostics, and memory inspections via `<robos-ai-textarea>` and the **Skills Manager** application.
+
+<div style="text-align: center; margin: 1.5rem 0 2.5rem;">
+  <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="btn btn-primary fs-5">Explore the Complete RobOS Skills Guide & Catalog →</a>
+</div>
 
 ---
 
@@ -171,7 +216,7 @@ RobOS is built entirely on open, industry-standard specifications. Instead of in
 
 | Standard / Technology | Industry Purpose | How RobOS Uses It |
 |:---|:---|:---|
-| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global standard for linking software lifecycle data across disparate tools. | **Dual-State Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Links microservices, schemas, contracts, repositories, tasks, and training courses into a unified graph. Powers blast radius analysis and documentation synchronization. |
+| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global standard for linking software lifecycle data across disparate tools. | **Packaged Dual-State Knowledge Graph (`.robos/kgraphs/`)**: Modular, namespaced multi-file package stores and multi-repo Git-tag versioned dependencies. Links microservices, schemas, contracts, repos, devops credentials, and eLearning courses into a unified graph. Powers blast radius analysis and living documentation synchronization. |
 | **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal catalog for service and team ownership. | **Zero-Config Architecture Discovery**: Reads existing `catalog-info.yaml` files across Git repositories to automatically populate the visual topology canvas. |
 | **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework across 4 zoom levels. | **Visual Topology Studio**: Renders software systems across Level 1 (Context), Level 2 (Containers & DBs), and Level 3 (Components) with exportable Structurizr diagrams. |
 | **[Microsoft TypeSpec](https://typespec.io/) & [Buf / Protobuf](https://buf.build/)** | Single-source schema definition languages for domain models and DTOs. | **Schema Studio**: Define data models once in TypeSpec; RobOS automatically compiles matching TypeScript types, Java Records, and Go structs. |

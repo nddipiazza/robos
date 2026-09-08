@@ -1,0 +1,125 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:organization",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "organization",
+  "robos:namespace": "robos.org",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Enterprise Organization, Teams & Personas",
+  "dcterms:description": "People, developer profiles, team topologies, and cross-team communication channels.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:person:sconnor",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Sarah Connor",
+      "robos:email": "sarah.connor@acmeglobal.com",
+      "robos:handle": "sconnor",
+      "robos:role": "Lead Architect & Approver",
+      "robos:memberOf": "urn:robos:team:core-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:core-platform",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Core Platform & Infrastructure",
+      "robos:topology": "platform",
+      "robos:lead": "urn:robos:person:sconnor",
+      "robos:hasMember": [
+        "urn:robos:person:sconnor",
+        "urn:robos:person:marcus-wright"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:order-processing",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Order Processing & Payments",
+      "robos:topology": "stream-aligned",
+      "robos:lead": "urn:robos:person:kyle-reese",
+      "robos:hasMember": [
+        "urn:robos:person:kyle-reese"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:architecture-guild",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Enterprise Architecture Guild",
+      "robos:topology": "enabling",
+      "robos:lead": "urn:robos:person:john-connor",
+      "robos:hasMember": [
+        "urn:robos:person:john-connor",
+        "urn:robos:person:sconnor"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:person:admin",
+      "@type": [
+        "oslc:Person",
+        "robos:Developer"
+      ],
+      "dcterms:title": "Alex Rivera",
+      "robos:email": "alex@acmecloud.io",
+      "robos:handle": "admin",
+      "robos:role": "Chief Architect & VP Engineering",
+      "robos:memberOf": "urn:robos:team:founding-core",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:founding-core",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Founding Core Engineering",
+      "robos:topology": "stream-aligned",
+      "robos:lead": "urn:robos:person:admin",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:team:cloud-platform",
+      "@type": [
+        "robos:Team"
+      ],
+      "dcterms:title": "Cloud Platform & Infrastructure",
+      "robos:topology": "platform",
+      "robos:lead": "urn:robos:person:admin",
+      "robos:hasMember": [
+        "urn:robos:person:admin"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "pact": "https://pact.io/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:applications",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "applications",
+  "robos:namespace": "robos.applications",
+  "robos:version": "1.0.0",
+  "dcterms:title": "applications Package",
+  "dcterms:description": "",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:app:billing-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp"
+      ],
+      "dcterms:title": "Billing Web Portal",
+      "robos:framework": "React 19 / Vite",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    }
+  ]
+}

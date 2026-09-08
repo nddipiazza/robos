@@ -1,0 +1,42 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "pact": "https://pact.io/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:devops",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "devops",
+  "robos:namespace": "robos.devops",
+  "robos:version": "1.0.0",
+  "dcterms:title": "devops Package",
+  "dcterms:description": "",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:devops:github:enterprise",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:DevOpsIntegration"
+      ],
+      "dcterms:title": "GitHub Enterprise Server",
+      "robos:category": "source-control",
+      "robos:categoryName": "Source Control & Git",
+      "robos:provider": "github",
+      "robos:providerName": "GitHub Cloud & Enterprise",
+      "robos:endpointUrl": "https://github.internal.acme.com",
+      "robos:status": "connected",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    }
+  ]
+}

@@ -137,7 +137,7 @@ function findElectron() {
 }
 
 function setupHome(homeDir, scenario) {
-  fs.rmSync(homeDir, { recursive: true, force: true });
+  fs.rmSync(homeDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   if (fs.existsSync(HOME_TMPL)) {
     fs.cpSync(HOME_TMPL, homeDir, { recursive: true });
   } else {

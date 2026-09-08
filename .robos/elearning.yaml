@@ -38,8 +38,8 @@ courses:
           - "Inspect .robos/topology.yaml and .robos/packages.yaml"
           - "Verify dual-commit: code changes plus knowledge graph branch update"
           - "Trigger automatic Kubernetes deployment reconciliation"
-  - id: "zero-trust-api-security-and-mutual-tls-v"
-    title: "Zero-Trust API Security and Mutual TLS Verification Mastery"
+  - id: "advanced-rest-api-security-and-oauth2"
+    title: "Advanced REST API Security and OAuth2 Mastery"
     topic: "Security & Authentication"
     difficulty: "Intermediate"
     duration: "40 minutes"
@@ -47,7 +47,7 @@ courses:
     targetService: "urn:robos:service:forms-api"
     targetContract: "urn:robos:contract:forms-api-v1"
     modules:
-      - id: "mod-01-zero-trust-api-security-and-mutual-tls-v"
+      - id: "mod-01-advanced-rest-api-security-and-oauth2"
         title: "Module 1: Foundations & Architecture of Security & Authentication"
         durationMinutes: 10
         overview: "Core architectural primitives, data models, and OSLC graph representations of Security & Authentication."
@@ -55,7 +55,7 @@ courses:
           - "Examine knowledge-graph.jsonld nodes relevant to Security & Authentication"
           - "Review declarative schemas in .robos/ directory"
           - "Inspect live entity status and topology links in KGraph Explorer"
-      - id: "mod-02-zero-trust-api-security-and-mutual-tls-v"
+      - id: "mod-02-advanced-rest-api-security-and-oauth2"
         title: "Module 2: Hands-On Implementation & Verification"
         durationMinutes: 20
         overview: "Practical step-by-step implementation, contract stubs, and test execution."
@@ -63,7 +63,7 @@ courses:
           - "Scaffold new component handlers adhering to SHACL constraints"
           - "Run local Test Fabric mock dispatch to simulate outbound dependencies"
           - "Verify strict Red-Green-Refactor test cycle"
-      - id: "mod-03-zero-trust-api-security-and-mutual-tls-v"
+      - id: "mod-03-advanced-rest-api-security-and-oauth2"
         title: "Module 3: GitOps Delivery & Automated Continuous Sync"
         durationMinutes: 10
         overview: "Declarative GitOps storage and living documentation synchronization."

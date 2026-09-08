@@ -70,7 +70,11 @@ function detectArchetype(parsed, localPath = null) {
           return 'desktop-app';
         }
         if (deps['react-native'] || deps.expo || deps['@capacitor/core']) {
+          if (name.includes('game')) return 'mobile-game';
           return 'mobile-app';
+        }
+        if (deps.next || deps.nuxt || deps.svelte || deps.vue || deps['@angular/core'] || deps.vite || deps['react-scripts'] || (deps.react && !deps.electron && !deps['react-native'])) {
+          return 'frontend-app';
         }
         if (pkg.bin || deps.commander || deps.yargs || deps.ink) {
           return 'console-app';
@@ -80,6 +84,15 @@ function detectArchetype(parsed, localPath = null) {
   }
 
   // Name / keyword heuristics
+  if (name.includes('mobile-game') || name.includes('game-mobile') || (name.includes('game') && (name.includes('mobile') || name.includes('android') || name.includes('ios')))) {
+    return 'mobile-game';
+  }
+  if (name.includes('pc-game') || name.includes('game-pc') || (name.includes('game') && (name.includes('pc') || name.includes('desktop') || name.includes('steam') || name.includes('unreal') || name.includes('bevy') || name.includes('unity')))) {
+    return 'pc-game';
+  }
+  if (name.includes('game')) {
+    return 'pc-game';
+  }
   if (name.includes('desktop') || name.includes('electron') || name.includes('tauri') || name.includes('studio') || name.includes('gui')) {
     return 'desktop-app';
   }
@@ -88,6 +101,9 @@ function detectArchetype(parsed, localPath = null) {
   }
   if (name.includes('mobile') || name.includes('android') || name.includes('ios') || name.includes('app-client')) {
     return 'mobile-app';
+  }
+  if (name.includes('frontend') || name.includes('front-end') || name.includes('webapp') || name.includes('web-app') || name.includes('client-web') || name.includes('portal') || (name.includes('web') && !name.includes('web-api') && !name.includes('gateway'))) {
+    return 'frontend-app';
   }
   if (name.includes('pipeline') || name.includes('worker') || name.includes('stream') || name.includes('etl') || name.includes('spark') || name.includes('event-bus')) {
     return 'data-pipeline';
@@ -105,6 +121,25 @@ function detectArchetype(parsed, localPath = null) {
  */
 function detectTechnology(parsed, archetype, localPath = null) {
   const name = (parsed.repo || '').toLowerCase();
+
+  if (archetype === 'pc-game') {
+    if (name.includes('unity')) return 'C# / Unity 6';
+    if (name.includes('godot')) return 'Godot 4.2 / GDScript';
+    if (name.includes('rust') || name.includes('bevy')) return 'Rust 1.78 / Bevy';
+    return 'C++ / Unreal Engine 5';
+  }
+  if (archetype === 'mobile-game') {
+    if (name.includes('godot')) return 'Godot 4.2 / C#';
+    if (name.includes('unreal')) return 'C++ / Unreal Engine 5';
+    return 'C# / Unity 6';
+  }
+  if (archetype === 'frontend-app') {
+    if (name.includes('vue')) return 'Vue 3 / Vite / TypeScript';
+    if (name.includes('next')) return 'Next.js 14 / React / TypeScript';
+    if (name.includes('svelte')) return 'SvelteKit / TypeScript';
+    if (name.includes('angular')) return 'Angular 18 / TypeScript';
+    return 'React 18 / Vite / TypeScript';
+  }
 
   if (name.includes('java') || name.includes('spring') || name.includes('petstore-api')) {
     return 'Java 21 / Spring Boot 3';
@@ -259,6 +294,9 @@ class BulkRepoImporter {
       mobileApps: 0,
       dataPipelines: 0,
       libraries: 0,
+      frontendApps: 0,
+      pcGames: 0,
+      mobileGames: 0,
       contracts: 0,
     };
 
@@ -407,6 +445,80 @@ class BulkRepoImporter {
           };
           if (contractId) appNode['robos:definesContract'] = contractId;
           summary.libraries++;
+          break;
+        }
+
+        case 'frontend-app': {
+          let framework = 'React';
+          if (technology.includes('Vue')) framework = 'Vue';
+          else if (technology.includes('Next')) framework = 'Next.js';
+          else if (technology.includes('Svelte')) framework = 'Svelte';
+          else if (technology.includes('Angular')) framework = 'Angular';
+
+          appNode = {
+            '@id': `urn:robos:frontend-app:${parsed.slug}`,
+            '@type': ['robos:FrontEndApp', 'schema:WebApplication', 'oslc_am:Resource', 'c4:Container'],
+            'dcterms:title': title.includes('App') || title.includes('Web') || title.includes('UI') ? title : `${title} Web App`,
+            'dcterms:description': `Modern single-page frontend web application for ${title}, built with ${framework}.`,
+            'robos:repository': parsed.canonicalRepo,
+            'robos:technology': technology,
+            'robos:frontendFramework': framework,
+            'robos:buildTool': technology.includes('Vite') ? 'Vite' : 'Webpack',
+            'robos:devServerPort': 3000,
+            'schema:browserRequirements': 'Requires HTML5 and modern evergreen browser with JavaScript enabled.',
+            'robos:ownerTeam': this.defaultTeam,
+            'robos:hasProject': this.defaultProject,
+          };
+          summary.frontendApps++;
+          break;
+        }
+
+        case 'pc-game': {
+          let engine = 'Unreal Engine';
+          if (technology.includes('Unity')) engine = 'Unity';
+          else if (technology.includes('Godot')) engine = 'Godot';
+          else if (technology.includes('Bevy')) engine = 'Bevy';
+
+          appNode = {
+            '@id': `urn:robos:pc-game:${parsed.slug}`,
+            '@type': ['robos:PCGame', 'schema:VideoGame', 'oslc_am:Resource', 'c4:Container'],
+            'dcterms:title': title.includes('Game') ? title : `${title} PC Game`,
+            'dcterms:description': `Interactive PC video game for ${title}, powered by ${engine}.`,
+            'robos:repository': parsed.canonicalRepo,
+            'robos:technology': technology,
+            'robos:gameEngine': engine,
+            'robos:targetPlatform': ['Windows', 'Linux', 'macOS'],
+            'robos:graphicsApi': 'DirectX 12 / Vulkan',
+            'schema:gamePlatform': 'PC',
+            'schema:playMode': 'SinglePlayer',
+            'robos:ownerTeam': this.defaultTeam,
+            'robos:hasProject': this.defaultProject,
+          };
+          summary.pcGames++;
+          break;
+        }
+
+        case 'mobile-game': {
+          let engine = 'Unity';
+          if (technology.includes('Godot')) engine = 'Godot';
+          else if (technology.includes('Unreal')) engine = 'Unreal Engine';
+
+          appNode = {
+            '@id': `urn:robos:mobile-game:${parsed.slug}`,
+            '@type': ['robos:MobileGame', 'schema:VideoGame', 'schema:MobileApplication', 'oslc_am:Resource', 'c4:Container'],
+            'dcterms:title': title.includes('Game') ? title : `${title} Mobile Game`,
+            'dcterms:description': `Interactive mobile video game for ${title}, supporting iOS and Android.`,
+            'robos:repository': parsed.canonicalRepo,
+            'robos:technology': technology,
+            'robos:gameEngine': engine,
+            'robos:platform': ['iOS', 'Android'],
+            'robos:bundleId': `com.robos.game.${parsed.slug.replace(/-/g, '')}`,
+            'schema:gamePlatform': ['iOS', 'Android'],
+            'schema:playMode': 'SinglePlayer',
+            'robos:ownerTeam': this.defaultTeam,
+            'robos:hasProject': this.defaultProject,
+          };
+          summary.mobileGames++;
           break;
         }
 

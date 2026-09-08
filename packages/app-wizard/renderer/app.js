@@ -277,12 +277,26 @@ function setupNavButtons() {
   document.getElementById('btn-generate-new').addEventListener('click', async () => {
     const consoleOut = document.getElementById('new-console-output');
     consoleOut.textContent = 'Generating scaffolding files...\n';
+function getArchetypeUrnPrefix(arch) {
+  const clean = (arch || '').replace('robos:', '');
+  if (clean === 'DesktopApp') return 'desktop-app';
+  if (clean === 'FrontEndApp') return 'frontend-app';
+  if (clean === 'PCGame') return 'pc-game';
+  if (clean === 'MobileGame') return 'mobile-game';
+  if (clean === 'ConsoleApp') return 'console-app';
+  if (clean === 'MobileApp') return 'mobile-app';
+  if (clean === 'DataPipeline') return 'pipeline';
+  if (clean === 'Microservice') return 'service';
+  if (clean === 'Library') return 'library';
+  return clean.toLowerCase();
+}
+
     const name = document.getElementById('new-app-name').value;
     const slug = document.getElementById('new-app-slug').value;
     const tech = document.getElementById('new-app-tech').value;
     const team = document.getElementById('new-app-team').value;
     const contractType = document.getElementById('new-contract-type').value;
-    const urn = 'urn:robos:' + selectedArchetype.replace('robos:', '').toLowerCase() + ':' + slug;
+    const urn = 'urn:robos:' + getArchetypeUrnPrefix(selectedArchetype) + ':' + slug;
 
     const res = await window.api.generateNewApp({
       name, slug, archetype: selectedArchetype, technology: tech, team, contractType, urn
@@ -331,7 +345,7 @@ function setupNavButtons() {
     consoleOut.textContent = 'Ingesting application into RobOS...\n';
     const team = document.getElementById('import-app-team').value;
     const tech = inspectionData.technology || (inspectionData.language + ' / ' + inspectionData.framework);
-    const urn = 'urn:robos:' + inspectionData.archetype.replace('robos:', '').toLowerCase() + ':' + inspectionData.name.toLowerCase();
+    const urn = 'urn:robos:' + getArchetypeUrnPrefix(inspectionData.archetype) + ':' + inspectionData.name.toLowerCase();
 
     const res = await window.api.importApp({
       sourcePath: inspectionData.sourcePath,

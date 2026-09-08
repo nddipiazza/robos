@@ -24,6 +24,9 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
     'https://github.com/acme/recommendation-pipeline',
     'https://github.com/acme/field-ops-mobile',
     'https://github.com/acme/shared-domain-sdk',
+    'https://github.com/acme/petstore-frontend-app',
+    'https://github.com/acme/space-raiders-pc-game',
+    'https://github.com/acme/galaxy-runners-mobile-game',
   ];
 
   it('bulk-imports diverse GitHub URLs and generates specialized KGraph archetypes with OpenAPI & CLI models', async () => {
@@ -36,13 +39,16 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
     // 1. Execute Bulk Import
     const importRes = store.bulkImportRepositories(SAMPLE_REPOS);
     assert.strictEqual(importRes.ok, true, 'Bulk import must return ok: true');
-    assert.strictEqual(importRes.summary.total, 7, 'Must process all 7 repositories');
+    assert.strictEqual(importRes.summary.total, 10, 'Must process all 10 repositories');
     assert.strictEqual(importRes.summary.microservices, 2, 'Should detect 2 microservices');
     assert.strictEqual(importRes.summary.desktopApps, 1, 'Should detect 1 desktop app');
     assert.strictEqual(importRes.summary.consoleApps, 1, 'Should detect 1 console app');
     assert.strictEqual(importRes.summary.dataPipelines, 1, 'Should detect 1 data pipeline');
     assert.strictEqual(importRes.summary.mobileApps, 1, 'Should detect 1 mobile app');
     assert.strictEqual(importRes.summary.libraries, 1, 'Should detect 1 library');
+    assert.strictEqual(importRes.summary.frontendApps, 1, 'Should detect 1 frontend app');
+    assert.strictEqual(importRes.summary.pcGames, 1, 'Should detect 1 PC game');
+    assert.strictEqual(importRes.summary.mobileGames, 1, 'Should detect 1 mobile game');
     assert.strictEqual(importRes.summary.contracts, 3, 'Should generate OpenAPI contracts for services & library');
 
     // 2. Verify Java Spring Boot Microservice & OpenAPI YAML Contract
@@ -93,19 +99,53 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
     assert.deepStrictEqual(mobileApp['robos:platform'], ['iOS', 'Android']);
     assert.ok(mobileApp['robos:bundleId'].includes('fieldopsmobile'), 'Must generate bundle identifier');
 
-    // 7. Verify SHACL Conformance for ALL Generated Archetypes
+    // 7. Verify Front End Application Archetype (Public Schema: schema:WebApplication)
+    const frontendApp = store.getNode('urn:robos:frontend-app:petstore-frontend-app');
+    assert.ok(frontendApp, 'Front End App node must exist in graph');
+    assert.ok(frontendApp['@type'].includes('robos:FrontEndApp'), 'Node must be typed as robos:FrontEndApp');
+    assert.ok(frontendApp['@type'].includes('schema:WebApplication'), 'Node must be co-typed with schema:WebApplication');
+    assert.strictEqual(frontendApp['robos:frontendFramework'], 'React');
+    assert.strictEqual(frontendApp['robos:buildTool'], 'Vite');
+    assert.strictEqual(frontendApp['robos:devServerPort'], 3000);
+    assert.ok(frontendApp['schema:browserRequirements'].includes('HTML5'));
+
+    // 8. Verify PC Game Archetype (Public Schema: schema:VideoGame)
+    const pcGame = store.getNode('urn:robos:pc-game:space-raiders-pc-game');
+    assert.ok(pcGame, 'PC Game node must exist in graph');
+    assert.ok(pcGame['@type'].includes('robos:PCGame'), 'Node must be typed as robos:PCGame');
+    assert.ok(pcGame['@type'].includes('schema:VideoGame'), 'Node must be co-typed with schema:VideoGame');
+    assert.strictEqual(pcGame['robos:gameEngine'], 'Unreal Engine');
+    assert.deepStrictEqual(pcGame['robos:targetPlatform'], ['Windows', 'Linux', 'macOS']);
+    assert.strictEqual(pcGame['schema:gamePlatform'], 'PC');
+    assert.strictEqual(pcGame['schema:playMode'], 'SinglePlayer');
+
+    // 9. Verify Mobile Game Archetype (Public Schema: schema:VideoGame, schema:MobileApplication)
+    const mobileGame = store.getNode('urn:robos:mobile-game:galaxy-runners-mobile-game');
+    assert.ok(mobileGame, 'Mobile Game node must exist in graph');
+    assert.ok(mobileGame['@type'].includes('robos:MobileGame'), 'Node must be typed as robos:MobileGame');
+    assert.ok(mobileGame['@type'].includes('schema:VideoGame'), 'Node must be co-typed with schema:VideoGame');
+    assert.ok(mobileGame['@type'].includes('schema:MobileApplication'), 'Node must be co-typed with schema:MobileApplication');
+    assert.strictEqual(mobileGame['robos:gameEngine'], 'Unity');
+    assert.deepStrictEqual(mobileGame['robos:platform'], ['iOS', 'Android']);
+    assert.ok(mobileGame['robos:bundleId'].includes('galaxyrunnersmobilegame'));
+    assert.strictEqual(mobileGame['schema:playMode'], 'SinglePlayer');
+
+    // 10. Verify SHACL Conformance for ALL Generated Archetypes (including 3 new shapes)
     const validator = new SHACLValidator();
     const valReport = validator.validateGraph(store.parser);
     assert.strictEqual(valReport.conforms, true, 'All generated nodes must satisfy SHACL constraint shapes');
     assert.strictEqual(valReport.resultsCount, 0, 'Must have zero SHACL violations');
 
-    // 8. Verify Living Documentation Synchronization Prompt
+    // 11. Verify Living Documentation Synchronization Prompt
     const docPrompt = importRes.docSyncPrompt;
     assert.ok(docPrompt, 'Bulk import must trigger an automated doc sync prompt');
     assert.strictEqual(docPrompt.changeType, 'bulk-repo-import');
-    assert.ok(docPrompt.aiPrompt.includes('Total Repositories Processed: 7'));
+    assert.ok(docPrompt.aiPrompt.includes('Total Repositories Processed: 10'));
     assert.ok(docPrompt.aiPrompt.includes('Generated Desktop Apps: 1'));
     assert.ok(docPrompt.aiPrompt.includes('Generated Console Apps: 1'));
+    assert.ok(docPrompt.aiPrompt.includes('Generated Front End Apps: 1'));
+    assert.ok(docPrompt.aiPrompt.includes('Generated PC Games: 1'));
+    assert.ok(docPrompt.aiPrompt.includes('Generated Mobile Games: 1'));
     assert.ok(docPrompt.suggestedFiles.includes('.robos/packages.yaml'));
   });
 
@@ -144,6 +184,9 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
       assert.strictEqual(importResult.ok, true, 'syncFromGitProjects must succeed');
       assert.strictEqual(importResult.summary.desktopApps, 1);
       assert.strictEqual(importResult.summary.consoleApps, 1);
+      assert.strictEqual(importResult.summary.frontendApps, 1);
+      assert.strictEqual(importResult.summary.pcGames, 1);
+      assert.strictEqual(importResult.summary.mobileGames, 1);
 
       // 4. Verify RobOS Agent Session Created
       const sessionDir = path.join(app.sandboxHome, '.config', 'robos', 'agent-sessions');
@@ -153,7 +196,7 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
       const sessionData = JSON.parse(fs.readFileSync(path.join(sessionDir, sessionFiles[0]), 'utf8'));
       assert.strictEqual(sessionData.agentId, 'kgraph-ingestion-agent');
       assert.strictEqual(sessionData.status, 'completed');
-      assert.strictEqual(sessionData.projectsCount, 7);
+      assert.strictEqual(sessionData.projectsCount, 10);
       assert.ok(sessionData.duration >= 0);
       assert.ok(sessionData.filesChanged.includes('.robos/knowledge-graph.jsonld'));
 
@@ -166,7 +209,7 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
       assert.ok(kgraphNotif, 'Must post Knowledge Graph Ingestion Completed notification');
       assert.strictEqual(kgraphNotif.category, 'agent');
       assert.strictEqual(kgraphNotif.tier, 'info');
-      assert.ok(kgraphNotif.message.includes('7 Git project(s)'));
+      assert.ok(kgraphNotif.message.includes('10 Git project(s)'));
 
       // 6. Test Category Filter Pill for Desktop Apps
       await new Promise(r => setTimeout(r, 500));
@@ -229,6 +272,24 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
         })()
       `);
       assert.ok(yamlContent.includes('openapi: 3.1.0'), 'Inspector must render OpenAPI 3.1 YAML contract');
+
+      // 7b. Test Category Filter Pill for Front End App
+      await evalClick(app.port, '.filter-pill[data-filter="frontend-app"]');
+      await new Promise(r => setTimeout(r, 400));
+      const frontendListCount = await evalJS(app.port, `document.querySelectorAll('.node-item').length`);
+      assert.ok(frontendListCount >= 1, 'Should filter and display front end app node(s)');
+
+      // 7c. Test Category Filter Pill for PC Game
+      await evalClick(app.port, '.filter-pill[data-filter="pc-game"]');
+      await new Promise(r => setTimeout(r, 400));
+      const pcGameListCount = await evalJS(app.port, `document.querySelectorAll('.node-item').length`);
+      assert.ok(pcGameListCount >= 1, 'Should filter and display PC game node(s)');
+
+      // 7d. Test Category Filter Pill for Mobile Game
+      await evalClick(app.port, '.filter-pill[data-filter="mobile-game"]');
+      await new Promise(r => setTimeout(r, 400));
+      const mobileGameListCount = await evalJS(app.port, `document.querySelectorAll('.node-item').length`);
+      assert.ok(mobileGameListCount >= 1, 'Should filter and display mobile game node(s)');
 
       // 8. Verify Documentation Synchronization Banner
       const bannerVisible = await evalJS(app.port, `

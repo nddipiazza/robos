@@ -93,6 +93,10 @@ The import workflow follows four concise panels:
 ### 1. Select Existing Project Path
 Enter the absolute directory path to the existing repository or local clone. RobOS verifies filesystem accessibility and branch status.
 
+> [!TIP]
+> **Onboarding dozens of company Git projects at once?**  
+> Instead of importing projects one-by-one, instruct your autonomous AI agent to run the **`import-company-kgraph`** skill (e.g. `/import-company-kgraph --source <url | s3://... | /path>`). The skill parses your company's full service inventory across HTTP endpoints, AWS S3, or local disks, and synthesizes Knowledge Graph entries and OpenAPI contracts in bulk that you can take and import directly into RobOS!
+
 ![Select Project Path]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }})
 
 ### 2. Deep Inspection & AI Refinement

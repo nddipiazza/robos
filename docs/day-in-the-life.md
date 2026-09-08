@@ -54,7 +54,7 @@ Every new capability begins with clear alignment on business intent and architec
 Once the architectural boundaries are established, RobOS establishes strict interface contracts and generates boilerplate across polyglot components.
 
 ### 🪄 App Wizard
-- **What It Does**: Scaffolds greenfield projects or ingests existing codebases across 6 multi-app archetypes (`Microservice`, `DesktopApp`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
+- **What It Does**: Scaffolds greenfield projects or ingests existing codebases across 9 multi-app archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
 - **Role in the Lifecycle**: Generates idiomatic directory structures, dependency manifests, Devcontainers, Dockerfiles, and `dev-setup.sh` provisioning scripts. Automatically registers the new package into `.robos/packages.yaml` and the central Knowledge Graph.
 
 ### 📜 Contract Studio

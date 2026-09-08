@@ -70,12 +70,15 @@ graph TD
 
 Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite**:
 
-- 🧬 **KGraph-First Application Generation**: Applications are generated from the Knowledge Graph just as web clients are generated from OpenAPI contracts. By defining system topology, entity models, and contracts in the RobOS schema, full production applications (across 6 archetypes) are synthesized automatically with zero boilerplate.
-- 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Desktop Apps, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
+- 🧬 **KGraph-First Application Generation**: Applications are generated from the Knowledge Graph just as web clients are generated from OpenAPI contracts. By defining system topology, entity models, and contracts in the RobOS schema, full production applications (across 9 archetypes) are synthesized automatically with zero boilerplate.
+- 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Front End Web Apps, Desktop Apps, PC Games, Mobile Games, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
 - 👤 **Ephemeral Linux Agent Profiles & X11 Display Bridging**: AI agents run in isolated ephemeral Linux accounts (`/home/agent-...`) on in-memory `tmpfs` storage with zero residue, rendering UI directly to real/headless X11 displays for visual verification.
 - 🎥 **Autonomous E2E-Driven Dev with Video Proof-of-Work**: Every task is validated in headless `Xvfb` compositors, generating timestamped DOM assertions, 1080p video walkthroughs, and synchronized neural voiceover subtitles (Piper TTS) before asking for human approval.
 - ⚡ **100% Declarative GitOps Storage (`.robos/`)**: Topology, contracts, schemas, and data sources are stored in standard Git repositories, automatically synthesizing deployable Kubernetes manifests and Helm charts.
 - 🗄️ **Comprehensive Developer Protocol & Database Suite**: DBeaver-inspired Relational DB Manager (Postgres, Oracle, MySQL), MongoDB/Redis NoSQL Manager, gRPC Client with Protobuf reflection, GraphQL Introspection Client, and Git-backed REST client.
+- 📋 **Interactive Task Templates & Multi-Domain Planning**: 66+ default task templates with interactive web forms spanning Web APIs, Frontend SPAs, Godot/Unity games, Java libraries, Mobile apps, Knowledge Graph schemas, and Cloud infrastructure, with user-defined custom template authoring and GitHub/Jira synchronization.
+- 📦 **Multi-File, Namespaced & Multi-Repo Knowledge Graph**: Knowledge Graphs are partitioned into modular, namespaced package stores (`.robos/kgraphs/<pkg>/package.jsonld`) indexed by `.robos/kgraph.yaml` across standard packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`). Supports multi-repo composition pulling in external Git repositories pinned to semver git tags (`~/.robos/cache/kgraphs/<repo>@<tag>/`).
+- ☁️ **DevOps Account Integrations & GPG Password Store (`pass`)**: Interactive onboarding wizards for 25+ providers across 7 categories (Source Control, Cloud Infrastructure, CI/CD & GitOps, Package Registries, Containers/Virt, OAuth Identity, Domains & DNS). Zero plaintext secrets in KGraph: credentials are encrypted into `~/.password-store/devops/` and referenced via first-class `robos:PassCredential` nodes.
 
 ---
 
@@ -100,6 +103,14 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 ### 5. Multi-Cluster Kube Studio & Cloud Infrastructure Navigator
 *Multi-cluster Kubernetes management (Kind, EKS, GKE, AKS), Helm release matrices, ArgoCD GitOps sync, and live pod log streaming:*
 ![Kube Studio](docs/assets/images/screenshots/topology-db-datasource_synthesized_frame.png)
+
+### 6. Modular Packages & Multi-Repo Knowledge Graph (robos-graph)
+*Organize your architecture into 6 standard namespaced package stores (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`), register external GitHub KGraph dependencies pinned to semver git tags, and filter views by namespace:*
+![Modular Packages Studio](docs/assets/images/screenshots/multi-pkg-modal_frame.png)
+
+### 7. DevOps Account Integrations & Password Store (pass)
+*Connect cloud accounts, VCS servers, container registries, and OAuth providers across 7 categories and 25+ providers with zero plaintext secrets in the KGraph via UNIX password store (`pass`) GPG encryption:*
+![DevOps Integrations](docs/assets/images/screenshots/devops-wizard-categories_frame.png)
 
 ---
 
@@ -186,7 +197,7 @@ RobOS is built entirely upon established, battle-tested open standards. Instead 
 
 | Standard / Technology | Industry Purpose | What RobOS Uses It For |
 |:---|:---|:---|
-| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global ISO/OASIS linked-data standard for software lifecycle tool integration. | **KGraph-First Application Generation & Dual-State SDLC Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Serves as the executable master blueprint from which applications across 6 archetypes are auto-generated (analogous to OpenAPI generating API clients). Links microservices, schemas, contracts, Git repositories, tasks, and interactive eLearning courses into a unified linked-data graph. Powers semantic graph diffs, AI interactive eLearning generation with GitOps storage (`.robos/elearning.yaml`), and continuous AI living documentation synchronization whenever graph objects are updated. |
+| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global ISO/OASIS linked-data standard for software lifecycle tool integration. | **KGraph-First Application Generation & Dual-State SDLC Knowledge Graph (`.robos/knowledge-graph.jsonld`)**: Serves as the executable master blueprint from which applications across 9 archetypes are auto-generated (analogous to OpenAPI generating API clients). Links microservices, schemas, contracts, Git repositories, tasks, and interactive eLearning courses into a unified linked-data graph. Powers semantic graph diffs, AI interactive eLearning generation with GitOps storage (`.robos/elearning.yaml`), and continuous AI living documentation synchronization whenever graph objects are updated. |
 | **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal catalog format for service and API ownership. | **Zero-Config System Topology Discovery**: RobOS parses your existing Backstage `catalog-info.yaml` files across Git repositories to automatically populate the System Topology canvas without manual data entry. |
 | **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework across 4 zooming levels. | **Visual Topology Studio & Blast Radius Inspector**: Renders polyglot microservice architectures across Level 1 (System Context), Level 2 (Containers & DBs), and Level 3 (Components), and exports C4 Structurizr PlantUML diagrams. |
 | **[Microsoft TypeSpec](https://typespec.io/) & [Buf / Protobuf](https://buf.build/)** | Single-source-of-truth schema definition languages for domain models and DTOs. | **Entity Schema Studio (`schema-studio`)**: Developers and AI agents define entity schemas in TypeSpec once; RobOS compiles them into multi-language TypeScript, Java Records, and Go struct packages automatically. |

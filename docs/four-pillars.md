@@ -65,6 +65,7 @@ Traditional code editors only understand plain text files in a single folder. Ro
 - **KGraph as Master Blueprint**: Just as OpenAPI contracts generate API clients, the KGraph node defines application archetypes (Microservices, Desktop Apps, CLIs, Mobile Apps, Pipelines, Libraries) from which full applications are auto-generated.
 - **Automated Blast Radius**: When an AI agent or developer modifies an endpoint or schema, RobOS immediately flags which downstream services, mobile apps, or web frontends are affected before coding even begins.
 - **Continuous Documentation Sync**: When architecture nodes change, RobOS automatically prompts and synchronizes system documentation (`docs/`) and training curriculums in lockstep.
+- **Modular Packages & DevOps Vault**: Organizes the graph into 6 namespaced package stores (`robos.core`, `robos.services`, `robos.apps`, `robos.org`, `robos.devops`, `robos.learning`) with zero-plaintext GPG password store (`pass`) credentials. [Explore the Dedicated SDLC Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %}).
 
 ---
 
@@ -128,5 +129,6 @@ RobOS stores your entire architecture in standard, human-readable Git files unde
 ## Next Steps
 
 - **[Installation & Getting Started]({{ site.baseurl }}{% link getting-started.md %})**: Set up RobOS on your workstation.
+- **[RobOS Skills & AI Capabilities]({{ site.baseurl }}{% link robos-skills.md %})**: Explore standard cross-agent skills for Claude, Codex, Antigravity, Copilot, and Gemini.
 - **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Learn how the internal engine and desktop bridges operate under the hood.
 - **[Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full suite of native desktop applications.

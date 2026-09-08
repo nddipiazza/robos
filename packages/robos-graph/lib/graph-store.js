@@ -11,6 +11,9 @@ const { GraphCoPilot } = require('./graph-copilot');
 const { RepoScanner } = require('./repo-scanner');
 const { BulkRepoImporter } = require('./bulk-repo-importer');
 const { GherkinLinker, SAMPLE_GHERKIN_FEATURE } = require('./gherkin-linker');
+const { KGraphPackageManager } = require('./package-manager');
+const { KGraphRepoManager } = require('./repo-manager');
+const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = require('./devops-integrations');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const DEFAULT_GRAPH_PATH = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
@@ -339,7 +342,11 @@ const DEFAULT_GRAPH_DATA = {
 
 class SDLCKnowledgeGraphStore {
   constructor(options = {}) {
-    this.filePath = options.filePath || DEFAULT_GRAPH_PATH;
+    this.filePath = options.filePath || (options.rootDir ? path.join(options.rootDir, 'knowledge-graph.jsonld') : DEFAULT_GRAPH_PATH);
+    const baseDir = options.baseDir || (options.rootDir ? (options.rootDir.endsWith('.robos') ? options.rootDir : path.join(options.rootDir, '.robos')) : path.dirname(this.filePath));
+    this.packageManager = new KGraphPackageManager({ baseDir, packagesDir: path.join(baseDir, 'kgraphs') });
+    this.repoManager = new KGraphRepoManager({ workspaceDir: path.dirname(baseDir), rootDir: baseDir });
+    this.devopsManager = new DevOpsIntegrationManager({ packageManager: this.packageManager });
     this.branchManager = new BranchManager({ baseGraphData: DEFAULT_GRAPH_DATA });
     this.parser = new OSLCGraphParser();
     this.validator = new SHACLValidator();
@@ -393,22 +400,62 @@ class SDLCKnowledgeGraphStore {
   }
 
   init() {
+    // 1. If packagesDir has package directories, load multi-file packages
+    if (fs.existsSync(this.packageManager.packagesDir)) {
+      try {
+        const subdirs = fs.readdirSync(this.packageManager.packagesDir);
+        if (subdirs.length > 0) {
+          const packageNodes = this.packageManager.loadPackages();
+          if (packageNodes.length > 0) {
+            this.parser = new OSLCGraphParser({
+              '@context': OSLC_CONTEXT,
+              '@id': 'urn:robos:graph:acme-enterprise-global',
+              '@type': ['oslc:ServiceProvider', 'robos:SystemGraph'],
+              'dcterms:title': 'Acme Enterprise Global SDLC Universe',
+              'robos:nodes': packageNodes,
+            });
+            this.branchManager = new BranchManager({ baseGraphData: this.parser.toJSONLD() });
+            return;
+          }
+        }
+      } catch {}
+    }
+
+    // 2. If single-file exists, split into packages and load
     if (fs.existsSync(this.filePath)) {
       try {
         const raw = JSON.parse(fs.readFileSync(this.filePath, 'utf8'));
-        this.parser = new OSLCGraphParser(raw);
+        const packageNodes = this.packageManager.splitMonolithicGraph(raw);
+        this.parser = new OSLCGraphParser({
+          '@context': OSLC_CONTEXT,
+          '@id': raw['@id'] || 'urn:robos:graph:acme-enterprise-global',
+          '@type': raw['@type'] || ['oslc:ServiceProvider', 'robos:SystemGraph'],
+          'dcterms:title': raw['dcterms:title'] || 'Acme Enterprise Global SDLC Universe',
+          'robos:nodes': packageNodes,
+        });
         this.branchManager = new BranchManager({ baseGraphData: raw });
         return;
       } catch {}
     }
-    this.parser = new OSLCGraphParser(DEFAULT_GRAPH_DATA);
+
+    // 3. Fall back to DEFAULT_GRAPH_DATA split into packages
+    const packageNodes = this.packageManager.splitMonolithicGraph(DEFAULT_GRAPH_DATA);
+    this.parser = new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': DEFAULT_GRAPH_DATA['@id'],
+      '@type': DEFAULT_GRAPH_DATA['@type'],
+      'dcterms:title': DEFAULT_GRAPH_DATA['dcterms:title'],
+      'robos:nodes': packageNodes,
+    });
     this.save();
   }
 
   save() {
     try {
-      fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
-      fs.writeFileSync(this.filePath, JSON.stringify(this.parser.toJSONLD(), null, 2), 'utf8');
+      for (const node of this.parser.nodes) {
+        this.packageManager.upsertNode(node);
+      }
+      this.packageManager.saveDirtyPackages(this.filePath);
     } catch {}
   }
 
@@ -455,6 +502,66 @@ class SDLCKnowledgeGraphStore {
       diff,
       blastRadius: blast,
     };
+  }
+
+  // ── Package & Multi-Repo Management ─────────────────────────────────────────
+  listPackages() {
+    return this.packageManager.listPackages();
+  }
+
+  getPackage(packageId) {
+    return this.packageManager.getPackage(packageId);
+  }
+
+  listRepos() {
+    return this.repoManager.listRepos();
+  }
+
+  addRepo(repoData) {
+    return this.repoManager.addRepo(repoData);
+  }
+
+  removeRepo(repoId) {
+    return this.repoManager.removeRepo(repoId);
+  }
+
+  syncRemoteRepo(repoId) {
+    return this.repoManager.syncRemoteRepo(repoId);
+  }
+
+  // ── DevOps Integrations Management ──────────────────────────────────────────
+  getDevOpsCategories() {
+    return this.devopsManager.getCategories();
+  }
+
+  getDevOpsProviders(categoryId) {
+    return this.devopsManager.getProviders(categoryId);
+  }
+
+  saveDevOpsIntegration(payload) {
+    const res = this.devopsManager.saveIntegration({ ...payload, packageManager: this.packageManager });
+    if (res && res.ok) {
+      this.parser.loadNodes(this.packageManager.getAllNodes());
+      this.save();
+    }
+    return res;
+  }
+
+  testDevOpsConnection(payload) {
+    return this.devopsManager.testConnection(payload);
+  }
+
+  deleteDevOpsIntegration(integrationId) {
+    const res = this.devopsManager.deleteIntegration(integrationId, this.packageManager);
+    if (res && res.ok) {
+      this.parser.loadNodes(this.packageManager.getAllNodes());
+      this.save();
+    }
+    return res;
+  }
+
+  listDevOpsIntegrations() {
+    return this.devopsManager.listIntegrations(this.packageManager);
   }
 
   generateCoPilotMutation(prompt) {
@@ -539,6 +646,9 @@ class SDLCKnowledgeGraphStore {
 - Generated Mobile Apps: ${summary.mobileApps || 0}
 - Generated Data Pipelines: ${summary.dataPipelines || 0}
 - Generated Libraries/SDKs: ${summary.libraries || 0}
+- Generated Front End Apps: ${summary.frontendApps || 0}
+- Generated PC Games: ${summary.pcGames || 0}
+- Generated Mobile Games: ${summary.mobileGames || 0}
 - Generated OpenAPI & Contracts: ${summary.contracts || 0}
 
 Action Required:
@@ -575,6 +685,12 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
     } else if (typeStr.includes('MobileApp')) {
       suggestedFiles.push('.robos/packages.yaml');
       suggestedFiles.push('docs/mobile-clients.md');
+    } else if (typeStr.includes('FrontEndApp')) {
+      suggestedFiles.push('.robos/packages.yaml');
+      suggestedFiles.push('docs/frontend-applications.md');
+    } else if (typeStr.includes('PCGame') || typeStr.includes('MobileGame')) {
+      suggestedFiles.push('.robos/packages.yaml');
+      suggestedFiles.push('docs/game-development.md');
     } else if (typeStr.includes('DataPipeline')) {
       suggestedFiles.push('.robos/topology.yaml');
       suggestedFiles.push('docs/data-pipelines.md');
@@ -961,7 +1077,7 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
         const lines = [existingContent ? existingContent.trim() : 'kind: PackagesCatalog\npackages:'];
         for (const node of nodes) {
           const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
-          if (types.some(t => t.includes('Microservice') || t.includes('DesktopApp') || t.includes('ConsoleApp') || t.includes('MobileApp') || t.includes('DataPipeline') || t.includes('Library'))) {
+          if (types.some(t => t.includes('Microservice') || t.includes('DesktopApp') || t.includes('ConsoleApp') || t.includes('MobileApp') || t.includes('DataPipeline') || t.includes('Library') || t.includes('FrontEndApp') || t.includes('PCGame') || t.includes('MobileGame'))) {
             const id = node['@id'];
             if (!lines.join('\n').includes(id)) {
               lines.push(`  - id: "${id}"`);
@@ -992,6 +1108,12 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
       suggestedFiles.push('.robos/packages.yaml');
     } else if (typeStr.includes('ConsoleApp')) {
       suggestedFiles.push('docs/cli-tools.md');
+      suggestedFiles.push('.robos/packages.yaml');
+    } else if (typeStr.includes('FrontEndApp')) {
+      suggestedFiles.push('docs/frontend-applications.md');
+      suggestedFiles.push('.robos/packages.yaml');
+    } else if (typeStr.includes('PCGame') || typeStr.includes('MobileGame')) {
+      suggestedFiles.push('docs/game-development.md');
       suggestedFiles.push('.robos/packages.yaml');
     } else if (typeStr.includes('Microservice')) {
       suggestedFiles.push('.robos/topology.yaml');

@@ -33,7 +33,7 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
     // 3. Trace Blast Radius / Dependents
     const blast = store.findDependents('urn:robos:service:forms-api');
     assert.ok(blast.blastRadiusCount >= 1, 'Forms API must have dependent nodes');
-    assert.strictEqual(blast.dependents[0].node['@id'], 'urn:robos:service:tasks-service');
+    assert.ok(blast.dependents.some(d => d.node['@id'] === 'urn:robos:service:tasks-service'), 'Tasks service must be in blast radius');
 
     // 4. Inject Invalid Node & Verify SHACL Violation Detection
     store.addNode({

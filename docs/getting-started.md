@@ -126,7 +126,7 @@ When you first launch RobOS or log into the desktop, you can onboard your organi
 - [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — For greenfield startups and new ventures: provision root administrator credentials, initialize VCS organizations, scaffold foundational squads, and configure AI provider keys.
 
 ### 🛠️ Developer Application Wizards
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Launch the **RobOS App Wizard** to scaffold a brand-new application across 6 multi-app archetypes (`DesktopApp`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`) with API contract specifications and runnable `dev-setup.sh`.
+- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Launch the **RobOS App Wizard** to scaffold a brand-new application across 9 multi-app archetypes (`DesktopApp`, `FrontEndApp`, `PCGame`, `MobileGame`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`) with API contract specifications and runnable `dev-setup.sh`.
 - [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Use the App Wizard's import engine to deeply inspect existing brownfield repositories, auto-detect runtime frameworks, synthesize Backstage `catalog-info.yaml`, and link into the Knowledge Graph.
 
 ---
@@ -155,8 +155,9 @@ xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle
 
 - [**Existing Company Setup**]({{ site.baseurl }}{% link existing-company-setup.md %}) — Connect enterprise directory sync (Okta, Azure AD, OpenLDAP) and map Team Topologies.
 - [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — Bootstrap a new startup, root administrator, and foundational squads.
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Scaffold a new application across 6 archetypes with API contracts and Backstage catalog.
+- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Scaffold a new application across 9 archetypes with API contracts and Backstage catalog.
 - [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Ingest existing brownfield repositories with automated tech stack detection.
+- [**RobOS Skills**]({{ site.baseurl }}{% link robos-skills.md %}) — Master cross-agent AI skills (Claude, Codex, Antigravity, Copilot, Gemini) and 74+ shell macros.
 - [**App Development Flow**]({{ site.baseurl }}{% link app-development-flow.md %}) — Learn the progressive flow of RobOS apps used to build an application.
 - [**AI Agent Review-Based Development**]({{ site.baseurl }}{% link agent-review-development.md %}) — Learn the plan-code-review-verify workflow.
 - [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.

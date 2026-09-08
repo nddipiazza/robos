@@ -5,8 +5,41 @@ let activeBranch = null;
 let nodes = [];
 let selectedNodeId = null;
 let currentFilter = 'all';
+let currentPackageFilter = 'all';
 let searchKeyword = '';
 let currentTab = 'visual'; // 'visual' | 'gitops' | 'edd' | 'video' | 'fabric' | 'traceability' | 'rdf'
+let nodeGroupMode = 'package'; // 'package' | 'category' | 'flat'
+const collapsedGroups = new Set();
+
+const PACKAGE_METADATA = {
+  'services': { title: 'Microservices & Contracts', icon: '🔌', ns: 'robos.services' },
+  'applications': { title: 'Applications & Clients', icon: '📱', ns: 'robos.apps' },
+  'devops': { title: 'DevOps & Pass Vault', icon: '☁️', ns: 'robos.devops' },
+  'core-platform': { title: 'Core Platform & Architecture', icon: '⚙️', ns: 'robos.core' },
+  'organization': { title: 'Organization & Teams', icon: '👥', ns: 'robos.org' },
+  'learning': { title: 'Learning & Living Docs', icon: '🎓', ns: 'robos.learning' },
+};
+
+const CATEGORY_METADATA = {
+  'service': { title: 'Microservices & Containers', icon: '🔌' },
+  'contract': { title: 'API Contracts & Specs', icon: '📜' },
+  'frontend-app': { title: 'Front End Applications', icon: '🌐' },
+  'desktop-app': { title: 'Desktop Applications', icon: '🖥️' },
+  'pc-game': { title: 'PC Games', icon: '🎮' },
+  'mobile-game': { title: 'Mobile Games', icon: '🕹️' },
+  'console-app': { title: 'Console & CLI Utilities', icon: '⌨️' },
+  'data-pipeline': { title: 'Data Pipelines', icon: '🔄' },
+  'mobile-app': { title: 'Mobile Applications', icon: '📱' },
+  'library': { title: 'Libraries & SDKs', icon: '📦' },
+  'devops': { title: 'DevOps Integrations', icon: '☁️' },
+  'pass-credential': { title: 'Pass Credentials', icon: '🔑' },
+  'bdd': { title: 'BDD Features', icon: '🥒' },
+  'requirement': { title: 'Requirements', icon: '📋' },
+  'elearning': { title: 'eLearning Modules', icon: '🎓' },
+  'project': { title: 'Projects', icon: '📁' },
+  'other': { title: 'Other Resources', icon: '📁' },
+};
+
 let pendingMutation = null;
 let activeProbedResponse = null;
 let eddState = null;
@@ -215,9 +248,14 @@ function isBDDNode(n) {
 function getNodeCategory(n) {
   if (!n) return 'other';
   const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+  if (types.some(t => t.includes('DevOpsIntegration') || t.endsWith('Integration'))) return 'devops';
+  if (types.some(t => t.includes('PassCredential') || t.includes('SecretReference'))) return 'pass-credential';
   if (types.some(t => t.includes('ELearning') || t.includes('Course'))) return 'elearning';
   if (types.some(t => t.includes('DesktopApp'))) return 'desktop-app';
   if (types.some(t => t.includes('ConsoleApp'))) return 'console-app';
+  if (types.some(t => t.includes('FrontEndApp') || t.includes('WebApplication'))) return 'frontend-app';
+  if (types.some(t => t.includes('PCGame'))) return 'pc-game';
+  if (types.some(t => t.includes('MobileGame'))) return 'mobile-game';
   if (types.some(t => t.includes('DataPipeline'))) return 'data-pipeline';
   if (types.some(t => t.includes('MobileApp'))) return 'mobile-app';
   if (types.some(t => t.includes('Library'))) return 'library';
@@ -232,9 +270,14 @@ function getNodeCategory(n) {
 function getTypeBadge(n) {
   const cat = getNodeCategory(n);
   switch (cat) {
+    case 'devops': return { label: '☁️ DevOps Integration', cls: 'type-service' };
+    case 'pass-credential': return { label: '🔑 Pass Credential', cls: 'type-contract' };
     case 'elearning': return { label: '🎓 eLearning', cls: 'type-elearning' };
     case 'desktop-app': return { label: '🖥️ Desktop App', cls: 'type-desktop-app' };
     case 'console-app': return { label: '⌨️ Console CLI', cls: 'type-console-app' };
+    case 'frontend-app': return { label: '🌐 Front End App', cls: 'type-frontend-app' };
+    case 'pc-game': return { label: '🎮 PC Game', cls: 'type-pc-game' };
+    case 'mobile-game': return { label: '🕹️ Mobile Game', cls: 'type-mobile-game' };
     case 'data-pipeline': return { label: '🔄 Data Pipeline', cls: 'type-data-pipeline' };
     case 'mobile-app': return { label: '📱 Mobile App', cls: 'type-mobile-app' };
     case 'library': return { label: '📦 Library', cls: 'type-library' };
@@ -264,54 +307,187 @@ function renderBranchSelector() {
   document.getElementById('stat-branch-type').textContent = cls.label;
 }
 
+function renderNodeItemHtml(n, badge, isSelected) {
+  let metaInfo = n['@id'];
+  if (n['robos:targetService']) {
+    metaInfo = `🎯 Target: ${n['robos:targetService'].replace(/.*:/, '')} &middot; 📋 ${n['robos:requirementId'] || 'REQ'}`;
+  } else if (n['robos:repository']) {
+    metaInfo = `📁 ${n['robos:repository']}`;
+  } else if (n['robos:categoryName'] || n['robos:category'] || getNodeCategory(n) === 'devops') {
+    const catLabel = n['robos:categoryName'] || n['robos:category'] || 'DevOps Integration';
+    metaInfo = `☁️ ${catLabel} &middot; 📦 ${n['robos:package'] || 'devops'}`;
+  } else if (n['robos:passPath']) {
+    metaInfo = `🔒 pass: ${n['robos:passPath']}`;
+  }
+
+  const pkgTag = n['robos:package'] ? `<span class="node-pkg-badge">📦 ${n['robos:package']}</span>` : '';
+  const nodeDomId = 'node-' + n['@id'].replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cat = getNodeCategory(n);
+
+  return `
+    <div class="node-item cat-${cat} ${isSelected ? 'selected' : ''}" id="${nodeDomId}" onclick="window.selectNode('${n['@id']}')">
+      <div class="node-header">
+        <span class="node-title">${n['dcterms:title']} ${pkgTag}</span>
+        <span class="type-badge ${badge.cls}">${badge.label}</span>
+      </div>
+      <div class="node-meta">${metaInfo}</div>
+    </div>
+  `;
+}
+
 function renderNodeList() {
   const filtered = nodes.filter(n => {
     if (currentFilter !== 'all' && getNodeCategory(n) !== currentFilter) {
       return false;
+    }
+    if (currentPackageFilter !== 'all') {
+      const nodePkg = n['robos:package'] || 'core-platform';
+      if (nodePkg !== currentPackageFilter) return false;
     }
     if (searchKeyword.trim()) {
       const q = searchKeyword.toLowerCase();
       const title = (n['dcterms:title'] || '').toLowerCase();
       const id = (n['@id'] || '').toLowerCase();
       const repo = (n['robos:repository'] || '').toLowerCase();
-      return title.includes(q) || id.includes(q) || repo.includes(q);
+      const pkg = (n['robos:package'] || '').toLowerCase();
+      return title.includes(q) || id.includes(q) || repo.includes(q) || pkg.includes(q);
     }
     return true;
   });
 
-  document.getElementById('stat-nodes').textContent = `${nodes.length} SDLC Nodes`;
-  document.getElementById('nodes-count-badge').textContent = `${filtered.length} of ${nodes.length} Nodes`;
+  const statNodesEl = document.getElementById('stat-nodes');
+  if (statNodesEl) statNodesEl.textContent = `${nodes.length} SDLC Nodes`;
+  const countBadgeEl = document.getElementById('nodes-count-badge');
+  if (countBadgeEl) countBadgeEl.textContent = `${filtered.length} of ${nodes.length} Nodes`;
 
   const listEl = document.getElementById('nodes-list');
+  if (!listEl) return;
+
   if (filtered.length === 0) {
-    listEl.innerHTML = `<div style="padding: 12px; color: var(--text-muted); font-size: 11px; text-align: center;">No matching nodes found</div>`;
+    listEl.innerHTML = `
+      <div style="padding: 24px 12px; color: var(--text-muted); font-size: 11px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span>🔍 No matching nodes found</span>
+        <button class="btn btn-secondary btn-sm" onclick="window.clearAllNodeFilters()">Clear Filters</button>
+      </div>
+    `;
     return;
   }
 
-  listEl.innerHTML = filtered.map(n => {
-    const badge = getTypeBadge(n);
-    const isSelected = n['@id'] === selectedNodeId;
+  // Flat mode
+  if (nodeGroupMode === 'flat') {
+    listEl.innerHTML = filtered.map(n => {
+      const badge = getTypeBadge(n);
+      const isSelected = n['@id'] === selectedNodeId;
+      return renderNodeItemHtml(n, badge, isSelected);
+    }).join('');
+    return;
+  }
 
-    let metaInfo = n['@id'];
-    if (n['robos:targetService']) {
-      metaInfo = `🎯 Target: ${n['robos:targetService'].replace(/.*:/, '')} &middot; 📋 ${n['robos:requirementId'] || 'REQ'}`;
-    } else if (n['robos:repository']) {
-      metaInfo = `📁 ${n['robos:repository']}`;
-    }
+  // Grouped mode (package or category)
+  const isPackage = nodeGroupMode === 'package';
+  const groups = new Map();
 
-    const nodeDomId = 'node-' + n['@id'].replace(/[^a-zA-Z0-9_-]/g, '_');
+  for (const n of filtered) {
+    const key = isPackage ? (n['robos:package'] || 'core-platform') : getNodeCategory(n);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(n);
+  }
 
-    return `
-      <div class="node-item ${isSelected ? 'selected' : ''}" id="${nodeDomId}" onclick="window.selectNode('${n['@id']}')">
-        <div class="node-header">
-          <span class="node-title">${n['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
+  // Preferred ordering
+  const preferredOrder = isPackage
+    ? ['services', 'applications', 'devops', 'core-platform', 'organization', 'learning']
+    : ['service', 'contract', 'frontend-app', 'desktop-app', 'pc-game', 'mobile-game', 'console-app', 'data-pipeline', 'mobile-app', 'library', 'devops', 'pass-credential', 'bdd', 'requirement', 'elearning', 'project', 'other'];
+
+  const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
+    const idxA = preferredOrder.indexOf(a);
+    const idxB = preferredOrder.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  let html = '';
+  for (const key of sortedKeys) {
+    const groupNodes = groups.get(key);
+    const meta = isPackage
+      ? (PACKAGE_METADATA[key] || { title: key, icon: '📦', ns: `robos.${key}` })
+      : (CATEGORY_METADATA[key] || { title: key, icon: '🏷️' });
+
+    // When searching, auto-expand so results are visible
+    const isCollapsed = collapsedGroups.has(key) && !searchKeyword.trim();
+
+    const itemsHtml = groupNodes.map(n => {
+      const badge = getTypeBadge(n);
+      const isSelected = n['@id'] === selectedNodeId;
+      return renderNodeItemHtml(n, badge, isSelected);
+    }).join('');
+
+    html += `
+      <div class="node-group" id="node-group-${key}">
+        <div class="node-group-header ${isCollapsed ? 'collapsed' : ''}" onclick="window.toggleNodeGroup('${key}')">
+          <span class="group-chevron">${isCollapsed ? '▶' : '▼'}</span>
+          <span class="group-icon">${meta.icon}</span>
+          <span class="group-title">${meta.title}</span>
+          ${meta.ns ? `<span class="group-ns">${meta.ns}</span>` : ''}
+          <span class="group-count">${groupNodes.length}</span>
         </div>
-        <div class="node-meta">${metaInfo}</div>
+        ${!isCollapsed ? `<div class="node-group-body">${itemsHtml}</div>` : ''}
       </div>
     `;
-  }).join('');
+  }
+
+  listEl.innerHTML = html;
 }
+
+window.setNodeGroupMode = function(mode) {
+  nodeGroupMode = mode;
+  document.querySelectorAll('#group-mode-toggle .group-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+  });
+  renderNodeList();
+};
+
+window.toggleNodeGroup = function(groupId) {
+  if (collapsedGroups.has(groupId)) {
+    collapsedGroups.delete(groupId);
+  } else {
+    collapsedGroups.add(groupId);
+  }
+  renderNodeList();
+};
+
+window.expandAllNodeGroups = function() {
+  collapsedGroups.clear();
+  renderNodeList();
+};
+
+window.collapseAllNodeGroups = function() {
+  const isPackage = nodeGroupMode === 'package';
+  for (const n of nodes) {
+    const key = isPackage ? (n['robos:package'] || 'core-platform') : getNodeCategory(n);
+    collapsedGroups.add(key);
+  }
+  renderNodeList();
+};
+
+window.clearAllNodeFilters = function() {
+  currentFilter = 'all';
+  currentPackageFilter = 'all';
+  searchKeyword = '';
+  const searchInput = document.getElementById('node-search-input');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('btn-clear-node-search');
+  if (clearBtn) clearBtn.style.display = 'none';
+  const typeFilterSelect = document.getElementById('node-type-filter');
+  if (typeFilterSelect) typeFilterSelect.value = 'all';
+  const packageFilterSelect = document.getElementById('node-package-filter');
+  if (packageFilterSelect) packageFilterSelect.value = 'all';
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'all');
+  });
+  renderNodeList();
+};
 
 async function selectNode(id) {
   selectedNodeId = id;
@@ -1054,6 +1230,136 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
         </div>
       ` : ''}
     `;
+  } else if (cat === 'frontend-app') {
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🌐 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Single-page web frontend application.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Frontend Framework</div>
+            <div class="field-value"><strong>${node['robos:frontendFramework'] || 'React'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Build Tool / Bundler</div>
+            <div class="field-value"><code>${node['robos:buildTool'] || 'Vite'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Technology Stack</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'TypeScript'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Dev Server Port</div>
+            <div class="field-value"><code>:${node['robos:devServerPort'] || 3000}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Owner Team</div>
+            <div class="field-value"><span class="type-badge type-team">${(node['robos:ownerTeam'] || 'frontend-team').replace(/.*:/, '')}</span></div>
+          </div>
+        </div>
+        ${node['schema:browserRequirements'] ? `
+          <div style="margin-top: 10px; font-size: 11px; color: var(--text-dim);">
+            <strong>Browser Requirements:</strong> ${node['schema:browserRequirements']}
+          </div>
+        ` : ''}
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
+        </div>
+      </div>
+    `;
+  } else if (cat === 'pc-game') {
+    const platforms = Array.isArray(node['robos:targetPlatform']) ? node['robos:targetPlatform'].join(', ') : (node['robos:targetPlatform'] || 'Windows, Linux');
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🎮 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Interactive PC video game.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Game Engine</div>
+            <div class="field-value"><strong>${node['robos:gameEngine'] || 'Unreal Engine'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Target PC Platforms</div>
+            <div class="field-value">${platforms}</div>
+          </div>
+          <div>
+            <div class="field-label">Graphics API</div>
+            <div class="field-value"><code>${node['robos:graphicsApi'] || 'DirectX 12 / Vulkan'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Technology Stack</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'C++'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Play Mode</div>
+            <div class="field-value">${node['schema:playMode'] || 'SinglePlayer'}</div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
+        </div>
+      </div>
+    `;
+  } else if (cat === 'mobile-game') {
+    const platforms = Array.isArray(node['robos:platform']) ? node['robos:platform'].join(', ') : (node['robos:platform'] || 'iOS, Android');
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🕹️ ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Interactive mobile video game.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Game Engine</div>
+            <div class="field-value"><strong>${node['robos:gameEngine'] || 'Unity'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Mobile Platforms</div>
+            <div class="field-value">${platforms}</div>
+          </div>
+          <div>
+            <div class="field-label">Bundle Identifier</div>
+            <div class="field-value"><code>${node['robos:bundleId'] || 'com.robos.game'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Technology Stack</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'C#'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Play Mode</div>
+            <div class="field-value">${node['schema:playMode'] || 'SinglePlayer'}</div>
+          </div>
+          <div>
+            <div class="field-label">Repository</div>
+            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
+        </div>
+      </div>
+    `;
   } else if (cat === 'contract' && node['robos:contractYaml']) {
     const endpoints = node['robos:endpoints'] || [];
     container.innerHTML = `
@@ -1105,6 +1411,117 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           <span>OpenAPI 3.1 YAML Definition</span>
         </div>
         <pre class="json-pre">${node['robos:contractYaml']}</pre>
+      </div>
+    `;
+  } else if (cat === 'devops') {
+    const settings = node['robos:settings'] || {};
+    const creds = Array.isArray(node['robos:hasCredential']) ? node['robos:hasCredential'] : [];
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>☁️ ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Provider</div>
+            <div class="field-value"><strong>${node['robos:providerName'] || node['robos:provider'] || 'Custom Provider'}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Category</div>
+            <div class="field-value"><span class="type-badge type-service">${node['robos:categoryName'] || node['robos:category'] || 'DevOps'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Endpoint URL</div>
+            <div class="field-value"><code>${node['robos:endpointUrl'] || 'Cloud Provider'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">KGraph Package</div>
+            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'devops'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Status</div>
+            <div class="field-value"><span class="status-tag-pass">🟢 ${node['robos:status'] || 'connected'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Last Updated</div>
+            <div class="field-value">${node['robos:updatedAt'] ? new Date(node['robos:updatedAt']).toLocaleString() : 'Active'}</div>
+          </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="window.testDevOpsIntegrationById('${node['@id']}', '${node['robos:provider'] || ''}')">⚡ Test Connection</button>
+          <button class="btn btn-danger" onclick="window.deleteDevOpsIntegrationById('${node['@id']}')">🗑️ Delete Integration</button>
+        </div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🔒 Password-Store Credentials (${creds.length})</span>
+          <span class="status-tag-pass">GPG ENCRYPTED</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px;">
+          Zero plaintext secrets in Knowledge Graph. Encrypted credentials reside inside standard pass tree:
+        </div>
+        ${creds.length > 0 ? creds.map(c => `
+          <div class="parsed-item" style="margin-bottom: 6px;">
+            <strong>🔑 ${c}</strong>
+            <span style="font-family: monospace; font-size: 10px; color: var(--accent);">GPG encrypted &middot; ~/.password-store/</span>
+          </div>
+        `).join('') : '<div style="color: var(--text-muted); font-size: 11px;">No credential nodes linked</div>'}
+      </div>
+
+      ${Object.keys(settings).length > 0 ? `
+        <div class="inspector-card">
+          <div class="card-title">
+            <span>⚙️ Configuration Settings</span>
+          </div>
+          <table class="matrix-table" style="width: 100%;">
+            <thead><tr><th>Key</th><th>Value</th></tr></thead>
+            <tbody>
+              ${Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `
+                <tr><td><code>${k}</code></td><td><code>${typeof v === 'object' ? JSON.stringify(v) : v}</code></td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+    `;
+  } else if (cat === 'pass-credential') {
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🔑 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          First-class Knowledge Graph secret reference pointing to encrypted local UNIX password store.
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Password Store Path</div>
+            <div class="field-value"><code>~/.password-store/${node['robos:passPath']}.gpg</code></div>
+          </div>
+          <div>
+            <div class="field-label">Storage Backend</div>
+            <div class="field-value"><span class="status-tag-pass">🔐 GPG pass CLI</span></div>
+          </div>
+          <div>
+            <div class="field-label">Credential Key Type</div>
+            <div class="field-value"><span class="type-badge type-contract">${node['robos:credentialType'] || 'secret'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">KGraph Package</div>
+            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'devops'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Last Rotated</div>
+            <div class="field-value">${node['robos:lastRotated'] ? new Date(node['robos:lastRotated']).toLocaleString() : 'N/A'}</div>
+          </div>
+          <div>
+            <div class="field-label">Plaintext Exposure</div>
+            <div class="field-value"><strong style="color: var(--success);">0% (Always Encrypted)</strong></div>
+          </div>
+        </div>
       </div>
     `;
   } else {
@@ -1343,12 +1760,48 @@ document.getElementById('branch-select').addEventListener('change', (e) => {
 });
 
 const searchInput = document.getElementById('node-search-input');
+const clearSearchBtn = document.getElementById('btn-clear-node-search');
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
     searchKeyword = e.target.value || '';
+    if (clearSearchBtn) {
+      clearSearchBtn.style.display = searchKeyword.trim() ? 'flex' : 'none';
+    }
     renderNodeList();
   });
 }
+if (clearSearchBtn) {
+  clearSearchBtn.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    searchKeyword = '';
+    clearSearchBtn.style.display = 'none';
+    renderNodeList();
+    if (searchInput) searchInput.focus();
+  });
+}
+
+document.querySelectorAll('#group-mode-toggle .group-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.mode) {
+      window.setNodeGroupMode(btn.dataset.mode);
+    }
+  });
+});
+
+const expandAllBtn = document.getElementById('btn-expand-all-groups');
+if (expandAllBtn) {
+  expandAllBtn.addEventListener('click', () => {
+    window.expandAllNodeGroups();
+  });
+}
+
+const collapseAllBtn = document.getElementById('btn-collapse-all-groups');
+if (collapseAllBtn) {
+  collapseAllBtn.addEventListener('click', () => {
+    window.collapseAllNodeGroups();
+  });
+}
+
 
 const typeFilterSelect = document.getElementById('node-type-filter');
 if (typeFilterSelect) {
@@ -1357,6 +1810,14 @@ if (typeFilterSelect) {
     document.querySelectorAll('.filter-pill').forEach(b => {
       b.classList.toggle('active', b.dataset.filter === currentFilter);
     });
+    renderNodeList();
+  });
+}
+
+const packageFilterSelect = document.getElementById('node-package-filter');
+if (packageFilterSelect) {
+  packageFilterSelect.addEventListener('change', (e) => {
+    currentPackageFilter = e.target.value;
     renderNodeList();
   });
 }
@@ -1652,7 +2113,583 @@ const btnCancelAppDoc = document.getElementById('btn-cancel-app-doc');
 if (btnCancelAppDoc) btnCancelAppDoc.addEventListener('click', () => window.closeAppDocModal());
 
 const btnSubmitAppDoc = document.getElementById('btn-submit-app-doc');
-if (btnSubmitAppDoc) btnSubmitAppDoc.addEventListener('click', () => window.submitAppDocUpdates());
+// ── DevOps Integrations & Onboarding Wizard ──────────────────────────────────
+let devopsIntegrationsList = [];
+let devopsCategoriesList = [];
+let activeDevOpsCategory = 'all';
+let selectedDevOpsProvider = null;
+let kgraphPackagesList = [];
+let kgraphReposList = [];
+
+window.openDevOpsModal = async function() {
+  const modal = document.getElementById('devops-modal');
+  if (modal) modal.style.display = 'flex';
+  await window.showDevOpsActiveView();
+};
+
+window.closeDevOpsModal = function() {
+  const modal = document.getElementById('devops-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.showDevOpsActiveView = async function() {
+  const activeView = document.getElementById('devops-active-view');
+  const wizardView = document.getElementById('devops-wizard-view');
+  if (activeView) activeView.style.display = 'block';
+  if (wizardView) wizardView.style.display = 'none';
+
+  const btnActive = document.getElementById('btn-devops-view-active');
+  const btnWizard = document.getElementById('btn-devops-start-onboarding');
+  if (btnActive) btnActive.classList.add('active');
+  if (btnWizard) btnWizard.classList.remove('active');
+
+  await window.loadDevOpsActiveView();
+};
+
+window.showDevOpsWizardView = async function() {
+  const activeView = document.getElementById('devops-active-view');
+  const wizardView = document.getElementById('devops-wizard-view');
+  if (activeView) activeView.style.display = 'none';
+  if (wizardView) wizardView.style.display = 'block';
+
+  const providerSelection = document.getElementById('wizard-provider-selection');
+  const configForm = document.getElementById('wizard-config-form');
+  const backBtn = document.getElementById('btn-wizard-back');
+  const stepLabel = document.getElementById('wizard-step-label');
+
+  if (providerSelection) providerSelection.style.display = 'block';
+  if (configForm) configForm.style.display = 'none';
+  if (backBtn) backBtn.style.display = 'none';
+  if (stepLabel) stepLabel.textContent = 'Step 1: Choose Integration Category & Provider';
+
+  const btnActive = document.getElementById('btn-devops-view-active');
+  const btnWizard = document.getElementById('btn-devops-start-onboarding');
+  if (btnActive) btnActive.classList.remove('active');
+  if (btnWizard) btnWizard.classList.add('active');
+
+  await window.loadDevOpsWizard();
+};
+
+window.backToProviderSelection = function() {
+  const providerSelection = document.getElementById('wizard-provider-selection');
+  const configForm = document.getElementById('wizard-config-form');
+  const backBtn = document.getElementById('btn-wizard-back');
+  const stepLabel = document.getElementById('wizard-step-label');
+
+  if (providerSelection) providerSelection.style.display = 'block';
+  if (configForm) configForm.style.display = 'none';
+  if (backBtn) backBtn.style.display = 'none';
+  if (stepLabel) stepLabel.textContent = 'Step 1: Choose Integration Category & Provider';
+  selectedDevOpsProvider = null;
+};
+
+window.loadDevOpsActiveView = async function() {
+  const container = document.getElementById('devops-integrations-list');
+  const countEl = document.getElementById('devops-active-count');
+  if (!container) return;
+
+  devopsIntegrationsList = await window.sdlcGraph.listDevOpsIntegrations();
+  if (countEl) countEl.textContent = `${devopsIntegrationsList.length} Connected Integrations`;
+
+  if (devopsIntegrationsList.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; background: var(--bg-card); border-radius: 8px; border: 1px dashed var(--border);">
+        <div style="font-size: 32px; margin-bottom: 8px;">☁️</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px;">No DevOps Integrations Configured</div>
+        <div style="font-size: 12px; color: var(--text-dim); max-width: 480px; margin: 0 auto 16px auto;">
+          Connect your GitHub, AWS, Kubernetes, Docker, CI/CD, and identity providers to enable autonomous agent operations and pipeline orchestration.
+        </div>
+        <button class="btn btn-primary" onclick="window.showDevOpsWizardView()">➕ Add First Integration</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = devopsIntegrationsList.map(node => {
+    const creds = Array.isArray(node['robos:hasCredential']) ? node['robos:hasCredential'] : [];
+    const settings = node['robos:settings'] || {};
+    const titleLabel = node['dcterms:title'] || node['@id'] || 'DevOps Integration';
+    const categoryLabel = node['robos:categoryName'] || node['robos:category'] || 'devops';
+    const endpointLabel = node['robos:endpointUrl'] || 'Cloud Provider';
+    const statusLabel = node['robos:status'] || 'connected';
+
+    return `
+      <div class="devops-card" id="devops-card-${node['@id'].replace(/[^a-zA-Z0-9_-]/g, '_')}">
+        <div class="devops-card-header">
+          <div>
+            <div class="devops-card-title">${titleLabel}</div>
+            <div class="devops-card-meta">${categoryLabel} &middot; ${endpointLabel}</div>
+          </div>
+          <span class="status-tag-pass">🟢 ${statusLabel}</span>
+        </div>
+
+        <div class="devops-card-body">
+          <div style="font-size: 11px; margin-bottom: 8px;">
+            <span style="color: var(--text-dim);">Package:</span>
+            <code style="color: var(--accent);">📦 ${node['robos:package'] || 'devops'}</code>
+          </div>
+
+          <div style="font-size: 11px; margin-bottom: 6px; font-weight: 600; color: var(--text-muted);">
+            🔒 Pass Credentials (${creds.length}):
+          </div>
+          ${creds.map(c => `
+            <div class="devops-pass-ref">
+              <span>🔑 ${c.replace(/.*:/, '')}</span>
+              <span class="pass-tag">GPG</span>
+            </div>
+          `).join('')}
+
+          ${Object.keys(settings).length > 0 ? `
+            <div style="margin-top: 8px; font-size: 10px; color: var(--text-dim);">
+              ${Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null && v !== '').slice(0, 3).map(([k, v]) => `<div><strong>${k}:</strong> ${v}</div>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="devops-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="window.testDevOpsIntegrationById('${node['@id']}', '${node['robos:provider'] || ''}')">⚡ Test</button>
+          <button class="btn btn-secondary btn-sm" onclick="window.selectNode('${node['@id']}'); window.closeDevOpsModal();">🔍 Inspect</button>
+          <button class="btn btn-danger btn-sm" onclick="window.deleteDevOpsIntegrationById('${node['@id']}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.testDevOpsIntegrationById = async function(id, providerId) {
+  const res = await window.sdlcGraph.testDevOpsConnection({ providerId });
+  if (res && res.ok) {
+    alert(`✅ Connection verified for ${res.provider} (${res.latencyMs || 10}ms latency)\n${res.message}`);
+  } else {
+    alert(`❌ Connection failed: ${res ? res.error : 'Unknown error'}`);
+  }
+};
+
+window.deleteDevOpsIntegrationById = async function(id) {
+  if (!confirm(`Are you sure you want to remove DevOps integration "${id}" and wipe associated credentials from pass?`)) {
+    return;
+  }
+  const res = await window.sdlcGraph.deleteDevOpsIntegration(id);
+  if (res && res.ok) {
+    nodes = await window.sdlcGraph.getAllNodes();
+    renderNodeList();
+    if (selectedNodeId === id) {
+      selectedNodeId = nodes[0] ? nodes[0]['@id'] : null;
+      renderInspector();
+    }
+    await window.loadDevOpsActiveView();
+  } else {
+    alert(`Failed to delete integration: ${res ? res.error : 'Unknown error'}`);
+  }
+};
+
+window.loadDevOpsWizard = async function() {
+  devopsCategoriesList = await window.sdlcGraph.getDevOpsCategories();
+
+  const pillsContainer = document.getElementById('wizard-category-pills');
+  if (pillsContainer) {
+    pillsContainer.innerHTML = `
+      <button class="wizard-cat-pill ${activeDevOpsCategory === 'all' ? 'active' : ''}" onclick="window.filterDevOpsWizardCategory('all')">
+        🌐 All Categories
+      </button>
+      ${devopsCategoriesList.map(c => `
+        <button class="wizard-cat-pill ${activeDevOpsCategory === c.id ? 'active' : ''}" onclick="window.filterDevOpsWizardCategory('${c.id}')">
+          ${c.icon} ${c.name}
+        </button>
+      `).join('')}
+    `;
+  }
+
+  await window.renderWizardProviders();
+};
+
+window.filterDevOpsWizardCategory = async function(catId) {
+  activeDevOpsCategory = catId;
+  document.querySelectorAll('.wizard-cat-pill').forEach(b => {
+    b.classList.remove('active');
+  });
+  if (window.event && window.event.currentTarget) {
+    window.event.currentTarget.classList.add('active');
+  }
+  await window.renderWizardProviders();
+};
+
+window.renderWizardProviders = async function() {
+  const grid = document.getElementById('wizard-providers-grid');
+  if (!grid) return;
+
+  const providers = await window.sdlcGraph.getDevOpsProviders(activeDevOpsCategory === 'all' ? null : activeDevOpsCategory);
+
+  grid.innerHTML = providers.map(p => {
+    const desc = p.description || p.desc || '';
+    const catName = p.categoryName || p.category || '';
+    return `
+      <div class="wizard-provider-card" onclick="window.selectDevOpsProvider('${p.id}')">
+        <div class="wizard-provider-icon">${p.icon || '☁️'}</div>
+        <div class="wizard-provider-info">
+          <div class="wizard-provider-title">${p.name}</div>
+          <div class="wizard-provider-category">${catName}</div>
+          ${desc ? `<div class="wizard-provider-desc">${desc}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.selectDevOpsProvider = async function(providerId) {
+  const providers = await window.sdlcGraph.getDevOpsProviders();
+  const provider = providers.find(p => p.id === providerId);
+  if (!provider) return;
+
+  selectedDevOpsProvider = provider;
+
+  document.getElementById('wizard-provider-selection').style.display = 'none';
+  document.getElementById('wizard-config-form').style.display = 'block';
+  document.getElementById('btn-wizard-back').style.display = 'inline-block';
+  document.getElementById('wizard-step-label').textContent = `Step 2: Configure ${provider.name} Integration & Credentials`;
+
+  const banner = document.getElementById('wizard-provider-banner');
+  if (banner) {
+    const catName = provider.categoryName || provider.category || 'DevOps';
+    const desc = provider.description || provider.desc || '';
+    banner.innerHTML = `
+      <div style="font-size: 24px;">${provider.icon || '☁️'}</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 700; font-size: 14px; color: var(--text);">${provider.name} (${catName})</div>
+        ${desc ? `<div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">${desc}</div>` : ''}
+        <div style="font-size: 10px; color: var(--accent); margin-top: 4px;">
+          🔒 All secrets are automatically encrypted via GPG password-store (pass). Knowledge Graph stores only secure URN references.
+        </div>
+      </div>
+    `;
+  }
+
+  const fieldsContainer = document.getElementById('wizard-form-fields');
+  if (fieldsContainer) {
+    const defaultSlug = provider.id;
+    let fieldsHtml = `
+      <div class="wizard-field-group">
+        <label class="wizard-field-label">Account Slug / ID <span style="color: var(--danger);">*</span></label>
+        <input type="text" class="input-text" id="devops-field-accountSlug" value="${defaultSlug}" placeholder="e.g. ${provider.id}-prod" required />
+        <div class="wizard-field-help">Unique lowercase identifier for this account integration.</div>
+      </div>
+      <div class="wizard-field-group">
+        <label class="wizard-field-label">Account Label / Title</label>
+        <input type="text" class="input-text" id="devops-field-accountTitle" value="${provider.name} (${defaultSlug})" placeholder="Display title" />
+      </div>
+    `;
+
+    for (const f of provider.fields) {
+      if (f.id === 'accountSlug') continue;
+
+      const isReq = f.required ? '<span style="color: var(--danger);">*</span>' : '';
+      const inputId = `devops-field-${f.id}`;
+      const fieldHelp = f.description || f.desc || f.help || '';
+
+      if (f.type === 'select' && Array.isArray(f.options)) {
+        fieldsHtml += `
+          <div class="wizard-field-group">
+            <label class="wizard-field-label">${f.label} ${isReq}</label>
+            <select class="input-text" id="${inputId}">
+              ${f.options.map(opt => {
+                const optVal = typeof opt === 'object' && opt !== null ? opt.value : opt;
+                const optLabel = typeof opt === 'object' && opt !== null ? (opt.label || opt.name || opt.value) : opt;
+                return `<option value="${optVal}" ${String(optVal) === String(f.default) ? 'selected' : ''}>${optLabel}</option>`;
+              }).join('')}
+            </select>
+            ${fieldHelp ? `<div class="wizard-field-help">${fieldHelp}</div>` : ''}
+          </div>
+        `;
+      } else if (f.type === 'textarea') {
+        fieldsHtml += `
+          <div class="wizard-field-group">
+            <label class="wizard-field-label">${f.label} ${isReq}</label>
+            <textarea class="input-text" id="${inputId}" rows="3" placeholder="${f.placeholder || ''}">${f.default || ''}</textarea>
+            ${f.secret ? `<div class="wizard-pass-badge">🔒 GPG Pass Encrypted: ~/.password-store/devops/${provider.category}/${provider.id}/&lt;slug&gt;/${f.id}</div>` : ''}
+            ${fieldHelp ? `<div class="wizard-field-help">${fieldHelp}</div>` : ''}
+          </div>
+        `;
+      } else {
+        const inputType = f.secret ? 'password' : 'text';
+        fieldsHtml += `
+          <div class="wizard-field-group">
+            <label class="wizard-field-label">${f.label} ${isReq}</label>
+            <input type="${inputType}" class="input-text" id="${inputId}" value="${f.default || ''}" placeholder="${f.placeholder || ''}" ${f.required ? 'required' : ''} />
+            ${f.secret ? `<div class="wizard-pass-badge">🔒 GPG Pass Encrypted: ~/.password-store/devops/${provider.category}/${provider.id}/&lt;slug&gt;/${f.id}</div>` : ''}
+            ${fieldHelp ? `<div class="wizard-field-help">${fieldHelp}</div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    fieldsContainer.innerHTML = fieldsHtml;
+  }
+
+  const statusEl = document.getElementById('wizard-form-status');
+  if (statusEl) statusEl.style.display = 'none';
+};
+
+window.getDevOpsFormValues = function() {
+  if (!selectedDevOpsProvider) return null;
+  const formValues = {};
+  const slugInput = document.getElementById('devops-field-accountSlug');
+  const titleInput = document.getElementById('devops-field-accountTitle');
+
+  formValues.accountSlug = slugInput ? slugInput.value.trim() : selectedDevOpsProvider.id;
+  formValues.accountTitle = titleInput ? titleInput.value.trim() : `${selectedDevOpsProvider.name} (${formValues.accountSlug})`;
+
+  for (const f of selectedDevOpsProvider.fields) {
+    let el = document.getElementById(`devops-field-${f.id}`);
+    if (!el && (f.id === 'personalAccessToken' || f.id === 'token')) {
+      el = document.getElementById('devops-field-personalAccessToken') || document.getElementById('devops-field-token');
+    }
+    if (el) {
+      formValues[f.id] = el.value;
+    }
+  }
+  return formValues;
+};
+
+window.testCurrentDevOpsForm = async function() {
+  if (!selectedDevOpsProvider) return;
+  const formValues = window.getDevOpsFormValues();
+  const statusEl = document.getElementById('wizard-form-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'wizard-status-msg info';
+    statusEl.textContent = '⚡ Testing connection…';
+  }
+
+  const res = await window.sdlcGraph.testDevOpsConnection({
+    providerId: selectedDevOpsProvider.id,
+    formValues,
+  });
+
+  if (statusEl) {
+    if (res && res.ok) {
+      statusEl.className = 'wizard-status-msg success';
+      statusEl.textContent = `✅ ${res.message} (${res.latencyMs || 10}ms latency)`;
+    } else {
+      statusEl.className = 'wizard-status-msg error';
+      statusEl.textContent = `❌ ${res ? res.error : 'Connection test failed'}`;
+    }
+  }
+};
+
+window.saveCurrentDevOpsForm = async function() {
+  if (!selectedDevOpsProvider) return;
+  const formValues = window.getDevOpsFormValues();
+  const statusEl = document.getElementById('wizard-form-status');
+
+  // Validate required fields
+  for (const f of selectedDevOpsProvider.fields) {
+    if (f.required && !formValues[f.id]) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'wizard-status-msg error';
+        statusEl.textContent = `Missing required field: ${f.label}`;
+      }
+      return;
+    }
+  }
+
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'wizard-status-msg info';
+    statusEl.textContent = '💾 Saving integration and encrypting secrets to GPG pass…';
+  }
+
+  try {
+    const res = await window.sdlcGraph.saveDevOpsIntegration({
+      providerId: selectedDevOpsProvider.id,
+      accountSlug: formValues.accountSlug,
+      formValues,
+    });
+
+    if (res && res.ok) {
+      if (statusEl) {
+        statusEl.className = 'wizard-status-msg success';
+        statusEl.textContent = `✅ Saved integration & encrypted secrets to pass: ${res.passPaths.join(', ')}`;
+      }
+
+      nodes = await window.sdlcGraph.getAllNodes();
+      renderNodeList();
+
+      await new Promise(r => setTimeout(r, 600));
+      await window.showDevOpsActiveView();
+      return res;
+    } else {
+      if (statusEl) {
+        statusEl.className = 'wizard-status-msg error';
+        statusEl.textContent = `❌ Save error: ${res ? res.error : 'Unknown error'}`;
+      }
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.className = 'wizard-status-msg error';
+      statusEl.textContent = `❌ Save error: ${err.message}`;
+    }
+  }
+};
+
+// ── Packages & Multi-Repo Manager Modal ──────────────────────────────────────
+window.openPackagesModal = async function() {
+  const modal = document.getElementById('packages-modal');
+  if (modal) modal.style.display = 'flex';
+  await window.loadPackagesAndRepos();
+};
+
+window.closePackagesModal = function() {
+  const modal = document.getElementById('packages-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.loadPackagesAndRepos = async function() {
+  const pkgsGrid = document.getElementById('packages-list-grid');
+  const reposGrid = document.getElementById('repos-list-grid');
+
+  kgraphPackagesList = await window.sdlcGraph.listPackages();
+  kgraphReposList = await window.sdlcGraph.listRepos();
+
+  if (pkgsGrid) {
+    pkgsGrid.innerHTML = kgraphPackagesList.map(pkg => `
+      <div class="package-card">
+        <div class="package-card-header">
+          <span class="package-card-id">📦 ${pkg.id}</span>
+          <span class="package-badge">${pkg.nodeCount} Nodes</span>
+        </div>
+        <div class="package-card-title">${pkg.title}</div>
+        <div class="package-card-desc">${pkg.description}</div>
+        <div class="package-card-footer">
+          <code>${pkg.namespace}</code> &middot; <code>v${pkg.version}</code>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (reposGrid) {
+    reposGrid.innerHTML = kgraphReposList.map(r => `
+      <div class="repo-card">
+        <div class="repo-card-header">
+          <div>
+            <span class="repo-card-id">${r.id}</span>
+            <span class="type-badge ${r.type === 'remote' ? 'type-service' : 'type-contract'}" style="margin-left: 6px;">
+              ${r.type.toUpperCase()}
+            </span>
+          </div>
+          <span class="repo-tag">🏷️ ${r.tag || r.version || 'v1.0.0'}</span>
+        </div>
+        <div class="repo-card-title">${r.name}</div>
+        <div class="repo-card-url">${r.url || r.path || 'local workspace (.robos/)'}</div>
+        ${r.type === 'remote' ? `
+          <div class="repo-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="window.syncRepoTag('${r.id}')">🔄 Sync Tag</button>
+            <button class="btn btn-danger btn-sm" onclick="window.removeRepoById('${r.id}')">🗑️ Remove</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+};
+
+window.syncRepoTag = async function(repoId) {
+  const res = await window.sdlcGraph.syncRemoteRepo(repoId);
+  if (res && res.ok) {
+    alert(`✅ Synced remote repository "${repoId}" at tag ${res.tag}!\nCached to: ${res.cacheDir}`);
+    await window.loadPackagesAndRepos();
+    nodes = await window.sdlcGraph.getAllNodes();
+    renderNodeList();
+  } else {
+    alert(`❌ Sync failed: ${res ? res.error : 'Unknown error'}`);
+  }
+};
+
+window.removeRepoById = async function(repoId) {
+  if (!confirm(`Are you sure you want to remove remote KGraph repository "${repoId}"?`)) return;
+  const res = await window.sdlcGraph.removeRepo(repoId);
+  if (res && res.ok) {
+    await window.loadPackagesAndRepos();
+  } else {
+    alert(`Failed to remove repository: ${res ? res.error : 'Unknown error'}`);
+  }
+};
+
+window.addNewRepo = async function() {
+  const idInput = document.getElementById('new-repo-id');
+  const nameInput = document.getElementById('new-repo-name');
+  const urlInput = document.getElementById('new-repo-url');
+  const tagInput = document.getElementById('new-repo-tag');
+  const statusEl = document.getElementById('repo-add-status');
+
+  const id = idInput ? idInput.value.trim() : '';
+  const name = nameInput ? nameInput.value.trim() : id;
+  const url = urlInput ? urlInput.value.trim() : '';
+  const tag = tagInput ? tagInput.value.trim() : 'v1.0.0';
+
+  if (!id) {
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      statusEl.className = 'wizard-status-msg error';
+      statusEl.textContent = 'Repository ID is required.';
+    }
+    return;
+  }
+
+  const res = await window.sdlcGraph.addRepo({ id, name, url, tag });
+  if (res && res.ok) {
+    if (url) {
+      await window.sdlcGraph.syncRemoteRepo(id);
+    }
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      statusEl.className = 'wizard-status-msg success';
+      statusEl.textContent = `✅ Registered repository "${id}" at tag ${tag}`;
+    }
+    if (idInput) idInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (tagInput) tagInput.value = '';
+
+    await window.loadPackagesAndRepos();
+  } else {
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      statusEl.className = 'wizard-status-msg error';
+      statusEl.textContent = `❌ ${res ? res.error : 'Failed to add repository'}`;
+    }
+  }
+};
+
+// Event Listeners for DevOps & Packages Modals
+const btnOpenDevOps = document.getElementById('btn-open-devops-modal');
+if (btnOpenDevOps) btnOpenDevOps.addEventListener('click', () => window.openDevOpsModal());
+
+const btnCloseDevOps = document.getElementById('btn-close-devops-modal');
+if (btnCloseDevOps) btnCloseDevOps.addEventListener('click', () => window.closeDevOpsModal());
+
+const btnDevOpsActive = document.getElementById('btn-devops-view-active');
+if (btnDevOpsActive) btnDevOpsActive.addEventListener('click', () => window.showDevOpsActiveView());
+
+const btnDevOpsWizard = document.getElementById('btn-devops-start-onboarding');
+if (btnDevOpsWizard) btnDevOpsWizard.addEventListener('click', () => window.showDevOpsWizardView());
+
+const btnWizardBack = document.getElementById('btn-wizard-back');
+if (btnWizardBack) btnWizardBack.addEventListener('click', () => window.backToProviderSelection());
+
+const btnTestDevOps = document.getElementById('btn-test-devops-connection');
+if (btnTestDevOps) btnTestDevOps.addEventListener('click', () => window.testCurrentDevOpsForm());
+
+const btnSaveDevOps = document.getElementById('btn-save-devops-integration');
+if (btnSaveDevOps) btnSaveDevOps.addEventListener('click', () => window.saveCurrentDevOpsForm());
+
+const btnOpenPackages = document.getElementById('btn-open-packages-modal');
+if (btnOpenPackages) btnOpenPackages.addEventListener('click', () => window.openPackagesModal());
+
+const btnClosePackages = document.getElementById('btn-close-packages-modal');
+if (btnClosePackages) btnClosePackages.addEventListener('click', () => window.closePackagesModal());
+
+const btnAddRepo = document.getElementById('btn-add-repo');
+if (btnAddRepo) btnAddRepo.addEventListener('click', () => window.addNewRepo());
 
 load();
 

@@ -20,6 +20,13 @@ contextBridge.exposeInMainWorld('robos', {
   deleteProject:   (id)      => ipcRenderer.invoke('delete-project', id),
   dialogConfirm:   (p)       => ipcRenderer.invoke('dialog-confirm', p),
 
+  // Templates
+  listTaskTemplates:    ()        => ipcRenderer.invoke('list-task-templates'),
+  getTaskTemplate:      (id)      => ipcRenderer.invoke('get-task-template', id),
+  saveCustomTemplate:   (t)       => ipcRenderer.invoke('save-custom-template', t),
+  deleteCustomTemplate: (id)      => ipcRenderer.invoke('delete-custom-template', id),
+  generateTemplatePlan: (p)       => ipcRenderer.invoke('generate-template-plan', p),
+
   // Story 31.08 DAG & Planning Mode
   getTaskGraph:     ()       => ipcRenderer.invoke('dag-get-task-graph'),
   dispatchPlanning: (id)     => ipcRenderer.invoke('dag-dispatch-planning', id),

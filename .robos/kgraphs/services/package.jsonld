@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "pact": "https://pact.io/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:services",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "services",
+  "robos:namespace": "robos.services",
+  "robos:version": "1.0.0",
+  "dcterms:title": "services Package",
+  "dcterms:description": "",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:service:billing-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Billing API Service",
+      "robos:technology": "Go 1.22 / Gin",
+      "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    }
+  ]
+}

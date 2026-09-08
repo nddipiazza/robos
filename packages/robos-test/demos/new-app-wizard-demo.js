@@ -7,7 +7,7 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SLUG = 'new-app-wizard';
 const PERSIST_DIR = path.join(process.env.HOME || '/home/ndipiazza', '.robos', 'development', 'walkthroughs', SLUG);
-const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/38cf4ff1-059d-4d41-9db8-305c6dee0964';
+const BRAIN_DIR = '/home/ndipiazza/.gemini/antigravity/brain/b3eec328-5b7c-4d20-9d65-749de9fa59ce';
 const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/screenshots');
 
 const SCRIPT = [
@@ -137,16 +137,18 @@ This end-to-end walkthrough demonstrates developing a **brand-new application fr
   // Extract frames
   try {
     if (fs.existsSync(videoPath)) {
-      execSync(`ffmpeg -y -ss 00:00:03 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-archetypes_frame.png"`, { stdio: 'ignore' });
-      execSync(`ffmpeg -y -ss 00:00:09 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-identity-team_frame.png"`, { stdio: 'ignore' });
-      execSync(`ffmpeg -y -ss 00:00:15 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-contract-spec_frame.png"`, { stdio: 'ignore' });
-      execSync(`ffmpeg -y -ss 00:00:23 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-scaffold-complete_frame.png"`, { stdio: 'ignore' });
+      execSync(`ffmpeg -y -ss 00:00:02.5 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-archetypes_frame.png"`, { stdio: 'ignore' });
+      execSync(`ffmpeg -y -ss 00:00:11.5 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-identity-team_frame.png"`, { stdio: 'ignore' });
+      execSync(`ffmpeg -y -ss 00:00:16.5 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-contract-spec_frame.png"`, { stdio: 'ignore' });
+      execSync(`ffmpeg -y -ss 00:00:21.0 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-scaffold-blueprint_frame.png"`, { stdio: 'ignore' });
+      execSync(`ffmpeg -y -ss 00:00:27.0 -i "${videoPath}" -vframes 1 "${PERSIST_DIR}/new-app-scaffold-complete_frame.png"`, { stdio: 'ignore' });
 
       // Copy to docs and brain
       const frames = [
         'new-app-archetypes_frame.png',
         'new-app-identity-team_frame.png',
         'new-app-contract-spec_frame.png',
+        'new-app-scaffold-blueprint_frame.png',
         'new-app-scaffold-complete_frame.png'
       ];
       for (const f of frames) {

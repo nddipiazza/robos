@@ -45,6 +45,12 @@
   <div id="modal-add" class="modal hidden">
     <div class="modal-box">
       <h2>Add Git Project</h2>
+      <div class="skill-flow-tip">
+        <span class="skill-flow-tip-icon">✨</span>
+        <div class="skill-flow-tip-text">
+          <strong>Onboarding existing company Git projects?</strong> Ask your AI agent to run <code>/import-company-kgraph</code> to discover and generate KGraph entries from GitHub, HTTP, S3, or local disks, which you can then take and import directly into RobOS!
+        </div>
+      </div>
       <label class="field-label">Pick from GitHub</label>
       <div class="gh-pick-wrap">
         <div class="gh-combo">
@@ -107,6 +113,12 @@
     <div class="modal-box modal-box-wide">
       <h2>Add Repos from GitHub Org</h2>
       <p class="modal-sub">Enter a GitHub organization name to load all its repositories.</p>
+      <div class="skill-flow-tip">
+        <span class="skill-flow-tip-icon">💡</span>
+        <div class="skill-flow-tip-text">
+          <strong>Tip:</strong> You can also tell your AI agent to run <code>/import-company-kgraph --source &lt;github-org-url&gt;</code> to automatically extract all organization repositories into structured Knowledge Graph entries and contracts.
+        </div>
+      </div>
       <div class="org-input-row">
         <input id="org-name-input" class="text-input org-name-input" placeholder="e.g. apache, google, microsoft" autocomplete="off" spellcheck="false"/>
         <button id="btn-org-load" class="btn btn-secondary">Load Repos</button>

@@ -47,10 +47,13 @@ graph TD
 2. **Team Roster & Team Topologies**: Clear directory of engineering squads (stream-aligned, platform, enablement, complicated-subsystem), service ownership, and enterprise directory sync (Okta, Azure AD, LDAP) stored in `.robos/teams.yaml`.
 3. **Data Model Studio (TypeSpec)**: Define domain data models once and generate TypeScript, Java, and Go types automatically.
 4. **API Contracts & Mock Servers**: Define REST APIs (OpenAPI 3.1), gRPC Protobuf, and event streams with live mock servers for instant testing.
-5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across 6 archetypes (`robos:Microservice`, `robos:DesktopApp`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
+5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across 9 archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
 6. **Multi-Repo Workspace Hub**: Switch between Git branches across multiple repositories simultaneously without duplicate disk storage.
 7. **Step-by-Step Task Roadmap**: Breaks high-level feature goals down into a clean checklist of prerequisite and dependent tasks (OASIS OSLC Change Management).
 8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files under `.robos/` (`knowledge-graph.jsonld`, `teams.yaml`, `packages.yaml`, `topology.yaml`) with zero proprietary cloud databases.
+
+{: .note }
+> **Deep Dive:** For the complete breakdown of packages, namespaces, Git-tag version pinning, and the zero-plaintext GPG password store vault, see the dedicated [SDLC Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %}).
 
 ---
 
@@ -96,7 +99,7 @@ sequenceDiagram
 - **`robos-mcp-router`**: Fast tool router connecting AI models (Claude, Antigravity, Copilot, Gemini) to local developer tools.
 
 ### Core Architectural Applications
-- **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across 6 multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
+- **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across 9 multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
 - **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
 - **IDE Review Bridges**: Native IPC servers and extensions bridging RobOS reviews to IntelliJ IDEA (port `63343`) and VS Code (`vscode://github.vscode-pull-request-github/open-pr`).
 

@@ -28,4 +28,20 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   requestAppDocUpdate: (payload) => ipcRenderer.invoke('graph-request-app-doc-update', payload),
   getDocSyncPrompt: () => ipcRenderer.invoke('graph-doc-sync-prompt'),
   applyDocUpdates: (updates) => ipcRenderer.invoke('graph-apply-doc-updates', updates),
+
+  // Multi-Package & Multi-Repo
+  listPackages: () => ipcRenderer.invoke('kgraph-list-packages'),
+  getPackage: (pkgId) => ipcRenderer.invoke('kgraph-get-package', pkgId),
+  listRepos: () => ipcRenderer.invoke('kgraph-list-repos'),
+  addRepo: (repoData) => ipcRenderer.invoke('kgraph-add-repo', repoData),
+  removeRepo: (repoId) => ipcRenderer.invoke('kgraph-remove-repo', repoId),
+  syncRemoteRepo: (repoId) => ipcRenderer.invoke('kgraph-sync-remote', repoId),
+
+  // DevOps Integrations
+  getDevOpsCategories: () => ipcRenderer.invoke('devops-get-categories'),
+  getDevOpsProviders: (categoryId) => ipcRenderer.invoke('devops-get-providers', categoryId),
+  listDevOpsIntegrations: () => ipcRenderer.invoke('devops-list-integrations'),
+  saveDevOpsIntegration: (payload) => ipcRenderer.invoke('devops-save-integration', payload),
+  testDevOpsConnection: (payload) => ipcRenderer.invoke('devops-test-connection', payload),
+  deleteDevOpsIntegration: (id) => ipcRenderer.invoke('devops-delete-integration', id),
 });

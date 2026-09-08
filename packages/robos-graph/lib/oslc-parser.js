@@ -10,6 +10,7 @@ const OSLC_CONTEXT = {
   c4: 'https://c4model.com/ns#',
   pact: 'https://pact.io/ns#',
   dcterms: 'http://purl.org/dc/terms/',
+  schema: 'https://schema.org/',
 };
 
 class OSLCGraphParser {

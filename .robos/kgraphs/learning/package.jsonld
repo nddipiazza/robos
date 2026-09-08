@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:learning",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "learning",
+  "robos:namespace": "robos.learning",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Interactive eLearning Curriculums & Knowledge Modules",
+  "dcterms:description": "Interactive developer courses, tutorials, and architectural training modules.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:elearning:course:sdlc-fundamentals",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse"
+      ],
+      "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+      "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:level": "Intermediate",
+      "robos:modulesCount": 4,
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning"
+    }
+  ]
+}

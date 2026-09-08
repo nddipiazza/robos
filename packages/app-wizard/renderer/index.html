@@ -63,6 +63,21 @@
             <div class="arch-title">Mobile Application</div>
             <div class="arch-desc">iOS, Android, React Native, or Flutter client applications.</div>
           </div>
+          <div class="archetype-card" data-archetype="robos:FrontEndApp" id="card-arch-frontend">
+            <div class="arch-icon">🌐</div>
+            <div class="arch-title">Front End Application</div>
+            <div class="arch-desc">Single-page and SSR web client applications with React, Vite, Next.js, Vue, or Svelte.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:PCGame" id="card-arch-pcgame">
+            <div class="arch-icon">🎮</div>
+            <div class="arch-title">PC Game</div>
+            <div class="arch-desc">Interactive desktop games built with Unreal Engine, Unity, Godot, or Bevy.</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:MobileGame" id="card-arch-mobilegame">
+            <div class="arch-icon">🕹️</div>
+            <div class="arch-title">Mobile Game</div>
+            <div class="arch-desc">Mobile game applications for iOS and Android built with Unity, Unreal, or Godot.</div>
+          </div>
           <div class="archetype-card" data-archetype="robos:DataPipeline" id="card-arch-pipeline">
             <div class="arch-icon">🌊</div>
             <div class="arch-title">Data Pipeline / Worker</div>
@@ -166,6 +181,12 @@ paths:
           <label for="import-source-path">Local Directory Path or Git URL</label>
           <input type="text" id="import-source-path" placeholder="/home/user/my-existing-app">
         </div>
+        <div class="skill-flow-tip" style="margin-bottom: 16px; background: rgba(0, 188, 212, 0.08); border: 1px solid rgba(0, 188, 212, 0.3); border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
+          <span style="font-size: 18px; line-height: 1;">✨</span>
+          <div style="font-size: 12.5px; line-height: 1.45; color: var(--text-secondary);">
+            <strong style="color: var(--accent);">Onboarding multiple existing Git projects?</strong> Ask your AI agent to run the <code>/import-company-kgraph</code> skill (e.g. <code>/import-company-kgraph --source &lt;url | s3://... | path&gt;</code>) to extract all company repositories into Knowledge Graph entries that you can then take and import directly into RobOS.
+          </div>
+        </div>
         <div class="action-bar">
           <button class="btn btn-primary" id="btn-scan-import">Deep Inspect Codebase 🔍</button>
         </div>
@@ -214,7 +235,10 @@ paths:
             <label for="import-app-archetype">Application Archetype</label>
             <select id="import-app-archetype">
               <option value="robos:Microservice">Microservice / Web API</option>
+              <option value="robos:FrontEndApp">Front End Application</option>
               <option value="robos:DesktopApp">Desktop Application</option>
+              <option value="robos:PCGame">PC Game</option>
+              <option value="robos:MobileGame">Mobile Game</option>
               <option value="robos:ConsoleApp">Console & CLI Tool</option>
               <option value="robos:MobileApp">Mobile Application</option>
               <option value="robos:DataPipeline">Data Pipeline / Worker</option>

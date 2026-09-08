@@ -154,6 +154,7 @@ plugins/
 | **`create-test`** | `/create-test` | Generate unit/E2E tests using `robos-test` framework |
 | **`deploy-to-vm`** | `/deploy-to-vm` | Deploy packages and apps to the running RobOS VM |
 | **`e2e-driven-dev`** | `/e2e-driven-dev`, `/do-e2e-driven-dev` | Perform task development driven by narrated E2E tests and video generation |
+| **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files |
 | **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies (QEMU, Electron, Java, Node) |
 | **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove a RobOS skill in the marketplace |
 | **`read-error-logs`** | `/read-error-logs` | Inspect centralized RobOS error stream and system crashes |
@@ -164,6 +165,7 @@ plugins/
 | **`restart-taskbar`** | `/restart-taskbar` | Restart `robos-desktop` taskbar dock and `desktop-manager` service |
 | **`start-vm`** | `/start-vm` | Start QEMU virtual machine with GTK, VNC, SPICE, or headless mode |
 | **`stop-vm`** | `/stop-vm` | Gracefully shut down or terminate the RobOS virtual machine |
+| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Inspect RobOS Knowledge Graph object updates, discern documentation impacts, and synchronize living docs |
 | **`test-container`** | `/test-container` | Run headless containerized E2E tests in Docker + Xvfb |
 | **`update-app-icon`** | `/update-app-icon` | Replace 48x48 Lucide SVG icon and sync to icon registries |
 | **`vm-ssh`** | `/vm-ssh` | Execute shell commands on the RobOS VM via SSH (port 2224) |

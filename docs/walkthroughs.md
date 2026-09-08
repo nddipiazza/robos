@@ -676,6 +676,12 @@ flowchart TD
         F --> H[Backstage Catalog & dev-setup.sh]
         H --> I[Dual-State Knowledge Graph]
     end
+    subgraph KGraph Architecture & DevOps Vault
+        I --> J[Modular Namespaces & Packages]
+        K[Remote GitHub Repos] -->|Git-Tag Versioning v2.4.0| J
+        L[DevOps Providers 25+] -->|Onboarding Wizards| M[GPG Pass Vault]
+        M -->|Zero Plaintext PassCredential| J
+    end
     D -.->|Assign Ownership| H
 ```
 
@@ -801,6 +807,77 @@ An engineering organization adopting RobOS has dozens of existing legacy and bro
 
 ---
 
+### Step 21: Multi-Package & Multi-Repo Knowledge Graph (Namespaces, Git-Tag Dependencies & Remote Caching)
+
+#### The Real-World Business Scenario
+As software ecosystems scale to dozens of engineering squads and hundreds of microservices, storing the entire architectural topology, contracts, DevOps integrations, and eLearning modules in a single monolithic file causes severe merge conflicts, performance bottlenecks, and graph clutter. Furthermore, modern enterprises need to compose knowledge graphs across multiple Git repositories—incorporating external shared infrastructure models, central compliance policies, and API contracts pinned to immutable semantic version releases (e.g. `v2.4.0`).
+
+RobOS solves this by decomposing the dual-state Knowledge Graph into modular, namespaced packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`) indexed by `.robos/kgraph.yaml`. RobOS supports multi-repo composition with Git-tag version pinning and automatic local caching (`~/.robos/cache/kgraphs/<repo>@<tag>/`), while preserving backward compatibility through automated aggregation into `.robos/knowledge-graph.jsonld`.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Inspect Graph Architecture**: Opens **RobOS SDLC Knowledge Graph Explorer** and inspects telemetry stats.
+2. **Open Packages & Repositories Console**: Clicks **📦 Packages & Repos** (`#btn-open-packages-modal`) to reveal the package management hub.
+3. **Inspect Standard Namespaces**: Audits the 6 foundational RobOS packages (`robos.core`, `robos.org`, `robos.services`, `robos.apps`, `robos.devops`, `robos.learning`) stored in `.robos/kgraphs/<pkg>/package.jsonld`.
+4. **Register External KGraph Dependency**: Enters Repository ID `enterprise-contracts`, Title `Enterprise Cloud Contracts`, Git URL `https://github.com/acme/cloud-contracts`, and Git Tag `v2.4.0`.
+5. **Sync & Cache Remote Repository**: Executes remote repository sync, cloning and validating into `~/.robos/cache/kgraphs/enterprise-contracts@v2.4.0/` with on-demand package resolution.
+6. **Package Namespace Filter**: Closes the modal and uses the sidebar package filter (`#node-package-filter`) to isolate `robos.services` microservices and contracts.
+7. **Verify Backward-Compatible Aggregation**: Asserts that all distributed package nodes automatically synchronize into `.robos/knowledge-graph.jsonld` upon saving.
+- **Source Demo Script**: [`packages/robos-test/demos/multi-package-repo-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/multi-package-repo-demo.js)
+- **Automated Test Suite**: [`packages/robos-test/tests/sdlc-graph/multi-package-repo.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/sdlc-graph/multi-package-repo.test.js)
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/multi-package-repo-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (6 Namespaces) |
+|:---:|:---:|
+| ![Stat Bar]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}) | ![Packages Modal]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}) |
+
+| Multi-Repo Registry & Git-Tag Versioning | Package Namespace Filter (robos.services) |
+|:---:|:---:|
+| ![Repos Grid]({{ '/assets/images/screenshots/multi-pkg-repos_frame.png' | relative_url }}) | ![Package Filter]({{ '/assets/images/screenshots/multi-pkg-filter_frame.png' | relative_url }}) |
+
+---
+
+### Step 22: DevOps Account Integrations & GPG Password Store (Onboarding Wizards, Zero Plaintext Secrets & Connection Probing)
+
+#### The Real-World Business Scenario
+Engineering teams must connect dozens of external platforms to drive their automated delivery lifecycle: source control (GitHub, GitLab, Bitbucket), cloud infrastructure (AWS, GCP, Azure, OpenShift), CI/CD pipelines (Jenkins, GitHub Actions), package and container registries (Docker Hub, Quay, Artifactory, NPM), local virtualization (Docker, Podman, Kubernetes, VMware), identity providers (Okta), and DNS management (GoDaddy).
+
+In conventional tooling, API keys and access tokens are scattered across plaintext configuration files or environment variables, posing severe security risks. RobOS introduces a secure, turnkey DevOps Integration Hub:
+- **Zero Plaintext Credentials in the Knowledge Graph**: Sensitive tokens, passwords, and private keys are never stored in graph nodes or committed to Git.
+- **UNIX Password Store (`pass`) Integration**: Secrets are encrypted using GPG and stored directly in `~/.password-store/devops/<category>/<provider>/<account-slug>/<key>.gpg`.
+- **First-Class PassCredential Reference Nodes**: The Knowledge Graph creates `robos:PassCredential` reference nodes declaring the `robos:passPath`, linked to `robos:DevOpsIntegration` nodes via `robos:hasCredential`.
+- **Pre-Flight Connection Probing**: Before saving, RobOS tests live API connectivity and authenticates credentials against provider endpoints.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Open DevOps Hub**: Clicks **☁️ DevOps Integrations** (`#btn-open-devops-modal`) in the Knowledge Graph explorer.
+2. **Launch Interactive Onboarding Wizard**: Clicks **⚡ Onboard Account** (`#btn-devops-start-onboarding`) to start guided account setup.
+3. **Explore 7 Categories & 25+ Providers**: Navigates category filter pills (`Source Control`, `Cloud Infrastructure`, `CI/CD & GitOps`, `Package & Artifact Registries`, `Containers & Virtualization`, `OAuth & Identity`, `Domains & DNS Providers`).
+4. **Configure GitLab Provider**: Selects GitLab provider, dynamically generating the credential form with account slug `acme-gitlab`, server URL `https://gitlab.com`, and personal access token `glpat-MOCKTOKEN987654321`.
+5. **Audit GPG Pass Encryption Badge**: Inspects visual security indicator confirming the token will be encrypted to `~/.password-store/devops/source-control/gitlab/acme-gitlab/personalAccessToken`.
+6. **Execute Live Connection Probe**: Clicks **⚡ Test Connection** (`#btn-test-devops-connection`) to verify credentials and endpoint reachability with instant green status confirmation.
+7. **Save Integration to KGraph & Pass**: Clicks **💾 Save to Knowledge Graph** (`#btn-save-devops-integration`), materializing the `robos:DevOpsIntegration` node into the `devops` package and writing encrypted secrets to `pass`.
+8. **Inspect Active Accounts & Graph Linking**: Validates the active account card with connection badge, GPG secret indicator, and bidirectional linkage to the Knowledge Graph nodes list.
+- **Source Demo Script**: [`packages/robos-test/demos/devops-integrations-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/devops-integrations-demo.js)
+- **Automated Test Suite**: [`packages/robos-test/tests/sdlc-graph/devops-integrations.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/sdlc-graph/devops-integrations.test.js)
+
+<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
+  <source src="{{ '/assets/videos/devops-integrations-final.webm' | relative_url }}" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+| DevOps Hub & Active Accounts | Onboarding Wizard (7 Categories & 25+ Providers) |
+|:---:|:---:|
+| ![DevOps Modal]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}) | ![Categories]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}) |
+
+| Dynamic Config Form with GPG Pass Badges | Active Accounts & Pass Credentials View |
+|:---:|:---:|
+| ![Config Form]({{ '/assets/images/screenshots/devops-config-form_frame.png' | relative_url }}) | ![Active Integrations]({{ '/assets/images/screenshots/devops-active-integrations_frame.png' | relative_url }}) |
+
+---
+
 ## How to Run Walkthroughs Yourself
 
 You can run any of these automated walkthroughs in headless mode to regenerate the videos and voiceovers on your own machine:
@@ -821,6 +898,12 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-w
 # Run the Import Existing Apps (Codebase Ingestion) walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/app-import-wizard-demo.js
 
+# Run the Multi-Package & Multi-Repo Knowledge Graph walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/multi-package-repo-demo.js
+
+# Run the DevOps Account Integrations & GPG Password Store walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/devops-integrations-demo.js
+
 # Run the Data Sources explorer walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/data-sources-demo.js
 
@@ -833,3 +916,4 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/agy-mcp-d
 # Run the Live Architecture Map walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/robos-graph-demo.js
 ```
+
