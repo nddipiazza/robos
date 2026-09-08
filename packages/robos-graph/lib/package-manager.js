@@ -42,6 +42,12 @@ const DEFAULT_PACKAGES = [
     title: 'Interactive eLearning Curriculums & Knowledge Modules',
     description: 'Interactive developer courses, tutorials, and architectural training modules.',
   },
+  {
+    id: 'documentation',
+    namespace: 'robos.docs',
+    title: 'Living Documentation, Visual Architecture & Flow Diagrams',
+    description: 'Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations.',
+  },
 ];
 
 class KGraphPackageManager {
@@ -72,6 +78,9 @@ class KGraphPackageManager {
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
     const typeStr = types.join(' ');
 
+    if (typeStr.includes('FlowDiagram') || typeStr.includes('DocumentationPage') || typeStr.includes('DocArticle') || typeStr.includes('ArchitectureDecisionRecord') || typeStr.includes('ADR') || typeStr.includes('InteractiveWalkthrough') || typeStr.includes('CodeSnippet') || typeStr.includes('CodeSample') || typeStr.includes('ApiGuide')) {
+      return 'documentation';
+    }
     if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('Company')) {
       return 'organization';
     }

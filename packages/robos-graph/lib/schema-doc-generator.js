@@ -178,6 +178,101 @@ const PROPERTY_METADATA = {
     type: 'Array<robos:AgentRule>',
     description: 'Organization-wide coding rules and architectural constraints inherited by AI agents.',
   },
+  'robos:mermaidText': {
+    name: 'Mermaid Graph Definition',
+    type: 'xsd:string',
+    description: 'Raw, executable Mermaid graph syntax specifying nodes, transitions, sequence interactions, or states.',
+  },
+  'robos:imagePath': {
+    name: 'AI-Rendered Diagram Image',
+    type: 'xsd:string',
+    description: 'Relative path to a high-resolution, AI-generated illustration visualizing the diagram (e.g. `assets/images/architecture/...`).',
+  },
+  'robos:tooltip': {
+    name: 'Hover Tooltip Summary',
+    type: 'xsd:string',
+    description: 'Concise tooltip text displayed on hover in interactive UI cards, IDE diagram viewers, and living doc popovers.',
+  },
+  'robos:diagramType': {
+    name: 'Diagram Type',
+    type: 'xsd:string',
+    description: 'Diagram classification (`flowchart`, `sequence`, `class`, `state`, `architecture`, `erDiagram`).',
+  },
+  'robos:aspectRatio': {
+    name: 'Image Aspect Ratio',
+    type: 'xsd:string',
+    description: 'Aspect ratio of the AI-rendered diagram image (`16:9`, `4:3`, `1:1`).',
+  },
+  'robos:targetComponent': {
+    name: 'Target Component',
+    type: 'URI (robos:Microservice | robos:FrontEndApp | robos:DesktopApp)',
+    description: 'URI reference linking the diagram to the target software architecture component it illustrates.',
+  },
+  'robos:docPath': {
+    name: 'Document File Path',
+    type: 'xsd:string',
+    description: 'Relative path to the living markdown documentation page within the repository.',
+  },
+  'robos:slug': {
+    name: 'URL / Document Slug',
+    type: 'xsd:string',
+    description: 'Canonical web and navigation slug for the documentation or walkthrough.',
+  },
+  'robos:category': {
+    name: 'Documentation Category',
+    type: 'xsd:string',
+    description: 'Functional documentation category (`Architecture`, `Guides`, `Runbooks`, `Onboarding`, `Specifications`).',
+  },
+  'robos:hasFlowDiagram': {
+    name: 'Associated Flow Diagram',
+    type: 'URI (robos:FlowDiagram)',
+    description: 'URI reference to a first-class visual flow diagram linked to this documentation or decision record.',
+  },
+  'robos:adrNumber': {
+    name: 'ADR Number Identifier',
+    type: 'xsd:string',
+    description: 'Standard sequential ADR identifier (e.g. `ADR-001`).',
+  },
+  'robos:context': {
+    name: 'Decision Context',
+    type: 'xsd:string',
+    description: 'Architectural context, problem statement, business drivers, and technical constraints motivating the decision.',
+  },
+  'robos:decision': {
+    name: 'Architectural Decision',
+    type: 'xsd:string',
+    description: 'The definitive architectural choice made, technology selected, or pattern mandated.',
+  },
+  'robos:consequences': {
+    name: 'Decision Consequences',
+    type: 'xsd:string',
+    description: 'Anticipated positive outcomes, operational tradeoffs, and secondary impacts of the architectural decision.',
+  },
+  'robos:walkthroughPath': {
+    name: 'Walkthrough Script Path',
+    type: 'xsd:string',
+    description: 'Relative path to the text-narrated walkthrough script and step-by-step documentation.',
+  },
+  'robos:videoPath': {
+    name: 'Video Recording Path',
+    type: 'xsd:string',
+    description: 'Relative path to the recorded video walkthrough demonstration file.',
+  },
+  'robos:targetApp': {
+    name: 'Target RobOS Application',
+    type: 'xsd:string',
+    description: 'Application ID of the RobOS desktop application showcased in the walkthrough.',
+  },
+  'robos:code': {
+    name: 'Source Code Content',
+    type: 'xsd:string',
+    description: 'Raw, executable source code snippet content.',
+  },
+  'robos:language': {
+    name: 'Programming Language',
+    type: 'xsd:string',
+    description: 'Code snippet syntax language (`javascript`, `typescript`, `python`, `go`, `rust`, `bash`).',
+  },
 };
 
 // Package display titles for Just the Docs navigation
@@ -188,6 +283,7 @@ const PACKAGE_DISPLAY_TITLES = {
   'applications': 'Applications (robos.apps)',
   'devops': 'DevOps & Cloud (robos.devops)',
   'learning': 'eLearning Curriculums (robos.learning)',
+  'documentation': 'Documentation & Diagrams (robos.docs)',
 };
 
 class SchemaDocGenerator {
@@ -303,7 +399,7 @@ class SchemaDocGenerator {
       '# RobOS Knowledge Graph Schemas & Ontologies',
       '{: .no_toc }',
       '',
-      'Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all 6 standard package stores.',
+      'Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all ' + packageMap.size + ' standard package stores.',
       '{: .fs-6 .fw-300 }',
       '',
       '## Table of contents',
@@ -320,18 +416,18 @@ class SchemaDocGenerator {
       '',
       '1. **OASIS OSLC Core 3.0 & W3C JSON-LD**: Global semantic web standard for linking requirements, changes, architectures, and tests.',
       '2. **W3C SHACL (Shapes Constraint Language)**: Strictly validates graph nodes against structural schemas before saving or synthesizing code.',
-      '3. **Modular Namespaced Packages (`.robos/kgraphs/`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into 6 domain-isolated package stores.',
+      `3. **Modular Namespaced Packages (\`.robos/kgraphs/\`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into ${packageMap.size} domain-isolated package stores.`,
       '',
       '<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">',
-      `  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and 6 Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />`,
+      `  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />`,
       '  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">',
-      '    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The 6 modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>',
+      `    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The ${packageMap.size} modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>`,
       '  </div>',
       '</div>',
       '',
       '---',
       '',
-      '## The 6 Standard RobOS Package Stores',
+      `## The ${packageMap.size} Standard RobOS Package Stores`,
       '',
       '| Package ID | Namespace | Target Domain | Schemas & Shapes |',
       '|---|---|---|---|',
@@ -576,6 +672,10 @@ class SchemaDocGenerator {
       lines.push('    DesktopApp -->|robos:implementsContract| Contract["Contract (services)"]');
       lines.push('    FrontEndApp -->|robos:implementsContract| Contract');
       lines.push('    ConsoleApp -->|robos:implementsContract| Contract');
+    } else if (pkg.id === 'documentation') {
+      lines.push('    DocumentationPage -->|robos:hasFlowDiagram| FlowDiagram');
+      lines.push('    ArchitectureDecisionRecord -->|robos:hasFlowDiagram| FlowDiagram');
+      lines.push('    InteractiveWalkthrough -->|robos:hasFlowDiagram| FlowDiagram');
     }
 
     return lines.join('\n');
@@ -635,6 +735,16 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:modules') sample[prop.path] = [{ title: 'Module 1: Fundamentals', labFile: 'labs/01.md' }];
       else if (prop.path === 'robos:gitopsFile') sample[prop.path] = '.robos/elearning.yaml';
       else if (prop.path === 'robos:status') sample[prop.path] = 'active';
+      else if (prop.path === 'robos:mermaidText') sample[prop.path] = 'sequenceDiagram\n    Client->>API: Request\n    API-->>Client: Response';
+      else if (prop.path === 'robos:imagePath') sample[prop.path] = 'assets/images/architecture/sample-flow.jpg';
+      else if (prop.path === 'robos:tooltip') sample[prop.path] = 'Hover tooltip summarizing the workflow';
+      else if (prop.path === 'robos:slug') sample[prop.path] = slug;
+      else if (prop.path === 'robos:docPath') sample[prop.path] = `docs/${slug}.md`;
+      else if (prop.path === 'robos:context') sample[prop.path] = 'Architectural drivers and operational context requiring a formal decision.';
+      else if (prop.path === 'robos:decision') sample[prop.path] = 'Adopt standardized JSON-LD knowledge graph with SHACL validation.';
+      else if (prop.path === 'robos:targetApp') sample[prop.path] = 'remote-execution-studio';
+      else if (prop.path === 'robos:language') sample[prop.path] = 'javascript';
+      else if (prop.path === 'robos:code') sample[prop.path] = 'const graph = require("robos-graph");';
     }
 
     return sample;

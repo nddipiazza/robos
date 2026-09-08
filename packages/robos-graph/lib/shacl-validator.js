@@ -172,6 +172,57 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:configFile', minCount: 1, message: 'Build System must specify configuration file (.bazelrc, .buckconfig).' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:FlowDiagramShape',
+    targetClass: 'robos:FlowDiagram',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Flow Diagram must have a title.' },
+      { path: 'dcterms:description', minCount: 1, message: 'Flow Diagram must have a description.' },
+      { path: 'robos:mermaidText', minCount: 1, message: 'Flow Diagram must contain raw Mermaid graph syntax (robos:mermaidText).' },
+      { path: 'robos:imagePath', minCount: 1, message: 'Flow Diagram must specify relative path to AI-rendered image (robos:imagePath).' },
+      { path: 'robos:tooltip', minCount: 1, message: 'Flow Diagram must declare hover tooltip text (robos:tooltip).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DocumentationPageShape',
+    targetClass: 'robos:DocumentationPage',
+    targetClasses: ['robos:DocumentationPage', 'robos:DocArticle'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Documentation Page must have a title.' },
+      { path: 'robos:slug', minCount: 1, message: 'Documentation Page must declare a URL slug.' },
+      { path: 'robos:docPath', minCount: 1, message: 'Documentation Page must specify a relative markdown document path.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ArchitectureDecisionRecordShape',
+    targetClass: 'robos:ArchitectureDecisionRecord',
+    targetClasses: ['robos:ArchitectureDecisionRecord', 'robos:ADR'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Architecture Decision Record must have a title.' },
+      { path: 'robos:status', minCount: 1, message: 'Architecture Decision Record must declare status (proposed, accepted, superseded, etc.).' },
+      { path: 'robos:context', minCount: 1, message: 'Architecture Decision Record must provide architectural context and problem statement.' },
+      { path: 'robos:decision', minCount: 1, message: 'Architecture Decision Record must state the architectural decision.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:InteractiveWalkthroughShape',
+    targetClass: 'robos:InteractiveWalkthrough',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Interactive Walkthrough must have a title.' },
+      { path: 'robos:slug', minCount: 1, message: 'Interactive Walkthrough must declare a unique slug.' },
+      { path: 'robos:targetApp', minCount: 1, message: 'Interactive Walkthrough must link to a target RobOS application or component.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:CodeSnippetShape',
+    targetClass: 'robos:CodeSnippet',
+    targetClasses: ['robos:CodeSnippet', 'robos:CodeSample'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Code Snippet must have a title.' },
+      { path: 'robos:language', minCount: 1, message: 'Code Snippet must specify a programming language.' },
+      { path: 'robos:code', minCount: 1, message: 'Code Snippet must provide source code text.' },
+    ],
+  },
 ];
 
 class SHACLValidator {

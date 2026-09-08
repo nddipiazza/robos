@@ -1711,6 +1711,387 @@ Apply the requested updates to the targeted documentation files, ensuring accura
       ],
     };
   }
+
+  // ── Living Documentation, Visual Architecture & Flow Diagrams ────────────────
+  createFlowDiagram(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'flow-diagram')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:diagram:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || 'Visual Flow Diagram';
+    const description = data['dcterms:description'] || data.description || '';
+    const mermaidText = data['robos:mermaidText'] || data.mermaidText || data['robos:mermaidGraph'] || data.mermaidGraph || '';
+    const imagePath = data['robos:imagePath'] || data.imagePath || data['robos:aiGeneratedImagePath'] || data.aiGeneratedImagePath || '';
+    const tooltip = data['robos:tooltip'] || data.tooltip || '';
+    const diagramType = data['robos:diagramType'] || data.diagramType || 'flowchart';
+    const aspectRatio = data['robos:aspectRatio'] || data.aspectRatio || '16:9';
+    const targetComponent = data['robos:targetComponent'] || data.targetComponent || null;
+    const tags = data['robos:tags'] || data.tags || ['FlowDiagram', 'VisualArchitecture'];
+    const nodeCount = data['robos:nodeCount'] !== undefined ? data['robos:nodeCount'] : (data.nodeCount || 0);
+
+    const diagramNode = {
+      '@id': id,
+      '@type': ['robos:FlowDiagram', 'oslc_am:Resource', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': description,
+      'robos:mermaidText': mermaidText,
+      'robos:imagePath': imagePath,
+      'robos:tooltip': tooltip,
+      'robos:diagramType': diagramType,
+      'robos:aspectRatio': aspectRatio,
+      'robos:targetComponent': targetComponent,
+      'robos:tags': tags,
+      'robos:nodeCount': nodeCount,
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    // SHACL validation
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [diagramNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Flow Diagram: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(diagramNode);
+    return {
+      ok: true,
+      node: diagramNode,
+      message: `Successfully registered Flow Diagram: ${title} (${id})`,
+    };
+  }
+
+  getFlowDiagrams(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isDiagram = types.some(t => t.includes('FlowDiagram'));
+      if (!isDiagram) return false;
+      if (filter.targetComponent && n['robos:targetComponent'] !== filter.targetComponent) return false;
+      if (filter.diagramType && n['robos:diagramType'] !== filter.diagramType) return false;
+      return true;
+    });
+  }
+
+  getFlowDiagram(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getFlowDiagrams().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  createDocumentationPage(data = {}) {
+    const slug = (data.slug || data['robos:slug'] || data['dcterms:title'] || data.title || 'doc-page')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:doc:${slug}`;
+    const title = data['dcterms:title'] || data.title || 'Living Documentation Page';
+    const docPath = data['robos:docPath'] || data.docPath || `docs/${slug}.md`;
+    const description = data['dcterms:description'] || data.description || '';
+    const category = data['robos:category'] || data.category || 'Guides';
+    const hasFlowDiagram = data['robos:hasFlowDiagram'] || data.hasFlowDiagram || null;
+    const targetNode = data['robos:targetNode'] || data.targetNode || null;
+
+    const pageNode = {
+      '@id': id,
+      '@type': ['robos:DocumentationPage', 'robos:DocArticle', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:slug': slug,
+      'robos:docPath': docPath,
+      'dcterms:description': description,
+      'robos:category': category,
+      'robos:hasFlowDiagram': hasFlowDiagram,
+      'robos:targetNode': targetNode,
+      'robos:author': data['robos:author'] || data.author || 'RobOS Living Documentation Sync Agent',
+      'robos:status': data['robos:status'] || data.status || 'published',
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [pageNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Documentation Page: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(pageNode);
+    return {
+      ok: true,
+      node: pageNode,
+      message: `Successfully registered Documentation Page: ${title} (${id})`,
+    };
+  }
+
+  getDocumentationPages(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isDoc = types.some(t => t.includes('DocumentationPage') || t.includes('DocArticle'));
+      if (!isDoc) return false;
+      if (filter.category && n['robos:category'] !== filter.category) return false;
+      return true;
+    });
+  }
+
+  getDocumentationPage(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getDocumentationPages().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['robos:slug'] && n['robos:slug'].toLowerCase() === query) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  createArchitectureDecisionRecord(data = {}) {
+    const slug = (data.slug || data.adrNumber || data['robos:adrNumber'] || data['dcterms:title'] || data.title || 'adr-001')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:adr:${slug}`;
+    const title = data['dcterms:title'] || data.title || 'Architecture Decision Record';
+    const status = data['robos:status'] || data.status || 'proposed';
+    const context = data['robos:context'] || data.context || '';
+    const decision = data['robos:decision'] || data.decision || '';
+    const consequences = data['robos:consequences'] || data.consequences || '';
+    const adrNumber = data['robos:adrNumber'] || data.adrNumber || slug.toUpperCase();
+    const hasFlowDiagram = data['robos:hasFlowDiagram'] || data.hasFlowDiagram || null;
+    const relatesTo = data['robos:relatesTo'] || data.relatesTo || null;
+    const supersededBy = data['robos:supersededBy'] || data.supersededBy || null;
+
+    const adrNode = {
+      '@id': id,
+      '@type': ['robos:ArchitectureDecisionRecord', 'robos:ADR', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:adrNumber': adrNumber,
+      'robos:status': status,
+      'robos:context': context,
+      'robos:decision': decision,
+      'robos:consequences': consequences,
+      'robos:date': data['robos:date'] || data.date || new Date().toISOString().split('T')[0],
+      'robos:hasFlowDiagram': hasFlowDiagram,
+      'robos:relatesTo': relatesTo,
+      'robos:supersededBy': supersededBy,
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [adrNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Architecture Decision Record: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(adrNode);
+    return {
+      ok: true,
+      node: adrNode,
+      message: `Successfully registered ADR: ${title} (${id})`,
+    };
+  }
+
+  createADR(data) {
+    return this.createArchitectureDecisionRecord(data);
+  }
+
+  getArchitectureDecisionRecords(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isADR = types.some(t => t.includes('ArchitectureDecisionRecord') || t.includes('ADR'));
+      if (!isADR) return false;
+      if (filter.status && n['robos:status'] !== filter.status) return false;
+      return true;
+    });
+  }
+
+  getADRs(filter = {}) {
+    return this.getArchitectureDecisionRecords(filter);
+  }
+
+  getArchitectureDecisionRecord(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getArchitectureDecisionRecords().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['robos:adrNumber'] && n['robos:adrNumber'].toLowerCase() === query) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  getADR(idOrSlug) {
+    return this.getArchitectureDecisionRecord(idOrSlug);
+  }
+
+  createInteractiveWalkthrough(data = {}) {
+    const slug = (data.slug || data['robos:slug'] || data['dcterms:title'] || data.title || 'walkthrough')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:walkthrough:${slug}`;
+    const title = data['dcterms:title'] || data.title || 'Interactive Guided Tour';
+    const targetApp = data['robos:targetApp'] || data.targetApp || 'app-launcher';
+
+    const walkthroughNode = {
+      '@id': id,
+      '@type': ['robos:InteractiveWalkthrough', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:slug': slug,
+      'robos:targetApp': targetApp,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:walkthroughPath': data['robos:walkthroughPath'] || data.walkthroughPath || `docs/walkthroughs/${slug}.md`,
+      'robos:videoPath': data['robos:videoPath'] || data.videoPath || null,
+      'robos:vttPath': data['robos:vttPath'] || data.vttPath || null,
+      'robos:stepsCount': data['robos:stepsCount'] || data.stepsCount || 0,
+      'robos:hasFlowDiagram': data['robos:hasFlowDiagram'] || data.hasFlowDiagram || null,
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [walkthroughNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Interactive Walkthrough: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(walkthroughNode);
+    return {
+      ok: true,
+      node: walkthroughNode,
+      message: `Successfully registered Walkthrough: ${title} (${id})`,
+    };
+  }
+
+  getInteractiveWalkthroughs(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isWalkthrough = types.some(t => t.includes('InteractiveWalkthrough'));
+      if (!isWalkthrough) return false;
+      if (filter.targetApp && n['robos:targetApp'] !== filter.targetApp) return false;
+      return true;
+    });
+  }
+
+  getInteractiveWalkthrough(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getInteractiveWalkthroughs().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['robos:slug'] && n['robos:slug'].toLowerCase() === query) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  createCodeSnippet(data = {}) {
+    const slug = (data.slug || data['dcterms:title'] || data.title || 'snippet')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:snippet:${slug}`;
+    const title = data['dcterms:title'] || data.title || 'Code Snippet';
+    const language = data['robos:language'] || data.language || 'javascript';
+    const code = data['robos:code'] || data.code || '';
+
+    const snippetNode = {
+      '@id': id,
+      '@type': ['robos:CodeSnippet', 'robos:CodeSample', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:language': language,
+      'robos:code': code,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:verifiedByTest': data['robos:verifiedByTest'] || data.verifiedByTest || null,
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [snippetNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Code Snippet: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(snippetNode);
+    return {
+      ok: true,
+      node: snippetNode,
+      message: `Successfully registered Code Snippet: ${title} (${id})`,
+    };
+  }
+
+  getCodeSnippets(filter = {}) {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isSnippet = types.some(t => t.includes('CodeSnippet') || t.includes('CodeSample'));
+      if (!isSnippet) return false;
+      if (filter.language && n['robos:language'] !== filter.language) return false;
+      return true;
+    });
+  }
+
+  getCodeSnippet(idOrSlug) {
+    if (!idOrSlug) return null;
+    const query = String(idOrSlug).trim().toLowerCase();
+    return this.getCodeSnippets().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === query) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
 }
 
 module.exports = { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA, SAMPLE_GHERKIN_FEATURE };

@@ -1,0 +1,199 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:package:documentation",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "documentation",
+  "robos:namespace": "robos.docs",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Living Documentation, Visual Architecture & Flow Diagrams",
+  "dcterms:description": "Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:diagram:order-lifecycle-flow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram"
+      ],
+      "dcterms:title": "Order Lifecycle & Event Processing Flow",
+      "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
+      "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing",
+      "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
+      "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
+      "robos:diagramType": "sequence",
+      "robos:aspectRatio": "16:9",
+      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:tags": [
+        "Architecture",
+        "Ordering",
+        "EventDriven"
+      ],
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:sdlc-architecture-guide",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle"
+      ],
+      "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
+      "robos:slug": "sdlc-architecture-guide",
+      "dcterms:description": "Comprehensive reference on the dual-state knowledge graph, modular packages, and living doc synchronization.",
+      "robos:docPath": "docs/knowledge-graph.md",
+      "robos:category": "Architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:001-modular-kgraph",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR"
+      ],
+      "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
+      "robos:adrNumber": "ADR-001",
+      "robos:status": "accepted",
+      "robos:context": "Monolithic JSON-LD knowledge graph files cause merge conflicts in multi-repo and multi-team environments.",
+      "robos:decision": "Adopt modular, namespaced package stores (.robos/kgraphs/<pkg>/package.jsonld) with git-tag versioning and aggregated backward compatibility.",
+      "robos:consequences": "Eliminates team collisions, isolates domains, and allows fine-grained GitOps diffing.",
+      "robos:date": "2026-03-15",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:walkthrough:remote-execution",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:InteractiveWalkthrough"
+      ],
+      "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
+      "robos:slug": "remote-execution-studio-tour",
+      "dcterms:description": "Guided developer walkthrough on inspecting REAPI distributed build clusters, Bazel configurations, and cache metrics.",
+      "robos:targetApp": "remote-execution-studio",
+      "robos:walkthroughPath": "docs/big-wins/remote-execution-studio.md",
+      "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
+      "robos:stepsCount": 7,
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:snippet:shacl-custom-validation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CodeSnippet",
+        "robos:CodeSample"
+      ],
+      "dcterms:title": "SHACL Custom Shape Programmatic Validation",
+      "robos:language": "javascript",
+      "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
+      "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:diagram:order-lifecycle-flow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram"
+      ],
+      "dcterms:title": "Order Lifecycle & Event Processing Flow",
+      "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
+      "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing",
+      "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
+      "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
+      "robos:diagramType": "sequence",
+      "robos:aspectRatio": "16:9",
+      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:tags": [
+        "Architecture",
+        "Ordering",
+        "EventDriven"
+      ],
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:sdlc-architecture-guide",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle"
+      ],
+      "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
+      "robos:slug": "sdlc-architecture-guide",
+      "dcterms:description": "Comprehensive reference on the dual-state knowledge graph, modular packages, and living doc synchronization.",
+      "robos:docPath": "docs/knowledge-graph.md",
+      "robos:category": "Architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:001-modular-kgraph",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR"
+      ],
+      "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
+      "robos:adrNumber": "ADR-001",
+      "robos:status": "accepted",
+      "robos:context": "Monolithic JSON-LD knowledge graph files cause merge conflicts in multi-repo and multi-team environments.",
+      "robos:decision": "Adopt modular, namespaced package stores (.robos/kgraphs/<pkg>/package.jsonld) with git-tag versioning and aggregated backward compatibility.",
+      "robos:consequences": "Eliminates team collisions, isolates domains, and allows fine-grained GitOps diffing.",
+      "robos:date": "2026-03-15",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:walkthrough:remote-execution",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:InteractiveWalkthrough"
+      ],
+      "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
+      "robos:slug": "remote-execution-studio-tour",
+      "dcterms:description": "Guided developer walkthrough on inspecting REAPI distributed build clusters, Bazel configurations, and cache metrics.",
+      "robos:targetApp": "remote-execution-studio",
+      "robos:walkthroughPath": "docs/big-wins/remote-execution-studio.md",
+      "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
+      "robos:stepsCount": 7,
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:snippet:shacl-custom-validation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CodeSnippet",
+        "robos:CodeSample"
+      ],
+      "dcterms:title": "SHACL Custom Shape Programmatic Validation",
+      "robos:language": "javascript",
+      "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
+      "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    }
+  ]
+}

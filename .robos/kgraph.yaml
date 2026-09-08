@@ -56,3 +56,9 @@ packages:
     title: "Interactive eLearning Curriculums & Living Docs"
     description: "Interactive courses, tutorials, architectural guides, and living documentation."
     path: "kgraphs/learning/package.jsonld"
+
+  - id: "documentation"
+    namespace: "robos.docs"
+    title: "Living Documentation, Visual Architecture & Flow Diagrams"
+    description: "Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations."
+    path: "kgraphs/documentation/package.jsonld"

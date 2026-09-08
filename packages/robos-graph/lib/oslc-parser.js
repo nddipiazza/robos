@@ -74,6 +74,14 @@ class OSLCGraphParser {
         'robos:usesBuildSystem',
         'robos:hasWorkerPool',
         'robos:buildConfig',
+        'robos:hasFlowDiagram',
+        'robos:hasDocumentationPage',
+        'robos:hasADR',
+        'robos:hasWalkthrough',
+        'robos:supersededBy',
+        'robos:flowDiagram',
+        'robos:relatesTo',
+        'robos:targetComponent',
       ];
 
       for (const k of refKeys) {

@@ -9,7 +9,7 @@ permalink: /schemas.html
 # RobOS Knowledge Graph Schemas & Ontologies
 {: .no_toc }
 
-Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all 6 standard package stores.
+Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all 7 standard package stores.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -26,18 +26,18 @@ RobOS structures the entire software development lifecycle as an open, interconn
 
 1. **OASIS OSLC Core 3.0 & W3C JSON-LD**: Global semantic web standard for linking requirements, changes, architectures, and tests.
 2. **W3C SHACL (Shapes Constraint Language)**: Strictly validates graph nodes against structural schemas before saving or synthesizing code.
-3. **Modular Namespaced Packages (`.robos/kgraphs/`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into 6 domain-isolated package stores.
+3. **Modular Namespaced Packages (`.robos/kgraphs/`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into 7 domain-isolated package stores.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and 6 Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The 6 modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The 7 modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 ---
 
-## The 6 Standard RobOS Package Stores
+## The 7 Standard RobOS Package Stores
 
 | Package ID | Namespace | Target Domain | Schemas & Shapes |
 |---|---|---|---|
@@ -47,6 +47,7 @@ RobOS structures the entire software development lifecycle as an open, interconn
 | **`applications`** | `robos.apps` | Front-end SPAs, desktop workstations, PC & mobile games, mobile apps, and CLI tools. | <code>robos:DesktopApp</code>, <code>robos:ConsoleApp</code>, <code>robos:MobileApp</code>, <code>robos:DataPipeline</code>, <code>robos:Library</code>, <code>robos:FrontEndApp</code>, <code>robos:PCGame</code>, <code>robos:MobileGame</code> |
 | **`devops`** | `robos.devops` | Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG pass credentials. | <code>robos:RemoteExecutionCluster</code> |
 | **`learning`** | `robos.learning` | Interactive developer courses, tutorials, and architectural training modules. | <code>robos:ELearning</code> |
+| **`documentation`** | `robos.docs` | Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations. | <code>robos:FlowDiagram</code>, <code>robos:DocumentationPage</code>, <code>robos:ArchitectureDecisionRecord</code>, <code>robos:InteractiveWalkthrough</code>, <code>robos:CodeSnippet</code> |
 
 ---
 

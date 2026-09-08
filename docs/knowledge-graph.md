@@ -71,13 +71,14 @@ RobOS decomposes the Knowledge Graph into **modular, namespaced package stores**
 | **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs, GraphQL schemas, and BDD verification features. |
 | **`applications`** | `robos.apps` | Single-page web apps, desktop apps, mobile apps, PC games, mobile games, and console CLI tools. |
 | **`devops`** | `robos.devops` | Connected cloud accounts (AWS, GCP, Azure), CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
-| **`learning`** | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and living documentation sync. |
+| **`learning`** | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
+| **`documentation`** | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
 
 ### Backwards-Compatible Aggregation
 
 While each package is stored in its own isolated file, RobOS automatically maintains an aggregated view in `.robos/knowledge-graph.jsonld` whenever packages are saved. This ensures existing scripts, Backstage catalog importers, and legacy tools continue to function without changes.
 
-| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (6 Namespaces) |
+| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (7 Namespaces) |
 |:---:|:---:|
 | ![Stat Bar]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}) | ![Packages Modal]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}) |
 

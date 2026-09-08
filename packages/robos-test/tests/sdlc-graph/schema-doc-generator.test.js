@@ -17,9 +17,9 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
     const result = generator.generateAll();
 
     assert.strictEqual(result.ok, true);
-    assert.strictEqual(result.packageCount, 6);
+    assert.strictEqual(result.packageCount, DEFAULT_PACKAGES.length);
     assert.strictEqual(result.shapeCount, BUILTIN_SHACL_SHAPES.length);
-    assert.strictEqual(result.generatedCount, 1 + 6 + BUILTIN_SHACL_SHAPES.length);
+    assert.strictEqual(result.generatedCount, 1 + DEFAULT_PACKAGES.length + BUILTIN_SHACL_SHAPES.length);
 
     // Verify Tier 1 hub file
     const hubPath = path.join(rootDir, 'docs', 'schemas.md');
