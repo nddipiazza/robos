@@ -34,30 +34,12 @@ When engineering teams and organizations adopt RobOS, they typically have dozens
 
 The **`import-company-kgraph`** skill enables autonomous AI coding agents (Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, Gemini CLI) to automatically scan, normalize, classify, and synthesize these inventories into standard **Dual-State OSLC JSON-LD Knowledge Graph** package files.
 
-```mermaid
-flowchart TD
-    subgraph Sources ["Ingestion Sources"]
-        HTTP["🌐 HTTP / HTTPS REST API<br/><i>(Backstage catalog.json)</i>"]
-        S3["🪣 AWS S3 Bucket<br/><i>(s3://company/catalog.json)</i>"]
-        FS["📁 Local FileSystem<br/><i>(~/.config/robos/git-projects.json)</i>"]
-        Git["🐙 Git Forge URLs<br/><i>(GitHub / GitLab / Bitbucket)</i>"]
-    end
-
-    Engine["⚙️ Companion Ingestion Engine<br/><code>plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js</code>"]
-
-    subgraph Output ["RobOS Knowledge Graph Artifacts"]
-        KGraph["📄 &lt;company&gt;-kgraph.jsonld<br/><i>(W3C JSON-LD 1.1 & OSLC Core 3.0)</i>"]
-        Contracts["📜 OpenAPI 3.1 YAML Contracts<br/><i>(Auto-synthesized for microservices)</i>"]
-        Stores["📦 .robos/kgraphs/ Stores<br/><i>(services, applications, organization)</i>"]
-        GitProjects["📁 git-projects.json<br/><i>(Multi-repo explorer registration)</i>"]
-    end
-
-    Sources --> Engine
-    Engine --> KGraph
-    Engine --> Contracts
-    Engine --> Stores
-    Engine --> GitProjects
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/import-company-kgraph-pipeline.jpg' | relative_url }}" alt="Company Knowledge Graph Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Company Knowledge Graph Ingestion Pipeline</strong>: How the <code>import-company-kgraph</code> AI skill ingests Backstage catalogs, AWS S3 inventories, local repos, and Git forges into modular package stores, OpenAPI contracts, and grounded AI context. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
