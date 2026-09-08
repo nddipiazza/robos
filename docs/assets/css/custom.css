@@ -112,16 +112,62 @@ pre {
 }
 
 .side-bar .site-header {
-  min-height: 6rem !important;
-  padding-top: 0.75rem !important;
+  position: relative !important;
+  min-height: 11.5rem !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: 1.25rem 1rem !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
   border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
 }
 
+.side-bar .site-title {
+  padding: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: auto !important;
+}
+
 .side-bar .site-logo {
-  height: 5rem !important;
-  min-height: 5rem !important;
-  background-size: contain !important;
-  background-position: left center !important;
+  height: 9.5rem !important;
+  min-height: 9.5rem !important;
+  width: 12.66rem !important;
+  max-width: 100% !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 229, 255, 0.25) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.side-bar .site-logo:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 229, 255, 0.5) !important;
+}
+
+@media (max-width: 50rem) {
+  .side-bar .site-header {
+    min-height: 7rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .side-bar .site-header #menu-button {
+    position: absolute !important;
+    right: 1rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .side-bar .site-logo {
+    height: 5.5rem !important;
+    min-height: 5.5rem !important;
+    width: 7.33rem !important;
+    border-radius: 10px !important;
+  }
 }
 
 .side-bar .nav-list-item {
