@@ -119,6 +119,63 @@ Before an autonomous agent or human engineer writes a single line of application
 
 ---
 
+## Hierarchical Agent Context & Multi-Level Rules Inheritance (Eliminating Duplicate Skills)
+
+In traditional AI coding setups, software engineering organizations face an unsustainable maintenance bottleneck: **prompt rule and skill duplication across repositories**.
+
+When developers rely on file-local configurations (`.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`, or custom skill manifests):
+- **Excessive Duplication**: Security guidelines, license requirements, commit formatting rules, and testing standards are copy-pasted across dozens or hundreds of individual repositories.
+- **Rule Drift & Stale Agents**: When a company-wide policy changes (e.g. banning a compromised dependency, enforcing GPG-signed commits, or updating an API authentication standard), dozens of repositories remain outdated.
+- **Context Blindness**: An autonomous agent operating in a microservice has no awareness of the parent organization's open-source bylaws, foundation rules (e.g., Apache Software Foundation policies), or team-level ownership protocols.
+
+### The Big Win: Graph-Inherited Agent Context
+
+RobOS leverages the Knowledge Graph hierarchy to define agent context, skills, and rules **once at the appropriate level**, dynamically synthesizing the effective context whenever an agent session starts:
+
+```mermaid
+graph TD
+    Global["🌐 Level 1: Global / Workstation Level<br/><i>System-wide defaults, base skills, RobOS Preferences</i>"]
+    Company["🏢 Level 2: Company / Enterprise Level<br/><i>Corporate security baseline, approved tech stacks, compliance standards</i>"]
+    Org["🏛️ Level 3: Git Project Organization Level<br/><i>e.g. Apache Software Foundation, GitHub Org rules, licensing, dev@ consensus</i>"]
+    Team["👥 Level 4: Team / Squad Level<br/><i>Team Topologies, ownership domains, PR review SLAs, service standards</i>"]
+    Repo["📦 Level 5: Repository / Component Level<br/><i>Microservice OpenAPI 3.1 contracts, TypeSpec schemas, Gherkin BDD specs</i>"]
+
+    Global --> Company
+    Company --> Org
+    Org --> Team
+    Team --> Repo
+
+    Agent["🤖 AI Agent Session<br/><i>Dynamically receives effective context & rules</i>"]
+    Repo -.->|Inherits entire chain with zero duplication| Agent
+
+    style Global fill:#161b22,stroke:#00bcd4,stroke-width:2px,color:#fff
+    style Company fill:#161b22,stroke:#8b5cf6,stroke-width:2px,color:#fff
+    style Org fill:#161b22,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Team fill:#161b22,stroke:#10b981,stroke-width:2px,color:#fff
+    style Repo fill:#161b22,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style Agent fill:#0d1117,stroke:#ec4899,stroke-width:2px,color:#fff
+```
+
+### The 5 Hierarchical Context Levels
+
+| Level | Knowledge Graph Store | Scope & Injected Capabilities | Duplicate Maintenance Eliminated |
+|:---|:---|:---|:---|
+| **1. Global / System** | `robos.core` / RobOS Preferences | System-wide developer defaults, base agent skills (`add-ai-text-area-to-app`, `app-snapshot`, etc.), global shell environments, and standard SDLC conventions. | Eliminates re-declaring base skills and toolchains across individual developer workstations. |
+| **2. Company / Enterprise** | `robos:Company` / Enterprise Sync | Corporate security baseline, allowed dependencies/registries, SSO SCIM policies, and enterprise-wide architectural review mandates. | Eliminates copying corporate compliance policies into 100+ separate service repositories. |
+| **3. Git Project Organization** | `robos:GitProjectOrganization` (`robos.org`) | Forge-level governance (e.g. `https://github.com/apache`), org-wide documentation hubs (`docsUrl`), open-source licenses (`license`), and org agent rules (`robos:agentRules` e.g. ASF license headers, public dev@ consensus tracing). | Prevents copy-pasting foundation or forge guidelines across 350+ member repos (Kafka, Spark, Lucene). |
+| **4. Team / Squad** | `robos:Team` (`robos.org`) | Team Topologies (`stream-aligned`, `platform`), code ownership boundaries, team lead approvers, and on-call escalation procedures. | Configured once in the team topology node; all squad repositories inherit ownership context. |
+| **5. Repository / Component** | `robos:Microservice`, `robos:FrontEndApp` | Service-specific OpenAPI 3.1 contracts, Protobuf stubs, TypeSpec models, and Gherkin `.feature` acceptance criteria. | Individual repositories focus solely on their distinct business logic and contract models. |
+
+### Dynamic Downward Traversal in Action
+
+When an autonomous agent investigates a bug or opens a pull request on `https://github.com/apache/kafka`:
+1. **Forge Organization Rules Injected**: RobOS traverses to `urn:robos:git-org:apache`, injecting `RULE-APACHE-001` (ASF license header verification) and `RULE-APACHE-002` (dev@ consensus citation).
+2. **Enterprise & Team Policies Merged**: Corporate security rules (secret leak prevention) and team approver rosters are automatically merged into the session prompt.
+3. **Local Component Contracts Linked**: The microservice's local OpenAPI contracts and TypeSpec schemas provide exact AST-level context.
+4. **Zero Skill Duplication**: The repository maintains zero redundant prompt files or duplicated skill definitions. Updating a rule at the organization level in the Knowledge Graph takes effect instantly across all 350+ repositories.
+
+---
+
 ## Living Documentation Continuous Synchronization
 
 A major disease of enterprise software is **Documentation Rot**—system architecture diagrams, READMEs, and wiki pages drift out of date within weeks of being written.

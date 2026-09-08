@@ -293,6 +293,12 @@ Rules are dynamically resolved across three pathways:
 - **Direct linkage**: Checking if a component declares `robos:inOrganization: urn:robos:git-org:apache`.
 - **Organization repository roster**: Checking if the organization lists the repository in `robos:hasRepository`.
 
+### Eliminating Duplicate Skills Across Repositories
+
+In traditional workflows, maintaining agent rules across 350+ repositories requires copying `.cursorrules`, `CLAUDE.md`, or custom skill manifests into every single repo. With RobOS Knowledge Graph inheritance:
+- **Zero Redundancy**: Rules, guidelines, and skills are declared once at the Global (`robos.core`), Company, Organization (`robos.org`), or Team level.
+- **Immediate Propagation**: Modifying a rule in `urn:robos:git-org:apache` or `urn:robos:team:core-platform` instantly governs every downstream agent session across all repositories without committing any changes to child repos.
+
 ### Canonical Example: Apache Software Foundation (`package.jsonld`)
 
 ```json

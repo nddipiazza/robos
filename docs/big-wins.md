@@ -44,7 +44,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🧠 2. Dual-State SDLC Knowledge Graph</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong> for pre-code blast radiuses. Provides <strong>multi-level agent context inheritance</strong> (Global, Company, Org, Team, Repo) to eliminate duplicate skills and prompt rules across codebases.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
@@ -166,6 +166,7 @@ Traditional developer tools are myopic: they only understand isolated source fil
 - **World 1 (Live Production `main`)**: Tracks currently deployed microservices, active API contracts, and production database tables.
 - **World 2 (Feature Branch)**: Models what the system will look like once your pull request or spike is merged.
 - **Automated Blast Radius Calculation**: When an AI agent or developer alters an endpoint, schema, or entity model, RobOS immediately flags which downstream microservices, mobile apps, or web frontends are affected *before* code is written.
+- **Hierarchical Agent Context & Multi-Level Rules Inheritance**: Specify agent context, skills, and architectural rules at global, company/enterprise, organization (e.g., Apache), team, and repository levels. Avoids duplicate skills, prompt rules, and `.cursorrules` files by dynamically compiling the effective context whenever an agent session launches.
 - **Living Documentation Continuous Sync**: Whenever graph objects change, RobOS automatically discerns impacts and synchronizes documentation (`docs/index.md`, `README.md`, `docs/project-plan/`) and training curriculums in continuous lockstep.
 - **Open-Standard Ontologies**: Strict OASIS OSLC Core 3.0 types (`oslc_rm:Requirement`, `oslc_cm:ChangeRequest`, `oslc_am:Resource`, `oslc_qm:TestPlan`) with W3C SHACL shape validation.
 

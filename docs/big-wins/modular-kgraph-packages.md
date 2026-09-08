@@ -73,6 +73,16 @@ RobOS organizes the Knowledge Graph into 6 standard packages, each addressing a 
 | **`devops`** | `urn:robos:pkg:devops` (`robos.devops`) | Cloud providers (AWS, GCP, Azure), CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG credentials. |
 | **`learning`** | `urn:robos:pkg:learning` (`robos.learning`) | Interactive developer eLearning courses, guided labs, audio voiceover scripts, and architectural knowledge modules. |
 
+### Hierarchical Agent Context & Eliminating Duplicate Skills
+
+This modular packaging architecture directly enables **Hierarchical Agent Context & Rules Inheritance**:
+
+- **`core-platform` (`robos.core`)**: Defines Global / Workstation-level defaults, standard development conventions, and base AI agent skills.
+- **`organization` (`robos.org`)**: Houses Company and Git Project Organization (`robos:GitProjectOrganization`) policies, open-source governance guidelines, licensing standards, and Team Topologies.
+- **`services` (`robos.services`) & `applications` (`robos.apps`)**: Capture repository-specific contracts (OpenAPI, gRPC), TypeSpec schemas, and microservice definitions.
+
+Instead of duplicating the same skill files, `.cursorrules`, or prompt instructions across dozens or hundreds of repositories, rules and skills are authored once at the appropriate package level and dynamically inherited downward during agent execution.
+
 ---
 
 ## Multi-Repo Composition & Git-Tag Version Pinning
