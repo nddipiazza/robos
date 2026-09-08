@@ -71,7 +71,12 @@ Automated heuristic detection is fast, but real-world enterprise codebases frequ
 
 In **Panel 2: Deep Inspection Results**, RobOS equips developers with an interactive `<robos-ai-textarea>` prompt bar alongside direct editable controls:
 
-![Deep Inspection & AI Prompt Refinement]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }})
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}" alt="Deep Inspection and Interactive AI Prompt Refinement" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Interactive AI Prompt Refinement</strong>: Using <code>&lt;robos-ai-textarea&gt;</code> to tune detected archetypes, technology stacks, and team assignments in real time. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 Developers can type natural language instructions to immediately alter the detected parameters:
 - *"Treat this as a Microservice using Spring Boot instead of a library"*
@@ -93,20 +98,42 @@ Enter the absolute directory path to the existing repository or local clone. Rob
 > **Onboarding dozens of company Git projects at once?**  
 > Instead of importing projects one-by-one, instruct your autonomous AI agent to run the **`import-company-kgraph`** skill (e.g. `/import-company-kgraph --source <url | s3://... | /path>`). The skill parses your company's full service inventory across HTTP endpoints, AWS S3, or local disks, and synthesizes Knowledge Graph entries and OpenAPI contracts in bulk that you can take and import directly into RobOS!
 
-![Select Project Path]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }})
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Select Project Path and Bulk Ingestion Skill Advice" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 1: Select Project Path</strong>: Enter local path or Git clone URL with embedded agent skill recommendations. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
-### 2. Deep Inspection & AI Refinement
+### 2. Deep Inspection & Archetype Detection
 The inspection engine scans package manifests, detects API schemas and database migrations, and exposes the `<robos-ai-textarea>` prompt bar to refine properties.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}" alt="Deep Codebase Inspection and Archetype Detection" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 2: Codebase Inspection Results</strong>: Heuristic detection of language, framework, API contracts, Dockerfile support, and environment runners. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 3. Team Ownership Assignment
 Assign the imported application to an existing stream-aligned, platform, or enabling team defined in `.robos/teams.yaml`.
 
-![Team Assignment]({{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }})
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }}" alt="Team Ownership and Form Configuration Review" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 3: Team Ownership Assignment</strong>: Bind repository to team topologies and review finalized package properties. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 4. Metadata Synthesis & Knowledge Graph Mapping
 RobOS generates Backstage `catalog-info.yaml`, synthesizes `dev-setup.sh`, creates Bruno `.bru` request collections, and registers the component into `.robos/packages.yaml` and the **Modular KGraph Packages**.
 
-![Ingestion Complete]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }})
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}" alt="Metadata Synthesis and Knowledge Graph Mapping Complete" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 4: Ingestion Complete</strong>: Real-time synthesis of Backstage catalog-info.yaml, dev-setup.sh, and SDLC Knowledge Graph mapping. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

@@ -202,6 +202,13 @@ You can open the console in two ways:
 
 Navigate to the **Agent Tiers & Prompt Optimization** section in the left sidebar to configure:
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }}" alt="RobOS Preferences — Agent Tiers and Prompt Optimization Pane" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Preferences — Agent Tiers & Prompt Optimization</strong>: Configurable model tiers (Tier 1: Claude Haiku 4.5, Tier 2: Claude Sonnet 5, Tier 3: OpenAI o3), Caveman algorithmic compression, and Stanford DSPy teleprompter. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
 <div style="margin: 2rem 0; padding: 1.5rem; border: 1px solid #30363d; border-radius: 10px; background: #161b22;">
   <h4 style="margin-top: 0; color: #58a6ff;">⚙️ RobOS Preferences — Agent Tiers Schema</h4>
   <ul>
@@ -218,6 +225,13 @@ Navigate to the **Agent Tiers & Prompt Optimization** section in the left sideba
   </ul>
 </div>
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }}" alt="Configuring Extreme Caveman Mode and DSPy BootstrapFewShot" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Tuning Token Optimization</strong>: Setting Caveman mode to <code>extreme</code> (55–65% token pruning) and Stanford DSPy teleprompter to <code>BootstrapFewShot</code> with <code>unit_tests_pass</code> verification. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
 ### Dual-State Knowledge Graph Synchronization
 
 When you click **Save Settings** in RobOS Preferences:
@@ -226,6 +240,13 @@ When you click **Save Settings** in RobOS Preferences:
    - `urn:robos:agent:strategy:caveman-compression` (`robos:PromptStrategy`)
    - `urn:robos:agent:optimizer:dspy-teleprompter` (`robos:PromptOptimizer`)
 3. All AI agent sessions running across **Agents Manager**, **Dev Central**, or CLI bridges (`claude`, `agy`, `copilot`) immediately inherit the updated tier and prompt configurations.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }}" alt="RobOS Preferences Saved and Synchronized" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Persistence & Knowledge Graph Synchronization</strong>: Clicking Save All validates inputs, updates <code>settings.json</code>, and publishes dual-state updates to the SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

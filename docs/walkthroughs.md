@@ -899,11 +899,41 @@ Rather than forcing developers to manually transcribe these systems into YAML or
 
 ---
 
+### Step 26: Agent Tiers, Caveman Prompt Compression & Stanford DSPy Optimization
+
+#### The Real-World Business Scenario
+Invoking homogeneous frontier models for every SDLC task creates severe budget exhaustion and unnecessary latency for simple utility tasks, while starving complex architectural challenges of sufficient reasoning depth. RobOS dynamically routes tasks across a 3-tier intelligence hierarchy (Tier 1 Fast Utility, Tier 2 Workhorse Implementation, Tier 3 Frontier Deep Reasoning), while pruning redundant prompt tokens via algorithmic Caveman Mode and compiling optimized prompt templates using Stanford DSPy teleprompters.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Open RobOS Preferences**: Launches the native desktop preferences console (`packages/robos-preferences`) and navigates to **Agent Tiers & Prompt Optimization**.
+2. **Audit 3-Tier Model Dispatch**: Inspects default tier assignments (Tier 1: `claude-haiku-4-5` / Local Ollama, Tier 2: `claude-sonnet-5`, Tier 3: `o3`).
+3. **Configure Extreme Caveman Compression**: Toggles algorithmic prompt pruning to `extreme` mode (55%–65% token savings) scoped to Tier 1 and Tier 2 tasks.
+4. **Configure Stanford DSPy Teleprompter**: Selects `BootstrapFewShot` teleprompter optimization scored against automated `unit_tests_pass` metrics.
+5. **Save & Knowledge Graph Synchronization**: Clicks **Save All**, verifying local disk persistence (`~/.config/robos/settings.json`) and real-time dual-state synchronization of `robos:PromptStrategy` and `robos:PromptOptimizer` nodes into `.robos/kgraphs/core-platform/package.jsonld`.
+- **Source Demo Script**: [`packages/robos-test/demos/agent-tiers-preferences-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-tiers-preferences-demo.js)
+- **Dedicated Documentation**: [Agent Tiers & Model Dispatch Guide]({{ '/agent-tiers.html' | relative_url }})
+
+| 1. Agent Tiers & Dispatch Overview | 2. Extreme Caveman & DSPy Configuration |
+|:---:|:---:|
+| ![Agent Tiers Overview]({{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }}) | ![Extreme Configuration]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }}) |
+
+| 3. Settings Saved & SDLC Knowledge Graph Synchronized |
+|:---:|
+| ![Saved & Synchronized]({{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }}) |
+
+---
+
 ## How to Run Walkthroughs Yourself
 
-You can run any of these automated walkthroughs in headless mode to regenerate the videos and voiceovers on your own machine:
+You can run any of these automated walkthroughs in headless mode to regenerate the videos, voiceovers, and screenshots on your own machine:
 
 ```bash
+# Run the Agent Tiers & Prompt Optimization Preferences walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/agent-tiers-preferences-demo.js
+
+# Run the Existing Codebase Import Wizard walkthrough & screenshot generator
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/app-import-wizard-screenshot-demo.js
+
 # Run the Universal Knowledge Graph Resource Importer & AI Agent Prompt walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/kgraph-resource-importer-demo.js
 

@@ -20,6 +20,20 @@ const IMPORT_STEPS = [
   { num: 3, label: 'Catalog & Ingest' },
 ];
 
+function getArchetypeUrnPrefix(arch) {
+  const clean = (arch || '').replace('robos:', '');
+  if (clean === 'DesktopApp') return 'desktop-app';
+  if (clean === 'FrontEndApp') return 'frontend-app';
+  if (clean === 'PCGame') return 'pc-game';
+  if (clean === 'MobileGame') return 'mobile-game';
+  if (clean === 'ConsoleApp') return 'console-app';
+  if (clean === 'MobileApp') return 'mobile-app';
+  if (clean === 'DataPipeline') return 'pipeline';
+  if (clean === 'Microservice') return 'service';
+  if (clean === 'Library') return 'library';
+  return clean.toLowerCase();
+}
+
 async function init() {
   setupModeToggle();
   setupArchetypeCards();
@@ -124,7 +138,7 @@ function updateImportSummary() {
   const teamSelect = document.getElementById('import-app-team');
   const team = teamSelect ? teamSelect.value : (inspectionData.team || 'platform-team');
   const tech = inspectionData.technology || (inspectionData.language + ' / ' + inspectionData.framework);
-  const urn = 'urn:robos:' + inspectionData.archetype.replace('robos:', '').toLowerCase() + ':' + inspectionData.name.toLowerCase();
+  const urn = 'urn:robos:' + getArchetypeUrnPrefix(inspectionData.archetype) + ':' + inspectionData.name.toLowerCase();
 
   const box = document.getElementById('import-synth-box');
   box.innerHTML = [
@@ -277,19 +291,6 @@ function setupNavButtons() {
   document.getElementById('btn-generate-new').addEventListener('click', async () => {
     const consoleOut = document.getElementById('new-console-output');
     consoleOut.textContent = 'Generating scaffolding files...\n';
-function getArchetypeUrnPrefix(arch) {
-  const clean = (arch || '').replace('robos:', '');
-  if (clean === 'DesktopApp') return 'desktop-app';
-  if (clean === 'FrontEndApp') return 'frontend-app';
-  if (clean === 'PCGame') return 'pc-game';
-  if (clean === 'MobileGame') return 'mobile-game';
-  if (clean === 'ConsoleApp') return 'console-app';
-  if (clean === 'MobileApp') return 'mobile-app';
-  if (clean === 'DataPipeline') return 'pipeline';
-  if (clean === 'Microservice') return 'service';
-  if (clean === 'Library') return 'library';
-  return clean.toLowerCase();
-}
 
     const name = document.getElementById('new-app-name').value;
     const slug = document.getElementById('new-app-slug').value;
