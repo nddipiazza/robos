@@ -40,7 +40,7 @@ When joining an existing enterprise using RobOS, developers do not need to wait 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}" alt="Developer Directory & Identity Synchronization Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Developer Directory & Identity Synchronization Workflow</strong>: Step-by-step onboarding flow from unlinked developer desktop to synchronized local identity, enterprise rosters, Team Topologies, and SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
+    <strong>Developer Onboarding & Identity Synchronization</strong>: How single-click enterprise directory sync (Okta, Azure AD, LDAP) unlocks cryptographic Git commit signing, squad code ownership, grounded AI agent context, and unified enterprise tool access. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 

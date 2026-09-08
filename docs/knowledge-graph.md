@@ -34,24 +34,12 @@ The Knowledge Graph is a live, machine-readable, plain-text semantic graph that 
 - **Spotify Backstage & C4 Model** for component registries and software architecture topologies.
 - **UNIX Password Store (`pass`) & GPG** for zero-plaintext secret management.
 
-```mermaid
-flowchart TD
-    subgraph KGraph ["Dual-State SDLC Knowledge Graph (.robos/kgraphs/)"]
-        direction TB
-        Core["📦 core-platform<br/>(C4 Topology, Microservices, DBs)"]
-        Org["👥 organization<br/>(Squads, RBAC, Directory Sync)"]
-        Services["🔌 services<br/>(OpenAPI 3.1, gRPC, BDD Features)"]
-        Apps["📱 applications<br/>(Frontends, Desktop, Games, CLI)"]
-        DevOps["☁️ devops<br/>(Cloud, CI/CD, Pass Credentials)"]
-        Learning["🎓 learning<br/>(eLearning, Labs, Living Docs)"]
-    end
-
-    HumanArch["🧑‍💻 Human Lead Architect"] -->|Design & Approve| KGraph
-    KGraph -->|Grounding Context| AgentSwarms["🤖 Autonomous AI Agents"]
-    AgentSwarms -->|Synthesize Code| EphemeralSandboxes["🛡️ Ephemeral RAM Workspaces"]
-    EphemeralSandboxes -->|PR Review & Diffs| IDEBridge["💻 IDE Bridges (IntelliJ & VS Code)"]
-    IDEBridge -->|Approve & Merge| LiveDeploy["🚀 Cloud & Kubernetes Deploy"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/kgraph-living-architecture.jpg' | relative_url }}" alt="SDLC Knowledge Graph: Living Architecture Engine" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Living Architecture Engine</strong>: How modular package stores and multi-repo composition power the dual-state engine to deliver instant blast radius analysis, grounded AI coding agents, automated living docs, and verified code ownership. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

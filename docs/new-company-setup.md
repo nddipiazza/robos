@@ -35,7 +35,7 @@ flowchart TD
     Topo["2. Foundational Team Topologies<br/><i>(Founding Core & Cloud Platform in teams.yaml)</i>"]
     VCS["3. Greenfield VCS Setup<br/><i>(GitHub Org / Gitea + Branch Protection)</i>"]
     AI["4. Central AI Hub & MCP Catalog<br/><i>(Claude, Gemini, OpenAI, system-mcp)</i>"]
-    C4["5. Starter C4 Architecture<br/><i>(Level 1 System Context in knowledge-graph.jsonld)</i>"]
+    C4["5. Starter C4 Architecture<br/><i>(Level 1 System Context in SDLC Knowledge Graph)</i>"]
 
     Init --> Topo --> VCS --> AI --> C4
 ```
@@ -46,17 +46,12 @@ flowchart TD
 
 Starting a greenfield company begins with declaring who you are and defining your company tenant. In **Group Manager** (`packages/group-manager`), founders do this directly through the interactive **Greenfield Company Bootstrap Wizard**:
 
-```mermaid
-flowchart LR
-    Unlinked["Unlinked RobOS Desktop<br/><i>(No Tenant / Guest)</i>"] --> BootBtn["Click '🚀 Bootstrap'"]
-    BootBtn --> Modal["Bootstrap Modal<br/><i>(Company Name, Domain, Admin Name & Email)</i>"]
-    Modal --> Engine["RobOS Greenfield Provisioner"]
-    Engine --> Tenant["Tenant Metadata<br/><code>~/.config/robos/company.json</code>"]
-    Engine --> AdminIdent["Active Admin Identity<br/><code>~/.config/robos/identity.json</code>"]
-    Engine --> AdminProfile["Root Profile<br/><code>~/.config/robos/people/admin.json</code>"]
-    Engine --> TeamsYaml["Foundational Squads<br/><code>.robos/teams.yaml</code>"]
-    Engine --> KGraph["SDLC Knowledge Graph<br/><code>.robos/knowledge-graph.jsonld</code>"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/new-company-bootstrap.jpg' | relative_url }}" alt="Greenfield Startup Bootstrap Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Greenfield Startup Bootstrap Workflow</strong>: How the 5-minute interactive bootstrap activates root cryptographic signing, foundational team topologies, central AI provider hubs, and living C4 starter architecture. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Interactive Bootstrap Wizard
 1. **Inspect Identity State**: Group Manager displays an unlinked badge (`No Tenant / Unlinked`).
