@@ -88,6 +88,17 @@ To eliminate both the economic waste of using frontier reasoning models for simp
 
 Every task—whether initiated by a developer typing in an `@`-search input, a background cron job scheduled in **Agent Scheduler**, an issue assigned in **Issue Manager**, or an automated pull request audit in **Agent Code Review Platform**—traverses seven distinct phases:
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-tier-dispatch-algorithm.jpg' | relative_url }}" alt="RobOS Agent Tier Dispatch Algorithm: Complete 7-Phase Architecture and Dynamic Escalation Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Agent Tier Dispatch Algorithm</strong>: Complete 7-phase architecture mapping task ingestion, complexity scoring (TCS), prompt optimization, RAM sandboxing, multi-gate verification, and dynamic self-healing escalation. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+<details style="margin: 1.5rem 0; padding: 1rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
+  <summary style="cursor: pointer; font-weight: 600; color: #58a6ff;">View Raw Flowchart Graph Specification (Mermaid Syntax)</summary>
+  <div style="margin-top: 1rem;">
+
 ```mermaid
 flowchart TD
     classDef trigger fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
@@ -160,6 +171,9 @@ flowchart TD
         PS3 --> PS4["Deliver Verified Code to PR Review Platform / Developer UI"]:::success
     end
 ```
+
+  </div>
+</details>
 
 ---
 
