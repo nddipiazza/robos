@@ -31,7 +31,10 @@
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/acme/billing-portal",
+      "robos:technology": "React 19 / TypeScript / Vite",
+      "robos:frontendFramework": "React"
     }
   ],
   "@graph": [
@@ -44,7 +47,10 @@
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/acme/billing-portal",
+      "robos:technology": "React 19 / TypeScript / Vite",
+      "robos:frontendFramework": "React"
     }
   ]
 }

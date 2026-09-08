@@ -82,6 +82,18 @@ class OSLCGraphParser {
         'robos:flowDiagram',
         'robos:relatesTo',
         'robos:targetComponent',
+        'robos:usesDatabase',
+        'robos:usesMessageBroker',
+        'robos:publishesTo',
+        'robos:subscribesTo',
+        'robos:usesMCPServer',
+        'robos:deployedTo',
+        'robos:targetCluster',
+        'robos:inEnvironment',
+        'robos:hasPipeline',
+        'robos:consumesContract',
+        'robos:assignedTeam',
+        'robos:hasCredential',
       ];
 
       for (const k of refKeys) {

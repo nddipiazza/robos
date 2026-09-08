@@ -223,6 +223,121 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:code', minCount: 1, message: 'Code Snippet must provide source code text.' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:DatabaseShape',
+    targetClass: 'robos:Database',
+    targetClasses: ['robos:Database', 'robos:RelationalDatabase'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Database must have a title or display name.' },
+      { path: 'robos:engine', minCount: 1, message: 'Database must declare its engine (postgresql, mysql, sqlite, oracle, etc.).' },
+      { path: 'robos:databaseName', minCount: 1, message: 'Database must specify a logical database name.' },
+      { path: 'robos:host', minCount: 1, message: 'Database must specify a host address or service DNS.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:NoSQLDatabaseShape',
+    targetClass: 'robos:NoSQLDatabase',
+    targetClasses: ['robos:NoSQLDatabase', 'robos:CacheStore', 'robos:DocumentStore', 'robos:KeyValueStore'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'NoSQL Database must have a title or display name.' },
+      { path: 'robos:engine', minCount: 1, message: 'NoSQL Database must declare engine (redis, mongodb, cassandra, dynamodb, elasticsearch).' },
+      { path: 'robos:host', minCount: 1, message: 'NoSQL Database must specify a host address or cluster endpoint.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MessageBrokerShape',
+    targetClass: 'robos:MessageBroker',
+    targetClasses: ['robos:MessageBroker', 'robos:EventBus'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Message Broker must have a title or display name.' },
+      { path: 'robos:brokerType', minCount: 1, message: 'Message Broker must declare broker type (kafka, rabbitmq, sqs, nats, pulsar).' },
+      { path: 'robos:endpoint', minCount: 1, message: 'Message Broker must specify bootstrap endpoint URI.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MCPServerShape',
+    targetClass: 'robos:MCPServer',
+    targetClasses: ['robos:MCPServer', 'robos:ToolProvider'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'MCP Server must have a title or display name.' },
+      { path: 'robos:transport', minCount: 1, message: 'MCP Server must declare transport protocol (stdio, sse).' },
+      { path: 'robos:toolsProvided', minCount: 1, message: 'MCP Server must list at least one provided tool.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:AgentPersonaShape',
+    targetClass: 'robos:AgentPersona',
+    targetClasses: ['robos:AgentPersona', 'robos:AIAgent'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Agent Persona must have a title or name.' },
+      { path: 'robos:role', minCount: 1, message: 'Agent Persona must specify an autonomous role.' },
+      { path: 'robos:systemPrompt', minCount: 1, message: 'Agent Persona must provide a system prompt or core directive.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:KubernetesClusterShape',
+    targetClass: 'robos:KubernetesCluster',
+    targetClasses: ['robos:KubernetesCluster', 'robos:K8sCluster'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Kubernetes Cluster must have a title or display name.' },
+      { path: 'robos:provider', minCount: 1, message: 'Kubernetes Cluster must declare provider (eks, gke, aks, minikube, k3s, on-prem).' },
+      { path: 'robos:apiEndpoint', minCount: 1, message: 'Kubernetes Cluster must specify API server endpoint URL.' },
+      { path: 'robos:clusterContext', minCount: 1, message: 'Kubernetes Cluster must specify kubeconfig context name.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:EnvironmentShape',
+    targetClass: 'robos:Environment',
+    targetClasses: ['robos:Environment', 'robos:DeploymentEnvironment'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Environment must have a title.' },
+      { path: 'robos:environmentType', minCount: 1, message: 'Environment must declare environment type (production, staging, development, test, sandbox).' },
+      { path: 'robos:tier', minCount: 1, message: 'Environment must declare SLA/criticality tier.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GitOpsDeploymentShape',
+    targetClass: 'robos:GitOpsDeployment',
+    targetClasses: ['robos:GitOpsDeployment', 'robos:ArgoCDApplication'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'GitOps Deployment must have a title.' },
+      { path: 'robos:gitopsEngine', minCount: 1, message: 'GitOps Deployment must declare engine (argocd, flux).' },
+      { path: 'robos:sourceRepo', minCount: 1, message: 'GitOps Deployment must specify source Git repository.' },
+      { path: 'robos:targetCluster', minCount: 1, message: 'GitOps Deployment must link to target Kubernetes Cluster.' },
+      { path: 'robos:targetNamespace', minCount: 1, message: 'GitOps Deployment must specify target namespace.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ProtobufContractShape',
+    targetClass: 'robos:ProtobufContract',
+    targetClasses: ['robos:ProtobufContract', 'robos:GRPCContract'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Protobuf Contract must have a title.' },
+      { path: 'robos:specFile', minCount: 1, message: 'Protobuf Contract must specify .proto file path.' },
+      { path: 'robos:packageName', minCount: 1, message: 'Protobuf Contract must specify protobuf package name.' },
+      { path: 'robos:rpcMethods', minCount: 1, message: 'Protobuf Contract must declare RPC methods.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GraphQLContractShape',
+    targetClass: 'robos:GraphQLContract',
+    targetClasses: ['robos:GraphQLContract', 'robos:GraphQLSchema'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'GraphQL Contract must have a title.' },
+      { path: 'robos:specFile', minCount: 1, message: 'GraphQL Contract must specify schema file path (.graphql).' },
+      { path: 'robos:schemaType', minCount: 1, message: 'GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:CICDPipelineShape',
+    targetClass: 'robos:CICDPipeline',
+    targetClasses: ['robos:CICDPipeline', 'robos:Pipeline'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'CI/CD Pipeline must have a title.' },
+      { path: 'robos:platform', minCount: 1, message: 'CI/CD Pipeline must declare platform (github-actions, gitlab-ci, jenkins).' },
+      { path: 'robos:workflowFile', minCount: 1, message: 'CI/CD Pipeline must specify workflow file path (.github/workflows/...).' },
+    ],
+  },
 ];
 
 class SHACLValidator {

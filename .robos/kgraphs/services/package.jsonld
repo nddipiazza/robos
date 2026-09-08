@@ -32,6 +32,50 @@
       "robos:technology": "Go 1.22 / Gin",
       "robos:repository": "github.com/acme/billing-api",
       "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:ownerTeam": "urn:robos:team:order-processing",
+      "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+      "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+      "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+      "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+      "robos:implementsContract": [
+        "urn:robos:contract:orders-grpc"
+      ]
+    },
+    {
+      "@id": "urn:robos:contract:orders-grpc",
+      "@type": [
+        "robos:Contract",
+        "robos:ProtobufContract",
+        "robos:GRPCContract"
+      ],
+      "dcterms:title": "Acme Orders gRPC Protobuf Contract",
+      "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
+      "robos:protocol": "grpc-protobuf",
+      "robos:specFile": "proto/orders/v1/orders.proto",
+      "robos:packageName": "acme.orders.v1",
+      "robos:rpcMethods": [
+        "CreateOrder",
+        "GetOrderStatus",
+        "CancelOrder",
+        "StreamOrderEvents"
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:catalog-graphql",
+      "@type": [
+        "robos:Contract",
+        "robos:GraphQLContract",
+        "robos:GraphQLSchema"
+      ],
+      "dcterms:title": "Acme Catalog GraphQL SDL Schema",
+      "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
+      "robos:protocol": "graphql",
+      "robos:specFile": "schemas/catalog.graphql",
+      "robos:schemaType": "federated-subgraph",
+      "robos:package": "services",
       "robos:namespace": "robos.services"
     }
   ],
@@ -45,6 +89,50 @@
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
       "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:ownerTeam": "urn:robos:team:order-processing",
+      "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+      "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+      "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+      "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+      "robos:implementsContract": [
+        "urn:robos:contract:orders-grpc"
+      ]
+    },
+    {
+      "@id": "urn:robos:contract:orders-grpc",
+      "@type": [
+        "robos:Contract",
+        "robos:ProtobufContract",
+        "robos:GRPCContract"
+      ],
+      "dcterms:title": "Acme Orders gRPC Protobuf Contract",
+      "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
+      "robos:protocol": "grpc-protobuf",
+      "robos:specFile": "proto/orders/v1/orders.proto",
+      "robos:packageName": "acme.orders.v1",
+      "robos:rpcMethods": [
+        "CreateOrder",
+        "GetOrderStatus",
+        "CancelOrder",
+        "StreamOrderEvents"
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:catalog-graphql",
+      "@type": [
+        "robos:Contract",
+        "robos:GraphQLContract",
+        "robos:GraphQLSchema"
+      ],
+      "dcterms:title": "Acme Catalog GraphQL SDL Schema",
+      "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
+      "robos:protocol": "graphql",
+      "robos:specFile": "schemas/catalog.graphql",
+      "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
     }

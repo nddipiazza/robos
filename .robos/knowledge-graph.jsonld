@@ -27,7 +27,10 @@
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/acme/billing-portal",
+      "robos:technology": "React 19 / TypeScript / Vite",
+      "robos:frontendFramework": "React"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -82,6 +85,95 @@
       "robos:namespace": "robos.platform"
     },
     {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "orders_db",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore"
+      ],
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:port": 6379,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:acme-event-kafka",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
       "@id": "urn:robos:devops:github:enterprise",
       "@type": [
         "oslc_config:ConfigurationItem",
@@ -131,6 +223,180 @@
       },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster"
+      ],
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "robos:provider": "eks",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:production",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Production Environment",
+      "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "robos:environmentType": "production",
+      "robos:tier": "tier-1",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:staging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "robos:environmentType": "staging",
+      "robos:tier": "tier-2",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:gitops:checkout-service-argocd",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:GitOpsDeployment",
+        "robos:ArgoCDApplication"
+      ],
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "robos:gitopsEngine": "argocd",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:sourcePath": "charts/billing-api",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production",
+      "robos:syncPolicy": "automated",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:pipeline:checkout-service-ci",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:CICDPipeline",
+        "robos:Pipeline"
+      ],
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "robos:platform": "github-actions",
+      "robos:workflowFile": ".github/workflows/ci.yml",
+      "robos:stages": [
+        "lint",
+        "test",
+        "security-scan",
+        "docker-build",
+        "argocd-sync"
+      ],
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:diagram:order-lifecycle-flow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram"
+      ],
+      "dcterms:title": "Order Lifecycle & Event Processing Flow",
+      "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
+      "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing",
+      "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
+      "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
+      "robos:diagramType": "sequence",
+      "robos:aspectRatio": "16:9",
+      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:tags": [
+        "Architecture",
+        "Ordering",
+        "EventDriven"
+      ],
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:sdlc-architecture-guide",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle"
+      ],
+      "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
+      "robos:slug": "sdlc-architecture-guide",
+      "dcterms:description": "Comprehensive reference on the dual-state knowledge graph, modular packages, and living doc synchronization.",
+      "robos:docPath": "docs/knowledge-graph.md",
+      "robos:category": "Architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:001-modular-kgraph",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR"
+      ],
+      "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
+      "robos:adrNumber": "ADR-001",
+      "robos:status": "accepted",
+      "robos:context": "Monolithic JSON-LD knowledge graph files cause merge conflicts in multi-repo and multi-team environments.",
+      "robos:decision": "Adopt modular, namespaced package stores (.robos/kgraphs/<pkg>/package.jsonld) with git-tag versioning and aggregated backward compatibility.",
+      "robos:consequences": "Eliminates team collisions, isolates domains, and allows fine-grained GitOps diffing.",
+      "robos:date": "2026-03-15",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:walkthrough:remote-execution",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:InteractiveWalkthrough"
+      ],
+      "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
+      "robos:slug": "remote-execution-studio-tour",
+      "dcterms:description": "Guided developer walkthrough on inspecting REAPI distributed build clusters, Bazel configurations, and cache metrics.",
+      "robos:targetApp": "remote-execution-studio",
+      "robos:walkthroughPath": "docs/big-wins/remote-execution-studio.md",
+      "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
+      "robos:stepsCount": 7,
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:snippet:shacl-custom-validation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CodeSnippet",
+        "robos:CodeSample"
+      ],
+      "dcterms:title": "SHACL Custom Shape Programmatic Validation",
+      "robos:language": "javascript",
+      "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
+      "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
     },
     {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
@@ -321,6 +587,61 @@
       "robos:namespace": "robos.org"
     },
     {
+      "@id": "urn:robos:agent:pr-reviewer",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:context-engine",
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:architecture-guardian",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:modelPreference": "gemini-2.5-pro",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:sre-incident-triage",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "robos:role": "SRE Incident & Health Triager",
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
+      "robos:modelPreference": "pro",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
       "@id": "urn:robos:service:billing-api",
       "@type": [
         "oslc_am:Resource",
@@ -329,6 +650,50 @@
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
       "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:ownerTeam": "urn:robos:team:order-processing",
+      "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+      "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+      "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+      "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+      "robos:implementsContract": [
+        "urn:robos:contract:orders-grpc"
+      ]
+    },
+    {
+      "@id": "urn:robos:contract:orders-grpc",
+      "@type": [
+        "robos:Contract",
+        "robos:ProtobufContract",
+        "robos:GRPCContract"
+      ],
+      "dcterms:title": "Acme Orders gRPC Protobuf Contract",
+      "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
+      "robos:protocol": "grpc-protobuf",
+      "robos:specFile": "proto/orders/v1/orders.proto",
+      "robos:packageName": "acme.orders.v1",
+      "robos:rpcMethods": [
+        "CreateOrder",
+        "GetOrderStatus",
+        "CancelOrder",
+        "StreamOrderEvents"
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:catalog-graphql",
+      "@type": [
+        "robos:Contract",
+        "robos:GraphQLContract",
+        "robos:GraphQLSchema"
+      ],
+      "dcterms:title": "Acme Catalog GraphQL SDL Schema",
+      "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
+      "robos:protocol": "graphql",
+      "robos:specFile": "schemas/catalog.graphql",
+      "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
     }
@@ -343,7 +708,10 @@
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/acme/billing-portal",
+      "robos:technology": "React 19 / TypeScript / Vite",
+      "robos:frontendFramework": "React"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -398,6 +766,95 @@
       "robos:namespace": "robos.platform"
     },
     {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "orders_db",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore"
+      ],
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:port": 6379,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:acme-event-kafka",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
       "@id": "urn:robos:devops:github:enterprise",
       "@type": [
         "oslc_config:ConfigurationItem",
@@ -447,6 +904,180 @@
       },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster"
+      ],
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "robos:provider": "eks",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:production",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Production Environment",
+      "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "robos:environmentType": "production",
+      "robos:tier": "tier-1",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:staging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "robos:environmentType": "staging",
+      "robos:tier": "tier-2",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:gitops:checkout-service-argocd",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:GitOpsDeployment",
+        "robos:ArgoCDApplication"
+      ],
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "robos:gitopsEngine": "argocd",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:sourcePath": "charts/billing-api",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production",
+      "robos:syncPolicy": "automated",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:pipeline:checkout-service-ci",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:CICDPipeline",
+        "robos:Pipeline"
+      ],
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "robos:platform": "github-actions",
+      "robos:workflowFile": ".github/workflows/ci.yml",
+      "robos:stages": [
+        "lint",
+        "test",
+        "security-scan",
+        "docker-build",
+        "argocd-sync"
+      ],
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:diagram:order-lifecycle-flow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram"
+      ],
+      "dcterms:title": "Order Lifecycle & Event Processing Flow",
+      "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
+      "robos:tooltip": "Visual sequence of order validation, distributed transaction, and event routing",
+      "robos:mermaidText": "sequenceDiagram\n    participant Client\n    participant Gateway\n    participant OrderService\n    participant Kafka\n    Client->>Gateway: POST /orders\n    Gateway->>OrderService: Validate & Route\n    OrderService->>Kafka: Emit OrderCreated\n",
+      "robos:imagePath": "assets/images/architecture/order-lifecycle-flow.jpg",
+      "robos:diagramType": "sequence",
+      "robos:aspectRatio": "16:9",
+      "robos:targetComponent": "urn:robos:service:forms-api",
+      "robos:tags": [
+        "Architecture",
+        "Ordering",
+        "EventDriven"
+      ],
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:sdlc-architecture-guide",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle"
+      ],
+      "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
+      "robos:slug": "sdlc-architecture-guide",
+      "dcterms:description": "Comprehensive reference on the dual-state knowledge graph, modular packages, and living doc synchronization.",
+      "robos:docPath": "docs/knowledge-graph.md",
+      "robos:category": "Architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:001-modular-kgraph",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR"
+      ],
+      "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
+      "robos:adrNumber": "ADR-001",
+      "robos:status": "accepted",
+      "robos:context": "Monolithic JSON-LD knowledge graph files cause merge conflicts in multi-repo and multi-team environments.",
+      "robos:decision": "Adopt modular, namespaced package stores (.robos/kgraphs/<pkg>/package.jsonld) with git-tag versioning and aggregated backward compatibility.",
+      "robos:consequences": "Eliminates team collisions, isolates domains, and allows fine-grained GitOps diffing.",
+      "robos:date": "2026-03-15",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:walkthrough:remote-execution",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:InteractiveWalkthrough"
+      ],
+      "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
+      "robos:slug": "remote-execution-studio-tour",
+      "dcterms:description": "Guided developer walkthrough on inspecting REAPI distributed build clusters, Bazel configurations, and cache metrics.",
+      "robos:targetApp": "remote-execution-studio",
+      "robos:walkthroughPath": "docs/big-wins/remote-execution-studio.md",
+      "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
+      "robos:stepsCount": 7,
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:snippet:shacl-custom-validation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CodeSnippet",
+        "robos:CodeSample"
+      ],
+      "dcterms:title": "SHACL Custom Shape Programmatic Validation",
+      "robos:language": "javascript",
+      "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
+      "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
     },
     {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
@@ -637,6 +1268,61 @@
       "robos:namespace": "robos.org"
     },
     {
+      "@id": "urn:robos:agent:pr-reviewer",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:context-engine",
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:architecture-guardian",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:modelPreference": "gemini-2.5-pro",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:sre-incident-triage",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "robos:role": "SRE Incident & Health Triager",
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
+      "robos:modelPreference": "pro",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
       "@id": "urn:robos:service:billing-api",
       "@type": [
         "oslc_am:Resource",
@@ -645,6 +1331,50 @@
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
       "robos:repository": "github.com/acme/billing-api",
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:ownerTeam": "urn:robos:team:order-processing",
+      "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+      "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+      "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+      "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+      "robos:implementsContract": [
+        "urn:robos:contract:orders-grpc"
+      ]
+    },
+    {
+      "@id": "urn:robos:contract:orders-grpc",
+      "@type": [
+        "robos:Contract",
+        "robos:ProtobufContract",
+        "robos:GRPCContract"
+      ],
+      "dcterms:title": "Acme Orders gRPC Protobuf Contract",
+      "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
+      "robos:protocol": "grpc-protobuf",
+      "robos:specFile": "proto/orders/v1/orders.proto",
+      "robos:packageName": "acme.orders.v1",
+      "robos:rpcMethods": [
+        "CreateOrder",
+        "GetOrderStatus",
+        "CancelOrder",
+        "StreamOrderEvents"
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:catalog-graphql",
+      "@type": [
+        "robos:Contract",
+        "robos:GraphQLContract",
+        "robos:GraphQLSchema"
+      ],
+      "dcterms:title": "Acme Catalog GraphQL SDL Schema",
+      "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
+      "robos:protocol": "graphql",
+      "robos:specFile": "schemas/catalog.graphql",
+      "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
     }

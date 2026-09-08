@@ -66,11 +66,11 @@ RobOS decomposes the Knowledge Graph into **modular, namespaced package stores**
 
 | Package ID | Namespace Prefix | Purpose & Managed Entities |
 |:---|:---|:---|
-| **`core-platform`** | `robos.core` | System architecture, C4 container topology, relational and NoSQL databases, Kafka brokers, and base infrastructure. |
-| **`organization`** | `robos.org` | Team Topologies (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), human architects, AI agent personas, and directory sync (Okta, Azure AD, LDAP). |
-| **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs, GraphQL schemas, and BDD verification features. |
+| **`core-platform`** | `robos.core` | System architecture, C4 container topology, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), MCP servers (`robos:MCPServer`), and distributed build systems. |
+| **`organization`** | `robos.org` | Team Topologies (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), and enterprise directory sync. |
+| **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and BDD verification features. |
 | **`applications`** | `robos.apps` | Single-page web apps, desktop apps, mobile apps, PC games, mobile games, and console CLI tools. |
-| **`devops`** | `robos.devops` | Connected cloud accounts (AWS, GCP, Azure), CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
+| **`devops`** | `robos.devops` | Kubernetes clusters (`robos:KubernetesCluster`), cloud environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
 | **`learning`** | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
 | **`documentation`** | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
 
@@ -342,7 +342,113 @@ Every `robos:GitProjectOrganization` is validated against `urn:robos:shape:GitPr
 
 ---
 
-## 9. Video Walkthroughs & Proof of Work
+## 9. Foundational SDLC Domains: Data, AI Agents, Cloud GitOps & Contracts
+
+To provide a complete, unbroken digital twin of modern software development, RobOS models the 4 foundational operational domains of software engineering as first-class, SHACL-validated citizens:
+
+### 1. Data Infrastructure & Storage (`core-platform`)
+
+Databases and message brokers are modeled directly within the platform architecture, allowing microservices to declare relational bindings and event-driven topologies:
+
+- **Relational Databases (`robos:Database` / `robos:RelationalDatabase`)**:
+  - Enforced by `urn:robos:shape:DatabaseShape`.
+  - Properties: `dcterms:title`, `robos:engine` (e.g. `postgresql`, `mysql`, `sqlite`, `oracle`), `robos:databaseName`, `robos:host`, `robos:port`, and optional migration framework `robos:schemaMigration` (Flyway, Liquibase, Prisma).
+  - Credentials link to GPG password vault via `robos:hasCredential`.
+- **NoSQL Databases & Cache Stores (`robos:NoSQLDatabase` / `robos:CacheStore`)**:
+  - Enforced by `urn:robos:shape:NoSQLDatabaseShape`.
+  - Properties: `dcterms:title`, `robos:engine` (e.g. `redis`, `mongodb`, `cassandra`, `dynamodb`), `robos:host`, `robos:port`.
+- **Message Brokers & Event Streams (`robos:MessageBroker` / `robos:EventBus`)**:
+  - Enforced by `urn:robos:shape:MessageBrokerShape`.
+  - Properties: `dcterms:title`, `robos:brokerType` (`kafka`, `rabbitmq`, `sqs`, `nats`), `robos:endpoint`, `robos:topics`.
+- **Semantic Edges**:
+  - `robos:usesDatabase`: Declares that a microservice queries and persists to a database.
+  - `robos:publishesTo` / `robos:subscribesTo`: Declares event stream publishers and consumer groups.
+
+```json
+{
+  "@id": "urn:robos:db:acme-orders-postgres",
+  "@type": ["oslc_am:Resource", "robos:Database", "robos:RelationalDatabase"],
+  "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+  "robos:engine": "postgresql",
+  "robos:databaseName": "orders_db",
+  "robos:host": "postgres.internal.acme.corp",
+  "robos:port": 5432,
+  "robos:schemaMigration": "flyway",
+  "robos:package": "core-platform"
+}
+```
+
+### 2. AI Agent Personas & Model Context Protocol (`organization` & `core-platform`)
+
+RobOS eliminates generic, ungrounded AI prompts by modeling specialized agent personas and runtime MCP servers in the Knowledge Graph:
+
+- **AI Agent Personas (`robos:AgentPersona` / `robos:AIAgent`)**:
+  - Enforced by `urn:robos:shape:AgentPersonaShape`.
+  - Properties: `dcterms:title`, `robos:role` (e.g. "Autonomous Pull Request Auditor", "Architecture Guardian", "SRE Incident Triager"), `robos:systemPrompt` (directive), `robos:modelPreference` (Claude 3.5 Sonnet, Gemini 2.5 Pro), and squad assignment (`robos:assignedTeam`).
+- **Model Context Protocol Servers (`robos:MCPServer` / `robos:ToolProvider`)**:
+  - Enforced by `urn:robos:shape:MCPServerShape`.
+  - Properties: `dcterms:title`, `robos:transport` (`stdio`, `sse`), `robos:command` or `robos:endpointUrl`, `robos:toolsProvided` (e.g. `["ast_search", "symbol_lookup", "query_nodes"]`).
+- **Semantic Edge**:
+  - `robos:usesMCPServer`: Connects an AI Agent Persona to the specific MCP tool servers it is authorized to call.
+
+```json
+{
+  "@id": "urn:robos:agent:pr-reviewer",
+  "@type": ["oslc:Person", "robos:AgentPersona", "robos:AIAgent"],
+  "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+  "robos:role": "Autonomous Pull Request Auditor",
+  "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+  "robos:modelPreference": "claude-3-5-sonnet",
+  "robos:assignedTeam": "urn:robos:team:core-platform",
+  "robos:usesMCPServer": ["urn:robos:mcp:context-engine", "urn:robos:mcp:kgraph-navigator"],
+  "robos:package": "organization"
+}
+```
+
+### 3. Cloud Infrastructure, Kubernetes & GitOps Deployments (`devops`)
+
+Multi-cluster Kubernetes management (integrated with **Kube Studio**) and GitOps sync engines (ArgoCD, Flux):
+
+- **Kubernetes Clusters (`robos:KubernetesCluster` / `robos:K8sCluster`)**:
+  - Enforced by `urn:robos:shape:KubernetesClusterShape`.
+  - Properties: `dcterms:title`, `robos:provider` (`eks`, `gke`, `aks`, `k3s`, `minikube`), `robos:apiEndpoint`, `robos:clusterContext`, `robos:namespaces`, `robos:inEnvironment`.
+- **Environments (`robos:Environment` / `robos:DeploymentEnvironment`)**:
+  - Enforced by `urn:robos:shape:EnvironmentShape`.
+  - Properties: `dcterms:title`, `robos:environmentType` (`production`, `staging`, `development`, `test`), `robos:tier` (`tier-1`, `tier-2`).
+- **GitOps Deployments (`robos:GitOpsDeployment` / `robos:ArgoCDApplication`)**:
+  - Enforced by `urn:robos:shape:GitOpsDeploymentShape`.
+  - Properties: `dcterms:title`, `robos:gitopsEngine` (`argocd`, `flux`), `robos:sourceRepo`, `robos:targetCluster`, `robos:targetNamespace`, `robos:syncPolicy`.
+- **CI/CD Pipelines (`robos:CICDPipeline` / `robos:Pipeline`)**:
+  - Enforced by `urn:robos:shape:CICDPipelineShape`.
+  - Properties: `dcterms:title`, `robos:platform` (`github-actions`, `gitlab-ci`), `robos:workflowFile`, `robos:stages`.
+
+```json
+{
+  "@id": "urn:robos:cluster:prod-us-east-eks",
+  "@type": ["c4:DeploymentNode", "robos:KubernetesCluster"],
+  "dcterms:title": "Production US-East AWS EKS Cluster",
+  "robos:provider": "eks",
+  "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+  "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+  "robos:inEnvironment": "urn:robos:env:production",
+  "robos:package": "devops"
+}
+```
+
+### 4. Expanded API Contracts: Protobuf gRPC & GraphQL (`services`)
+
+RobOS elevates Protobuf interface definitions and GraphQL SDL schemas alongside OpenAPI 3.1 REST contracts:
+
+- **Protobuf gRPC Contracts (`robos:ProtobufContract` / `robos:GRPCContract`)**:
+  - Enforced by `urn:robos:shape:ProtobufContractShape`.
+  - Properties: `dcterms:title`, `robos:protocol: "grpc-protobuf"`, `robos:specFile` (e.g. `proto/orders/v1/orders.proto`), `robos:packageName`, `robos:rpcMethods`.
+- **GraphQL Schema Contracts (`robos:GraphQLContract` / `robos:GraphQLSchema`)**:
+  - Enforced by `urn:robos:shape:GraphQLContractShape`.
+  - Properties: `dcterms:title`, `robos:protocol: "graphql"`, `robos:specFile` (e.g. `schemas/catalog.graphql`), `robos:schemaType` (`federated-subgraph`, `monolithic`).
+
+---
+
+## 10. Video Walkthroughs & Proof of Work
 
 All Knowledge Graph workflows are validated end-to-end with automated, headless 1080p video recordings and simulated DOM interactions:
 

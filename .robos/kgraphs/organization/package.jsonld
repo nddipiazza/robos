@@ -195,6 +195,61 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:pr-reviewer",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:context-engine",
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:architecture-guardian",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:modelPreference": "gemini-2.5-pro",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:sre-incident-triage",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "robos:role": "SRE Incident & Health Triager",
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
+      "robos:modelPreference": "pro",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
     }
   ],
   "@graph": [
@@ -370,6 +425,61 @@
         }
       ],
       "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:pr-reviewer",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Autonomous PR Code Reviewer",
+      "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
+      "robos:role": "Autonomous Pull Request Auditor",
+      "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
+      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:assignedTeam": "urn:robos:team:core-platform",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:context-engine",
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:architecture-guardian",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS Architecture & Governance Guardian",
+      "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
+      "robos:role": "Architecture & Governance Guardian",
+      "robos:systemPrompt": "Enforce C4 boundaries, ADR decisions, and package taxonomy across Git repositories.",
+      "robos:modelPreference": "gemini-2.5-pro",
+      "robos:assignedTeam": "urn:robos:team:architecture-guild",
+      "robos:usesMCPServer": [
+        "urn:robos:mcp:kgraph-navigator"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:agent:sre-incident-triage",
+      "@type": [
+        "oslc:Person",
+        "robos:AgentPersona",
+        "robos:AIAgent"
+      ],
+      "dcterms:title": "RobOS SRE Incident & Deployment Triager",
+      "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
+      "robos:role": "SRE Incident & Health Triager",
+      "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
+      "robos:modelPreference": "pro",
+      "robos:assignedTeam": "urn:robos:team:cloud-platform",
       "robos:package": "organization",
       "robos:namespace": "robos.org"
     }

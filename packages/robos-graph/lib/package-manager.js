@@ -81,19 +81,19 @@ class KGraphPackageManager {
     if (typeStr.includes('FlowDiagram') || typeStr.includes('DocumentationPage') || typeStr.includes('DocArticle') || typeStr.includes('ArchitectureDecisionRecord') || typeStr.includes('ADR') || typeStr.includes('InteractiveWalkthrough') || typeStr.includes('CodeSnippet') || typeStr.includes('CodeSample') || typeStr.includes('ApiGuide')) {
       return 'documentation';
     }
-    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('Company')) {
+    if (typeStr.includes('Person') || typeStr.includes('Developer') || typeStr.includes('Team') || typeStr.includes('GitProjectOrganization') || typeStr.includes('GitOrganization') || typeStr.includes('Company') || typeStr.includes('AgentPersona') || typeStr.includes('AIAgent')) {
       return 'organization';
     }
-    if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider') || typeStr.includes('RemoteExecutionCluster') || typeStr.includes('RemoteBuildCluster')) {
+    if (typeStr.includes('DevOpsIntegration') || typeStr.includes('PassCredential') || typeStr.includes('SecretReference') || typeStr.includes('CloudProvider') || typeStr.includes('RemoteExecutionCluster') || typeStr.includes('RemoteBuildCluster') || typeStr.includes('KubernetesCluster') || typeStr.includes('K8sCluster') || typeStr.includes('Environment') || typeStr.includes('DeploymentEnvironment') || typeStr.includes('GitOpsDeployment') || typeStr.includes('ArgoCDApplication') || typeStr.includes('CICDPipeline') || typeStr.includes('Pipeline')) {
       return 'devops';
     }
-    if (typeStr.includes('BuildSystem') || typeStr.includes('MonorepoBuild')) {
+    if (typeStr.includes('BuildSystem') || typeStr.includes('MonorepoBuild') || typeStr.includes('Database') || typeStr.includes('RelationalDatabase') || typeStr.includes('NoSQLDatabase') || typeStr.includes('CacheStore') || typeStr.includes('MessageBroker') || typeStr.includes('EventBus') || typeStr.includes('MCPServer') || typeStr.includes('ToolProvider')) {
       return 'core-platform';
     }
     if (typeStr.includes('FrontEndApp') || typeStr.includes('PCGame') || typeStr.includes('MobileGame') || typeStr.includes('DesktopApp') || typeStr.includes('ConsoleApp') || typeStr.includes('MobileApp') || typeStr.includes('DataPipeline') || typeStr.includes('Library') || typeStr.includes('WebApplication') || typeStr.includes('VideoGame')) {
       return 'applications';
     }
-    if (typeStr.includes('Microservice') || typeStr.includes('Contract') || typeStr.includes('Requirement') || typeStr.includes('Feature') || typeStr.includes('Scenario') || typeStr.includes('DataSource')) {
+    if (typeStr.includes('Microservice') || typeStr.includes('Contract') || typeStr.includes('ProtobufContract') || typeStr.includes('GRPCContract') || typeStr.includes('GraphQLContract') || typeStr.includes('GraphQLSchema') || typeStr.includes('Requirement') || typeStr.includes('Feature') || typeStr.includes('Scenario') || typeStr.includes('DataSource')) {
       return 'services';
     }
     if (typeStr.includes('ELearning') || typeStr.includes('Tutorial') || typeStr.includes('Course')) {

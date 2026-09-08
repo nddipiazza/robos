@@ -72,6 +72,94 @@
       },
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster"
+      ],
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "robos:provider": "eks",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:production",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Production Environment",
+      "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "robos:environmentType": "production",
+      "robos:tier": "tier-1",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:staging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "robos:environmentType": "staging",
+      "robos:tier": "tier-2",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:gitops:checkout-service-argocd",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:GitOpsDeployment",
+        "robos:ArgoCDApplication"
+      ],
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "robos:gitopsEngine": "argocd",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:sourcePath": "charts/billing-api",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production",
+      "robos:syncPolicy": "automated",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:pipeline:checkout-service-ci",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:CICDPipeline",
+        "robos:Pipeline"
+      ],
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "robos:platform": "github-actions",
+      "robos:workflowFile": ".github/workflows/ci.yml",
+      "robos:stages": [
+        "lint",
+        "test",
+        "security-scan",
+        "docker-build",
+        "argocd-sync"
+      ],
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
     }
   ],
   "@graph": [
@@ -123,6 +211,94 @@
         "retentionDays": 14,
         "evictionPolicy": "lru"
       },
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:cluster:prod-us-east-eks",
+      "@type": [
+        "c4:DeploymentNode",
+        "robos:KubernetesCluster",
+        "robos:K8sCluster"
+      ],
+      "dcterms:title": "Production US-East AWS EKS Cluster",
+      "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
+      "robos:provider": "eks",
+      "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
+      "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
+      "robos:namespaces": [
+        "production",
+        "ingress",
+        "monitoring"
+      ],
+      "robos:inEnvironment": "urn:robos:env:production",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:production",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Production Environment",
+      "dcterms:description": "High-availability production tier serving external customer traffic.",
+      "robos:environmentType": "production",
+      "robos:tier": "tier-1",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:env:staging",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Environment",
+        "robos:DeploymentEnvironment"
+      ],
+      "dcterms:title": "Staging & Pre-Release Environment",
+      "dcterms:description": "Pre-production verification environment matching production architecture.",
+      "robos:environmentType": "staging",
+      "robos:tier": "tier-2",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:gitops:checkout-service-argocd",
+      "@type": [
+        "oslc_config:ConfigurationItem",
+        "robos:GitOpsDeployment",
+        "robos:ArgoCDApplication"
+      ],
+      "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
+      "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
+      "robos:gitopsEngine": "argocd",
+      "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
+      "robos:sourcePath": "charts/billing-api",
+      "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
+      "robos:targetNamespace": "production",
+      "robos:syncPolicy": "automated",
+      "robos:package": "devops",
+      "robos:namespace": "robos.devops"
+    },
+    {
+      "@id": "urn:robos:pipeline:checkout-service-ci",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:CICDPipeline",
+        "robos:Pipeline"
+      ],
+      "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
+      "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
+      "robos:platform": "github-actions",
+      "robos:workflowFile": ".github/workflows/ci.yml",
+      "robos:stages": [
+        "lint",
+        "test",
+        "security-scan",
+        "docker-build",
+        "argocd-sync"
+      ],
       "robos:package": "devops",
       "robos:namespace": "robos.devops"
     }

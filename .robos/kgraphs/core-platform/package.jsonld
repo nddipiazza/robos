@@ -72,6 +72,95 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "orders_db",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore"
+      ],
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:port": 6379,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:acme-event-kafka",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
     }
   ],
   "@graph": [
@@ -124,6 +213,95 @@
         "OSFamily": "linux",
         "ISA": "x86-64"
       },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-orders-postgres",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
+      "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "orders_db",
+      "robos:host": "postgres.internal.acme.corp",
+      "robos:port": 5432,
+      "robos:schemaMigration": "flyway",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:acme-session-redis",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:NoSQLDatabase",
+        "robos:CacheStore"
+      ],
+      "dcterms:title": "Acme Distributed Session & Cache Store",
+      "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
+      "robos:engine": "redis",
+      "robos:host": "redis-cluster.internal.acme.corp",
+      "robos:port": 6379,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:acme-event-kafka",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
+      "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal.acme.corp:9092",
+      "robos:topics": [
+        "orders.created",
+        "payments.processed",
+        "invoices.generated"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:context-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Code Context MCP Server",
+      "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-context-mcp",
+      "robos:toolsProvided": [
+        "ast_search",
+        "symbol_lookup",
+        "dependency_graph"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:mcp:kgraph-navigator",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MCPServer",
+        "robos:ToolProvider"
+      ],
+      "dcterms:title": "RobOS Knowledge Graph MCP Server",
+      "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
+      "robos:transport": "stdio",
+      "robos:command": "/usr/local/bin/robos-kgraph-mcp",
+      "robos:toolsProvided": [
+        "query_nodes",
+        "get_blast_radius",
+        "validate_shacl"
+      ],
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
     }

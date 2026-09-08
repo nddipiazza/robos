@@ -247,6 +247,91 @@ class KGraphResourceImporter {
       });
     }
 
+    // 4. Extract Database Connection Strings & Declarations
+    const dbRegex = /(postgres(?:ql)?|mysql|redis|mongodb):\/\/[^\s"',;<>()]+/gi;
+    while ((match = dbRegex.exec(text)) !== null) {
+      let rawUri = match[0].replace(/[.,:;)]+$/, '');
+      const proto = match[1].toLowerCase();
+      resources.push({
+        type: 'database',
+        uri: rawUri,
+        engine: proto.startsWith('postgres') ? 'postgresql' : proto,
+        label: `${proto.toUpperCase()} Database (${rawUri.split('@').pop().split('/')[0]})`,
+      });
+    }
+
+    // 5. Extract Kafka / Message Brokers
+    const kafkaMatch = text.match(/kafka(?:\s+broker|\s+cluster)?\s*(?:at|on|:)\s*([^\s,;]+)/i);
+    if (kafkaMatch) {
+      resources.push({
+        type: 'message-broker',
+        brokerType: 'kafka',
+        endpoint: kafkaMatch[1].trim(),
+        label: `Kafka Cluster (${kafkaMatch[1].trim()})`,
+      });
+    }
+
+    // 6. Extract Kubernetes Clusters
+    const k8sRegex = /(?:(EKS|GKE|AKS|Kubernetes|K8s)\s+cluster)\s+([A-Za-z0-9_-]+)(?:\s+at\s+([^\s,;]+))?/gi;
+    while ((match = k8sRegex.exec(text)) !== null) {
+      const prov = match[1].toLowerCase().replace('k8s', 'kubernetes');
+      const clusterName = match[2];
+      const ep = match[3] || `https://${clusterName}.k8s.internal`;
+      resources.push({
+        type: 'kubernetes-cluster',
+        provider: prov === 'kubernetes' ? 'k3s' : prov,
+        name: clusterName,
+        endpoint: ep,
+        label: `Kubernetes Cluster: ${clusterName}`,
+      });
+    }
+
+    // 7. Extract MCP Servers
+    const mcpRegex = /MCP\s+server\s+([A-Za-z0-9_-]+)(?:\s+(?:at|command)\s+([^\s,;]+))?/gi;
+    while ((match = mcpRegex.exec(text)) !== null) {
+      const serverName = match[1];
+      const cmd = match[2] || `/usr/local/bin/${serverName}`;
+      resources.push({
+        type: 'mcp-server',
+        name: serverName,
+        command: cmd,
+        transport: 'stdio',
+        label: `MCP Server: ${serverName}`,
+      });
+    }
+
+    // 8. Extract Agent Personas
+    const personaRegex = /(?:Agent\s+persona|AI\s+persona):\s*([A-Za-z0-9_\s-]+?)(?:\s*-\s*([^\n.]+)|[.,\n]|$)/gi;
+    while ((match = personaRegex.exec(text)) !== null) {
+      const personaTitle = match[1].trim();
+      const promptDirective = match[2] ? match[2].trim() : `Dedicated autonomous agent for ${personaTitle}`;
+      resources.push({
+        type: 'agent-persona',
+        title: personaTitle,
+        systemPrompt: promptDirective,
+        label: `Agent Persona: ${personaTitle}`,
+      });
+    }
+
+    // 9. Extract Protobuf / GraphQL specs
+    const protoRegex = /([a-zA-Z0-9_\-./]+\.proto)/gi;
+    while ((match = protoRegex.exec(text)) !== null) {
+      resources.push({
+        type: 'protobuf-contract',
+        path: match[1],
+        label: `Protobuf Contract: ${match[1]}`,
+      });
+    }
+
+    const gqlRegex = /([a-zA-Z0-9_\-./]+\.graphql)/gi;
+    while ((match = gqlRegex.exec(text)) !== null) {
+      resources.push({
+        type: 'graphql-contract',
+        path: match[1],
+        label: `GraphQL Schema: ${match[1]}`,
+      });
+    }
+
     const summary = {
       totalResources: resources.length,
       confluenceWikis: resources.filter(r => r.type === 'confluence').length,
@@ -256,6 +341,13 @@ class KGraphResourceImporter {
       filesystemLinks: resources.filter(r => r.type === 'filesystem').length,
       httpCatalogs: resources.filter(r => r.type === 'http-catalog').length,
       s3Buckets: resources.filter(r => r.type === 's3').length,
+      databases: resources.filter(r => r.type === 'database').length,
+      messageBrokers: resources.filter(r => r.type === 'message-broker').length,
+      kubernetesClusters: resources.filter(r => r.type === 'kubernetes-cluster').length,
+      mcpServers: resources.filter(r => r.type === 'mcp-server').length,
+      agentPersonas: resources.filter(r => r.type === 'agent-persona').length,
+      protobufContracts: resources.filter(r => r.type === 'protobuf-contract').length,
+      graphqlContracts: resources.filter(r => r.type === 'graphql-contract').length,
     };
 
     return {
@@ -617,6 +709,122 @@ class KGraphResourceImporter {
     return nodes;
   }
 
+  async resolveDatabase(r, options = {}) {
+    const slug = (r.engine || 'db') + '-' + Math.abs((r.uri || '').split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0)).toString(36).slice(0, 5);
+    const hostMatch = (r.uri || '').match(/@([^:/]+)(?::(\d+))?(?:\/([^?]+))?/);
+    const host = hostMatch ? hostMatch[1] : 'localhost';
+    const port = hostMatch && hostMatch[2] ? parseInt(hostMatch[2], 10) : (r.engine === 'redis' ? 6379 : 5432);
+    const dbName = hostMatch && hostMatch[3] ? hostMatch[3] : `${r.engine || 'app'}_db`;
+
+    const isNoSql = ['redis', 'mongodb', 'cassandra', 'dynamodb'].includes(r.engine);
+    return [{
+      '@id': `urn:robos:db:${slug}`,
+      '@type': isNoSql ? ['oslc_am:Resource', 'robos:NoSQLDatabase', 'robos:CacheStore'] : ['oslc_am:Resource', 'robos:Database', 'robos:RelationalDatabase'],
+      'dcterms:title': `${(r.engine || 'db').toUpperCase()} Database (${dbName})`,
+      'dcterms:description': `Imported ${r.engine} database connection ${r.uri}`,
+      'robos:engine': r.engine,
+      'robos:databaseName': dbName,
+      'robos:host': host,
+      'robos:port': port,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.platform',
+    }];
+  }
+
+  async resolveMessageBroker(r, options = {}) {
+    const slug = (r.brokerType || 'broker') + '-stream';
+    return [{
+      '@id': `urn:robos:broker:${slug}`,
+      '@type': ['oslc_am:Resource', 'robos:MessageBroker', 'robos:EventBus'],
+      'dcterms:title': `${(r.brokerType || 'Message Broker').toUpperCase()} Event Stream`,
+      'dcterms:description': `Imported event bus at ${r.endpoint}`,
+      'robos:brokerType': r.brokerType || 'kafka',
+      'robos:endpoint': r.endpoint || 'kafka:9092',
+      'robos:topics': ['events.incoming', 'events.processed'],
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.platform',
+    }];
+  }
+
+  async resolveKubernetesCluster(r, options = {}) {
+    const slug = (r.name || 'k8s-cluster').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    return [{
+      '@id': `urn:robos:cluster:${slug}`,
+      '@type': ['c4:DeploymentNode', 'robos:KubernetesCluster', 'robos:K8sCluster'],
+      'dcterms:title': `Kubernetes Cluster (${r.name || 'Primary'})`,
+      'dcterms:description': `Cluster infrastructure running on ${r.provider || 'cloud'}`,
+      'robos:provider': r.provider || 'eks',
+      'robos:apiEndpoint': r.endpoint || `https://${slug}.k8s.internal`,
+      'robos:clusterContext': `ctx-${slug}`,
+      'robos:namespaces': ['default', 'production'],
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+    }];
+  }
+
+  async resolveMCPServer(r, options = {}) {
+    const slug = (r.name || 'mcp-tool').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    return [{
+      '@id': `urn:robos:mcp:${slug}`,
+      '@type': ['oslc_am:Resource', 'robos:MCPServer', 'robos:ToolProvider'],
+      'dcterms:title': `MCP Server (${r.name || 'Custom'})`,
+      'dcterms:description': `Model Context Protocol server executing ${r.command}`,
+      'robos:transport': r.transport || 'stdio',
+      'robos:command': r.command || `/usr/local/bin/${slug}`,
+      'robos:toolsProvided': ['custom_query', 'inspect_context'],
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.platform',
+    }];
+  }
+
+  async resolveAgentPersona(r, options = {}) {
+    const slug = (r.title || 'agent').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    return [{
+      '@id': `urn:robos:agent:${slug}`,
+      '@type': ['oslc:Person', 'robos:AgentPersona', 'robos:AIAgent'],
+      'dcterms:title': r.title || 'AI Agent Persona',
+      'dcterms:description': `Autonomous persona with directive: ${r.systemPrompt}`,
+      'robos:role': r.title || 'Autonomous Specialist',
+      'robos:systemPrompt': r.systemPrompt || 'Execute assigned SDLC lifecycle tasks.',
+      'robos:modelPreference': 'pro',
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+    }];
+  }
+
+  async resolveProtobufContract(r, options = {}) {
+    const fileName = path.basename(r.path || 'service.proto');
+    const slug = fileName.replace(/\.proto$/, '');
+    return [{
+      '@id': `urn:robos:contract:${slug}-grpc`,
+      '@type': ['robos:Contract', 'robos:ProtobufContract', 'robos:GRPCContract'],
+      'dcterms:title': `${slug.toUpperCase()} gRPC Protobuf Contract`,
+      'dcterms:description': `Protobuf specification at ${r.path}`,
+      'robos:protocol': 'grpc-protobuf',
+      'robos:specFile': r.path,
+      'robos:packageName': `acme.${slug}.v1`,
+      'robos:rpcMethods': ['CallService', 'StreamEvents'],
+      'robos:package': 'services',
+      'robos:namespace': 'robos.services',
+    }];
+  }
+
+  async resolveGraphQLContract(r, options = {}) {
+    const fileName = path.basename(r.path || 'schema.graphql');
+    const slug = fileName.replace(/\.graphql$/, '');
+    return [{
+      '@id': `urn:robos:contract:${slug}-graphql`,
+      '@type': ['robos:Contract', 'robos:GraphQLContract', 'robos:GraphQLSchema'],
+      'dcterms:title': `${slug.toUpperCase()} GraphQL Schema`,
+      'dcterms:description': `GraphQL SDL schema at ${r.path}`,
+      'robos:protocol': 'graphql',
+      'robos:specFile': r.path,
+      'robos:schemaType': 'federated-subgraph',
+      'robos:package': 'services',
+      'robos:namespace': 'robos.services',
+    }];
+  }
+
   // ── 3. Unified Multi-Resource Ingestion Engine ──────────────────────────────
 
   /**
@@ -684,6 +892,27 @@ class KGraphResourceImporter {
         case 'filesystem':
           resNodes = await this.resolveLocalFileSystem(r, options);
           break;
+        case 'database':
+          resNodes = await this.resolveDatabase(r, options);
+          break;
+        case 'message-broker':
+          resNodes = await this.resolveMessageBroker(r, options);
+          break;
+        case 'kubernetes-cluster':
+          resNodes = await this.resolveKubernetesCluster(r, options);
+          break;
+        case 'mcp-server':
+          resNodes = await this.resolveMCPServer(r, options);
+          break;
+        case 'agent-persona':
+          resNodes = await this.resolveAgentPersona(r, options);
+          break;
+        case 'protobuf-contract':
+          resNodes = await this.resolveProtobufContract(r, options);
+          break;
+        case 'graphql-contract':
+          resNodes = await this.resolveGraphQLContract(r, options);
+          break;
         default:
           if (r.url) {
             resNodes = await this.resolveGitRepo(r, options);
@@ -740,7 +969,12 @@ class KGraphResourceImporter {
       documentationPages: allNodes.filter(n => (n['@type'] || []).includes('robos:DocumentationPage')).length,
       adrs: allNodes.filter(n => (n['@type'] || []).includes('robos:ArchitectureDecisionRecord')).length,
       flowDiagrams: allNodes.filter(n => (n['@type'] || []).includes('robos:FlowDiagram')).length,
-      pipelines: allNodes.filter(n => (n['@type'] || []).includes('robos:DataPipeline')).length,
+      pipelines: allNodes.filter(n => (n['@type'] || []).includes('robos:DataPipeline') || (n['@type'] || []).includes('robos:CICDPipeline')).length,
+      databases: allNodes.filter(n => (n['@type'] || []).includes('robos:Database') || (n['@type'] || []).includes('robos:NoSQLDatabase')).length,
+      messageBrokers: allNodes.filter(n => (n['@type'] || []).includes('robos:MessageBroker')).length,
+      kubernetesClusters: allNodes.filter(n => (n['@type'] || []).includes('robos:KubernetesCluster')).length,
+      mcpServers: allNodes.filter(n => (n['@type'] || []).includes('robos:MCPServer')).length,
+      agentPersonas: allNodes.filter(n => (n['@type'] || []).includes('robos:AgentPersona')).length,
       packageBreakdown,
       shacl: shaclSummary,
     };
@@ -766,20 +1000,23 @@ class KGraphResourceImporter {
    */
   inferPackage(node) {
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
-    if (types.some(t => t.includes('DocumentationPage') || t.includes('ArchitectureDecisionRecord') || t.includes('ADR') || t.includes('FlowDiagram') || t.includes('CodeSnippet'))) {
+    if (types.some(t => t.includes('DocumentationPage') || t.includes('ArchitectureDecisionRecord') || t.includes('ADR') || t.includes('FlowDiagram') || t.includes('CodeSnippet') || t.includes('InteractiveWalkthrough'))) {
       return 'documentation';
     }
-    if (types.some(t => t.includes('GitProjectOrganization') || t.includes('Organization') || t.includes('Company') || t.includes('Team') || t.includes('Person'))) {
+    if (types.some(t => t.includes('GitProjectOrganization') || t.includes('Organization') || t.includes('Company') || t.includes('Team') || t.includes('Person') || t.includes('AgentPersona') || t.includes('AIAgent'))) {
       return 'organization';
     }
-    if (types.some(t => t.includes('Microservice') || t.includes('Contract') || t.includes('Library') || t.includes('Service'))) {
+    if (types.some(t => t.includes('Microservice') || t.includes('Contract') || t.includes('ProtobufContract') || t.includes('GraphQLContract') || t.includes('Library') || t.includes('Service'))) {
       return 'services';
     }
     if (types.some(t => t.includes('FrontEndApp') || t.includes('DesktopApp') || t.includes('ConsoleApp') || t.includes('MobileApp') || t.includes('PCGame') || t.includes('MobileGame'))) {
       return 'applications';
     }
-    if (types.some(t => t.includes('DevOpsIntegration') || t.includes('DataPipeline') || t.includes('CloudProvider') || t.includes('RemoteExecutionCluster'))) {
+    if (types.some(t => t.includes('KubernetesCluster') || t.includes('Environment') || t.includes('GitOpsDeployment') || t.includes('CICDPipeline') || t.includes('DevOpsIntegration') || t.includes('PassCredential') || t.includes('CloudProvider') || t.includes('RemoteExecutionCluster'))) {
       return 'devops';
+    }
+    if (types.some(t => t.includes('Database') || t.includes('RelationalDatabase') || t.includes('NoSQLDatabase') || t.includes('CacheStore') || t.includes('MessageBroker') || t.includes('EventBus') || t.includes('MCPServer') || t.includes('ToolProvider') || t.includes('BuildSystem'))) {
+      return 'core-platform';
     }
     return 'core-platform';
   }

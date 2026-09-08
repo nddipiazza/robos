@@ -209,11 +209,11 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 RobOS maintains a modular, packaged Dual-State SDLC Knowledge Graph. Rather than storing the universe in a single monolithic file, the Knowledge Graph is organized into namespaced, multi-file packages under `.robos/kgraphs/<package-id>/package.jsonld` indexed by `.robos/kgraph.yaml` (while maintaining backwards-compatible aggregated synchronization to `.robos/knowledge-graph.jsonld`).
 
 **Standard RobOS Packages & Namespaces**:
-- **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, databases, and container definitions.
-- **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas, Git project organizations (`robos:GitProjectOrganization`), and directory sync.
-- **`services`** (`robos.services`): Microservices, OpenAPI 3.1 contracts, Protobuf gRPC stubs, and BDD verification features.
+- **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), Model Context Protocol servers (`robos:MCPServer`), and distributed build systems (`robos:RemoteExecutionCluster`, `robos:BuildSystem`).
+- **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), and enterprise directory sync.
+- **`services`** (`robos.services`): Microservices, OpenAPI 3.1 contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and BDD verification features.
 - **`applications`** (`robos.apps`): Client applications, frontend SPAs, desktop apps, mobile apps, PC/mobile games, and CLI tools.
-- **`devops`** (`robos.devops`): Connected cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG pass credentials.
+- **`devops`** (`robos.devops`): Connected cloud providers, Kubernetes clusters (`robos:KubernetesCluster`), environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG pass credentials.
 - **`learning`** (`robos.learning`): Interactive developer eLearning courses, labs, and architectural knowledge modules.
 - **`documentation`** (`robos.docs`): Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`).
 
