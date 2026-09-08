@@ -47,20 +47,34 @@ The **`import-company-kgraph`** skill enables autonomous AI coding agents (Claud
 
 Execute the companion engine via your AI agent or directly from the terminal:
 
+## Command Syntax & Parameters
+
+Execute the companion engine via your AI agent or directly from the terminal:
+
 ```bash
+# Natural Language Prompt Mode (AI Agent Prompt Analyzer)
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js --prompt "<unstructured prompt>" [options]
+
+# Single Inventory Source Mode (HTTP, Filesystem, S3, Git URL list)
 node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js --source <source> [options]
+
+# Multi-Resource List Mode
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js --resources <res1,res2,...> [options]
 ```
 
 ### Supported Flags
 
 | Flag | Shorthand | Type | Default | Description |
 |:---|:---|:---|:---|:---|
-| `--source` | `-s` | String | *Required* | Path, HTTP URL, or S3 URI of the source repository inventory. |
+| `--prompt` | `-P` | String | `null` | Natural language developer prompt describing heterogeneous infrastructure resources to discover and import. |
+| `--source` | `-s` | String | `null` | Path, HTTP URL, or S3 URI of the source repository inventory. |
+| `--resources` | `-R` | String | `[]` | Comma-separated list of repository URLs, Confluence spaces, or local filesystem paths. |
 | `--source-type` | `-t` | String | `auto` | Parser type: `auto`, `http`, `file`, `s3`, or `git-list`. |
 | `--output` | `-o` | String | `./<slug>-kgraph.jsonld` | Destination path for the generated standalone JSON-LD file. |
 | `--company-name` | `-n` | String | `"Acme Global"` | Enterprise or organization display title. |
 | `--company-slug` | | String | `"acme"` | Lowercase hyphenated slug for URN and package generation. |
 | `--default-team` | | String | `"urn:robos:team:core-platform"` | Default team ownership URN assigned to imported nodes. |
+| `--package` | `-p` | String | `"services"` | Target package store: `services`, `applications`, `core-platform`, `devops`, or `documentation`. |
 | `--import-to-robos` | | Flag | `false` | When set, automatically merges nodes into `.robos/kgraphs/` package stores and registers repos in `~/.config/robos/git-projects.json`. |
 | `--dry-run` | | Flag | `false` | Simulates ingestion and prints node counts without writing to disk. |
 | `--verbose` | `-v` | Flag | `false` | Enables detailed discovery and parsing telemetry logs. |
@@ -69,7 +83,15 @@ node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js
 
 ## Real-World Ingestion Examples
 
-### 1. Ingesting from an AWS S3 Bucket Inventory
+### 1. Smart Agent Prompt Ingestion (Heterogeneous Multi-Resource Ingestion)
+The RobOS agent prompt analyzer extracts and resolves diverse infrastructure assets concurrently:
+```bash
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --prompt "Import our enterprise assets: Confluence at https://confluence.acme.corp/display/ARCH, our payments org https://github.com/acme-payments, identity org https://github.com/acme-identity, checkout service https://github.com/acme-retail/checkout-api, GitLab GitOps repo https://gitlab.com/acme-devops/gitops-deployments, and local monorepo /tmp/acme-legacy-monorepo" \
+  --output ./acme-global-kgraph.jsonld
+```
+
+### 2. Ingesting from an AWS S3 Bucket Inventory
 Organizations storing service inventories or CI/CD catalogs in AWS S3 can ingest directly:
 ```bash
 node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
@@ -79,7 +101,7 @@ node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js
   --import-to-robos
 ```
 
-### 2. Ingesting from an HTTP REST API or Spotify Backstage Catalog
+### 3. Ingesting from an HTTP REST API or Spotify Backstage Catalog
 Fetch live service catalogs from corporate developer portals:
 ```bash
 node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
@@ -88,7 +110,7 @@ node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js
   --output ./acme-kgraph.jsonld
 ```
 
-### 3. Ingesting from a Local File or Directory
+### 4. Ingesting from a Local File or Directory
 Scan existing local projects or registered git projects:
 ```bash
 # Ingest from existing git-projects.json:
@@ -102,6 +124,39 @@ node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js
   --source /home/developer/source/repos \
   --company-name "Acme Global" \
   --import-to-robos
+```
+
+---
+
+## Reusable Component: `KGraphResourceImporter`
+
+The underlying ingestion engine is packaged as a reusable class exported by `robos-graph`:
+
+```javascript
+const { KGraphResourceImporter } = require('robos-graph');
+
+const importer = new KGraphResourceImporter({
+  companyName: 'Acme Global',
+  companySlug: 'acme',
+  defaultTeam: 'urn:robos:team:core-platform',
+});
+
+// 1. Natural Language Prompt Execution
+const { plan, importResult, summary } = await importer.importFromPrompt(`
+  Import Confluence wiki https://confluence.acme.corp/display/ARCH,
+  GitHub org https://github.com/acme-payments, and
+  repo https://github.com/acme-retail/checkout-api
+`);
+
+console.log('Ingested Nodes:', summary.totalNodes);
+console.log('SHACL Conformance:', summary.shacl.conforms);
+
+// 2. Direct Array Ingestion
+const result = await importer.importResources([
+  { type: 'confluence', url: 'https://confluence.acme.corp/display/ARCH' },
+  { type: 'github-org', url: 'https://github.com/acme-payments', org: 'acme-payments' },
+  { type: 'github-repo', url: 'https://github.com/acme-retail/checkout-api' },
+]);
 ```
 
 ---

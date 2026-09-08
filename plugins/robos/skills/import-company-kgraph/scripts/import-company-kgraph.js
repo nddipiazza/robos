@@ -14,10 +14,25 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-// Try requiring BulkRepoImporter from robos-graph if available
+// Try requiring BulkRepoImporter and KGraphResourceImporter from robos-graph if available
 let BulkRepoImporter = null;
+let KGraphResourceImporter = null;
 try {
   const possiblePaths = [
+    path.join(__dirname, '../../../../../packages/robos-graph/lib/resource-importer.js'),
+    path.join(__dirname, '../../../../packages/robos-graph/lib/resource-importer.js'),
+    '/usr/local/share/robos/robos-graph/lib/resource-importer.js',
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      KGraphResourceImporter = require(p).KGraphResourceImporter;
+      break;
+    }
+  }
+} catch {}
+try {
+  const possiblePaths = [
+    path.join(__dirname, '../../../../../packages/robos-graph/lib/bulk-repo-importer.js'),
     path.join(__dirname, '../../../../packages/robos-graph/lib/bulk-repo-importer.js'),
     '/usr/local/share/robos/robos-graph/lib/bulk-repo-importer.js',
   ];
@@ -50,6 +65,8 @@ function parseArgs(args) {
   const options = {
     source: null,
     sourceType: 'auto',
+    prompt: null,
+    resources: [],
     output: null,
     companyName: 'Acme Global',
     companySlug: 'acme',
@@ -65,6 +82,13 @@ function parseArgs(args) {
     const a = args[i];
     if (a === '--source' || a === '-s') {
       options.source = args[++i];
+    } else if (a === '--prompt' || a === '-P') {
+      options.prompt = args[++i];
+    } else if (a === '--resources' || a === '-R') {
+      const val = args[++i];
+      if (val) {
+        options.resources = val.split(',').map(s => s.trim()).filter(Boolean);
+      }
     } else if (a === '--source-type' || a === '-t') {
       options.sourceType = args[++i];
     } else if (a === '--output' || a === '-o') {
@@ -89,9 +113,9 @@ function parseArgs(args) {
     }
   }
 
-  if (!options.source) {
+  if (!options.source && !options.prompt && (!options.resources || options.resources.length === 0)) {
     printHelp();
-    console.error('\nError: Missing required argument --source <path|url|s3-uri>');
+    console.error('\nError: Missing required argument: provide --prompt <text>, --source <path|url|s3-uri>, or --resources <list>');
     process.exit(1);
   }
 
@@ -104,24 +128,33 @@ RobOS Company Knowledge Graph Importer (import-company-kgraph)
 =============================================================
 Imports company repositories, services, and apps from HTTP, FileSystem, AWS S3,
 or Git forge catalogs, and generates OSLC JSON-LD Knowledge Graph file(s).
+Also features RobOS Agent Prompt intelligence to parse natural language requests
+and ingest heterogeneous infrastructure resources (Confluence, GitHub orgs, repos, GitLab, filesystem).
 
 Usage:
+  node import-company-kgraph.js --prompt "<prompt text>" [options]
   node import-company-kgraph.js --source <source> [options]
+  node import-company-kgraph.js --resources <res1,res2,...> [options]
 
 Options:
+  -P, --prompt <text>         Natural language prompt describing infrastructure & resources to import
   -s, --source <source>       Source input (HTTP URL, local file/folder, s3:// URI, or git URL)
+  -R, --resources <list>      Comma-separated list of URLs or paths to import
   -t, --source-type <type>    Source type: auto (default), http, file, s3, git-list
   -o, --output <file>         Destination file path (e.g. ./acme-kgraph.jsonld)
   -n, --company-name <name>   Company display name (default: "Acme Global")
       --company-slug <slug>   Company identifier slug (default: "acme")
       --default-team <urn>    Default owner team URN (default: "urn:robos:team:core-platform")
-  -p, --package <id>          Target package store: services, applications, core-platform, devops
+  -p, --package <id>          Target package store: services, applications, core-platform, devops, documentation
       --import-to-robos       Merge generated nodes directly into local .robos/ workspace
       --dry-run               Simulate import and print node counts without writing files
   -v, --verbose               Display detailed discovery and ingestion logs
   -h, --help                  Show this help screen
 
 Examples:
+  # Ingest from natural language AI agent prompt
+  node import-company-kgraph.js --prompt "Import our Confluence wiki at https://confluence.acme.corp/spaces/ARCH, our GitHub org https://github.com/acme-payments, and repo https://github.com/acme-retail/checkout-api"
+
   # Ingest from local repository list or git-projects.json
   node import-company-kgraph.js --source ~/.config/robos/git-projects.json --output ./company-kgraph.jsonld
 
@@ -744,6 +777,134 @@ function mergeIntoRobosWorkspace(jsonLdDoc, repoEntries, options = {}) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
 
+  // Case 1: Agent Natural Language Prompt Mode
+  if (options.prompt) {
+    console.log(`\n🤖 RobOS Agent Prompt Knowledge Graph Ingestion`);
+    console.log(`────────────────────────────────────────────────────────`);
+    console.log(`Prompt: "${options.prompt}"`);
+
+    try {
+      if (!KGraphResourceImporter) {
+        throw new Error('KGraphResourceImporter could not be loaded from robos-graph package.');
+      }
+      const importer = new KGraphResourceImporter(options);
+      const { plan, importResult, summary } = await importer.importFromPrompt(options.prompt, options);
+
+      console.log(`\nAgent Prompt Analysis Plan:`);
+      console.log(`  • Company:       ${plan.company.name} (${plan.company.slug})`);
+      console.log(`  • Discovered:    ${plan.summary.totalResources} resource target(s)`);
+      if (plan.summary.confluenceWikis) console.log(`    - Confluence wikis:   ${plan.summary.confluenceWikis}`);
+      if (plan.summary.githubOrgs) console.log(`    - GitHub orgs:        ${plan.summary.githubOrgs}`);
+      if (plan.summary.githubRepos) console.log(`    - GitHub repos:       ${plan.summary.githubRepos}`);
+      if (plan.summary.gitlabRepos) console.log(`    - GitLab repos:       ${plan.summary.gitlabRepos}`);
+      if (plan.summary.filesystemLinks) console.log(`    - Filesystem paths:   ${plan.summary.filesystemLinks}`);
+      if (plan.summary.httpCatalogs) console.log(`    - HTTP catalogs:      ${plan.summary.httpCatalogs}`);
+      if (plan.summary.s3Buckets) console.log(`    - S3 buckets:         ${plan.summary.s3Buckets}`);
+
+      console.log(`\nGenerated Knowledge Graph Summary:`);
+      console.log(`  • Total Nodes:         ${summary.totalNodes}`);
+      console.log(`  • Organizations:       ${summary.organizations}`);
+      console.log(`  • Microservices:       ${summary.microservices}`);
+      console.log(`  • API Contracts:       ${summary.contracts}`);
+      console.log(`  • Documentation Pages: ${summary.documentationPages}`);
+      console.log(`  • ADRs:                ${summary.adrs}`);
+      console.log(`  • Flow Diagrams:       ${summary.flowDiagrams}`);
+      console.log(`  • Data Pipelines:      ${summary.pipelines}`);
+      console.log(`  • SHACL Conformance:   ${summary.shacl.conforms ? 'VALID' : 'VIOLATIONS'} (${summary.shacl.violations} violations)`);
+
+      console.log(`\nPackage Breakdown:`);
+      for (const [pkg, count] of Object.entries(importResult.packageBreakdown)) {
+        if (count > 0) {
+          console.log(`  • ${pkg.padEnd(16)}: ${count} node(s)`);
+        }
+      }
+
+      const jsonLdDocument = importResult.jsonLdDocument;
+      const targetSlug = plan.company.slug || options.companySlug;
+
+      if (options.dryRun) {
+        console.log(`\n[Dry Run] No files modified. Target output would be: ${options.output || `${targetSlug}-kgraph.jsonld`}`);
+        return;
+      }
+
+      const outputPath = options.output || path.join(process.cwd(), `${targetSlug}-kgraph.jsonld`);
+      fs.mkdirSync(path.dirname(path.resolve(outputPath)), { recursive: true });
+      fs.writeFileSync(outputPath, JSON.stringify(jsonLdDocument, null, 2), 'utf8');
+      console.log(`\n💾 Saved company KGraph to: ${outputPath}`);
+
+      if (options.importToRobos) {
+        console.log(`\n📥 Ingesting nodes directly into RobOS workspace...`);
+        const { addedNodesCount, addedProjectsCount } = mergeIntoRobosWorkspace(jsonLdDocument, plan.resources, options);
+        console.log(`  ✔ Ingested ${addedNodesCount} nodes into .robos/ package stores`);
+        console.log(`  ✔ Added ${addedProjectsCount} repositories into ~/.config/robos/git-projects.json`);
+      }
+
+      console.log(`\n✨ Successfully imported resources for ${plan.company.name}!\n`);
+      return;
+    } catch (err) {
+      console.error(`\n❌ Error during prompt ingestion: ${err.message}`);
+      if (options.verbose) {
+        console.error(err.stack);
+      }
+      process.exit(1);
+    }
+  }
+
+  // Case 2: Multi-Resource Direct Array Mode
+  if (options.resources && options.resources.length > 0) {
+    console.log(`\n📦 RobOS Multi-Resource Knowledge Graph Ingestion`);
+    console.log(`────────────────────────────────────────────────────────`);
+    console.log(`Resources:    ${options.resources.length} resource target(s)`);
+    console.log(`Company:      ${options.companyName} (${options.companySlug})`);
+
+    try {
+      if (!KGraphResourceImporter) {
+        throw new Error('KGraphResourceImporter could not be loaded from robos-graph package.');
+      }
+      const importer = new KGraphResourceImporter(options);
+      const importResult = await importer.importResources(options.resources, options);
+      const summary = importResult.summary;
+
+      console.log(`\nGenerated Knowledge Graph Summary:`);
+      console.log(`  • Total Nodes:         ${summary.totalNodes}`);
+      console.log(`  • Organizations:       ${summary.organizations}`);
+      console.log(`  • Microservices:       ${summary.microservices}`);
+      console.log(`  • API Contracts:       ${summary.contracts}`);
+      console.log(`  • Documentation Pages: ${summary.documentationPages}`);
+      console.log(`  • ADRs:                ${summary.adrs}`);
+      console.log(`  • Flow Diagrams:       ${summary.flowDiagrams}`);
+      console.log(`  • SHACL Conformance:   ${summary.shacl.conforms ? 'VALID' : 'VIOLATIONS'}`);
+
+      const jsonLdDocument = importResult.jsonLdDocument;
+      if (options.dryRun) {
+        console.log(`\n[Dry Run] No files modified. Target output would be: ${options.output || `${options.companySlug}-kgraph.jsonld`}`);
+        return;
+      }
+
+      const outputPath = options.output || path.join(process.cwd(), `${options.companySlug}-kgraph.jsonld`);
+      fs.mkdirSync(path.dirname(path.resolve(outputPath)), { recursive: true });
+      fs.writeFileSync(outputPath, JSON.stringify(jsonLdDocument, null, 2), 'utf8');
+      console.log(`\n💾 Saved company KGraph to: ${outputPath}`);
+
+      if (options.importToRobos) {
+        console.log(`\n📥 Ingesting nodes directly into RobOS workspace...`);
+        const { addedNodesCount, addedProjectsCount } = mergeIntoRobosWorkspace(jsonLdDocument, options.resources, options);
+        console.log(`  ✔ Ingested ${addedNodesCount} nodes into .robos/ package stores`);
+        console.log(`  ✔ Added ${addedProjectsCount} repositories into ~/.config/robos/git-projects.json`);
+      }
+
+      console.log(`\n✨ Successfully imported resources for ${options.companyName}!\n`);
+      return;
+    } catch (err) {
+      console.error(`\n❌ Error during multi-resource ingestion: ${err.message}`);
+      if (options.verbose) {
+        console.error(err.stack);
+      }
+      process.exit(1);
+    }
+  }
+
+  // Case 3: Single Source Catalog / File / HTTP Mode
   console.log(`\n🚀 RobOS Company KGraph Importer`);
   console.log(`─────────────────────────────────────────`);
   console.log(`Source:       ${options.source}`);
@@ -807,6 +968,7 @@ module.exports = {
   parseRawContent,
   generateCompanyKnowledgeGraph,
   mergeIntoRobosWorkspace,
+  KGraphResourceImporter,
   OSLC_CONTEXT,
 };
 

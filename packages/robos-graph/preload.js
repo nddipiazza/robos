@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   getEDDStatus: () => ipcRenderer.invoke('graph-edd-status'),
   generateELearning: (prompt) => ipcRenderer.invoke('graph-generate-elearning', prompt),
   bulkImportRepos: (repos) => ipcRenderer.invoke('graph-bulk-import-repos', repos),
+  importResources: (resources, options) => ipcRenderer.invoke('graph-import-resources', { resources, options }),
+  importFromPrompt: (prompt, options) => ipcRenderer.invoke('graph-import-prompt', { prompt, options }),
   importGitProjects: () => ipcRenderer.invoke('graph-import-git-projects'),
   requestAppDocUpdate: (payload) => ipcRenderer.invoke('graph-request-app-doc-update', payload),
   getDocSyncPrompt: () => ipcRenderer.invoke('graph-doc-sync-prompt'),

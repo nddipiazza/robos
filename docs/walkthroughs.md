@@ -853,11 +853,60 @@ In conventional tooling, API keys and access tokens are scattered across plainte
 
 ---
 
+### Universal Knowledge Graph Resource Importer & AI Agent Prompt Ingestion
+
+#### The Real-World Enterprise Scenario
+In enterprise engineering environments, architectural knowledge and operational components rarely live in a single clean repository or catalog. An enterprise technology footprint is fragmented across heterogeneous systems:
+- **Architecture Documentation & Decision Records**: Confluence wiki spaces containing architectural diagrams, system overviews, and Architecture Decision Records (ADRs).
+- **Multiple Git Forge Organizations**: Segregated GitHub forge organizations for distinct divisions (e.g. `acme-payments` and `acme-identity`), each with organization-wide security and coding standards.
+- **Standalone Cloud Services**: Individual GitHub repositories hosting critical business APIs (e.g. `checkout-api`).
+- **GitOps Infrastructure Deployments**: GitLab repositories managing Kubernetes cluster deployment pipelines, ArgoCD sync manifests, and Helm releases.
+- **Legacy Monorepos**: Local filesystem directory checkouts containing legacy multi-service codebases with local markdown ADR documentation.
+
+Rather than forcing developers to manually transcribe these systems into YAML or schema files, the **RobOS Universal Knowledge Graph Resource Importer** (`KGraphResourceImporter`) provides an autonomous AI agent prompt interface. Developers provide a natural language prompt referencing any number of web and local resources, and RobOS parses the targets, executes specialized resolvers, assigns canonical modular packages (`organization`, `services`, `applications`, `devops`, `documentation`), and validates the result with 100% SHACL constraint conformance.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Natural Language Agent Prompt**: The developer feeds an unstructured prompt to RobOS specifying:
+   - 1 Confluence wiki space: `https://confluence.acme.corp/display/ARCH`
+   - 2 GitHub organizations: `https://github.com/acme-payments` and `https://github.com/acme-identity`
+   - 1 GitHub repository: `https://github.com/acme-retail/checkout-api`
+   - 1 GitLab repository: `https://gitlab.com/acme-devops/gitops-deployments`
+   - 1 Local filesystem directory: `/tmp/acme-legacy-monorepo`
+2. **Autonomous Prompt Analyzer**: `importer.parsePrompt(text)` classifies targets using URL path heuristics and regex patterns, inferring company name and slug (`Acme Global`).
+3. **Multi-Resource Ingestion Engine**:
+   - **Confluence Resolver**: Synthesizes `robos:DocumentationPage` overview, `robos:ArchitectureDecisionRecord` (ADR-004), and `robos:FlowDiagram` with machine-readable Mermaid sequence syntax.
+   - **GitHub Org Resolver**: Provisions `robos:GitProjectOrganization` nodes with inherited `robos:agentRules` (e.g., mTLS enforcement, BigDecimal currency handling) and discovers member microservices.
+   - **Individual Repo Resolvers**: Classifies `checkout-api` as `robos:Microservice` with an OpenAPI 3.1 YAML contract; classifies GitLab deployment as `robos:DataPipeline` in the `devops` package.
+   - **Local Filesystem Resolver**: Scans codebase manifests and indexes local markdown ADRs (`001-monolith-decoupling.md`).
+4. **SHACL Conformance Verification**: Validates the unified OSLC JSON-LD document against RobOS SHACL shapes, confirming zero constraint violations.
+- **Source Demo Script**: [`packages/robos-test/demos/kgraph-resource-importer-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/kgraph-resource-importer-demo.js)
+
+| 1. Natural Language Agent Prompt | 2. Ingested Multi-Resource Knowledge Graph Overview |
+|:---:|:---:|
+| ![Agent Prompt Ingestion]({{ '/assets/images/screenshots/kgraph-importer-prompt.png' | relative_url }}) | ![Ingested Overview]({{ '/assets/images/screenshots/kgraph-importer-overview.png' | relative_url }}) |
+
+| 3. Confluence Flow Diagram (Mermaid Sequence Flow) | 4. Confluence Architecture Decision Record (ADR-004) |
+|:---:|:---:|
+| ![Flow Diagram]({{ '/assets/images/screenshots/kgraph-importer-flow-diagram.png' | relative_url }}) | ![ADR-004]({{ '/assets/images/screenshots/kgraph-importer-adr.png' | relative_url }}) |
+
+| 5. GitHub Organization & Inherited Agent Rules | 6. Microservice & OpenAPI 3.1 Spec (Checkout API) |
+|:---:|:---:|
+| ![GitHub Org]({{ '/assets/images/screenshots/kgraph-importer-git-org.png' | relative_url }}) | ![Checkout Service]({{ '/assets/images/screenshots/kgraph-importer-checkout-service.png' | relative_url }}) |
+
+| 7. GitLab GitOps Deployment Pipeline | 8. 100% SHACL Constraint Conformance (0 Violations) |
+|:---:|:---:|
+| ![GitLab Pipeline]({{ '/assets/images/screenshots/kgraph-importer-devops-pipeline.png' | relative_url }}) | ![SHACL Conformance]({{ '/assets/images/screenshots/kgraph-importer-shacl-valid.png' | relative_url }}) |
+
+---
+
 ## How to Run Walkthroughs Yourself
 
 You can run any of these automated walkthroughs in headless mode to regenerate the videos and voiceovers on your own machine:
 
 ```bash
+# Run the Universal Knowledge Graph Resource Importer & AI Agent Prompt walkthrough
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/kgraph-resource-importer-demo.js
+
 # Run the complete Acme Petshop end-to-end lifecycle walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/topology-db-kube-lifecycle-demo.js
 

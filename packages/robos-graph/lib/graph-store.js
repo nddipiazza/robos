@@ -10,6 +10,7 @@ const { BlastRadiusAnalyzer } = require('./blast-radius');
 const { GraphCoPilot } = require('./graph-copilot');
 const { RepoScanner } = require('./repo-scanner');
 const { BulkRepoImporter } = require('./bulk-repo-importer');
+const { KGraphResourceImporter } = require('./resource-importer');
 const { GherkinLinker, SAMPLE_GHERKIN_FEATURE } = require('./gherkin-linker');
 const { KGraphPackageManager } = require('./package-manager');
 const { KGraphRepoManager } = require('./repo-manager');
@@ -355,6 +356,7 @@ class SDLCKnowledgeGraphStore {
     this.copilot = new GraphCoPilot({ validator: this.validator });
     this.repoScanner = new RepoScanner();
     this.bulkRepoImporter = new BulkRepoImporter();
+    this.resourceImporter = new KGraphResourceImporter();
     this.gherkinLinker = new GherkinLinker();
     this.init();
   }
@@ -1057,6 +1059,54 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
     } catch (err) {
       return { ok: false, error: err.message };
     }
+  }
+
+  async importResources(resources, options = {}) {
+    const importRes = await this.resourceImporter.importResources(resources, options);
+    const addedNodes = [];
+
+    for (const node of importRes.nodes) {
+      const idx = this.parser.nodes.findIndex(n => n['@id'] === node['@id']);
+      if (idx >= 0) {
+        this.parser.nodes[idx] = node;
+      } else {
+        this.parser.nodes.push(node);
+      }
+      addedNodes.push(node);
+    }
+
+    this.parser.loadNodes(this.parser.nodes);
+    this.save();
+    this.syncToGitOpsPackages(addedNodes);
+
+    const docSyncPrompt = this.discernDocUpdates({
+      action: 'resource-import',
+      nodes: addedNodes,
+      summary: importRes.summary,
+    });
+
+    return {
+      ok: true,
+      summary: importRes.summary,
+      packageBreakdown: importRes.packageBreakdown,
+      addedCount: addedNodes.length,
+      nodes: addedNodes,
+      docSyncPrompt,
+    };
+  }
+
+  async importFromPrompt(promptText, options = {}) {
+    const plan = this.resourceImporter.parsePrompt(promptText);
+    const res = await this.importResources(plan.resources, {
+      companyName: plan.company.name,
+      companySlug: plan.company.slug,
+      ...options,
+    });
+    return {
+      ok: true,
+      plan,
+      ...res,
+    };
   }
 
   syncToGitOpsPackages(nodes = []) {

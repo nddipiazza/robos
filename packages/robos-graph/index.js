@@ -10,6 +10,7 @@ const { GherkinLinker, SAMPLE_GHERKIN_FEATURE } = require('./lib/gherkin-linker'
 const { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA } = require('./lib/graph-store');
 
 const { BulkRepoImporter } = require('./lib/bulk-repo-importer');
+const { KGraphResourceImporter, DEFAULT_MOCK_REGISTRY } = require('./lib/resource-importer');
 const { KGraphPackageManager, DEFAULT_PACKAGES } = require('./lib/package-manager');
 const { KGraphRepoManager } = require('./lib/repo-manager');
 const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = require('./lib/devops-integrations');
@@ -27,6 +28,9 @@ module.exports = {
   GraphCoPilot,
   RepoScanner,
   BulkRepoImporter,
+  KGraphResourceImporter,
+  UniversalResourceImporter: KGraphResourceImporter,
+  DEFAULT_MOCK_REGISTRY,
   GherkinLinker,
   SAMPLE_GHERKIN_FEATURE,
   SDLCKnowledgeGraphStore,

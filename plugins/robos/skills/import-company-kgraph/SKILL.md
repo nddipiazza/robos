@@ -32,7 +32,15 @@ Use this skill whenever:
 
 The skill provides an automated, standalone Node.js engine located at `plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js`.
 
-### Basic Ingestion
+### Natural Language Agent Prompt (Heterogeneous Multi-Resource Ingestion)
+```bash
+# Ingest Confluence wiki, 2 GitHub orgs, GitHub repo, GitLab repo, and local filesystem link:
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --prompt "Import our Confluence wiki at https://confluence.acme.corp/display/ARCH, GitHub orgs https://github.com/acme-payments, https://github.com/acme-identity, repo https://github.com/acme-retail/checkout-api, GitLab repo https://gitlab.com/acme-devops/gitops-deployments, and local monorepo /tmp/acme-legacy-monorepo" \
+  --output ./acme-global-kgraph.jsonld
+```
+
+### Basic Ingestion from Inventory File
 ```bash
 # Ingest from an existing git-projects.json file and generate company-kgraph.jsonld
 node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \

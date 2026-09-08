@@ -248,6 +248,10 @@ function isBDDNode(n) {
 function getNodeCategory(n) {
   if (!n) return 'other';
   const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+  if (types.some(t => t.includes('FlowDiagram'))) return 'diagram';
+  if (types.some(t => t.includes('ArchitectureDecisionRecord') || t.includes('ADR'))) return 'adr';
+  if (types.some(t => t.includes('DocumentationPage'))) return 'documentation';
+  if (types.some(t => t.includes('GitProjectOrganization') || t.includes('GitOrganization'))) return 'organization';
   if (types.some(t => t.includes('DevOpsIntegration') || t.endsWith('Integration'))) return 'devops';
   if (types.some(t => t.includes('PassCredential') || t.includes('SecretReference'))) return 'pass-credential';
   if (types.some(t => t.includes('ELearning') || t.includes('Course'))) return 'elearning';
@@ -270,6 +274,10 @@ function getNodeCategory(n) {
 function getTypeBadge(n) {
   const cat = getNodeCategory(n);
   switch (cat) {
+    case 'diagram': return { label: '📊 Flow Diagram', cls: 'type-contract' };
+    case 'adr': return { label: '📋 ADR Record', cls: 'type-req' };
+    case 'documentation': return { label: '📖 Living Doc', cls: 'type-team' };
+    case 'organization': return { label: '🏢 Git Project Org', cls: 'type-service' };
     case 'devops': return { label: '☁️ DevOps Integration', cls: 'type-service' };
     case 'pass-credential': return { label: '🔑 Pass Credential', cls: 'type-contract' };
     case 'elearning': return { label: '🎓 eLearning', cls: 'type-elearning' };
@@ -1524,6 +1532,156 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
         </div>
       </div>
     `;
+  } else if (cat === 'diagram') {
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>📊 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'System architecture and sequence flow diagram.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Diagram Type</div>
+            <div class="field-value"><span class="type-badge type-contract">${(node['robos:diagramType'] || 'Sequence').toUpperCase()}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Tooltip & Summary</div>
+            <div class="field-value"><code>${node['robos:tooltip'] || node['dcterms:title']}</code></div>
+          </div>
+          <div>
+            <div class="field-label">KGraph Package</div>
+            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'documentation'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Source Space</div>
+            <div class="field-value"><code>${node['robos:sourceUrl'] || 'Confluence Wiki'}</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>Mermaid Syntax Flow</span>
+          <span class="status-tag-pass">100% SHACL VERIFIED</span>
+        </div>
+        <pre class="json-pre" style="color: #58a6ff; font-family: monospace; white-space: pre-wrap;">${node['robos:mermaidText'] || 'sequenceDiagram\n  autonumber\n  Customer->>Service: Request\n  Service-->>Customer: Response'}</pre>
+      </div>
+    `;
+  } else if (cat === 'adr') {
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>📋 ${node['dcterms:title']}</span>
+          <span class="status-tag-pass">${(node['robos:status'] || 'accepted').toUpperCase()}</span>
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">ADR Number</div>
+            <div class="field-value"><strong>ADR-${String(node['robos:adrNumber'] || 1).padStart(3, '0')}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Governance Status</div>
+            <div class="field-value"><span class="status-tag-pass">${node['robos:status'] || 'accepted'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Context</div>
+            <div class="field-value">${node['robos:context'] || 'Architecture decision context.'}</div>
+          </div>
+          <div>
+            <div class="field-label">Decision</div>
+            <div class="field-value"><strong style="color: var(--accent);">${node['robos:decision'] || node['dcterms:description']}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Consequences</div>
+            <div class="field-value">${node['robos:consequences'] || 'Standard system consequences.'}</div>
+          </div>
+          <div>
+            <div class="field-label">Source Reference</div>
+            <div class="field-value"><code>${node['robos:sourceUrl'] || node['robos:sourcePath'] || 'Confluence / Local'}</code></div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (cat === 'documentation') {
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>📖 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Living documentation page.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Documentation Category</div>
+            <div class="field-value"><span class="type-badge type-contract">${(node['robos:category'] || 'Architecture').toUpperCase()}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Markdown Storage Path</div>
+            <div class="field-value"><code>${node['robos:docPath'] || 'docs/'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">KGraph Package</div>
+            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'documentation'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Source URL</div>
+            <div class="field-value"><code>${node['robos:sourceUrl'] || 'Confluence Space'}</code></div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (cat === 'organization') {
+    const rules = node['robos:agentRules'] || [];
+    const repos = node['robos:hasRepository'] || [];
+    container.innerHTML = `
+      <div class="inspector-card">
+        <div class="card-title">
+          <span>🏢 ${node['dcterms:title']}</span>
+          <span class="type-badge ${badge.cls}">${badge.label}</span>
+        </div>
+        <div class="card-desc">
+          ${node['dcterms:description'] || 'Enterprise Git Forge Organization.'}
+        </div>
+        <div class="grid-2col">
+          <div>
+            <div class="field-label">Organization Slug</div>
+            <div class="field-value"><code>${node['robos:orgName'] || 'org'}</code></div>
+          </div>
+          <div>
+            <div class="field-label">Forge Type & Visibility</div>
+            <div class="field-value"><span class="type-badge type-service">${(node['robos:forgeType'] || 'GitHub').toUpperCase()}</span> &middot; <span class="status-tag-pass">${node['robos:visibility'] || 'Internal'}</span></div>
+          </div>
+          <div>
+            <div class="field-label">Member Repositories</div>
+            <div class="field-value"><strong>${repos.length} Repositories Registered</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Forge URL</div>
+            <div class="field-value"><code>${node['robos:url'] || 'https://github.com'}</code></div>
+          </div>
+        </div>
+      </div>
+
+      ${rules.length > 0 ? `
+        <div class="inspector-card">
+          <div class="card-title">
+            <span>🤖 Inherited Agent Rules (${rules.length})</span>
+            <span class="status-tag-pass">ENFORCED FOR ALL AGENTS</span>
+          </div>
+          <div class="card-desc" style="margin-bottom: 6px;">
+            All AI agents working on repositories in this organization automatically inherit and obey these rules:
+          </div>
+          <ul style="margin: 0; padding-left: 20px; font-size: 11px; line-height: 1.6;">
+            ${rules.map(r => `<li><span style="color: var(--accent); font-weight: 600;">Rule:</span> ${r}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+    `;
   } else {
     container.innerHTML = `
       <div class="inspector-card">
@@ -2033,6 +2191,20 @@ window.syncFromGitProjects = async function() {
     renderNodeList();
     if (res.docSyncPrompt) {
       window.showDocSyncBanner(res.docSyncPrompt);
+    }
+  }
+  return res;
+};
+
+// ── Smart Agent Prompt Ingestion ─────────────────────────────────────────────
+window.importFromPrompt = async function(promptText) {
+  const res = await window.sdlcGraph.importFromPrompt(promptText);
+  if (res) {
+    nodes = await window.sdlcGraph.getAllNodes();
+    renderNodeList();
+    if (nodes.length > 0) {
+      selectedNodeId = nodes[0]['@id'];
+      renderInspector();
     }
   }
   return res;

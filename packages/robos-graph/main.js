@@ -112,6 +112,8 @@ ipcMain.handle('graph-edd-run', async (_, config) => {
 ipcMain.handle('graph-edd-status', async () => eddRunner ? eddRunner.getSummary() : { currentPhase: 'IDLE' });
 ipcMain.handle('graph-generate-elearning', async (_, prompt) => store.generateELearningCourse({ prompt }));
 ipcMain.handle('graph-bulk-import-repos', async (_, repos) => store.bulkImportRepositories(repos));
+ipcMain.handle('graph-import-resources', async (_, { resources, options } = {}) => store.importResources(resources, options));
+ipcMain.handle('graph-import-prompt', async (_, { prompt, options } = {}) => store.importFromPrompt(prompt, options));
 ipcMain.handle('graph-import-git-projects', async () => store.importGitProjectsConfig());
 ipcMain.handle('graph-request-app-doc-update', async (_, payload) => store.requestAppDocUpdate(payload));
 ipcMain.handle('graph-get-doc-sync-prompt', async () => store.latestDocSyncPrompt || store.discernDocUpdates({ action: 'inspect', node: store.parser.nodes[0] }));
