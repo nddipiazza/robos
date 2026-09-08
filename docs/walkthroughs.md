@@ -618,6 +618,37 @@ When building cross-language microservices (Java backend, TypeScript frontend, G
 
 ---
 
+### Remote Execution Studio: Distributed REAPI v2 Build Clusters & Client Synthesis
+
+#### The Real-World Scenario
+Over 95% of software engineering organizations avoid adopting distributed build systems (Bazel, Buck2) and distributed remote execution clusters (Buildbarn, NativeLink, BuildGrid) despite 10x–50x compile speedups. The reason is operational friction: arcane gRPC endpoint configurations, complex action cache rules, multi-service deployment manifests (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), and vendor lock-in from proprietary SaaS build clouds.
+
+RobOS solves this with **Remote Execution Studio** (`packages/remote-execution-studio`). The desktop control room and semantic configuration synthesizer allow developers to inspect cluster topology, probe live REAPI v2 endpoints, generate optimized `.bazelrc` and `.buckconfig` flags with a single click, configure modular Buildbarn microservice JSON specifications, and validate cluster conformance against the `robos:RemoteExecutionCluster` SHACL shape in the Knowledge Graph.
+
+#### What the Test Actually Executes Step-by-Step
+1. **Cluster Topology & Worker Pool Observability**: Launches Remote Execution Studio to inspect active clusters (Acme Buildbarn REAPI Cluster, NativeLink Edge Cache), verifying gRPC execution endpoints, Content Addressable Storage (CAS), Action Cache (AC), worker pool concurrency constraints (`linux-x86_64-large`, `linux-arm64-workers`), and cache hit ratios.
+2. **Live REAPI Endpoint Connectivity Probes**: Clicks **⚡ Test REAPI Endpoints** (`#btn-test-endpoints`) to execute live gRPC health checks and latency benchmarks against the Execution service (14ms), CAS/Bytestream (11ms), and observation web UI (HTTP 200).
+3. **Push-Button Bazel Configuration Synthesis**: Navigates to **Build Clients** tab (`#tab-clients-btn`), dynamically synthesizing production-ready `.bazelrc` flags (`--remote_executor`, `--remote_cache`, `--remote_download_minimal`, `--remote_instance_name`, concurrency flags) with one-click clipboard copying.
+4. **Zero-Overhead Meta Buck2 Client Generation**: Toggles client generator to Meta Buck2 (`#btn-toggle-buck2`), generating native `[buck2_re_client]` TOML blocks with SHA256 digest functions and remote execution flags.
+5. **Modular Buildbarn Microservice Specs**: Switches to **Provider Configurations** tab (`#tab-provider-btn`), inspecting and toggling modular Buildbarn microservice JSON manifests across `bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, and `bb-browser`, as well as alternative providers like NativeLink.
+6. **Knowledge Graph & SHACL Structural Conformance**: Opens **Knowledge Graph & SHACL** tab (`#tab-kgraph-btn`) and clicks **Validate SHACL Constraints** (`#btn-validate-shacl`), confirming the cluster conforms strictly to `urn:robos:shape:RemoteExecutionClusterShape` in `.robos/kgraphs/devops/package.jsonld`.
+- **Source Demo Script**: [`packages/robos-test/demos/remote-execution-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/remote-execution-studio-demo.js)
+- **Automated Test Suite**: [`packages/robos-test/tests/remote-execution/smoke.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/remote-execution/smoke.test.js)
+
+| REAPI Cluster Overview & Worker Pools | Live Endpoint Connectivity & Latency Probe |
+|:---:|:---:|
+| ![Cluster Overview]({{ '/assets/images/screenshots/re-studio-overview_frame.png' | relative_url }}) | ![Endpoint Health Probe]({{ '/assets/images/screenshots/re-studio-probe_frame.png' | relative_url }}) |
+
+| Bazel Client Config Generator (`.bazelrc`) | Buck2 Client Config Generator (`.buckconfig`) |
+|:---:|:---:|
+| ![Bazel Config Generator]({{ '/assets/images/screenshots/re-studio-bazel_frame.png' | relative_url }}) | ![Buck2 Config Generator]({{ '/assets/images/screenshots/re-studio-buck2_frame.png' | relative_url }}) |
+
+| Modular Buildbarn Microservice Specs (`bb-storage.json`) | Knowledge Graph & SHACL Validation Badge |
+|:---:|:---:|
+| ![Buildbarn Provider Config]({{ '/assets/images/screenshots/re-studio-buildbarn_frame.png' | relative_url }}) | ![Knowledge Graph SHACL Conformance]({{ '/assets/images/screenshots/re-studio-kgraph_frame.png' | relative_url }}) |
+
+---
+
 ## Section 3: Company Setup & App Developer Wizards (Hardened Workflows)
 
 RobOS provides purpose-built wizards and governance engines for enterprise onboarding and rapid application scaffolding. Each workflow is verified end-to-end with real processes, live directory synchronization, and zero mocking.
@@ -850,6 +881,9 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/devops-in
 
 # Run the Data Sources explorer walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/data-sources-demo.js
+
+# Run the Remote Execution Studio walkthrough & screenshot generator
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/remote-execution-studio-demo.js
 
 # Run the Developer Tools Suite walkthrough
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/developer-tools-suite-demo.js
