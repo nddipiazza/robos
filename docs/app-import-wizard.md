@@ -87,51 +87,55 @@ Clicking **Apply AI Refinement** (or directly modifying the form fields) updates
 
 ---
 
-## Step-by-Step Codebase Ingestion Workflow
+## Step-by-Step Heterogeneous Resource & Codebase Ingestion Workflow
 
-The import workflow follows four concise panels:
+The import workflow follows three streamlined panels powered by the **RobOS Knowledge Graph Resource Importer** (`KGraphResourceImporter`):
 
-### 1. Select Existing Project Path
-Enter the absolute directory path to the existing repository or local clone. RobOS verifies filesystem accessibility and branch status.
-
-> [!TIP]
-> **Onboarding dozens of company Git projects at once?**  
-> Instead of importing projects one-by-one, instruct your autonomous AI agent to run the **`import-company-kgraph`** skill (e.g. `/import-company-kgraph --source <url | s3://... | /path>`). The skill parses your company's full service inventory across HTTP endpoints, AWS S3, or local disks, and synthesizes Knowledge Graph entries and OpenAPI contracts in bulk that you can take and import directly into RobOS!
+### 1. Step 1: What stuff are you importing?
+Specify any combination of heterogeneous infrastructure resources to ingest into the dual-state SDLC Knowledge Graph:
+- **Git Repositories & URLs**: Individual GitHub, GitLab, or Bitbucket repositories (`https://github.com/org/repo`).
+- **Git Organizations & Forges**: Full GitHub organizations (`https://github.com/acme-payments`), importing member repositories, forge metadata, and organization-level agent rules.
+- **Local Directories & Monorepos**: Local filesystem paths (`/home/user/app`), scanning codebase manifests, packages, and markdown ADRs (`docs/adr/*.md`).
+- **Confluence Spaces & Wikis**: Confluence URLs (`https://confluence.acme.corp/display/ARCH`), extracting living documentation pages, Architecture Decision Records (ADRs), and interactive Mermaid flowcharts.
+- **Databases & Event Streams**: Connection URIs for PostgreSQL, MySQL, Redis, MongoDB (`postgres://...`), and Apache Kafka clusters (`kafka.internal:9092`).
+- **Cloud Infrastructure & MCP Servers**: Kubernetes clusters (EKS, GKE, AKS, K3s) and Model Context Protocol (MCP) server endpoints.
+- **AI Prompt & Bulk Extractor**: Paste unstructured notes or natural language requests into `<robos-ai-textarea>` to extract and queue targets automatically.
+- **Enterprise Sample Stack**: One-click preset loading a realistic enterprise stack for rapid exploration.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Select Project Path and Bulk Ingestion Skill Advice" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Step 1: What stuff are you importing?" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 1: Select Project Path</strong>: Enter local path or Git clone URL with embedded agent skill recommendations. <em>(Click image to zoom full screen)</em>
+    <strong>Step 1: What stuff are you importing?</strong>: Queue URL resources, local repositories, Confluence spaces, databases, Kafka streams, and use AI prompt extraction. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
-### 2. Deep Inspection & Archetype Detection
-The inspection engine scans package manifests, detects API schemas and database migrations, and exposes the `<robos-ai-textarea>` prompt bar to refine properties.
+### 2. Step 2: Inspection & Knowledge Graph Topology
+The inspection engine scans local manifests and simultaneously executes the `KGraphResourceImporter` pipeline:
+- **Topology Statistics**: Discovers all entities across 8 standard packages (Microservices, Git Organizations, Confluence Docs, ADRs, Flow Diagrams, OpenAPI/Protobuf contracts, Databases, and Kafka brokers).
+- **100% W3C SHACL Shape Conformance**: Every discovered node is validated in real time against 91 SHACL constraint shapes.
+- **Interactive AI Prompt Refinement**: Use the `<robos-ai-textarea>` prompt bar to tune detected archetypes, technology stacks, naming, or team mapping in seconds.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}" alt="Deep Codebase Inspection and Archetype Detection" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}" alt="Step 2: Inspection and Knowledge Graph Topology" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 2: Codebase Inspection Results</strong>: Heuristic detection of language, framework, API contracts, Dockerfile support, and environment runners. <em>(Click image to zoom full screen)</em>
+    <strong>Step 2: Inspection & Knowledge Graph Topology</strong>: Discovered entities, modular package breakdown, W3C SHACL conformance, and interactive AI refinement. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
-### 3. Team Ownership Assignment
-Assign the imported application to an existing stream-aligned, platform, or enabling team defined in `.robos/teams.yaml`.
-
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }}" alt="Team Ownership and Form Configuration Review" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}" alt="Step 2: AI Prompt Refinement Applied" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 3: Team Ownership Assignment</strong>: Bind repository to team topologies and review finalized package properties. <em>(Click image to zoom full screen)</em>
+    <strong>Step 2 (Continued): AI Prompt Refinement</strong>: Instructing AI in natural language to refine archetype, stack, and team ownership. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
-### 4. Metadata Synthesis & Knowledge Graph Mapping
-RobOS generates Backstage `catalog-info.yaml`, synthesizes `dev-setup.sh`, creates Bruno `.bru` request collections, and registers the component into `.robos/packages.yaml` and the **Modular KGraph Packages**.
+### 3. Step 3: Synthesize Backstage Catalog & Ingest
+Executing ingestion automatically creates Backstage `catalog-info.yaml`, synthesizes executable `dev-setup.sh` environment runners, commits all validated nodes into `.robos/kgraphs/`, registers components in `.robos/packages.yaml`, and updates local workspace discovery in `~/.config/robos/git-projects.json`:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}" alt="Metadata Synthesis and Knowledge Graph Mapping Complete" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}" alt="Step 3: Ingestion Complete & Knowledge Graph Mapped" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 4: Ingestion Complete</strong>: Real-time synthesis of Backstage catalog-info.yaml, dev-setup.sh, and SDLC Knowledge Graph mapping. <em>(Click image to zoom full screen)</em>
+    <strong>Step 3: Ingestion Complete</strong>: Real-time synthesis of Backstage catalog metadata, dev-setup scripts, and Knowledge Graph mapping. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 

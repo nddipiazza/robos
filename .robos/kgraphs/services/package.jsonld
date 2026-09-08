@@ -77,6 +77,305 @@
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:payment-gateway-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Payment Gateway OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/payment-gateway-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Payment Gateway REST API\n  description: High-performance microservice contract for Payment Gateway in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/payment-gateway\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/payment-gateway:\n    get:\n      tags: [Core]\n      summary: Retrieve all payment-gateway items\n      operationId: listPayment-gatewayItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Payment-gatewayItem'\n    post:\n      tags: [Core]\n      summary: Create new payment-gateway entry\n      operationId: createPayment-gatewayItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Payment-gatewayItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/payment-gateway/{id}:\n    get:\n      tags: [Core]\n      summary: Get payment-gateway by identifier\n      operationId: getPayment-gatewayById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Payment-gatewayItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary payment-gateway record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "GET",
+          "description": "List Payment Gateway records"
+        },
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "POST",
+          "description": "Create Payment Gateway record"
+        },
+        {
+          "path": "/api/v1/payment-gateway/{id}",
+          "method": "GET",
+          "description": "Get Payment Gateway by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:payment-gateway",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Payment Gateway Service",
+      "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:fraud-detector-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Fraud Detector OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/fraud-detector-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Fraud Detector REST API\n  description: High-performance microservice contract for Fraud Detector in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/fraud-detector\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/fraud-detector:\n    get:\n      tags: [Core]\n      summary: Retrieve all fraud-detector items\n      operationId: listFraud-detectorItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Fraud-detectorItem'\n    post:\n      tags: [Core]\n      summary: Create new fraud-detector entry\n      operationId: createFraud-detectorItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Fraud-detectorItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/fraud-detector/{id}:\n    get:\n      tags: [Core]\n      summary: Get fraud-detector by identifier\n      operationId: getFraud-detectorById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Fraud-detectorItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary fraud-detector record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "GET",
+          "description": "List Fraud Detector records"
+        },
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "POST",
+          "description": "Create Fraud Detector record"
+        },
+        {
+          "path": "/api/v1/fraud-detector/{id}",
+          "method": "GET",
+          "description": "Get Fraud Detector by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:fraud-detector",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Fraud Detector Service",
+      "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:checkout-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout API Microservice OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/checkout-api-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Checkout API Microservice REST API\n  description: High-performance microservice contract for Checkout API Microservice in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/checkout-api\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/checkout-api:\n    get:\n      tags: [Core]\n      summary: Retrieve all checkout-api items\n      operationId: listCheckout-apiItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Checkout-apiItem'\n    post:\n      tags: [Core]\n      summary: Create new checkout-api entry\n      operationId: createCheckout-apiItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Checkout-apiItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/checkout-api/{id}:\n    get:\n      tags: [Core]\n      summary: Get checkout-api by identifier\n      operationId: getCheckout-apiById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Checkout-apiItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary checkout-api record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "GET",
+          "description": "List Checkout API Microservice records"
+        },
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "POST",
+          "description": "Create Checkout API Microservice record"
+        },
+        {
+          "path": "/api/v1/checkout-api/{id}",
+          "method": "GET",
+          "description": "Get Checkout API Microservice by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:checkout-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Checkout API Microservice Service",
+      "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-retail",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:oauth-server-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Oauth Server OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/oauth-server-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Oauth Server REST API\n  description: High-performance microservice contract for Oauth Server in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/oauth-server\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/oauth-server:\n    get:\n      tags: [Core]\n      summary: Retrieve all oauth-server items\n      operationId: listOauth-serverItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Oauth-serverItem'\n    post:\n      tags: [Core]\n      summary: Create new oauth-server entry\n      operationId: createOauth-serverItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Oauth-serverItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/oauth-server/{id}:\n    get:\n      tags: [Core]\n      summary: Get oauth-server by identifier\n      operationId: getOauth-serverById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Oauth-serverItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary oauth-server record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "GET",
+          "description": "List Oauth Server records"
+        },
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "POST",
+          "description": "Create Oauth Server record"
+        },
+        {
+          "path": "/api/v1/oauth-server/{id}",
+          "method": "GET",
+          "description": "Get Oauth Server by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:oauth-server",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Oauth Server Service",
+      "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:user-directory-sync-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "User Directory Sync OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/user-directory-sync-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: User Directory Sync REST API\n  description: High-performance microservice contract for User Directory Sync in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/user-directory-sync\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/user-directory-sync:\n    get:\n      tags: [Core]\n      summary: Retrieve all user-directory-sync items\n      operationId: listUser-directory-syncItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/User-directory-syncItem'\n    post:\n      tags: [Core]\n      summary: Create new user-directory-sync entry\n      operationId: createUser-directory-syncItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/User-directory-syncItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/user-directory-sync/{id}:\n    get:\n      tags: [Core]\n      summary: Get user-directory-sync by identifier\n      operationId: getUser-directory-syncById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    User-directory-syncItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary user-directory-sync record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "GET",
+          "description": "List User Directory Sync records"
+        },
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "POST",
+          "description": "Create User Directory Sync record"
+        },
+        {
+          "path": "/api/v1/user-directory-sync/{id}",
+          "method": "GET",
+          "description": "Get User Directory Sync by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:user-directory-sync",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "User Directory Sync Service",
+      "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
     }
   ],
   "@graph": [
@@ -133,6 +432,305 @@
       "robos:protocol": "graphql",
       "robos:specFile": "schemas/catalog.graphql",
       "robos:schemaType": "federated-subgraph",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:payment-gateway-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Payment Gateway OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/payment-gateway-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Payment Gateway REST API\n  description: High-performance microservice contract for Payment Gateway in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/payment-gateway\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/payment-gateway:\n    get:\n      tags: [Core]\n      summary: Retrieve all payment-gateway items\n      operationId: listPayment-gatewayItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Payment-gatewayItem'\n    post:\n      tags: [Core]\n      summary: Create new payment-gateway entry\n      operationId: createPayment-gatewayItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Payment-gatewayItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/payment-gateway/{id}:\n    get:\n      tags: [Core]\n      summary: Get payment-gateway by identifier\n      operationId: getPayment-gatewayById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Payment-gatewayItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary payment-gateway record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "GET",
+          "description": "List Payment Gateway records"
+        },
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "POST",
+          "description": "Create Payment Gateway record"
+        },
+        {
+          "path": "/api/v1/payment-gateway/{id}",
+          "method": "GET",
+          "description": "Get Payment Gateway by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:payment-gateway",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Payment Gateway Service",
+      "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:fraud-detector-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Fraud Detector OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/fraud-detector-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Fraud Detector REST API\n  description: High-performance microservice contract for Fraud Detector in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/fraud-detector\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/fraud-detector:\n    get:\n      tags: [Core]\n      summary: Retrieve all fraud-detector items\n      operationId: listFraud-detectorItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Fraud-detectorItem'\n    post:\n      tags: [Core]\n      summary: Create new fraud-detector entry\n      operationId: createFraud-detectorItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Fraud-detectorItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/fraud-detector/{id}:\n    get:\n      tags: [Core]\n      summary: Get fraud-detector by identifier\n      operationId: getFraud-detectorById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Fraud-detectorItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary fraud-detector record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "GET",
+          "description": "List Fraud Detector records"
+        },
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "POST",
+          "description": "Create Fraud Detector record"
+        },
+        {
+          "path": "/api/v1/fraud-detector/{id}",
+          "method": "GET",
+          "description": "Get Fraud Detector by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:fraud-detector",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Fraud Detector Service",
+      "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:checkout-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout API Microservice OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/checkout-api-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Checkout API Microservice REST API\n  description: High-performance microservice contract for Checkout API Microservice in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/checkout-api\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/checkout-api:\n    get:\n      tags: [Core]\n      summary: Retrieve all checkout-api items\n      operationId: listCheckout-apiItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Checkout-apiItem'\n    post:\n      tags: [Core]\n      summary: Create new checkout-api entry\n      operationId: createCheckout-apiItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Checkout-apiItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/checkout-api/{id}:\n    get:\n      tags: [Core]\n      summary: Get checkout-api by identifier\n      operationId: getCheckout-apiById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Checkout-apiItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary checkout-api record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "GET",
+          "description": "List Checkout API Microservice records"
+        },
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "POST",
+          "description": "Create Checkout API Microservice record"
+        },
+        {
+          "path": "/api/v1/checkout-api/{id}",
+          "method": "GET",
+          "description": "Get Checkout API Microservice by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:checkout-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Checkout API Microservice Service",
+      "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-retail",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:oauth-server-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Oauth Server OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/oauth-server-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Oauth Server REST API\n  description: High-performance microservice contract for Oauth Server in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/oauth-server\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/oauth-server:\n    get:\n      tags: [Core]\n      summary: Retrieve all oauth-server items\n      operationId: listOauth-serverItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Oauth-serverItem'\n    post:\n      tags: [Core]\n      summary: Create new oauth-server entry\n      operationId: createOauth-serverItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Oauth-serverItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/oauth-server/{id}:\n    get:\n      tags: [Core]\n      summary: Get oauth-server by identifier\n      operationId: getOauth-serverById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Oauth-serverItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary oauth-server record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "GET",
+          "description": "List Oauth Server records"
+        },
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "POST",
+          "description": "Create Oauth Server record"
+        },
+        {
+          "path": "/api/v1/oauth-server/{id}",
+          "method": "GET",
+          "description": "Get Oauth Server by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:oauth-server",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Oauth Server Service",
+      "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:user-directory-sync-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "User Directory Sync OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/user-directory-sync-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: User Directory Sync REST API\n  description: High-performance microservice contract for User Directory Sync in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/user-directory-sync\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/user-directory-sync:\n    get:\n      tags: [Core]\n      summary: Retrieve all user-directory-sync items\n      operationId: listUser-directory-syncItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/User-directory-syncItem'\n    post:\n      tags: [Core]\n      summary: Create new user-directory-sync entry\n      operationId: createUser-directory-syncItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/User-directory-syncItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/user-directory-sync/{id}:\n    get:\n      tags: [Core]\n      summary: Get user-directory-sync by identifier\n      operationId: getUser-directory-syncById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    User-directory-syncItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary user-directory-sync record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "GET",
+          "description": "List User Directory Sync records"
+        },
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "POST",
+          "description": "Create User Directory Sync record"
+        },
+        {
+          "path": "/api/v1/user-directory-sync/{id}",
+          "method": "GET",
+          "description": "Get User Directory Sync by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:user-directory-sync",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "User Directory Sync Service",
+      "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
       "robos:namespace": "robos.services"
     }

@@ -30,6 +30,25 @@ try {
   }
 } catch {}
 
+let KGraphResourceImporter = null;
+let SDLCKnowledgeGraphStore = null;
+try {
+  const graphLibPaths = [
+    path.resolve(__dirname, '..', 'robos-graph', 'index.js'),
+    '/usr/local/share/robos/robos-graph/index.js',
+  ];
+  for (const gp of graphLibPaths) {
+    try {
+      const g = require(gp);
+      if (g.KGraphResourceImporter) {
+        KGraphResourceImporter = g.KGraphResourceImporter;
+        SDLCKnowledgeGraphStore = g.SDLCKnowledgeGraphStore;
+        break;
+      }
+    } catch {}
+  }
+} catch {}
+
 function getRobosRoot() {
   let cur = process.cwd();
   for (let i = 0; i < 5; i++) {
@@ -445,6 +464,137 @@ ipcMain.handle('app-wizard:import-app', async (_, spec) => {
     };
   } catch (err) {
     return { error: err.message };
+  }
+});
+
+ipcMain.handle('app-wizard:parse-prompt', async (_, prompt) => {
+  try {
+    if (!KGraphResourceImporter) {
+      return { ok: false, error: 'Knowledge Graph Resource Importer library not available' };
+    }
+    const importer = new KGraphResourceImporter();
+    const plan = importer.parsePrompt(prompt || '');
+    return { ok: true, plan };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('app-wizard:ingest-resources', async (_, payload = {}) => {
+  try {
+    const {
+      resources = [],
+      companyName = 'Acme Global',
+      companySlug = 'acme-global',
+      defaultTeam = 'urn:robos:team:platform-team',
+      defaultProject = 'urn:robos:project:enterprise-core',
+      validateSHACL = true,
+    } = payload;
+
+    if (!KGraphResourceImporter) {
+      return { ok: false, error: 'Knowledge Graph Resource Importer library not available' };
+    }
+
+    const robosRoot = getRobosRoot();
+    let store = null;
+    if (SDLCKnowledgeGraphStore) {
+      try {
+        const storePath = path.join(robosRoot, '.robos', 'knowledge-graph.jsonld');
+        store = new SDLCKnowledgeGraphStore({ filePath: storePath });
+      } catch {}
+    }
+
+    const importer = new KGraphResourceImporter({
+      companyName,
+      companySlug,
+      defaultTeam,
+      defaultProject,
+    });
+
+    const importResult = await importer.importResources(resources, {
+      companyName,
+      companySlug,
+      defaultTeam,
+      defaultProject,
+      validateSHACL,
+    });
+
+    // Sync to store if available
+    let docSyncPrompt = null;
+    if (store && typeof store.importResources === 'function') {
+      try {
+        const storeRes = await store.importResources(resources, {
+          companyName,
+          companySlug,
+          defaultTeam,
+          defaultProject,
+          validateSHACL,
+        });
+        docSyncPrompt = storeRes.docSyncPrompt;
+      } catch (e) {
+        console.warn('Could not sync to store directly:', e.message);
+      }
+    }
+
+    // Sync to .robos/packages.yaml
+    try {
+      const packagesYamlPath = path.join(robosRoot, '.robos', 'packages.yaml');
+      if (fs.existsSync(packagesYamlPath)) {
+        let content = fs.readFileSync(packagesYamlPath, 'utf8');
+        for (const n of importResult.nodes) {
+          const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+          const archType = types.find(t => t.startsWith('robos:')) || 'robos:Microservice';
+          const id = n['@id'];
+          if (id && !content.includes(id)) {
+            const title = n['dcterms:title'] || n['robos:slug'] || id;
+            const repo = n['robos:repository'] || n['robos:url'] || `github.com/${companySlug}/${n['robos:slug'] || 'component'}`;
+            const tech = n['robos:technology'] || 'Polyglot';
+            content += `  - id: "${id}"\n    title: "${title}"\n    type: "${archType}"\n    repository: "${repo}"\n    technology: "${tech}"\n`;
+          }
+        }
+        fs.writeFileSync(packagesYamlPath, content, 'utf8');
+      }
+    } catch {}
+
+    // Sync to ~/.config/robos/git-projects.json
+    try {
+      const gitProjectsPath = path.join(os.homedir(), '.config', 'robos', 'git-projects.json');
+      let projects = [];
+      if (fs.existsSync(gitProjectsPath)) {
+        try { projects = JSON.parse(fs.readFileSync(gitProjectsPath, 'utf8')); } catch {}
+      }
+      for (const n of importResult.nodes) {
+        const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+        if (types.some(t => t.includes('Microservice') || t.includes('DesktopApp') || t.includes('ConsoleApp') || t.includes('FrontEndApp') || t.includes('DataPipeline') || t.includes('Library'))) {
+          const name = n['dcterms:title'] || n['robos:slug'] || 'Component';
+          const slug = n['robos:slug'] || name.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+          const localPath = n['robos:localPath'] || (n['robos:sourcePath'] ? path.dirname(n['robos:sourcePath']) : path.join(robosRoot, 'packages', slug));
+          if (!projects.some(p => p.path === localPath || p.slug === slug)) {
+            projects.push({
+              name,
+              slug,
+              path: localPath,
+              archetype: types.find(t => t.startsWith('robos:')) || 'robos:Microservice',
+              technology: n['robos:technology'] || 'Standard',
+              importedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
+      fs.mkdirSync(path.dirname(gitProjectsPath), { recursive: true });
+      fs.writeFileSync(gitProjectsPath, JSON.stringify(projects, null, 2), 'utf8');
+    } catch {}
+
+    return {
+      ok: true,
+      importResult,
+      summary: importResult.summary,
+      packageBreakdown: importResult.packageBreakdown,
+      nodes: importResult.nodes,
+      docSyncPrompt,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 });
 

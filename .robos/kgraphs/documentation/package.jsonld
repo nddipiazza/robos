@@ -106,6 +106,57 @@
       "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:acme-architecture-overview",
+      "@type": [
+        "robos:DocumentationPage",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Platform Architecture Overview",
+      "dcterms:description": "Enterprise cloud platform architecture spanning payments, identity, checkout, and GitOps deployments.",
+      "robos:slug": "acme-architecture-overview",
+      "robos:docPath": "docs/architecture/overview.md",
+      "robos:category": "architecture",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:004-event-driven-orders",
+      "@type": [
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "ADR-004: Event-Driven Order Processing with Kafka",
+      "dcterms:description": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:slug": "004-event-driven-orders",
+      "robos:adrNumber": 4,
+      "robos:status": "accepted",
+      "robos:context": "High concurrency checkout requests require non-blocking order intake and asynchronous inventory settlement.",
+      "robos:decision": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:checkout-payment-flow",
+      "@type": [
+        "robos:FlowDiagram",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout and Payment Processing Flowchart",
+      "dcterms:description": "End-to-end transactional sequence from customer checkout to payment settlement.",
+      "robos:slug": "checkout-payment-flow",
+      "robos:diagramType": "sequence",
+      "robos:mermaidText": "sequenceDiagram\n  autonumber\n  actor Customer as Customer SPA\n  participant Checkout as Checkout API (Java)\n  participant Payments as Payment Gateway (Java)\n  participant Kafka as Apache Kafka\n  Customer->>Checkout: POST /api/v1/checkout/orders\n  Checkout->>Payments: POST /api/v1/payments/charge\n  Payments-->>Checkout: 200 OK (Transaction Approved)\n  Checkout->>Kafka: Publish \"orders.created\" event\n  Checkout-->>Customer: 201 Created (Order Confirmed)",
+      "robos:tooltip": "Interactive sequence diagram for checkout order validation and payment capture",
+      "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
     }
   ],
   "@graph": [
@@ -192,6 +243,57 @@
       "robos:language": "javascript",
       "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
       "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:acme-architecture-overview",
+      "@type": [
+        "robos:DocumentationPage",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Platform Architecture Overview",
+      "dcterms:description": "Enterprise cloud platform architecture spanning payments, identity, checkout, and GitOps deployments.",
+      "robos:slug": "acme-architecture-overview",
+      "robos:docPath": "docs/architecture/overview.md",
+      "robos:category": "architecture",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:004-event-driven-orders",
+      "@type": [
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "ADR-004: Event-Driven Order Processing with Kafka",
+      "dcterms:description": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:slug": "004-event-driven-orders",
+      "robos:adrNumber": 4,
+      "robos:status": "accepted",
+      "robos:context": "High concurrency checkout requests require non-blocking order intake and asynchronous inventory settlement.",
+      "robos:decision": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:checkout-payment-flow",
+      "@type": [
+        "robos:FlowDiagram",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout and Payment Processing Flowchart",
+      "dcterms:description": "End-to-end transactional sequence from customer checkout to payment settlement.",
+      "robos:slug": "checkout-payment-flow",
+      "robos:diagramType": "sequence",
+      "robos:mermaidText": "sequenceDiagram\n  autonumber\n  actor Customer as Customer SPA\n  participant Checkout as Checkout API (Java)\n  participant Payments as Payment Gateway (Java)\n  participant Kafka as Apache Kafka\n  Customer->>Checkout: POST /api/v1/checkout/orders\n  Checkout->>Payments: POST /api/v1/payments/charge\n  Payments-->>Checkout: 200 OK (Transaction Approved)\n  Checkout->>Kafka: Publish \"orders.created\" event\n  Checkout-->>Customer: 201 Created (Order Confirmed)",
+      "robos:tooltip": "Interactive sequence diagram for checkout order validation and payment capture",
+      "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs"
     }

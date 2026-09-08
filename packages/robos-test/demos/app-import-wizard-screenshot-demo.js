@@ -65,21 +65,24 @@ async function main() {
     // 1. Wait for window to initialize
     await sleep(2500);
 
-    // Frame 1: Switch to Import Mode and enter directory path
+    // Frame 1: Switch to Import Mode and showcase Step 1: What stuff are you importing?
     console.log(`Navigating to Import Existing App Mode...`);
     await evalJS(app.port, `
       (() => {
         document.getElementById('btn-mode-import').click();
+        const sampleBtn = document.getElementById('btn-load-sample');
+        if (sampleBtn) sampleBtn.click();
         const input = document.getElementById('import-source-path');
         if (input) {
           input.value = '${SAMPLE_IMPORT_DIR}';
-          input.dispatchEvent(new Event('input', { bubbles: true }));
+          const addBtn = document.getElementById('btn-add-resource');
+          if (addBtn) addBtn.click();
         }
       })()
     `);
     await sleep(800);
 
-    console.log(`Capturing Frame 1: Source Path Selection...`);
+    console.log(`Capturing Frame 1: Step 1 What Stuff Are You Importing...`);
     const frame1Buf = await fetchScreenshot(app.port);
     saveFrame('import-app-source-select_frame.png', frame1Buf);
 

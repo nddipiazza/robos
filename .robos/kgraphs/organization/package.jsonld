@@ -96,16 +96,19 @@
     {
       "@id": "urn:robos:team:founding-core",
       "@type": [
+        "oslc:Group",
         "robos:Team"
       ],
-      "dcterms:title": "Founding Core Engineering",
+      "dcterms:title": "Acme Global Core Platform Team",
       "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:admin",
+      "robos:lead": "urn:robos:person:architect",
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:topologyType": "platform",
+      "robos:memberOf": "urn:robos:organization:acme-global"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
@@ -248,6 +251,174 @@
       "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "robos:slug": "acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme",
+      "dcterms:description": "Git Project Organization for acme.",
+      "robos:orgName": "acme",
+      "robos:url": "https://github.com/acme",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "at https",
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "robos:slug": "at-https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Payments Organization",
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "robos:orgName": "acme-payments",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-payments",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme-retail",
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "robos:orgName": "acme-retail",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-retail",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "robos:orgName": "acme-identity",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-identity",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
       "robos:package": "organization",
       "robos:namespace": "robos.org"
     }
@@ -328,16 +499,19 @@
     {
       "@id": "urn:robos:team:founding-core",
       "@type": [
+        "oslc:Group",
         "robos:Team"
       ],
-      "dcterms:title": "Founding Core Engineering",
+      "dcterms:title": "Acme Global Core Platform Team",
       "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:admin",
+      "robos:lead": "urn:robos:person:architect",
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:topologyType": "platform",
+      "robos:memberOf": "urn:robos:organization:acme-global"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
@@ -480,6 +654,174 @@
       "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "robos:slug": "acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme",
+      "dcterms:description": "Git Project Organization for acme.",
+      "robos:orgName": "acme",
+      "robos:url": "https://github.com/acme",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "at https",
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "robos:slug": "at-https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Payments Organization",
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "robos:orgName": "acme-payments",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-payments",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme-retail",
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "robos:orgName": "acme-retail",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-retail",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "robos:orgName": "acme-identity",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-identity",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
       "robos:package": "organization",
       "robos:namespace": "robos.org"
     }

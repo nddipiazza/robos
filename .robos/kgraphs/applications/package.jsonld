@@ -35,6 +35,61 @@
       "robos:repository": "github.com/acme/billing-portal",
       "robos:technology": "React 19 / TypeScript / Vite",
       "robos:frontendFramework": "React"
+    },
+    {
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Rest Client CLI",
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:cliCommand": "rest-client",
+      "robos:subcommands": [
+        {
+          "name": "init",
+          "description": "Initialize local workspace and credentials"
+        },
+        {
+          "name": "deploy",
+          "description": "Deploy artifacts to targeted cluster or environment"
+        },
+        {
+          "name": "status",
+          "description": "Inspect health and operational status"
+        },
+        {
+          "name": "logs",
+          "description": "Stream aggregated logs with live tail"
+        },
+        {
+          "name": "rollback",
+          "description": "Revert to previous revision"
+        }
+      ],
+      "robos:globalFlags": [
+        {
+          "flag": "--verbose, -v",
+          "description": "Enable verbose debug tracing"
+        },
+        {
+          "flag": "--config, -c",
+          "description": "Path to configuration manifest"
+        },
+        {
+          "flag": "--output, -o",
+          "description": "Output format (json, yaml, text)"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
     }
   ],
   "@graph": [
@@ -51,6 +106,61 @@
       "robos:repository": "github.com/acme/billing-portal",
       "robos:technology": "React 19 / TypeScript / Vite",
       "robos:frontendFramework": "React"
+    },
+    {
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Rest Client CLI",
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:cliCommand": "rest-client",
+      "robos:subcommands": [
+        {
+          "name": "init",
+          "description": "Initialize local workspace and credentials"
+        },
+        {
+          "name": "deploy",
+          "description": "Deploy artifacts to targeted cluster or environment"
+        },
+        {
+          "name": "status",
+          "description": "Inspect health and operational status"
+        },
+        {
+          "name": "logs",
+          "description": "Stream aggregated logs with live tail"
+        },
+        {
+          "name": "rollback",
+          "description": "Revert to previous revision"
+        }
+      ],
+      "robos:globalFlags": [
+        {
+          "flag": "--verbose, -v",
+          "description": "Enable verbose debug tracing"
+        },
+        {
+          "flag": "--config, -c",
+          "description": "Path to configuration manifest"
+        },
+        {
+          "flag": "--output, -o",
+          "description": "Output format (json, yaml, text)"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
     }
   ]
 }

@@ -33,6 +33,61 @@
       "robos:frontendFramework": "React"
     },
     {
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Rest Client CLI",
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:cliCommand": "rest-client",
+      "robos:subcommands": [
+        {
+          "name": "init",
+          "description": "Initialize local workspace and credentials"
+        },
+        {
+          "name": "deploy",
+          "description": "Deploy artifacts to targeted cluster or environment"
+        },
+        {
+          "name": "status",
+          "description": "Inspect health and operational status"
+        },
+        {
+          "name": "logs",
+          "description": "Stream aggregated logs with live tail"
+        },
+        {
+          "name": "rollback",
+          "description": "Revert to previous revision"
+        }
+      ],
+      "robos:globalFlags": [
+        {
+          "flag": "--verbose, -v",
+          "description": "Enable verbose debug tracing"
+        },
+        {
+          "flag": "--config, -c",
+          "description": "Path to configuration manifest"
+        },
+        {
+          "flag": "--output, -o",
+          "description": "Output format (json, yaml, text)"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    },
+    {
       "@id": "urn:robos:graph:root",
       "@type": [
         "oslc:ServiceProvider",
@@ -62,7 +117,8 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
@@ -82,7 +138,99 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-services-maven",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
+      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
+      "robos:buildTool": "maven",
+      "robos:configFile": "pom.xml",
+      "robos:repository": "github.com/acme/enterprise-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-backend-gradle",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
+      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
+      "robos:buildTool": "gradle",
+      "robos:configFile": "build.gradle.kts",
+      "robos:repository": "github.com/acme/kotlin-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-systems-cargo",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
+      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
+      "robos:buildTool": "cargo",
+      "robos:configFile": "Cargo.toml",
+      "robos:repository": "github.com/acme/crypto-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-cloud-go",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+      "robos:buildTool": "go",
+      "robos:configFile": "go.mod",
+      "robos:repository": "github.com/acme/k8s-operator",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
+      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
+      "robos:buildTool": "pnpm",
+      "robos:configFile": "pnpm-workspace.yaml",
+      "robos:repository": "github.com/acme/web-portal",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-native-cmake",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Native Video Engine (CMake)",
+      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
+      "robos:buildTool": "cmake",
+      "robos:configFile": "CMakeLists.txt",
+      "robos:repository": "github.com/acme/video-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",
@@ -169,6 +317,92 @@
         "query_nodes",
         "get_blast_radius",
         "validate_shacl"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:agent:strategy:caveman-compression",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptStrategy",
+        "robos:AIPromptTechnique"
+      ],
+      "dcterms:title": "Caveman Algorithmic Prompt Compression",
+      "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
+      "robos:strategyType": "compression",
+      "robos:engine": "caveman",
+      "robos:targetTiers": [
+        "tier1",
+        "tier2"
+      ],
+      "robos:mode": "standard",
+      "robos:enabled": true,
+      "robos:parameters": {
+        "stripFillers": true,
+        "terseDirectives": true,
+        "preserveCodeBlocks": true,
+        "preservePaths": true
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptOptimizer",
+        "robos:PromptCompiler"
+      ],
+      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
+      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
+      "robos:strategyType": "teleprompter-optimization",
+      "robos:engine": "dspy",
+      "robos:targetTiers": [
+        "tier2",
+        "tier3"
+      ],
+      "robos:enabled": true,
+      "robos:parameters": {
+        "teleprompter": "MIPROv2",
+        "metric": "shacl_validation",
+        "candidatePrompts": 10,
+        "maxBootstrappedDemos": 4,
+        "autoCompileOnSave": false
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:postgresql-nb5dk",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "POSTGRESQL Database (payments_db)",
+      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "payments_db",
+      "robos:host": "db.internal",
+      "robos:port": 5432,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:kafka-stream",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "KAFKA Event Stream",
+      "dcterms:description": "Imported event bus at kafka.internal:9092",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal:9092",
+      "robos:topics": [
+        "events.incoming",
+        "events.processed"
       ],
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
@@ -399,6 +633,57 @@
       "robos:namespace": "robos.docs"
     },
     {
+      "@id": "urn:robos:doc:acme-architecture-overview",
+      "@type": [
+        "robos:DocumentationPage",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Platform Architecture Overview",
+      "dcterms:description": "Enterprise cloud platform architecture spanning payments, identity, checkout, and GitOps deployments.",
+      "robos:slug": "acme-architecture-overview",
+      "robos:docPath": "docs/architecture/overview.md",
+      "robos:category": "architecture",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:004-event-driven-orders",
+      "@type": [
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "ADR-004: Event-Driven Order Processing with Kafka",
+      "dcterms:description": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:slug": "004-event-driven-orders",
+      "robos:adrNumber": 4,
+      "robos:status": "accepted",
+      "robos:context": "High concurrency checkout requests require non-blocking order intake and asynchronous inventory settlement.",
+      "robos:decision": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:checkout-payment-flow",
+      "@type": [
+        "robos:FlowDiagram",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout and Payment Processing Flowchart",
+      "dcterms:description": "End-to-end transactional sequence from customer checkout to payment settlement.",
+      "robos:slug": "checkout-payment-flow",
+      "robos:diagramType": "sequence",
+      "robos:mermaidText": "sequenceDiagram\n  autonumber\n  actor Customer as Customer SPA\n  participant Checkout as Checkout API (Java)\n  participant Payments as Payment Gateway (Java)\n  participant Kafka as Apache Kafka\n  Customer->>Checkout: POST /api/v1/checkout/orders\n  Checkout->>Payments: POST /api/v1/payments/charge\n  Payments-->>Checkout: 200 OK (Transaction Approved)\n  Checkout->>Kafka: Publish \"orders.created\" event\n  Checkout-->>Customer: 201 Created (Order Confirmed)",
+      "robos:tooltip": "Interactive sequence diagram for checkout order validation and payment capture",
+      "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
@@ -486,16 +771,19 @@
     {
       "@id": "urn:robos:team:founding-core",
       "@type": [
+        "oslc:Group",
         "robos:Team"
       ],
-      "dcterms:title": "Founding Core Engineering",
+      "dcterms:title": "Acme Global Core Platform Team",
       "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:admin",
+      "robos:lead": "urn:robos:person:architect",
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:topologyType": "platform",
+      "robos:memberOf": "urn:robos:organization:acme-global"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
@@ -597,7 +885,7 @@
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
       "robos:role": "Autonomous Pull Request Auditor",
       "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:modelPreference": "claude-sonnet-5",
       "robos:assignedTeam": "urn:robos:team:core-platform",
       "robos:usesMCPServer": [
         "urn:robos:mcp:context-engine",
@@ -638,6 +926,174 @@
       "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "robos:slug": "acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme",
+      "dcterms:description": "Git Project Organization for acme.",
+      "robos:orgName": "acme",
+      "robos:url": "https://github.com/acme",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "at https",
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "robos:slug": "at-https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Payments Organization",
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "robos:orgName": "acme-payments",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-payments",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme-retail",
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "robos:orgName": "acme-retail",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-retail",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "robos:orgName": "acme-identity",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-identity",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
       "robos:package": "organization",
       "robos:namespace": "robos.org"
     },
@@ -696,6 +1152,810 @@
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:payment-gateway-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Payment Gateway OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/payment-gateway-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Payment Gateway REST API\n  description: High-performance microservice contract for Payment Gateway in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/payment-gateway\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/payment-gateway:\n    get:\n      tags: [Core]\n      summary: Retrieve all payment-gateway items\n      operationId: listPayment-gatewayItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Payment-gatewayItem'\n    post:\n      tags: [Core]\n      summary: Create new payment-gateway entry\n      operationId: createPayment-gatewayItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Payment-gatewayItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/payment-gateway/{id}:\n    get:\n      tags: [Core]\n      summary: Get payment-gateway by identifier\n      operationId: getPayment-gatewayById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Payment-gatewayItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary payment-gateway record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "GET",
+          "description": "List Payment Gateway records"
+        },
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "POST",
+          "description": "Create Payment Gateway record"
+        },
+        {
+          "path": "/api/v1/payment-gateway/{id}",
+          "method": "GET",
+          "description": "Get Payment Gateway by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:payment-gateway",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Payment Gateway Service",
+      "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:fraud-detector-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Fraud Detector OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/fraud-detector-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Fraud Detector REST API\n  description: High-performance microservice contract for Fraud Detector in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/fraud-detector\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/fraud-detector:\n    get:\n      tags: [Core]\n      summary: Retrieve all fraud-detector items\n      operationId: listFraud-detectorItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Fraud-detectorItem'\n    post:\n      tags: [Core]\n      summary: Create new fraud-detector entry\n      operationId: createFraud-detectorItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Fraud-detectorItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/fraud-detector/{id}:\n    get:\n      tags: [Core]\n      summary: Get fraud-detector by identifier\n      operationId: getFraud-detectorById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Fraud-detectorItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary fraud-detector record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "GET",
+          "description": "List Fraud Detector records"
+        },
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "POST",
+          "description": "Create Fraud Detector record"
+        },
+        {
+          "path": "/api/v1/fraud-detector/{id}",
+          "method": "GET",
+          "description": "Get Fraud Detector by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:fraud-detector",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Fraud Detector Service",
+      "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:checkout-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout API Microservice OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/checkout-api-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Checkout API Microservice REST API\n  description: High-performance microservice contract for Checkout API Microservice in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/checkout-api\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/checkout-api:\n    get:\n      tags: [Core]\n      summary: Retrieve all checkout-api items\n      operationId: listCheckout-apiItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Checkout-apiItem'\n    post:\n      tags: [Core]\n      summary: Create new checkout-api entry\n      operationId: createCheckout-apiItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Checkout-apiItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/checkout-api/{id}:\n    get:\n      tags: [Core]\n      summary: Get checkout-api by identifier\n      operationId: getCheckout-apiById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Checkout-apiItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary checkout-api record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "GET",
+          "description": "List Checkout API Microservice records"
+        },
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "POST",
+          "description": "Create Checkout API Microservice record"
+        },
+        {
+          "path": "/api/v1/checkout-api/{id}",
+          "method": "GET",
+          "description": "Get Checkout API Microservice by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:checkout-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Checkout API Microservice Service",
+      "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-retail",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:oauth-server-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Oauth Server OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/oauth-server-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Oauth Server REST API\n  description: High-performance microservice contract for Oauth Server in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/oauth-server\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/oauth-server:\n    get:\n      tags: [Core]\n      summary: Retrieve all oauth-server items\n      operationId: listOauth-serverItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Oauth-serverItem'\n    post:\n      tags: [Core]\n      summary: Create new oauth-server entry\n      operationId: createOauth-serverItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Oauth-serverItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/oauth-server/{id}:\n    get:\n      tags: [Core]\n      summary: Get oauth-server by identifier\n      operationId: getOauth-serverById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Oauth-serverItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary oauth-server record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "GET",
+          "description": "List Oauth Server records"
+        },
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "POST",
+          "description": "Create Oauth Server record"
+        },
+        {
+          "path": "/api/v1/oauth-server/{id}",
+          "method": "GET",
+          "description": "Get Oauth Server by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:oauth-server",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Oauth Server Service",
+      "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:user-directory-sync-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "User Directory Sync OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/user-directory-sync-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: User Directory Sync REST API\n  description: High-performance microservice contract for User Directory Sync in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/user-directory-sync\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/user-directory-sync:\n    get:\n      tags: [Core]\n      summary: Retrieve all user-directory-sync items\n      operationId: listUser-directory-syncItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/User-directory-syncItem'\n    post:\n      tags: [Core]\n      summary: Create new user-directory-sync entry\n      operationId: createUser-directory-syncItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/User-directory-syncItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/user-directory-sync/{id}:\n    get:\n      tags: [Core]\n      summary: Get user-directory-sync by identifier\n      operationId: getUser-directory-syncById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    User-directory-syncItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary user-directory-sync record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "GET",
+          "description": "List User Directory Sync records"
+        },
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "POST",
+          "description": "Create User Directory Sync record"
+        },
+        {
+          "path": "/api/v1/user-directory-sync/{id}",
+          "method": "GET",
+          "description": "Get User Directory Sync by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:user-directory-sync",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "User Directory Sync Service",
+      "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement"
+      ],
+      "dcterms:title": "E-Commerce Checkout & Cart Validation",
+      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
+      "robos:featureFile": "features/checkout.feature",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
+      "robos:hasRule": [
+        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
+      ],
+      "robos:hasScenario": [
+        "urn:robos:scenario:checkout-standard-items"
+      ],
+      "robos:hasScenarioOutline": [
+        "urn:robos:scenario-outline:checkout-discount-tiers"
+      ],
+      "robos:tags": [
+        "checkout",
+        "billing",
+        "regression"
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
+      "@type": [
+        "robos:GherkinBackground",
+        "robos:Background"
+      ],
+      "dcterms:title": "Customer Session & Cart Initialization",
+      "robos:steps": [
+        "Given the customer is logged in with valid token",
+        "And the shopping cart is initialized"
+      ],
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "@type": [
+        "robos:GherkinRule",
+        "robos:Rule"
+      ],
+      "dcterms:title": "Rule: Inventory must be verified before payment processing",
+      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule"
+    },
+    {
+      "@id": "urn:robos:scenario:checkout-standard-items",
+      "@type": [
+        "robos:Scenario",
+        "oslc_qm:TestCase"
+      ],
+      "dcterms:title": "Successful checkout with in-stock items",
+      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "robos:steps": [
+        "Given items SKU-101 and SKU-202 are in stock",
+        "When the customer submits order with total $50",
+        "Then order status is CONFIRMED"
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase"
+    },
+    {
+      "@id": "urn:robos:step:checkout-add-item-with-table",
+      "@type": [
+        "robos:ScenarioStep"
+      ],
+      "robos:keyword": "When",
+      "robos:stepText": "the customer adds items to cart with configuration",
+      "robos:dataTable": "urn:robos:datatable:cart-items",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+    },
+    {
+      "@id": "urn:robos:datatable:cart-items",
+      "@type": [
+        "robos:DataTable"
+      ],
+      "robos:step": "urn:robos:step:checkout-add-item-with-table",
+      "robos:tableRows": [
+        [
+          "sku",
+          "quantity",
+          "price"
+        ],
+        [
+          "SKU-101",
+          "2",
+          "19.99"
+        ],
+        [
+          "SKU-202",
+          "1",
+          "49.50"
+        ]
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables"
+    },
+    {
+      "@id": "urn:robos:step:checkout-payload-docstring",
+      "@type": [
+        "robos:ScenarioStep"
+      ],
+      "robos:keyword": "Given",
+      "robos:stepText": "the checkout order payload is provided as JSON",
+      "robos:docString": "urn:robos:docstring:checkout-payload",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+    },
+    {
+      "@id": "urn:robos:docstring:checkout-payload",
+      "@type": [
+        "robos:DocString"
+      ],
+      "robos:step": "urn:robos:step:checkout-payload-docstring",
+      "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
+      "robos:contentType": "application/json",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
+    },
+    {
+      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
+      "@type": [
+        "robos:ScenarioOutline",
+        "oslc_qm:TestCase"
+      ],
+      "dcterms:title": "Discount tier calculation for loyalty members",
+      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:steps": [
+        "Given customer loyalty tier is <tier>",
+        "When order subtotal is <amount>",
+        "Then calculated discount is <discount>"
+      ],
+      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+    },
+    {
+      "@id": "urn:robos:examples:checkout-loyalty-tiers",
+      "@type": [
+        "robos:ExamplesTable"
+      ],
+      "dcterms:title": "Loyalty Tier Discounts",
+      "robos:tableHeaders": [
+        "tier",
+        "amount",
+        "discount"
+      ],
+      "robos:tableRows": [
+        [
+          "Bronze",
+          "100",
+          "5%"
+        ],
+        [
+          "Silver",
+          "100",
+          "10%"
+        ],
+        [
+          "Gold",
+          "100",
+          "20%"
+        ]
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+    },
+    {
+      "@id": "urn:robos:stepdef:customer-submits-order",
+      "@type": [
+        "robos:StepDefinition"
+      ],
+      "dcterms:title": "StepDef: Customer Submits Order",
+      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
+      "robos:codeFile": "tests/steps/checkout_steps.js",
+      "robos:functionName": "submitOrderStep",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+    },
+    {
+      "@id": "urn:robos:test-plan:q3-release-regression",
+      "@type": [
+        "robos:TestPlan",
+        "oslc_qm:TestPlan"
+      ],
+      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
+      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+    },
+    {
+      "@id": "urn:robos:test-suite:billing-api-bdd",
+      "@type": [
+        "robos:TestSuite",
+        "oslc_qm:TestSuite"
+      ],
+      "dcterms:title": "Billing API Cucumber BDD Test Suite",
+      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
+      "robos:testFramework": "cucumber",
+      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+    },
+    {
+      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
+      "@type": [
+        "robos:TestExecutionRecord",
+        "oslc_qm:TestExecutionRecord"
+      ],
+      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
+      "oslc_qm:executionStatus": "PASS",
+      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
+      "robos:testFramework": "cucumber",
+      "robos:durationMs": 420,
+      "robos:executedAt": "2026-09-08T12:00:00Z",
+      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+    },
+    {
+      "@id": "urn:robos:testing:cucumber",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Cucumber",
+      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
+      "robos:testingType": "bdd",
+      "robos:language": "polyglot",
+      "robos:website": "https://cucumber.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:jest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Jest",
+      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
+      "robos:testingType": "unit",
+      "robos:language": "javascript",
+      "robos:website": "https://jestjs.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:vitest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Vitest",
+      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
+      "robos:testingType": "unit",
+      "robos:language": "typescript",
+      "robos:website": "https://vitest.dev",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:playwright",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Playwright",
+      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
+      "robos:testingType": "e2e",
+      "robos:language": "polyglot",
+      "robos:website": "https://playwright.dev",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:cypress",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Cypress",
+      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
+      "robos:testingType": "e2e",
+      "robos:language": "javascript",
+      "robos:website": "https://www.cypress.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:junit5",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "JUnit 5",
+      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
+      "robos:testingType": "unit",
+      "robos:language": "java",
+      "robos:website": "https://junit.org/junit5/",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:testng",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "TestNG",
+      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
+      "robos:testingType": "integration",
+      "robos:language": "java",
+      "robos:website": "https://testng.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:mockito",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Mockito",
+      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
+      "robos:testingType": "mocking",
+      "robos:language": "java",
+      "robos:website": "https://site.mockito.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:pytest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Pytest",
+      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
+      "robos:testingType": "unit",
+      "robos:language": "python",
+      "robos:website": "https://pytest.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:robot-framework",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Robot Framework",
+      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
+      "robos:testingType": "bdd",
+      "robos:language": "python",
+      "robos:website": "https://robotframework.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:pact",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Pact",
+      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
+      "robos:testingType": "contract",
+      "robos:language": "polyglot",
+      "robos:website": "https://pact.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:k6",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Grafana k6",
+      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
+      "robos:testingType": "performance",
+      "robos:language": "javascript",
+      "robos:website": "https://k6.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:restassured",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "REST Assured",
+      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
+      "robos:testingType": "api",
+      "robos:language": "java",
+      "robos:website": "https://rest-assured.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:testify",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Testify",
+      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
+      "robos:testingType": "unit",
+      "robos:language": "go",
+      "robos:website": "https://github.com/stretchr/testify",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:godog",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Godog",
+      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
+      "robos:testingType": "bdd",
+      "robos:language": "go",
+      "robos:website": "https://github.com/cucumber/godog",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:mocha",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Mocha",
+      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
+      "robos:testingType": "unit",
+      "robos:language": "javascript",
+      "robos:website": "https://mochajs.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ],
   "@graph": [
@@ -714,6 +1974,61 @@
       "robos:frontendFramework": "React"
     },
     {
+      "@id": "urn:robos:console-app:rest-client",
+      "@type": [
+        "robos:ConsoleApp",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Rest Client CLI",
+      "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
+      "robos:repository": "github.com/acme/rest-client",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:cliCommand": "rest-client",
+      "robos:subcommands": [
+        {
+          "name": "init",
+          "description": "Initialize local workspace and credentials"
+        },
+        {
+          "name": "deploy",
+          "description": "Deploy artifacts to targeted cluster or environment"
+        },
+        {
+          "name": "status",
+          "description": "Inspect health and operational status"
+        },
+        {
+          "name": "logs",
+          "description": "Stream aggregated logs with live tail"
+        },
+        {
+          "name": "rollback",
+          "description": "Revert to previous revision"
+        }
+      ],
+      "robos:globalFlags": [
+        {
+          "flag": "--verbose, -v",
+          "description": "Enable verbose debug tracing"
+        },
+        {
+          "flag": "--config, -c",
+          "description": "Path to configuration manifest"
+        },
+        {
+          "flag": "--output, -o",
+          "description": "Output format (json, yaml, text)"
+        }
+      ],
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
+    },
+    {
       "@id": "urn:robos:graph:root",
       "@type": [
         "oslc:ServiceProvider",
@@ -743,7 +2058,8 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
@@ -763,7 +2079,99 @@
         "ISA": "x86-64"
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-services-maven",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Enterprise Services (Apache Maven)",
+      "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
+      "robos:buildTool": "maven",
+      "robos:configFile": "pom.xml",
+      "robos:repository": "github.com/acme/enterprise-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-backend-gradle",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Kotlin Microservices (Gradle)",
+      "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
+      "robos:buildTool": "gradle",
+      "robos:configFile": "build.gradle.kts",
+      "robos:repository": "github.com/acme/kotlin-services",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-systems-cargo",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
+      "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
+      "robos:buildTool": "cargo",
+      "robos:configFile": "Cargo.toml",
+      "robos:repository": "github.com/acme/crypto-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-cloud-go",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+      "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+      "robos:buildTool": "go",
+      "robos:configFile": "go.mod",
+      "robos:repository": "github.com/acme/k8s-operator",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-monorepo-pnpm",
+      "@type": [
+        "robos:BuildSystem",
+        "robos:MonorepoBuild",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
+      "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
+      "robos:buildTool": "pnpm",
+      "robos:configFile": "pnpm-workspace.yaml",
+      "robos:repository": "github.com/acme/web-portal",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:build-system:acme-native-cmake",
+      "@type": [
+        "robos:BuildSystem",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Native Video Engine (CMake)",
+      "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
+      "robos:buildTool": "cmake",
+      "robos:configFile": "CMakeLists.txt",
+      "robos:repository": "github.com/acme/video-engine",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",
@@ -850,6 +2258,92 @@
         "query_nodes",
         "get_blast_radius",
         "validate_shacl"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:agent:strategy:caveman-compression",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptStrategy",
+        "robos:AIPromptTechnique"
+      ],
+      "dcterms:title": "Caveman Algorithmic Prompt Compression",
+      "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
+      "robos:strategyType": "compression",
+      "robos:engine": "caveman",
+      "robos:targetTiers": [
+        "tier1",
+        "tier2"
+      ],
+      "robos:mode": "standard",
+      "robos:enabled": true,
+      "robos:parameters": {
+        "stripFillers": true,
+        "terseDirectives": true,
+        "preserveCodeBlocks": true,
+        "preservePaths": true
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PromptOptimizer",
+        "robos:PromptCompiler"
+      ],
+      "dcterms:title": "Stanford DSPy Teleprompter Optimizer",
+      "dcterms:description": "Declarative prompt compilation framework synthesizing few-shot exemplars and calibrated instructions against verifiable validation metrics.",
+      "robos:strategyType": "teleprompter-optimization",
+      "robos:engine": "dspy",
+      "robos:targetTiers": [
+        "tier2",
+        "tier3"
+      ],
+      "robos:enabled": true,
+      "robos:parameters": {
+        "teleprompter": "MIPROv2",
+        "metric": "shacl_validation",
+        "candidatePrompts": 10,
+        "maxBootstrappedDemos": 4,
+        "autoCompileOnSave": false
+      },
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:db:postgresql-nb5dk",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "POSTGRESQL Database (payments_db)",
+      "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
+      "robos:engine": "postgresql",
+      "robos:databaseName": "payments_db",
+      "robos:host": "db.internal",
+      "robos:port": 5432,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:broker:kafka-stream",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MessageBroker",
+        "robos:EventBus"
+      ],
+      "dcterms:title": "KAFKA Event Stream",
+      "dcterms:description": "Imported event bus at kafka.internal:9092",
+      "robos:brokerType": "kafka",
+      "robos:endpoint": "kafka.internal:9092",
+      "robos:topics": [
+        "events.incoming",
+        "events.processed"
       ],
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
@@ -1080,6 +2574,57 @@
       "robos:namespace": "robos.docs"
     },
     {
+      "@id": "urn:robos:doc:acme-architecture-overview",
+      "@type": [
+        "robos:DocumentationPage",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Platform Architecture Overview",
+      "dcterms:description": "Enterprise cloud platform architecture spanning payments, identity, checkout, and GitOps deployments.",
+      "robos:slug": "acme-architecture-overview",
+      "robos:docPath": "docs/architecture/overview.md",
+      "robos:category": "architecture",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:adr:004-event-driven-orders",
+      "@type": [
+        "robos:ArchitectureDecisionRecord",
+        "robos:ADR",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "ADR-004: Event-Driven Order Processing with Kafka",
+      "dcterms:description": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:slug": "004-event-driven-orders",
+      "robos:adrNumber": 4,
+      "robos:status": "accepted",
+      "robos:context": "High concurrency checkout requests require non-blocking order intake and asynchronous inventory settlement.",
+      "robos:decision": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
+      "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:checkout-payment-flow",
+      "@type": [
+        "robos:FlowDiagram",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout and Payment Processing Flowchart",
+      "dcterms:description": "End-to-end transactional sequence from customer checkout to payment settlement.",
+      "robos:slug": "checkout-payment-flow",
+      "robos:diagramType": "sequence",
+      "robos:mermaidText": "sequenceDiagram\n  autonumber\n  actor Customer as Customer SPA\n  participant Checkout as Checkout API (Java)\n  participant Payments as Payment Gateway (Java)\n  participant Kafka as Apache Kafka\n  Customer->>Checkout: POST /api/v1/checkout/orders\n  Checkout->>Payments: POST /api/v1/payments/charge\n  Payments-->>Checkout: 200 OK (Transaction Approved)\n  Checkout->>Kafka: Publish \"orders.created\" event\n  Checkout-->>Customer: 201 Created (Order Confirmed)",
+      "robos:tooltip": "Interactive sequence diagram for checkout order validation and payment capture",
+      "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
+      "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
@@ -1167,16 +2712,19 @@
     {
       "@id": "urn:robos:team:founding-core",
       "@type": [
+        "oslc:Group",
         "robos:Team"
       ],
-      "dcterms:title": "Founding Core Engineering",
+      "dcterms:title": "Acme Global Core Platform Team",
       "robos:topology": "stream-aligned",
-      "robos:lead": "urn:robos:person:admin",
+      "robos:lead": "urn:robos:person:architect",
       "robos:hasMember": [
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:topologyType": "platform",
+      "robos:memberOf": "urn:robos:organization:acme-global"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
@@ -1278,7 +2826,7 @@
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
       "robos:role": "Autonomous Pull Request Auditor",
       "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-      "robos:modelPreference": "claude-3-5-sonnet",
+      "robos:modelPreference": "claude-sonnet-5",
       "robos:assignedTeam": "urn:robos:team:core-platform",
       "robos:usesMCPServer": [
         "urn:robos:mcp:context-engine",
@@ -1319,6 +2867,174 @@
       "robos:systemPrompt": "Analyze cluster events, pod crashloops, and ArgoCD sync failures to triage deployment incidents.",
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:organization:acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for Acme Global.",
+      "robos:slug": "acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme",
+      "dcterms:description": "Git Project Organization for acme.",
+      "robos:orgName": "acme",
+      "robos:url": "https://github.com/acme",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme/rest-client"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:organization:at-https",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "at https",
+      "dcterms:description": "Enterprise technology ecosystem for at https.",
+      "robos:slug": "at-https",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-payments",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Payments Organization",
+      "dcterms:description": "Core billing, transaction processing, and fraud detection services.",
+      "robos:orgName": "acme-payments",
+      "robos:url": "https://github.com/acme-payments",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-payments/payment-gateway",
+        "github.com/acme-payments/fraud-detector"
+      ],
+      "robos:agentRules": [
+        "All monetary amounts must be handled using integer cents or BigDecimal to avoid floating point errors.",
+        "Mutual TLS (mTLS) is mandatory for all inbound payment gateway endpoints.",
+        "PCI-DSS compliance: Never log unmasked credit card or PAN numbers in application logs."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-payments",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
+      "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:git-org:acme-retail",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme-retail",
+      "dcterms:description": "Git Project Organization for acme-retail.",
+      "robos:orgName": "acme-retail",
+      "robos:url": "https://github.com/acme-retail",
+      "robos:forgeType": "github",
+      "robos:visibility": "public",
+      "robos:hasRepository": [
+        "github.com/acme-retail/checkout-api"
+      ],
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-retail",
+        "docsPaths": [
+          "docs/index.md",
+          "README.md",
+          "CONTRIBUTING.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:agentRules": [],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:repoCount": 1
+    },
+    {
+      "@id": "urn:robos:git-org:acme-identity",
+      "@type": [
+        "robos:GitProjectOrganization",
+        "robos:GitOrganization",
+        "schema:Organization",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Acme Identity & Access Management Organization",
+      "dcterms:description": "Enterprise SSO, OAuth2/OIDC providers, and directory SCIM synchronization.",
+      "robos:orgName": "acme-identity",
+      "robos:url": "https://github.com/acme-identity",
+      "robos:forgeType": "github",
+      "robos:visibility": "internal",
+      "robos:hasRepository": [
+        "github.com/acme-identity/oauth-server",
+        "github.com/acme-identity/user-directory-sync"
+      ],
+      "robos:agentRules": [
+        "All issued OAuth2 access tokens must be JWT signed with RS256 private keys.",
+        "SCIM 2.0 user provisioning endpoints must strictly enforce bearer token scope validation.",
+        "Multi-factor authentication (MFA) must be verified before granting administrative privilege grants."
+      ],
+      "robos:agentRulesDoc": "AGENTS.md",
+      "robos:documentation": {
+        "docsUrl": "https://github.com/acme-identity",
+        "docsPaths": [
+          "README.md",
+          "CONTRIBUTING.md",
+          "docs/index.md"
+        ],
+        "license": "Apache-2.0"
+      },
+      "robos:repoCount": 2,
       "robos:package": "organization",
       "robos:namespace": "robos.org"
     },
@@ -1377,6 +3093,810 @@
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
       "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:payment-gateway-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Payment Gateway OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/payment-gateway-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Payment Gateway REST API\n  description: High-performance microservice contract for Payment Gateway in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/payment-gateway\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/payment-gateway:\n    get:\n      tags: [Core]\n      summary: Retrieve all payment-gateway items\n      operationId: listPayment-gatewayItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Payment-gatewayItem'\n    post:\n      tags: [Core]\n      summary: Create new payment-gateway entry\n      operationId: createPayment-gatewayItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Payment-gatewayItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/payment-gateway/{id}:\n    get:\n      tags: [Core]\n      summary: Get payment-gateway by identifier\n      operationId: getPayment-gatewayById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Payment-gatewayItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary payment-gateway record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "GET",
+          "description": "List Payment Gateway records"
+        },
+        {
+          "path": "/api/v1/payment-gateway",
+          "method": "POST",
+          "description": "Create Payment Gateway record"
+        },
+        {
+          "path": "/api/v1/payment-gateway/{id}",
+          "method": "GET",
+          "description": "Get Payment Gateway by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:payment-gateway",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Payment Gateway Service",
+      "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/payment-gateway",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:payment-gateway-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:fraud-detector-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Fraud Detector OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/fraud-detector-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Fraud Detector REST API\n  description: High-performance microservice contract for Fraud Detector in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/fraud-detector\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/fraud-detector:\n    get:\n      tags: [Core]\n      summary: Retrieve all fraud-detector items\n      operationId: listFraud-detectorItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Fraud-detectorItem'\n    post:\n      tags: [Core]\n      summary: Create new fraud-detector entry\n      operationId: createFraud-detectorItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Fraud-detectorItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/fraud-detector/{id}:\n    get:\n      tags: [Core]\n      summary: Get fraud-detector by identifier\n      operationId: getFraud-detectorById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Fraud-detectorItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary fraud-detector record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "GET",
+          "description": "List Fraud Detector records"
+        },
+        {
+          "path": "/api/v1/fraud-detector",
+          "method": "POST",
+          "description": "Create Fraud Detector record"
+        },
+        {
+          "path": "/api/v1/fraud-detector/{id}",
+          "method": "GET",
+          "description": "Get Fraud Detector by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:fraud-detector",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Fraud Detector Service",
+      "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-payments/fraud-detector",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:fraud-detector-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-payments",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:checkout-api-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Checkout API Microservice OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/checkout-api-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Checkout API Microservice REST API\n  description: High-performance microservice contract for Checkout API Microservice in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/checkout-api\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/checkout-api:\n    get:\n      tags: [Core]\n      summary: Retrieve all checkout-api items\n      operationId: listCheckout-apiItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Checkout-apiItem'\n    post:\n      tags: [Core]\n      summary: Create new checkout-api entry\n      operationId: createCheckout-apiItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Checkout-apiItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/checkout-api/{id}:\n    get:\n      tags: [Core]\n      summary: Get checkout-api by identifier\n      operationId: getCheckout-apiById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Checkout-apiItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary checkout-api record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "GET",
+          "description": "List Checkout API Microservice records"
+        },
+        {
+          "path": "/api/v1/checkout-api",
+          "method": "POST",
+          "description": "Create Checkout API Microservice record"
+        },
+        {
+          "path": "/api/v1/checkout-api/{id}",
+          "method": "GET",
+          "description": "Get Checkout API Microservice by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:checkout-api",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Checkout API Microservice Service",
+      "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-retail/checkout-api",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:checkout-api-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-retail",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:oauth-server-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Oauth Server OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/oauth-server-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Oauth Server REST API\n  description: High-performance microservice contract for Oauth Server in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/oauth-server\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/oauth-server:\n    get:\n      tags: [Core]\n      summary: Retrieve all oauth-server items\n      operationId: listOauth-serverItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Oauth-serverItem'\n    post:\n      tags: [Core]\n      summary: Create new oauth-server entry\n      operationId: createOauth-serverItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Oauth-serverItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/oauth-server/{id}:\n    get:\n      tags: [Core]\n      summary: Get oauth-server by identifier\n      operationId: getOauth-serverById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Oauth-serverItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary oauth-server record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "GET",
+          "description": "List Oauth Server records"
+        },
+        {
+          "path": "/api/v1/oauth-server",
+          "method": "POST",
+          "description": "Create Oauth Server record"
+        },
+        {
+          "path": "/api/v1/oauth-server/{id}",
+          "method": "GET",
+          "description": "Get Oauth Server by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:oauth-server",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Oauth Server Service",
+      "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/oauth-server",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:oauth-server-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:contract:user-directory-sync-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "User Directory Sync OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/user-directory-sync-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: User Directory Sync REST API\n  description: High-performance microservice contract for User Directory Sync in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/user-directory-sync\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/user-directory-sync:\n    get:\n      tags: [Core]\n      summary: Retrieve all user-directory-sync items\n      operationId: listUser-directory-syncItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/User-directory-syncItem'\n    post:\n      tags: [Core]\n      summary: Create new user-directory-sync entry\n      operationId: createUser-directory-syncItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/User-directory-syncItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/user-directory-sync/{id}:\n    get:\n      tags: [Core]\n      summary: Get user-directory-sync by identifier\n      operationId: getUser-directory-syncById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    User-directory-syncItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary user-directory-sync record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "GET",
+          "description": "List User Directory Sync records"
+        },
+        {
+          "path": "/api/v1/user-directory-sync",
+          "method": "POST",
+          "description": "Create User Directory Sync record"
+        },
+        {
+          "path": "/api/v1/user-directory-sync/{id}",
+          "method": "GET",
+          "description": "Get User Directory Sync by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:user-directory-sync",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "User Directory Sync Service",
+      "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme-identity/user-directory-sync",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:user-directory-sync-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme-identity",
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement"
+      ],
+      "dcterms:title": "E-Commerce Checkout & Cart Validation",
+      "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
+      "robos:featureFile": "features/checkout.feature",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:hasBackground": "urn:robos:gherkin:checkout-cart-validation:background",
+      "robos:hasRule": [
+        "urn:robos:gherkin:checkout-cart-validation:rule-inventory"
+      ],
+      "robos:hasScenario": [
+        "urn:robos:scenario:checkout-standard-items"
+      ],
+      "robos:hasScenarioOutline": [
+        "urn:robos:scenario-outline:checkout-discount-tiers"
+      ],
+      "robos:tags": [
+        "checkout",
+        "billing",
+        "regression"
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:background",
+      "@type": [
+        "robos:GherkinBackground",
+        "robos:Background"
+      ],
+      "dcterms:title": "Customer Session & Cart Initialization",
+      "robos:steps": [
+        "Given the customer is logged in with valid token",
+        "And the shopping cart is initialized"
+      ],
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+    },
+    {
+      "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "@type": [
+        "robos:GherkinRule",
+        "robos:Rule"
+      ],
+      "dcterms:title": "Rule: Inventory must be verified before payment processing",
+      "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule"
+    },
+    {
+      "@id": "urn:robos:scenario:checkout-standard-items",
+      "@type": [
+        "robos:Scenario",
+        "oslc_qm:TestCase"
+      ],
+      "dcterms:title": "Successful checkout with in-stock items",
+      "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:inRule": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
+      "robos:steps": [
+        "Given items SKU-101 and SKU-202 are in stock",
+        "When the customer submits order with total $50",
+        "Then order status is CONFIRMED"
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase"
+    },
+    {
+      "@id": "urn:robos:step:checkout-add-item-with-table",
+      "@type": [
+        "robos:ScenarioStep"
+      ],
+      "robos:keyword": "When",
+      "robos:stepText": "the customer adds items to cart with configuration",
+      "robos:dataTable": "urn:robos:datatable:cart-items",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+    },
+    {
+      "@id": "urn:robos:datatable:cart-items",
+      "@type": [
+        "robos:DataTable"
+      ],
+      "robos:step": "urn:robos:step:checkout-add-item-with-table",
+      "robos:tableRows": [
+        [
+          "sku",
+          "quantity",
+          "price"
+        ],
+        [
+          "SKU-101",
+          "2",
+          "19.99"
+        ],
+        [
+          "SKU-202",
+          "1",
+          "49.50"
+        ]
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables"
+    },
+    {
+      "@id": "urn:robos:step:checkout-payload-docstring",
+      "@type": [
+        "robos:ScenarioStep"
+      ],
+      "robos:keyword": "Given",
+      "robos:stepText": "the checkout order payload is provided as JSON",
+      "robos:docString": "urn:robos:docstring:checkout-payload",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+    },
+    {
+      "@id": "urn:robos:docstring:checkout-payload",
+      "@type": [
+        "robos:DocString"
+      ],
+      "robos:step": "urn:robos:step:checkout-payload-docstring",
+      "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
+      "robos:contentType": "application/json",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
+    },
+    {
+      "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
+      "@type": [
+        "robos:ScenarioOutline",
+        "oslc_qm:TestCase"
+      ],
+      "dcterms:title": "Discount tier calculation for loyalty members",
+      "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
+      "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
+      "robos:steps": [
+        "Given customer loyalty tier is <tier>",
+        "When order subtotal is <amount>",
+        "Then calculated discount is <discount>"
+      ],
+      "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+    },
+    {
+      "@id": "urn:robos:examples:checkout-loyalty-tiers",
+      "@type": [
+        "robos:ExamplesTable"
+      ],
+      "dcterms:title": "Loyalty Tier Discounts",
+      "robos:tableHeaders": [
+        "tier",
+        "amount",
+        "discount"
+      ],
+      "robos:tableRows": [
+        [
+          "Bronze",
+          "100",
+          "5%"
+        ],
+        [
+          "Silver",
+          "100",
+          "10%"
+        ],
+        [
+          "Gold",
+          "100",
+          "20%"
+        ]
+      ],
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+    },
+    {
+      "@id": "urn:robos:stepdef:customer-submits-order",
+      "@type": [
+        "robos:StepDefinition"
+      ],
+      "dcterms:title": "StepDef: Customer Submits Order",
+      "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
+      "robos:codeFile": "tests/steps/checkout_steps.js",
+      "robos:functionName": "submitOrderStep",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+    },
+    {
+      "@id": "urn:robos:test-plan:q3-release-regression",
+      "@type": [
+        "robos:TestPlan",
+        "oslc_qm:TestPlan"
+      ],
+      "dcterms:title": "Q3 Release Acceptance & Regression Plan",
+      "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+    },
+    {
+      "@id": "urn:robos:test-suite:billing-api-bdd",
+      "@type": [
+        "robos:TestSuite",
+        "oslc_qm:TestSuite"
+      ],
+      "dcterms:title": "Billing API Cucumber BDD Test Suite",
+      "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
+      "robos:testFramework": "cucumber",
+      "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+    },
+    {
+      "@id": "urn:robos:test-exec:checkout-standard-items-latest",
+      "@type": [
+        "robos:TestExecutionRecord",
+        "oslc_qm:TestExecutionRecord"
+      ],
+      "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
+      "oslc_qm:executionStatus": "PASS",
+      "oslc_qm:reportsOnTestCase": "urn:robos:scenario:checkout-standard-items",
+      "robos:testFramework": "cucumber",
+      "robos:durationMs": 420,
+      "robos:executedAt": "2026-09-08T12:00:00Z",
+      "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+    },
+    {
+      "@id": "urn:robos:testing:cucumber",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Cucumber",
+      "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
+      "robos:testingType": "bdd",
+      "robos:language": "polyglot",
+      "robos:website": "https://cucumber.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:jest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Jest",
+      "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
+      "robos:testingType": "unit",
+      "robos:language": "javascript",
+      "robos:website": "https://jestjs.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:vitest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Vitest",
+      "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
+      "robos:testingType": "unit",
+      "robos:language": "typescript",
+      "robos:website": "https://vitest.dev",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:playwright",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Playwright",
+      "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
+      "robos:testingType": "e2e",
+      "robos:language": "polyglot",
+      "robos:website": "https://playwright.dev",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:cypress",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Cypress",
+      "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
+      "robos:testingType": "e2e",
+      "robos:language": "javascript",
+      "robos:website": "https://www.cypress.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:junit5",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "JUnit 5",
+      "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
+      "robos:testingType": "unit",
+      "robos:language": "java",
+      "robos:website": "https://junit.org/junit5/",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:testng",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "TestNG",
+      "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
+      "robos:testingType": "integration",
+      "robos:language": "java",
+      "robos:website": "https://testng.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:mockito",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Mockito",
+      "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
+      "robos:testingType": "mocking",
+      "robos:language": "java",
+      "robos:website": "https://site.mockito.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:pytest",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Pytest",
+      "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
+      "robos:testingType": "unit",
+      "robos:language": "python",
+      "robos:website": "https://pytest.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:robot-framework",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Robot Framework",
+      "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
+      "robos:testingType": "bdd",
+      "robos:language": "python",
+      "robos:website": "https://robotframework.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:pact",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Pact",
+      "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
+      "robos:testingType": "contract",
+      "robos:language": "polyglot",
+      "robos:website": "https://pact.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:k6",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Grafana k6",
+      "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
+      "robos:testingType": "performance",
+      "robos:language": "javascript",
+      "robos:website": "https://k6.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:restassured",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "REST Assured",
+      "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
+      "robos:testingType": "api",
+      "robos:language": "java",
+      "robos:website": "https://rest-assured.io",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:testify",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Testify",
+      "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
+      "robos:testingType": "unit",
+      "robos:language": "go",
+      "robos:website": "https://github.com/stretchr/testify",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:godog",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Godog",
+      "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
+      "robos:testingType": "bdd",
+      "robos:language": "go",
+      "robos:website": "https://github.com/cucumber/godog",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:testing:mocha",
+      "@type": [
+        "robos:TestingLibrary",
+        "robos:TestFramework",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Mocha",
+      "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
+      "robos:testingType": "unit",
+      "robos:language": "javascript",
+      "robos:website": "https://mochajs.org",
+      "robos:package": "testing",
+      "robos:namespace": "robos.testing",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     }
   ]
 }

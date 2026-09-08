@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld('api', {
   listPath: (query) => ipcRenderer.invoke('app-wizard:list-path', query),
   generateNewApp: (spec) => ipcRenderer.invoke('app-wizard:generate-new-app', spec),
   importApp: (spec) => ipcRenderer.invoke('app-wizard:import-app', spec),
+  parsePrompt: (prompt) => ipcRenderer.invoke('app-wizard:parse-prompt', prompt),
+  ingestResources: (payload) => ipcRenderer.invoke('app-wizard:ingest-resources', payload),
 });

@@ -175,26 +175,123 @@ paths:
 
       <!-- MODE: IMPORT APP PANELS -->
       <section class="step-panel" id="panel-import-1">
-        <h2>Select Repository or Source Codebase</h2>
-        <div class="subtitle">Specify the local path or Git URL of the application to import into RobOS.</div>
+        <h2>What stuff are you importing?</h2>
+        <div class="subtitle">Queue URL resources, local repositories, documentation spaces, databases, and infrastructure to ingest into the RobOS Knowledge Graph.</div>
+
+        <!-- Quick Resource Adder Bar -->
         <div class="form-group">
-          <label for="import-source-path">Local Directory Path or Git URL</label>
-          <input type="text" id="import-source-path" placeholder="/home/user/my-existing-app">
-        </div>
-        <div class="skill-flow-tip" style="margin-bottom: 16px; background: rgba(0, 188, 212, 0.08); border: 1px solid rgba(0, 188, 212, 0.3); border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
-          <span style="font-size: 18px; line-height: 1;">✨</span>
-          <div style="font-size: 12.5px; line-height: 1.45; color: var(--text-secondary);">
-            <strong style="color: var(--accent);">Onboarding multiple existing Git projects?</strong> Ask your AI agent to run the <code>/import-company-kgraph</code> skill (e.g. <code>/import-company-kgraph --source &lt;url | s3://... | path&gt;</code>) to extract all company repositories into Knowledge Graph entries that you can then take and import directly into RobOS.
+          <label for="import-source-path">Add Resource Target (URL, Local Path, or Connection URI)</label>
+          <div class="resource-adder-bar">
+            <select id="import-resource-type">
+              <option value="auto">Auto-Detect Type</option>
+              <option value="github-repo">GitHub / Git Repo URL</option>
+              <option value="github-org">GitHub Organization</option>
+              <option value="filesystem">Local Directory / Codebase</option>
+              <option value="confluence">Confluence Wiki Space</option>
+              <option value="http-catalog">HTTP / Backstage Catalog</option>
+              <option value="s3">AWS S3 Bucket</option>
+              <option value="database">Database (Postgres / MySQL / Redis / Mongo)</option>
+              <option value="message-broker">Message Broker (Kafka)</option>
+              <option value="kubernetes-cluster">Kubernetes Cluster</option>
+              <option value="mcp-server">MCP Server</option>
+            </select>
+            <input type="text" id="import-source-path" placeholder="https://github.com/org/repo, /home/user/app, https://confluence..., postgres://...">
+            <button type="button" class="btn btn-secondary" id="btn-add-resource">+ Add Resource</button>
           </div>
         </div>
+
+        <!-- Queued Resources List -->
+        <div class="resource-queue-box">
+          <div class="resource-queue-header">
+            <div class="resource-queue-header-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                <path d="m3.3 7 8.7 5 8.7-5"/>
+                <path d="M12 22V12"/>
+              </svg>
+              <span>Queued Resources for Ingestion</span>
+            </div>
+            <span id="queued-count-badge" class="pkg-pill" style="color:var(--accent); border-color:var(--accent);">0 items queued</span>
+          </div>
+          <div class="resource-queue-list" id="queued-resources-list">
+            <div class="resource-queue-empty" id="queued-empty-msg">No resources queued yet. Type a target above, load a sample stack, or use the AI Prompt Extractor below.</div>
+          </div>
+        </div>
+
+        <!-- AI Prompt & Multi-Resource Bulk Extractor Card -->
+        <div class="ai-refine-box" style="background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); margin: 0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+              AI Prompt & Multi-Resource Bulk Extractor
+            </label>
+            <span style="font-size: 11px; color: var(--text-secondary);">Extract multiple URLs, paths, and services from unstructured text</span>
+          </div>
+          <robos-ai-textarea
+            id="ai-import-prompt"
+            show-submit="false"
+            show-commands="false"
+            placeholder="Instruct AI to extract targets (e.g. 'Import Acme Payments org at https://github.com/acme-payments, Confluence at https://confluence.acme.corp/display/ARCH, checkout-api at https://github.com/acme-retail/checkout-api, and local path /home/user/checkout-service')..."
+            min-height="64">
+          </robos-ai-textarea>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" id="btn-parse-prompt" style="display: flex; align-items: center; gap: 6px;">
+              <span>✦</span> AI Extract & Queue Targets
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-load-sample" style="display: flex; align-items: center; gap: 6px;">
+              <span>📋</span> Load Enterprise Sample Stack
+            </button>
+            <div id="ai-parse-status" style="font-size: 12px; color: var(--accent); margin-left: auto;"></div>
+          </div>
+        </div>
+
+        <!-- Target Enterprise & Team Context -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="import-company-name">Company / Organization</label>
+            <input type="text" id="import-company-name" value="Acme Global">
+          </div>
+          <div class="form-group">
+            <label for="import-company-slug">Company Slug</label>
+            <input type="text" id="import-company-slug" value="acme-global">
+          </div>
+          <div class="form-group">
+            <label for="import-default-team">Default Assigned Team</label>
+            <select id="import-default-team"></select>
+          </div>
+        </div>
+
         <div class="action-bar">
-          <button class="btn btn-primary" id="btn-scan-import">Deep Inspect Codebase 🔍</button>
+          <button class="btn btn-primary" id="btn-scan-import">Deep Inspect & Analyze Targets 🔍</button>
         </div>
       </section>
 
       <section class="step-panel" id="panel-import-2">
-        <h2>Codebase Inspection Results</h2>
-        <div class="subtitle">Automated archetype, language, framework, and contract detection.</div>
+        <h2>Inspection & Knowledge Graph Topology</h2>
+        <div class="subtitle">Automated archetype detection, contract discovery, and linked-data graph topology.</div>
+
+        <!-- Multi-Resource KGraph Topology Stats Box -->
+        <div id="kgraph-multi-inspection" style="display: none;">
+          <div class="shacl-badge-box">
+            <span class="shacl-badge-text">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+              W3C SHACL Shape Conformance: Passed 100% (0 Violations)
+            </span>
+            <span id="shacl-stats-text" style="font-size: 12px; color: var(--text-secondary);">Validated against 91 shapes across 8 packages</span>
+          </div>
+          <div class="kgraph-stat-grid" id="kgraph-stats-cards">
+            <!-- Populated by app.js -->
+          </div>
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Standard Modular Package Distribution:</div>
+            <div class="package-pills-row" id="kgraph-package-pills"></div>
+          </div>
+        </div>
+
         <div class="summary-box" id="import-inspection-results">
           <!-- Populated by app.js -->
         </div>
@@ -256,7 +353,7 @@ paths:
         </div>
 
         <div class="action-bar">
-          <button class="btn btn-secondary" id="btn-back-import-2">← Rescan</button>
+          <button class="btn btn-secondary" id="btn-back-import-2">← Back to Resources</button>
           <button class="btn btn-primary" id="btn-next-import-2">Next: Catalog & Dev Setup →</button>
         </div>
       </section>
