@@ -126,8 +126,8 @@ teams:
         role: Approver
 ```
 
-### Dual-State SDLC Knowledge Graph Registration (`.robos/knowledge-graph.jsonld`)
-The bootstrap engine simultaneously registers the organization root admin and founding squads into the OSLC JSON-LD Knowledge Graph:
+### Modular KGraph Packages Registration
+The bootstrap engine simultaneously registers the organization root admin and founding squads into the **Modular KGraph Packages** (`organization` package):
 ```json
 {
   "@id": "urn:robos:person:admin",
@@ -173,7 +173,7 @@ Individual API keys scattered across developer machines lead to billing headache
 
 ## Step 5: Starter C4 Architecture & Knowledge Graph
 
-RobOS automatically generates an initial **C4 Level 1 (System Context)** diagram in `.robos/knowledge-graph.jsonld`:
+RobOS automatically generates an initial **C4 Level 1 (System Context)** diagram in the **Modular KGraph Packages** (`core-platform`):
 - **Users**: Target customers, administrators, and external API consumers.
 - **Software System**: Acme Cloud Innovations platform boundary.
 - **External Dependencies**: Payment providers, third-party auth, and cloud hosting.

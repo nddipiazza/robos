@@ -16,4 +16,4 @@ Ingest existing Kubernetes clusters (AWS EKS, Google Cloud GKE, Azure AKS, On-pr
 - [x] Map active namespaces (Production, Staging, Dev) to Knowledge Graph topology container nodes.
 - [x] Connect ArgoCD GitOps instances to display live sync status and deployment revisions.
 - [x] Enable live container log streaming and pod telemetry in Kube Studio.
-- [x] Provide automated topology reconciliation between live cluster resources and .robos/knowledge-graph.jsonld.
+- [x] Provide automated topology reconciliation between live cluster resources and Modular KGraph Packages.

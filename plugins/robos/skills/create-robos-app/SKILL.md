@@ -99,7 +99,7 @@ Add the new app to the appropriate section in the App Suite tables in `AGENTS.md
 
 ### 4. Register in Knowledge Graph & Prompt Documentation Synchronization
 
-1. Add package node to `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml`.
+1. Add package node to Modular KGraph Packages (`.robos/kgraphs/` & `.robos/kgraph.yaml`) and `.robos/packages.yaml`.
 2. **Documentation Synchronization Prompt**: When KGraph objects are updated, discern noticeable updates to system documentation (`docs/index.md`, `README.md`, `docs/project-plan/`) and update them accordingly.
 
 ### 5. Deploy to VM

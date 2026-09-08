@@ -16,7 +16,7 @@ Story 32.01 implements the **RobOS Knowledge Graph Engine** (`packages/robos-gra
 - **Lifecycle Standard**: [OASIS OSLC Core 3.0 Specification](https://open-services.net/specifications/core/core-3.0.html) (defines Requirements, Architecture Management, Change Management, Quality Management, and Automation domains as linked RDF resources).
 - **Format**: [W3C JSON-LD 1.1](https://www.w3.org/TR/json-ld11/).
 - **Constraint Validation**: [W3C SHACL (Shapes Constraint Language)](https://www.w3.org/TR/shacl/).
-- **Storage Location**: `.robos/knowledge-graph.jsonld` and `.robos/shapes/`.
+- **Storage Location**: Modular KGraph Packages (`.robos/kgraphs/`) and `.robos/shapes/`.
 
 ---
 

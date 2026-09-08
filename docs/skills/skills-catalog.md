@@ -37,7 +37,7 @@ Comprehensive reference of all 24+ AI Agent Skills in the RobOS Plugin Marketpla
 
 ### `sync-kgraph-docs`
 - **Slash Command**: `/sync-kgraph-docs`
-- **Description**: Monitors additions, updates, or removals in `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml`. Automatically discerns impacts across system documentation, architecture diagrams, and API guides, and synchronizes documentation in lockstep.
+- **Description**: Monitors additions, updates, or removals in **Modular KGraph Packages** and `.robos/packages.yaml`. Automatically discerns impacts across system documentation, architecture diagrams, and API guides, and synchronizes documentation in lockstep.
 
 ---
 

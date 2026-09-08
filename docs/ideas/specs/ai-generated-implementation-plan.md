@@ -7,7 +7,7 @@ nav_exclude: true
 
 - **Status**: Draft
 - **Created Date**: 2026-09-05
-- **Target Component**: `packages/task-planner`, `packages/robos-graph`, `packages/dev-central`, `.robos/` Git Store (`.robos/plans/`, `.robos/knowledge-graph.jsonld`), `packages/agents-manager`
+- **Target Component**: `packages/task-planner`, `packages/robos-graph`, `packages/dev-central`, `.robos/` Git Store (`.robos/plans/`, Modular KGraph Packages), `packages/agents-manager`
 - **Author/Idea Source**: User & Antigravity Agent
 
 ---
@@ -28,7 +28,7 @@ This feature establishes the **AI-Generated Implementation Plan** as an official
 Whenever the **RobOS Task Planner** (`packages/task-planner`) analyzes a requirement and produces a project breakdown:
 1. It synthesizes a formal `robos:ImplementationPlan` object complying with **OASIS OSLC Core 3.0** and **W3C JSON-LD / SHACL**.
 2. It persists the plan directly into the repository's Git store under `.robos/plans/<plan-id>.jsonld` accompanied by a human-friendly markdown summary (`.robos/plans/<plan-id>.md`).
-3. It links the plan into the central `.robos/knowledge-graph.jsonld` index, associating it with the driving requirements, impacted microservices/apps, contracts, epics, and verification test suites.
+3. It links the plan into the central Modular KGraph Packages index, associating it with the driving requirements, impacted microservices/apps, contracts, epics, and verification test suites.
 4. Because the plan resides in Git, it automatically benefits from RobOS's **Dual-State World Representation** (`main` vs `feature/*` branches), allowing architects and reviewers to semantically diff proposed plans across branches before execution.
 
 ---
@@ -54,7 +54,7 @@ Whenever the **RobOS Task Planner** (`packages/task-planner`) analyzes a require
   - Multi-tier synthesis: High-level architectural impact analysis $\rightarrow$ execution phases $\rightarrow$ concrete issue tracker tickets $\rightarrow$ automated verification gates.
 - [ ] **Git Store Persistence (`.robos/plans/`)**:
   - Declarative storage under `.robos/plans/<plan-slug>.jsonld` and `.robos/plans/<plan-slug>.md`.
-  - Automatic registration in `.robos/knowledge-graph.jsonld` nodes index.
+  - Automatic registration in Modular KGraph Packages index.
   - Automated staging/committing to the current Git branch.
 - [ ] **Dual-State Semantic Plan Diffing**:
   - Comparison of implementation plans between `main` (baseline) and feature/pilot branches.
@@ -92,7 +92,7 @@ graph TD
     subgraph GitStore [Git Repository .robos/]
         PlanJSONLD[.robos/plans/<plan-id>.jsonld]
         PlanMD[.robos/plans/<plan-id>.md]
-        KGraph[.robos/knowledge-graph.jsonld]
+        KGraph[Modular KGraph Packages]
     end
 
     subgraph ExternalTrackers [Task Backends]
@@ -224,14 +224,14 @@ robos:ImplementationPlanShape
 
 1. **Phase 1: Knowledge Graph Core & SHACL Schema**
    - Define `robos:ImplementationPlan` in `packages/robos-graph/lib/oslc-parser.js` and `packages/robos-graph/lib/shacl-validator.js`.
-   - Update `.robos/knowledge-graph.jsonld` context definitions to map `oslc:Plan` and `robos:ImplementationPlan`.
+   - Update Modular KGraph Packages context definitions to map `oslc:Plan` and `robos:ImplementationPlan`.
 
 2. **Phase 2: Task Planner Plan Synthesis Engine**
    - Enhance `packages/task-planner/main.js` prompt engineering to generate comprehensive plan metadata (architectural scope, affected packages/contracts, phased DAG, verification plan) alongside raw ticket objects.
    - Implement `.robos/plans/` file generator producing `<plan-slug>.jsonld` and companion `<plan-slug>.md`.
 
 3. **Phase 3: Git Store Integration & KGraph Node Synchronization**
-   - Update `packages/task-planner/main.js:syncProjectToKGraph()` to register the new implementation plan node directly into `~/.robos/knowledge-graph.jsonld`.
+   - Update `packages/task-planner/main.js:syncProjectToKGraph()` to register the new implementation plan node directly into Modular KGraph Packages.
    - Add Git staging/committing helper to track `.robos/plans/` in the active repository workspace.
 
 4. **Phase 4: Visual Plan Explorer in Task Planner & Graph Studio**
@@ -246,7 +246,7 @@ robos:ImplementationPlanShape
 ## 6. Acceptance Criteria
 
 - [ ] Task Planner generates an `ImplementationPlan` artifact (`.robos/plans/<plan-slug>.jsonld` and `.robos/plans/<plan-slug>.md`) in the repository Git store whenever a planning session runs.
-- [ ] The generated plan is registered as a first-class `robos:ImplementationPlan` node in `.robos/knowledge-graph.jsonld`.
+- [ ] The generated plan is registered as a first-class `robos:ImplementationPlan` node in Modular KGraph Packages.
 - [ ] The plan object validates against `robos:ImplementationPlanShape` using the SHACL validator.
 - [ ] The plan accurately links to affected services (`robos:Microservice`), contracts (`robos:Contract`), and child change requests (`oslc_cm:ChangeRequest`).
 - [ ] Plans are version-controlled in Git, enabling branch diffing between `main` and feature branches.

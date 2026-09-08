@@ -169,7 +169,7 @@ graph TD
 
 | Domain | Open Source Standard / Project | How RobOS Integrates It |
 |--------|--------------------------------|-------------------------|
-| **Knowledge Graph** | [OASIS OSLC Core 3.0](https://open-services.net/), [W3C JSON-LD](https://www.w3.org/TR/json-ld11/), [W3C SHACL](https://www.w3.org/TR/shacl/) | International lifecycle linked data standard storing full system state in `.robos/knowledge-graph.jsonld`. |
+| **Knowledge Graph** | [OASIS OSLC Core 3.0](https://open-services.net/), [W3C JSON-LD](https://www.w3.org/TR/json-ld11/), [W3C SHACL](https://www.w3.org/TR/shacl/) | International lifecycle linked data standard storing full system state in Modular KGraph Packages (`.robos/kgraphs/`). |
 | **Topology & Catalog** | [Backstage](https://backstage.io/), [C4 Model](https://c4model.com/), [Cytoscape.js](https://js.cytoscape.org/) | Reuses Backstage `catalog-info.yaml` and C4 DSL; interactive node-link diagrams in Electron. |
 | **Human & Agent HR** | [Team Topologies](https://teamtopologies.com/), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) | Stream-aligned/platform team models; MCP skill bindings for agent personas. |
 | **Entity Schemas** | [Microsoft TypeSpec](https://typespec.io/), [JSON Schema](https://json-schema.org/), [Buf CLI](https://buf.build/) | Author once in TypeSpec, auto-generate TypeScript, Java, Python, Go types and Prisma models. |

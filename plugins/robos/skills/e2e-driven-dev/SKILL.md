@@ -161,12 +161,12 @@ Implement the application code across the standard RobOS layers:
 
 #### Phase 3b — Knowledge Graph & GitOps Continuous Synchronization
 RobOS development skills strictly ensure the Knowledge Graph is kept up to date:
-- Register or update all affected entities in `.robos/knowledge-graph.jsonld` (services, contracts, requirements, eLearning courses).
+- Register or update all affected entities in Modular KGraph Packages (services, contracts, requirements, eLearning courses).
 - Ensure declarative GitOps files under `.robos/` (`topology.yaml`, `teams.yaml`, `packages.yaml`, `elearning.yaml`) reflect the state.
 
 #### Phase 3c — Documentation Synchronization Prompt
 **Cardinal Rule**: Whenever Knowledge Graph objects are updated, the AI coding agent must be prompted to discern any noticeable updates to system documentation and update the documentation accordingly:
-1. Examine what was added or altered in `.robos/knowledge-graph.jsonld`.
+1. Examine what was added or altered in Modular KGraph Packages.
 2. Discern any noticeable updates needed across `docs/index.md`, `README.md`, `docs/project-plan/`, and specs.
 3. Automatically update the corresponding documentation files to maintain perfect documentation alignment.
 

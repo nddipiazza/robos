@@ -699,7 +699,7 @@ An established enterprise with 500+ engineers across multiple divisions needs to
 4. **Execute Directory Synchronization**: Ingests enterprise user rosters, sets global git author credentials, and binds active identity in `~/.config/robos/identity.json`.
 5. **Verify Activated Identity**: Asserts updated active badge showing `Sarah Connor · Lead Architect & Approver · core-platform`.
 6. **Inspect Team Topologies & Members**: Verifies Core Platform team and cryptographic GPG commit signers.
-7. **GitOps & Knowledge Graph Sync**: Persists team definitions to `.robos/teams.yaml` and synchronizes developer/team nodes into `.robos/knowledge-graph.jsonld`.
+7. **GitOps & Knowledge Graph Sync**: Persists team definitions to `.robos/teams.yaml` and synchronizes developer/team nodes into **Modular KGraph Packages** (`organization`).
 - **Source Demo Script**: [`packages/robos-test/demos/existing-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/existing-company-setup-demo.js)
 - **Dedicated Documentation**: [Existing Company Setup Guide]({{ '/existing-company-setup.html' | relative_url }})
 
@@ -730,7 +730,7 @@ A greenfield startup or new engineering division is setting up their software de
 4. **Execute Bootstrap**: Provisions company tenant in `~/.config/robos/company.json`, generates administrator keyrings in `~/.gnupg`, and activates root identity in `~/.config/robos/identity.json`.
 5. **Verify Activated Root Admin**: Asserts updated active badge showing `Alex Rivera · Chief Architect & VP Engineering · founding-core`.
 6. **Inspect Foundational Squads**: Validates `Founding Core Engineering` and `Cloud Platform` teams in `.robos/teams.yaml`.
-7. **Security Baselines & Knowledge Graph Registration**: Materializes administrator and squad nodes into `.robos/knowledge-graph.jsonld` and registers corporate AI models.
+7. **Security Baselines & Knowledge Graph Registration**: Materializes administrator and squad nodes into **Modular KGraph Packages** (`organization`) and registers corporate AI models.
 - **Source Demo Script**: [`packages/robos-test/demos/new-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/new-company-setup-demo.js)
 - **Dedicated Documentation**: [New Company Setup Guide]({{ '/new-company-setup.html' | relative_url }})
 

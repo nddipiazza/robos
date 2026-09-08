@@ -268,7 +268,7 @@ When adding, renaming, or removing an app, update ALL of these locations. Use th
 7. `packages/desktop-shell/install.sh` — install block
 8. `<app-id>.desktop` file
 9. `AGENTS.md` App Suite table
-10. `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml` — Register or update the application node in the dual-state SDLC knowledge graph and GitOps tree, and prompt documentation synchronization.
+10. **Modular KGraph Packages** (`.robos/kgraphs/` & `.robos/kgraph.yaml`) and `.robos/packages.yaml` — Register or update the application node in the dual-state SDLC knowledge graph and GitOps tree, and prompt documentation synchronization.
 
 **Note:** Some checklist targets (desktop-manager, icon-lib, task-manager, desktop-shell) may not exist yet. Only update files that exist.
 

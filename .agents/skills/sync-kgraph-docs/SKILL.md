@@ -1,6 +1,6 @@
 ---
 name: sync-kgraph-docs
-description: Inspect RobOS Knowledge Graph (.robos/knowledge-graph.jsonld) object updates, discern noticeable impacts to system documentation, and synchronize docs accordingly.
+description: Inspect RobOS Modular KGraph Packages (.robos/kgraphs/) object updates, discern noticeable impacts to system documentation, and synchronize docs accordingly.
 ---
 
 # Sync Knowledge Graph & Living Documentation
@@ -10,7 +10,7 @@ Inspect newly added, modified, or removed Knowledge Graph (KGraph) objects and G
 ## When to Use
 
 Use this skill whenever:
-- A new application, microservice, API contract, requirement, BDD scenario, or eLearning course is registered in `.robos/knowledge-graph.jsonld`.
+- A new application, microservice, API contract, requirement, BDD scenario, or eLearning course is registered in Modular KGraph Packages.
 - A feature branch or GitOps configuration (`.robos/topology.yaml`, `.robos/packages.yaml`, `.robos/elearning.yaml`) has been modified.
 - The AI prompt advisory is triggered: *"Noticeable updates detected in Knowledge Graph objects. AI prompted to discern documentation updates."*
 
@@ -19,7 +19,7 @@ Use this skill whenever:
 ```
 ┌────────────────────────────────────────────────────────┐
 │ 1. Ingest Knowledge Graph Deltas                       │
-│    Inspect added/modified nodes in knowledge-graph.jsonld│
+│    Inspect added/modified nodes in Modular KGraph Pkgs │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
@@ -36,7 +36,7 @@ Use this skill whenever:
 ```
 
 ### Step 1 — Ingest KGraph Deltas
-1. Read `.robos/knowledge-graph.jsonld` (or query via `SDLCKnowledgeGraphStore.query()` / `robos_ekgraph_search`).
+1. Read Modular KGraph Packages under `.robos/kgraphs/` (or query via `SDLCKnowledgeGraphStore.query()` / `robos_ekgraph_search`).
 2. Identify changed nodes:
    - Microservices (`robos:Microservice`)
    - Contracts (`robos:Contract`)
@@ -53,5 +53,5 @@ Evaluate whether the entity update introduces or alters:
 
 ### Step 3 — Apply Documentation Updates
 1. Apply concise, accurate updates reflecting the entity's purpose, identifiers, contracts, or links.
-2. Ensure GitOps declarative catalogs (`.robos/topology.yaml`, `.robos/elearning.yaml`) remain strictly aligned with `.robos/knowledge-graph.jsonld`.
+2. Ensure GitOps declarative catalogs (`.robos/topology.yaml`, `.robos/elearning.yaml`) remain strictly aligned with the Modular KGraph Packages.
 3. Verify that all links, IDs, and markdown anchors remain valid.

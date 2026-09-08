@@ -41,7 +41,7 @@ In RobOS, agents practice End-to-End Driven Development against **fully self-con
 ## 3. Key Capabilities & Scope
 
 ### In Scope
-- [x] **OSLC Core 3.0 & JSON-LD + SHACL Knowledge Graph**: Standardized `.robos/knowledge-graph.jsonld` storage format linking systems, services, entities, contracts, teams, features, and tasks.
+- [x] **OSLC Core 3.0 & JSON-LD + SHACL Knowledge Graph**: Standardized Modular KGraph Packages (`.robos/kgraphs/`) storage format linking systems, services, entities, contracts, teams, features, and tasks.
 - [x] **Multi-Branch World State Versioning**: Git-backed graph branching supporting `main` (Production) and `feature/*`, `poc/*`, `pilot/*`, `spike/*` branches.
 - [x] **Semantic Graph Diffing & Blast Radius Calculation**: Automated comparison highlighting added/modified nodes, schema drift, and broken consumer contracts between branches.
 - [x] **Agent-Assisted Graph Authoring Studio**: Natural-language co-pilot assisting users with authoring TypeSpec schemas, OpenAPI contracts, and C4 topologies.
@@ -61,8 +61,8 @@ In RobOS, agents practice End-to-End Driven Development against **fully self-con
 ```mermaid
 graph TD
     subgraph GitRepo [Git Repository .robos/]
-        ProdGraph[main branch: Production Reality<br/>knowledge-graph.jsonld]
-        FutureGraph[feature / poc / pilot branch: Proposed State<br/>knowledge-graph.jsonld]
+        ProdGraph[main branch: Production Reality<br/>Modular KGraph Packages]
+        FutureGraph[feature / poc / pilot branch: Proposed State<br/>Modular KGraph Packages]
     end
 
     subgraph GraphEngine [OSLC & SHACL Graph Core]

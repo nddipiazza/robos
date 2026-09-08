@@ -108,7 +108,7 @@ Assign the imported application to an existing stream-aligned, platform, or enab
 ![Team Assignment]({{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }})
 
 ### 4. Metadata Synthesis & Knowledge Graph Mapping
-RobOS generates Backstage `catalog-info.yaml`, synthesizes `dev-setup.sh`, creates Bruno `.bru` request collections, and registers the component into `.robos/packages.yaml` and `.robos/knowledge-graph.jsonld`.
+RobOS generates Backstage `catalog-info.yaml`, synthesizes `dev-setup.sh`, creates Bruno `.bru` request collections, and registers the component into `.robos/packages.yaml` and the **Modular KGraph Packages**.
 
 ![Ingestion Complete]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }})
 

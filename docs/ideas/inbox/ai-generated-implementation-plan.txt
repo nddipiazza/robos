@@ -13,7 +13,7 @@ Key Elements:
    - Generates both machine-readable linked data (`.robos/plans/<plan-id>.jsonld`) and human-readable executive markdown (`.robos/plans/<plan-id>.md`).
 
 3. Version-Controlled in Git Store:
-   - Plans are saved directly into the Git repository under `.robos/plans/` alongside `.robos/knowledge-graph.jsonld`.
+   - Plans are saved directly into the Git repository under `.robos/plans/` alongside Modular KGraph Packages.
    - Leverages RobOS dual-state world representation: implementation plans live on feature/pilot branches and can be semantically diffed against `main`.
    - Immutable audit trail of how an implementation strategy evolved from prompt to verified code.
 

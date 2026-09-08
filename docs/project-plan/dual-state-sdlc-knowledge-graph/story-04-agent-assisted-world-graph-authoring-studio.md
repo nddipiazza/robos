@@ -17,6 +17,6 @@ Story 32.04 implements the **Agent-Assisted World Graph Authoring Studio** (`pac
 ## 2. Acceptance Criteria
 
 - [x] Users can add and modify graph nodes using natural language prompts.
-- [x] Scanning an existing multi-repo folder auto-generates a valid `.robos/knowledge-graph.jsonld` file.
+- [x] Scanning an existing multi-repo folder auto-generates valid Modular KGraph Packages.
 - [x] AI Co-Pilot validates all additions against SHACL shapes before committing.
 - [x] Verified with unit and automated E2E tests (`packages/robos-test/tests/sdlc-graph/graph-copilot.test.js`) and persistent walkthrough archive in `~/.robos/development/walkthroughs/graph-copilot/`.

@@ -141,8 +141,8 @@ teams:
         role: Approver
 ```
 
-### Dual-State SDLC Knowledge Graph Synchronization (`.robos/knowledge-graph.jsonld`)
-Simultaneously, RobOS materializes the developer profile and team nodes directly into the dual-state OSLC JSON-LD Knowledge Graph:
+### Modular KGraph Packages Synchronization
+Simultaneously, RobOS materializes the developer profile and team nodes directly into the **Modular KGraph Packages** (`organization` package):
 ```json
 {
   "@id": "urn:robos:person:sconnor",
@@ -228,7 +228,7 @@ Enterprise security policies often require signed Git commits:
 
 Enterprise Kubernetes infrastructure connects seamlessly into **Kube Studio** (`packages/kube-studio`):
 1. **Kubeconfig Discovery**: Ingests all active contexts from `~/.kube/config` (EKS, GKE, AKS, and bare-metal clusters).
-2. **Namespace Mapping**: Maps namespaces (`production`, `staging`, `dev`) to container nodes in `.robos/knowledge-graph.jsonld`.
+2. **Namespace Mapping**: Maps namespaces (`production`, `staging`, `dev`) to container nodes in the **Modular KGraph Packages** (`core-platform`).
 3. **ArgoCD GitOps Sync**: Connects to the ArgoCD API to display live deployment synchronization status and rollback history.
 
 ---

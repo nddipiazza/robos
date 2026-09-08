@@ -28,7 +28,7 @@ Every time you switch between these separate tools, context is lost:
 - AI coding assistants only see isolated file snippets without understanding system topology.
 - Code reviews happen in web browsers disconnected from IDE symbol indexes and debugger breakpoints.
 
-**RobOS changes this fundamentally.** RobOS provides a unified desktop operating system and application suite where **every tool shares the same underlying Git-backed architecture knowledge graph (`.robos/knowledge-graph.jsonld`)**.
+**RobOS changes this fundamentally.** RobOS provides a unified desktop operating system and application suite where **every tool shares the same underlying Git-backed Modular KGraph Packages**.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/app-flow-lifecycle-overview.jpg' | relative_url }}" alt="The RobOS End-to-End Application Lifecycle Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -126,7 +126,7 @@ For existing repositories, the **App Import Wizard** performs automated deep cod
 
 * **What Happens**: You type the high-level business goal into the AI prompt window (e.g., *"Build a distributed pet store web application with a Java Spring Boot backend, a PostgreSQL relational database, an mTLS rabies vaccination verification gateway, an interactive React frontend, and an analytics warehouse"*).
 * **The App's Job**: The AI analyzes the requirements and breaks the project into an ordered, step-by-step dependency graph (**Directed Acyclic Graph / DAG**). It identifies prerequisite tasks (e.g., *"Database Schema must be defined before creating the REST API"*) and automatically syncs numbered tickets (e.g., `PET-101` through `PET-116`) to GitHub Issues or Jira.
-* **Handoff to Next Step**: The generated task list and dependency graph are saved directly to `.robos/knowledge-graph.jsonld`, creating the blueprint for the architecture.
+* **Handoff to Next Step**: The generated task list and dependency graph are saved directly to the **Modular KGraph Packages**, creating the blueprint for the architecture.
 
 ---
 
@@ -305,7 +305,7 @@ For existing repositories, the **App Import Wizard** performs automated deep cod
 |:---|:---|:---|:---|:---|
 | **0. Foundation** | **Group Manager** (`group-manager` & `security-setup`) | Enterprise directory SCIM/LDAP sync, team topologies, GPG/SSH crypto keys | SCIM 2.0, LDAP, GPG, SSH, `pass` | `.robos/teams.yaml`, `~/.config/robos/` |
 | **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across 9 archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
-| **2. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap & DAG | OASIS OSLC 3.0, GitHub Issues, Jira | `.robos/knowledge-graph.jsonld` |
+| **2. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap & DAG | OASIS OSLC 3.0, GitHub Issues, Jira | Modular KGraph Packages |
 | **3. Architecture** | **Topology Studio** | C4 multi-level visual system architecture & blast radius analysis | C4 Model, Spotify Backstage | `catalog-info.yaml` |
 | **4. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
 | **5. Repositories** | **Git Projects** | Multi-repo linking & automated dev setup | Git, POSIX Shell, GPG Vault | `dev-setup.sh` |

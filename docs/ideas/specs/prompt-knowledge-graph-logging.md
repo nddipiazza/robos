@@ -7,7 +7,7 @@ nav_exclude: true
 
 - **Status**: Draft
 - **Created Date**: 2026-09-05
-- **Target Component**: `packages/robos-graph`, `packages/ai-prompt`, `packages/dev-central`, `packages/desktop-agents`, `packages/robos-lib`, Terminal Shell Integration, `.robos/` Git Store (`.robos/prompts/`, `.robos/knowledge-graph.jsonld`)
+- **Target Component**: `packages/robos-graph`, `packages/ai-prompt`, `packages/dev-central`, `packages/desktop-agents`, `packages/robos-lib`, Terminal Shell Integration, `.robos/` Git Store (`.robos/prompts/`, Modular KGraph Packages)
 - **Author/Idea Source**: User & Antigravity Agent
 
 ---
@@ -24,7 +24,7 @@ Today, prompt executions are often treated as ephemeral terminal outputs or scat
 ### The Solution: First-Class Knowledge Graph Object (`robos:Prompt`)
 This feature introduces `robos:Prompt` as an official, first-class linked-data entity in the **RobOS SDLC Knowledge Graph**. 
 
-Every prompt executed within the operating system is intercepted, structured, categorized by its execution provenance, and committed to the Git store under `.robos/prompts/` while being indexed in `.robos/knowledge-graph.jsonld`.
+Every prompt executed within the operating system is intercepted, structured, categorized by its execution provenance, and committed to the Git store under `.robos/prompts/` while being indexed in Modular KGraph Packages.
 
 ### Provenance Taxonomy
 Each prompt run is tagged with an explicit origin taxonomy:
@@ -59,7 +59,7 @@ Each prompt run is tagged with an explicit origin taxonomy:
   - **Terminal Shell Wrapper**: Lightweight zsh/bash wrapper for `gh copilot`, `claude`, `gemini`, and `agy` in Tilix, logging CLI runs as `OriginExternalTerminal`.
 - [ ] **Git Store Persistence (`.robos/prompts/`)**:
   - Append-only, version-controlled JSON-LD files organized by date: `.robos/prompts/YYYY-MM-DD/<prompt-id>.jsonld`.
-  - Continuous index registration in `.robos/knowledge-graph.jsonld`.
+  - Continuous index registration in Modular KGraph Packages.
 - [ ] **Bidirectional Semantic Graph Linking**:
   - Links to generating user (`foaf:Person`), triggering requirement (`oslc_rm:Requirement`), implementation plan (`robos:ImplementationPlan`), created tasks (`oslc_cm:ChangeRequest`), and resulting code commits (`robos:Commit`).
 - [ ] **Dev Central & KGraph Explorer Audit UI**:
@@ -94,7 +94,7 @@ graph TD
 
     subgraph GitStore [Git Repository .robos/]
         PromptStore[".robos/prompts/YYYY-MM-DD/&lt;uuid&gt;.jsonld"]
-        KGraph[".robos/knowledge-graph.jsonld"]
+        KGraph["Modular KGraph Packages"]
     end
 
     subgraph DownstreamArtifacts [Linked SDLC Entities]
@@ -215,7 +215,7 @@ robos:PromptShape
 
 1. **Phase 1: Knowledge Graph Ontology & SHACL Shapes**
    - Register `robos:Prompt` and origin taxonomy URIs in `packages/robos-graph/lib/oslc-parser.js` and `packages/robos-graph/lib/shacl-validator.js`.
-   - Update `.robos/knowledge-graph.jsonld` `@context` definition.
+   - Update Modular KGraph Packages `@context` definition.
 
 2. **Phase 2: Unified Prompt Logger Library (`robos-lib/prompt-logger.js`)**
    - Implement shared logging utility providing `logPromptExecution({ prompt, origin, appId, model, ... })`.
@@ -243,5 +243,5 @@ robos:PromptShape
 - [ ] Autonomous background agents, schedulers, and PR review runs log prompts tagged as `OriginRobOSAutonomous`.
 - [ ] Terminal-initiated prompt executions via CLI tools log prompts tagged as `OriginExternalTerminal`.
 - [ ] Sub-agent spawns and synthetic benchmarks are appropriately categorized (`OriginSubagentDelegation` / `OriginSyntheticBench`).
-- [ ] Each prompt run produces a validated JSON-LD artifact under `.robos/prompts/YYYY-MM-DD/<uuid>.jsonld` and is indexed in `.robos/knowledge-graph.jsonld`.
+- [ ] Each prompt run produces a validated JSON-LD artifact under `.robos/prompts/YYYY-MM-DD/<uuid>.jsonld` and is indexed in Modular KGraph Packages.
 - [ ] Dev Central displays an interactive prompt timeline filterable by origin taxonomy with 1-click replay capability.

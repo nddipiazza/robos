@@ -14,6 +14,6 @@ Generate master company cryptographic signing keys, distribute developer securit
 ## Tasks
 - [x] Generate corporate master GPG signing keypair for verifiable build releases.
 - [x] Initialize .devcontainer/ baseline definitions for reproducible developer environments.
-- [x] Generate starter C4 Level 1 System Context diagram in .robos/knowledge-graph.jsonld.
+- [x] Generate starter C4 Level 1 System Context diagram in Modular KGraph Packages.
 - [x] Create initial software catalog entry in catalog-info.yaml.
 - [x] Record initial architecture baseline commit to git.

@@ -92,7 +92,7 @@ The RobOS Plugin Marketplace ships with standard skills categorized across the e
 | Skill | Slash Command | Description | What It Accomplishes |
 |:---|:---|:---|:---|
 | **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company repository catalogs from HTTP, FileSystem, AWS S3, or Git forges | Scans company inventories across HTTP REST APIs (Spotify Backstage), AWS S3 buckets, or local directory clones. Auto-classifies components into 9 archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files ready to import directly into RobOS. |
-| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Synchronize living documentation with Knowledge Graph object updates | Monitors additions, modifications, or deletions in `.robos/knowledge-graph.jsonld` and `.robos/packages.yaml`. Discovers impacted user documentation, architecture diagrams, and API guides, and automatically updates documentation in lockstep. |
+| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Synchronize living documentation with Knowledge Graph object updates | Monitors additions, modifications, or deletions in **Modular KGraph Packages** and `.robos/packages.yaml`. Discovers impacted user documentation, architecture diagrams, and API guides, and automatically updates documentation in lockstep. |
 
 #### Ingesting Company Architecture Example:
 ```bash

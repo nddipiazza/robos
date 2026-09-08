@@ -36,7 +36,7 @@ RobOS structures all development lifecycle information into 8 connected, plain-t
 5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across 9 archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
 6. **Multi-Repo Workspace Hub**: Switch between Git branches across multiple repositories simultaneously without duplicate disk storage.
 7. **Step-by-Step Task Roadmap**: Breaks high-level feature goals down into a clean checklist of prerequisite and dependent tasks (OASIS OSLC Change Management).
-8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files under `.robos/` (`knowledge-graph.jsonld`, `teams.yaml`, `packages.yaml`, `topology.yaml`) with zero proprietary cloud databases.
+8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files across **Modular KGraph Packages** under `.robos/` (`teams.yaml`, `packages.yaml`, `topology.yaml`) with zero proprietary cloud databases.
 
 {: .note }
 > **Deep Dive:** For the complete breakdown of packages, namespaces, Git-tag version pinning, and the zero-plaintext GPG password store vault, see the dedicated [SDLC Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %}).

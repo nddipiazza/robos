@@ -4,7 +4,7 @@
 **Status:** **Done**
 
 ## Overview
-Ensures that the Knowledge Graph (`.robos/knowledge-graph.jsonld`) is constantly maintained by RobOS development skills (`e2e-driven-dev`, `create-robos-app`, `sync-kgraph-docs`). Whenever Knowledge Graph objects are updated (added, altered, or deleted), the AI is prompted to discern any noticeable updates needed across system documentation (`docs/index.md`, `README.md`, `docs/project-plan/`, API specs) and to apply those updates automatically.
+Ensures that the Modular KGraph Packages are constantly maintained by RobOS development skills (`e2e-driven-dev`, `create-robos-app`, `sync-kgraph-docs`). Whenever Knowledge Graph objects are updated (added, altered, or deleted), the AI is prompted to discern any noticeable updates needed across system documentation (`docs/index.md`, `README.md`, `docs/project-plan/`, API specs) and to apply those updates automatically.
 
 ## Acceptance Criteria
 - [x] Continuous synchronization convention codified in `AGENTS.md`.

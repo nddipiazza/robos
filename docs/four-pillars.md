@@ -122,7 +122,7 @@ RobOS stores your entire architecture in standard, human-readable Git files unde
 - **Instant Cloud Manifests**: Adding a PostgreSQL, MySQL, Redis, or Kafka node to the visual architecture canvas generates ready-to-deploy Kubernetes StatefulSets, Deployments, and Helm charts.
 - **Local & Enterprise Clusters**: Connect to local Kind clusters for instant development, or target enterprise clouds (AWS EKS, Google Cloud GKE, Azure AKS) with real-time pod log streaming and ArgoCD GitOps sync.
 - **Git-Backed API Testing**: API endpoints and test suites are stored directly in your repository as plain-text files, versioned alongside your application code.
-- **No Vendor Lock-In**: Everything is backed by open formats: `.robos/knowledge-graph.jsonld`, `.robos/topology.yaml`, `.robos/packages.yaml`, and `.robos/teams.yaml`.
+- **No Vendor Lock-In**: Everything is backed by open formats: **Modular KGraph Packages**, `.robos/topology.yaml`, `.robos/packages.yaml`, and `.robos/teams.yaml`.
 
 ---
 

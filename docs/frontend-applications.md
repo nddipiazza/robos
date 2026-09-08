@@ -47,7 +47,7 @@ RobOS provides automated heuristic stack detection and scaffolding for modern fr
 
 ## Schema & Properties
 
-A Front End Application node in `.robos/knowledge-graph.jsonld` conforms to `urn:robos:shape:FrontEndAppShape`:
+A Front End Application node in the **Modular KGraph Packages** conforms to `urn:robos:shape:FrontEndAppShape`:
 
 ```json
 {
