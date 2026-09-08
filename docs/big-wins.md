@@ -2,6 +2,7 @@
 title: RobOS Big Wins
 layout: default
 nav_order: 2
+has_children: true
 permalink: /big-wins.html
 redirect_from:
   - /four-pillars.html
@@ -10,7 +11,7 @@ redirect_from:
 # RobOS Big Wins: Core Innovations & Strategic Advantages
 {: .no_toc }
 
-The 9 architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering into Knowledge Graph-First generation and agent review.
+The 10 architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants, transforming software engineering into Knowledge Graph-First generation and agent review.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -28,53 +29,88 @@ Traditional IDEs and AI coding tools give you autocompletions, chat sidebars, an
 2. **Workstation Clutter & Machine Pollution**: Autonomous agents litter your primary environment with temporary files, conflicting ports, orphaned `node_modules`, and security exposures.
 3. **Hallucinations & Review Fatigue**: Agents claim "Task complete!" without proving anything, forcing developers into exhausting manual verification loops.
 
-RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **9 Big Wins**:
+RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **10 Big Wins**:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 1. KGraph-First App Generation</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🧠 2. Dual-State SDLC Knowledge Graph</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #3b82f6; font-size: 1.1rem;">👤 3. Ephemeral In-Memory Sandboxes</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %}" style="color: #3b82f6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #10b981; font-size: 1.1rem;">🎥 4. Video Proof-of-Work</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 5. 100% Declarative GitOps Storage</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %}" style="color: #f59e0b; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899;">
-<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 6. Native Protocol & Database Suite</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Integrated DBeaver-grade SQL console (Postgres, Oracle, MySQL), NoSQL DB Manager (Mongo, Redis), gRPC Client with Protobuf reflection, GraphQL explorer, and Git-backed REST client.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 6. Unified Data Sources GUI</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">RobOS provides a native data source client and management GUI across Relational (PostgreSQL, MySQL, Oracle), NoSQL (MongoDB, Redis), Search, and Cloud Object Stores directly connected to the Knowledge Graph.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" style="color: #ec4899; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6;">
-<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 7. Interactive Planning & 66+ Templates</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🌐 7. Universal Web & API Clients</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">RobOS provides native web clients and management GUIs for REST (Git-backed <code>.bru</code> collections), Protobuf gRPC, GraphQL introspection, and real-time streaming protocols synchronized with architecture contracts.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1;">
-<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 8. Modular Namespaces & Multi-Repo KGraph</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 8. Interactive Planning & 66+ Templates</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308;">
-<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 9. DevOps Integrations & GPG Password Store</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in the KGraph: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 9. Modular Namespaces & Multi-Repo KGraph</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %}" style="color: #6366f1; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 10. DevOps Integrations & GPG Password Store</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in the KGraph: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
 </div>
@@ -111,6 +147,8 @@ In modern software engineering, developers rely on contracts to eliminate manual
    - Consumer contract tests (Pact) and headless E2E verification suites
 4. **Agent Review-Based Governance**: The human lead architect reviews the synthesized application diffs against KGraph requirements and inspects the narrated video proof-of-work before approving deployment.
 
+👉 **[Read the Complete Guide: KGraph-First Application Generation →]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**
+
 ---
 
 ## 2. 🧠 Dual-State SDLC Knowledge Graph (Today vs. Tomorrow)
@@ -131,6 +169,8 @@ Traditional developer tools are myopic: they only understand isolated source fil
 - **Living Documentation Continuous Sync**: Whenever graph objects change, RobOS automatically discerns impacts and synchronizes documentation (`docs/index.md`, `README.md`, `docs/project-plan/`) and training curriculums in continuous lockstep.
 - **Open-Standard Ontologies**: Strict OASIS OSLC Core 3.0 types (`oslc_rm:Requirement`, `oslc_cm:ChangeRequest`, `oslc_am:Resource`, `oslc_qm:TestPlan`) with W3C SHACL shape validation.
 
+👉 **[Read the Complete Guide: Dual-State Knowledge Graph →]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**
+
 ---
 
 ## 3. 👤 Ephemeral Linux Agent Sandboxes & Display Bridging (Zero Machine Clutter)
@@ -149,6 +189,8 @@ Letting autonomous AI agents execute terminal commands directly in your primary 
 - **Virtual Display Isolation (`Xvfb` + Picom)**: Automated visual tests and browser sessions run on private headless displays, leaving your active monitor and workflow completely uninterrupted.
 - **Live DOM & UI Inspection**: Dedicated debug ports (`19100–19183`) allow agents to inspect real DOM trees, verify styles, and test UI components with sub-pixel precision.
 - **Scoped Credential Isolation**: Agents execute under scoped ephemeral user accounts (`/home/agent-...`), shielding your private SSH keys, GPG keys, and personal shell dotfiles.
+
+👉 **[Read the Complete Guide: Ephemeral Agent Sandboxes →]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**
 
 ---
 
@@ -169,6 +211,8 @@ In RobOS, no code reaches human review on trust alone. Hallucinations and review
 3. **Local Neural Voiceovers (Piper TTS)**: Generates clear, spoken audio explanations using offline neural text-to-speech synchronized with WebVTT subtitle tracks.
 4. **30-Second Human Approvals**: Lead architects review features in under 30 seconds by watching the walkthrough rather than spending 20 minutes manually cloning, building, and seeding test data.
 
+👉 **[Read the Complete Guide: Video Proof-of-Work →]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**
+
 ---
 
 ## 5. ⚡ 100% Declarative GitOps Storage & Zero-YAML Synthesis (`.robos/`)
@@ -188,11 +232,28 @@ RobOS eliminates YAML sprawl and configuration fragility. All architecture, cont
 - **Git-Backed API Collections**: API endpoints and test suites are stored directly in your repository as plain-text files (`.bru`), version-controlled alongside application code.
 - **Zero Vendor Lock-In**: Everything is stored in open, declarative formats: Modular KGraph Packages (`.robos/kgraphs/`), `.robos/topology.yaml`, `.robos/packages.yaml`, and `.robos/teams.yaml`.
 
+👉 **[Read the Complete Guide: Declarative GitOps Synthesis →]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**
+
 ---
 
-## 6. 🗄️ Comprehensive Developer Protocol & Database Suite
+## 6. 🗄️ Unified Data Source Client & Management GUI (Relational, NoSQL, & Cloud Stores)
 
-Developers frequently suffer from severe context switching between heavy, memory-hungry third-party tools (DBeaver, DataGrip, Postman, BloomRPC, GraphiQL). RobOS includes a **native, unified developer protocol and database application suite**:
+In software development, "having a database" is unremarkable. **The strategic Big Win is that RobOS provides a native, unified data source client and management GUI across Relational (PostgreSQL, MySQL, Oracle), NoSQL (MongoDB, Redis), Search, and Cloud Object Stores directly connected to the Knowledge Graph.**
+
+Engineers no longer need heavy, memory-hungry, disconnected third-party tools like DBeaver, DataGrip, or MongoDB Compass running alongside their IDE.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }}" alt="Data Sources Explorer in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Data Sources Explorer</strong>: Connect, inspect, and query live relational databases, document stores, and cloud vaults with instantaneous topology linkage. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+### Key Capabilities
+- **Relational DB Manager**: DBeaver-grade SQL console, schema inspector, table data grid, foreign key navigation, and DDL generation supporting **PostgreSQL, Oracle, and MySQL**.
+- **NoSQL DB Manager**: MongoDB Compass and RedisInsight-inspired document viewer, key-value inspector, TTL editor, and query runner.
+- **Unified Data Sources Explorer**: Comprehensive view linking relational databases, Kafka streaming topics, and AWS S3 contract vaults directly into system topology nodes.
+- **Automated Schema Synchronization**: Local database schemas, migrations, and DDL definitions automatically synchronize with KGraph entity models.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }}" alt="Relational DB Manager in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -201,24 +262,34 @@ Developers frequently suffer from severe context switching between heavy, memory
   </div>
 </div>
 
-### Suite Capabilities
-- **Relational DB Manager**: DBeaver-grade SQL console, schema inspector, table data grid, foreign key navigation, and DDL generation supporting **PostgreSQL, Oracle, and MySQL**.
-- **NoSQL DB Manager**: MongoDB Compass and RedisInsight-inspired document viewer, key-value inspector, TTL editor, and query runner.
-- **gRPC Client**: BloomRPC-style client with dynamic Protobuf reflection, server streaming support, and request payload validation.
-- **GraphQL Client**: Introspection schema browser, query/mutation composer, and variable execution runner.
-- **REST API Client**: Git-backed REST client (`.bru` format), environment variables matrix, collection runner, and microservice verifier.
-- **Data Sources Explorer**: Unified view linking databases, Kafka topics, and AWS S3 contract vaults directly into system topology nodes.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }}" alt="Data Sources Explorer in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Data Sources Explorer</strong>: Connect, inspect, and query live relational databases and cloud stores with instantaneous connection verification. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+👉 **[Read the Complete Guide: Unified Data Sources Management Suite →]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**
 
 ---
 
-## 7. 📋 Interactive Task Templates & Multi-Domain Planning
+## 7. 🌐 Universal Web, API & Microservice Client Suite (REST, gRPC, GraphQL, & Streaming)
+
+Similarly, "having a REST client" is not a big win. **The strategic Big Win is that RobOS provides a universal web, API & microservice client suite and management GUI across REST, gRPC, GraphQL, and real-time streaming protocols directly synchronized with architecture contracts.**
+
+RobOS eliminates SaaS lock-in, proprietary cloud vaults, and electron bloat from Postman or Insomnia by committing all collections as Git-backed plain text files versioned with your codebase.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/data-sources-test_connection_frame.png' | relative_url }}" alt="REST API Client in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS REST API Client & Microservice Verifier</strong>: Git-backed plain text collections (.bru), environment matrices, and automated response assertions. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+### Key Capabilities
+- **Git-Backed REST API Client**: Bruno-compatible `.bru` plain text format versioned directly inside your Git repository alongside code.
+- **gRPC Client with Protobuf Reflection**: Dynamic service discovery, Protobuf payload authoring, and server streaming inspection without manual compilation.
+- **GraphQL Introspection Client**: Live schema explorer, query/mutation composer, and variable execution runner.
+- **Microservice BDD Verification**: Run entire test suites against live microservices with assertion matrices and automated response checks.
+
+👉 **[Read the Complete Guide: Universal Web & API Clients Suite →]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**
+
+---
+
+## 8. 📋 Interactive Task Templates & Multi-Domain Planning
 
 Bridging high-level product intent and concrete engineering implementation is often the weakest link in SDLC automation. The **RobOS Task Planner** provides a structured, multi-domain planning studio:
 
@@ -228,9 +299,11 @@ Bridging high-level product intent and concrete engineering implementation is of
 - **Bidirectional Issue Tracker Sync**: Native two-way synchronization with **GitHub Issues** and **Jira Cloud/Server**, as well as the hermetic RobOS Local Task Server.
 - **Phased DAG Task Synthesis**: Converts high-level architectural requirements into a Directed Acyclic Graph (DAG) with milestone checkpoints and automated agent execution dispatch.
 
+👉 **[Read the Complete Guide: Interactive Task Planning & 66+ Templates →]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**
+
 ---
 
-## 8. 📦 Modular Namespaced & Multi-Repo Knowledge Graph
+## 9. 📦 Modular Namespaced & Multi-Repo Knowledge Graph
 
 Monolithic architecture repositories don't scale across large engineering divisions. RobOS partitions the Knowledge Graph into **modular, namespaced package stores** indexed by `.robos/kgraph.yaml`:
 
@@ -256,9 +329,11 @@ Monolithic architecture repositories don't scale across large engineering divisi
 - **Local Caching**: External KGraph repositories are cloned and cached into `~/.robos/cache/kgraphs/<repo>@<tag>/` with on-demand sync.
 - **Backwards-Compatible Aggregation**: Automatically maintains an aggregated view for legacy tools while preserving package boundary isolation.
 
+👉 **[Read the Complete Guide: Modular KGraph Packages & Multi-Repo Composition →]({{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %})**
+
 ---
 
-## 9. ☁️ DevOps Account Integrations & GPG Password Store (`pass`)
+## 10. ☁️ DevOps Account Integrations & GPG Password Store (`pass`)
 
 Managing credentials and cloud access across multi-cloud environments is notorious for credential leakage. RobOS provides **interactive onboarding wizards across 7 categories and 25+ providers with zero plaintext credentials**:
 
@@ -275,6 +350,8 @@ Managing credentials and cloud access across multi-cloud environments is notorio
 - **UNIX Password Store (`pass`) GPG Encryption**: Secrets are encrypted and saved directly into the local UNIX password store (`pass`) at `~/.password-store/devops/<category>/<provider>/<account-slug>/<key>.gpg`.
 - **First-Class Reference Nodes**: The KGraph stores first-class `robos:PassCredential` reference nodes declaring `robos:passPath`, linked to `robos:DevOpsIntegration` nodes via `robos:hasCredential`.
 
+👉 **[Read the Complete Guide: DevOps Security & GPG Password Store →]({{ site.baseurl }}{% link big-wins/devops-security-pass.md %})**
+
 ---
 
 ## Summary Comparison: RobOS vs. Traditional Tools
@@ -287,7 +364,8 @@ Managing credentials and cloud access across multi-cloud environments is notorio
 | **Agent Execution Safety** | Host user directory pollution | **Hermetic In-Memory RAM Sandboxes (`tmpfs`)** |
 | **Verification & Review** | "Trust me, it works" walls of text | **Headless 1080p Video Proof-of-Work & Neural Voice** |
 | **Infrastructure Deployment** | Manual YAML writing & copy-pasting | **100% Declarative Zero-YAML GitOps Synthesis** |
-| **Protocol & DB Tooling** | Heavy external tools (DBeaver, Postman) | **Native Relational DB, NoSQL, gRPC, & REST Suite** |
+| **Data Source Management** | Heavy external tools (DBeaver, DataGrip) | **Native Relational DB, NoSQL, & Data Sources Manager** |
+| **Web & API Clients** | SaaS-locked apps (Postman, Insomnia) | **Universal Web, API & Microservice Suite (REST, gRPC, GraphQL)** |
 | **Task Planning** | Ad-hoc tickets or markdown checklists | **66+ Interactive Templates & Phased DAG Planning** |
 | **Architecture Scalability** | Monolithic configuration files | **Modular Namespaced & Multi-Repo Package Stores** |
 | **Credential Security** | Plaintext `.env` and config files | **GPG-Encrypted UNIX Password Store (`pass`)** |

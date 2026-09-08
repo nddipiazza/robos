@@ -89,59 +89,94 @@ RobOS turns the developer into a **Lead Architect**. Just as OpenAPI specificati
 
 ## RobOS Big Wins: Core Innovations & Strategic Advantages
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 9 core breakthroughs:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 10 core breakthroughs:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 1. KGraph-First App Generation</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Just as OpenAPI contracts generate typed web clients, a schema-validated Knowledge Graph auto-generates entire applications across 9 archetypes with zero boilerplate.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🧠 2. Dual-State SDLC Knowledge Graph</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong>, calculating the exact blast radius of every change across microservices, schemas, and contracts before coding begins.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #3b82f6; font-size: 1.1rem;">👤 3. Ephemeral In-Memory Sandboxes</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %}" style="color: #3b82f6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #10b981; font-size: 1.1rem;">🎥 4. Video Proof-of-Work</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b;">
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
 <h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 5. 100% Declarative GitOps Storage</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %}" style="color: #f59e0b; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899;">
-<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 6. Native Protocol & Database Suite</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Integrated DBeaver-grade SQL console (Postgres, Oracle, MySQL), NoSQL DB Manager (Mongo, Redis), gRPC Client with Protobuf reflection, GraphQL explorer, and Git-backed REST client.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 6. Unified Data Sources GUI</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">RobOS provides a native data source client and management GUI across Relational (PostgreSQL, MySQL, Oracle), NoSQL (MongoDB, Redis), Search, and Cloud Object Stores directly connected to the Knowledge Graph.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" style="color: #ec4899; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6;">
-<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 7. Interactive Planning & 66+ Templates</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🌐 7. Universal Web & API Clients</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">RobOS provides native web clients and management GUIs for REST (Git-backed <code>.bru</code> collections), Protobuf gRPC, GraphQL introspection, and real-time streaming protocols synchronized with architecture contracts.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1;">
-<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 8. Modular Namespaces & Multi-Repo KGraph</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 8. Interactive Planning & 66+ Templates</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308;">
-<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 9. DevOps Integrations & GPG Password Store</h3>
-<p style="margin-bottom: 0; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in the KGraph: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">📦 9. Modular Namespaces & Multi-Repo KGraph</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Decomposes architectures into 6 standard namespaced package stores (<code>core-platform</code>, <code>organization</code>, <code>services</code>, <code>applications</code>, <code>devops</code>, <code>learning</code>) with Git-tag version pinning and caching.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/modular-kgraph-packages.md %}" style="color: #6366f1; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 10. DevOps Integrations & GPG Password Store</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in the KGraph: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
 </div>
 
 <div style="text-align: center; margin: 1.5rem 0 2.5rem;">
-  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn btn-primary fs-5">Explore All 9 RobOS Big Wins in Depth →</a>
+  <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn btn-primary fs-5">Explore All 10 RobOS Big Wins in Depth →</a>
 </div>
 
 ---

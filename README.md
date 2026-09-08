@@ -69,18 +69,19 @@ graph TD
 
 ---
 
-## 🚀 The Big Wins (Why RobOS?)
+## 🚀 The 10 Big Wins (Why RobOS?)
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite**:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around 10 strategic breakthroughs:
 
 - 🧬 **KGraph-First Application Generation**: Applications are generated from the Knowledge Graph just as web clients are generated from OpenAPI contracts. By defining system topology, entity models, and contracts in the RobOS schema, full production applications (across 9 archetypes) are synthesized automatically with zero boilerplate.
 - 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Front End Web Apps, Desktop Apps, PC Games, Mobile Games, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
 - 👤 **Ephemeral Linux Agent Profiles & X11 Display Bridging**: AI agents run in isolated ephemeral Linux accounts (`/home/agent-...`) on in-memory `tmpfs` storage with zero residue, rendering UI directly to real/headless X11 displays for visual verification.
 - 🎥 **Autonomous E2E-Driven Dev with Video Proof-of-Work**: Every task is validated in headless `Xvfb` compositors, generating timestamped DOM assertions, 1080p video walkthroughs, and synchronized neural voiceover subtitles (Piper TTS) before asking for human approval.
 - ⚡ **100% Declarative GitOps Storage (`.robos/`)**: Topology, contracts, schemas, and data sources are stored in standard Git repositories, automatically synthesizing deployable Kubernetes manifests and Helm charts.
-- 🗄️ **Comprehensive Developer Protocol & Database Suite**: DBeaver-inspired Relational DB Manager (Postgres, Oracle, MySQL), MongoDB/Redis NoSQL Manager, gRPC Client with Protobuf reflection, GraphQL Introspection Client, and Git-backed REST client.
+- 🗄️ **Unified Data Source Client & Management GUI**: RobOS provides native, unified data source clients and management GUIs for Relational (PostgreSQL, MySQL, Oracle), NoSQL (MongoDB, Redis), Search, and Cloud Object Stores directly connected to the Knowledge Graph with schema inspection, table data grids, and multi-tab SQL consoles.
+- 🌐 **Universal Web, API & Microservice Client Suite**: RobOS provides native web clients and management GUIs for REST (Git-backed `.bru` collections), Protobuf gRPC dynamic reflection, GraphQL schema introspection, and real-time streaming event protocols directly synchronized with architecture contracts.
 - 📋 **Interactive Task Templates & Multi-Domain Planning**: 66+ default task templates with interactive web forms spanning Web APIs, Frontend SPAs, Godot/Unity games, Java libraries, Mobile apps, Knowledge Graph schemas, and Cloud infrastructure, with user-defined custom template authoring and GitHub/Jira synchronization.
-- 📦 **Multi-File, Namespaced & Multi-Repo Knowledge Graph**: Knowledge Graphs are partitioned into modular, namespaced package stores (`.robos/kgraphs/<pkg>/package.jsonld`) indexed by `.robos/kgraph.yaml` across standard packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`). Supports multi-repo composition pulling in external Git repositories pinned to semver git tags (`~/.robos/cache/kgraphs/<repo>@<tag>/`).
+- 📦 **Modular Namespaced & Multi-Repo Knowledge Graph**: Knowledge Graphs are partitioned into modular, namespaced package stores (`.robos/kgraphs/<pkg>/package.jsonld`) indexed by `.robos/kgraph.yaml` across standard packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`). Supports multi-repo composition pulling in external Git repositories pinned to semver git tags (`~/.robos/cache/kgraphs/<repo>@<tag>/`).
 - ☁️ **DevOps Account Integrations & GPG Password Store (`pass`)**: Interactive onboarding wizards for 25+ providers across 7 categories (Source Control, Cloud Infrastructure, CI/CD & GitOps, Package Registries, Containers/Virt, OAuth Identity, Domains & DNS). Zero plaintext secrets in KGraph: credentials are encrypted into `~/.password-store/devops/` and referenced via first-class `robos:PassCredential` nodes.
 
 ---
