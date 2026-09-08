@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RobOS Entity Schema Studio & Code Generator</title>
+  <title>RobOS Schema Studio & Definitive Registry</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,65 +13,110 @@
       <div class="header-left">
         <div class="logo-icon">📐</div>
         <div>
-          <h1>Entity Schema Studio & Code Generator</h1>
-          <div class="subtitle">Microsoft TypeSpec &middot; Buf Protobuf &middot; JSON Schema 2020-12 &middot; .robos/entities/</div>
+          <h1>Entity Schema Studio & Code Generator — Schema.org & Definitive Registry</h1>
+          <div class="subtitle">Schema.org v28+ &middot; OASIS OSLC 3.0 &middot; W3C SHACL &middot; Microsoft TypeSpec &middot; .robos/entities/</div>
         </div>
       </div>
 
-      <!-- GitOps Branch Selector -->
-      <div class="gitops-branch-wrap">
-        <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
-          <option value="main">🌿 main (Production / GitOps HEAD)</option>
-          <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
-          <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
-        </select>
-        <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1 (clean)</span>
-      </div>
+      <!-- Navigation Tabs -->
+      <nav class="app-nav-tabs">
+        <button class="nav-tab active" id="tab-btn-typespec" onclick="window.switchTab('typespec')">📐 TypeSpec & Models</button>
+        <button class="nav-tab" id="tab-btn-explorer" onclick="window.switchTab('explorer')">🌐 Schema.org Explorer</button>
+        <button class="nav-tab" id="tab-btn-synthesizer" onclick="window.switchTab('synthesizer')">⚡ KGraph Synthesizer</button>
+        <button class="nav-tab" id="tab-btn-validator" onclick="window.switchTab('validator')">🛡️ Schema Validator</button>
+      </nav>
 
+      <!-- GitOps Branch Selector & Action Buttons -->
       <div class="header-right">
-        <button class="btn btn-secondary" id="btn-detect-breaking" onclick="window.detectBreakingChanges()">🛡️ Detect Breaking Changes</button>
-        <button class="btn btn-primary" id="btn-compile-targets" onclick="window.compileAllTargets()">⚡ Compile All Targets</button>
+        <div class="gitops-branch-wrap">
+          <select id="select-gitops-branch" class="branch-select" onchange="window.switchGitBranch(this.value)">
+            <option value="main">🌿 main (Production / GitOps HEAD)</option>
+            <option value="feature/TAX-1099-ein-verification">🌿 feature/TAX-1099-ein-verification (EIN Delta)</option>
+            <option value="hotfix/calc-rate">🌿 hotfix/calc-rate</option>
+          </select>
+          <span class="commit-badge" id="git-commit-badge">commit: 8f9a2b1</span>
+        </div>
+        <button class="btn btn-secondary" id="btn-sync-upstream" onclick="window.syncUpstreamSchema()" title="Sync upstream Schema.org vocabulary">🔄 Sync Upstream</button>
       </div>
     </header>
 
     <!-- Stat Bar -->
     <div id="stat-bar">
       <div class="stat-card">
-        <div class="stat-num" id="stat-entities-count">2 Domain Models</div>
-        <div class="stat-label">Registered Schemas</div>
+        <div class="stat-num" id="stat-classes-count">1,003 Classes</div>
+        <div class="stat-label">Schema.org Vocabulary</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-active-format">Microsoft TypeSpec</div>
-        <div class="stat-label">Schema Standard</div>
+        <div class="stat-num" id="stat-properties-count">1,676 Properties</div>
+        <div class="stat-label">Definitive Attributes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-targets-count">6 Multi-Lang Targets</div>
-        <div class="stat-label">TS &middot; Java &middot; Py &middot; Go &middot; Prisma</div>
+        <div class="stat-num" id="stat-robos-shapes">91 RobOS SHACL Shapes</div>
+        <div class="stat-label">100% Schema.org Mapped</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-conformance" style="color: var(--success);">100% VALID</div>
-        <div class="stat-label">0 Drift Violations</div>
+        <div class="stat-num" id="stat-standards-count">5 De Facto Standards</div>
+        <div class="stat-label">OSLC &middot; C4 &middot; Cucumber &middot; LOV</div>
       </div>
     </div>
 
-    <!-- Main 2-Column Workspace -->
-    <main class="main-content">
+    <!-- TAB 1: Definitive Schema Explorer -->
+    <main class="main-content tab-view" id="view-explorer">
       <div class="schema-grid">
-        <!-- Left Sidebar: Entity Schemas Tree -->
+        <!-- Left: Search & Class List -->
         <section class="panel schemas-panel">
           <div class="panel-header">
-            <span>📂 Entity Schemas</span>
+            <span>📚 Schema.org Types</span>
+            <span class="count-badge" id="explorer-count-badge">1,003 Types</span>
+          </div>
+          <div class="filter-controls">
+            <input type="text" id="explorer-search-input" class="search-input" placeholder="🔍 Search types (e.g., SoftwareApplication, Action)..." oninput="window.handleExplorerSearch(this.value)" />
+            <select id="explorer-filter-standard" class="standard-select" onchange="window.handleFilterStandard(this.value)">
+              <option value="ALL">All Definitive Types</option>
+              <option value="ROBOS_ONLY">Mapped in RobOS SHACL (91)</option>
+              <option value="OASIS_OSLC">OASIS OSLC Standards</option>
+              <option value="W3C_C4">W3C C4 Model</option>
+              <option value="CUCUMBER">Cucumber BDD</option>
+            </select>
+          </div>
+          <div class="schemas-tree-body" id="explorer-classes-list">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+
+        <!-- Right: Class Details, Lineage & Properties -->
+        <section class="panel editor-panel">
+          <div class="panel-header">
+            <span id="class-details-header">📖 Class Definition & Lineage</span>
+            <div class="header-actions">
+              <button class="btn btn-primary btn-sm" id="btn-synthesize-from-class" onclick="window.synthesizeFromSelectedClass()">⚡ Synthesize KGraph Node</button>
+            </div>
+          </div>
+          <div class="editor-body" id="class-details-workspace">
+            <!-- Rendered by app.js -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- TAB 2: TypeSpec & Domain Models Workspace -->
+    <main class="main-content tab-view active" id="view-typespec">
+      <div class="schema-grid">
+        <!-- Left: TypeSpec Entities Tree -->
+        <section class="panel schemas-panel">
+          <div class="panel-header">
+            <span>📂 Local Domain Models</span>
             <span class="count-badge" id="schemas-count-badge">2 Models</span>
           </div>
           <div class="search-wrap">
-            <input type="text" id="schema-search-input" class="search-input" placeholder="🔍 Search domain schemas..." />
+            <input type="text" id="schema-search-input" class="search-input" placeholder="🔍 Search domain schemas..." oninput="window.handleTypeSpecSearch(this.value)" />
           </div>
           <div class="schemas-tree-body" id="schemas-list">
             <!-- Rendered by app.js -->
           </div>
         </section>
 
-        <!-- Right Workspace: Schema Editor & Compiled Target Generators -->
+        <!-- Right: Schema Editor & Compiled Target Generators -->
         <section class="panel editor-panel">
           <div class="panel-header">
             <span>📝 Schema Authoring & Cross-Compilation Inspector</span>
@@ -81,6 +126,101 @@
             <!-- Rendered by app.js -->
           </div>
         </section>
+      </div>
+    </main>
+
+    <!-- TAB 3: KGraph Entity Synthesizer -->
+    <main class="main-content tab-view" id="view-synthesizer">
+      <div class="synthesizer-layout">
+        <div class="panel synth-controls-panel">
+          <div class="panel-header">
+            <span>⚡ Synthesizer Configuration</span>
+            <span class="status-tag-pass">W3C SHACL + TypeSpec Engine</span>
+          </div>
+          <div class="synth-form">
+            <div class="form-group">
+              <label>Target RobOS Entity Name:</label>
+              <input type="text" id="synth-entity-name" class="text-input" value="PaymentGatewayService" placeholder="e.g. IdentityProvider, MetricCollector" />
+            </div>
+            <div class="form-group">
+              <label>Canonical Schema.org Base Class:</label>
+              <select id="synth-base-class" class="select-input">
+                <option value="SoftwareApplication">SoftwareApplication (Microservices, Apps, Tools)</option>
+                <option value="CodeRepository">CodeRepository (Git Projects, Source Modules)</option>
+                <option value="WebAPI">WebAPI (REST & gRPC Microservice APIs)</option>
+                <option value="Organization">Organization (Enterprises, Companies, Teams)</option>
+                <option value="Action">Action (CI/CD Pipelines, Agent Workflows)</option>
+                <option value="Dataset">Dataset (Databases, Schemas, Kafka Streams)</option>
+                <option value="DigitalDocument">DigitalDocument (Living Docs, ADRs, Walkthroughs)</option>
+                <option value="Person">Person (Human Architects, Engineers, AI Personas)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>De Facto Domain Standard:</label>
+              <select id="synth-domain-standard" class="select-input">
+                <option value="OASIS_OSLC_AM">OASIS OSLC Architecture Management 3.0</option>
+                <option value="OASIS_OSLC_CM">OASIS OSLC Change Management 3.0</option>
+                <option value="OASIS_OSLC_QM">OASIS OSLC Quality Management 2.0</option>
+                <option value="W3C_C4_MODEL">W3C C4 Software Architecture Model</option>
+                <option value="CUCUMBER_BDD">Cucumber Gherkin BDD Standard</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="window.runSynthesizer()">⚡ Generate Full Specification Suite</button>
+          </div>
+        </div>
+
+        <div class="panel synth-output-panel">
+          <div class="panel-header">
+            <span>📦 Generated Specification Artifacts</span>
+            <div class="target-pills">
+              <button class="target-pill active" onclick="window.switchSynthTab('jsonld')">JSON-LD</button>
+              <button class="target-pill" onclick="window.switchSynthTab('typespec')">TypeSpec</button>
+              <button class="target-pill" onclick="window.switchSynthTab('shacl')">W3C SHACL</button>
+              <button class="target-pill" onclick="window.switchSynthTab('ts')">TypeScript/Zod</button>
+              <button class="target-pill" onclick="window.switchSynthTab('java')">Java 21</button>
+              <button class="target-pill" onclick="window.switchSynthTab('py')">Python</button>
+              <button class="target-pill" onclick="window.switchSynthTab('go')">Go</button>
+            </div>
+          </div>
+          <div class="synth-code-body">
+            <pre><code id="synth-code-display">// Click 'Generate Full Specification Suite' to synthesize artifacts</code></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 4: Live Schema.org & SHACL Validator -->
+    <main class="main-content tab-view" id="view-validator">
+      <div class="validator-layout">
+        <div class="panel val-input-panel">
+          <div class="panel-header">
+            <span>📥 JSON-LD Entity Payload</span>
+            <div class="val-presets">
+              <button class="btn btn-secondary btn-sm" onclick="window.loadValidatorPreset('microservice')">Preset: Microservice</button>
+              <button class="btn btn-secondary btn-sm" onclick="window.loadValidatorPreset('task')">Preset: OSLC Task</button>
+              <button class="btn btn-secondary btn-sm" onclick="window.loadValidatorPreset('org')">Preset: Organization</button>
+            </div>
+          </div>
+          <div class="val-input-body">
+            <textarea id="val-json-input" class="code-textarea" spellcheck="false"></textarea>
+          </div>
+          <div class="val-footer">
+            <button class="btn btn-primary" onclick="window.runValidation()">🛡️ Validate Conformance</button>
+          </div>
+        </div>
+
+        <div class="panel val-report-panel">
+          <div class="panel-header">
+            <span>📋 Semantic Conformance Report</span>
+            <span id="val-status-badge" class="status-tag-pass">Ready</span>
+          </div>
+          <div class="val-report-body" id="val-report-container">
+            <div class="empty-state">
+              <div style="font-size: 32px; margin-bottom: 8px;">🛡️</div>
+              <div>Load a JSON-LD payload and click <strong>Validate Conformance</strong> to verify Schema.org and W3C SHACL compliance.</div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>

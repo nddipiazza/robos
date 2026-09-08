@@ -3,6 +3,15 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { createMCPServer } = require('../robos-mcp-lib/index');
+let SchemaRegistry;
+try {
+  SchemaRegistry = require('../schema-studio/lib/schema-registry').SchemaRegistry;
+} catch (_) {
+  try {
+    SchemaRegistry = require('/usr/local/share/robos/schema-studio/lib/schema-registry').SchemaRegistry;
+  } catch (_) {}
+}
+
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const EKG_DIR = path.join(HOME_DIR, '.config', 'robos', 'ekgraph');
@@ -239,6 +248,68 @@ function createEKGraphMCPServer(options = {}) {
           required: ['path'],
         },
         handler: async (args) => service.getLinked(args.path),
+      },
+      {
+        name: 'robos_schema_lookup',
+        description: 'Search Schema.org, OASIS OSLC, and definitive semantic vocabularies, or retrieve detailed type lineage, properties, and linked RobOS SHACL shapes.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search term (e.g. SoftwareApplication, Action, Person, Database)' },
+            typeName: { type: 'string', description: 'Exact class name to inspect (e.g. SoftwareApplication)' },
+            standard: { type: 'string', description: 'Filter standard: ALL, ROBOS_ONLY, OASIS_OSLC, W3C_C4, CUCUMBER' },
+          },
+        },
+        handler: async (args) => {
+          if (!SchemaRegistry) throw new Error('SchemaRegistry service not available');
+          const reg = new SchemaRegistry();
+          reg.init();
+          if (args.typeName) {
+            const details = reg.getClass(args.typeName);
+            if (!details) throw new Error(`Schema.org class '${args.typeName}' not found`);
+            return details;
+          }
+          return reg.search(args.query || '', { standard: args.standard || 'ALL', limit: 20 });
+        },
+      },
+      {
+        name: 'robos_schema_validate',
+        description: 'Validate a JSON-LD payload against Schema.org types and RobOS W3C SHACL constraint shapes.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            payload: { type: 'object', description: 'JSON-LD object containing @type and properties' },
+          },
+          required: ['payload'],
+        },
+        handler: async (args) => {
+          if (!SchemaRegistry) throw new Error('SchemaRegistry service not available');
+          const reg = new SchemaRegistry();
+          reg.init();
+          return reg.validateJsonLd(args.payload);
+        },
+      },
+      {
+        name: 'robos_schema_synthesize',
+        description: 'Synthesize a complete specification suite (dual-typed JSON-LD, TypeSpec 0.61 model, W3C SHACL shape, and polyglot code) from a definitive Schema.org type.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            baseClass: { type: 'string', description: 'Canonical Schema.org class (e.g. SoftwareApplication, WebAPI, Organization)' },
+            entityName: { type: 'string', description: 'Desired RobOS entity name (e.g. PaymentGatewayService)' },
+            domainStandard: { type: 'string', description: 'OASIS_OSLC_AM, OASIS_OSLC_CM, W3C_C4_MODEL, or CUCUMBER_BDD' },
+          },
+          required: ['baseClass'],
+        },
+        handler: async (args) => {
+          if (!SchemaRegistry) throw new Error('SchemaRegistry service not available');
+          const reg = new SchemaRegistry();
+          reg.init();
+          return reg.synthesizeKGraphEntity(args.baseClass, {
+            entityName: args.entityName,
+            domainStandard: args.domainStandard,
+          });
+        },
       },
     ],
     resources: [

@@ -95,6 +95,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **MCP Manager** | Discover, configure, and test Model Context Protocol servers |
 | **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
 | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
+| **Schema Studio & Registry** | Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape generation, and live JSON-LD validator |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |

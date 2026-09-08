@@ -14,6 +14,10 @@ try {
 
 let mainWindow;
 
+const { SchemaRegistry } = require('./lib/schema-registry');
+const schemaRegistry = new SchemaRegistry();
+schemaRegistry.init();
+
 const DEFAULT_ENTITIES = {
   version: '1.0',
   activeEntity: 'form.typespec',
@@ -475,6 +479,37 @@ ipcMain.handle('schema-detect-breaking', async (_evt, entityId) => {
     auditReport: 'Buf Breaking & TypeSpec Drift Check: 100% Backward Compatible (0 Field Drift Violations)',
   };
 });
+
+// Definitive Schema.org & Standards IPC Handlers
+ipcMain.handle('schema-search', async (_evt, query, options) => {
+  return schemaRegistry.search(query, options);
+});
+
+ipcMain.handle('schema-get-class', async (_evt, id) => {
+  return schemaRegistry.getClass(id);
+});
+
+ipcMain.handle('schema-get-property', async (_evt, id) => {
+  return schemaRegistry.getProperty(id);
+});
+
+ipcMain.handle('schema-validate-jsonld', async (_evt, payload) => {
+  return schemaRegistry.validateJsonLd(payload);
+});
+
+ipcMain.handle('schema-synthesize-kgraph', async (_evt, classId, options) => {
+  return schemaRegistry.synthesizeKGraphEntity(classId, options);
+});
+
+ipcMain.handle('schema-sync-upstream', async () => {
+  try {
+    const result = await schemaRegistry.syncUpstream();
+    return { ok: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 
 app.whenReady().then(createWindow);
 

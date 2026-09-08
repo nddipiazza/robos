@@ -7,7 +7,7 @@ nav_order: 13
 # RobOS App Suite
 {: .no_toc }
 
-The complete suite of 50 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
+The complete suite of 51 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
 {: .fs-6 .fw-300 }
 
 ## Official Application Directory
@@ -17,7 +17,7 @@ The complete suite of 50 native developer desktop applications covering the enti
   <div class="robos-app-nav-pills">
     <a href="#core-desktop" class="robos-app-nav-pill">Core Desktop & Command Center <span class="pill-count">16</span></a>
     <a href="#ai-agents" class="robos-app-nav-pill">Autonomous AI & Agent Workflows <span class="pill-count">7</span></a>
-    <a href="#arch-planning" class="robos-app-nav-pill">Software Architecture & Planning <span class="pill-count">8</span></a>
+    <a href="#arch-planning" class="robos-app-nav-pill">Software Architecture & Planning <span class="pill-count">9</span></a>
     <a href="#code-review" class="robos-app-nav-pill">Code, Repositories & Review <span class="pill-count">3</span></a>
     <a href="#databases-streams" class="robos-app-nav-pill">Databases & Event Streams <span class="pill-count">3</span></a>
     <a href="#apis-testing" class="robos-app-nav-pill">APIs, Contracts & Testing <span class="pill-count">3</span></a>
@@ -278,7 +278,7 @@ The complete suite of 50 native developer desktop applications covering the enti
   <div id="arch-planning" class="robos-cat-group">
     <div class="robos-cat-header">
       <h3 class="robos-cat-title">Software Architecture & Planning</h3>
-      <span class="robos-cat-badge">8 Apps</span>
+      <span class="robos-cat-badge">9 Apps</span>
     </div>
     <div class="robos-apps-grid">
       <a href="#robos-app-wizard-greenfield--brownfield-multi-app-scaffolding" class="robos-app-card">
@@ -363,6 +363,17 @@ The complete suite of 50 native developer desktop applications covering the enti
           <p class="robos-app-desc">Low-code SDLC event triggers, Git webhook actions, and automated agent runbooks.</p>
         </div>
       </div>
+      <a href="#robos-schema-studio--definitive-registry" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/schema-studio.svg' | relative_url }}" width="38" height="38" alt="Schema Studio icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Schema Studio & Registry</div>
+          <span class="robos-app-pkg">robos:schema-studio</span>
+          <p class="robos-app-desc">Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL synthesis, and live JSON-LD validator.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
     </div>
   </div>
   <div id="code-review" class="robos-cat-group">
@@ -743,8 +754,14 @@ Manage multiple AI coding agents (Claude Code, Google Antigravity, GitHub Copilo
 Explore the full connected map of your software ecosystem with visual comparisons between live production (`main`) and proposed feature branches.
 ![Knowledge Graph]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }})
 
-### Data Model Studio (TypeSpec)
-Define your domain models once in Microsoft TypeSpec; RobOS automatically generates matching TypeScript interfaces, Java Records, and Go structs.
+### RobOS Schema Studio & Definitive Registry
+The semantic command center and ontology explorer bridging Schema.org, OASIS OSLC, and W3C standards with native developer tooling:
+- **Canonical Schema.org Explorer**: Real-time browsing and fuzzy search across **1,003 classes** and **1,676 properties** directly indexed from `schemaorg-current-https.jsonld`.
+- **Inheritance & Lineage Traversal**: Visual taxonomy inheritance trees (`Thing` → `CreativeWork` → `SoftwareApplication`) with full direct and inherited property tables, domain definitions, and expected range types.
+- **Definitive Standards Integration**: First-class grounding in **OASIS OSLC 3.0** (Change, Requirements, Architecture, and Quality Management), **W3C Linked Open Vocabularies (LOV)**, **W3C C4 Model**, and **Cucumber Gherkin BDD**.
+- **Dual-State Knowledge Graph Synthesis**: Push-button generation of dual-typed JSON-LD instances (`["robos:Microservice", "schema:SoftwareApplication"]`), W3C SHACL constraint shapes (`sh:NodeShape`), and TypeSpec 0.61 domain models with polyglot bindings (TypeScript Zod, Java 21 Record, Python Pydantic v2, Go struct).
+- **Interactive JSON-LD Conformance Linter**: Built-in validation workbench verifying payloads against Schema.org types and RobOS SHACL shapes with immediate diagnostic feedback.
+- **AI Agent Skill & MCP Server Integration**: Equips autonomous agents (Claude Code, Google Antigravity, Copilot CLI, Gemini) with the `schema-lookup` skill and `robos_schema_lookup`, `robos_schema_validate`, and `robos_schema_synthesize` MCP tools.
 ![Schema Studio]({{ '/assets/images/screenshots/schema-studio-frame_01.png' | relative_url }})
 
 ### Skills Manager & Cross-Agent AI Skills Library

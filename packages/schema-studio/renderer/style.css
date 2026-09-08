@@ -325,3 +325,380 @@ body {
   font-weight: 700;
   font-size: 10px;
 }
+
+/* ── App Navigation Tabs ──────────────────────────────────────────────────── */
+.app-nav-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-darker);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-tab:hover {
+  color: var(--text-bright);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active {
+  color: var(--accent);
+  background: var(--bg-card);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tab-view {
+  display: none;
+}
+
+.tab-view.active {
+  display: flex;
+}
+
+/* ── Filter Controls ──────────────────────────────────────────────────────── */
+.filter-controls {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-darker);
+  border-bottom: 1px solid var(--border);
+}
+
+.standard-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  outline: none;
+}
+
+.standard-select option {
+  background: var(--bg-card);
+  color: var(--text-bright);
+}
+
+/* ── Lineage & Inheritance Breadcrumbs ────────────────────────────────────── */
+.lineage-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.lineage-node {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 188, 212, 0.25);
+  cursor: pointer;
+}
+
+.lineage-node:hover {
+  background: rgba(0, 188, 212, 0.2);
+}
+
+.lineage-node.current {
+  color: #ffffff;
+  background: #00bcd4;
+  border-color: #00bcd4;
+  font-weight: 600;
+}
+
+.lineage-arrow {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* ── RobOS Shape Mapping Badge ────────────────────────────────────────────── */
+.robos-shapes-box {
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: rgba(0, 188, 212, 0.05);
+  border: 1px solid rgba(0, 188, 212, 0.2);
+  border-radius: 6px;
+}
+
+.robos-shapes-title {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 11px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.robos-shapes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.robos-shape-chip {
+  font-family: monospace;
+  font-size: 10px;
+  background: var(--bg-card);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+/* ── Properties Table ─────────────────────────────────────────────────────── */
+.props-table-wrap {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.props-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.props-table th {
+  background: var(--bg-darker);
+  color: var(--text-muted);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.props-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: top;
+}
+
+.props-table tr:hover {
+  background: var(--bg-hover);
+}
+
+.prop-name {
+  font-family: monospace;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.prop-range {
+  font-family: monospace;
+  font-size: 10px;
+  color: #a78bfa;
+}
+
+.prop-desc {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ── Synthesizer Layout ───────────────────────────────────────────────────── */
+.synthesizer-layout, .validator-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 12px;
+  width: 100%;
+  height: calc(100vh - 120px);
+  padding: 12px 16px;
+}
+
+.synth-controls-panel, .val-input-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.synth-form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-bright);
+}
+
+.text-input, .select-input {
+  width: 100%;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+}
+
+.text-input:focus, .select-input:focus {
+  border-color: var(--accent);
+}
+
+.synth-output-panel, .val-report-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.target-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.target-pill {
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.target-pill.active {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.synth-code-body, .val-report-body {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-darker);
+  overflow: auto;
+}
+
+.synth-code-body pre {
+  font-family: monospace;
+  font-size: 11px;
+  color: #38bdf8;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ── Validator Layout ─────────────────────────────────────────────────────── */
+.val-input-body {
+  flex: 1;
+  display: flex;
+}
+
+.code-textarea {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-darker);
+  color: #e6edf3;
+  border: none;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+}
+
+.val-footer {
+  padding: 10px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.val-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 10px;
+}
+
+.val-result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.val-result-card.success {
+  border-color: var(--success);
+}
+
+.val-result-card.warning {
+  border-color: var(--amber);
+}
+
+.val-result-card.error {
+  border-color: var(--danger);
+}
+
+.val-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.val-item {
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.val-item.error {
+  background: rgba(248, 81, 73, 0.1);
+  color: #f85149;
+  border: 1px solid rgba(248, 81, 73, 0.25);
+}
+
+.val-item.warning {
+  background: rgba(210, 153, 34, 0.1);
+  color: #d29922;
+  border: 1px solid rgba(210, 153, 34, 0.25);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
