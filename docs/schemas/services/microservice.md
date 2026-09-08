@@ -36,7 +36,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Micr
 ```mermaid
 graph LR
     ThisNode["Microservice<br/><code>robos:Microservice</code>"]:::primary
-    classDef primary fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#000;
+    classDef primary fill:#16243b,stroke:#00e5ff,stroke-width:2.5px,color:#ffffff;
     ThisNode -->|robos:repository| repository["repository"]
     ThisNode -->|robos:ownerTeam| ownerTeam["ownerTeam"]
 ```

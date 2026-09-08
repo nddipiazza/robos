@@ -36,7 +36,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 ```mermaid
 graph LR
     ThisNode["Contract<br/><code>robos:Contract</code>"]:::primary
-    classDef primary fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#000;
+    classDef primary fill:#16243b,stroke:#00e5ff,stroke-width:2.5px,color:#ffffff;
 ```
 
 ---

@@ -509,7 +509,7 @@ body.robos-lightbox-open {
    Ensures crystal-clear contrast between dark backgrounds and all lines/nodes
    ========================================================================== */
 
-.mermaid, .robos-diagram-card .mermaid, div.mermaid, pre.mermaid {
+.mermaid, .robos-diagram-card .mermaid, div.mermaid, pre.mermaid, .language-mermaid {
   background: transparent !important;
   padding: 1.5rem 1rem !important;
   margin: 0 !important;
@@ -520,7 +520,10 @@ body.robos-lightbox-open {
   align-items: center !important;
 }
 
-.mermaid svg, .robos-diagram-card svg {
+.mermaid svg,
+.robos-diagram-card svg,
+.language-mermaid svg,
+svg[id^="mermaid-"] {
   max-width: 100% !important;
   height: auto !important;
 }
@@ -532,6 +535,14 @@ body.robos-lightbox-open {
 .mermaid path.link,
 .mermaid .edge-thickness-normal,
 .mermaid .edge-pattern-solid,
+.robos-diagram-card .edgePath .path,
+.robos-diagram-card .flowchart-link,
+.language-mermaid .edgePath .path,
+.language-mermaid .flowchart-link,
+svg[id^="mermaid-"] .edgePath .path,
+svg[id^="mermaid-"] .flowchart-link,
+svg[id^="mermaid-"] path.flowchart-link,
+svg[id^="mermaid-"] path.link,
 .robos-lightbox-rendered-svg .edgePath .path,
 .robos-lightbox-rendered-svg .flowchart-link,
 .robos-lightbox-rendered-svg path.flowchart-link,
@@ -552,6 +563,15 @@ body.robos-lightbox-open {
 .mermaid #flowchart-circleEnd path,
 .mermaid #flowchart-crossEnd path,
 .mermaid defs marker path,
+.robos-diagram-card marker path,
+.robos-diagram-card .marker,
+.language-mermaid marker path,
+.language-mermaid .marker,
+svg[id^="mermaid-"] marker path,
+svg[id^="mermaid-"] .marker,
+svg[id^="mermaid-"] #arrowheadHD path,
+svg[id^="mermaid-"] #flowchart-pointEnd path,
+svg[id^="mermaid-"] defs marker path,
 .robos-lightbox-rendered-svg marker path,
 .robos-lightbox-rendered-svg .marker,
 .robos-lightbox-rendered-svg #arrowheadHD path,
@@ -568,6 +588,21 @@ body.robos-lightbox-open {
 .mermaid .node ellipse,
 .mermaid .node polygon,
 .mermaid .node path,
+.robos-diagram-card .node rect,
+.robos-diagram-card .node circle,
+.robos-diagram-card .node ellipse,
+.robos-diagram-card .node polygon,
+.robos-diagram-card .node path,
+.language-mermaid .node rect,
+.language-mermaid .node circle,
+.language-mermaid .node ellipse,
+.language-mermaid .node polygon,
+.language-mermaid .node path,
+svg[id^="mermaid-"] .node rect,
+svg[id^="mermaid-"] .node circle,
+svg[id^="mermaid-"] .node ellipse,
+svg[id^="mermaid-"] .node polygon,
+svg[id^="mermaid-"] .node path,
 .robos-lightbox-rendered-svg .node rect,
 .robos-lightbox-rendered-svg .node circle,
 .robos-lightbox-rendered-svg .node ellipse,
@@ -581,11 +616,40 @@ body.robos-lightbox-open {
   ry: 6px !important;
 }
 
+/* Primary Highlight / Anchor Nodes */
+.mermaid .node.primary rect,
+.mermaid [class*="primary"] rect,
+.robos-diagram-card .node.primary rect,
+.robos-diagram-card [class*="primary"] rect,
+.language-mermaid .node.primary rect,
+.language-mermaid [class*="primary"] rect,
+svg[id^="mermaid-"] .node.primary rect,
+svg[id^="mermaid-"] [class*="primary"] rect,
+.robos-lightbox-rendered-svg .node.primary rect,
+.robos-lightbox-rendered-svg [class*="primary"] rect {
+  fill: #16243b !important;
+  stroke: #00e5ff !important;
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.4)) !important;
+}
+
 /* Node Text Labels */
 .mermaid .node .label,
 .mermaid .nodeLabel,
 .mermaid .node text,
 .mermaid .node tspan,
+.robos-diagram-card .node .label,
+.robos-diagram-card .nodeLabel,
+.robos-diagram-card .node text,
+.robos-diagram-card .node tspan,
+.language-mermaid .node .label,
+.language-mermaid .nodeLabel,
+.language-mermaid .node text,
+.language-mermaid .node tspan,
+svg[id^="mermaid-"] .node .label,
+svg[id^="mermaid-"] .nodeLabel,
+svg[id^="mermaid-"] .node text,
+svg[id^="mermaid-"] .node tspan,
 .robos-lightbox-rendered-svg .node .label,
 .robos-lightbox-rendered-svg .nodeLabel,
 .robos-lightbox-rendered-svg .node text,
@@ -597,10 +661,50 @@ body.robos-lightbox-open {
   font-size: 13.5px !important;
 }
 
+/* Backticked Code & Identifier Badges inside Diagrams (Expanded & Non-Expanded) */
+.robos-diagram-card code,
+.robos-diagram-card .node code,
+.robos-diagram-card foreignObject code,
+.mermaid code,
+.mermaid .node code,
+.mermaid foreignObject code,
+.language-mermaid code,
+.language-mermaid .node code,
+.language-mermaid foreignObject code,
+svg[id^="mermaid-"] code,
+svg[id^="mermaid-"] foreignObject code,
+.robos-lightbox-rendered-svg code,
+.robos-lightbox-rendered-svg .node code,
+.robos-lightbox-rendered-svg foreignObject code,
+#robos-lightbox-svg-target code {
+  color: #38bdf8 !important;
+  background-color: #121927 !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  padding: 0.15em 0.45em !important;
+  border-radius: 4px !important;
+  font-family: "Fira Code", monospace !important;
+  font-size: 0.84em !important;
+  font-weight: 500 !important;
+  display: inline-block !important;
+  line-height: 1.35 !important;
+  margin-top: 3px !important;
+  letter-spacing: normal !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
 /* Edge Labels */
 .mermaid .edgeLabel,
 .mermaid .edgeLabel rect,
 .mermaid .edgeLabel span,
+.robos-diagram-card .edgeLabel,
+.robos-diagram-card .edgeLabel rect,
+.robos-diagram-card .edgeLabel span,
+.language-mermaid .edgeLabel,
+.language-mermaid .edgeLabel rect,
+.language-mermaid .edgeLabel span,
+svg[id^="mermaid-"] .edgeLabel,
+svg[id^="mermaid-"] .edgeLabel rect,
+svg[id^="mermaid-"] .edgeLabel span,
 .robos-lightbox-rendered-svg .edgeLabel,
 .robos-lightbox-rendered-svg .edgeLabel rect,
 .robos-lightbox-rendered-svg .edgeLabel span {
@@ -618,6 +722,12 @@ body.robos-lightbox-open {
 /* Clusters / Subgraphs */
 .mermaid .cluster rect,
 .mermaid .subgraph rect,
+.robos-diagram-card .cluster rect,
+.robos-diagram-card .subgraph rect,
+.language-mermaid .cluster rect,
+.language-mermaid .subgraph rect,
+svg[id^="mermaid-"] .cluster rect,
+svg[id^="mermaid-"] .subgraph rect,
 .robos-lightbox-rendered-svg .cluster rect,
 .robos-lightbox-rendered-svg .subgraph rect {
   fill: #0b111e !important;
@@ -632,6 +742,15 @@ body.robos-lightbox-open {
 .mermaid .cluster text,
 .mermaid .cluster-label text,
 .mermaid .cluster span,
+.robos-diagram-card .cluster text,
+.robos-diagram-card .cluster-label text,
+.robos-diagram-card .cluster span,
+.language-mermaid .cluster text,
+.language-mermaid .cluster-label text,
+.language-mermaid .cluster span,
+svg[id^="mermaid-"] .cluster text,
+svg[id^="mermaid-"] .cluster-label text,
+svg[id^="mermaid-"] .cluster span,
 .robos-lightbox-rendered-svg .cluster text,
 .robos-lightbox-rendered-svg .cluster-label text,
 .robos-lightbox-rendered-svg .cluster span {

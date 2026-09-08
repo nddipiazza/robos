@@ -579,6 +579,31 @@
       t.setAttribute('fill', '#fef08a');
       t.style.fill = '#fef08a';
     });
+
+    // Flowchart Primary Highlight Nodes
+    svg.querySelectorAll('.node.primary rect, [class*="primary"] rect').forEach((r) => {
+      r.style.setProperty('fill', '#16243b', 'important');
+      r.style.setProperty('stroke', '#00e5ff', 'important');
+      r.style.setProperty('stroke-width', '2.5px', 'important');
+    });
+
+    svg.querySelectorAll('.node.primary text, .node.primary .nodeLabel, [class*="primary"] text, [class*="primary"] .nodeLabel').forEach((t) => {
+      t.style.setProperty('color', '#ffffff', 'important');
+      t.style.setProperty('fill', '#ffffff', 'important');
+    });
+
+    // Inline Code Badges inside Nodes (foreignObject)
+    svg.querySelectorAll('code, .node code, foreignObject code').forEach((c) => {
+      c.style.setProperty('color', '#38bdf8', 'important');
+      c.style.setProperty('background-color', '#121927', 'important');
+      c.style.setProperty('border', '1px solid rgba(56, 189, 248, 0.4)', 'important');
+      c.style.setProperty('border-radius', '4px', 'important');
+      c.style.setProperty('padding', '0.15em 0.45em', 'important');
+      c.style.setProperty('font-family', '"Fira Code", monospace', 'important');
+      c.style.setProperty('font-size', '0.85em', 'important');
+      c.style.setProperty('font-weight', '500', 'important');
+      c.style.setProperty('display', 'inline-block', 'important');
+    });
   }
 
   function bindDocDiagrams() {
@@ -599,6 +624,8 @@
       if (!svgEl) return;
 
       container.dataset.robosDiagramReady = 'true';
+      svgEl.classList.add('mermaid');
+      svgEl.classList.add('robos-flowchart-svg');
       applyHighContrastToSvg(svgEl);
 
       // If not already inside a robos-diagram-card, wrap it

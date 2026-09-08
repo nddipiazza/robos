@@ -588,7 +588,7 @@ class SchemaDocGenerator {
     const name = shape.targetClass.replace(/^.*:/, '');
     const lines = ['graph LR'];
     lines.push(`    ThisNode["${name}<br/><code>${shape.targetClass}</code>"]:::primary`);
-    lines.push('    classDef primary fill:#00bcd4,stroke:#00838f,stroke-width:2px,color:#000;');
+    lines.push('    classDef primary fill:#16243b,stroke:#00e5ff,stroke-width:2.5px,color:#ffffff;');
 
     for (const prop of shape.properties) {
       if (prop.path.startsWith('robos:') && prop.path.match(/(Contract|Team|Project|RemoteExecution|Entity|Repository)/i)) {
