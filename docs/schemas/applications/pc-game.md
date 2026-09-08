@@ -1,16 +1,16 @@
 ---
-title: Data Pipeline
+title: PC Game
 layout: default
 parent: Applications (robos.apps)
 grand_parent: KGraph Schemas
-nav_order: 4
-permalink: /schemas/applications/data-pipeline.html
+nav_order: 6
+permalink: /schemas/applications/pc-game.html
 ---
 
-# Schema: `robos:DataPipeline`
+# Schema: `robos:PCGame`
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:DataPipeline` in the `applications` package store.
+Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:PCGame` in the `applications` package store.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -23,9 +23,9 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 
 ## Specification Metadata
 
-- **RDF / OWL Class**: `robos:DataPipeline`
-- **Aliases / Target Classes**: `robos:DataPipeline`
-- **SHACL Shape ID**: `urn:robos:shape:DataPipelineShape`
+- **RDF / OWL Class**: `robos:PCGame`
+- **Aliases / Target Classes**: `robos:PCGame`
+- **SHACL Shape ID**: `urn:robos:shape:PCGameShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
 
@@ -35,15 +35,16 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Data Pipeline</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:DataPipeline</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">PC Game</span>
+    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:PCGame</span>
   </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:DataPipelineShape</code> within the <strong>Applications (robos.apps)</strong> (<code>robos.apps</code>) package store.</p>
+  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:PCGameShape</code> within the <strong>Applications (robos.apps)</strong> (<code>robos.apps</code>) package store.</p>
   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:technology</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:pipelineEngine</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:gameEngine</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:targetPlatform</code></span>
   </div>
 </div>
 
@@ -53,10 +54,11 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 
 | Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
 |---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Data Pipeline must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Data Pipeline must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Data Pipeline must specify technology stack. |
-| **`robos:pipelineEngine`** | Pipeline Engine | `1..*` | `xsd:string` | Data Pipeline must declare execution engine (Kafka Streams, Spark, Celery). |
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | PC Game must have a title. |
+| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | PC Game must define a repository. |
+| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | PC Game must specify technology stack. |
+| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy). |
+| **`robos:targetPlatform`** | Gaming Target Platform | `1..*` | `xsd:string` | PC Game must specify target PC platform(s) (Windows, Linux, macOS). |
 
 ---
 
@@ -64,18 +66,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 
 ```json
 {
-  "@id": "urn:robos:applications:data-pipeline-sample",
+  "@id": "urn:robos:applications:pc-game-sample",
   "@type": [
-    "robos:DataPipeline",
+    "robos:PCGame",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample Data Pipeline",
-  "dcterms:description": "Canonical reference instance for robos:DataPipeline.",
+  "dcterms:title": "Sample PC Game",
+  "dcterms:description": "Canonical reference instance for robos:PCGame.",
   "robos:package": "applications",
   "robos:namespace": "robos.apps",
   "robos:repository": "github.com/acme/sample-repo",
   "robos:technology": "Node.js / TypeScript",
-  "robos:pipelineEngine": "Kafka Streams"
+  "robos:gameEngine": "Unreal Engine 5",
+  "robos:targetPlatform": "Windows / Linux"
 }
 ```
 
@@ -92,18 +95,19 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:applications:data-pipeline-sample",
+        "@id": "urn:robos:applications:pc-game-sample",
         "@type": [
-            "robos:DataPipeline",
+            "robos:PCGame",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample Data Pipeline",
-        "dcterms:description": "Canonical reference instance for robos:DataPipeline.",
+        "dcterms:title": "Sample PC Game",
+        "dcterms:description": "Canonical reference instance for robos:PCGame.",
         "robos:package": "applications",
         "robos:namespace": "robos.apps",
         "robos:repository": "github.com/acme/sample-repo",
         "robos:technology": "Node.js / TypeScript",
-        "robos:pipelineEngine": "Kafka Streams"
+        "robos:gameEngine": "Unreal Engine 5",
+        "robos:targetPlatform": "Windows / Linux"
     }
   ],
 }));

@@ -97,4 +97,39 @@ describe('RobOS Knowledge Graph: Automated Tiered Schema Doc Generator', () => {
       assert.strictEqual(parsed['robos:package'], pkgId, `${slug}.md JSON has correct robos:package`);
     }
   });
+
+  it('4. Accurately formats acronyms and compounds (GraphQLContract, NoSQLDatabase, MCPServer, APIEndpoint, CICDPipeline)', () => {
+    const rootDir = path.resolve(__dirname, '../../../..');
+    const generator = new SchemaDocGenerator({ rootDir });
+
+    assert.strictEqual(generator.getEntitySlug('robos:GraphQLContract'), 'graphql-contract');
+    assert.strictEqual(generator.getEntityTitle('robos:GraphQLContract'), 'GraphQL Contract');
+
+    assert.strictEqual(generator.getEntitySlug('robos:NoSQLDatabase'), 'nosql-database');
+    assert.strictEqual(generator.getEntityTitle('robos:NoSQLDatabase'), 'NoSQL Database');
+
+    assert.strictEqual(generator.getEntitySlug('robos:NoSQLCollection'), 'nosql-collection');
+    assert.strictEqual(generator.getEntityTitle('robos:NoSQLCollection'), 'NoSQL Collection');
+
+    assert.strictEqual(generator.getEntitySlug('robos:MCPServer'), 'mcp-server');
+    assert.strictEqual(generator.getEntityTitle('robos:MCPServer'), 'MCP Server');
+
+    assert.strictEqual(generator.getEntitySlug('robos:APIEndpoint'), 'api-endpoint');
+    assert.strictEqual(generator.getEntityTitle('robos:APIEndpoint'), 'API Endpoint');
+
+    assert.strictEqual(generator.getEntitySlug('robos:CICDPipeline'), 'cicd-pipeline');
+    assert.strictEqual(generator.getEntityTitle('robos:CICDPipeline'), 'CI/CD Pipeline');
+
+    assert.strictEqual(generator.getEntitySlug('robos:CLICommand'), 'cli-command');
+    assert.strictEqual(generator.getEntitySlug('robos:CLIFlag'), 'cli-flag');
+    assert.strictEqual(generator.getEntitySlug('robos:ADROption'), 'adr-option');
+    assert.strictEqual(generator.getEntitySlug('robos:PCGame'), 'pc-game');
+    assert.strictEqual(generator.getEntitySlug('robos:GitOpsDeployment'), 'gitops-deployment');
+
+    // Confirm that proper files exist and old typo files are purged
+    assert.ok(fs.existsSync(path.join(rootDir, 'docs/schemas/services/graphql-contract.md')), 'graphql-contract.md exists');
+    assert.ok(!fs.existsSync(path.join(rootDir, 'docs/schemas/services/graph-qlcontract.md')), 'graph-qlcontract.md does not exist');
+    assert.ok(fs.existsSync(path.join(rootDir, 'docs/schemas/core-platform/nosql-database.md')), 'nosql-database.md exists');
+    assert.ok(!fs.existsSync(path.join(rootDir, 'docs/schemas/core-platform/no-sqldatabase.md')), 'no-sqldatabase.md does not exist');
+  });
 });

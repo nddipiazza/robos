@@ -23,7 +23,7 @@ describe('Multi-Branch World State Versioning (BranchManager) Tests with In-Dept
     // 1. Classification Tests
     assert.strictEqual(classifyBranch('main').type, 'production');
     assert.strictEqual(classifyBranch('feature/TASK-101-auth').type, 'feature');
-    assert.strictEqual(classifyBranch('poc/v2-graph-ql').type, 'poc');
+    assert.strictEqual(classifyBranch('poc/v2-graphql').type, 'poc');
     assert.strictEqual(classifyBranch('pilot/beta-billing').type, 'pilot');
 
     // 2. Initial main branch state
@@ -39,8 +39,8 @@ describe('Multi-Branch World State Versioning (BranchManager) Tests with In-Dept
     assert.ok(switchRes1.durationMs < 50, `Switch latency (${switchRes1.durationMs}ms) must be <50ms`);
     assert.strictEqual(switchRes1.branch.nodeCount, baseCount + 3, 'Feature branch must have baseline + 3 delta nodes');
 
-    // 4. Switch to poc/v2-graph-ql
-    const switchRes2 = store.switchBranch('poc/v2-graph-ql');
+    // 4. Switch to poc/v2-graphql
+    const switchRes2 = store.switchBranch('poc/v2-graphql');
     assert.strictEqual(switchRes2.branch.nodeCount, baseCount + 2, 'POC branch must have baseline + 2 delta nodes');
 
     // 5. Switch back to main
@@ -79,8 +79,8 @@ describe('Multi-Branch World State Versioning (BranchManager) Tests with In-Dept
       const featureNodes = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
       assert.ok(featureNodes.includes('Nodes'), 'Feature branch must display nodes');
 
-      // 3. Switch to poc/v2-graph-ql
-      await evalJS(app.port, `window.switchBranch('poc/v2-graph-ql')`);
+      // 3. Switch to poc/v2-graphql
+      await evalJS(app.port, `window.switchBranch('poc/v2-graphql')`);
       await new Promise(r => setTimeout(r, 400));
 
       const pocBadge = await evalJS(app.port, `document.getElementById('branch-badge').textContent`);

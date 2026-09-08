@@ -1,10 +1,10 @@
 ---
-title: APIEndpoint
+title: API Endpoint
 layout: default
 parent: Services & Contracts (robos.services)
 grand_parent: KGraph Schemas
 nav_order: 7
-permalink: /schemas/services/apiendpoint.html
+permalink: /schemas/services/api-endpoint.html
 ---
 
 # Schema: `robos:APIEndpoint`
@@ -35,7 +35,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:APIE
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">APIEndpoint</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">API Endpoint</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:APIEndpoint</span>
   </div>
   <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:APIEndpointShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
@@ -62,13 +62,13 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:APIE
 
 ```json
 {
-  "@id": "urn:robos:services:apiendpoint-sample",
+  "@id": "urn:robos:services:api-endpoint-sample",
   "@type": [
     "robos:APIEndpoint",
     "robos:APIOperation",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample APIEndpoint",
+  "dcterms:title": "Sample API Endpoint",
   "dcterms:description": "Canonical reference instance for robos:APIEndpoint.",
   "robos:package": "services",
   "robos:namespace": "robos.services",
@@ -90,13 +90,13 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:services:apiendpoint-sample",
+        "@id": "urn:robos:services:api-endpoint-sample",
         "@type": [
             "robos:APIEndpoint",
             "robos:APIOperation",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample APIEndpoint",
+        "dcterms:title": "Sample API Endpoint",
         "dcterms:description": "Canonical reference instance for robos:APIEndpoint.",
         "robos:package": "services",
         "robos:namespace": "robos.services",

@@ -81,7 +81,7 @@ const DEFAULT_BRANCH_DELTAS = {
       },
     ],
   },
-  'poc/v2-graph-ql': {
+  'poc/v2-graphql': {
     commit: 'b44d88e',
     author: 'Lead Architect',
     timestamp: new Date().toISOString(),

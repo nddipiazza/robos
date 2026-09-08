@@ -1,5 +1,5 @@
 ---
-title: ELearning
+title: eLearning Course
 layout: default
 parent: eLearning Curriculums (robos.learning)
 grand_parent: KGraph Schemas
@@ -35,7 +35,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ELea
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">ELearning</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">eLearning Course</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ELearning</span>
   </div>
   <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ELearningShape</code> within the <strong>eLearning Curriculums (robos.learning)</strong> (<code>robos.learning</code>) package store.</p>
@@ -69,7 +69,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ELea
     "robos:ELearning",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample ELearning",
+  "dcterms:title": "Sample eLearning Course",
   "dcterms:description": "Canonical reference instance for robos:ELearning.",
   "robos:package": "learning",
   "robos:namespace": "robos.learning",
@@ -102,7 +102,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "robos:ELearning",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample ELearning",
+        "dcterms:title": "Sample eLearning Course",
         "dcterms:description": "Canonical reference instance for robos:ELearning.",
         "robos:package": "learning",
         "robos:namespace": "robos.learning",

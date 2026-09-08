@@ -1,10 +1,10 @@
 ---
-title: ADROption
+title: ADR Option
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
 nav_order: 7
-permalink: /schemas/documentation/adroption.html
+permalink: /schemas/documentation/adr-option.html
 ---
 
 # Schema: `robos:ADROption`
@@ -35,7 +35,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADRO
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">ADROption</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">ADR Option</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ADROption</span>
   </div>
   <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ADROptionShape</code> within the <strong>Documentation & Diagrams (robos.docs)</strong> (<code>robos.docs</code>) package store.</p>
@@ -60,12 +60,12 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADRO
 
 ```json
 {
-  "@id": "urn:robos:documentation:adroption-sample",
+  "@id": "urn:robos:documentation:adr-option-sample",
   "@type": [
     "robos:ADROption",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample ADROption",
+  "dcterms:title": "Sample ADR Option",
   "dcterms:description": "Canonical reference instance for robos:ADROption.",
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
@@ -86,12 +86,12 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:documentation:adroption-sample",
+        "@id": "urn:robos:documentation:adr-option-sample",
         "@type": [
             "robos:ADROption",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample ADROption",
+        "dcterms:title": "Sample ADR Option",
         "dcterms:description": "Canonical reference instance for robos:ADROption.",
         "robos:package": "documentation",
         "robos:namespace": "robos.docs",

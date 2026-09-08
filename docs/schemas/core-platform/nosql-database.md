@@ -1,10 +1,10 @@
 ---
-title: No SQLDatabase
+title: NoSQL Database
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
 nav_order: 3
-permalink: /schemas/core-platform/no-sqldatabase.html
+permalink: /schemas/core-platform/nosql-database.html
 ---
 
 # Schema: `robos:NoSQLDatabase`
@@ -35,7 +35,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">No SQLDatabase</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">NoSQL Database</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:NoSQLDatabase</span>
   </div>
   <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:NoSQLDatabaseShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>

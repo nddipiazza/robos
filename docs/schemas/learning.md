@@ -34,7 +34,7 @@ Interactive developer courses, tutorials, and architectural training modules.
 
 | Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |
 |---|---|---|---|
-| [**ELearning** (`robos:ELearning`)]({{ '/schemas/learning/elearning.html' | relative_url }}) | `urn:robos:shape:ELearningShape` | `dcterms:title`, `robos:topic`, `robos:modules`, `robos:gitopsFile` | [View Schema &rarr;]({{ '/schemas/learning/elearning.html' | relative_url }}) |
+| [**eLearning Course** (`robos:ELearning`)]({{ '/schemas/learning/elearning.html' | relative_url }}) | `urn:robos:shape:ELearningShape` | `dcterms:title`, `robos:topic`, `robos:modules`, `robos:gitopsFile` | [View Schema &rarr;]({{ '/schemas/learning/elearning.html' | relative_url }}) |
 | [**Learning Module** (`robos:LearningModule`)]({{ '/schemas/learning/learning-module.html' | relative_url }}) | `urn:robos:shape:LearningModuleShape` | `dcterms:title`, `robos:course` | [View Schema &rarr;]({{ '/schemas/learning/learning-module.html' | relative_url }}) |
 | [**Learning Lesson** (`robos:LearningLesson`)]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) | `urn:robos:shape:LearningLessonShape` | `dcterms:title`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) |
 | [**Hands On Lab** (`robos:HandsOnLab`)]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) | `urn:robos:shape:HandsOnLabShape` | `dcterms:title`, `robos:labFile`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) |

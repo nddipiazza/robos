@@ -25,11 +25,11 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: 'We switch world states to poc/v2-graph-ql to evaluate an exploratory GraphQL federation spike.',
+    narration: 'We switch world states to poc/v2-graphql to evaluate an exploratory GraphQL federation spike.',
     target: '#branch-select',
     action: 'select',
-    value: 'poc/v2-graph-ql',
-    callout: 'Switch to poc/v2-graph-ql Spike',
+    value: 'poc/v2-graphql',
+    callout: 'Switch to poc/v2-graphql Spike',
     minHold: 3500,
   },
   {

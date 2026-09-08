@@ -581,6 +581,25 @@ const PACKAGE_DISPLAY_TITLES = {
   'documentation': 'Documentation & Diagrams (robos.docs)',
 };
 
+// Explicit slug and display title overrides for acronyms, multi-capital terms, and compound tech names
+const ENTITY_OVERRIDES = {
+  'GraphQLContract': { slug: 'graphql-contract', title: 'GraphQL Contract' },
+  'NoSQLDatabase': { slug: 'nosql-database', title: 'NoSQL Database' },
+  'NoSQLCollection': { slug: 'nosql-collection', title: 'NoSQL Collection' },
+  'MCPServer': { slug: 'mcp-server', title: 'MCP Server' },
+  'MCPTool': { slug: 'mcp-tool', title: 'MCP Tool' },
+  'MCPResource': { slug: 'mcp-resource', title: 'MCP Resource' },
+  'MCPPrompt': { slug: 'mcp-prompt', title: 'MCP Prompt' },
+  'CICDPipeline': { slug: 'cicd-pipeline', title: 'CI/CD Pipeline' },
+  'APIEndpoint': { slug: 'api-endpoint', title: 'API Endpoint' },
+  'CLICommand': { slug: 'cli-command', title: 'CLI Command' },
+  'CLIFlag': { slug: 'cli-flag', title: 'CLI Flag' },
+  'ADROption': { slug: 'adr-option', title: 'ADR Option' },
+  'PCGame': { slug: 'pc-game', title: 'PC Game' },
+  'GitOpsDeployment': { slug: 'gitops-deployment', title: 'GitOps Deployment' },
+  'ELearning': { slug: 'elearning', title: 'eLearning Course' },
+};
+
 class SchemaDocGenerator {
   constructor(options = {}) {
     this.rootDir = options.rootDir || process.cwd();
@@ -597,14 +616,23 @@ class SchemaDocGenerator {
 
   getEntitySlug(targetClass) {
     const name = targetClass.replace(/^.*:/, '');
+    if (ENTITY_OVERRIDES[name] && ENTITY_OVERRIDES[name].slug) {
+      return ENTITY_OVERRIDES[name].slug;
+    }
     return name
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
       .toLowerCase();
   }
 
   getEntityTitle(targetClass) {
     const name = targetClass.replace(/^.*:/, '');
-    return name.replace(/([a-z])([A-Z])/g, '$1 $2');
+    if (ENTITY_OVERRIDES[name] && ENTITY_OVERRIDES[name].title) {
+      return ENTITY_OVERRIDES[name].title;
+    }
+    return name
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2');
   }
 
   getCanonicalNode(targetClass, pkgId) {
@@ -669,6 +697,19 @@ class SchemaDocGenerator {
         const shapeContent = this.generateSchemaMarkdown(shape, pkgData, shapeOrder++);
         fs.writeFileSync(shapeFilePath, shapeContent, 'utf8');
         generatedFiles.push(shapeFilePath);
+      }
+
+      // Clean stale markdown files in this package subdirectory
+      if (fs.existsSync(pkgSubdir)) {
+        const existingFiles = fs.readdirSync(pkgSubdir);
+        for (const file of existingFiles) {
+          if (file.endsWith('.md')) {
+            const fullPath = path.join(pkgSubdir, file);
+            if (!generatedFiles.includes(fullPath)) {
+              fs.unlinkSync(fullPath);
+            }
+          }
+        }
       }
     }
 
@@ -1105,4 +1146,4 @@ class SchemaDocGenerator {
   }
 }
 
-module.exports = { SchemaDocGenerator, PROPERTY_METADATA, PACKAGE_DISPLAY_TITLES };
+module.exports = { SchemaDocGenerator, PROPERTY_METADATA, PACKAGE_DISPLAY_TITLES, ENTITY_OVERRIDES };

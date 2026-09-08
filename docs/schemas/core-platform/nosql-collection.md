@@ -1,10 +1,10 @@
 ---
-title: No SQLCollection
+title: NoSQL Collection
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
 nav_order: 12
-permalink: /schemas/core-platform/no-sqlcollection.html
+permalink: /schemas/core-platform/nosql-collection.html
 ---
 
 # Schema: `robos:NoSQLCollection`
@@ -35,7 +35,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">No SQLCollection</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">NoSQL Collection</span>
     <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:NoSQLCollection</span>
   </div>
   <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:NoSQLCollectionShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
@@ -62,12 +62,12 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 
 ```json
 {
-  "@id": "urn:robos:core-platform:no-sqlcollection-sample",
+  "@id": "urn:robos:core-platform:nosql-collection-sample",
   "@type": [
     "robos:NoSQLCollection",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample No SQLCollection",
+  "dcterms:title": "Sample NoSQL Collection",
   "dcterms:description": "Canonical reference instance for robos:NoSQLCollection.",
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
@@ -89,12 +89,12 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:core-platform:no-sqlcollection-sample",
+        "@id": "urn:robos:core-platform:nosql-collection-sample",
         "@type": [
             "robos:NoSQLCollection",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample No SQLCollection",
+        "dcterms:title": "Sample NoSQL Collection",
         "dcterms:description": "Canonical reference instance for robos:NoSQLCollection.",
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",

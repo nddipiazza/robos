@@ -1,16 +1,16 @@
 ---
-title: MCPTool
+title: MCP Resource
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 15
-permalink: /schemas/core-platform/mcptool.html
+nav_order: 16
+permalink: /schemas/core-platform/mcp-resource.html
 ---
 
-# Schema: `robos:MCPTool`
+# Schema: `robos:MCPResource`
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPTool` in the `core-platform` package store.
+Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPResource` in the `core-platform` package store.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -23,9 +23,9 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 
 ## Specification Metadata
 
-- **RDF / OWL Class**: `robos:MCPTool`
-- **Aliases / Target Classes**: `robos:MCPTool`
-- **SHACL Shape ID**: `urn:robos:shape:MCPToolShape`
+- **RDF / OWL Class**: `robos:MCPResource`
+- **Aliases / Target Classes**: `robos:MCPResource`
+- **SHACL Shape ID**: `urn:robos:shape:MCPResourceShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
 
@@ -35,13 +35,13 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">MCPTool</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:MCPTool</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">MCP Resource</span>
+    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:MCPResource</span>
   </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:MCPToolShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
+  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:MCPResourceShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:toolName</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:uriTemplate</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:mcpServer</code></span>
   </div>
 </div>
@@ -52,9 +52,9 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 
 | Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
 |---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | MCP Tool must have a title. |
-| **`robos:toolName`** | MCP Tool Name | `1..*` | `xsd:string` | MCP Tool must declare tool name. |
-| **`robos:mcpServer`** | Parent MCP Server | `1..*` | `URI (robos:MCPServer)` | MCP Tool must link to parent MCP server. |
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | MCP Resource must have a title. |
+| **`robos:uriTemplate`** | URI Template | `1..*` | `xsd:string` | MCP Resource must declare URI template. |
+| **`robos:mcpServer`** | Parent MCP Server | `1..*` | `URI (robos:MCPServer)` | MCP Resource must link to parent MCP server. |
 
 ---
 
@@ -62,16 +62,16 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 
 ```json
 {
-  "@id": "urn:robos:core-platform:mcptool-sample",
+  "@id": "urn:robos:core-platform:mcp-resource-sample",
   "@type": [
-    "robos:MCPTool",
+    "robos:MCPResource",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample MCPTool",
-  "dcterms:description": "Canonical reference instance for robos:MCPTool.",
+  "dcterms:title": "Sample MCP Resource",
+  "dcterms:description": "Canonical reference instance for robos:MCPResource.",
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
-  "robos:toolName": "sample_tool",
+  "robos:uriTemplate": "sample://resources/{id}",
   "robos:mcpServer": "urn:robos:mcp:context-engine"
 }
 ```
@@ -89,16 +89,16 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:core-platform:mcptool-sample",
+        "@id": "urn:robos:core-platform:mcp-resource-sample",
         "@type": [
-            "robos:MCPTool",
+            "robos:MCPResource",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample MCPTool",
-        "dcterms:description": "Canonical reference instance for robos:MCPTool.",
+        "dcterms:title": "Sample MCP Resource",
+        "dcterms:description": "Canonical reference instance for robos:MCPResource.",
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
-        "robos:toolName": "sample_tool",
+        "robos:uriTemplate": "sample://resources/{id}",
         "robos:mcpServer": "urn:robos:mcp:context-engine"
     }
   ],
