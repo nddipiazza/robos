@@ -86,32 +86,12 @@ Tier 3 models are reserved for complex, multi-variable engineering challenges th
 
 As multi-agent swarms execute hundreds of continuous sub-tasks throughout the day, prompt token consumption becomes both an economic bottleneck and a latency driver. RobOS incorporates two cutting-edge token optimization techniques into its agent pipeline:
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       ROBOS AGENT DISPATCH PIPELINE                         │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                         [ Incoming SDLC Task / PR ]
-                                      │
-                                      ▼
-                      ┌───────────────────────────────┐
-                      │  Task Complexity Classifier   │
-                      └───────────────────────────────┘
-                                      │
-         ┌────────────────────────────┼────────────────────────────┐
-         ▼                            ▼                            ▼
-  [ Tier 1: Utility ]       [ Tier 2: Workhorse ]        [ Tier 3: Frontier ]
-         │                            │                            │
-         ▼                            ▼                            ▼
-  ┌───────────────┐           ┌───────────────┐            ┌───────────────┐
-  │ Caveman Mode  │           │ Stanford DSPy │            │ Raw Extended  │
-  │  Compression  │           │ Teleprompter  │            │  Reasoning    │
-  │ (40-60% Less) │           │ Optimization  │            │ (Full Context)│
-  └───────────────┘           └───────────────┘            └───────────────┘
-         │                            │                            │
-         ▼                            ▼                            ▼
-  [ Local / Haiku 4.5 ]       [ Sonnet 5 / GPT-5 ]         [ o3 / Opus 5 ]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-dispatch-pipeline.jpg' | relative_url }}" alt="RobOS Agent Dispatch Pipeline: Model Tiers, Caveman Compression, and DSPy Optimization" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Agent Dispatch Pipeline</strong>: Dynamic 3-tier routing, Caveman token compression, and Stanford DSPy optimization. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
