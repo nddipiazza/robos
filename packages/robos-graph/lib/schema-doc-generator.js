@@ -273,6 +273,301 @@ const PROPERTY_METADATA = {
     type: 'xsd:string',
     description: 'Code snippet syntax language (`javascript`, `typescript`, `python`, `go`, `rust`, `bash`).',
   },
+  'robos:parentTask': {
+    name: 'Parent Task',
+    type: 'URI (robos:Task)',
+    description: 'URI reference linking a subtask or item to its parent task.',
+  },
+  'robos:severity': {
+    name: 'Defect Severity',
+    type: 'xsd:string',
+    description: 'Severity classification of a bug or defect (blocker, critical, major, minor, trivial).',
+  },
+  'robos:startDate': {
+    name: 'Start Date',
+    type: 'xsd:date',
+    description: 'Scheduled start date for a sprint or milestone.',
+  },
+  'robos:endDate': {
+    name: 'End Date',
+    type: 'xsd:date',
+    description: 'Scheduled completion date for a sprint.',
+  },
+  'robos:targetDate': {
+    name: 'Target Date',
+    type: 'xsd:date',
+    description: 'Target delivery date for a milestone or release.',
+  },
+  'robos:defaultBranch': {
+    name: 'Default Git Branch',
+    type: 'xsd:string',
+    description: 'Default primary branch name for a repository (e.g. main, master).',
+  },
+  'robos:branchName': {
+    name: 'Git Branch Name',
+    type: 'xsd:string',
+    description: 'Name of the Git branch (e.g. feat/agent-tiers, fix/schema-validator).',
+  },
+  'robos:prNumber': {
+    name: 'Pull Request Number',
+    type: 'xsd:integer',
+    description: 'Numerical pull request identifier within the repository forge.',
+  },
+  'robos:sourceBranch': {
+    name: 'Source Branch',
+    type: 'xsd:string',
+    description: 'Head or source branch containing changes to be merged.',
+  },
+  'robos:targetBranch': {
+    name: 'Target Branch',
+    type: 'xsd:string',
+    description: 'Base or destination branch into which changes are merged.',
+  },
+  'robos:commitSha': {
+    name: 'Git Commit SHA',
+    type: 'xsd:string',
+    description: '40-character hexadecimal Git commit hash.',
+  },
+  'robos:tagName': {
+    name: 'Git Release Tag',
+    type: 'xsd:string',
+    description: 'Semantic version tag label (e.g. v1.0.0, v2.4.1).',
+  },
+  'robos:pathPattern': {
+    name: 'API Path Pattern',
+    type: 'xsd:string',
+    description: 'URL route template pattern for an endpoint (e.g. /api/v1/orders/{id}).',
+  },
+  'robos:httpMethod': {
+    name: 'HTTP Method',
+    type: 'xsd:string',
+    description: 'HTTP request method (GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD).',
+  },
+  'robos:modelName': {
+    name: 'Data Model Name',
+    type: 'xsd:string',
+    description: 'Name of the domain entity or schema model (e.g. OrderDto, CustomerProfile).',
+  },
+  'robos:schemaName': {
+    name: 'Database Schema Name',
+    type: 'xsd:string',
+    description: 'Logical schema or namespace name within a database (e.g. public, auth, billing).',
+  },
+  'robos:database': {
+    name: 'Parent Database',
+    type: 'URI (robos:Database | robos:NoSQLDatabase)',
+    description: 'URI reference linking schema, table, or collection to its parent database.',
+  },
+  'robos:tableName': {
+    name: 'Database Table Name',
+    type: 'xsd:string',
+    description: 'Relational table name (e.g. orders, users, invoices).',
+  },
+  'robos:columnName': {
+    name: 'Column Name',
+    type: 'xsd:string',
+    description: 'Table column name (e.g. id, email, created_at).',
+  },
+  'robos:dataType': {
+    name: 'Column Data Type',
+    type: 'xsd:string',
+    description: 'Storage data type for a column (e.g. uuid, varchar, bigint, timestamp).',
+  },
+  'robos:table': {
+    name: 'Parent Table',
+    type: 'URI (robos:DatabaseTable)',
+    description: 'URI reference linking a column or index to its parent table.',
+  },
+  'robos:indexName': {
+    name: 'Index Name',
+    type: 'xsd:string',
+    description: 'Database index identifier (e.g. idx_orders_user_id).',
+  },
+  'robos:collectionName': {
+    name: 'NoSQL Collection Name',
+    type: 'xsd:string',
+    description: 'NoSQL document collection or keyspace name (e.g. sessions, audit_logs).',
+  },
+  'robos:topicName': {
+    name: 'Topic / Queue Name',
+    type: 'xsd:string',
+    description: 'Message broker topic or queue identifier (e.g. order-events-v1).',
+  },
+  'robos:broker': {
+    name: 'Parent Message Broker',
+    type: 'URI (robos:MessageBroker)',
+    description: 'URI reference linking topic or queue to its governing message broker.',
+  },
+  'robos:groupId': {
+    name: 'Consumer Group ID',
+    type: 'xsd:string',
+    description: 'Unique identifier for a stream consumer group.',
+  },
+  'robos:toolName': {
+    name: 'MCP Tool Name',
+    type: 'xsd:string',
+    description: 'Tool name exposed by a Model Context Protocol server.',
+  },
+  'robos:mcpServer': {
+    name: 'Parent MCP Server',
+    type: 'URI (robos:MCPServer)',
+    description: 'URI reference linking a tool, resource, or prompt to its MCP server.',
+  },
+  'robos:uriTemplate': {
+    name: 'URI Template',
+    type: 'xsd:string',
+    description: 'Resource URI template exposed by an MCP server.',
+  },
+  'robos:promptName': {
+    name: 'MCP Prompt Name',
+    type: 'xsd:string',
+    description: 'Prompt template name exposed by an MCP server.',
+  },
+  'robos:namespaceName': {
+    name: 'Kubernetes Namespace Name',
+    type: 'xsd:string',
+    description: 'Logical cluster namespace name (e.g. production, staging, kube-system).',
+  },
+  'robos:cluster': {
+    name: 'Target Kubernetes Cluster',
+    type: 'URI (robos:KubernetesCluster)',
+    description: 'URI reference linking namespace or resource to its host Kubernetes cluster.',
+  },
+  'robos:namespace': {
+    name: 'Namespace Reference',
+    type: 'URI (robos:KubernetesNamespace)',
+    description: 'URI reference linking workload or service to its target namespace.',
+  },
+  'robos:image': {
+    name: 'Container Image',
+    type: 'xsd:string',
+    description: 'OCI container image reference (e.g. registry.acme.com/apps/order-api:v1.2.0).',
+  },
+  'robos:serviceName': {
+    name: 'Kubernetes Service Name',
+    type: 'xsd:string',
+    description: 'Cluster service resource name (e.g. forms-api-svc).',
+  },
+  'robos:serviceType': {
+    name: 'Kubernetes Service Type',
+    type: 'xsd:string',
+    description: 'Networking service type (ClusterIP, NodePort, LoadBalancer, ExternalName).',
+  },
+  'robos:ingressName': {
+    name: 'Ingress Rule Name',
+    type: 'xsd:string',
+    description: 'Ingress resource routing name.',
+  },
+  'robos:host': {
+    name: 'Routing Hostname',
+    type: 'xsd:string',
+    description: 'DNS hostname or service endpoint address.',
+  },
+  'robos:stageName': {
+    name: 'Pipeline Stage Name',
+    type: 'xsd:string',
+    description: 'CI/CD pipeline stage name (e.g. build, test, deploy).',
+  },
+  'robos:pipeline': {
+    name: 'Parent CI/CD Pipeline',
+    type: 'URI (robos:CICDPipeline)',
+    description: 'URI reference linking stage to its parent CI/CD pipeline.',
+  },
+  'robos:jobName': {
+    name: 'Pipeline Job Name',
+    type: 'xsd:string',
+    description: 'Individual job identifier within a pipeline stage.',
+  },
+  'robos:stage': {
+    name: 'Parent Pipeline Stage',
+    type: 'URI (robos:PipelineStage)',
+    description: 'URI reference linking job to its parent stage.',
+  },
+  'robos:stepName': {
+    name: 'Pipeline Step Name',
+    type: 'xsd:string',
+    description: 'Granular execution step name within a job.',
+  },
+  'robos:job': {
+    name: 'Parent Pipeline Job',
+    type: 'URI (robos:PipelineJob)',
+    description: 'URI reference linking step to its parent job.',
+  },
+  'robos:course': {
+    name: 'Parent eLearning Course',
+    type: 'URI (robos:ELearning)',
+    description: 'URI reference linking module to its parent course.',
+  },
+  'robos:module': {
+    name: 'Parent Learning Module',
+    type: 'URI (robos:LearningModule)',
+    description: 'URI reference linking lesson, lab, or quiz to its parent module.',
+  },
+  'robos:labFile': {
+    name: 'Hands-on Lab Guide File',
+    type: 'xsd:string',
+    description: 'Relative path to hands-on lab instructions or tutorial guide.',
+  },
+  'robos:questions': {
+    name: 'Assessment Questions',
+    type: 'Array<Object>',
+    description: 'List of assessment quiz questions and verification checks.',
+  },
+  'robos:sectionId': {
+    name: 'Doc Section Anchor',
+    type: 'xsd:string',
+    description: 'Unique heading identifier or HTML anchor within the documentation page.',
+  },
+  'robos:docPage': {
+    name: 'Parent Documentation Page',
+    type: 'URI (robos:DocumentationPage)',
+    description: 'URI reference linking section to its parent documentation page.',
+  },
+  'robos:adr': {
+    name: 'Parent ADR',
+    type: 'URI (robos:ArchitectureDecisionRecord)',
+    description: 'URI reference linking considered option to its Architecture Decision Record.',
+  },
+  'robos:steps': {
+    name: 'Scenario Steps',
+    type: 'Array<robos:ScenarioStep>',
+    description: 'Ordered sequence of BDD test steps executing the scenario.',
+  },
+  'robos:keyword': {
+    name: 'BDD Step Keyword',
+    type: 'xsd:string',
+    description: 'Gherkin step keyword (Given, When, Then, And, But).',
+  },
+  'robos:stepText': {
+    name: 'BDD Step Expression',
+    type: 'xsd:string',
+    description: 'Gherkin step narrative text matching cucumber step definition.',
+  },
+  'robos:routePath': {
+    name: 'Web Route Path',
+    type: 'xsd:string',
+    description: 'Frontend SPA URL route path (e.g. /dashboard, /settings).',
+  },
+  'robos:app': {
+    name: 'Parent Application',
+    type: 'URI (robos:FrontEndApp | robos:DesktopApp | robos:ConsoleApp)',
+    description: 'URI reference linking route, window, or command to its parent application.',
+  },
+  'robos:commandName': {
+    name: 'CLI Command Name',
+    type: 'xsd:string',
+    description: 'Console executable subcommand name (e.g. validate, deploy, run).',
+  },
+  'robos:flagName': {
+    name: 'CLI Flag / Option Name',
+    type: 'xsd:string',
+    description: 'Command line flag name (e.g. --output, --dry-run).',
+  },
+  'robos:command': {
+    name: 'Parent CLI Command',
+    type: 'URI (robos:CLICommand)',
+    description: 'URI reference linking a flag to its parent command.',
+  },
 };
 
 // Package display titles for Just the Docs navigation
@@ -745,6 +1040,65 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:targetApp') sample[prop.path] = 'remote-execution-studio';
       else if (prop.path === 'robos:language') sample[prop.path] = 'javascript';
       else if (prop.path === 'robos:code') sample[prop.path] = 'const graph = require("robos-graph");';
+      else if (prop.path === 'robos:parentTask') sample[prop.path] = 'urn:robos:task:sample-task-1';
+      else if (prop.path === 'robos:severity') sample[prop.path] = 'major';
+      else if (prop.path === 'robos:startDate') sample[prop.path] = '2026-10-01';
+      else if (prop.path === 'robos:endDate') sample[prop.path] = '2026-10-15';
+      else if (prop.path === 'robos:targetDate') sample[prop.path] = '2026-11-01';
+      else if (prop.path === 'robos:defaultBranch') sample[prop.path] = 'main';
+      else if (prop.path === 'robos:branchName') sample[prop.path] = 'feat/new-feature';
+      else if (prop.path === 'robos:prNumber') sample[prop.path] = 142;
+      else if (prop.path === 'robos:sourceBranch') sample[prop.path] = 'feat/new-feature';
+      else if (prop.path === 'robos:targetBranch') sample[prop.path] = 'main';
+      else if (prop.path === 'robos:commitSha') sample[prop.path] = '4a8f9c1b2e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a';
+      else if (prop.path === 'robos:tagName') sample[prop.path] = 'v1.0.0';
+      else if (prop.path === 'robos:pathPattern') sample[prop.path] = '/api/v1/samples';
+      else if (prop.path === 'robos:httpMethod') sample[prop.path] = 'GET';
+      else if (prop.path === 'robos:modelName') sample[prop.path] = 'SampleModel';
+      else if (prop.path === 'robos:schemaName') sample[prop.path] = 'public';
+      else if (prop.path === 'robos:database') sample[prop.path] = 'urn:robos:db:acme-orders-postgres';
+      else if (prop.path === 'robos:tableName') sample[prop.path] = 'sample_table';
+      else if (prop.path === 'robos:columnName') sample[prop.path] = 'sample_column';
+      else if (prop.path === 'robos:dataType') sample[prop.path] = 'varchar(255)';
+      else if (prop.path === 'robos:table') sample[prop.path] = 'urn:robos:db-table:sample-table';
+      else if (prop.path === 'robos:indexName') sample[prop.path] = 'idx_sample_column';
+      else if (prop.path === 'robos:collectionName') sample[prop.path] = 'sample_collection';
+      else if (prop.path === 'robos:topicName') sample[prop.path] = 'sample-events-v1';
+      else if (prop.path === 'robos:broker') sample[prop.path] = 'urn:robos:broker:acme-kafka';
+      else if (prop.path === 'robos:groupId') sample[prop.path] = 'sample-consumer-group';
+      else if (prop.path === 'robos:toolName') sample[prop.path] = 'sample_tool';
+      else if (prop.path === 'robos:mcpServer') sample[prop.path] = 'urn:robos:mcp:context-engine';
+      else if (prop.path === 'robos:uriTemplate') sample[prop.path] = 'sample://resources/{id}';
+      else if (prop.path === 'robos:promptName') sample[prop.path] = 'sample_prompt';
+      else if (prop.path === 'robos:namespaceName') sample[prop.path] = 'sample-namespace';
+      else if (prop.path === 'robos:cluster') sample[prop.path] = 'urn:robos:cluster:prod-us-east-eks';
+      else if (prop.path === 'robos:namespace') sample[prop.path] = 'urn:robos:ns:forms-prod';
+      else if (prop.path === 'robos:image') sample[prop.path] = 'registry.acme.com/apps/sample:v1.0.0';
+      else if (prop.path === 'robos:serviceName') sample[prop.path] = 'sample-service';
+      else if (prop.path === 'robos:serviceType') sample[prop.path] = 'ClusterIP';
+      else if (prop.path === 'robos:ingressName') sample[prop.path] = 'sample-ingress';
+      else if (prop.path === 'robos:host') sample[prop.path] = 'api.acme.internal';
+      else if (prop.path === 'robos:stageName') sample[prop.path] = 'build';
+      else if (prop.path === 'robos:pipeline') sample[prop.path] = 'urn:robos:pipeline:checkout-service-ci';
+      else if (prop.path === 'robos:jobName') sample[prop.path] = 'unit-tests';
+      else if (prop.path === 'robos:stage') sample[prop.path] = 'urn:robos:stage:build';
+      else if (prop.path === 'robos:stepName') sample[prop.path] = 'run-linter';
+      else if (prop.path === 'robos:job') sample[prop.path] = 'urn:robos:job:unit-tests';
+      else if (prop.path === 'robos:course') sample[prop.path] = 'urn:robos:elearning:microservices-contracts';
+      else if (prop.path === 'robos:module') sample[prop.path] = 'urn:robos:module:sample-module';
+      else if (prop.path === 'robos:labFile') sample[prop.path] = 'labs/sample-lab.md';
+      else if (prop.path === 'robos:questions') sample[prop.path] = [{ question: 'What is SHACL?', answer: 'Shapes Constraint Language' }];
+      else if (prop.path === 'robos:sectionId') sample[prop.path] = 'overview';
+      else if (prop.path === 'robos:docPage') sample[prop.path] = 'urn:robos:doc:architecture-overview';
+      else if (prop.path === 'robos:adr') sample[prop.path] = 'urn:robos:adr:001-modular-kgraph';
+      else if (prop.path === 'robos:steps') sample[prop.path] = [{ keyword: 'Given', stepText: 'a running service' }];
+      else if (prop.path === 'robos:keyword') sample[prop.path] = 'Given';
+      else if (prop.path === 'robos:stepText') sample[prop.path] = 'the system is initialized';
+      else if (prop.path === 'robos:routePath') sample[prop.path] = '/dashboard';
+      else if (prop.path === 'robos:app') sample[prop.path] = 'urn:robos:app:dev-central';
+      else if (prop.path === 'robos:commandName') sample[prop.path] = 'validate';
+      else if (prop.path === 'robos:flagName') sample[prop.path] = '--output';
+      else if (prop.path === 'robos:command') sample[prop.path] = 'urn:robos:cli:validate';
     }
 
     return sample;

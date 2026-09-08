@@ -26,7 +26,7 @@ Front-end SPAs, desktop workstations, PC & mobile games, mobile apps, and CLI to
 - **Package Store ID**: `applications`
 - **Ontology Namespace**: `robos.apps`
 - **GitOps Package File**: `.robos/kgraphs/applications/package.jsonld`
-- **Schemas Defined**: 7
+- **Schemas Defined**: 10
 
 ---
 
@@ -41,6 +41,9 @@ Front-end SPAs, desktop workstations, PC & mobile games, mobile apps, and CLI to
 | [**Front End App** (`robos:FrontEndApp`)]({{ '/schemas/applications/front-end-app.html' | relative_url }}) | `urn:robos:shape:FrontEndAppShape` | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:frontendFramework` | [View Schema &rarr;]({{ '/schemas/applications/front-end-app.html' | relative_url }}) |
 | [**PCGame** (`robos:PCGame`)]({{ '/schemas/applications/pcgame.html' | relative_url }}) | `urn:robos:shape:PCGameShape` | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:gameEngine`, `robos:targetPlatform` | [View Schema &rarr;]({{ '/schemas/applications/pcgame.html' | relative_url }}) |
 | [**Mobile Game** (`robos:MobileGame`)]({{ '/schemas/applications/mobile-game.html' | relative_url }}) | `urn:robos:shape:MobileGameShape` | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:gameEngine`, `robos:platform` | [View Schema &rarr;]({{ '/schemas/applications/mobile-game.html' | relative_url }}) |
+| [**Web Route** (`robos:WebRoute`)]({{ '/schemas/applications/web-route.html' | relative_url }}) | `urn:robos:shape:WebRouteShape` | `dcterms:title`, `robos:routePath`, `robos:app` | [View Schema &rarr;]({{ '/schemas/applications/web-route.html' | relative_url }}) |
+| [**CLICommand** (`robos:CLICommand`)]({{ '/schemas/applications/clicommand.html' | relative_url }}) | `urn:robos:shape:CLICommandShape` | `dcterms:title`, `robos:commandName`, `robos:app` | [View Schema &rarr;]({{ '/schemas/applications/clicommand.html' | relative_url }}) |
+| [**CLIFlag** (`robos:CLIFlag`)]({{ '/schemas/applications/cliflag.html' | relative_url }}) | `urn:robos:shape:CLIFlagShape` | `dcterms:title`, `robos:flagName`, `robos:command` | [View Schema &rarr;]({{ '/schemas/applications/cliflag.html' | relative_url }}) |
 
 ---
 

@@ -26,7 +26,7 @@ Living documentation pages, architecture decision records (ADRs), interactive wa
 - **Package Store ID**: `documentation`
 - **Ontology Namespace**: `robos.docs`
 - **GitOps Package File**: `.robos/kgraphs/documentation/package.jsonld`
-- **Schemas Defined**: 5
+- **Schemas Defined**: 7
 
 ---
 
@@ -39,6 +39,8 @@ Living documentation pages, architecture decision records (ADRs), interactive wa
 | [**Architecture Decision Record** (`robos:ArchitectureDecisionRecord`)]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) | `urn:robos:shape:ArchitectureDecisionRecordShape` | `dcterms:title`, `robos:status`, `robos:context`, `robos:decision` | [View Schema &rarr;]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) |
 | [**Interactive Walkthrough** (`robos:InteractiveWalkthrough`)]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) | `urn:robos:shape:InteractiveWalkthroughShape` | `dcterms:title`, `robos:slug`, `robos:targetApp` | [View Schema &rarr;]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) |
 | [**Code Snippet** (`robos:CodeSnippet`)]({{ '/schemas/documentation/code-snippet.html' | relative_url }}) | `urn:robos:shape:CodeSnippetShape` | `dcterms:title`, `robos:language`, `robos:code` | [View Schema &rarr;]({{ '/schemas/documentation/code-snippet.html' | relative_url }}) |
+| [**Doc Section** (`robos:DocSection`)]({{ '/schemas/documentation/doc-section.html' | relative_url }}) | `urn:robos:shape:DocSectionShape` | `dcterms:title`, `robos:sectionId`, `robos:docPage` | [View Schema &rarr;]({{ '/schemas/documentation/doc-section.html' | relative_url }}) |
+| [**ADROption** (`robos:ADROption`)]({{ '/schemas/documentation/adroption.html' | relative_url }}) | `urn:robos:shape:ADROptionShape` | `dcterms:title`, `robos:adr` | [View Schema &rarr;]({{ '/schemas/documentation/adroption.html' | relative_url }}) |
 
 ---
 

@@ -26,7 +26,7 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 - **Package Store ID**: `devops`
 - **Ontology Namespace**: `robos.devops`
 - **GitOps Package File**: `.robos/kgraphs/devops/package.jsonld`
-- **Schemas Defined**: 6
+- **Schemas Defined**: 13
 
 ---
 
@@ -40,6 +40,13 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 | [**Environment** (`robos:Environment`)]({{ '/schemas/devops/environment.html' | relative_url }}) | `urn:robos:shape:EnvironmentShape` | `dcterms:title`, `robos:environmentType`, `robos:tier` | [View Schema &rarr;]({{ '/schemas/devops/environment.html' | relative_url }}) |
 | [**Git Ops Deployment** (`robos:GitOpsDeployment`)]({{ '/schemas/devops/git-ops-deployment.html' | relative_url }}) | `urn:robos:shape:GitOpsDeploymentShape` | `dcterms:title`, `robos:gitopsEngine`, `robos:sourceRepo`, `robos:targetCluster`, `robos:targetNamespace` | [View Schema &rarr;]({{ '/schemas/devops/git-ops-deployment.html' | relative_url }}) |
 | [**CICDPipeline** (`robos:CICDPipeline`)]({{ '/schemas/devops/cicdpipeline.html' | relative_url }}) | `urn:robos:shape:CICDPipelineShape` | `dcterms:title`, `robos:platform`, `robos:workflowFile` | [View Schema &rarr;]({{ '/schemas/devops/cicdpipeline.html' | relative_url }}) |
+| [**Kubernetes Namespace** (`robos:KubernetesNamespace`)]({{ '/schemas/devops/kubernetes-namespace.html' | relative_url }}) | `urn:robos:shape:KubernetesNamespaceShape` | `dcterms:title`, `robos:namespaceName`, `robos:cluster` | [View Schema &rarr;]({{ '/schemas/devops/kubernetes-namespace.html' | relative_url }}) |
+| [**Kubernetes Deployment** (`robos:KubernetesDeployment`)]({{ '/schemas/devops/kubernetes-deployment.html' | relative_url }}) | `urn:robos:shape:KubernetesDeploymentShape` | `dcterms:title`, `robos:namespace`, `robos:image` | [View Schema &rarr;]({{ '/schemas/devops/kubernetes-deployment.html' | relative_url }}) |
+| [**Kubernetes Service** (`robos:KubernetesService`)]({{ '/schemas/devops/kubernetes-service.html' | relative_url }}) | `urn:robos:shape:KubernetesServiceShape` | `dcterms:title`, `robos:serviceName`, `robos:serviceType`, `robos:namespace` | [View Schema &rarr;]({{ '/schemas/devops/kubernetes-service.html' | relative_url }}) |
+| [**Kubernetes Ingress** (`robos:KubernetesIngress`)]({{ '/schemas/devops/kubernetes-ingress.html' | relative_url }}) | `urn:robos:shape:KubernetesIngressShape` | `dcterms:title`, `robos:ingressName`, `robos:host`, `robos:namespace` | [View Schema &rarr;]({{ '/schemas/devops/kubernetes-ingress.html' | relative_url }}) |
+| [**Pipeline Stage** (`robos:PipelineStage`)]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) | `urn:robos:shape:PipelineStageShape` | `dcterms:title`, `robos:stageName`, `robos:pipeline` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) |
+| [**Pipeline Job** (`robos:PipelineJob`)]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) | `urn:robos:shape:PipelineJobShape` | `dcterms:title`, `robos:jobName`, `robos:stage` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) |
+| [**Pipeline Step** (`robos:PipelineStep`)]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) | `urn:robos:shape:PipelineStepShape` | `dcterms:title`, `robos:stepName`, `robos:job` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) |
 
 ---
 

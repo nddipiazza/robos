@@ -3,7 +3,7 @@ title: Message Broker
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 6
+nav_order: 4
 permalink: /schemas/core-platform/message-broker.html
 ---
 

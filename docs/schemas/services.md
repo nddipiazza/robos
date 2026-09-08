@@ -26,7 +26,7 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 - **Package Store ID**: `services`
 - **Ontology Namespace**: `robos.services`
 - **GitOps Package File**: `.robos/kgraphs/services/package.jsonld`
-- **Schemas Defined**: 5
+- **Schemas Defined**: 10
 
 ---
 
@@ -39,6 +39,11 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 | [**Requirement** (`oslc_rm:Requirement`)]({{ '/schemas/services/requirement.html' | relative_url }}) | `urn:robos:shape:RequirementShape` | `dcterms:title`, `robos:featureFile` | [View Schema &rarr;]({{ '/schemas/services/requirement.html' | relative_url }}) |
 | [**Protobuf Contract** (`robos:ProtobufContract`)]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) | `urn:robos:shape:ProtobufContractShape` | `dcterms:title`, `robos:specFile`, `robos:packageName`, `robos:rpcMethods` | [View Schema &rarr;]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) |
 | [**Graph QLContract** (`robos:GraphQLContract`)]({{ '/schemas/services/graph-qlcontract.html' | relative_url }}) | `urn:robos:shape:GraphQLContractShape` | `dcterms:title`, `robos:specFile`, `robos:schemaType` | [View Schema &rarr;]({{ '/schemas/services/graph-qlcontract.html' | relative_url }}) |
+| [**Feature** (`robos:Feature`)]({{ '/schemas/services/feature.html' | relative_url }}) | `urn:robos:shape:FeatureShape` | `dcterms:title` | [View Schema &rarr;]({{ '/schemas/services/feature.html' | relative_url }}) |
+| [**APIEndpoint** (`robos:APIEndpoint`)]({{ '/schemas/services/apiendpoint.html' | relative_url }}) | `urn:robos:shape:APIEndpointShape` | `dcterms:title`, `robos:pathPattern`, `robos:httpMethod` | [View Schema &rarr;]({{ '/schemas/services/apiendpoint.html' | relative_url }}) |
+| [**Data Model** (`robos:DataModel`)]({{ '/schemas/services/data-model.html' | relative_url }}) | `urn:robos:shape:DataModelShape` | `dcterms:title`, `robos:modelName` | [View Schema &rarr;]({{ '/schemas/services/data-model.html' | relative_url }}) |
+| [**Scenario** (`robos:Scenario`)]({{ '/schemas/services/scenario.html' | relative_url }}) | `urn:robos:shape:ScenarioShape` | `dcterms:title`, `robos:steps` | [View Schema &rarr;]({{ '/schemas/services/scenario.html' | relative_url }}) |
+| [**Scenario Step** (`robos:ScenarioStep`)]({{ '/schemas/services/scenario-step.html' | relative_url }}) | `urn:robos:shape:ScenarioStepShape` | `robos:keyword`, `robos:stepText` | [View Schema &rarr;]({{ '/schemas/services/scenario-step.html' | relative_url }}) |
 
 ---
 

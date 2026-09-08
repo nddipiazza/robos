@@ -3364,6 +3364,836 @@ Apply the requested updates to the targeted documentation files, ensuring accura
       optimizedAt: new Date().toISOString(),
     };
   }
+
+  // ── Child Entity Registrations & Hierarchies ──────────────────────────────
+
+  registerFeature(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'feature')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:feature:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Feature`;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Feature', 'robos:ProductFeature', 'oslc:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:status': data['robos:status'] || data.status || 'proposed',
+      'robos:inEpic': data['robos:inEpic'] || data.epic || data.inEpic || undefined,
+      'robos:inProject': data['robos:inProject'] || data.project || data.inProject || undefined,
+      'robos:package': 'services',
+      'robos:namespace': 'robos.services',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Feature: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Feature: ${title} (${id})` };
+  }
+
+  registerUserStory(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'story')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:story:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Story`;
+    const status = data['robos:status'] || data.status || 'backlog';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:UserStory', 'robos:Story', 'oslc_cm:ChangeRequest'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:status': status,
+      'robos:acceptanceCriteria': data['robos:acceptanceCriteria'] || data.acceptanceCriteria || [],
+      'robos:storyPoints': data['robos:storyPoints'] || data.storyPoints || 3,
+      'robos:inFeature': data['robos:inFeature'] || data.feature || data.inFeature || undefined,
+      'robos:inEpic': data['robos:inEpic'] || data.epic || data.inEpic || undefined,
+      'robos:inSprint': data['robos:inSprint'] || data.sprint || data.inSprint || undefined,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:status'] = status;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for UserStory: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered User Story: ${title} (${id})` };
+  }
+
+  registerTask(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'task')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:task:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Task`;
+    const status = data['robos:status'] || data.status || 'todo';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Task', 'oslc_cm:ChangeRequest', 'robos:WorkItem'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:status': status,
+      'robos:priority': data['robos:priority'] || data.priority || 'medium',
+      'robos:inStory': data['robos:inStory'] || data.story || data.inStory || undefined,
+      'robos:inSprint': data['robos:inSprint'] || data.sprint || data.inSprint || undefined,
+      'robos:assignedDeveloper': data['robos:assignedDeveloper'] || data.assignedDeveloper || undefined,
+      'robos:assignedAgent': data['robos:assignedAgent'] || data.assignedAgent || undefined,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:status'] = status;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Task: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Task: ${title} (${id})` };
+  }
+
+  registerSubtask(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'subtask')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:subtask:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Subtask`;
+    const parentTask = data['robos:parentTask'] || data.parentTask || data.task;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Subtask', 'robos:WorkItem'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:status': data['robos:status'] || data.status || 'todo',
+      'robos:parentTask': parentTask,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:parentTask'] = parentTask;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Subtask: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Subtask: ${title} (${id})` };
+  }
+
+  registerBug(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'bug')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:bug:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Defect`;
+    const severity = data['robos:severity'] || data.severity || 'major';
+    const status = data['robos:status'] || data.status || 'open';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Bug', 'robos:Defect', 'oslc_cm:Defect'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || '',
+      'robos:severity': severity,
+      'robos:status': status,
+      'robos:inSprint': data['robos:inSprint'] || data.sprint || data.inSprint || undefined,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:severity'] = severity;
+    node['robos:status'] = status;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Bug: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Bug: ${title} (${id})` };
+  }
+
+  registerSprint(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'sprint')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:sprint:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug}`;
+    const status = data['robos:status'] || data.status || 'active';
+    const startDate = data['robos:startDate'] || data.startDate || new Date().toISOString().split('T')[0];
+    const endDate = data['robos:endDate'] || data.endDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Sprint', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:status': status,
+      'robos:startDate': startDate,
+      'robos:endDate': endDate,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:status'] = status;
+    node['robos:startDate'] = startDate;
+    node['robos:endDate'] = endDate;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Sprint: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Sprint: ${title} (${id})` };
+  }
+
+  registerMilestone(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'milestone')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:milestone:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug}`;
+    const targetDate = data['robos:targetDate'] || data.targetDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:Milestone', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:targetDate': targetDate,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:targetDate'] = targetDate;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for Milestone: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Milestone: ${title} (${id})` };
+  }
+
+  registerGitRepository(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'repo')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:repo:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug}`;
+    const url = data['robos:url'] || data.url || `https://github.com/acme/${slug}`;
+    const defaultBranch = data['robos:defaultBranch'] || data.defaultBranch || 'main';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:GitRepository', 'robos:Repository', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:url': url,
+      'robos:defaultBranch': defaultBranch,
+      'robos:inOrganization': data['robos:inOrganization'] || data.organization || undefined,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:url'] = url;
+    node['robos:defaultBranch'] = defaultBranch;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for GitRepository: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Git Repository: ${title} (${id})` };
+  }
+
+  registerGitBranch(data = {}) {
+    const branchName = data['robos:branchName'] || data.branchName || data.name || 'main';
+    const slug = (data.slug || branchName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:branch:${slug}`;
+    const title = data['dcterms:title'] || data.title || branchName;
+    const repository = data['robos:repository'] || data.repository || data.repo;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:GitBranch', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:branchName': branchName,
+      'robos:repository': repository,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:branchName'] = branchName;
+    node['robos:repository'] = repository;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for GitBranch: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Git Branch: ${title} (${id})` };
+  }
+
+  registerPullRequest(data = {}) {
+    const prNumber = data['robos:prNumber'] || data.prNumber || data.number || 1;
+    const slug = (data.slug || `pr-${prNumber}`).toLowerCase();
+    const id = data['@id'] || `urn:robos:pr:${slug}`;
+    const title = data['dcterms:title'] || data.title || `PR #${prNumber}`;
+    const sourceBranch = data['robos:sourceBranch'] || data.sourceBranch || 'feature';
+    const targetBranch = data['robos:targetBranch'] || data.targetBranch || 'main';
+    const status = data['robos:status'] || data.status || 'open';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:PullRequest', 'oslc_cm:ChangeRequest'],
+      'dcterms:title': title,
+      'robos:prNumber': prNumber,
+      'robos:sourceBranch': sourceBranch,
+      'robos:targetBranch': targetBranch,
+      'robos:status': status,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:prNumber'] = prNumber;
+    node['robos:sourceBranch'] = sourceBranch;
+    node['robos:targetBranch'] = targetBranch;
+    node['robos:status'] = status;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for PullRequest: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Pull Request: ${title} (${id})` };
+  }
+
+  registerAPIEndpoint(data = {}) {
+    const pathPattern = data['robos:pathPattern'] || data.pathPattern || data.path || '/api/v1/resource';
+    const httpMethod = (data['robos:httpMethod'] || data.httpMethod || data.method || 'GET').toUpperCase();
+    const slug = (data.slug || `${httpMethod.toLowerCase()}-${pathPattern.replace(/[^a-z0-9]/gi, '-')}`).toLowerCase();
+    const id = data['@id'] || `urn:robos:endpoint:${slug}`;
+    const title = data['dcterms:title'] || data.title || `${httpMethod} ${pathPattern}`;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:APIEndpoint', 'robos:APIOperation', 'c4:Component'],
+      'dcterms:title': title,
+      'robos:pathPattern': pathPattern,
+      'robos:httpMethod': httpMethod,
+      'robos:service': data['robos:service'] || data.service || undefined,
+      'robos:package': 'services',
+      'robos:namespace': 'robos.services',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:pathPattern'] = pathPattern;
+    node['robos:httpMethod'] = httpMethod;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for APIEndpoint: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered API Endpoint: ${title} (${id})` };
+  }
+
+  registerDatabaseTable(data = {}) {
+    const tableName = data['robos:tableName'] || data.tableName || data.name || 'table_name';
+    const slug = (data.slug || tableName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:db-table:${slug}`;
+    const title = data['dcterms:title'] || data.title || tableName;
+    const database = data['robos:database'] || data.database || data.db;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:DatabaseTable', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:tableName': tableName,
+      'robos:database': database,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:tableName'] = tableName;
+    node['robos:database'] = database;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for DatabaseTable: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Database Table: ${title} (${id})` };
+  }
+
+  registerDatabaseColumn(data = {}) {
+    const columnName = data['robos:columnName'] || data.columnName || data.name || 'column_name';
+    const slug = (data.slug || columnName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:db-col:${slug}`;
+    const title = data['dcterms:title'] || data.title || columnName;
+    const dataType = data['robos:dataType'] || data.dataType || data.type || 'varchar(255)';
+    const table = data['robos:table'] || data.table;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:DatabaseColumn', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:columnName': columnName,
+      'robos:dataType': dataType,
+      'robos:table': table,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:columnName'] = columnName;
+    node['robos:dataType'] = dataType;
+    node['robos:table'] = table;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for DatabaseColumn: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Database Column: ${title} (${id})` };
+  }
+
+  registerNoSQLCollection(data = {}) {
+    const collectionName = data['robos:collectionName'] || data.collectionName || data.name || 'collection';
+    const slug = (data.slug || collectionName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:nosql-col:${slug}`;
+    const title = data['dcterms:title'] || data.title || collectionName;
+    const database = data['robos:database'] || data.database || data.db;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:NoSQLCollection', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'robos:collectionName': collectionName,
+      'robos:database': database,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:collectionName'] = collectionName;
+    node['robos:database'] = database;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for NoSQLCollection: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered NoSQL Collection: ${title} (${id})` };
+  }
+
+  registerMessageTopic(data = {}) {
+    const topicName = data['robos:topicName'] || data.topicName || data.name || 'events-v1';
+    const slug = (data.slug || topicName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:topic:${slug}`;
+    const title = data['dcterms:title'] || data.title || topicName;
+    const broker = data['robos:broker'] || data.broker;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:MessageTopic', 'robos:MessageQueue', 'robos:EventTopic'],
+      'dcterms:title': title,
+      'robos:topicName': topicName,
+      'robos:broker': broker,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:topicName'] = topicName;
+    node['robos:broker'] = broker;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for MessageTopic: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Message Topic: ${title} (${id})` };
+  }
+
+  registerMCPTool(data = {}) {
+    const toolName = data['robos:toolName'] || data.toolName || data.name || 'tool';
+    const slug = (data.slug || toolName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:mcp-tool:${slug}`;
+    const title = data['dcterms:title'] || data.title || toolName;
+    const mcpServer = data['robos:mcpServer'] || data.mcpServer || data.server;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:MCPTool', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:toolName': toolName,
+      'robos:mcpServer': mcpServer,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:toolName'] = toolName;
+    node['robos:mcpServer'] = mcpServer;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for MCPTool: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered MCP Tool: ${title} (${id})` };
+  }
+
+  registerKubernetesNamespace(data = {}) {
+    const namespaceName = data['robos:namespaceName'] || data.namespaceName || data.name || 'default';
+    const slug = (data.slug || namespaceName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:k8s-ns:${slug}`;
+    const title = data['dcterms:title'] || data.title || `${namespaceName} Namespace`;
+    const cluster = data['robos:cluster'] || data.cluster;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:KubernetesNamespace', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:namespaceName': namespaceName,
+      'robos:cluster': cluster,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:namespaceName'] = namespaceName;
+    node['robos:cluster'] = cluster;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for KubernetesNamespace: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Kubernetes Namespace: ${title} (${id})` };
+  }
+
+  registerKubernetesDeployment(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'deployment')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:k8s-dep:${slug}`;
+    const title = data['dcterms:title'] || data.title || `${slug} Deployment`;
+    const namespace = data['robos:namespace'] || data.namespace || 'default';
+    const image = data['robos:image'] || data.image || 'registry.acme.com/app:latest';
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:KubernetesDeployment', 'c4:Container'],
+      'dcterms:title': title,
+      'robos:namespace': namespace,
+      'robos:image': image,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:namespace'] = namespace;
+    node['robos:image'] = image;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for KubernetesDeployment: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Kubernetes Deployment: ${title} (${id})` };
+  }
+
+  registerPipelineStage(data = {}) {
+    const stageName = data['robos:stageName'] || data.stageName || data.name || 'build';
+    const slug = (data.slug || stageName).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:pipeline-stage:${slug}`;
+    const title = data['dcterms:title'] || data.title || `${stageName} Stage`;
+    const pipeline = data['robos:pipeline'] || data.pipeline;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:PipelineStage', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:stageName': stageName,
+      'robos:pipeline': pipeline,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:stageName'] = stageName;
+    node['robos:pipeline'] = pipeline;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for PipelineStage: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Pipeline Stage: ${title} (${id})` };
+  }
+
+  registerLearningModule(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'module')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:module:${slug}`;
+    const title = data['dcterms:title'] || data.title || `${slug} Module`;
+    const course = data['robos:course'] || data.course;
+
+    const node = {
+      '@id': id,
+      '@type': ['robos:LearningModule', 'oslc:Resource'],
+      'dcterms:title': title,
+      'robos:course': course,
+      'robos:package': 'learning',
+      'robos:namespace': 'robos.learning',
+      'robos:updatedAt': new Date().toISOString(),
+      ...data,
+    };
+    node['dcterms:title'] = title;
+    node['robos:course'] = course;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [node],
+    }));
+    if (!shaclRes.conforms) {
+      return { ok: false, error: `SHACL validation failed for LearningModule: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`, results: shaclRes.results };
+    }
+    this.addNode(node);
+    return { ok: true, node, message: `Successfully registered Learning Module: ${title} (${id})` };
+  }
+
+  // ── Child Traversal & Query Helpers ─────────────────────────────────────────
+
+  getChildNodes(parentId) {
+    if (!parentId) return [];
+    return this.parser.nodes.filter(n => {
+      const parentKeys = [
+        'robos:parentTask', 'robos:parentWorkItem', 'robos:inProject', 'robos:inEpic',
+        'robos:inFeature', 'robos:inStory', 'robos:inSprint', 'robos:repository',
+        'robos:database', 'robos:table', 'robos:broker', 'robos:mcpServer',
+        'robos:cluster', 'robos:pipeline', 'robos:stage', 'robos:job',
+        'robos:course', 'robos:module', 'robos:docPage', 'robos:adr',
+        'robos:app', 'robos:command', 'robos:service'
+      ];
+      for (const k of parentKeys) {
+        if (n[k] === parentId) return true;
+        if (Array.isArray(n[k]) && n[k].includes(parentId)) return true;
+      }
+      return false;
+    });
+  }
+
+  getWorkItemsForProject(projectId) {
+    if (!projectId) return [];
+    const workItemTypes = ['Epic', 'Feature', 'UserStory', 'Story', 'Task', 'Subtask', 'Bug', 'Defect'];
+    const projectNodeIds = new Set([projectId]);
+    const workItems = new Map();
+
+    // Pass 1: Direct matches
+    for (const n of this.parser.nodes) {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const matchesType = types.some(t => workItemTypes.some(wit => t.includes(wit)));
+      if (!matchesType) continue;
+
+      if (n['robos:inProject'] === projectId || n['robos:project'] === projectId) {
+        workItems.set(n['@id'], n);
+        projectNodeIds.add(n['@id']);
+      }
+    }
+
+    // Pass 2 & 3: Transitive hierarchy (features in epic, stories in feature/epic, tasks in story, subtasks in task)
+    let added = true;
+    while (added) {
+      added = false;
+      for (const n of this.parser.nodes) {
+        if (workItems.has(n['@id'])) continue;
+        const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+        const matchesType = types.some(t => workItemTypes.some(wit => t.includes(wit)));
+        if (!matchesType) continue;
+
+        if (
+          (n['robos:inEpic'] && projectNodeIds.has(n['robos:inEpic'])) ||
+          (n['robos:inFeature'] && projectNodeIds.has(n['robos:inFeature'])) ||
+          (n['robos:inStory'] && projectNodeIds.has(n['robos:inStory'])) ||
+          (n['robos:parentTask'] && projectNodeIds.has(n['robos:parentTask'])) ||
+          (n['robos:epic'] && projectNodeIds.has(n['robos:epic'])) ||
+          (n['robos:story'] && projectNodeIds.has(n['robos:story'])) ||
+          (n['robos:task'] && projectNodeIds.has(n['robos:task']))
+        ) {
+          workItems.set(n['@id'], n);
+          projectNodeIds.add(n['@id']);
+          added = true;
+        }
+      }
+    }
+
+    return Array.from(workItems.values());
+  }
+
+  getTasksForSprint(sprintId) {
+    if (!sprintId) return [];
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      const isTaskLike = types.some(t => t.includes('Task') || t.includes('Story') || t.includes('Bug'));
+      return isTaskLike && (n['robos:inSprint'] === sprintId || n['robos:sprint'] === sprintId);
+    });
+  }
+
+  getEndpointsForService(serviceId) {
+    if (!serviceId) return [];
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('APIEndpoint') || t.includes('APIOperation')) &&
+        (n['robos:service'] === serviceId || n['robos:targetNode'] === serviceId);
+    });
+  }
+
+  getTablesForDatabase(databaseId) {
+    if (!databaseId) return [];
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('DatabaseTable')) &&
+        (n['robos:database'] === databaseId || n['robos:db'] === databaseId);
+    });
+  }
 }
 
 module.exports = { SDLCKnowledgeGraphStore, DEFAULT_GRAPH_DATA, SAMPLE_GHERKIN_FEATURE };

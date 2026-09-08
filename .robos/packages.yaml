@@ -120,3 +120,8 @@ packages:
     type: "robos:Microservice"
     repository: "github.com/acme/payment-gateway-api"
     technology: "Java 21 / Spring Boot 3"
+  - id: "urn:robos:service:fraud-detector"
+    title: "Fraud Detector Service"
+    type: "robos:Microservice"
+    repository: "github.com/acme-payments/fraud-detector"
+    technology: "Node.js 20 / TypeScript"

@@ -3,7 +3,7 @@ title: Database
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 4
+nav_order: 2
 permalink: /schemas/core-platform/database.html
 ---
 
@@ -56,7 +56,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 | **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Database must have a title or display name. |
 | **`robos:engine`** | engine | `1..*` | `xsd:string` | Database must declare its engine (postgresql, mysql, sqlite, oracle, etc.). |
 | **`robos:databaseName`** | databaseName | `1..*` | `xsd:string` | Database must specify a logical database name. |
-| **`robos:host`** | host | `1..*` | `xsd:string` | Database must specify a host address or service DNS. |
+| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | Database must specify a host address or service DNS. |
 
 ---
 

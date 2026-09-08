@@ -3,7 +3,7 @@ title: Git Project Organization
 layout: default
 parent: Organization & Teams (robos.org)
 grand_parent: KGraph Schemas
-nav_order: 2
+nav_order: 4
 permalink: /schemas/organization/git-project-organization.html
 ---
 

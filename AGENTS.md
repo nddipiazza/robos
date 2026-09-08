@@ -254,6 +254,16 @@ RobOS provides interactive onboarding wizards across 7 categories (Source Contro
 - **Data Pipelines & Workers** (`robos:DataPipeline`): Stream and batch processing jobs (Kafka Streams, Celery, Spark).
 - **Libraries & SDKs** (`robos:Library`): Reusable client SDKs, common modules, and packages.
 
+**Child Schema Elements & Entity Hierarchies**:
+RobOS enforces granular W3C SHACL shape validation (79 shapes) across full parent-child architectural trees:
+- **Work Items & Agile Tracking** (`robos.org`): `Feature` (`robos:inEpic`, `robos:inProject`), `UserStory` (`robos:inFeature`, `robos:inEpic`), `Task` (`robos:inStory`, `robos:inSprint`), `Subtask` (`robos:parentTask`), `Bug` (`robos:affectsService`, `robos:inSprint`), `Sprint` (`robos:inProject`), `Milestone` (`robos:inProject`).
+- **Source Control Topology** (`robos.org`): `GitRepository` (`robos:inOrganization`), `GitBranch` (`robos:inRepository`), `PullRequest` (`robos:targetBranch`, `robos:resolvesIssue`), `GitCommit` (`robos:inRepository`), `GitTag` (`robos:inRepository`).
+- **API & Data Contracts** (`robos.services`): `APIEndpoint` (`robos:endpointOf`), `DataModel` (`robos:definedInContract`).
+- **Databases & Event Streams** (`robos.core`): `DatabaseSchema` (`robos:schemaOf`), `DatabaseTable` (`robos:tableOfSchema`), `DatabaseColumn` (`robos:columnOfTable`), `DatabaseIndex` (`robos:indexOfTable`), `NoSQLCollection` (`robos:collectionOfDatabase`), `MessageTopic` (`robos:topicOfBroker`), `ConsumerGroup` (`robos:subscribesTo`).
+- **MCP & Cloud Infrastructure** (`robos.core`, `robos.devops`): `MCPTool`/`MCPResource`/`MCPPrompt` (`robos:toolOfServer`), `KubernetesNamespace` (`robos:namespaceOfCluster`), `KubernetesDeployment`/`KubernetesService`/`KubernetesIngress` (`robos:inNamespace`), `PipelineStage`/`PipelineJob`/`PipelineStep` (`robos:stageOfPipeline`).
+- **eLearning, Docs & App Routing** (`robos.learning`, `robos.docs`, `robos.apps`): `LearningModule`/`LearningLesson`/`HandsOnLab`/`QuizAssessment`, `DocSection`/`ADROption`/`Scenario`/`ScenarioStep`, `WebRoute`/`CLICommand`/`CLIFlag`.
+- **Graph Traversal APIs** (`SDLCKnowledgeGraphStore`): `store.getChildNodes(parentId)`, `store.getWorkItemsForProject(projectId)` (transitive closure across epics, features, stories, tasks, bugs, subtasks), `store.getTasksForSprint(sprintId)`, `store.getEndpointsForService(serviceId)`, and `store.getTablesForDatabase(dbId)`.
+
 **Git Projects Auto-Synchronization**:
 Every repository registered in RobOS Git Projects (`~/.config/robos/git-projects.json`) is automatically ingested into the Knowledge Graph upon addition and continuously updated on `git pull` on the `main` branch.
 

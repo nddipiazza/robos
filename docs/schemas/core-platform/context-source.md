@@ -3,7 +3,7 @@ title: Context Source
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 8
+nav_order: 6
 permalink: /schemas/core-platform/context-source.html
 ---
 

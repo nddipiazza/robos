@@ -3,7 +3,7 @@ title: Agent Persona
 layout: default
 parent: Organization & Teams (robos.org)
 grand_parent: KGraph Schemas
-nav_order: 3
+nav_order: 5
 permalink: /schemas/organization/agent-persona.html
 ---
 

@@ -596,9 +596,91 @@ In RobOS, **all application operational data across the 30+ desktop app suite is
 
 ---
 
+## 11. Child Schema Elements & Entity Hierarchies
+
+RobOS models complex software engineering architectures as interconnected parent-child hierarchies. Every top-level node in the Knowledge Graph decomposes into granular, first-class child schema elements governed by dedicated W3C SHACL constraint shapes:
+
+### 1. Work Item & Task Server Hierarchy
+
+A `robos:TaskServer` (e.g. Jira instance, GitHub Issues) hosts `robos:Project` boards, which decompose into structured agile work items:
+
+```mermaid
+graph TD
+    TS["TaskServer<br/><code>robos:TaskServer</code>"] -->|robos:hasProject| PROJ["Project<br/><code>robos:Project</code>"]
+    PROJ -->|robos:hasMilestone| MS["Milestone<br/><code>robos:Milestone</code>"]
+    PROJ -->|robos:hasSprint| SPRINT["Sprint<br/><code>robos:Sprint</code>"]
+    PROJ -->|robos:hasEpic| EPIC["Epic<br/><code>robos:Epic</code>"]
+    EPIC -->|robos:hasFeature| FEAT["Feature<br/><code>robos:Feature</code>"]
+    FEAT -->|robos:hasStory| STORY["User Story<br/><code>robos:UserStory</code>"]
+    STORY -->|robos:hasTask| TASK["Task<br/><code>robos:Task</code>"]
+    TASK -->|robos:hasSubtask| SUBTASK["Subtask<br/><code>robos:Subtask</code>"]
+    STORY -->|robos:hasBug| BUG["Bug / Defect<br/><code>robos:Bug</code>"]
+    TASK -.->|robos:inSprint| SPRINT
+    BUG -.->|robos:inSprint| SPRINT
+```
+
+| Entity Class | Governing Shape | Key Properties | Parent Predicate |
+|:---|:---|:---|:---|
+| **`robos:Milestone`** | `MilestoneShape` | `targetDate`, `status` | `robos:inProject` |
+| **`robos:Sprint`** | `SprintShape` | `startDate`, `endDate`, `status` | `robos:inProject` |
+| **`robos:Epic`** | `EpicShape` | `title`, `description` | `robos:inProject` |
+| **`robos:Feature`** | `FeatureShape` | `title`, `status` | `robos:inEpic`, `robos:inProject` |
+| **`robos:UserStory`** | `UserStoryShape` | `acceptanceCriteria`, `storyPoints`, `status` | `robos:inFeature`, `robos:inEpic` |
+| **`robos:Task`** | `TaskShape` | `priority`, `status`, `assignedDeveloper`, `assignedAgent` | `robos:inStory`, `robos:inSprint` |
+| **`robos:Subtask`** | `SubtaskShape` | `title`, `status` | `robos:parentTask` |
+| **`robos:Bug`** | `BugShape` | `severity`, `status` | `robos:inSprint`, `robos:parentWorkItem` |
+
+### 2. Git Organization & Source Control Hierarchy
+
+A `robos:GitProjectOrganization` (e.g. `github.com/apache`) aggregates member repositories, branches, pull requests, and commit records:
+
+- **`robos:GitRepository`** (`GitRepositoryShape`): Repository URL, default branch, language stack.
+- **`robos:GitBranch`** (`GitBranchShape`): Branch name, parent repository, head commit SHA.
+- **`robos:PullRequest`** (`PullRequestShape`): PR number, source branch, target branch, status (`open`, `merged`, `closed`).
+- **`robos:GitCommit`** (`GitCommitShape`): Commit SHA hash, message snippet, committer identity.
+- **`robos:GitTag`** (`GitTagShape`): Release version tag name, target commit SHA.
+
+### 3. Microservices & API Service Decomposition
+
+A `robos:Microservice` contains granular architectural child nodes:
+
+- **`robos:APIEndpoint`** (`APIEndpointShape`): Path pattern (`/api/v1/orders/{id}`), HTTP method (`GET`, `POST`), request/response schema.
+- **`robos:DataModel`** (`DataModelShape`): Core entity data transfer object (DTO) or domain entity name (`OrderDto`).
+- **`robos:ServiceDependency`**: Outbound service link with mock proxy URL, timeout, and fallback circuit breaker.
+
+### 4. Databases & Data Schema Elements
+
+Relational and NoSQL datastores decompose into schemas, tables, and columns:
+
+- **`robos:DatabaseSchema`** (`DatabaseSchemaShape`): Logical schema/namespace within the database (`public`, `auth`).
+- **`robos:DatabaseTable`** (`DatabaseTableShape`): Relational table name (`orders`, `users`).
+- **`robos:DatabaseColumn`** (`DatabaseColumnShape`): Column name, storage data type (`varchar(255)`, `bigint`), primary/foreign key flags.
+- **`robos:DatabaseIndex`** (`DatabaseIndexShape`): Table index name and indexed columns.
+- **`robos:NoSQLCollection`** (`NoSQLCollectionShape`): Document collection or keyspace name in MongoDB or Redis.
+
+### 5. Event Streaming & Model Context Protocol
+
+- **`robos:MessageTopic`** (`MessageTopicShape`): Stream topic or queue on a `MessageBroker` (`order-events-v1`).
+- **`robos:ConsumerGroup`** (`ConsumerGroupShape`): Active consumer group reading from a topic.
+- **`robos:MCPTool`** (`MCPToolShape`): Tool name and input parameter schema exposed by a `MCPServer`.
+- **`robos:MCPResource`** (`MCPResourceShape`): URI template and mime-type exposed by a `MCPServer`.
+- **`robos:MCPPrompt`** (`MCPPromptShape`): Reusable prompt template exposed by a `MCPServer`.
+
+### 6. Kubernetes Infrastructure & CI/CD Stages
+
+- **`robos:KubernetesNamespace`** (`KubernetesNamespaceShape`): Namespace name on a Kubernetes cluster.
+- **`robos:KubernetesDeployment`** (`KubernetesDeploymentShape`): Container image, replicas, and pod spec.
+- **`robos:KubernetesService`** (`KubernetesServiceShape`): Networking service name and type (`ClusterIP`, `LoadBalancer`).
+- **`robos:KubernetesIngress`** (`KubernetesIngressShape`): Ingress hostname routing rules.
+- **`robos:PipelineStage`** (`PipelineStageShape`): Sequential execution stage in a CI/CD pipeline (`build`, `test`, `deploy`).
+- **`robos:PipelineJob`** (`PipelineJobShape`): Execution job within a pipeline stage (`unit-tests`, `e2e-tests`).
+- **`robos:PipelineStep`** (`PipelineStepShape`): Atomic command step within a pipeline job.
+
+---
+
 ## Next Steps
 
-- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 18+ SHACL constraint shapes across the 6 standard RobOS package stores.
+- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 79+ SHACL constraint shapes across the 7 standard RobOS package stores.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

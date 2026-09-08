@@ -3,7 +3,7 @@ title: Build System
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 3
+nav_order: 1
 permalink: /schemas/core-platform/build-system.html
 ---
 

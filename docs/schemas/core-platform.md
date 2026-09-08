@@ -26,7 +26,7 @@ Foundational architectural graph, system roots, and platform configuration.
 - **Package Store ID**: `core-platform`
 - **Ontology Namespace**: `robos.platform`
 - **GitOps Package File**: `.robos/kgraphs/core-platform/package.jsonld`
-- **Schemas Defined**: 8
+- **Schemas Defined**: 17
 
 ---
 
@@ -34,14 +34,23 @@ Foundational architectural graph, system roots, and platform configuration.
 
 | Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |
 |---|---|---|---|
-| [**Project** (`robos:Project`)]({{ '/schemas/core-platform/project.html' | relative_url }}) | `urn:robos:shape:ProjectShape` | `dcterms:title`, `robos:status` | [View Schema &rarr;]({{ '/schemas/core-platform/project.html' | relative_url }}) |
-| [**Epic** (`robos:Epic`)]({{ '/schemas/core-platform/epic.html' | relative_url }}) | `urn:robos:shape:EpicShape` | `dcterms:title` | [View Schema &rarr;]({{ '/schemas/core-platform/epic.html' | relative_url }}) |
 | [**Build System** (`robos:BuildSystem`)]({{ '/schemas/core-platform/build-system.html' | relative_url }}) | `urn:robos:shape:BuildSystemShape` | `dcterms:title`, `robos:buildTool`, `robos:configFile` | [View Schema &rarr;]({{ '/schemas/core-platform/build-system.html' | relative_url }}) |
 | [**Database** (`robos:Database`)]({{ '/schemas/core-platform/database.html' | relative_url }}) | `urn:robos:shape:DatabaseShape` | `dcterms:title`, `robos:engine`, `robos:databaseName`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/database.html' | relative_url }}) |
 | [**No SQLDatabase** (`robos:NoSQLDatabase`)]({{ '/schemas/core-platform/no-sqldatabase.html' | relative_url }}) | `urn:robos:shape:NoSQLDatabaseShape` | `dcterms:title`, `robos:engine`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/no-sqldatabase.html' | relative_url }}) |
 | [**Message Broker** (`robos:MessageBroker`)]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) | `urn:robos:shape:MessageBrokerShape` | `dcterms:title`, `robos:brokerType`, `robos:endpoint` | [View Schema &rarr;]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) |
 | [**MCPServer** (`robos:MCPServer`)]({{ '/schemas/core-platform/mcpserver.html' | relative_url }}) | `urn:robos:shape:MCPServerShape` | `dcterms:title`, `robos:transport`, `robos:toolsProvided` | [View Schema &rarr;]({{ '/schemas/core-platform/mcpserver.html' | relative_url }}) |
 | [**Context Source** (`robos:ContextSource`)]({{ '/schemas/core-platform/context-source.html' | relative_url }}) | `urn:robos:shape:ContextSourceShape` | `dcterms:title`, `robos:sourceType`, `robos:location` | [View Schema &rarr;]({{ '/schemas/core-platform/context-source.html' | relative_url }}) |
+| [**Prompt Strategy** (`robos:PromptStrategy`)]({{ '/schemas/core-platform/prompt-strategy.html' | relative_url }}) | `urn:robos:shape:PromptStrategyShape` | `dcterms:title`, `robos:strategyType`, `robos:engine` | [View Schema &rarr;]({{ '/schemas/core-platform/prompt-strategy.html' | relative_url }}) |
+| [**Database Schema** (`robos:DatabaseSchema`)]({{ '/schemas/core-platform/database-schema.html' | relative_url }}) | `urn:robos:shape:DatabaseSchemaShape` | `dcterms:title`, `robos:schemaName`, `robos:database` | [View Schema &rarr;]({{ '/schemas/core-platform/database-schema.html' | relative_url }}) |
+| [**Database Table** (`robos:DatabaseTable`)]({{ '/schemas/core-platform/database-table.html' | relative_url }}) | `urn:robos:shape:DatabaseTableShape` | `dcterms:title`, `robos:tableName`, `robos:database` | [View Schema &rarr;]({{ '/schemas/core-platform/database-table.html' | relative_url }}) |
+| [**Database Column** (`robos:DatabaseColumn`)]({{ '/schemas/core-platform/database-column.html' | relative_url }}) | `urn:robos:shape:DatabaseColumnShape` | `dcterms:title`, `robos:columnName`, `robos:dataType`, `robos:table` | [View Schema &rarr;]({{ '/schemas/core-platform/database-column.html' | relative_url }}) |
+| [**Database Index** (`robos:DatabaseIndex`)]({{ '/schemas/core-platform/database-index.html' | relative_url }}) | `urn:robos:shape:DatabaseIndexShape` | `dcterms:title`, `robos:indexName`, `robos:table` | [View Schema &rarr;]({{ '/schemas/core-platform/database-index.html' | relative_url }}) |
+| [**No SQLCollection** (`robos:NoSQLCollection`)]({{ '/schemas/core-platform/no-sqlcollection.html' | relative_url }}) | `urn:robos:shape:NoSQLCollectionShape` | `dcterms:title`, `robos:collectionName`, `robos:database` | [View Schema &rarr;]({{ '/schemas/core-platform/no-sqlcollection.html' | relative_url }}) |
+| [**Message Topic** (`robos:MessageTopic`)]({{ '/schemas/core-platform/message-topic.html' | relative_url }}) | `urn:robos:shape:MessageTopicShape` | `dcterms:title`, `robos:topicName`, `robos:broker` | [View Schema &rarr;]({{ '/schemas/core-platform/message-topic.html' | relative_url }}) |
+| [**Consumer Group** (`robos:ConsumerGroup`)]({{ '/schemas/core-platform/consumer-group.html' | relative_url }}) | `urn:robos:shape:ConsumerGroupShape` | `dcterms:title`, `robos:groupId`, `robos:topic` | [View Schema &rarr;]({{ '/schemas/core-platform/consumer-group.html' | relative_url }}) |
+| [**MCPTool** (`robos:MCPTool`)]({{ '/schemas/core-platform/mcptool.html' | relative_url }}) | `urn:robos:shape:MCPToolShape` | `dcterms:title`, `robos:toolName`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcptool.html' | relative_url }}) |
+| [**MCPResource** (`robos:MCPResource`)]({{ '/schemas/core-platform/mcpresource.html' | relative_url }}) | `urn:robos:shape:MCPResourceShape` | `dcterms:title`, `robos:uriTemplate`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcpresource.html' | relative_url }}) |
+| [**MCPPrompt** (`robos:MCPPrompt`)]({{ '/schemas/core-platform/mcpprompt.html' | relative_url }}) | `urn:robos:shape:MCPPromptShape` | `dcterms:title`, `robos:promptName`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcpprompt.html' | relative_url }}) |
 
 ---
 

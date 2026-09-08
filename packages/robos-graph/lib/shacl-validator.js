@@ -368,6 +368,387 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:engine', minCount: 1, message: 'Prompt Strategy must declare optimization engine (caveman, dspy, standard).' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:FeatureShape',
+    targetClass: 'robos:Feature',
+    targetClasses: ['robos:Feature', 'robos:ProductFeature'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Feature must have a title.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:UserStoryShape',
+    targetClass: 'robos:UserStory',
+    targetClasses: ['robos:UserStory', 'robos:Story'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'User Story must have a title.' },
+      { path: 'robos:status', minCount: 1, message: 'User Story must have a status.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:TaskShape',
+    targetClass: 'robos:Task',
+    targetClasses: ['robos:Task', 'oslc_cm:ChangeRequest', 'robos:WorkItem'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Task must have a title.' },
+      { path: 'robos:status', minCount: 1, message: 'Task must declare a lifecycle status.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:SubtaskShape',
+    targetClass: 'robos:Subtask',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Subtask must have a title.' },
+      { path: 'robos:parentTask', minCount: 1, message: 'Subtask must link to its parent task.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:BugShape',
+    targetClass: 'robos:Bug',
+    targetClasses: ['robos:Bug', 'robos:Defect', 'oslc_cm:Defect'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Bug must have a title.' },
+      { path: 'robos:severity', minCount: 1, message: 'Bug must declare severity level.' },
+      { path: 'robos:status', minCount: 1, message: 'Bug must declare lifecycle status.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:SprintShape',
+    targetClass: 'robos:Sprint',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Sprint must have a title or name.' },
+      { path: 'robos:status', minCount: 1, message: 'Sprint must declare status (planning, active, completed).' },
+      { path: 'robos:startDate', minCount: 1, message: 'Sprint must specify a start date.' },
+      { path: 'robos:endDate', minCount: 1, message: 'Sprint must specify an end date.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MilestoneShape',
+    targetClass: 'robos:Milestone',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Milestone must have a title.' },
+      { path: 'robos:targetDate', minCount: 1, message: 'Milestone must declare a target delivery date.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GitRepositoryShape',
+    targetClass: 'robos:GitRepository',
+    targetClasses: ['robos:GitRepository', 'robos:Repository'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Git Repository must have a title.' },
+      { path: 'robos:url', minCount: 1, message: 'Git Repository must specify a repository URL.' },
+      { path: 'robos:defaultBranch', minCount: 1, message: 'Git Repository must declare its default branch.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GitBranchShape',
+    targetClass: 'robos:GitBranch',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Git Branch must have a title or display name.' },
+      { path: 'robos:branchName', minCount: 1, message: 'Git Branch must specify branch name.' },
+      { path: 'robos:repository', minCount: 1, message: 'Git Branch must link to parent repository.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:PullRequestShape',
+    targetClass: 'robos:PullRequest',
+    targetClasses: ['robos:PullRequest', 'robos:MergeRequest'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Pull Request must have a title.' },
+      { path: 'robos:prNumber', minCount: 1, message: 'Pull Request must specify PR number.' },
+      { path: 'robos:sourceBranch', minCount: 1, message: 'Pull Request must declare source branch.' },
+      { path: 'robos:targetBranch', minCount: 1, message: 'Pull Request must declare target branch.' },
+      { path: 'robos:status', minCount: 1, message: 'Pull Request must declare status (open, merged, closed).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GitCommitShape',
+    targetClass: 'robos:GitCommit',
+    targetClasses: ['robos:GitCommit', 'robos:CommitRef'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Git Commit must have a title or message snippet.' },
+      { path: 'robos:commitSha', minCount: 1, message: 'Git Commit must specify commit SHA hash.' },
+      { path: 'robos:repository', minCount: 1, message: 'Git Commit must link to parent repository.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:GitTagShape',
+    targetClass: 'robos:GitTag',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Git Tag must have a title.' },
+      { path: 'robos:tagName', minCount: 1, message: 'Git Tag must specify tag name.' },
+      { path: 'robos:commitSha', minCount: 1, message: 'Git Tag must link to target commit SHA.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:APIEndpointShape',
+    targetClass: 'robos:APIEndpoint',
+    targetClasses: ['robos:APIEndpoint', 'robos:APIOperation'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'API Endpoint must have a title or summary.' },
+      { path: 'robos:pathPattern', minCount: 1, message: 'API Endpoint must declare path pattern (e.g. /api/v1/orders).' },
+      { path: 'robos:httpMethod', minCount: 1, message: 'API Endpoint must declare HTTP method (GET, POST, etc.).' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DataModelShape',
+    targetClass: 'robos:DataModel',
+    targetClasses: ['robos:DataModel', 'robos:SchemaModel', 'robos:DomainEntity'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Data Model must have a title.' },
+      { path: 'robos:modelName', minCount: 1, message: 'Data Model must specify entity/model name.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DatabaseSchemaShape',
+    targetClass: 'robos:DatabaseSchema',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Database Schema must have a title.' },
+      { path: 'robos:schemaName', minCount: 1, message: 'Database Schema must specify schema name.' },
+      { path: 'robos:database', minCount: 1, message: 'Database Schema must link to parent database.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DatabaseTableShape',
+    targetClass: 'robos:DatabaseTable',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Database Table must have a title.' },
+      { path: 'robos:tableName', minCount: 1, message: 'Database Table must specify table name.' },
+      { path: 'robos:database', minCount: 1, message: 'Database Table must link to parent database.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DatabaseColumnShape',
+    targetClass: 'robos:DatabaseColumn',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Database Column must have a title.' },
+      { path: 'robos:columnName', minCount: 1, message: 'Database Column must specify column name.' },
+      { path: 'robos:dataType', minCount: 1, message: 'Database Column must declare data type.' },
+      { path: 'robos:table', minCount: 1, message: 'Database Column must link to parent table.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DatabaseIndexShape',
+    targetClass: 'robos:DatabaseIndex',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Database Index must have a title.' },
+      { path: 'robos:indexName', minCount: 1, message: 'Database Index must specify index name.' },
+      { path: 'robos:table', minCount: 1, message: 'Database Index must link to parent table.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:NoSQLCollectionShape',
+    targetClass: 'robos:NoSQLCollection',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'NoSQL Collection must have a title.' },
+      { path: 'robos:collectionName', minCount: 1, message: 'NoSQL Collection must specify collection name.' },
+      { path: 'robos:database', minCount: 1, message: 'NoSQL Collection must link to parent database.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MessageTopicShape',
+    targetClass: 'robos:MessageTopic',
+    targetClasses: ['robos:MessageTopic', 'robos:MessageQueue', 'robos:EventTopic'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Message Topic must have a title.' },
+      { path: 'robos:topicName', minCount: 1, message: 'Message Topic must specify topic name.' },
+      { path: 'robos:broker', minCount: 1, message: 'Message Topic must link to parent message broker.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ConsumerGroupShape',
+    targetClass: 'robos:ConsumerGroup',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Consumer Group must have a title.' },
+      { path: 'robos:groupId', minCount: 1, message: 'Consumer Group must declare consumer group ID.' },
+      { path: 'robos:topic', minCount: 1, message: 'Consumer Group must link to subscribed topic.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MCPToolShape',
+    targetClass: 'robos:MCPTool',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'MCP Tool must have a title.' },
+      { path: 'robos:toolName', minCount: 1, message: 'MCP Tool must declare tool name.' },
+      { path: 'robos:mcpServer', minCount: 1, message: 'MCP Tool must link to parent MCP server.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MCPResourceShape',
+    targetClass: 'robos:MCPResource',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'MCP Resource must have a title.' },
+      { path: 'robos:uriTemplate', minCount: 1, message: 'MCP Resource must declare URI template.' },
+      { path: 'robos:mcpServer', minCount: 1, message: 'MCP Resource must link to parent MCP server.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:MCPPromptShape',
+    targetClass: 'robos:MCPPrompt',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'MCP Prompt must have a title.' },
+      { path: 'robos:promptName', minCount: 1, message: 'MCP Prompt must declare prompt name.' },
+      { path: 'robos:mcpServer', minCount: 1, message: 'MCP Prompt must link to parent MCP server.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:KubernetesNamespaceShape',
+    targetClass: 'robos:KubernetesNamespace',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Kubernetes Namespace must have a title.' },
+      { path: 'robos:namespaceName', minCount: 1, message: 'Kubernetes Namespace must specify namespace name.' },
+      { path: 'robos:cluster', minCount: 1, message: 'Kubernetes Namespace must link to parent cluster.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:KubernetesDeploymentShape',
+    targetClass: 'robos:KubernetesDeployment',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Kubernetes Deployment must have a title.' },
+      { path: 'robos:namespace', minCount: 1, message: 'Kubernetes Deployment must link to target namespace.' },
+      { path: 'robos:image', minCount: 1, message: 'Kubernetes Deployment must specify container image.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:KubernetesServiceShape',
+    targetClass: 'robos:KubernetesService',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Kubernetes Service must have a title.' },
+      { path: 'robos:serviceName', minCount: 1, message: 'Kubernetes Service must specify service name.' },
+      { path: 'robos:serviceType', minCount: 1, message: 'Kubernetes Service must declare service type.' },
+      { path: 'robos:namespace', minCount: 1, message: 'Kubernetes Service must link to namespace.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:KubernetesIngressShape',
+    targetClass: 'robos:KubernetesIngress',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Kubernetes Ingress must have a title.' },
+      { path: 'robos:ingressName', minCount: 1, message: 'Kubernetes Ingress must specify ingress name.' },
+      { path: 'robos:host', minCount: 1, message: 'Kubernetes Ingress must specify routing hostname.' },
+      { path: 'robos:namespace', minCount: 1, message: 'Kubernetes Ingress must link to namespace.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:PipelineStageShape',
+    targetClass: 'robos:PipelineStage',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Pipeline Stage must have a title.' },
+      { path: 'robos:stageName', minCount: 1, message: 'Pipeline Stage must specify stage name.' },
+      { path: 'robos:pipeline', minCount: 1, message: 'Pipeline Stage must link to parent CI/CD pipeline.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:PipelineJobShape',
+    targetClass: 'robos:PipelineJob',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Pipeline Job must have a title.' },
+      { path: 'robos:jobName', minCount: 1, message: 'Pipeline Job must specify job name.' },
+      { path: 'robos:stage', minCount: 1, message: 'Pipeline Job must link to parent pipeline stage.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:PipelineStepShape',
+    targetClass: 'robos:PipelineStep',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Pipeline Step must have a title.' },
+      { path: 'robos:stepName', minCount: 1, message: 'Pipeline Step must specify step name.' },
+      { path: 'robos:job', minCount: 1, message: 'Pipeline Step must link to parent job.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:LearningModuleShape',
+    targetClass: 'robos:LearningModule',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Learning Module must have a title.' },
+      { path: 'robos:course', minCount: 1, message: 'Learning Module must link to parent eLearning course.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:LearningLessonShape',
+    targetClass: 'robos:LearningLesson',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Learning Lesson must have a title.' },
+      { path: 'robos:module', minCount: 1, message: 'Learning Lesson must link to parent learning module.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:HandsOnLabShape',
+    targetClass: 'robos:HandsOnLab',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Hands-on Lab must have a title.' },
+      { path: 'robos:labFile', minCount: 1, message: 'Hands-on Lab must specify lab guide file path.' },
+      { path: 'robos:module', minCount: 1, message: 'Hands-on Lab must link to parent learning module.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:QuizAssessmentShape',
+    targetClass: 'robos:QuizAssessment',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Quiz Assessment must have a title.' },
+      { path: 'robos:module', minCount: 1, message: 'Quiz Assessment must link to parent module.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:DocSectionShape',
+    targetClass: 'robos:DocSection',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Documentation Section must have a title.' },
+      { path: 'robos:sectionId', minCount: 1, message: 'Documentation Section must specify section identifier or anchor.' },
+      { path: 'robos:docPage', minCount: 1, message: 'Documentation Section must link to parent documentation page.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ADROptionShape',
+    targetClass: 'robos:ADROption',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'ADR Option must have a title.' },
+      { path: 'robos:adr', minCount: 1, message: 'ADR Option must link to parent Architecture Decision Record.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ScenarioShape',
+    targetClass: 'robos:Scenario',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Scenario must have a title.' },
+      { path: 'robos:steps', minCount: 1, message: 'Scenario must define execution steps.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ScenarioStepShape',
+    targetClass: 'robos:ScenarioStep',
+    properties: [
+      { path: 'robos:keyword', minCount: 1, message: 'Scenario Step must specify keyword (Given, When, Then, And, But).' },
+      { path: 'robos:stepText', minCount: 1, message: 'Scenario Step must specify step expression text.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:WebRouteShape',
+    targetClass: 'robos:WebRoute',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Web Route must have a title.' },
+      { path: 'robos:routePath', minCount: 1, message: 'Web Route must specify route path (e.g. /dashboard).' },
+      { path: 'robos:app', minCount: 1, message: 'Web Route must link to parent application.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:CLICommandShape',
+    targetClass: 'robos:CLICommand',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'CLI Command must have a title.' },
+      { path: 'robos:commandName', minCount: 1, message: 'CLI Command must declare command name.' },
+      { path: 'robos:app', minCount: 1, message: 'CLI Command must link to parent console application.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:CLIFlagShape',
+    targetClass: 'robos:CLIFlag',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'CLI Flag must have a title.' },
+      { path: 'robos:flagName', minCount: 1, message: 'CLI Flag must declare flag name (e.g. --output).' },
+      { path: 'robos:command', minCount: 1, message: 'CLI Flag must link to parent CLI command.' },
+    ],
+  },
 ];
 
 class SHACLValidator {

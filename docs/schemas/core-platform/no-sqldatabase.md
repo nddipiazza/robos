@@ -3,7 +3,7 @@ title: No SQLDatabase
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 5
+nav_order: 3
 permalink: /schemas/core-platform/no-sqldatabase.html
 ---
 
@@ -54,7 +54,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 |---|---|---|---|---|
 | **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | NoSQL Database must have a title or display name. |
 | **`robos:engine`** | engine | `1..*` | `xsd:string` | NoSQL Database must declare engine (redis, mongodb, cassandra, dynamodb, elasticsearch). |
-| **`robos:host`** | host | `1..*` | `xsd:string` | NoSQL Database must specify a host address or cluster endpoint. |
+| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | NoSQL Database must specify a host address or cluster endpoint. |
 
 ---
 
