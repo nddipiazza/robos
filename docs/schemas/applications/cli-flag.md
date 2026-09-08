@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CLIF
 - **SHACL Shape ID**: `urn:robos:shape:CLIFlagShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Schema.org Classification**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
+- **Domain De Facto Standard**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/PropertyValue](https://schema.org/PropertyValue)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:CLIFlag`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:CLIFlag`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:applications:cli-flag-sample",
   "@type": [
     "robos:CLIFlag",
+    "schema:PropertyValue",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample CLI Flag",
@@ -82,6 +87,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.apps",
   "robos:flagName": "--output",
   "robos:command": "urn:robos:cli:validate",
+  "robos:schemaOrgType": "https://schema.org/PropertyValue",
+  "robos:domainStandard": "https://schema.org/PropertyValue",
   "robos:refersFrom": "https://schema.org/PropertyValue"
 }
 ```
@@ -102,6 +109,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:applications:cli-flag-sample",
         "@type": [
             "robos:CLIFlag",
+            "schema:PropertyValue",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample CLI Flag",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.apps",
         "robos:flagName": "--output",
         "robos:command": "urn:robos:cli:validate",
+        "robos:schemaOrgType": "https://schema.org/PropertyValue",
+        "robos:domainStandard": "https://schema.org/PropertyValue",
         "robos:refersFrom": "https://schema.org/PropertyValue"
     }
   ],

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `oslc_rm:Re
 - **SHACL Shape ID**: `urn:robos:shape:RequirementShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Schema.org Classification**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument)
+- **Domain De Facto Standard**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/rm#Requirement](http://open-services.net/ns/rm#Requirement)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `oslc_rm:Requirement`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `oslc_rm:Requirement`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,6 +76,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:services:requirement-sample",
   "@type": [
     "oslc_rm:Requirement",
+    "schema:DigitalDocument",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Requirement",
@@ -79,6 +84,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:package": "services",
   "robos:namespace": "robos.services",
   "robos:featureFile": "tests/bdd/sample.feature",
+  "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+  "robos:domainStandard": "http://open-services.net/ns/rm#Requirement",
   "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
 }
 ```
@@ -99,6 +106,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:services:requirement-sample",
         "@type": [
             "oslc_rm:Requirement",
+            "schema:DigitalDocument",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Requirement",
@@ -106,6 +114,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "services",
         "robos:namespace": "robos.services",
         "robos:featureFile": "tests/bdd/sample.feature",
+        "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+        "robos:domainStandard": "http://open-services.net/ns/rm#Requirement",
         "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
     }
   ],

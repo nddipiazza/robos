@@ -26,7 +26,8 @@
       "@id": "urn:robos:service:billing-api",
       "@type": [
         "oslc_am:Resource",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
@@ -40,14 +41,17 @@
       "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
       "robos:implementsContract": [
         "urn:robos:contract:orders-grpc"
-      ]
+      ],
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:orders-grpc",
       "@type": [
         "robos:Contract",
         "robos:ProtobufContract",
-        "robos:GRPCContract"
+        "robos:GRPCContract",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Orders gRPC Protobuf Contract",
       "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
@@ -61,14 +65,17 @@
         "StreamOrderEvents"
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:catalog-graphql",
       "@type": [
         "robos:Contract",
         "robos:GraphQLContract",
-        "robos:GraphQLSchema"
+        "robos:GraphQLSchema",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Catalog GraphQL SDL Schema",
       "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
@@ -76,14 +83,17 @@
       "robos:specFile": "schemas/catalog.graphql",
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:payment-gateway-v1",
       "@type": [
         "robos:Contract",
         "c4:Component",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Payment Gateway OpenAPI 3.1 Spec",
       "robos:specFile": "specs/contracts/payment-gateway-v1.yaml",
@@ -114,14 +124,17 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:payment-gateway",
       "@type": [
         "oslc_am:Resource",
         "c4:Container",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Payment Gateway Service",
       "dcterms:description": "Backend microservice powering Payment Gateway capabilities with containerized deployment.",
@@ -136,14 +149,17 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:fraud-detector-v1",
       "@type": [
         "robos:Contract",
         "c4:Component",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Fraud Detector OpenAPI 3.1 Spec",
       "robos:specFile": "specs/contracts/fraud-detector-v1.yaml",
@@ -174,14 +190,17 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:fraud-detector",
       "@type": [
         "oslc_am:Resource",
         "c4:Container",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Fraud Detector Service",
       "dcterms:description": "Backend microservice powering Fraud Detector capabilities with containerized deployment.",
@@ -196,14 +215,17 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:checkout-api-v1",
       "@type": [
         "robos:Contract",
         "c4:Component",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Checkout API Microservice OpenAPI 3.1 Spec",
       "robos:specFile": "specs/contracts/checkout-api-v1.yaml",
@@ -233,14 +255,17 @@
         }
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:checkout-api",
       "@type": [
         "oslc_am:Resource",
         "c4:Container",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Checkout API Microservice Service",
       "dcterms:description": "Backend microservice powering Checkout API Microservice capabilities with containerized deployment.",
@@ -255,14 +280,17 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-retail",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:oauth-server-v1",
       "@type": [
         "robos:Contract",
         "c4:Component",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Oauth Server OpenAPI 3.1 Spec",
       "robos:specFile": "specs/contracts/oauth-server-v1.yaml",
@@ -293,14 +321,17 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:oauth-server",
       "@type": [
         "oslc_am:Resource",
         "c4:Container",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Oauth Server Service",
       "dcterms:description": "Backend microservice powering Oauth Server capabilities with containerized deployment.",
@@ -315,14 +346,17 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:user-directory-sync-v1",
       "@type": [
         "robos:Contract",
         "c4:Component",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "User Directory Sync OpenAPI 3.1 Spec",
       "robos:specFile": "specs/contracts/user-directory-sync-v1.yaml",
@@ -353,14 +387,17 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:user-directory-sync",
       "@type": [
         "oslc_am:Resource",
         "c4:Container",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "User Directory Sync Service",
       "dcterms:description": "Backend microservice powering User Directory Sync capabilities with containerized deployment.",
@@ -375,7 +412,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     }
   ],
   "@graph": [

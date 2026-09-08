@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Gher
 - **SHACL Shape ID**: `urn:robos:shape:GherkinBackgroundShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/ItemList](https://schema.org/ItemList)
+- **Domain De Facto Standard**: [https://cucumber.io/docs/gherkin/reference/#background](https://cucumber.io/docs/gherkin/reference/#background)
 - **Upstream Schema Basis (Refers From)**: [https://cucumber.io/docs/gherkin/reference/#background](https://cucumber.io/docs/gherkin/reference/#background)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ItemList](https://schema.org/ItemList) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://cucumber.io/docs/gherkin/reference/#background](https://cucumber.io/docs/gherkin/reference/#background) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://cucumber.io/docs/gherkin/reference/#background](https://cucumber.io/docs/gherkin/reference/#background)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:GherkinBackground`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:GherkinBackground`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,7 +78,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:gherkin:checkout-cart-validation:background",
   "@type": [
     "robos:GherkinBackground",
-    "robos:Background"
+    "robos:Background",
+    "schema:ItemList"
   ],
   "dcterms:title": "Customer Session & Cart Initialization",
   "robos:steps": [
@@ -84,7 +89,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
+  "robos:schemaOrgType": "https://schema.org/ItemList",
+  "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
 }
 ```
 
@@ -104,7 +111,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:gherkin:checkout-cart-validation:background",
         "@type": [
             "robos:GherkinBackground",
-            "robos:Background"
+            "robos:Background",
+            "schema:ItemList"
         ],
         "dcterms:title": "Customer Session & Cart Initialization",
         "robos:steps": [
@@ -114,7 +122,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
+        "robos:schemaOrgType": "https://schema.org/ItemList",
+        "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
     }
   ],
 }));

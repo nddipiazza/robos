@@ -25,7 +25,8 @@
       "@id": "urn:robos:diagram:order-lifecycle-flow",
       "@type": [
         "oslc_am:Resource",
-        "robos:FlowDiagram"
+        "robos:FlowDiagram",
+        "schema:ImageObject"
       ],
       "dcterms:title": "Order Lifecycle & Event Processing Flow",
       "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
@@ -41,14 +42,17 @@
         "EventDriven"
       ],
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
       "@id": "urn:robos:doc:sdlc-architecture-guide",
       "@type": [
         "oslc_am:Resource",
         "robos:DocumentationPage",
-        "robos:DocArticle"
+        "robos:DocArticle",
+        "schema:TechArticle"
       ],
       "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
       "robos:slug": "sdlc-architecture-guide",
@@ -57,14 +61,17 @@
       "robos:category": "Architecture",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:001-modular-kgraph",
       "@type": [
         "oslc_am:Resource",
         "robos:ArchitectureDecisionRecord",
-        "robos:ADR"
+        "robos:ADR",
+        "schema:TechArticle"
       ],
       "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
       "robos:adrNumber": "ADR-001",
@@ -75,13 +82,16 @@
       "robos:date": "2026-03-15",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:walkthrough:remote-execution",
       "@type": [
         "oslc_am:Resource",
-        "robos:InteractiveWalkthrough"
+        "robos:InteractiveWalkthrough",
+        "schema:Guide"
       ],
       "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
       "robos:slug": "remote-execution-studio-tour",
@@ -91,27 +101,33 @@
       "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
       "robos:stepsCount": 7,
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/Guide",
+      "robos:domainStandard": "https://schema.org/Guide"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",
       "@type": [
         "oslc_am:Resource",
         "robos:CodeSnippet",
-        "robos:CodeSample"
+        "robos:CodeSample",
+        "schema:SoftwareSourceCode"
       ],
       "dcterms:title": "SHACL Custom Shape Programmatic Validation",
       "robos:language": "javascript",
       "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
       "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:domainStandard": "https://schema.org/SoftwareSourceCode"
     },
     {
       "@id": "urn:robos:doc:acme-architecture-overview",
       "@type": [
         "robos:DocumentationPage",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:TechArticle"
       ],
       "dcterms:title": "Acme Platform Architecture Overview",
       "dcterms:description": "Enterprise cloud platform architecture spanning payments, identity, checkout, and GitOps deployments.",
@@ -120,14 +136,17 @@
       "robos:category": "architecture",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:004-event-driven-orders",
       "@type": [
         "robos:ArchitectureDecisionRecord",
         "robos:ADR",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:TechArticle"
       ],
       "dcterms:title": "ADR-004: Event-Driven Order Processing with Kafka",
       "dcterms:description": "Adopt Apache Kafka event streams for decoupled order events and reactive inventory reservation.",
@@ -139,13 +158,16 @@
       "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:diagram:checkout-payment-flow",
       "@type": [
         "robos:FlowDiagram",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:ImageObject"
       ],
       "dcterms:title": "Checkout and Payment Processing Flowchart",
       "dcterms:description": "End-to-end transactional sequence from customer checkout to payment settlement.",
@@ -156,7 +178,9 @@
       "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     }
   ],
   "@graph": [

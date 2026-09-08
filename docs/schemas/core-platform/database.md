@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DatabaseShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/DataStore](https://schema.org/DataStore)
+- **Domain De Facto Standard**: [https://www.iso.org/standard/63555.html](https://www.iso.org/standard/63555.html)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/DataStore](https://schema.org/DataStore)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/DataStore](https://schema.org/DataStore) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://www.iso.org/standard/63555.html](https://www.iso.org/standard/63555.html) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/DataStore](https://schema.org/DataStore)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Database`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Database`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -77,7 +81,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:Database",
-    "robos:RelationalDatabase"
+    "robos:RelationalDatabase",
+    "schema:DataStore"
   ],
   "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
   "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
@@ -87,7 +92,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:port": 5432,
   "robos:schemaMigration": "flyway",
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/DataStore",
+  "robos:domainStandard": "https://www.iso.org/standard/63555.html"
 }
 ```
 
@@ -108,7 +115,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:Database",
-            "robos:RelationalDatabase"
+            "robos:RelationalDatabase",
+            "schema:DataStore"
         ],
         "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
         "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
@@ -118,7 +126,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:port": 5432,
         "robos:schemaMigration": "flyway",
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/DataStore",
+        "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     }
   ],
 }));

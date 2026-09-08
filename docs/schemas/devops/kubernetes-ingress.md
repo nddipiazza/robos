@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesIngressShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
+- **Domain De Facto Standard**: [https://kubernetes.io/docs/concepts/services-networking/ingress/](https://kubernetes.io/docs/concepts/services-networking/ingress/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kubernetes.io/docs/concepts/services-networking/ingress/](https://kubernetes.io/docs/concepts/services-networking/ingress/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/EntryPoint](https://schema.org/EntryPoint)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesIngress`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesIngress`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -76,6 +80,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:devops:kubernetes-ingress-sample",
   "@type": [
     "robos:KubernetesIngress",
+    "schema:EntryPoint",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Kubernetes Ingress",
@@ -84,6 +89,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.devops",
   "robos:ingressName": "sample-ingress",
   "robos:host": "api.acme.internal",
+  "robos:schemaOrgType": "https://schema.org/EntryPoint",
+  "robos:domainStandard": "https://kubernetes.io/docs/concepts/services-networking/ingress/",
   "robos:refersFrom": "https://schema.org/EntryPoint"
 }
 ```
@@ -104,6 +111,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:devops:kubernetes-ingress-sample",
         "@type": [
             "robos:KubernetesIngress",
+            "schema:EntryPoint",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Kubernetes Ingress",
@@ -112,6 +120,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.devops",
         "robos:ingressName": "sample-ingress",
         "robos:host": "api.acme.internal",
+        "robos:schemaOrgType": "https://schema.org/EntryPoint",
+        "robos:domainStandard": "https://kubernetes.io/docs/concepts/services-networking/ingress/",
         "robos:refersFrom": "https://schema.org/EntryPoint"
     }
   ],

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesServiceShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/Service](https://schema.org/Service)
+- **Domain De Facto Standard**: [https://kubernetes.io/docs/concepts/services-networking/service/](https://kubernetes.io/docs/concepts/services-networking/service/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Service](https://schema.org/Service)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Service](https://schema.org/Service) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kubernetes.io/docs/concepts/services-networking/service/](https://kubernetes.io/docs/concepts/services-networking/service/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Service](https://schema.org/Service)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesService`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesService`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -76,6 +80,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:devops:kubernetes-service-sample",
   "@type": [
     "robos:KubernetesService",
+    "schema:Service",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Kubernetes Service",
@@ -84,6 +89,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.devops",
   "robos:serviceName": "sample-service",
   "robos:serviceType": "ClusterIP",
+  "robos:schemaOrgType": "https://schema.org/Service",
+  "robos:domainStandard": "https://kubernetes.io/docs/concepts/services-networking/service/",
   "robos:refersFrom": "https://schema.org/Service"
 }
 ```
@@ -104,6 +111,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:devops:kubernetes-service-sample",
         "@type": [
             "robos:KubernetesService",
+            "schema:Service",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Kubernetes Service",
@@ -112,6 +120,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.devops",
         "robos:serviceName": "sample-service",
         "robos:serviceType": "ClusterIP",
+        "robos:schemaOrgType": "https://schema.org/Service",
+        "robos:domainStandard": "https://kubernetes.io/docs/concepts/services-networking/service/",
         "robos:refersFrom": "https://schema.org/Service"
     }
   ],

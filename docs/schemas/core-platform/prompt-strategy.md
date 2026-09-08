@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Prom
 - **SHACL Shape ID**: `urn:robos:shape:PromptStrategyShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/Intangible](https://schema.org/Intangible)
+- **Domain De Facto Standard**: [https://schema.org/Intangible](https://schema.org/Intangible)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Intangible](https://schema.org/Intangible)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Intangible](https://schema.org/Intangible) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/Intangible](https://schema.org/Intangible) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Intangible](https://schema.org/Intangible)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:PromptStrategy`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:PromptStrategy`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:PromptStrategy",
-    "robos:AIPromptTechnique"
+    "robos:AIPromptTechnique",
+    "schema:Intangible"
   ],
   "dcterms:title": "Caveman Algorithmic Prompt Compression",
   "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
@@ -94,7 +99,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "preservePaths": true
   },
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/Intangible",
+  "robos:domainStandard": "https://schema.org/Intangible"
 }
 ```
 
@@ -115,7 +122,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:PromptStrategy",
-            "robos:AIPromptTechnique"
+            "robos:AIPromptTechnique",
+            "schema:Intangible"
         ],
         "dcterms:title": "Caveman Algorithmic Prompt Compression",
         "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
@@ -134,7 +142,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "preservePaths": true
         },
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/Intangible",
+        "robos:domainStandard": "https://schema.org/Intangible"
     }
   ],
 }));

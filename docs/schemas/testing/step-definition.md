@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Step
 - **SHACL Shape ID**: `urn:robos:shape:StepDefinitionShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
+- **Domain De Facto Standard**: [https://cucumber.io/docs/cucumber/step-definitions/](https://cucumber.io/docs/cucumber/step-definitions/)
 - **Upstream Schema Basis (Refers From)**: [https://cucumber.io/docs/cucumber/step-definitions/](https://cucumber.io/docs/cucumber/step-definitions/)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://cucumber.io/docs/cucumber/step-definitions/](https://cucumber.io/docs/cucumber/step-definitions/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://cucumber.io/docs/cucumber/step-definitions/](https://cucumber.io/docs/cucumber/step-definitions/)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:StepDefinition`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:StepDefinition`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -73,7 +77,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
 {
   "@id": "urn:robos:stepdef:customer-submits-order",
   "@type": [
-    "robos:StepDefinition"
+    "robos:StepDefinition",
+    "schema:SoftwareSourceCode"
   ],
   "dcterms:title": "StepDef: Customer Submits Order",
   "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
@@ -81,7 +86,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:functionName": "submitOrderStep",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+  "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+  "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+  "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
 }
 ```
 
@@ -100,7 +107,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
     {
         "@id": "urn:robos:stepdef:customer-submits-order",
         "@type": [
-            "robos:StepDefinition"
+            "robos:StepDefinition",
+            "schema:SoftwareSourceCode"
         ],
         "dcterms:title": "StepDef: Customer Submits Order",
         "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
@@ -108,7 +116,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:functionName": "submitOrderStep",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+        "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+        "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+        "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
     }
   ],
 }));

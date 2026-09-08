@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Micr
 - **SHACL Shape ID**: `urn:robos:shape:MicroserviceShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Domain De Facto Standard**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
 - **Upstream Schema Basis (Refers From)**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Microservice`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Microservice`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,7 +78,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:service:billing-api",
   "@type": [
     "oslc_am:Resource",
-    "robos:Microservice"
+    "robos:Microservice",
+    "schema:SoftwareApplication"
   ],
   "dcterms:title": "Billing API Service",
   "robos:technology": "Go 1.22 / Gin",
@@ -88,7 +93,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
   "robos:implementsContract": [
     "urn:robos:contract:orders-grpc"
-  ]
+  ],
+  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+  "robos:domainStandard": "https://w3id.org/c4/Container"
 }
 ```
 
@@ -108,7 +115,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:service:billing-api",
         "@type": [
             "oslc_am:Resource",
-            "robos:Microservice"
+            "robos:Microservice",
+            "schema:SoftwareApplication"
         ],
         "dcterms:title": "Billing API Service",
         "robos:technology": "Go 1.22 / Gin",
@@ -122,7 +130,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
         "robos:implementsContract": [
             "urn:robos:contract:orders-grpc"
-        ]
+        ],
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://w3id.org/c4/Container"
     }
   ],
 }));

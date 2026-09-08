@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Flow
 - **SHACL Shape ID**: `urn:robos:shape:FlowDiagramShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Schema.org Classification**: [https://schema.org/ImageObject](https://schema.org/ImageObject)
+- **Domain De Facto Standard**: [https://schema.org/ImageObject](https://schema.org/ImageObject)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/ImageObject](https://schema.org/ImageObject)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ImageObject](https://schema.org/ImageObject) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/ImageObject](https://schema.org/ImageObject) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/ImageObject](https://schema.org/ImageObject)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:FlowDiagram`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:FlowDiagram`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -78,7 +82,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:diagram:order-lifecycle-flow",
   "@type": [
     "oslc_am:Resource",
-    "robos:FlowDiagram"
+    "robos:FlowDiagram",
+    "schema:ImageObject"
   ],
   "dcterms:title": "Order Lifecycle & Event Processing Flow",
   "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
@@ -94,7 +99,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "EventDriven"
   ],
   "robos:package": "documentation",
-  "robos:namespace": "robos.docs"
+  "robos:namespace": "robos.docs",
+  "robos:schemaOrgType": "https://schema.org/ImageObject",
+  "robos:domainStandard": "https://schema.org/ImageObject"
 }
 ```
 
@@ -114,7 +121,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:diagram:order-lifecycle-flow",
         "@type": [
             "oslc_am:Resource",
-            "robos:FlowDiagram"
+            "robos:FlowDiagram",
+            "schema:ImageObject"
         ],
         "dcterms:title": "Order Lifecycle & Event Processing Flow",
         "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
@@ -130,7 +138,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "EventDriven"
         ],
         "robos:package": "documentation",
-        "robos:namespace": "robos.docs"
+        "robos:namespace": "robos.docs",
+        "robos:schemaOrgType": "https://schema.org/ImageObject",
+        "robos:domainStandard": "https://schema.org/ImageObject"
     }
   ],
 }));

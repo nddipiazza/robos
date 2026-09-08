@@ -20,7 +20,7 @@ describe('RobOS Documentation Package & FlowDiagram First-Class Elements', () =>
     const pkgMgr = new KGraphPackageManager({ rootDir: tmpDir });
 
     const packages = pkgMgr.listPackages();
-    assert.strictEqual(packages.length, 7, 'Must register 7 standard packages');
+    assert.strictEqual(packages.length, 8, 'Must register 8 standard packages');
 
     const docPkg = pkgMgr.getPackage('documentation');
     assert.ok(docPkg, 'documentation package must exist');

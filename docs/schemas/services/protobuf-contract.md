@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Prot
 - **SHACL Shape ID**: `urn:robos:shape:ProtobufContractShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Schema.org Classification**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument)
+- **Domain De Facto Standard**: [https://protobuf.dev/](https://protobuf.dev/)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://protobuf.dev/](https://protobuf.dev/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ProtobufContract`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ProtobufContract`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -77,7 +81,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:Contract",
     "robos:ProtobufContract",
-    "robos:GRPCContract"
+    "robos:GRPCContract",
+    "schema:DigitalDocument"
   ],
   "dcterms:title": "Acme Orders gRPC Protobuf Contract",
   "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
@@ -91,7 +96,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "StreamOrderEvents"
   ],
   "robos:package": "services",
-  "robos:namespace": "robos.services"
+  "robos:namespace": "robos.services",
+  "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+  "robos:domainStandard": "http://open-services.net/ns/am#Resource"
 }
 ```
 
@@ -112,7 +119,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:Contract",
             "robos:ProtobufContract",
-            "robos:GRPCContract"
+            "robos:GRPCContract",
+            "schema:DigitalDocument"
         ],
         "dcterms:title": "Acme Orders gRPC Protobuf Contract",
         "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
@@ -126,7 +134,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "StreamOrderEvents"
         ],
         "robos:package": "services",
-        "robos:namespace": "robos.services"
+        "robos:namespace": "robos.services",
+        "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+        "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     }
   ],
 }));

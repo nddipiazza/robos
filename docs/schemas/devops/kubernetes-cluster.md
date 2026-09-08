@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesClusterShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
+- **Domain De Facto Standard**: [https://kubernetes.io/docs/concepts/overview/](https://kubernetes.io/docs/concepts/overview/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kubernetes.io/docs/concepts/overview/](https://kubernetes.io/docs/concepts/overview/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesCluster`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesCluster`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -77,7 +81,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "c4:DeploymentNode",
     "robos:KubernetesCluster",
-    "robos:K8sCluster"
+    "robos:K8sCluster",
+    "schema:ComputerPlatform"
   ],
   "dcterms:title": "Production US-East AWS EKS Cluster",
   "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
@@ -91,7 +96,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   ],
   "robos:inEnvironment": "urn:robos:env:production",
   "robos:package": "devops",
-  "robos:namespace": "robos.devops"
+  "robos:namespace": "robos.devops",
+  "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+  "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
 }
 ```
 
@@ -112,7 +119,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "c4:DeploymentNode",
             "robos:KubernetesCluster",
-            "robos:K8sCluster"
+            "robos:K8sCluster",
+            "schema:ComputerPlatform"
         ],
         "dcterms:title": "Production US-East AWS EKS Cluster",
         "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
@@ -126,7 +134,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         ],
         "robos:inEnvironment": "urn:robos:env:production",
         "robos:package": "devops",
-        "robos:namespace": "robos.devops"
+        "robos:namespace": "robos.devops",
+        "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+        "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
     }
   ],
 }));

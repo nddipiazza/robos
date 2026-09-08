@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Buil
 - **SHACL Shape ID**: `urn:robos:shape:BuildSystemShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Domain De Facto Standard**: [https://bazel.build/](https://bazel.build/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://bazel.build/](https://bazel.build/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:BuildSystem`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:BuildSystem`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:BuildSystem",
     "robos:MonorepoBuild",
-    "oslc:Resource"
+    "oslc:Resource",
+    "schema:SoftwareApplication"
   ],
   "dcterms:title": "Acme Core Services Monorepo (Bazel)",
   "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
@@ -89,7 +94,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   },
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
-  "robos:refersFrom": "https://schema.org/SoftwareApplication"
+  "robos:refersFrom": "https://schema.org/SoftwareApplication",
+  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+  "robos:domainStandard": "https://bazel.build/"
 }
 ```
 
@@ -110,7 +117,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:BuildSystem",
             "robos:MonorepoBuild",
-            "oslc:Resource"
+            "oslc:Resource",
+            "schema:SoftwareApplication"
         ],
         "dcterms:title": "Acme Core Services Monorepo (Bazel)",
         "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
@@ -124,7 +132,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         },
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
-        "robos:refersFrom": "https://schema.org/SoftwareApplication"
+        "robos:refersFrom": "https://schema.org/SoftwareApplication",
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://bazel.build/"
     }
   ],
 }));

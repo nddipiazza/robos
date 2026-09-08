@@ -38,7 +38,8 @@
     {
       "@id": "urn:robos:team:core-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Core Platform & Infrastructure",
       "robos:topology": "platform",
@@ -48,12 +49,15 @@
         "urn:robos:person:marcus-wright"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:order-processing",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Order Processing & Payments",
       "robos:topology": "stream-aligned",
@@ -62,12 +66,15 @@
         "urn:robos:person:kyle-reese"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:architecture-guild",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Enterprise Architecture Guild",
       "robos:topology": "enabling",
@@ -77,7 +84,9 @@
         "urn:robos:person:sconnor"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:person:admin",
@@ -97,7 +106,8 @@
       "@id": "urn:robos:team:founding-core",
       "@type": [
         "oslc:Group",
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Acme Global Core Platform Team",
       "robos:topology": "stream-aligned",
@@ -108,12 +118,15 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:topologyType": "platform",
-      "robos:memberOf": "urn:robos:organization:acme-global"
+      "robos:memberOf": "urn:robos:organization:acme-global",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Cloud Platform & Infrastructure",
       "robos:topology": "platform",
@@ -122,7 +135,9 @@
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:git-org:apache",
@@ -197,14 +212,17 @@
       ],
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:agent:pr-reviewer",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Autonomous PR Code Reviewer",
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
@@ -217,14 +235,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:architecture-guardian",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Architecture & Governance Guardian",
       "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
@@ -236,14 +257,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:sre-incident-triage",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS SRE Incident & Deployment Triager",
       "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
@@ -252,7 +276,9 @@
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:organization:acme-global",
@@ -299,7 +325,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:organization:at-https",
@@ -351,7 +379,9 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-retail",
@@ -383,7 +413,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-identity",
@@ -420,7 +452,9 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     }
   ],
   "@graph": [

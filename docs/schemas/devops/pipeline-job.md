@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pipe
 - **SHACL Shape ID**: `urn:robos:shape:PipelineJobShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/Action](https://schema.org/Action)
+- **Domain De Facto Standard**: [https://schema.org/Action](https://schema.org/Action)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Action](https://schema.org/Action) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/Action](https://schema.org/Action) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:PipelineJob`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:PipelineJob`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:devops:pipeline-job-sample",
   "@type": [
     "robos:PipelineJob",
+    "schema:Action",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Pipeline Job",
@@ -82,6 +87,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.devops",
   "robos:jobName": "unit-tests",
   "robos:stage": "urn:robos:stage:build",
+  "robos:schemaOrgType": "https://schema.org/Action",
+  "robos:domainStandard": "https://schema.org/Action",
   "robos:refersFrom": "https://schema.org/Action"
 }
 ```
@@ -102,6 +109,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:devops:pipeline-job-sample",
         "@type": [
             "robos:PipelineJob",
+            "schema:Action",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Pipeline Job",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.devops",
         "robos:jobName": "unit-tests",
         "robos:stage": "urn:robos:stage:build",
+        "robos:schemaOrgType": "https://schema.org/Action",
+        "robos:domainStandard": "https://schema.org/Action",
         "robos:refersFrom": "https://schema.org/Action"
     }
   ],

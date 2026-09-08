@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Docu
 - **SHACL Shape ID**: `urn:robos:shape:DocumentationPageShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Schema.org Classification**: [https://schema.org/TechArticle](https://schema.org/TechArticle)
+- **Domain De Facto Standard**: [https://schema.org/TechArticle](https://schema.org/TechArticle)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/TechArticle](https://schema.org/TechArticle)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/TechArticle](https://schema.org/TechArticle) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/TechArticle](https://schema.org/TechArticle) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/TechArticle](https://schema.org/TechArticle)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DocumentationPage`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:DocumentationPage`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:DocumentationPage",
-    "robos:DocArticle"
+    "robos:DocArticle",
+    "schema:TechArticle"
   ],
   "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
   "robos:slug": "sdlc-architecture-guide",
@@ -84,7 +89,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:category": "Architecture",
   "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
   "robos:package": "documentation",
-  "robos:namespace": "robos.docs"
+  "robos:namespace": "robos.docs",
+  "robos:schemaOrgType": "https://schema.org/TechArticle",
+  "robos:domainStandard": "https://schema.org/TechArticle"
 }
 ```
 
@@ -105,7 +112,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:DocumentationPage",
-            "robos:DocArticle"
+            "robos:DocArticle",
+            "schema:TechArticle"
         ],
         "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
         "robos:slug": "sdlc-architecture-guide",
@@ -114,7 +122,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:category": "Architecture",
         "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
         "robos:package": "documentation",
-        "robos:namespace": "robos.docs"
+        "robos:namespace": "robos.docs",
+        "robos:schemaOrgType": "https://schema.org/TechArticle",
+        "robos:domainStandard": "https://schema.org/TechArticle"
     }
   ],
 }));

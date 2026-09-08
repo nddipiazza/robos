@@ -22,7 +22,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Microservice must have a title."
       }
     ],
-    "refersFrom": "https://w3id.org/c4/Container"
+    "refersFrom": "https://w3id.org/c4/Container",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://w3id.org/c4/Container"
   },
   {
     "shapeId": "urn:robos:shape:ContractShape",
@@ -39,7 +41,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Contract must declare a protocol (OpenAPI, Pact, etc.)."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/am#Resource"
+    "refersFrom": "http://open-services.net/ns/am#Resource",
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "http://open-services.net/ns/am#Resource"
   },
   {
     "shapeId": "urn:robos:shape:RequirementShape",
@@ -56,7 +60,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Requirement must link to a Gherkin .feature file."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/rm#Requirement"
+    "refersFrom": "http://open-services.net/ns/rm#Requirement",
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "http://open-services.net/ns/rm#Requirement"
   },
   {
     "shapeId": "urn:robos:shape:TeamShape",
@@ -68,7 +74,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Team must have a display name."
       }
     ],
-    "refersFrom": "https://schema.org/ProjectTeam"
+    "refersFrom": "https://schema.org/ProjectTeam",
+    "schemaOrgType": "https://schema.org/ProjectTeam",
+    "domainStandard": "https://schema.org/ProjectTeam"
   },
   {
     "shapeId": "urn:robos:shape:ProjectShape",
@@ -85,7 +93,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Project must declare a lifecycle status."
       }
     ],
-    "refersFrom": "https://schema.org/Project"
+    "refersFrom": "https://schema.org/Project",
+    "schemaOrgType": "https://schema.org/Project",
+    "domainStandard": "https://schema.org/Project"
   },
   {
     "shapeId": "urn:robos:shape:EpicShape",
@@ -97,7 +107,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Epic must have a title."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/Plan",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:ELearningShape",
@@ -124,7 +136,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "eLearning course must declare its GitOps file location (.robos/elearning.yaml)."
       }
     ],
-    "refersFrom": "https://schema.org/Course"
+    "refersFrom": "https://schema.org/Course",
+    "schemaOrgType": "https://schema.org/Course",
+    "domainStandard": "https://schema.org/Course"
   },
   {
     "shapeId": "urn:robos:shape:DesktopAppShape",
@@ -151,7 +165,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Desktop App must declare desktop framework (Electron, Tauri, Qt, GTK)."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:ConsoleAppShape",
@@ -178,7 +194,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Console App must declare executable CLI command name."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:MobileAppShape",
@@ -205,7 +223,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Mobile App must specify mobile platform(s)."
       }
     ],
-    "refersFrom": "https://schema.org/MobileApplication"
+    "refersFrom": "https://schema.org/MobileApplication",
+    "schemaOrgType": "https://schema.org/MobileApplication",
+    "domainStandard": "https://schema.org/MobileApplication"
   },
   {
     "shapeId": "urn:robos:shape:DataPipelineShape",
@@ -232,7 +252,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Data Pipeline must declare execution engine (Kafka Streams, Spark, Celery)."
       }
     ],
-    "refersFrom": "https://schema.org/DataFeed"
+    "refersFrom": "https://schema.org/DataFeed",
+    "schemaOrgType": "https://schema.org/DataFeed",
+    "domainStandard": "https://schema.org/DataFeed"
   },
   {
     "shapeId": "urn:robos:shape:LibraryShape",
@@ -254,7 +276,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Library must specify technology stack."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:FrontEndAppShape",
@@ -281,7 +305,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte)."
       }
     ],
-    "refersFrom": "https://schema.org/WebApplication"
+    "refersFrom": "https://schema.org/WebApplication",
+    "schemaOrgType": "https://schema.org/WebApplication",
+    "domainStandard": "https://schema.org/WebApplication"
   },
   {
     "shapeId": "urn:robos:shape:PCGameShape",
@@ -313,7 +339,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "PC Game must specify target PC platform(s) (Windows, Linux, macOS)."
       }
     ],
-    "refersFrom": "https://schema.org/VideoGame"
+    "refersFrom": "https://schema.org/VideoGame",
+    "schemaOrgType": "https://schema.org/VideoGame",
+    "domainStandard": "https://schema.org/VideoGame"
   },
   {
     "shapeId": "urn:robos:shape:MobileGameShape",
@@ -345,7 +373,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Mobile Game must specify mobile platform(s) (iOS, Android)."
       }
     ],
-    "refersFrom": "https://schema.org/VideoGame"
+    "refersFrom": "https://schema.org/VideoGame",
+    "schemaOrgType": "https://schema.org/VideoGame",
+    "domainStandard": "https://schema.org/VideoGame"
   },
   {
     "shapeId": "urn:robos:shape:GitProjectOrganizationShape",
@@ -376,7 +406,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Git Project Organization must declare forge type (github, gitlab, bitbucket, etc.)."
       }
     ],
-    "refersFrom": "https://schema.org/Organization"
+    "refersFrom": "https://schema.org/Organization",
+    "schemaOrgType": "https://schema.org/Organization",
+    "domainStandard": "https://schema.org/Organization"
   },
   {
     "shapeId": "urn:robos:shape:RemoteExecutionClusterShape",
@@ -412,7 +444,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Remote Execution Cluster must specify Content Addressable Storage (CAS) endpoint URI."
       }
     ],
-    "refersFrom": "https://schema.org/ComputerPlatform"
+    "refersFrom": "https://schema.org/ComputerPlatform",
+    "schemaOrgType": "https://schema.org/ComputerPlatform",
+    "domainStandard": "https://github.com/bazelbuild/remote-apis"
   },
   {
     "shapeId": "urn:robos:shape:BuildSystemShape",
@@ -438,7 +472,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig)."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://bazel.build/"
   },
   {
     "shapeId": "urn:robos:shape:FlowDiagramShape",
@@ -470,7 +506,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Flow Diagram must declare hover tooltip text (robos:tooltip)."
       }
     ],
-    "refersFrom": "https://schema.org/ImageObject"
+    "refersFrom": "https://schema.org/ImageObject",
+    "schemaOrgType": "https://schema.org/ImageObject",
+    "domainStandard": "https://schema.org/ImageObject"
   },
   {
     "shapeId": "urn:robos:shape:DocumentationPageShape",
@@ -496,7 +534,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Documentation Page must specify a relative markdown document path."
       }
     ],
-    "refersFrom": "https://schema.org/TechArticle"
+    "refersFrom": "https://schema.org/TechArticle",
+    "schemaOrgType": "https://schema.org/TechArticle",
+    "domainStandard": "https://schema.org/TechArticle"
   },
   {
     "shapeId": "urn:robos:shape:ArchitectureDecisionRecordShape",
@@ -527,7 +567,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Architecture Decision Record must state the architectural decision."
       }
     ],
-    "refersFrom": "https://schema.org/TechArticle"
+    "refersFrom": "https://schema.org/TechArticle",
+    "schemaOrgType": "https://schema.org/TechArticle",
+    "domainStandard": "https://adr.github.io/"
   },
   {
     "shapeId": "urn:robos:shape:InteractiveWalkthroughShape",
@@ -549,7 +591,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Interactive Walkthrough must link to a target RobOS application or component."
       }
     ],
-    "refersFrom": "https://schema.org/Guide"
+    "refersFrom": "https://schema.org/Guide",
+    "schemaOrgType": "https://schema.org/Guide",
+    "domainStandard": "https://schema.org/Guide"
   },
   {
     "shapeId": "urn:robos:shape:CodeSnippetShape",
@@ -575,7 +619,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Code Snippet must provide source code text."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:DatabaseShape",
@@ -606,7 +652,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Database must specify a host address or service DNS."
       }
     ],
-    "refersFrom": "https://schema.org/DataStore"
+    "refersFrom": "https://schema.org/DataStore",
+    "schemaOrgType": "https://schema.org/DataStore",
+    "domainStandard": "https://www.iso.org/standard/63555.html"
   },
   {
     "shapeId": "urn:robos:shape:NoSQLDatabaseShape",
@@ -634,7 +682,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "NoSQL Database must specify a host address or cluster endpoint."
       }
     ],
-    "refersFrom": "https://schema.org/DataStore"
+    "refersFrom": "https://schema.org/DataStore",
+    "schemaOrgType": "https://schema.org/DataStore",
+    "domainStandard": "https://schema.org/DataStore"
   },
   {
     "shapeId": "urn:robos:shape:MessageBrokerShape",
@@ -660,7 +710,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Message Broker must specify bootstrap endpoint URI."
       }
     ],
-    "refersFrom": "https://schema.org/BroadcastService"
+    "refersFrom": "https://schema.org/BroadcastService",
+    "schemaOrgType": "https://schema.org/BroadcastService",
+    "domainStandard": "https://kafka.apache.org/"
   },
   {
     "shapeId": "urn:robos:shape:MCPServerShape",
@@ -686,7 +738,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "MCP Server must list at least one provided tool."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://modelcontextprotocol.io/specification"
   },
   {
     "shapeId": "urn:robos:shape:AgentPersonaShape",
@@ -712,7 +766,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Agent Persona must provide a system prompt or core directive."
       }
     ],
-    "refersFrom": "https://schema.org/Person"
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://schema.org/Person"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesClusterShape",
@@ -743,7 +799,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Kubernetes Cluster must specify kubeconfig context name."
       }
     ],
-    "refersFrom": "https://schema.org/ComputerPlatform"
+    "refersFrom": "https://schema.org/ComputerPlatform",
+    "schemaOrgType": "https://schema.org/ComputerPlatform",
+    "domainStandard": "https://kubernetes.io/docs/concepts/overview/"
   },
   {
     "shapeId": "urn:robos:shape:EnvironmentShape",
@@ -769,7 +827,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Environment must declare SLA/criticality tier."
       }
     ],
-    "refersFrom": "https://schema.org/DeploymentEnvironment"
+    "refersFrom": "https://schema.org/DeploymentEnvironment",
+    "schemaOrgType": "https://schema.org/DeploymentEnvironment",
+    "domainStandard": "https://schema.org/DeploymentEnvironment"
   },
   {
     "shapeId": "urn:robos:shape:GitOpsDeploymentShape",
@@ -805,7 +865,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "GitOps Deployment must specify target namespace."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://opengitops.dev/"
   },
   {
     "shapeId": "urn:robos:shape:ProtobufContractShape",
@@ -836,7 +898,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Protobuf Contract must declare RPC methods."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/am#Resource"
+    "refersFrom": "http://open-services.net/ns/am#Resource",
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "https://protobuf.dev/"
   },
   {
     "shapeId": "urn:robos:shape:GraphQLContractShape",
@@ -862,7 +926,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway)."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/am#Resource"
+    "refersFrom": "http://open-services.net/ns/am#Resource",
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "https://graphql.org/learn/schema/"
   },
   {
     "shapeId": "urn:robos:shape:CICDPipelineShape",
@@ -888,7 +954,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "CI/CD Pipeline must specify workflow file path (.github/workflows/...)."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:TaskServerShape",
@@ -913,7 +981,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Task Server must specify server URL."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:ContextSourceShape",
@@ -938,7 +1008,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Context Source must specify location path, URL, or repository identifier."
       }
     ],
-    "refersFrom": "https://schema.org/DataFeed"
+    "refersFrom": "https://schema.org/DataFeed",
+    "schemaOrgType": "https://schema.org/DataFeed",
+    "domainStandard": "https://schema.org/DataFeed"
   },
   {
     "shapeId": "urn:robos:shape:PromptStrategyShape",
@@ -966,7 +1038,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Prompt Strategy must declare optimization engine (caveman, dspy, standard)."
       }
     ],
-    "refersFrom": "https://schema.org/Intangible"
+    "refersFrom": "https://schema.org/Intangible",
+    "schemaOrgType": "https://schema.org/Intangible",
+    "domainStandard": "https://schema.org/Intangible"
   },
   {
     "shapeId": "urn:robos:shape:FeatureShape",
@@ -982,7 +1056,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Feature must have a title."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/rm#Requirement"
+    "refersFrom": "http://open-services.net/ns/rm#Requirement",
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "http://open-services.net/ns/rm#Requirement"
   },
   {
     "shapeId": "urn:robos:shape:UserStoryShape",
@@ -1003,7 +1079,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "User Story must have a status."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:TaskShape",
@@ -1025,7 +1103,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Task must declare a lifecycle status."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:SubtaskShape",
@@ -1042,7 +1122,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Subtask must link to its parent task."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:BugShape",
@@ -1069,7 +1151,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Bug must declare lifecycle status."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:SprintShape",
@@ -1096,7 +1180,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Sprint must specify an end date."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://schema.org/Action"
   },
   {
     "shapeId": "urn:robos:shape:MilestoneShape",
@@ -1113,7 +1199,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Milestone must declare a target delivery date."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://schema.org/Action"
   },
   {
     "shapeId": "urn:robos:shape:GitRepositoryShape",
@@ -1139,7 +1227,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Git Repository must declare its default branch."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:GitBranchShape",
@@ -1161,7 +1251,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Git Branch must link to parent repository."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:PullRequestShape",
@@ -1197,7 +1289,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Pull Request must declare status (open, merged, closed)."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "https://schema.org/UpdateAction",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
     "shapeId": "urn:robos:shape:GitCommitShape",
@@ -1223,7 +1317,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Git Commit must link to parent repository."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:GitTagShape",
@@ -1245,7 +1341,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Git Tag must link to target commit SHA."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareSourceCode"
+    "refersFrom": "https://schema.org/SoftwareSourceCode",
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://schema.org/SoftwareSourceCode"
   },
   {
     "shapeId": "urn:robos:shape:APIEndpointShape",
@@ -1271,7 +1369,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "API Endpoint must declare HTTP method (GET, POST, etc.)."
       }
     ],
-    "refersFrom": "https://schema.org/EntryPoint"
+    "refersFrom": "https://schema.org/EntryPoint",
+    "schemaOrgType": "https://schema.org/EntryPoint",
+    "domainStandard": "https://spec.openapis.org/oas/v3.1.0"
   },
   {
     "shapeId": "urn:robos:shape:DataModelShape",
@@ -1293,7 +1393,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Data Model must specify entity/model name."
       }
     ],
-    "refersFrom": "https://schema.org/Class"
+    "refersFrom": "https://schema.org/Class",
+    "schemaOrgType": "https://schema.org/Class",
+    "domainStandard": "https://spec.openapis.org/oas/v3.1.0"
   },
   {
     "shapeId": "urn:robos:shape:DatabaseSchemaShape",
@@ -1315,7 +1417,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Database Schema must link to parent database."
       }
     ],
-    "refersFrom": "https://schema.org/DataStore"
+    "refersFrom": "https://schema.org/DataStore",
+    "schemaOrgType": "https://schema.org/DataStore",
+    "domainStandard": "https://www.iso.org/standard/63555.html"
   },
   {
     "shapeId": "urn:robos:shape:DatabaseTableShape",
@@ -1337,7 +1441,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Database Table must link to parent database."
       }
     ],
-    "refersFrom": "https://schema.org/Table"
+    "refersFrom": "https://schema.org/Table",
+    "schemaOrgType": "https://schema.org/Table",
+    "domainStandard": "https://www.iso.org/standard/63555.html"
   },
   {
     "shapeId": "urn:robos:shape:DatabaseColumnShape",
@@ -1364,7 +1470,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Database Column must link to parent table."
       }
     ],
-    "refersFrom": "https://schema.org/Property"
+    "refersFrom": "https://schema.org/Property",
+    "schemaOrgType": "https://schema.org/Property",
+    "domainStandard": "https://www.iso.org/standard/63555.html"
   },
   {
     "shapeId": "urn:robos:shape:DatabaseIndexShape",
@@ -1386,7 +1494,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Database Index must link to parent table."
       }
     ],
-    "refersFrom": "https://schema.org/Index"
+    "refersFrom": "https://schema.org/Index",
+    "schemaOrgType": "https://schema.org/Index",
+    "domainStandard": "https://www.iso.org/standard/63555.html"
   },
   {
     "shapeId": "urn:robos:shape:NoSQLCollectionShape",
@@ -1408,7 +1518,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "NoSQL Collection must link to parent database."
       }
     ],
-    "refersFrom": "https://schema.org/Collection"
+    "refersFrom": "https://schema.org/Collection",
+    "schemaOrgType": "https://schema.org/Collection",
+    "domainStandard": "https://schema.org/Collection"
   },
   {
     "shapeId": "urn:robos:shape:MessageTopicShape",
@@ -1435,7 +1547,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Message Topic must link to parent message broker."
       }
     ],
-    "refersFrom": "https://schema.org/BroadcastChannel"
+    "refersFrom": "https://schema.org/BroadcastChannel",
+    "schemaOrgType": "https://schema.org/BroadcastChannel",
+    "domainStandard": "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
   },
   {
     "shapeId": "urn:robos:shape:ConsumerGroupShape",
@@ -1457,7 +1571,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Consumer Group must link to subscribed topic."
       }
     ],
-    "refersFrom": "https://schema.org/Audience"
+    "refersFrom": "https://schema.org/Audience",
+    "schemaOrgType": "https://schema.org/Audience",
+    "domainStandard": "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
   },
   {
     "shapeId": "urn:robos:shape:MCPToolShape",
@@ -1479,7 +1595,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "MCP Tool must link to parent MCP server."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://modelcontextprotocol.io/specification"
   },
   {
     "shapeId": "urn:robos:shape:MCPResourceShape",
@@ -1501,7 +1619,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "MCP Resource must link to parent MCP server."
       }
     ],
-    "refersFrom": "https://schema.org/MediaObject"
+    "refersFrom": "https://schema.org/MediaObject",
+    "schemaOrgType": "https://schema.org/MediaObject",
+    "domainStandard": "https://modelcontextprotocol.io/specification"
   },
   {
     "shapeId": "urn:robos:shape:MCPPromptShape",
@@ -1523,7 +1643,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "MCP Prompt must link to parent MCP server."
       }
     ],
-    "refersFrom": "https://schema.org/Text"
+    "refersFrom": "https://schema.org/Text",
+    "schemaOrgType": "https://schema.org/Text",
+    "domainStandard": "https://modelcontextprotocol.io/specification"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesNamespaceShape",
@@ -1545,7 +1667,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Kubernetes Namespace must link to parent cluster."
       }
     ],
-    "refersFrom": "https://schema.org/AdministrativeArea"
+    "refersFrom": "https://schema.org/AdministrativeArea",
+    "schemaOrgType": "https://schema.org/AdministrativeArea",
+    "domainStandard": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesDeploymentShape",
@@ -1567,7 +1691,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Kubernetes Deployment must specify container image."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesServiceShape",
@@ -1594,7 +1720,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Kubernetes Service must link to namespace."
       }
     ],
-    "refersFrom": "https://schema.org/Service"
+    "refersFrom": "https://schema.org/Service",
+    "schemaOrgType": "https://schema.org/Service",
+    "domainStandard": "https://kubernetes.io/docs/concepts/services-networking/service/"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesIngressShape",
@@ -1621,7 +1749,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Kubernetes Ingress must link to namespace."
       }
     ],
-    "refersFrom": "https://schema.org/EntryPoint"
+    "refersFrom": "https://schema.org/EntryPoint",
+    "schemaOrgType": "https://schema.org/EntryPoint",
+    "domainStandard": "https://kubernetes.io/docs/concepts/services-networking/ingress/"
   },
   {
     "shapeId": "urn:robos:shape:PipelineStageShape",
@@ -1643,7 +1773,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Pipeline Stage must link to parent CI/CD pipeline."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://schema.org/Action"
   },
   {
     "shapeId": "urn:robos:shape:PipelineJobShape",
@@ -1665,7 +1797,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Pipeline Job must link to parent pipeline stage."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://schema.org/Action"
   },
   {
     "shapeId": "urn:robos:shape:PipelineStepShape",
@@ -1687,7 +1821,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Pipeline Step must link to parent job."
       }
     ],
-    "refersFrom": "https://schema.org/Action"
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://schema.org/Action"
   },
   {
     "shapeId": "urn:robos:shape:LearningModuleShape",
@@ -1704,7 +1840,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Learning Module must link to parent eLearning course."
       }
     ],
-    "refersFrom": "https://schema.org/CourseInstance"
+    "refersFrom": "https://schema.org/CourseInstance",
+    "schemaOrgType": "https://schema.org/CourseInstance",
+    "domainStandard": "https://schema.org/CourseInstance"
   },
   {
     "shapeId": "urn:robos:shape:LearningLessonShape",
@@ -1721,7 +1859,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Learning Lesson must link to parent learning module."
       }
     ],
-    "refersFrom": "https://schema.org/LearningResource"
+    "refersFrom": "https://schema.org/LearningResource",
+    "schemaOrgType": "https://schema.org/LearningResource",
+    "domainStandard": "https://schema.org/LearningResource"
   },
   {
     "shapeId": "urn:robos:shape:HandsOnLabShape",
@@ -1743,7 +1883,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Hands-on Lab must link to parent learning module."
       }
     ],
-    "refersFrom": "https://schema.org/ExercisePlan"
+    "refersFrom": "https://schema.org/ExercisePlan",
+    "schemaOrgType": "https://schema.org/ExercisePlan",
+    "domainStandard": "https://schema.org/ExercisePlan"
   },
   {
     "shapeId": "urn:robos:shape:QuizAssessmentShape",
@@ -1760,7 +1902,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Quiz Assessment must link to parent module."
       }
     ],
-    "refersFrom": "https://schema.org/Quiz"
+    "refersFrom": "https://schema.org/Quiz",
+    "schemaOrgType": "https://schema.org/Quiz",
+    "domainStandard": "https://schema.org/Quiz"
   },
   {
     "shapeId": "urn:robos:shape:DocSectionShape",
@@ -1782,7 +1926,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Documentation Section must link to parent documentation page."
       }
     ],
-    "refersFrom": "https://schema.org/Article"
+    "refersFrom": "https://schema.org/Article",
+    "schemaOrgType": "https://schema.org/Article",
+    "domainStandard": "https://schema.org/Article"
   },
   {
     "shapeId": "urn:robos:shape:ADROptionShape",
@@ -1799,7 +1945,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "ADR Option must link to parent Architecture Decision Record."
       }
     ],
-    "refersFrom": "https://schema.org/ChooseAction"
+    "refersFrom": "https://schema.org/ChooseAction",
+    "schemaOrgType": "https://schema.org/ChooseAction",
+    "domainStandard": "https://schema.org/ChooseAction"
   },
   {
     "shapeId": "urn:robos:shape:ScenarioShape",
@@ -1816,7 +1964,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Scenario must define execution steps."
       }
     ],
-    "refersFrom": "http://open-services.net/ns/qm#TestCase"
+    "refersFrom": "http://open-services.net/ns/qm#TestCase",
+    "schemaOrgType": "https://schema.org/CheckAction",
+    "domainStandard": "http://open-services.net/ns/qm#TestCase"
   },
   {
     "shapeId": "urn:robos:shape:ScenarioStepShape",
@@ -1833,7 +1983,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Scenario Step must specify step expression text."
       }
     ],
-    "refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+    "refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+    "schemaOrgType": "https://schema.org/HowToStep",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
   },
   {
     "shapeId": "urn:robos:shape:WebRouteShape",
@@ -1855,7 +2007,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "Web Route must link to parent application."
       }
     ],
-    "refersFrom": "https://schema.org/WebPage"
+    "refersFrom": "https://schema.org/WebPage",
+    "schemaOrgType": "https://schema.org/WebPage",
+    "domainStandard": "https://schema.org/WebPage"
   },
   {
     "shapeId": "urn:robos:shape:CLICommandShape",
@@ -1877,7 +2031,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "CLI Command must link to parent console application."
       }
     ],
-    "refersFrom": "https://schema.org/SoftwareApplication"
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:CLIFlagShape",
@@ -1899,7 +2055,9 @@ const BUILTIN_SHACL_SHAPES = [
         "message": "CLI Flag must link to parent CLI command."
       }
     ],
-    "refersFrom": "https://schema.org/PropertyValue"
+    "refersFrom": "https://schema.org/PropertyValue",
+    "schemaOrgType": "https://schema.org/PropertyValue",
+    "domainStandard": "https://schema.org/PropertyValue"
   },
   {
     "shapeId": "urn:robos:shape:GherkinFeatureShape",
@@ -1920,7 +2078,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Gherkin Feature must link to a .feature file."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "http://open-services.net/ns/rm#Requirement"
   },
   {
     "shapeId": "urn:robos:shape:GherkinBackgroundShape",
@@ -1946,7 +2106,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Gherkin Background must link to parent Gherkin feature."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/ItemList",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
   },
   {
     "shapeId": "urn:robos:shape:GherkinRuleShape",
@@ -1967,7 +2129,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Gherkin Rule must link to parent Gherkin feature."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/DigitalDocument",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule"
   },
   {
     "shapeId": "urn:robos:shape:ScenarioOutlineShape",
@@ -1989,7 +2153,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Scenario Outline must link to an Examples table."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/CheckAction",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
   },
   {
     "shapeId": "urn:robos:shape:ExamplesTableShape",
@@ -2011,7 +2177,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Examples Table must define parameter value rows."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/Table",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
   },
   {
     "shapeId": "urn:robos:shape:StepDefinitionShape",
@@ -2033,7 +2201,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Step Definition must link to implementation source file."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/SoftwareSourceCode",
+    "domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
   },
   {
     "shapeId": "urn:robos:shape:DataTableShape",
@@ -2050,7 +2220,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Data Table must link to parent scenario step."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/Table",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables"
   },
   {
     "shapeId": "urn:robos:shape:DocStringShape",
@@ -2067,7 +2239,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "DocString must link to parent scenario step."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/Text",
+    "domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
   },
   {
     "shapeId": "urn:robos:shape:TestingLibraryShape",
@@ -2093,7 +2267,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Testing Library must declare target language ecosystem (polyglot, java, javascript, typescript, python, go, rust)."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://schema.org/SoftwareApplication"
   },
   {
     "shapeId": "urn:robos:shape:TestPlanShape",
@@ -2109,7 +2285,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Test Plan must have a title."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/Plan",
+    "domainStandard": "http://open-services.net/ns/qm#TestPlan"
   },
   {
     "shapeId": "urn:robos:shape:TestSuiteShape",
@@ -2130,7 +2308,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Test Suite must specify testing framework or runner."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/ItemList",
+    "domainStandard": "http://open-services.net/ns/qm#TestSuite"
   },
   {
     "shapeId": "urn:robos:shape:TestExecutionRecordShape",
@@ -2156,7 +2336,9 @@ const BUILTIN_SHACL_SHAPES = [
         "minCount": 1,
         "message": "Test Execution Record must link to target test case or scenario."
       }
-    ]
+    ],
+    "schemaOrgType": "https://schema.org/AssessAction",
+    "domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
   }
 ];
 

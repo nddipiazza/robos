@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Scen
 - **SHACL Shape ID**: `urn:robos:shape:ScenarioStepShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/HowToStep](https://schema.org/HowToStep)
+- **Domain De Facto Standard**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps)
 - **Upstream Schema Basis (Refers From)**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/HowToStep](https://schema.org/HowToStep) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://cucumber.io/docs/gherkin/reference/#steps](https://cucumber.io/docs/gherkin/reference/#steps)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ScenarioStep`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ScenarioStep`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -71,14 +75,17 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
 {
   "@id": "urn:robos:step:checkout-add-item-with-table",
   "@type": [
-    "robos:ScenarioStep"
+    "robos:ScenarioStep",
+    "schema:HowToStep"
   ],
   "robos:keyword": "When",
   "robos:stepText": "the customer adds items to cart with configuration",
   "robos:dataTable": "urn:robos:datatable:cart-items",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+  "robos:schemaOrgType": "https://schema.org/HowToStep",
+  "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
 }
 ```
 
@@ -97,14 +104,17 @@ const result = validator.validateGraph(new OSLCGraphParser({
     {
         "@id": "urn:robos:step:checkout-add-item-with-table",
         "@type": [
-            "robos:ScenarioStep"
+            "robos:ScenarioStep",
+            "schema:HowToStep"
         ],
         "robos:keyword": "When",
         "robos:stepText": "the customer adds items to cart with configuration",
         "robos:dataTable": "urn:robos:datatable:cart-items",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+        "robos:schemaOrgType": "https://schema.org/HowToStep",
+        "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
     }
   ],
 }));

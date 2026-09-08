@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Lear
 - **SHACL Shape ID**: `urn:robos:shape:LearningLessonShape`
 - **Governing Package**: [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`)
 - **Namespace**: `robos.learning`
+- **Schema.org Classification**: [https://schema.org/LearningResource](https://schema.org/LearningResource)
+- **Domain De Facto Standard**: [https://schema.org/LearningResource](https://schema.org/LearningResource)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/LearningResource](https://schema.org/LearningResource)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/LearningResource](https://schema.org/LearningResource) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/LearningResource](https://schema.org/LearningResource) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/LearningResource](https://schema.org/LearningResource)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:LearningLesson`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:LearningLesson`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,6 +76,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:learning:learning-lesson-sample",
   "@type": [
     "robos:LearningLesson",
+    "schema:LearningResource",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Learning Lesson",
@@ -79,6 +84,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:package": "learning",
   "robos:namespace": "robos.learning",
   "robos:module": "urn:robos:module:sample-module",
+  "robos:schemaOrgType": "https://schema.org/LearningResource",
+  "robos:domainStandard": "https://schema.org/LearningResource",
   "robos:refersFrom": "https://schema.org/LearningResource"
 }
 ```
@@ -99,6 +106,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:learning:learning-lesson-sample",
         "@type": [
             "robos:LearningLesson",
+            "schema:LearningResource",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Learning Lesson",
@@ -106,6 +114,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "learning",
         "robos:namespace": "robos.learning",
         "robos:module": "urn:robos:module:sample-module",
+        "robos:schemaOrgType": "https://schema.org/LearningResource",
+        "robos:domainStandard": "https://schema.org/LearningResource",
         "robos:refersFrom": "https://schema.org/LearningResource"
     }
   ],

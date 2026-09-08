@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Bug`
 - **SHACL Shape ID**: `urn:robos:shape:BugShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/Action](https://schema.org/Action)
+- **Domain De Facto Standard**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Action](https://schema.org/Action) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Bug`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Bug`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -76,6 +80,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "robos:Bug",
     "robos:Defect",
     "oslc_cm:Defect",
+    "schema:Action",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Bug",
@@ -84,6 +89,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.org",
   "robos:severity": "major",
   "robos:status": "active",
+  "robos:schemaOrgType": "https://schema.org/Action",
+  "robos:domainStandard": "http://open-services.net/ns/cm#ChangeRequest",
   "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
 }
 ```
@@ -106,6 +113,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "robos:Bug",
             "robos:Defect",
             "oslc_cm:Defect",
+            "schema:Action",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Bug",
@@ -114,6 +122,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.org",
         "robos:severity": "major",
         "robos:status": "active",
+        "robos:schemaOrgType": "https://schema.org/Action",
+        "robos:domainStandard": "http://open-services.net/ns/cm#ChangeRequest",
         "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
     }
   ],

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Remo
 - **SHACL Shape ID**: `urn:robos:shape:RemoteExecutionClusterShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
+- **Domain De Facto Standard**: [https://github.com/bazelbuild/remote-apis](https://github.com/bazelbuild/remote-apis)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://github.com/bazelbuild/remote-apis](https://github.com/bazelbuild/remote-apis) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/ComputerPlatform](https://schema.org/ComputerPlatform)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:RemoteExecutionCluster`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:RemoteExecutionCluster`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -79,7 +83,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:RemoteExecutionCluster",
     "robos:RemoteBuildCluster",
-    "oslc:Resource"
+    "oslc:Resource",
+    "schema:ComputerPlatform"
   ],
   "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
   "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
@@ -107,7 +112,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "evictionPolicy": "lru"
   },
   "robos:package": "devops",
-  "robos:namespace": "robos.devops"
+  "robos:namespace": "robos.devops",
+  "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+  "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
 }
 ```
 
@@ -128,7 +135,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:RemoteExecutionCluster",
             "robos:RemoteBuildCluster",
-            "oslc:Resource"
+            "oslc:Resource",
+            "schema:ComputerPlatform"
         ],
         "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
         "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
@@ -156,7 +164,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "evictionPolicy": "lru"
         },
         "robos:package": "devops",
-        "robos:namespace": "robos.devops"
+        "robos:namespace": "robos.devops",
+        "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+        "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
     }
   ],
 }));

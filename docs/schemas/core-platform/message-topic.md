@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mess
 - **SHACL Shape ID**: `urn:robos:shape:MessageTopicShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/BroadcastChannel](https://schema.org/BroadcastChannel)
+- **Domain De Facto Standard**: [https://kafka.apache.org/documentation/#intro_concepts_and_terms](https://kafka.apache.org/documentation/#intro_concepts_and_terms)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/BroadcastChannel](https://schema.org/BroadcastChannel)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/BroadcastChannel](https://schema.org/BroadcastChannel) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kafka.apache.org/documentation/#intro_concepts_and_terms](https://kafka.apache.org/documentation/#intro_concepts_and_terms) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/BroadcastChannel](https://schema.org/BroadcastChannel)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MessageTopic`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MessageTopic`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -76,6 +80,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "robos:MessageTopic",
     "robos:MessageQueue",
     "robos:EventTopic",
+    "schema:BroadcastChannel",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Message Topic",
@@ -84,6 +89,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.platform",
   "robos:topicName": "sample-events-v1",
   "robos:broker": "urn:robos:broker:acme-kafka",
+  "robos:schemaOrgType": "https://schema.org/BroadcastChannel",
+  "robos:domainStandard": "https://kafka.apache.org/documentation/#intro_concepts_and_terms",
   "robos:refersFrom": "https://schema.org/BroadcastChannel"
 }
 ```
@@ -106,6 +113,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "robos:MessageTopic",
             "robos:MessageQueue",
             "robos:EventTopic",
+            "schema:BroadcastChannel",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Message Topic",
@@ -114,6 +122,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.platform",
         "robos:topicName": "sample-events-v1",
         "robos:broker": "urn:robos:broker:acme-kafka",
+        "robos:schemaOrgType": "https://schema.org/BroadcastChannel",
+        "robos:domainStandard": "https://kafka.apache.org/documentation/#intro_concepts_and_terms",
         "robos:refersFrom": "https://schema.org/BroadcastChannel"
     }
   ],

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Test
 - **SHACL Shape ID**: `urn:robos:shape:TestPlanShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/Plan](https://schema.org/Plan)
+- **Domain De Facto Standard**: [http://open-services.net/ns/qm#TestPlan](http://open-services.net/ns/qm#TestPlan)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/qm#TestPlan](http://open-services.net/ns/qm#TestPlan)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Plan](https://schema.org/Plan) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/qm#TestPlan](http://open-services.net/ns/qm#TestPlan) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/qm#TestPlan](http://open-services.net/ns/qm#TestPlan)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:TestPlan`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:TestPlan`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -70,14 +74,17 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:test-plan:q3-release-regression",
   "@type": [
     "robos:TestPlan",
-    "oslc_qm:TestPlan"
+    "oslc_qm:TestPlan",
+    "schema:Plan"
   ],
   "dcterms:title": "Q3 Release Acceptance & Regression Plan",
   "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
   "robos:testsService": "urn:robos:service:billing-api",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+  "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+  "robos:schemaOrgType": "https://schema.org/Plan",
+  "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
 }
 ```
 
@@ -97,14 +104,17 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:test-plan:q3-release-regression",
         "@type": [
             "robos:TestPlan",
-            "oslc_qm:TestPlan"
+            "oslc_qm:TestPlan",
+            "schema:Plan"
         ],
         "dcterms:title": "Q3 Release Acceptance & Regression Plan",
         "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
         "robos:testsService": "urn:robos:service:billing-api",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+        "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+        "robos:schemaOrgType": "https://schema.org/Plan",
+        "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
     }
   ],
 }));

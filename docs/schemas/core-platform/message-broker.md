@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Mess
 - **SHACL Shape ID**: `urn:robos:shape:MessageBrokerShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService)
+- **Domain De Facto Standard**: [https://kafka.apache.org/](https://kafka.apache.org/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kafka.apache.org/](https://kafka.apache.org/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/BroadcastService](https://schema.org/BroadcastService)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MessageBroker`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MessageBroker`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:MessageBroker",
-    "robos:EventBus"
+    "robos:EventBus",
+    "schema:BroadcastService"
   ],
   "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
   "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
@@ -87,7 +92,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "invoices.generated"
   ],
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/BroadcastService",
+  "robos:domainStandard": "https://kafka.apache.org/"
 }
 ```
 
@@ -108,7 +115,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:MessageBroker",
-            "robos:EventBus"
+            "robos:EventBus",
+            "schema:BroadcastService"
         ],
         "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
         "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
@@ -120,7 +128,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "invoices.generated"
         ],
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/BroadcastService",
+        "robos:domainStandard": "https://kafka.apache.org/"
     }
   ],
 }));

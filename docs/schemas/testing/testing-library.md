@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Test
 - **SHACL Shape ID**: `urn:robos:shape:TestingLibraryShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Domain De Facto Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:TestingLibrary`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:TestingLibrary`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:TestingLibrary",
     "robos:TestFramework",
-    "oslc:Resource"
+    "oslc:Resource",
+    "schema:SoftwareApplication"
   ],
   "dcterms:title": "Cucumber",
   "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
@@ -84,7 +89,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:website": "https://cucumber.io",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "https://schema.org/SoftwareApplication"
+  "robos:refersFrom": "https://schema.org/SoftwareApplication",
+  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+  "robos:domainStandard": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -105,7 +112,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:TestingLibrary",
             "robos:TestFramework",
-            "oslc:Resource"
+            "oslc:Resource",
+            "schema:SoftwareApplication"
         ],
         "dcterms:title": "Cucumber",
         "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
@@ -114,7 +122,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:website": "https://cucumber.io",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "https://schema.org/SoftwareApplication"
+        "robos:refersFrom": "https://schema.org/SoftwareApplication",
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

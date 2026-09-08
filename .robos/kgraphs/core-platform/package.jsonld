@@ -38,7 +38,8 @@
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Core Services Monorepo (Bazel)",
       "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
@@ -52,14 +53,17 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
       "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
@@ -73,13 +77,16 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-services-maven",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Enterprise Services (Apache Maven)",
       "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
@@ -88,13 +95,16 @@
       "robos:repository": "github.com/acme/enterprise-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-backend-gradle",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Kotlin Microservices (Gradle)",
       "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
@@ -103,13 +113,16 @@
       "robos:repository": "github.com/acme/kotlin-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-systems-cargo",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
       "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
@@ -118,13 +131,16 @@
       "robos:repository": "github.com/acme/crypto-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-cloud-go",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
       "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
@@ -133,14 +149,17 @@
       "robos:repository": "github.com/acme/k8s-operator",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-monorepo-pnpm",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
       "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
@@ -149,13 +168,16 @@
       "robos:repository": "github.com/acme/web-portal",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-native-cmake",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Native Video Engine (CMake)",
       "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
@@ -164,14 +186,17 @@
       "robos:repository": "github.com/acme/video-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",
       "@type": [
         "oslc_am:Resource",
         "robos:Database",
-        "robos:RelationalDatabase"
+        "robos:RelationalDatabase",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
       "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
@@ -181,14 +206,17 @@
       "robos:port": 5432,
       "robos:schemaMigration": "flyway",
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:db:acme-session-redis",
       "@type": [
         "oslc_am:Resource",
         "robos:NoSQLDatabase",
-        "robos:CacheStore"
+        "robos:CacheStore",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Distributed Session & Cache Store",
       "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
@@ -196,14 +224,17 @@
       "robos:host": "redis-cluster.internal.acme.corp",
       "robos:port": 6379,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
     },
     {
       "@id": "urn:robos:broker:acme-event-kafka",
       "@type": [
         "oslc_am:Resource",
         "robos:MessageBroker",
-        "robos:EventBus"
+        "robos:EventBus",
+        "schema:BroadcastService"
       ],
       "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
       "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
@@ -215,14 +246,17 @@
         "invoices.generated"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
     },
     {
       "@id": "urn:robos:mcp:context-engine",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Code Context MCP Server",
       "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
@@ -234,14 +268,17 @@
         "dependency_graph"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Knowledge Graph MCP Server",
       "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
@@ -253,14 +290,17 @@
         "validate_shacl"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
       "@type": [
         "oslc_am:Resource",
         "robos:PromptStrategy",
-        "robos:AIPromptTechnique"
+        "robos:AIPromptTechnique",
+        "schema:Intangible"
       ],
       "dcterms:title": "Caveman Algorithmic Prompt Compression",
       "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
@@ -279,7 +319,9 @@
         "preservePaths": true
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/Intangible",
+      "robos:domainStandard": "https://schema.org/Intangible"
     },
     {
       "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
@@ -312,7 +354,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:Database",
-        "robos:RelationalDatabase"
+        "robos:RelationalDatabase",
+        "schema:DataStore"
       ],
       "dcterms:title": "POSTGRESQL Database (payments_db)",
       "dcterms:description": "Imported postgresql database connection postgresql://admin:secret@db.internal:5432/payments_db",
@@ -321,14 +364,17 @@
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:broker:kafka-stream",
       "@type": [
         "oslc_am:Resource",
         "robos:MessageBroker",
-        "robos:EventBus"
+        "robos:EventBus",
+        "schema:BroadcastService"
       ],
       "dcterms:title": "KAFKA Event Stream",
       "dcterms:description": "Imported event bus at kafka.internal:9092",
@@ -339,7 +385,9 @@
         "events.processed"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
     }
   ],
   "@graph": [

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADRO
 - **SHACL Shape ID**: `urn:robos:shape:ADROptionShape`
 - **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
 - **Namespace**: `robos.docs`
+- **Schema.org Classification**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
+- **Domain De Facto Standard**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ADROption`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ADROption`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,6 +76,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:documentation:adr-option-sample",
   "@type": [
     "robos:ADROption",
+    "schema:ChooseAction",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample ADR Option",
@@ -79,6 +84,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
   "robos:adr": "urn:robos:adr:001-modular-kgraph",
+  "robos:schemaOrgType": "https://schema.org/ChooseAction",
+  "robos:domainStandard": "https://schema.org/ChooseAction",
   "robos:refersFrom": "https://schema.org/ChooseAction"
 }
 ```
@@ -99,6 +106,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:documentation:adr-option-sample",
         "@type": [
             "robos:ADROption",
+            "schema:ChooseAction",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample ADR Option",
@@ -106,6 +114,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "documentation",
         "robos:namespace": "robos.docs",
         "robos:adr": "urn:robos:adr:001-modular-kgraph",
+        "robos:schemaOrgType": "https://schema.org/ChooseAction",
+        "robos:domainStandard": "https://schema.org/ChooseAction",
         "robos:refersFrom": "https://schema.org/ChooseAction"
     }
   ],

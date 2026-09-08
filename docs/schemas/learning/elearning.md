@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ELea
 - **SHACL Shape ID**: `urn:robos:shape:ELearningShape`
 - **Governing Package**: [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`)
 - **Namespace**: `robos.learning`
+- **Schema.org Classification**: [https://schema.org/Course](https://schema.org/Course)
+- **Domain De Facto Standard**: [https://schema.org/Course](https://schema.org/Course)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Course](https://schema.org/Course)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Course](https://schema.org/Course) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/Course](https://schema.org/Course) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Course](https://schema.org/Course)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ELearning`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ELearning`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -73,24 +77,29 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
 
 ```json
 {
-  "@id": "urn:robos:learning:elearning-sample",
+  "@id": "urn:robos:elearning:course:sdlc-fundamentals",
   "@type": [
+    "oslc_am:Resource",
+    "robos:ELearningCourse",
     "robos:ELearning",
-    "oslc:Resource"
+    "schema:Course"
   ],
-  "dcterms:title": "Sample eLearning Course",
-  "dcterms:description": "Canonical reference instance for robos:ELearning.",
-  "robos:package": "learning",
-  "robos:namespace": "robos.learning",
-  "robos:topic": "Distributed Architecture",
+  "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+  "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+  "robos:topic": "SDLC Fundamentals",
+  "robos:level": "Intermediate",
+  "robos:modulesCount": 4,
+  "robos:gitopsFile": ".robos/elearning.yaml",
   "robos:modules": [
     {
-      "title": "Module 1: Fundamentals",
-      "labFile": "labs/01.md"
+      "title": "Module 1: Dual-State Architecture",
+      "labFile": "labs/01-dual-state.md"
     }
   ],
-  "robos:gitopsFile": ".robos/elearning.yaml",
-  "robos:refersFrom": "https://schema.org/Course"
+  "robos:package": "learning",
+  "robos:namespace": "robos.learning",
+  "robos:schemaOrgType": "https://schema.org/Course",
+  "robos:domainStandard": "https://schema.org/Course"
 }
 ```
 
@@ -107,24 +116,29 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:learning:elearning-sample",
+        "@id": "urn:robos:elearning:course:sdlc-fundamentals",
         "@type": [
+            "oslc_am:Resource",
+            "robos:ELearningCourse",
             "robos:ELearning",
-            "oslc:Resource"
+            "schema:Course"
         ],
-        "dcterms:title": "Sample eLearning Course",
-        "dcterms:description": "Canonical reference instance for robos:ELearning.",
-        "robos:package": "learning",
-        "robos:namespace": "robos.learning",
-        "robos:topic": "Distributed Architecture",
+        "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
+        "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+        "robos:topic": "SDLC Fundamentals",
+        "robos:level": "Intermediate",
+        "robos:modulesCount": 4,
+        "robos:gitopsFile": ".robos/elearning.yaml",
         "robos:modules": [
             {
-                "title": "Module 1: Fundamentals",
-                "labFile": "labs/01.md"
+                "title": "Module 1: Dual-State Architecture",
+                "labFile": "labs/01-dual-state.md"
             }
         ],
-        "robos:gitopsFile": ".robos/elearning.yaml",
-        "robos:refersFrom": "https://schema.org/Course"
+        "robos:package": "learning",
+        "robos:namespace": "robos.learning",
+        "robos:schemaOrgType": "https://schema.org/Course",
+        "robos:domainStandard": "https://schema.org/Course"
     }
   ],
 }));

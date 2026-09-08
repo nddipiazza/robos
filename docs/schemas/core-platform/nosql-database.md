@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:NoSQ
 - **SHACL Shape ID**: `urn:robos:shape:NoSQLDatabaseShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/DataStore](https://schema.org/DataStore)
+- **Domain De Facto Standard**: [https://schema.org/DataStore](https://schema.org/DataStore)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/DataStore](https://schema.org/DataStore)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/DataStore](https://schema.org/DataStore) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/DataStore](https://schema.org/DataStore) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/DataStore](https://schema.org/DataStore)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:NoSQLDatabase`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:NoSQLDatabase`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:NoSQLDatabase",
-    "robos:CacheStore"
+    "robos:CacheStore",
+    "schema:DataStore"
   ],
   "dcterms:title": "Acme Distributed Session & Cache Store",
   "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
@@ -83,7 +88,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:host": "redis-cluster.internal.acme.corp",
   "robos:port": 6379,
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/DataStore",
+  "robos:domainStandard": "https://schema.org/DataStore"
 }
 ```
 
@@ -104,7 +111,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:NoSQLDatabase",
-            "robos:CacheStore"
+            "robos:CacheStore",
+            "schema:DataStore"
         ],
         "dcterms:title": "Acme Distributed Session & Cache Store",
         "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
@@ -112,7 +120,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:host": "redis-cluster.internal.acme.corp",
         "robos:port": 6379,
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/DataStore",
+        "robos:domainStandard": "https://schema.org/DataStore"
     }
   ],
 }));

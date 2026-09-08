@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GitP
 - **SHACL Shape ID**: `urn:robos:shape:GitProjectOrganizationShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/Organization](https://schema.org/Organization)
+- **Domain De Facto Standard**: [https://schema.org/Organization](https://schema.org/Organization)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Organization](https://schema.org/Organization)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Organization](https://schema.org/Organization) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/Organization](https://schema.org/Organization) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Organization](https://schema.org/Organization)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:GitProjectOrganization`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:GitProjectOrganization`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -145,7 +149,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   ],
   "robos:agentRulesDoc": "AGENTS.md",
   "robos:package": "organization",
-  "robos:namespace": "robos.org"
+  "robos:namespace": "robos.org",
+  "robos:schemaOrgType": "https://schema.org/Organization",
+  "robos:domainStandard": "https://schema.org/Organization"
 }
 ```
 
@@ -234,7 +240,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         ],
         "robos:agentRulesDoc": "AGENTS.md",
         "robos:package": "organization",
-        "robos:namespace": "robos.org"
+        "robos:namespace": "robos.org",
+        "robos:schemaOrgType": "https://schema.org/Organization",
+        "robos:domainStandard": "https://schema.org/Organization"
     }
   ],
 }));

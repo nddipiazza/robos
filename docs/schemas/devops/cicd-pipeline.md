@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CICD
 - **SHACL Shape ID**: `urn:robos:shape:CICDPipelineShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Domain De Facto Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:CICDPipeline`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:CICDPipeline`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_qm:TestPlan",
     "robos:CICDPipeline",
-    "robos:Pipeline"
+    "robos:Pipeline",
+    "schema:SoftwareApplication"
   ],
   "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
   "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
@@ -89,7 +94,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "argocd-sync"
   ],
   "robos:package": "devops",
-  "robos:namespace": "robos.devops"
+  "robos:namespace": "robos.devops",
+  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+  "robos:domainStandard": "https://schema.org/SoftwareApplication"
 }
 ```
 
@@ -110,7 +117,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_qm:TestPlan",
             "robos:CICDPipeline",
-            "robos:Pipeline"
+            "robos:Pipeline",
+            "schema:SoftwareApplication"
         ],
         "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
         "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
@@ -124,7 +132,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "argocd-sync"
         ],
         "robos:package": "devops",
-        "robos:namespace": "robos.devops"
+        "robos:namespace": "robos.devops",
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ],
 }));

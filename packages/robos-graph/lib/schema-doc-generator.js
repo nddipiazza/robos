@@ -892,6 +892,49 @@ class SchemaDocGenerator {
       '',
       '---',
       '',
+      '## Universal Schema.org & De Facto Standards Matrix',
+      '',
+      'Every single entity in the RobOS Knowledge Graph is formally mapped to a canonical **[Schema.org](https://schema.org/)** parent class (ensuring 100% interoperability with search engines, web indexers, and general AI reasoning models) alongside an international **De Facto Domain Standard** (OASIS OSLC 3.0, W3C C4 Model, Cucumber BDD, OpenAPI 3.1, CNCF).',
+      '',
+      'The formal, machine-readable W3C RDF Schema / OWL ontology bridge is published at [**`ontology.jsonld`**]({{ \x27/schemas/ontology.jsonld\x27 | relative_url }}).',
+      '',
+      '| RobOS Class | Package | Schema.org Classification | De Facto Domain Standard | Specification |',
+      '|---|---|---|---|---|'
+    );
+
+    for (const [pkgId, pkg] of packageMap.entries()) {
+      for (const shape of pkg.shapes) {
+        const slug = this.getEntitySlug(shape.targetClass);
+        const specLink = `[Docs & SHACL]({{ \x27/schemas/${pkgId}/${slug}.html\x27 | relative_url }})`;
+        const sLink = shape.schemaOrgType ? `[\`${shape.schemaOrgType.replace('https://schema.org/', 'schema:')}\`](${shape.schemaOrgType})` : '-';
+        let dDisplay = shape.domainStandard || shape.refersFrom || '-';
+        if (dDisplay.includes('open-services.net/ns/')) {
+          dDisplay = `[OSLC ${dDisplay.split('#')[0].split('/').pop().toUpperCase()}](${dDisplay})`;
+        } else if (dDisplay.includes('cucumber.io')) {
+          dDisplay = `[Cucumber BDD](${dDisplay})`;
+        } else if (dDisplay.includes('w3id.org/c4')) {
+          dDisplay = `[W3C C4 Model](${dDisplay})`;
+        } else if (dDisplay.includes('openapis.org')) {
+          dDisplay = `[OpenAPI 3.1](${dDisplay})`;
+        } else if (dDisplay.includes('kubernetes.io')) {
+          dDisplay = `[Kubernetes / CNCF](${dDisplay})`;
+        } else if (dDisplay.includes('modelcontextprotocol.io')) {
+          dDisplay = `[MCP Spec](${dDisplay})`;
+        } else if (dDisplay.includes('kafka.apache.org')) {
+          dDisplay = `[Apache Kafka](${dDisplay})`;
+        } else if (dDisplay.includes('schema.org')) {
+          dDisplay = `[\`${dDisplay.replace('https://schema.org/', 'schema:')}\`](${dDisplay})`;
+        } else {
+          dDisplay = `[Standard](${dDisplay})`;
+        }
+        lines.push(`| <code>${shape.targetClass}</code> | [${pkg.displayTitle}]({{ \x27/schemas/${pkgId}.html\x27 | relative_url }}) | ${sLink} | ${dDisplay} | ${specLink} |`);
+      }
+    }
+
+    lines.push(
+      '',
+      '---',
+      '',
       '## Automated Validation via SHACL',
       '',
       'Every node in the Knowledge Graph is verified using programmatic SHACL validators before it can be merged into `.robos/knowledge-graph.jsonld` or deployed to production:',
@@ -1027,16 +1070,20 @@ class SchemaDocGenerator {
       `- **SHACL Shape ID**: \`${shape.shapeId}\``,
       `- **Governing Package**: [${pkg.displayTitle}]({{ '/schemas/${pkg.id}.html' | relative_url }}) (\`${pkg.id}\`)`,
       `- **Namespace**: \`${pkg.namespace}\``,
+      shape.schemaOrgType ? `- **Schema.org Classification**: [${shape.schemaOrgType}](${shape.schemaOrgType})` : '',
+      shape.domainStandard ? `- **Domain De Facto Standard**: [${shape.domainStandard}](${shape.domainStandard})` : '',
       shape.refersFrom ? `- **Upstream Schema Basis (Refers From)**: [${shape.refersFrom}](${shape.refersFrom})` : '',
       '',
       '---',
       '',
-      ...(shape.refersFrom ? [
-        '## Upstream Schema Basis (Refers From)',
+      ...(shape.refersFrom || shape.schemaOrgType ? [
+        '## Upstream Schema Basis (Refers From) & Global Standards Provenance',
         '',
-        `This RobOS schema is modeled after and directly expands upon the upstream canonical standard:`,
-        `- **Canonical Reference**: [${shape.refersFrom}](${shape.refersFrom})`,
-        `- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of \`${shape.targetClass}\`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.`,
+        `This RobOS schema is modeled after and directly aligns with two levels of global standards:`,
+        ...(shape.schemaOrgType ? [`- **Universal Schema.org Class**: [${shape.schemaOrgType}](${shape.schemaOrgType}) (100% interoperability with search engines, web indexers, and general AI reasoning)`] : []),
+        ...(shape.domainStandard ? [`- **Specialized Domain Standard**: [${shape.domainStandard}](${shape.domainStandard}) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)`] : []),
+        ...(shape.refersFrom ? [`- **Canonical Reference**: [${shape.refersFrom}](${shape.refersFrom})`] : []),
+        `- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of \`${shape.targetClass}\`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.`,
         '',
         '---',
         '',
@@ -1159,9 +1206,17 @@ class SchemaDocGenerator {
 
   generateSampleNode(shape, pkg) {
     const slug = this.getEntitySlug(shape.targetClass);
+    const schemaCurie = shape.schemaOrgType ? `schema:${shape.schemaOrgType.replace('https://schema.org/', '')}` : null;
+    const baseTypes = Array.isArray(shape.targetClasses) ? [...shape.targetClasses] : [shape.targetClass];
+    const types = [...baseTypes];
+    if (schemaCurie && !types.includes(schemaCurie)) {
+      types.push(schemaCurie);
+    }
+    types.push('oslc:Resource');
+
     const sample = {
       '@id': `urn:robos:${pkg.id}:${slug}-sample`,
-      '@type': Array.isArray(shape.targetClasses) ? [...shape.targetClasses, 'oslc:Resource'] : [shape.targetClass, 'oslc:Resource'],
+      '@type': types,
       'dcterms:title': `Sample ${this.getEntityTitle(shape.targetClass)}`,
       'dcterms:description': `Canonical reference instance for ${shape.targetClass}.`,
       'robos:package': pkg.id,
@@ -1279,6 +1334,12 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:testsService') sample[prop.path] = 'urn:robos:service:billing-api';
     }
 
+    if (shape.schemaOrgType) {
+      sample['robos:schemaOrgType'] = shape.schemaOrgType;
+    }
+    if (shape.domainStandard) {
+      sample['robos:domainStandard'] = shape.domainStandard;
+    }
     if (shape.refersFrom) {
       sample['robos:refersFrom'] = shape.refersFrom;
     }

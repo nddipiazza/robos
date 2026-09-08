@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Team
 - **SHACL Shape ID**: `urn:robos:shape:TeamShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam)
+- **Domain De Facto Standard**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/ProjectTeam](https://schema.org/ProjectTeam)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:Team`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Team`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -69,7 +73,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
 {
   "@id": "urn:robos:team:core-platform",
   "@type": [
-    "robos:Team"
+    "robos:Team",
+    "schema:ProjectTeam"
   ],
   "dcterms:title": "Core Platform & Infrastructure",
   "robos:topology": "platform",
@@ -79,7 +84,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "urn:robos:person:marcus-wright"
   ],
   "robos:package": "organization",
-  "robos:namespace": "robos.org"
+  "robos:namespace": "robos.org",
+  "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+  "robos:domainStandard": "https://schema.org/ProjectTeam"
 }
 ```
 
@@ -98,7 +105,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
     {
         "@id": "urn:robos:team:core-platform",
         "@type": [
-            "robos:Team"
+            "robos:Team",
+            "schema:ProjectTeam"
         ],
         "dcterms:title": "Core Platform & Infrastructure",
         "robos:topology": "platform",
@@ -108,7 +116,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "urn:robos:person:marcus-wright"
         ],
         "robos:package": "organization",
-        "robos:namespace": "robos.org"
+        "robos:namespace": "robos.org",
+        "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+        "robos:domainStandard": "https://schema.org/ProjectTeam"
     }
   ],
 }));

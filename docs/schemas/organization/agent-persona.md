@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Agen
 - **SHACL Shape ID**: `urn:robos:shape:AgentPersonaShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/Person](https://schema.org/Person)
+- **Domain De Facto Standard**: [https://schema.org/Person](https://schema.org/Person)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Person](https://schema.org/Person)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Person](https://schema.org/Person) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/Person](https://schema.org/Person) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Person](https://schema.org/Person)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:AgentPersona`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:AgentPersona`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc:Person",
     "robos:AgentPersona",
-    "robos:AIAgent"
+    "robos:AIAgent",
+    "schema:Person"
   ],
   "dcterms:title": "RobOS Autonomous PR Code Reviewer",
   "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
@@ -88,7 +93,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "urn:robos:mcp:kgraph-navigator"
   ],
   "robos:package": "organization",
-  "robos:namespace": "robos.org"
+  "robos:namespace": "robos.org",
+  "robos:schemaOrgType": "https://schema.org/Person",
+  "robos:domainStandard": "https://schema.org/Person"
 }
 ```
 
@@ -109,7 +116,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc:Person",
             "robos:AgentPersona",
-            "robos:AIAgent"
+            "robos:AIAgent",
+            "schema:Person"
         ],
         "dcterms:title": "RobOS Autonomous PR Code Reviewer",
         "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
@@ -122,7 +130,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "urn:robos:mcp:kgraph-navigator"
         ],
         "robos:package": "organization",
-        "robos:namespace": "robos.org"
+        "robos:namespace": "robos.org",
+        "robos:schemaOrgType": "https://schema.org/Person",
+        "robos:domainStandard": "https://schema.org/Person"
     }
   ],
 }));

@@ -25,14 +25,26 @@
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
-        "robos:ELearningCourse"
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
       ],
       "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
       "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:topic": "SDLC Fundamentals",
       "robos:level": "Intermediate",
       "robos:modulesCount": 4,
+      "robos:gitopsFile": ".robos/elearning.yaml",
+      "robos:modules": [
+        {
+          "title": "Module 1: Dual-State Architecture",
+          "labFile": "labs/01-dual-state.md"
+        }
+      ],
       "robos:package": "learning",
-      "robos:namespace": "robos.learning"
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course"
     }
   ],
   "@graph": [
@@ -40,14 +52,26 @@
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
-        "robos:ELearningCourse"
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
       ],
       "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
       "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:topic": "SDLC Fundamentals",
       "robos:level": "Intermediate",
       "robos:modulesCount": 4,
+      "robos:gitopsFile": ".robos/elearning.yaml",
+      "robos:modules": [
+        {
+          "title": "Module 1: Dual-State Architecture",
+          "labFile": "labs/01-dual-state.md"
+        }
+      ],
       "robos:package": "learning",
-      "robos:namespace": "robos.learning"
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course"
     }
   ]
 }

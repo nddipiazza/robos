@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Exam
 - **SHACL Shape ID**: `urn:robos:shape:ExamplesTableShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/Table](https://schema.org/Table)
+- **Domain De Facto Standard**: [https://cucumber.io/docs/gherkin/reference/#examples](https://cucumber.io/docs/gherkin/reference/#examples)
 - **Upstream Schema Basis (Refers From)**: [https://cucumber.io/docs/gherkin/reference/#examples](https://cucumber.io/docs/gherkin/reference/#examples)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Table](https://schema.org/Table) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://cucumber.io/docs/gherkin/reference/#examples](https://cucumber.io/docs/gherkin/reference/#examples) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://cucumber.io/docs/gherkin/reference/#examples](https://cucumber.io/docs/gherkin/reference/#examples)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ExamplesTable`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ExamplesTable`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -73,7 +77,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
 {
   "@id": "urn:robos:examples:checkout-loyalty-tiers",
   "@type": [
-    "robos:ExamplesTable"
+    "robos:ExamplesTable",
+    "schema:Table"
   ],
   "dcterms:title": "Loyalty Tier Discounts",
   "robos:tableHeaders": [
@@ -100,7 +105,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   ],
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+  "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+  "robos:schemaOrgType": "https://schema.org/Table",
+  "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
 }
 ```
 
@@ -119,7 +126,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
     {
         "@id": "urn:robos:examples:checkout-loyalty-tiers",
         "@type": [
-            "robos:ExamplesTable"
+            "robos:ExamplesTable",
+            "schema:Table"
         ],
         "dcterms:title": "Loyalty Tier Discounts",
         "robos:tableHeaders": [
@@ -146,7 +154,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         ],
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+        "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+        "robos:schemaOrgType": "https://schema.org/Table",
+        "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
     }
   ],
 }));

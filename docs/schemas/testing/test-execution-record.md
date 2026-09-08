@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Test
 - **SHACL Shape ID**: `urn:robos:shape:TestExecutionRecordShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/AssessAction](https://schema.org/AssessAction)
+- **Domain De Facto Standard**: [http://open-services.net/ns/qm#TestExecutionRecord](http://open-services.net/ns/qm#TestExecutionRecord)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/qm#TestExecutionRecord](http://open-services.net/ns/qm#TestExecutionRecord)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/AssessAction](https://schema.org/AssessAction) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/qm#TestExecutionRecord](http://open-services.net/ns/qm#TestExecutionRecord) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/qm#TestExecutionRecord](http://open-services.net/ns/qm#TestExecutionRecord)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:TestExecutionRecord`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:TestExecutionRecord`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,7 +78,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:test-exec:checkout-standard-items-latest",
   "@type": [
     "robos:TestExecutionRecord",
-    "oslc_qm:TestExecutionRecord"
+    "oslc_qm:TestExecutionRecord",
+    "schema:AssessAction"
   ],
   "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
   "oslc_qm:executionStatus": "PASS",
@@ -85,7 +90,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+  "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+  "robos:schemaOrgType": "https://schema.org/AssessAction",
+  "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
 }
 ```
 
@@ -105,7 +112,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:test-exec:checkout-standard-items-latest",
         "@type": [
             "robos:TestExecutionRecord",
-            "oslc_qm:TestExecutionRecord"
+            "oslc_qm:TestExecutionRecord",
+            "schema:AssessAction"
         ],
         "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
         "oslc_qm:executionStatus": "PASS",
@@ -116,7 +124,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+        "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+        "robos:schemaOrgType": "https://schema.org/AssessAction",
+        "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
     }
   ],
 }));

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DataModelShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
+- **Schema.org Classification**: [https://schema.org/Class](https://schema.org/Class)
+- **Domain De Facto Standard**: [https://spec.openapis.org/oas/v3.1.0](https://spec.openapis.org/oas/v3.1.0)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Class](https://schema.org/Class)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Class](https://schema.org/Class) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://spec.openapis.org/oas/v3.1.0](https://spec.openapis.org/oas/v3.1.0) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Class](https://schema.org/Class)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DataModel`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:DataModel`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "robos:DataModel",
     "robos:SchemaModel",
     "robos:DomainEntity",
+    "schema:Class",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Data Model",
@@ -81,6 +86,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:package": "services",
   "robos:namespace": "robos.services",
   "robos:modelName": "SampleModel",
+  "robos:schemaOrgType": "https://schema.org/Class",
+  "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0",
   "robos:refersFrom": "https://schema.org/Class"
 }
 ```
@@ -103,6 +110,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "robos:DataModel",
             "robos:SchemaModel",
             "robos:DomainEntity",
+            "schema:Class",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Data Model",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "services",
         "robos:namespace": "robos.services",
         "robos:modelName": "SampleModel",
+        "robos:schemaOrgType": "https://schema.org/Class",
+        "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0",
         "robos:refersFrom": "https://schema.org/Class"
     }
   ],

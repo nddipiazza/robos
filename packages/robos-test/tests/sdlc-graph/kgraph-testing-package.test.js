@@ -255,4 +255,35 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
     assert.strictEqual(md.includes('When autonomous agents generate, expand, or validate instances of `robos:GherkinFeature`'), true);
   });
 
+  it('8. Universal Schema.org Coverage: 100% of all 91 shapes define canonical schemaOrgType and domainStandard', () => {
+    assert.strictEqual(BUILTIN_SHACL_SHAPES.length, 91, 'Should evaluate all 91 shapes');
+
+    for (const shape of BUILTIN_SHACL_SHAPES) {
+      assert.ok(shape.schemaOrgType, `Shape ${shape.shapeId} (${shape.targetClass}) must define schemaOrgType`);
+      assert.strictEqual(
+        shape.schemaOrgType.startsWith('https://schema.org/'),
+        true,
+        `Shape ${shape.targetClass} schemaOrgType must start with https://schema.org/ (got ${shape.schemaOrgType})`
+      );
+      assert.ok(shape.domainStandard, `Shape ${shape.targetClass} must define domainStandard`);
+    }
+  });
+
+  it('9. Formal Ontology Bridge: .robos/ontology.jsonld maps all 91 classes via rdfs:subClassOf', () => {
+    const ontologyPath = path.join(__dirname, '../../../../.robos/ontology.jsonld');
+    assert.strictEqual(fs.existsSync(ontologyPath), true, '.robos/ontology.jsonld must exist');
+
+    const ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+    assert.strictEqual(ontology['@type'], 'owl:Ontology');
+    assert.ok(ontology['@graph']);
+    assert.strictEqual(ontology['@graph'].length, 91, 'Ontology graph must contain all 91 classes');
+
+    for (const item of ontology['@graph']) {
+      assert.strictEqual(item['@type'], 'rdfs:Class');
+      assert.ok(item['rdfs:subClassOf']['@id'].startsWith('https://schema.org/'));
+      assert.ok(item['robos:shaclShape']);
+    }
+  });
+
 });
+

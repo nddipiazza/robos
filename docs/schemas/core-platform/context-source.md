@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 - **SHACL Shape ID**: `urn:robos:shape:ContextSourceShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+- **Domain De Facto Standard**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/DataFeed](https://schema.org/DataFeed) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/DataFeed](https://schema.org/DataFeed) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:ContextSource`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ContextSource`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,12 +78,15 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:core-platform:context-source-sample",
   "@type": [
     "robos:ContextSource",
+    "schema:DataFeed",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Context Source",
   "dcterms:description": "Canonical reference instance for robos:ContextSource.",
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/DataFeed",
+  "robos:domainStandard": "https://schema.org/DataFeed",
   "robos:refersFrom": "https://schema.org/DataFeed"
 }
 ```
@@ -100,12 +107,15 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:core-platform:context-source-sample",
         "@type": [
             "robos:ContextSource",
+            "schema:DataFeed",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Context Source",
         "dcterms:description": "Canonical reference instance for robos:ContextSource.",
         "robos:package": "core-platform",
         "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/DataFeed",
+        "robos:domainStandard": "https://schema.org/DataFeed",
         "robos:refersFrom": "https://schema.org/DataFeed"
     }
   ],

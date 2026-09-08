@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Pull
 - **SHACL Shape ID**: `urn:robos:shape:PullRequestShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/UpdateAction](https://schema.org/UpdateAction)
+- **Domain De Facto Standard**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/UpdateAction](https://schema.org/UpdateAction) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/cm#ChangeRequest](http://open-services.net/ns/cm#ChangeRequest)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:PullRequest`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:PullRequest`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -79,6 +83,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:PullRequest",
     "robos:MergeRequest",
+    "schema:UpdateAction",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Pull Request",
@@ -89,6 +94,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:sourceBranch": "feat/new-feature",
   "robos:targetBranch": "main",
   "robos:status": "active",
+  "robos:schemaOrgType": "https://schema.org/UpdateAction",
+  "robos:domainStandard": "http://open-services.net/ns/cm#ChangeRequest",
   "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
 }
 ```
@@ -110,6 +117,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:PullRequest",
             "robos:MergeRequest",
+            "schema:UpdateAction",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Pull Request",
@@ -120,6 +128,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:sourceBranch": "feat/new-feature",
         "robos:targetBranch": "main",
         "robos:status": "active",
+        "robos:schemaOrgType": "https://schema.org/UpdateAction",
+        "robos:domainStandard": "http://open-services.net/ns/cm#ChangeRequest",
         "robos:refersFrom": "http://open-services.net/ns/cm#ChangeRequest"
     }
   ],

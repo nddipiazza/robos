@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GitR
 - **SHACL Shape ID**: `urn:robos:shape:GitRepositoryShape`
 - **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
 - **Namespace**: `robos.org`
+- **Schema.org Classification**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
+- **Domain De Facto Standard**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareSourceCode](https://schema.org/SoftwareSourceCode)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:GitRepository`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:GitRepository`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,6 +79,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "robos:GitRepository",
     "robos:Repository",
+    "schema:SoftwareSourceCode",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Git Repository",
@@ -83,6 +88,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.org",
   "robos:url": "https://github.com/acme",
   "robos:defaultBranch": "main",
+  "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+  "robos:domainStandard": "https://schema.org/SoftwareSourceCode",
   "robos:refersFrom": "https://schema.org/SoftwareSourceCode"
 }
 ```
@@ -104,6 +111,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:GitRepository",
             "robos:Repository",
+            "schema:SoftwareSourceCode",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Git Repository",
@@ -112,6 +120,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.org",
         "robos:url": "https://github.com/acme",
         "robos:defaultBranch": "main",
+        "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+        "robos:domainStandard": "https://schema.org/SoftwareSourceCode",
         "robos:refersFrom": "https://schema.org/SoftwareSourceCode"
     }
   ],

@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPS
 - **SHACL Shape ID**: `urn:robos:shape:MCPServerShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:MCPServer`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPServer`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -75,7 +79,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@type": [
     "oslc_am:Resource",
     "robos:MCPServer",
-    "robos:ToolProvider"
+    "robos:ToolProvider",
+    "schema:SoftwareApplication"
   ],
   "dcterms:title": "RobOS Code Context MCP Server",
   "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
@@ -87,7 +92,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
     "dependency_graph"
   ],
   "robos:package": "core-platform",
-  "robos:namespace": "robos.platform"
+  "robos:namespace": "robos.platform",
+  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+  "robos:domainStandard": "https://modelcontextprotocol.io/specification"
 }
 ```
 
@@ -108,7 +115,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "oslc_am:Resource",
             "robos:MCPServer",
-            "robos:ToolProvider"
+            "robos:ToolProvider",
+            "schema:SoftwareApplication"
         ],
         "dcterms:title": "RobOS Code Context MCP Server",
         "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
@@ -120,7 +128,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "dependency_graph"
         ],
         "robos:package": "core-platform",
-        "robos:namespace": "robos.platform"
+        "robos:namespace": "robos.platform",
+        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+        "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     }
   ],
 }));

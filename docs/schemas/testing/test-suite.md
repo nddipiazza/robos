@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Test
 - **SHACL Shape ID**: `urn:robos:shape:TestSuiteShape`
 - **Governing Package**: [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`)
 - **Namespace**: `robos.testing`
+- **Schema.org Classification**: [https://schema.org/ItemList](https://schema.org/ItemList)
+- **Domain De Facto Standard**: [http://open-services.net/ns/qm#TestSuite](http://open-services.net/ns/qm#TestSuite)
 - **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/qm#TestSuite](http://open-services.net/ns/qm#TestSuite)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/ItemList](https://schema.org/ItemList) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [http://open-services.net/ns/qm#TestSuite](http://open-services.net/ns/qm#TestSuite) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [http://open-services.net/ns/qm#TestSuite](http://open-services.net/ns/qm#TestSuite)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:TestSuite`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:TestSuite`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -72,7 +76,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:test-suite:billing-api-bdd",
   "@type": [
     "robos:TestSuite",
-    "oslc_qm:TestSuite"
+    "oslc_qm:TestSuite",
+    "schema:ItemList"
   ],
   "dcterms:title": "Billing API Cucumber BDD Test Suite",
   "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
@@ -80,7 +85,9 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
   "robos:package": "testing",
   "robos:namespace": "robos.testing",
-  "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+  "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+  "robos:schemaOrgType": "https://schema.org/ItemList",
+  "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
 }
 ```
 
@@ -100,7 +107,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:test-suite:billing-api-bdd",
         "@type": [
             "robos:TestSuite",
-            "oslc_qm:TestSuite"
+            "oslc_qm:TestSuite",
+            "schema:ItemList"
         ],
         "dcterms:title": "Billing API Cucumber BDD Test Suite",
         "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
@@ -108,7 +116,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
         "robos:package": "testing",
         "robos:namespace": "robos.testing",
-        "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+        "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+        "robos:schemaOrgType": "https://schema.org/ItemList",
+        "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
     }
   ],
 }));

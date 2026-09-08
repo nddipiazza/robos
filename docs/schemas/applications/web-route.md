@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:WebR
 - **SHACL Shape ID**: `urn:robos:shape:WebRouteShape`
 - **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
 - **Namespace**: `robos.apps`
+- **Schema.org Classification**: [https://schema.org/WebPage](https://schema.org/WebPage)
+- **Domain De Facto Standard**: [https://schema.org/WebPage](https://schema.org/WebPage)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/WebPage](https://schema.org/WebPage)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/WebPage](https://schema.org/WebPage) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://schema.org/WebPage](https://schema.org/WebPage) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/WebPage](https://schema.org/WebPage)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:WebRoute`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:WebRoute`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:applications:web-route-sample",
   "@type": [
     "robos:WebRoute",
+    "schema:WebPage",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Web Route",
@@ -82,6 +87,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.apps",
   "robos:routePath": "/dashboard",
   "robos:app": "urn:robos:app:dev-central",
+  "robos:schemaOrgType": "https://schema.org/WebPage",
+  "robos:domainStandard": "https://schema.org/WebPage",
   "robos:refersFrom": "https://schema.org/WebPage"
 }
 ```
@@ -102,6 +109,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:applications:web-route-sample",
         "@type": [
             "robos:WebRoute",
+            "schema:WebPage",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Web Route",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.apps",
         "robos:routePath": "/dashboard",
         "robos:app": "urn:robos:app:dev-central",
+        "robos:schemaOrgType": "https://schema.org/WebPage",
+        "robos:domainStandard": "https://schema.org/WebPage",
         "robos:refersFrom": "https://schema.org/WebPage"
     }
   ],

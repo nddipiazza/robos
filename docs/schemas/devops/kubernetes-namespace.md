@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Kube
 - **SHACL Shape ID**: `urn:robos:shape:KubernetesNamespaceShape`
 - **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
 - **Namespace**: `robos.devops`
+- **Schema.org Classification**: [https://schema.org/AdministrativeArea](https://schema.org/AdministrativeArea)
+- **Domain De Facto Standard**: [https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/AdministrativeArea](https://schema.org/AdministrativeArea)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/AdministrativeArea](https://schema.org/AdministrativeArea) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/AdministrativeArea](https://schema.org/AdministrativeArea)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesNamespace`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:KubernetesNamespace`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:devops:kubernetes-namespace-sample",
   "@type": [
     "robos:KubernetesNamespace",
+    "schema:AdministrativeArea",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Kubernetes Namespace",
@@ -82,6 +87,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.devops",
   "robos:namespaceName": "sample-namespace",
   "robos:cluster": "urn:robos:cluster:prod-us-east-eks",
+  "robos:schemaOrgType": "https://schema.org/AdministrativeArea",
+  "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
   "robos:refersFrom": "https://schema.org/AdministrativeArea"
 }
 ```
@@ -102,6 +109,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:devops:kubernetes-namespace-sample",
         "@type": [
             "robos:KubernetesNamespace",
+            "schema:AdministrativeArea",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Kubernetes Namespace",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.devops",
         "robos:namespaceName": "sample-namespace",
         "robos:cluster": "urn:robos:cluster:prod-us-east-eks",
+        "robos:schemaOrgType": "https://schema.org/AdministrativeArea",
+        "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
         "robos:refersFrom": "https://schema.org/AdministrativeArea"
     }
   ],

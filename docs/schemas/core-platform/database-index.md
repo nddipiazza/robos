@@ -28,15 +28,19 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Data
 - **SHACL Shape ID**: `urn:robos:shape:DatabaseIndexShape`
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
+- **Schema.org Classification**: [https://schema.org/Index](https://schema.org/Index)
+- **Domain De Facto Standard**: [https://www.iso.org/standard/63555.html](https://www.iso.org/standard/63555.html)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Index](https://schema.org/Index)
 
 ---
 
-## Upstream Schema Basis (Refers From)
+## Upstream Schema Basis (Refers From) & Global Standards Provenance
 
-This RobOS schema is modeled after and directly expands upon the upstream canonical standard:
+This RobOS schema is modeled after and directly aligns with two levels of global standards:
+- **Universal Schema.org Class**: [https://schema.org/Index](https://schema.org/Index) (100% interoperability with search engines, web indexers, and general AI reasoning)
+- **Specialized Domain Standard**: [https://www.iso.org/standard/63555.html](https://www.iso.org/standard/63555.html) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Index](https://schema.org/Index)
-- **Provenance & Alignment**: When autonomous agents generate, expand, or validate instances of `robos:DatabaseIndex`, they MUST adhere to and base their output on this referred schema object, extending it with RobOS SDLC properties.
+- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:DatabaseIndex`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
 ---
 
@@ -74,6 +78,7 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "@id": "urn:robos:core-platform:database-index-sample",
   "@type": [
     "robos:DatabaseIndex",
+    "schema:Index",
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Database Index",
@@ -82,6 +87,8 @@ This RobOS schema is modeled after and directly expands upon the upstream canoni
   "robos:namespace": "robos.platform",
   "robos:indexName": "idx_sample_column",
   "robos:table": "urn:robos:db-table:sample-table",
+  "robos:schemaOrgType": "https://schema.org/Index",
+  "robos:domainStandard": "https://www.iso.org/standard/63555.html",
   "robos:refersFrom": "https://schema.org/Index"
 }
 ```
@@ -102,6 +109,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@id": "urn:robos:core-platform:database-index-sample",
         "@type": [
             "robos:DatabaseIndex",
+            "schema:Index",
             "oslc:Resource"
         ],
         "dcterms:title": "Sample Database Index",
@@ -110,6 +118,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.platform",
         "robos:indexName": "idx_sample_column",
         "robos:table": "urn:robos:db-table:sample-table",
+        "robos:schemaOrgType": "https://schema.org/Index",
+        "robos:domainStandard": "https://www.iso.org/standard/63555.html",
         "robos:refersFrom": "https://schema.org/Index"
     }
   ],

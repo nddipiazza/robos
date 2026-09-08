@@ -1,0 +1,1124 @@
+{
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "schema": "https://schema.org/",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+  },
+  "@id": "https://robos.dev/schemas/ontology.jsonld",
+  "@type": "owl:Ontology",
+  "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
+  "dcterms:description": "Formal linked data ontology mapping 100% of RobOS SDLC entities (91 classes across 8 packages) to Schema.org parent classes and international de facto standards (OASIS OSLC 3.0, W3C C4, Cucumber, OpenAPI 3.1, CNCF).",
+  "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
+  "robos:totalClasses": 91,
+  "@graph": [
+    {
+      "@id": "robos:Microservice",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Microservice",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:MicroserviceShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "https://w3id.org/c4/Container"
+      },
+      "owl:equivalentClass": {
+        "@id": "https://w3id.org/c4/Container"
+      }
+    },
+    {
+      "@id": "robos:Contract",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Contract",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:ContractShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/am#Resource"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/am#Resource"
+      }
+    },
+    {
+      "@id": "oslc_rm:Requirement",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Requirement",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:RequirementShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      }
+    },
+    {
+      "@id": "robos:Team",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Team",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ProjectTeam"
+      },
+      "robos:shaclShape": "urn:robos:shape:TeamShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:Project",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Project",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Project"
+      },
+      "robos:shaclShape": "urn:robos:shape:ProjectShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:Epic",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Epic",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Plan"
+      },
+      "robos:shaclShape": "urn:robos:shape:EpicShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:ELearning",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ELearning",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Course"
+      },
+      "robos:shaclShape": "urn:robos:shape:ELearningShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:DesktopApp",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DesktopApp",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:DesktopAppShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:ConsoleApp",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ConsoleApp",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:ConsoleAppShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:MobileApp",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MobileApp",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/MobileApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:MobileAppShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:DataPipeline",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DataPipeline",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataFeed"
+      },
+      "robos:shaclShape": "urn:robos:shape:DataPipelineShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:Library",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Library",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:LibraryShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:FrontEndApp",
+      "@type": "rdfs:Class",
+      "rdfs:label": "FrontEndApp",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/WebApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:FrontEndAppShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:PCGame",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PCGame",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/VideoGame"
+      },
+      "robos:shaclShape": "urn:robos:shape:PCGameShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:MobileGame",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MobileGame",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/VideoGame"
+      },
+      "robos:shaclShape": "urn:robos:shape:MobileGameShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:GitProjectOrganization",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitProjectOrganization",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Organization"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitProjectOrganizationShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:RemoteExecutionCluster",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RemoteExecutionCluster",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ComputerPlatform"
+      },
+      "robos:shaclShape": "urn:robos:shape:RemoteExecutionClusterShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://github.com/bazelbuild/remote-apis"
+      }
+    },
+    {
+      "@id": "robos:BuildSystem",
+      "@type": "rdfs:Class",
+      "rdfs:label": "BuildSystem",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:BuildSystemShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://bazel.build/"
+      }
+    },
+    {
+      "@id": "robos:FlowDiagram",
+      "@type": "rdfs:Class",
+      "rdfs:label": "FlowDiagram",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ImageObject"
+      },
+      "robos:shaclShape": "urn:robos:shape:FlowDiagramShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:DocumentationPage",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DocumentationPage",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/TechArticle"
+      },
+      "robos:shaclShape": "urn:robos:shape:DocumentationPageShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:ArchitectureDecisionRecord",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ArchitectureDecisionRecord",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/TechArticle"
+      },
+      "robos:shaclShape": "urn:robos:shape:ArchitectureDecisionRecordShape",
+      "robos:package": "documentation",
+      "rdfs:seeAlso": {
+        "@id": "https://adr.github.io/"
+      }
+    },
+    {
+      "@id": "robos:InteractiveWalkthrough",
+      "@type": "rdfs:Class",
+      "rdfs:label": "InteractiveWalkthrough",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Guide"
+      },
+      "robos:shaclShape": "urn:robos:shape:InteractiveWalkthroughShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:CodeSnippet",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CodeSnippet",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:CodeSnippetShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:Database",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Database",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:shaclShape": "urn:robos:shape:DatabaseShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://www.iso.org/standard/63555.html"
+      }
+    },
+    {
+      "@id": "robos:NoSQLDatabase",
+      "@type": "rdfs:Class",
+      "rdfs:label": "NoSQLDatabase",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:shaclShape": "urn:robos:shape:NoSQLDatabaseShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:MessageBroker",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MessageBroker",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/BroadcastService"
+      },
+      "robos:shaclShape": "urn:robos:shape:MessageBrokerShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://kafka.apache.org/"
+      }
+    },
+    {
+      "@id": "robos:MCPServer",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MCPServer",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:MCPServerShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://modelcontextprotocol.io/specification"
+      }
+    },
+    {
+      "@id": "robos:AgentPersona",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AgentPersona",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:shaclShape": "urn:robos:shape:AgentPersonaShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:KubernetesCluster",
+      "@type": "rdfs:Class",
+      "rdfs:label": "KubernetesCluster",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ComputerPlatform"
+      },
+      "robos:shaclShape": "urn:robos:shape:KubernetesClusterShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://kubernetes.io/docs/concepts/overview/"
+      }
+    },
+    {
+      "@id": "robos:Environment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Environment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DeploymentEnvironment"
+      },
+      "robos:shaclShape": "urn:robos:shape:EnvironmentShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:GitOpsDeployment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitOpsDeployment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitOpsDeploymentShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://opengitops.dev/"
+      }
+    },
+    {
+      "@id": "robos:ProtobufContract",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ProtobufContract",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:ProtobufContractShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "https://protobuf.dev/"
+      }
+    },
+    {
+      "@id": "robos:GraphQLContract",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GraphQLContract",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:GraphQLContractShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "https://graphql.org/learn/schema/"
+      }
+    },
+    {
+      "@id": "robos:CICDPipeline",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CICDPipeline",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:CICDPipelineShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:TaskServer",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TaskServer",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:TaskServerShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:ContextSource",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ContextSource",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataFeed"
+      },
+      "robos:shaclShape": "urn:robos:shape:ContextSourceShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:PromptStrategy",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PromptStrategy",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Intangible"
+      },
+      "robos:shaclShape": "urn:robos:shape:PromptStrategyShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:Feature",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Feature",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:FeatureShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      }
+    },
+    {
+      "@id": "robos:UserStory",
+      "@type": "rdfs:Class",
+      "rdfs:label": "UserStory",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:UserStoryShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:Task",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Task",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:TaskShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:Subtask",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Subtask",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:SubtaskShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:Bug",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Bug",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:BugShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:Sprint",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Sprint",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:SprintShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:Milestone",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Milestone",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:MilestoneShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:GitRepository",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitRepository",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitRepositoryShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:GitBranch",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitBranch",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitBranchShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:PullRequest",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PullRequest",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/UpdateAction"
+      },
+      "robos:shaclShape": "urn:robos:shape:PullRequestShape",
+      "robos:package": "organization",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      }
+    },
+    {
+      "@id": "robos:GitCommit",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitCommit",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitCommitShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:GitTag",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GitTag",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:GitTagShape",
+      "robos:package": "organization"
+    },
+    {
+      "@id": "robos:APIEndpoint",
+      "@type": "rdfs:Class",
+      "rdfs:label": "APIEndpoint",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/EntryPoint"
+      },
+      "robos:shaclShape": "urn:robos:shape:APIEndpointShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "https://spec.openapis.org/oas/v3.1.0"
+      }
+    },
+    {
+      "@id": "robos:DataModel",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DataModel",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Class"
+      },
+      "robos:shaclShape": "urn:robos:shape:DataModelShape",
+      "robos:package": "services",
+      "rdfs:seeAlso": {
+        "@id": "https://spec.openapis.org/oas/v3.1.0"
+      }
+    },
+    {
+      "@id": "robos:DatabaseSchema",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DatabaseSchema",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:shaclShape": "urn:robos:shape:DatabaseSchemaShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://www.iso.org/standard/63555.html"
+      }
+    },
+    {
+      "@id": "robos:DatabaseTable",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DatabaseTable",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Table"
+      },
+      "robos:shaclShape": "urn:robos:shape:DatabaseTableShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://www.iso.org/standard/63555.html"
+      }
+    },
+    {
+      "@id": "robos:DatabaseColumn",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DatabaseColumn",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Property"
+      },
+      "robos:shaclShape": "urn:robos:shape:DatabaseColumnShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://www.iso.org/standard/63555.html"
+      }
+    },
+    {
+      "@id": "robos:DatabaseIndex",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DatabaseIndex",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Index"
+      },
+      "robos:shaclShape": "urn:robos:shape:DatabaseIndexShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://www.iso.org/standard/63555.html"
+      }
+    },
+    {
+      "@id": "robos:NoSQLCollection",
+      "@type": "rdfs:Class",
+      "rdfs:label": "NoSQLCollection",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Collection"
+      },
+      "robos:shaclShape": "urn:robos:shape:NoSQLCollectionShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:MessageTopic",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MessageTopic",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/BroadcastChannel"
+      },
+      "robos:shaclShape": "urn:robos:shape:MessageTopicShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+      }
+    },
+    {
+      "@id": "robos:ConsumerGroup",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ConsumerGroup",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Audience"
+      },
+      "robos:shaclShape": "urn:robos:shape:ConsumerGroupShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+      }
+    },
+    {
+      "@id": "robos:MCPTool",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MCPTool",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:MCPToolShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://modelcontextprotocol.io/specification"
+      }
+    },
+    {
+      "@id": "robos:MCPResource",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MCPResource",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/MediaObject"
+      },
+      "robos:shaclShape": "urn:robos:shape:MCPResourceShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://modelcontextprotocol.io/specification"
+      }
+    },
+    {
+      "@id": "robos:MCPPrompt",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MCPPrompt",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Text"
+      },
+      "robos:shaclShape": "urn:robos:shape:MCPPromptShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://modelcontextprotocol.io/specification"
+      }
+    },
+    {
+      "@id": "robos:KubernetesNamespace",
+      "@type": "rdfs:Class",
+      "rdfs:label": "KubernetesNamespace",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/AdministrativeArea"
+      },
+      "robos:shaclShape": "urn:robos:shape:KubernetesNamespaceShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
+      }
+    },
+    {
+      "@id": "robos:KubernetesDeployment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "KubernetesDeployment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:KubernetesDeploymentShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+      }
+    },
+    {
+      "@id": "robos:KubernetesService",
+      "@type": "rdfs:Class",
+      "rdfs:label": "KubernetesService",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Service"
+      },
+      "robos:shaclShape": "urn:robos:shape:KubernetesServiceShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://kubernetes.io/docs/concepts/services-networking/service/"
+      }
+    },
+    {
+      "@id": "robos:KubernetesIngress",
+      "@type": "rdfs:Class",
+      "rdfs:label": "KubernetesIngress",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/EntryPoint"
+      },
+      "robos:shaclShape": "urn:robos:shape:KubernetesIngressShape",
+      "robos:package": "devops",
+      "rdfs:seeAlso": {
+        "@id": "https://kubernetes.io/docs/concepts/services-networking/ingress/"
+      }
+    },
+    {
+      "@id": "robos:PipelineStage",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PipelineStage",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:PipelineStageShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:PipelineJob",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PipelineJob",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:PipelineJobShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:PipelineStep",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PipelineStep",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:shaclShape": "urn:robos:shape:PipelineStepShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:LearningModule",
+      "@type": "rdfs:Class",
+      "rdfs:label": "LearningModule",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CourseInstance"
+      },
+      "robos:shaclShape": "urn:robos:shape:LearningModuleShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:LearningLesson",
+      "@type": "rdfs:Class",
+      "rdfs:label": "LearningLesson",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/LearningResource"
+      },
+      "robos:shaclShape": "urn:robos:shape:LearningLessonShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:HandsOnLab",
+      "@type": "rdfs:Class",
+      "rdfs:label": "HandsOnLab",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ExercisePlan"
+      },
+      "robos:shaclShape": "urn:robos:shape:HandsOnLabShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:QuizAssessment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "QuizAssessment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Quiz"
+      },
+      "robos:shaclShape": "urn:robos:shape:QuizAssessmentShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:DocSection",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DocSection",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Article"
+      },
+      "robos:shaclShape": "urn:robos:shape:DocSectionShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:ADROption",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ADROption",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ChooseAction"
+      },
+      "robos:shaclShape": "urn:robos:shape:ADROptionShape",
+      "robos:package": "documentation"
+    },
+    {
+      "@id": "robos:Scenario",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Scenario",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CheckAction"
+      },
+      "robos:shaclShape": "urn:robos:shape:ScenarioShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/qm#TestCase"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/qm#TestCase"
+      }
+    },
+    {
+      "@id": "robos:ScenarioStep",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ScenarioStep",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/HowToStep"
+      },
+      "robos:shaclShape": "urn:robos:shape:ScenarioStepShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#steps"
+      }
+    },
+    {
+      "@id": "robos:WebRoute",
+      "@type": "rdfs:Class",
+      "rdfs:label": "WebRoute",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/WebPage"
+      },
+      "robos:shaclShape": "urn:robos:shape:WebRouteShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:CLICommand",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CLICommand",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:CLICommandShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:CLIFlag",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CLIFlag",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/PropertyValue"
+      },
+      "robos:shaclShape": "urn:robos:shape:CLIFlagShape",
+      "robos:package": "applications"
+    },
+    {
+      "@id": "robos:GherkinFeature",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GherkinFeature",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:GherkinFeatureShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/rm#Requirement"
+      }
+    },
+    {
+      "@id": "robos:GherkinBackground",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GherkinBackground",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ItemList"
+      },
+      "robos:shaclShape": "urn:robos:shape:GherkinBackgroundShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#background"
+      }
+    },
+    {
+      "@id": "robos:GherkinRule",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GherkinRule",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DigitalDocument"
+      },
+      "robos:shaclShape": "urn:robos:shape:GherkinRuleShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#rule"
+      }
+    },
+    {
+      "@id": "robos:ScenarioOutline",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ScenarioOutline",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CheckAction"
+      },
+      "robos:shaclShape": "urn:robos:shape:ScenarioOutlineShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+      }
+    },
+    {
+      "@id": "robos:ExamplesTable",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ExamplesTable",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Table"
+      },
+      "robos:shaclShape": "urn:robos:shape:ExamplesTableShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#examples"
+      }
+    },
+    {
+      "@id": "robos:StepDefinition",
+      "@type": "rdfs:Class",
+      "rdfs:label": "StepDefinition",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareSourceCode"
+      },
+      "robos:shaclShape": "urn:robos:shape:StepDefinitionShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/cucumber/step-definitions/"
+      }
+    },
+    {
+      "@id": "robos:DataTable",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DataTable",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Table"
+      },
+      "robos:shaclShape": "urn:robos:shape:DataTableShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#data-tables"
+      }
+    },
+    {
+      "@id": "robos:DocString",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DocString",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Text"
+      },
+      "robos:shaclShape": "urn:robos:shape:DocStringShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
+      }
+    },
+    {
+      "@id": "robos:TestingLibrary",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TestingLibrary",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "urn:robos:shape:TestingLibraryShape",
+      "robos:package": "testing"
+    },
+    {
+      "@id": "robos:TestPlan",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TestPlan",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Plan"
+      },
+      "robos:shaclShape": "urn:robos:shape:TestPlanShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/qm#TestPlan"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/qm#TestPlan"
+      }
+    },
+    {
+      "@id": "robos:TestSuite",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TestSuite",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ItemList"
+      },
+      "robos:shaclShape": "urn:robos:shape:TestSuiteShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/qm#TestSuite"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/qm#TestSuite"
+      }
+    },
+    {
+      "@id": "robos:TestExecutionRecord",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TestExecutionRecord",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/AssessAction"
+      },
+      "robos:shaclShape": "urn:robos:shape:TestExecutionRecordShape",
+      "robos:package": "testing",
+      "rdfs:seeAlso": {
+        "@id": "http://open-services.net/ns/qm#TestExecutionRecord"
+      },
+      "owl:equivalentClass": {
+        "@id": "http://open-services.net/ns/qm#TestExecutionRecord"
+      }
+    }
+  ]
+}
