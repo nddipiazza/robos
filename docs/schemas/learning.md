@@ -38,11 +38,11 @@ Interactive developer courses, tutorials, and architectural training modules.
 
 ---
 
-## Package Entity Relationships
+## Package Architecture & Linked Data Model
 
-```mermaid
-graph LR
-    subgraph Pkg ["eLearning Curriculums (robos.learning)"]
-        ELearning["ELearning<br/><code>robos:ELearning</code>"]
-    end
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="eLearning Curriculums (robos.learning) Ontology Map" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>eLearning Curriculums (robos.learning) (robos.learning)</strong>: High-level package ontology within the RobOS Knowledge Graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>

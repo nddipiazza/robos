@@ -10,33 +10,12 @@ nav_exclude: true
 
 Establishes RobOS as the operating system and desktop suite built specifically for **Agent-First Software Lifecycle Management**. Orchestrates modern generative software engineering by managing System Topology, Human & Agent Personnel, Entity Schemas, API Contracts, Application/Package Lifecycles, Multi-Repo Projects, Work Item/Task Graphs, and Declarative GitOps Storage. Adheres strictly to the **"Reinvent Nothing! Steal from OSS!"** principle by integrating open-source standards (Backstage, TypeSpec, Pact, Buf, Devcontainers, C4 Model, Team Topologies, MCP).
 
-```mermaid
-graph TD
-    subgraph CorePillars [8 Pillars of Modern SDLC]
-        P1[1. System Topology<br/>Backstage / C4 / Cytoscape]
-        P2[2. Human & Agent HR<br/>Team Topologies / MCP]
-        P3[3. Entity Schemas<br/>TypeSpec / JSON Schema / Buf]
-        P4[4. API Contracts<br/>OpenAPI 3.1 / AsyncAPI / Pact]
-        P5[5. Apps & Packages<br/>Devcontainers / Mise / Nix]
-        P6[6. Dev Projects<br/>Git Worktrees / Multi-Repo]
-        P7[7. Task Graph & Goals<br/>DAG Tasks / Planning / Alignment]
-        P8[8. Declarative GitOps<br/>.robos/ Storage Single Source of Truth]
-    end
-
-    subgraph OSExperience [RobOS Desktop Environment]
-        DC[Dev Central Command Hub]
-        TopMgr[Topology Manager]
-        HRMgr[People & Agent Manager]
-        SchemaStd[Entity Schema Studio]
-        ContractEng[API Contract Studio]
-        PkgMgr[App & Package Manager]
-        WSMgr[Workspace Manager]
-        AgentEngine[Desktop Agent Swarm & Review Gates]
-    end
-
-    P8 --> P1 & P2 & P3 & P4 & P5 & P6 & P7
-    P1 & P2 & P3 & P4 & P5 & P6 & P7 --> OSExperience
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="8 Pillars of Modern SDLC Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The 8 Pillars of Modern SDLC</strong>: Orchestrating Topology, HR, Schemas, Contracts, Packages, Projects, Tasks, and Declarative GitOps Storage within the RobOS Desktop Suite. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

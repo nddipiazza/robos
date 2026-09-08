@@ -248,26 +248,12 @@ In addition to 30+ native applications and the SDLC Knowledge Graph, RobOS intro
 
 Instead of writing vendor-locked prompt instructions, RobOS skills are packaged as open, plain-text markdown specifications (`SKILL.md`) and companion CLI engines stored in `plugins/robos/skills/` and `.agents/skills/`.
 
-```mermaid
-flowchart LR
-    subgraph Repo ["RobOS Skills Standard (plugins/robos/)"]
-        Skills["📄 24+ AI Agent Skills<br/><i>(SKILL.md & CLI engines)</i>"]
-        Shell["💻 74+ Shell Skills<br/><i>(Skills Manager App)</i>"]
-    end
-
-    Sync["🔄 ./plugins/install.sh --sync"]
-    Repo --> Sync
-
-    subgraph Agents ["All Modern AI Agent Platforms"]
-        Claude["🟣 Claude Code"]
-        Codex["🟢 OpenAI Codex"]
-        AGY["🔵 Antigravity"]
-        Copilot["⚫ GitHub Copilot"]
-        Gemini["🟡 Gemini CLI"]
-    end
-
-    Sync --> Agents
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/robos-skills-architecture.jpg' | relative_url }}" alt="RobOS Skills Standard Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Skills Standard</strong>: Standardized AI Agent Skills and Shell Skills synchronizing across Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Key Skill Capabilities
 - **Enterprise Knowledge Graph Ingestion (`import-company-kgraph`)**: Extracts complete company repository inventories from HTTP REST endpoints (Spotify Backstage), AWS S3 buckets, local directories, or Git forge URLs, classifying components across 9 archetypes and auto-synthesizing OpenAPI 3.1 contracts.

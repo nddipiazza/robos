@@ -10,50 +10,12 @@ nav_exclude: true
 
 Establishes a standardized, open-source-aligned **World State Knowledge Graph** based on **OASIS OSLC Core 3.0** and **W3C JSON-LD + SHACL**, capturing everything developers, architects, project managers, and AI agents need to build and maintain software. Features Git-backed **Dual-State Multi-Branch Versioning** (`main` = current production reality, `feature/*`, `poc/*`, `pilot/*`, `spike/*` = proposed future states) with semantic graph diffing and blast-radius impact analysis. Integrates **Gherkin BDD** features and step definitions into the graph, executes autonomous **End-to-End Driven Development (EDD)** against self-contained local test fabrics, and generates **1080p narrated video walkthroughs** with Piper neural TTS audio and WebVTT captions for seamless human review and 1-click merge approvals in Dev Central.
 
-```mermaid
-graph TD
-    subgraph MultiBranchGraph [Git-Backed OSLC Knowledge Graph]
-        ProdState[main branch: Production Reality<br/>OSLC JSON-LD & SHACL Shapes]
-        FutureState[feature / poc / pilot / spike branch: Proposed Future State<br/>OSLC JSON-LD & SHACL Shapes]
-    end
-
-    subgraph DiffAndAuthoring [Graph Diff & Authoring]
-        DiffEngine[Semantic Graph Diff & Blast Radius Analyzer]
-        CoPilot[Agent-Assisted Graph Authoring Studio]
-        BDD[Gherkin Feature, Scenario & Step Def Graph]
-    end
-
-    subgraph TestFabric [Self-Contained Dev/Test Fabric]
-        DevCont[Devcontainer / Docker Compose]
-        Xvfb[Xvfb Headless Display + Mutter]
-        Stubs[Prism OpenAPI & WireMock Stubs]
-        DB[Seeded Local SQLite/Postgres DB]
-    end
-
-    subgraph EDDAndVideo [E2E-Driven Development & Video Engine]
-        AgentRunner[Autonomous EDD Agent Runner]
-        ScreenRec[1080p Headless Screen Recorder]
-        NeuralTTS[Piper Neural TTS + WebVTT Captions]
-        WalkthroughVideo[Narrated Walkthrough Video Artifact]
-    end
-
-    subgraph DevCentralHub [Dev Central Review & Sign-Off Hub]
-        Player[Interactive Video & Step Player]
-        DiffViewer[Contract & Code Diff Inspector]
-        MergeGate[1-Click Merge & Sign-Off]
-    end
-
-    ProdState & FutureState --> DiffEngine
-    DiffEngine --> CoPilot & BDD
-    BDD --> AgentRunner
-    AgentRunner --> TestFabric
-    TestFabric --> ScreenRec & NeuralTTS
-    ScreenRec & NeuralTTS --> WalkthroughVideo
-    WalkthroughVideo --> Player
-    DiffEngine --> DiffViewer
-    Player & DiffViewer --> MergeGate
-    MergeGate --> ProdState
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-State SDLC Knowledge Graph Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Dual-State SDLC Knowledge Graph Architecture</strong>: Multi-branch Git versioning, semantic graph diffing, blast-radius impact analysis, and autonomous video walkthrough verification. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

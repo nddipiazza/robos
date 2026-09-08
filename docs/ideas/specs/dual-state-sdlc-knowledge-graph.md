@@ -58,50 +58,12 @@ In RobOS, agents practice End-to-End Driven Development against **fully self-con
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    subgraph GitRepo [Git Repository .robos/]
-        ProdGraph[main branch: Production Reality<br/>Modular KGraph Packages]
-        FutureGraph[feature / poc / pilot branch: Proposed State<br/>Modular KGraph Packages]
-    end
-
-    subgraph GraphEngine [OSLC & SHACL Graph Core]
-        Parser[OSLC Core 3.0 JSON-LD Parser]
-        SHACL[W3C SHACL Validator]
-        DiffEngine[Semantic Graph Diff & Blast Radius]
-    end
-
-    subgraph DevEnvironment [Self-Contained Test Fabric]
-        DevContainer[Devcontainer / Docker Compose]
-        Xvfb[Xvfb Virtual Display + Mutter]
-        MockSvc[Prism & WireMock Stubs]
-        SeededDB[PostgreSQL / SQLite Seeded DB]
-    end
-
-    subgraph AgentReviewLoop [Agent Execution & Verification]
-        Agent[RobOS Agent Swarm]
-        EDD[E2E-Driven Development Runner]
-        Recorder[Headless Screen Recorder]
-        TTS[Piper Neural TTS + WebVTT]
-        VideoArtifact[1080p Narrated Video Walkthrough]
-    end
-
-    subgraph UIHub [RobOS Dev Central]
-        ReviewHub[Interactive Proof-of-Work Review Hub]
-        MergeGate[1-Click Merge & Sign-Off]
-    end
-
-    ProdGraph & FutureGraph --> GraphEngine
-    GraphEngine --> DiffEngine
-    DiffEngine --> Agent
-    Agent --> DevEnvironment
-    DevEnvironment --> EDD
-    EDD --> Recorder & TTS
-    Recorder & TTS --> VideoArtifact
-    VideoArtifact --> ReviewHub
-    ReviewHub --> MergeGate
-    MergeGate --> ProdGraph
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-State SDLC Knowledge Graph Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Dual-State SDLC Knowledge Graph Architecture</strong>: Multi-branch Git versioning, semantic graph diffing, blast-radius impact analysis, and autonomous video walkthrough verification. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

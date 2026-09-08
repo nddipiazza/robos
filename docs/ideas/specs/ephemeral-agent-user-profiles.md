@@ -23,40 +23,12 @@ Instead of requiring an isolated remote desktop streaming viewer, applications l
 
 A dedicated **RobOS Toolbar / Taskbar Widget** provides live visibility into all running agent accounts, their active windows and processes, and one-click session termination.
 
-```mermaid
-graph TD
-    subgraph Host Environment ["Host Session (e.g. ndipiazza)"]
-        Display["Host Display Server (X11 / Wayland)"]
-        Audio["PulseAudio / PipeWire Socket"]
-        SSH["SSH / GPG Agent Sockets"]
-        Net["Network & Loopback Interfaces"]
-        Toolbar["RobOS Taskbar / Dock Widget"]
-    end
-
-    subgraph Daemon ["RobOS Profile Daemon (robos-profiled)"]
-        ProfileMgr["Ephemeral Account & Tmpfs Manager"]
-        AclMgr["Socket & Xauthority ACL Bridge"]
-    end
-
-    subgraph Agent1 ["Ephemeral Agent: /home/my-agent-alpha"]
-        App1["App Process (e.g. Chromium / VS Code)"]
-        Home1["Isolated $HOME (tmpfs/overlayfs)"]
-    end
-
-    subgraph Agent2 ["Ephemeral Agent: /home/my-agent-beta"]
-        App2["App Process (e.g. Terminal / Node CLI)"]
-        Home2["Isolated $HOME (tmpfs/overlayfs)"]
-    end
-
-    Toolbar -->|Manage / Terminate| ProfileMgr
-    ProfileMgr -->|Provision / Teardown| Agent1
-    ProfileMgr -->|Provision / Teardown| Agent2
-
-    App1 -->|Direct GUI Rendering| Display
-    App2 -->|Direct GUI Rendering| Display
-    App1 -.->|Tunnel Audio/SSH/Net| Audio
-    App2 -.->|Tunnel Audio/SSH/Net| SSH
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/ephemeral-sandboxes-architecture.jpg' | relative_url }}" alt="Ephemeral Agent User Profiles Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Ephemeral Agent User Profiles Architecture</strong>: Isolated tmpfs user accounts with direct host display bridging, audio/SSH socket tunneling, and dock widget controls. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

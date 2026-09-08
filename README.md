@@ -26,33 +26,9 @@ In modern software engineering, developers rely on contracts to eliminate manual
 
 > **If an API contract can automatically generate a client, a schema-validated Knowledge Graph can automatically generate an entire application.**
 
-```mermaid
-graph TD
-    subgraph KGraphBlueprint [1. RobOS Knowledge Graph: Master Executable Blueprint]
-        K[robos:Application Node]
-        K --> Arch[Archetype: Microservice / Desktop / CLI / Mobile / Pipeline / Library]
-        K --> Ent[Domain Entities & TypeSpec Schemas]
-        K --> Con[API & Event Contracts: OpenAPI 3.1 / Protobuf / AsyncAPI]
-        K --> DB[Database Topology & Persistence Rules]
-        K --> Team[Team Ownership & RBAC Policies]
-    end
-
-    subgraph AutoGenEngine [2. RobOS Synthesis Engine & Autonomous Swarm]
-        KGraphBlueprint --> Synth[RobOS App Generator & Synthesis Swarm]
-        Synth --> Code[Application Source Code & Business Stubs]
-        Synth --> K8s[Kubernetes StatefulSets, Deployments & Helm Charts]
-        Synth --> DBInit[Flyway / Liquibase / SQL Schema Migrations]
-        Synth --> Tests[E2E Verification Fabrics & Pact Contract Tests]
-        Synth --> Docs[Living Documentation & Interactive eLearning]
-    end
-
-    subgraph GovernanceLayer [3. Agent Review Governance Layer]
-        Code --> E2E[Headless Xvfb E2E Test & Video Proof-of-Work]
-        K8s --> E2E
-        Tests --> E2E
-        E2E --> Review[Human Architect Review & 1-Click Merge]
-    end
-```
+<p align="center">
+  <img src="docs/assets/images/kgraph-autogen-architecture.jpg" alt="Knowledge-Graph-First Application Generation Architecture" width="100%" />
+</p>
 
 ### How KGraph-First Generation Works
 
@@ -122,24 +98,9 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 
 Agent Review-Based Development is the quality assurance and governance harness that wraps around KGraph-First generation:
 
-```mermaid
-graph LR
-    subgraph KGraphLayer [KGraph Blueprint]
-        K[KGraph Node & Schema] --> P[Architectural Plan & Blast Radius Diff]
-    end
-
-    subgraph AutonomousAI [Autonomous AI Agent Swarm]
-        P --> S[Auto-Generate App & K8s Manifests]
-        S --> V[Xvfb E2E Test & Video Proof]
-    end
-
-    subgraph HumanArchitect [Human Lead Architect]
-        P --> G[Proactive Alignment & Plan Review]
-        G --> S
-        V --> R2[Visual Review & Approval]
-        R2 --> M[1-Click Merge & Deploy]
-    end
-```
+<p align="center">
+  <img src="docs/assets/images/agent-review-workflow-comparison.jpg" alt="Agent Review-Based Development Governance Layer" width="100%" />
+</p>
 
 1. **KGraph Synthesis & Investigation**: Grounded in the Knowledge Graph blueprint, the AI provisions an isolated workspace, investigates the task or feature requirement, reproduces edge cases at live breakpoints, and drafts an architectural plan.
 2. **Proactive Human Alignment & Plan Review**: Grounded in the Knowledge Graph, RobOS workflows actively probe the lead architect on edge cases, constraints, and requirements—keeping humans intimately in the know before code is generated.

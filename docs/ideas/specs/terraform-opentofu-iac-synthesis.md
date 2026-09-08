@@ -100,45 +100,12 @@ This feature extends RobOS with **first-class Infrastructure as Code (IaC) synth
 
 ### System Architecture Flow
 
-```mermaid
-graph TD
-    subgraph ArchitectCanvas [RobOS Visual Architecture Canvas]
-        KGraph[Modular KGraph Packages<br/>.robos/kgraphs/core-platform/]
-        Canvas[Topology & Cloud Resource Canvas]
-    end
-
-    subgraph SynthesisEngine [IaC Synthesis Engine]
-        Gen[HCL Code Generator]
-        Modules[Standard OpenTofu Modules<br/>VPC / RDS / S3 / IAM / KMS]
-    end
-
-    subgraph GitStore [Git Repository .robos/terraform/]
-        HCLFiles[".robos/terraform/environments/dev/*.tf"]
-        RemoteBackend[Remote State Backend<br/>S3 + DynamoDB / GCS]
-    end
-
-    subgraph EphemeralSandbox [In-Memory tmpfs Agent Sandbox]
-        TofuCLI[OpenTofu / Terraform Binary]
-        PlanOut[JSON Plan: Add / Modify / Destroy]
-        PassStore[GPG UNIX Password Store<br/>~/.password-store/devops/]
-    end
-
-    subgraph DevCentralUI [Dev Central Review & Governance]
-        BlastRadius[Visual Infrastructure Blast Radius]
-        ApproveBtn[1-Click Apply & Live Stream]
-    end
-
-    Canvas -->|Declare Cloud Nodes| KGraph
-    KGraph --> Gen
-    Gen --> Modules
-    Modules --> HCLFiles
-    HCLFiles --> TofuCLI
-    PassStore -->|Inject Credentials| TofuCLI
-    TofuCLI --> PlanOut
-    PlanOut --> BlastRadius
-    BlastRadius --> ApproveBtn
-    ApproveBtn -->|tofu apply| RemoteBackend
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/gitops-synthesis-pipeline.jpg' | relative_url }}" alt="OpenTofu & Terraform IaC Synthesis Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>OpenTofu & Terraform IaC Synthesis Architecture</strong>: Visual cloud canvas synthesis to HCL, ephemeral tmpfs execution with GPG password store, and Dev Central blast-radius review. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Impacted Packages & Components
 - **`packages/kube-studio` / `packages/iac-studio`**: Adds visual "Cloud Infrastructure & IaC" explorer tab with resource inventory and terminal runner.

@@ -35,19 +35,12 @@ This specification introduces two tightly integrated capabilities into the RobOS
 
 ## 3. Key Capabilities & Scope
 
-```mermaid
-graph TD
-    AGENT[Desktop Agent finishes JIRA-1234 & drafts PR] --> NOTIFY[Toast Notification to Host User]
-    NOTIFY --> REVIEWER[RobOS Reviewer App]
-
-    subgraph Reviewer Actions
-        REVIEWER --> TEACH["Button: Teach Me How This Change Works"]
-        REVIEWER --> SHOW["Button: Show Me This Change in Action"]
-    end
-
-    TEACH --> ELEARNING[Dual-Context eLearning Engine<br/>Prod Reality vs Proposed Reality]
-    SHOW --> DEMO[Switch to Desktop Agent Viewer<br/>Live Demo: Terminal, GUI Apps, Browser & Custom Workflows]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}" alt="Dual-Context eLearning and Interactive Reviewer Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Dual-Context eLearning & Interactive Reviewer Architecture</strong>: Desktop agent task completion triggering toast notifications, reviewer GUI, dual-reality tutorial generation, and live demonstration. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### In Scope
 

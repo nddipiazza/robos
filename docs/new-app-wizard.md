@@ -24,16 +24,12 @@ In conventional software development, creating a new application requires hours 
 
 The **RobOS App Wizard** (`packages/app-wizard`) eliminates this setup friction with a 4-step interactive wizard tailored to the application's architectural archetype:
 
-```mermaid
-flowchart TD
-    Arch["1. Archetype Selection<br/><i>(Microservice, FrontEnd, Desktop, PC Game, Mobile Game, CLI, Mobile, Pipeline, Lib)</i>"]
-    Meta["2. App Identity & Team Ownership<br/><i>(App Name, Package URN, Tech Stack, teams.yaml)</i>"]
-    Spec["3. Contract / API Specification<br/><i>(OpenAPI 3.1, TypeSpec, Protobuf gRPC, GraphQL)</i>"]
-    Scaff["4. Polyglot Scaffolding Generation<br/><i>(catalog-info.yaml, dev-setup.sh, Dockerfile, tests)</i>"]
-    Sync["5. Dual-State Knowledge Graph Ingestion<br/><i>(.robos/packages.yaml & .robos/kgraphs/ package stores)</i>"]
-
-    Arch --> Meta --> Spec --> Scaff --> Sync
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}" alt="App Wizard Guided Scaffolding Flow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>App Wizard Guided Scaffolding Flow</strong>: Interactive 5-step creation pipeline from archetype selection to contract specification, scaffolding, and Knowledge Graph ingestion. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

@@ -2,7 +2,7 @@
 title: KGraph-First App Generation & Modular Architecture
 layout: default
 parent: RobOS Big Wins
-nav_order: 8
+nav_order: 9
 permalink: /big-wins/kgraph-first-app-generation.html
 ---
 
@@ -61,39 +61,12 @@ RobOS treats applications as first-class, typed architectural nodes rather than 
 
 When an application node is registered or modified in the Knowledge Graph, the RobOS synthesis pipeline executes four automated phases:
 
-```mermaid
-graph TD
-    subgraph Blueprint [1. Executable Semantic Blueprint]
-        AppNode[robos:Application Node]
-        Schema[Microsoft TypeSpec / JSON Schema]
-        Contract[OpenAPI 3.1 / Protobuf / AsyncAPI]
-        Topology[Database & Messaging Topology]
-    end
-
-    subgraph Synthesis [2. RobOS Synthesis Engine]
-        Scaffold[Project Scaffolding & Dependencies]
-        Models[Strongly Typed DTOs & Entities]
-        API[Controllers, Gateways & Prism Mocks]
-        DB[Schema Migrations & Connection Pools]
-        K8s[Kubernetes Deployments & Helm Charts]
-    end
-
-    subgraph Verification [3. Verification Fabric]
-        Pact[Pact Consumer Contract Verification]
-        E2E[Headless Xvfb E2E Test Runner]
-        Proof[1080p Video Proof-of-Work & Neural Voice]
-    end
-
-    subgraph Review [4. Human Governance]
-        PR[Dev Central & IDE Review Platform]
-        Merge[1-Click Approval & Merge]
-    end
-
-    Blueprint --> Synthesis
-    Synthesis --> Verification
-    Verification --> Review
-    Review --> Merge
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/kgraph-synthesis-pipeline.jpg' | relative_url }}" alt="RobOS Synthesis Engine Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Synthesis Engine Pipeline</strong>: Semantic blueprints compiled through scaffolding, typed models, and controllers to verification fabrics and human governance. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Scaffolding & Polyglot Dependencies
 RobOS synthesizes idiomatic project structures according to best-in-class language conventions:
@@ -183,34 +156,12 @@ Instead of duplicating identical skill files, `.cursorrules`, or prompt instruct
 
 RobOS goes far beyond single-repository monorepos: it natively supports **distributed, multi-repo knowledge graphs**:
 
-```mermaid
-graph TD
-    subgraph LocalWorkspace [Local Repository: .robos/kgraph.yaml]
-        LocalCore[Local Package: core-platform]
-        LocalServices[Local Package: services]
-    end
-
-    subgraph ExternalRepos [External Git Forges Pinned to Tags]
-        SharedContracts[github.com/enterprise/shared-contracts@v2.1.0]
-        PlatformInfra[github.com/enterprise/cloud-infra@v1.4.0]
-    end
-
-    subgraph LocalCache [Cached Package Store: ~/.robos/cache/kgraphs/]
-        Cache1[~/.robos/cache/kgraphs/shared-contracts@v2.1.0/]
-        Cache2[~/.robos/cache/kgraphs/cloud-infra@v1.4.0/]
-    end
-
-    subgraph UnifiedView [Unified Semantic Graph View]
-        Engine[RobOS Graph Engine & Blast Radius Analyzer]
-    end
-
-    LocalCore --> Engine
-    LocalServices --> Engine
-    SharedContracts -->|Git Clone & Cache| Cache1
-    PlatformInfra -->|Git Clone & Cache| Cache2
-    Cache1 --> Engine
-    Cache2 --> Engine
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/multi-repo-kgraph-composition.jpg' | relative_url }}" alt="Multi-Repo Knowledge Graph Composition and Git-Tag Version Pinning" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Multi-Repo Knowledge Graph Composition</strong>: Local workspace repositories linked with external Git-tagged packages cached locally and evaluated as a single unified semantic graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Manifest Configuration (`.robos/kgraph.yaml`)
 
@@ -253,7 +204,7 @@ Auto-generation without rigorous governance leads to chaos. RobOS wraps the enti
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Dual-State SDLC Knowledge Graph]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**: Discover how RobOS models World 1 vs. World 2 and detects blast radius.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[New App Development Wizard]({{ site.baseurl }}{% link new-app-wizard.md %})**: Walk through scaffolding a greenfield application step-by-step.

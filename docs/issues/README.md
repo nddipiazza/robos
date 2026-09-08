@@ -9,12 +9,12 @@ Welcome to the RobOS Issue Knowledgebase! This directory stores raw bug reports,
 
 ## Workflow Pipeline
 
-```mermaid
-graph LR
-    A[1. Raw Bug Dump] -->|Agent Refinement| B[2. Structured Issue Spec]
-    B -->|Triage & Approval| C[3. Fix Plan / Task]
-    C -->|AI / Dev Fix| D[4. Verification & Closure]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}" alt="RobOS Issues Workflow Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Issues & Fix Pipeline</strong>: 4-stage automated lifecycle from raw bug dump in inbox to structured issue specs, triaged fix plans, and automated verification. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 1. **Inbox / Raw Issues (`docs/issues/inbox/`)**: Dump quick notes, bug reports, audio transcripts, or rough issue details here.
 2. **Refined Issue Specs (`docs/issues/reported/`)**: Agents refine raw reports into structured specifications using `TEMPLATE.md`.

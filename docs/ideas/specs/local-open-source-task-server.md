@@ -68,18 +68,12 @@ This feature introduces a **Local Open-Source Task Server** embedded directly in
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    A[RobOS Task Servers UI] -->|Manage & Configure| B[Local Task Server Daemon]
-    C[packages/task-board] -->|Query & Mutate Tasks| D[packages/robos-task-client]
-    E[Dev Central Dashboard] --> D
-    F[RobOS AI Agents / MCP] --> D
-    D -->|Adapter Interface| B
-    D -->|Adapter Interface| G[GitHub Issues API]
-    D -->|Adapter Interface| H[Jira Cloud API]
-    D -->|Adapter Interface| I[Linear API]
-    B --> J[(Local SQLite: ~/.config/robos/tasks.db)]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/task-servers-architecture.jpg' | relative_url }}" alt="Local Task Server and Issue Adapters Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Local Task Server & Issue Adapters Architecture</strong>: Unified task client bridging local SQLite storage with GitHub Issues, Jira, and Linear. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 - **Impacted Packages/Apps**:
   - `packages/task-servers` (add Local Server configuration & management panel)

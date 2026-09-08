@@ -9,12 +9,12 @@ Welcome to the RobOS Feature Knowledgebase! This directory stores raw project id
 
 ## Workflow Pipeline
 
-```mermaid
-graph LR
-    A[1. Raw Idea Dump] -->|Agent Refinement| B[2. Structured Spec File]
-    B -->|User Approval| C[3. Project Epic / Plan]
-    C -->|AI / Dev Execution| D[4. Implementation]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}" alt="RobOS Ideas Workflow Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Ideas & Specs Pipeline</strong>: 4-stage automated lifecycle from raw notes in inbox to structured specs, approved project epics, and verified software implementations. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 1. **Inbox / Raw Ideas (`docs/ideas/inbox/`)**: Dump quick notes, bullet points, audio transcripts, or rough thoughts here.
 2. **Refined Feature Specs (`docs/ideas/specs/`)**: Agents refine raw ideas into structured specifications using `TEMPLATE.md`.

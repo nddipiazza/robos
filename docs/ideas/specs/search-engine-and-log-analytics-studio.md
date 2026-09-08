@@ -98,55 +98,12 @@ This feature introduces two transformative additions to RobOS:
 
 ### System Architecture Flow
 
-```mermaid
-graph TD
-    subgraph UI [RobOS Desktop App: Search Studio (packages/search-studio)]
-        Nav[Cluster Navigator<br/>OpenSearch / Elastic / Solr / Qdrant]
-        IndexGrid[Index & Shard Matrix Explorer]
-        MappingView[Schema & Field Mapping Browser]
-        QueryConsole[Monaco Query DSL & Lucene Console]
-        LogTailer[Live Async Log Streamer & Trace Filter]
-        VectorPlay[Vector Similarity Playground]
-    end
-
-    subgraph KGraphStore [Modular KGraph Packages .robos/]
-        KCluster[robos:SearchCluster Node]
-        KIndex[robos:SearchIndex Node]
-        KLogSink[robos:LogAnalyticsSink Node]
-        Microservices[robos:Microservice Nodes]
-    end
-
-    subgraph ClusterConnections [External Search & Log Infrastructure]
-        LocalOpenSearch[Local Kind / Docker OpenSearch]
-        AWSOpenSearch[AWS OpenSearch Service]
-        ElasticCloud[Elastic Cloud Cluster]
-        SolrServer[Apache Solr Cluster]
-        QdrantDB[Qdrant / Milvus Vector DB]
-    end
-
-    subgraph PasswordStore [UNIX Password Store]
-        PassCreds[~/.password-store/devops/search-clusters/]
-    end
-
-    Nav --> PassCreds
-    Nav --> LocalOpenSearch
-    Nav --> AWSOpenSearch
-    Nav --> ElasticCloud
-    Nav --> SolrServer
-    Nav --> QdrantDB
-
-    LocalOpenSearch --> IndexGrid
-    IndexGrid --> MappingView
-    MappingView --> QueryConsole
-    LocalOpenSearch --> LogTailer
-    QdrantDB --> VectorPlay
-
-    Nav -->|Auto-Discover & Sync| KCluster
-    KCluster --> KIndex
-    KCluster --> KLogSink
-    Microservices -->|streamsLogsTo| KLogSink
-    Microservices -->|queriesIndex| KIndex
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/search-studio-architecture.jpg' | relative_url }}" alt="RobOS Search Studio & Log Analytics Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Search Studio & Log Analytics Architecture</strong>: Cluster navigator, index explorer, Monaco query DSL console, and live log tailer connected to OpenSearch, Elasticsearch, Solr, and Qdrant. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Impacted Packages & Registration Checklist
 1. **New Package `packages/search-studio/`**:

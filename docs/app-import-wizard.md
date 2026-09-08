@@ -24,16 +24,12 @@ Most engineering teams have existing repositories that were built before adoptin
 
 The **RobOS App Import Wizard** (`packages/app-wizard` in import mode) automatically inspects existing codebases, extracts their capabilities and contracts, and integrates them into the RobOS ecosystem in seconds:
 
-```mermaid
-flowchart TD
-    Src["1. Point to Repository<br/><i>(Local directory or Git clone URL)</i>"]
-    Scan["2. Deep Codebase Inspection<br/><i>(Scans build manifests: pom.xml, package.json, go.mod)</i>"]
-    Detect["3. Heuristic Archetype Inference<br/><i>(Identifies Microservice, Desktop, CLI, etc.)</i>"]
-    Synth["4. Backstage & Dev-Setup Synthesis<br/><i>(Generates catalog-info.yaml, dev-setup.sh, .bru)</i>"]
-    Map["5. Knowledge Graph Ingestion<br/><i>(.robos/packages.yaml & git-projects.json)</i>"]
-
-    Src --> Scan --> Detect --> Synth --> Map
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}" alt="Existing App Import & Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Existing App Import & Ingestion Pipeline</strong>: How the App Import Wizard scans manifests, infers archetypes, synthesizes Backstage metadata and dev-setup scripts, and ingests repositories into the Knowledge Graph. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

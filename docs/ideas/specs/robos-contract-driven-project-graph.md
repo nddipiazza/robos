@@ -66,41 +66,12 @@ Furthermore, RobOS integrates an **Autonomous Deployment Engine** where RobOS AI
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    subgraph Repository Layer (.robos/)
-        GRAPH_FILE[project-graph.json-ld]
-        SCHEMAS[SHACL / JSON Schemas]
-    end
-
-    subgraph Core Engine (packages/robos-graph)
-        PARSER[AST & Git Ingestion Engine]
-        VAL[SHACL / Schema Validator]
-        DAG[Dependency Resolver & DAG Engine]
-    end
-
-    subgraph Desktop GUI (packages/project-graph)
-        CANVAS[2D Interactive Canvas Explorer]
-        EDITOR[Contract & Feature Editor]
-        DISPATCH[Agent Dispatcher UI]
-    end
-
-    subgraph AI Execution Engine
-        AGENT_MGR[packages/agents-manager]
-        SUB_AGENT[packages/desktop-agents Sub-Session]
-        TEST_RUNNER[Contract Verification Gate - GUT/Jest/PyTest]
-    end
-
-    GRAPH_FILE --> DAG
-    PARSER --> GRAPH_FILE
-    DAG --> CANVAS
-    VAL --> EDITOR
-    DISPATCH --> AGENT_MGR
-    AGENT_MGR --> SUB_AGENT
-    SUB_AGENT --> TEST_RUNNER
-    TEST_RUNNER -->|Pass / Fail Gate| DAG
-    DAG -->|Update State| GRAPH_FILE
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/contract-project-graph-architecture.jpg' | relative_url }}" alt="Contract-Driven Project Graph Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Contract-Driven Project Graph Architecture</strong>: Multi-tier coordination between repository specs, DAG core engine, 2D interactive canvas, and AI verification gates. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Impacted Packages & Repositories
 
@@ -181,13 +152,12 @@ graph TD
 
 ## 6. Proposed Implementation Plan
 
-```mermaid
-graph TD
-    P1[Phase 1: robos-graph Core Library & Schema Standard] --> P2[Phase 2: Universal Repository Dump CLI]
-    P2 --> P3[Phase 3: Project Graph Studio Electron App]
-    P3 --> P4[Phase 4: Agent Task Execution & Verification Gate]
-    P4 --> P5[Phase 5: Dev Central Integration & Auto-Deploy Workflows]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/contract-graph-roadmap.jpg' | relative_url }}" alt="Contract-Driven Project Graph Implementation Roadmap" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Contract-Driven Project Graph Implementation Roadmap</strong>: 5-phase delivery from core library and repository dump CLI to Studio GUI, verification gates, and Dev Central integration. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Phase 1: Core Library & Schema Specification (`packages/robos-graph`)
 - Define JSON Schema and JSON-LD context for `.robos/project-graph.json-ld`.

@@ -73,7 +73,7 @@ The LLM has access to:
 ### Provider Support
 
 - **Primary**: Claude (via Anthropic API or Claude Code CLI)
-- **Fallback**: Any OpenAI-compatible API (GPT-4, local models via Ollama)
+- **Fallback**: Any OpenAI-compatible API (GPT, local models via Ollama)
 - Configured in RobOS Preferences → AI Settings
 
 ### Streaming

@@ -82,39 +82,12 @@ The central connection hub that maps physical data stores directly to architectu
 
 Unlike isolated third-party tools, RobOS connects live data sources directly into the **SDLC Knowledge Graph**:
 
-```mermaid
-graph TD
-    subgraph PhysicalStores [Physical Data Stores]
-        PG[(PostgreSQL Database)]
-        Mongo[(MongoDB Cluster)]
-        Redis[(Redis Cache)]
-        S3[(AWS S3 Contract Vault)]
-    end
-
-    subgraph ManagementGUI [RobOS Unified Data Source Suite]
-        RDB[Relational DB Manager<br/>SQL Console & Grid]
-        NDB[NoSQL DB Manager<br/>JSON Document & Key-Value]
-        DS[Data Sources Explorer<br/>Connection Hub & Health]
-    end
-
-    subgraph KGraph [Modular KGraph Packages .robos/]
-        K_DB[robos:RelationalDatabase Node]
-        K_Entity[TypeSpec Entities & Schemas]
-        K_Service[robos:Microservice Nodes]
-    end
-
-    PG --> RDB
-    Mongo --> NDB
-    Redis --> NDB
-    S3 --> DS
-
-    RDB --> DS
-    NDB --> DS
-
-    DS -->|1-Click Schema Introspection| K_DB
-    K_DB --> K_Entity
-    K_Service -->|robos:persistsTo| K_DB
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/data-sources-kgraph-architecture.jpg' | relative_url }}" alt="RobOS Unified Data Sources Management Suite Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Data Sources & Knowledge Graph Integration</strong>: Physical data stores introspected by native management GUIs and bound to canonical Knowledge Graph nodes and TypeSpec entities. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 - **Automated Entity Model Synthesis**: When you connect to an existing database, RobOS can introspect table structures and automatically synthesize **Microsoft TypeSpec** domain models and TypeScript/Java entity definitions.
 - **Contract & Blast Radius Enforcement**: If a developer proposes dropping or renaming a database column in World 2 (feature branch), the Knowledge Graph flags all microservices that query that table before the migration script is run.
@@ -123,7 +96,7 @@ graph TD
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Connect microservice clients with database persistence.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual databases compile into Kubernetes StatefulSets.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Inspect detailed specifications for the entire application suite.

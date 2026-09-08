@@ -33,48 +33,12 @@ In traditional software engineering, developers write code and hope their unit t
 
 The **Acme Petshop Platform** is a reference distributed polyglot microservice application designed to mirror complex enterprise software delivery. It spans a Java Spring Boot backend, a PostgreSQL relational database, a React TypeScript frontend, an Apache Kafka event streaming pipeline, an mTLS rabies vaccination verification gateway, and a dedicated analytics warehouse.
 
-```mermaid
-flowchart TD
-    subgraph Phase1 ["Phase 1: Architecture & Specification"]
-        S1["Step 1: AI Task Planner & Automated Project Breakdown"]
-        S2["Step 2: Visual Architecture & C4 Service Map"]
-        S3["Step 3: API Contracts & Live Mock Servers"]
-        S4["Step 4: Multi-Repo Hub & Automated Dev Setup"]
-        S1 --> S2 --> S3 --> S4
-    end
-
-    subgraph Phase2 ["Phase 2: Autonomous Implementation & Review"]
-        S5["Step 5: Autonomous AI Task Implementation & Solution Plan"]
-        S6["Step 6: PR Review Process & IDE Review Hub"]
-        S5 --> S6
-    end
-
-    subgraph Phase3 ["Phase 3: Continuous Deployment & Cloud Infrastructure"]
-        S7["Step 7: Deployment Tracker & Progressive Rollouts"]
-        S8["Step 8: Kubernetes & Cloud Infrastructure Navigator"]
-        S9["Step 9: One-Click Live Kubernetes Cluster Deployment"]
-        S10["Step 10: Automatic Deploy on Merge & Zero-Waste Cleanup"]
-        S7 --> S8 --> S9 --> S10
-    end
-
-    subgraph Phase4 ["Phase 4: API Testing & Quality Gates"]
-        S11["Step 11: Git-Backed REST API Client (Bruno Engine)"]
-        S12["Step 12: Automated API Test Runner & Merge Gates"]
-        S11 --> S12
-    end
-
-    subgraph Phase5 ["Phase 5: Agent Connections & Full Data Lifecycle"]
-        S13["Step 13: Universal AI Tool Connections (MCP Router)"]
-        S15["Step 15: Multi-Database Explorer (PostgreSQL, Kafka, S3)"]
-        S16["Step 16: Complete Database & Cloud Lifecycle"]
-        S13 --> S15 --> S16
-    end
-
-    S4 --> S5
-    S6 --> S7
-    S10 --> S11
-    S12 --> S13
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-lifecycle-overview.jpg' | relative_url }}" alt="Acme Petshop 16-Step Application Delivery Lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Acme Petshop 16-Step Lifecycle Overview</strong>: Complete automated SDLC progression across 5 core phases: Specification, Autonomous Implementation, Cloud Deployment, API Verification, and Data Observability. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -128,17 +92,12 @@ In most companies, system architecture diagrams suffer from three fatal flaws:
 ### 2. What is the C4 Architecture Model? (The "Google Maps" of Software)
 Created by engineer Simon Brown, the **C4 Model** solves diagram confusion by creating a standard 4-level zoom hierarchy—exactly like zooming in on Google Maps:
 
-```mermaid
-graph TD
-    L1["Level 1: System Context (The World / Continent View)<br/>Shows high-level human personas and external SaaS systems"]
-    L2["Level 2: Containers (The City View)<br/>Shows deployable applications, microservices, databases & queues"]
-    L3["Level 3: Components (The Street View)<br/>Shows internal controllers, domain services & repositories inside a service"]
-    L4["Level 4: Code (The Building View)<br/>Shows individual classes, functions, and database tables"]
-
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/c4-model-architecture.jpg' | relative_url }}" alt="The C4 Software Architecture Model" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The C4 Software Architecture Model (The Google Maps of Code)</strong>: 4-level progressive zoom hierarchy from System Context (Level 1) to Containers (Level 2), Components (Level 3), and Code (Level 4). <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 | C4 Level | What It Shows | Real-World Acme Petshop Example |
 |---|---|---|
@@ -663,27 +622,12 @@ When building cross-language microservices (Java backend, TypeScript frontend, G
 
 RobOS provides purpose-built wizards and governance engines for enterprise onboarding and rapid application scaffolding. Each workflow is verified end-to-end with real processes, live directory synchronization, and zero mocking.
 
-```mermaid
-flowchart TD
-    subgraph Organization Onboarding
-        A[Existing Enterprise] -->|Directory Sync & SCIM| B[RobOS Group Manager]
-        C[New Startup] -->|Tenant Bootstrap| B
-        B --> D[Team Topologies & RBAC]
-    end
-    subgraph Developer Scaffolding
-        E[Develop New App] -->|Contract-First Scaffolding| F[RobOS App Wizard]
-        G[Import Existing Codebase] -->|Deep Heuristic Inspection| F
-        F --> H[Backstage Catalog & dev-setup.sh]
-        H --> I[Dual-State Knowledge Graph]
-    end
-    subgraph KGraph Architecture & DevOps Vault
-        I --> J[Modular Namespaces & Packages]
-        K[Remote GitHub Repos] -->|Git-Tag Versioning v2.4.0| J
-        L[DevOps Providers 25+] -->|Onboarding Wizards| M[GPG Pass Vault]
-        M -->|Zero Plaintext PassCredential| J
-    end
-    D -.->|Assign Ownership| H
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/app-flow-org-foundation.jpg' | relative_url }}" alt="Company Setup and Developer Scaffolding Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Company Setup & Developer Scaffolding Architecture</strong>: Enterprise directory synchronization, greenfield tenant bootstrap, multi-archetype app scaffolding, and GPG-encrypted DevOps pass vault. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -921,7 +865,7 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/robos-gra
 
 ## Next Steps
 
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural innovations and strategic advantages.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
 - **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

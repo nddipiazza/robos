@@ -28,25 +28,12 @@ RobOS structures the entire software development lifecycle as an open, interconn
 2. **W3C SHACL (Shapes Constraint Language)**: Strictly validates graph nodes against structural schemas before saving or synthesizing code.
 3. **Modular Namespaced Packages (`.robos/kgraphs/`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into 6 domain-isolated package stores.
 
-```mermaid
-graph TB
-    subgraph Hub ["RobOS SDLC Knowledge Graph (/schemas.html)"]
-        Core["Platform Core<br/><code>robos.platform</code>"]
-        Org["Organization & Teams<br/><code>robos.org</code>"]
-        Svc["Services & Contracts<br/><code>robos.services</code>"]
-        Apps["Applications<br/><code>robos.apps</code>"]
-        DevOps["DevOps & Cloud<br/><code>robos.devops</code>"]
-        Learn["eLearning<br/><code>robos.learning</code>"]
-    end
-
-    Org -->|Governs| Core
-    Org -->|Owns| Svc
-    Org -->|Builds| Apps
-    Svc -->|Validates| Apps
-    Apps -->|Deploys via| DevOps
-    Core -->|Compiles with| DevOps
-    Learn -->|Educates on| Svc
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and 6 Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The 6 modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

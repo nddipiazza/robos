@@ -21,61 +21,12 @@ To enable AI agents to autonomously build RobOS feature by feature, development 
 
 The roadmap is structured into 6 sequential dependency waves, starting from the completed **Setup Wizard**:
 
-```mermaid
-graph TD
-    subgraph Phase0 [Phase 0: Bootstrapped Foundation & Setup - COMPLETED]
-        DF[Desktop Foundation ✅]
-        AF[App Framework & RobOS Lib ✅]
-        DT[Developer Tool Center ✅]
-        SA[Security & Secrets Distribution ✅]
-        SU[Unified Setup Wizard & Project Provisioner ✅]
-        EC[Existing Company Setup & Directory Sync]
-        NC[New Company Greenfield Bootstrap]
-        NA[New App Development Wizard]
-        IA[Existing App Import Wizard]
-    end
-
-    subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
-        SS[System Services & Desktop Integration]
-        EP[Ephemeral Agent User Profiles & Display Bridging]
-        DA[Desktop Agent Sessions & Tunneling]
-        MCP[First-Class MCP Server Support]
-    end
-
-    subgraph Phase2 [Phase 2: World State Modeling & GitOps Schema]
-        KG[Dual-State SDLC Knowledge Graph & OSLC Engine]
-        SLOS[Agent-First Software Lifecycle OS]
-        PG[Contract-Driven Project Knowledge Graph]
-        EK[Engineering Knowledge Graph - EKGraph]
-    end
-
-    subgraph Phase3 [Phase 3: Work Items, Multi-Repo Workspaces & Review Hub]
-        TM[Task & Issue Management]
-        WM[Multi-Repo Workspace Orchestrator]
-        EE[Event Engine & Agent Scheduler]
-        DC[Dev Central — AI Agent Review Hub]
-    end
-
-    subgraph Phase4 [Phase 4: Autonomous E2E-Driven Dev & Verification]
-        EDD[App Test Framework & Local Test Fabric]
-        REV[Dual-Context eLearning & Interactive Reviewer]
-        AI[AI Agent Integration & Questionnaire]
-        CR[Code Review Board & CI/CD Monitor]
-    end
-
-    subgraph Phase5 [Phase 5: Extended Experience & Distribution]
-        WJ[Work Journal & Activity Feed]
-        VI[Voice Dictation & Input]
-        MR[Management Dashboards & Blocker Radar]
-        RP[Release Packaging & Automated Pipeline]
-    end
-
-    Phase0 --> Phase1
-    Phase1 --> Phase2
-    Phase2 --> Phase3
-    Phase3 --> Phase4
-    Phase4 --> Phase5
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/roadmap-phases-architecture.jpg' | relative_url }}" alt="RobOS Phased Iterative Roadmap" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Phased Iterative Roadmap</strong>: 6-phase dependency progression from Bootstrapped Foundation (Phase 0) to Agent Isolation, World State, Workspaces, Autonomous EDD, and Distribution. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

@@ -21,33 +21,12 @@ To prove that the 8 pillars of modern software development work together seamles
 
 ## 2. Walkthrough Flow & Test Architecture
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Dev as Lead Reviewer (Human)
-    participant UI as RobOS Dev Central & Desktop Suite
-    participant Forge as Hermetic Gitea Git Forge (Local)
-    participant Agent as RobOS Agent Swarm
-    participant Env as Multi-Repo Worktree & Devcontainer
-    participant Gate as Pact & Contract Verification Gate
-
-    Dev->>UI: Create Acme Petshop Task (PET-102) & Dispatch Goal
-    UI->>Forge: Read Topology, Schemas, Contracts from Git
-    UI->>Agent: Launch in Planning Mode
-    Agent->>UI: Submit implementation_plan.md
-    Dev->>UI: Review & Proactive Alignment Session
-    Dev->>UI: Approve Implementation Plan
-    UI->>Env: Provision Multi-Repo Worktrees & Devcontainers
-    UI->>Agent: Execute Plan
-    Agent->>Env: Generate Java Spring Boot & React Code
-    Agent->>Forge: Git Commit & Push Feature Branch (PET-105-vaccine)
-    Agent->>Gate: Run Pact (14/14) & Stoplight Spectral Lint
-    Gate-->>Agent: PASSED (100% contracts verified)
-    Agent->>Forge: Open Pull Request #42 on Gitea
-    Agent->>UI: Submit Proof-of-Work Full-Desktop Walkthrough
-    Dev->>UI: Final Code Review & 1-Click Merge Sign-Off
-    UI->>Forge: Merge PR #42 to main branch on Gitea
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}" alt="Agent-First SDLC Walkthrough & Review Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Agent-First SDLC Walkthrough & Review Architecture</strong>: End-to-end orchestration from task creation and plan alignment to worktree execution, contract gates, and proof-of-work sign-off. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

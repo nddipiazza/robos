@@ -29,29 +29,18 @@ RobOS changes this with a unified **Greenfield Company Bootstrap Wizard**. In un
 4. **Central AI Hub & Shared MCP Tools**: Centralizing LLM API keys (Anthropic Claude, Google Gemini/Antigravity, OpenAI) and configuring shared Model Context Protocol servers.
 5. **Baseline Security & Starter Architecture**: Generating corporate cryptographic signing keys and an initial C4 Level 1 (System Context) Knowledge Graph.
 
-```mermaid
-flowchart TD
-    Init["1. Company Bootstrap Wizard<br/><i>(Company Name, Domain & Root Admin)</i>"]
-    Topo["2. Foundational Team Topologies<br/><i>(Founding Core & Cloud Platform in teams.yaml)</i>"]
-    VCS["3. Greenfield VCS Setup<br/><i>(GitHub Org / Gitea + Branch Protection)</i>"]
-    AI["4. Central AI Hub & MCP Catalog<br/><i>(Claude, Gemini, OpenAI, system-mcp)</i>"]
-    C4["5. Starter C4 Architecture<br/><i>(Level 1 System Context in SDLC Knowledge Graph)</i>"]
-
-    Init --> Topo --> VCS --> AI --> C4
-```
-
----
-
-## Step 1: Company Profile & Root Administrator Initialization
-
-Starting a greenfield company begins with declaring who you are and defining your company tenant. In **Group Manager** (`packages/group-manager`), founders do this directly through the interactive **Greenfield Company Bootstrap Wizard**:
-
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/new-company-bootstrap.jpg' | relative_url }}" alt="Greenfield Startup Bootstrap Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
     <strong>Greenfield Startup Bootstrap Workflow</strong>: How the 5-minute interactive bootstrap activates root cryptographic signing, foundational team topologies, central AI provider hubs, and living C4 starter architecture. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
+
+---
+
+## Step 1: Company Profile & Root Administrator Initialization
+
+Starting a greenfield company begins with declaring who you are and defining your company tenant. In **Group Manager** (`packages/group-manager`), founders do this directly through the interactive **Greenfield Company Bootstrap Wizard**:
 
 ### 1. Interactive Bootstrap Wizard
 1. **Inspect Identity State**: Group Manager displays an unlinked badge (`No Tenant / Unlinked`).
@@ -159,10 +148,10 @@ RobOS connects to your Git hosting provider:
 
 Individual API keys scattered across developer machines lead to billing headaches and security risks. RobOS centralizes AI model management:
 - **Central Model Providers**: Configures shared corporate keys for:
-  - **Anthropic Claude** (Claude 3.7 Sonnet / Claude 3.5 Sonnet)
-  - **Google Gemini & Antigravity** (Gemini 2.0 Flash / Pro)
-  - **OpenAI** (GPT-4o / Codex)
-  - **Local Ollama** (offline deepseek, llama3)
+  - **Anthropic Claude** (Claude Sonnet / Claude Opus)
+  - **Google Gemini & Antigravity** (Gemini Flash / Gemini Pro)
+  - **OpenAI** (GPT / Codex)
+  - **Local Ollama** (offline DeepSeek, Llama)
 - **Shared MCP Tool Registry**: Configures local Model Context Protocol servers:
   - `system-mcp`: OS and system resource management.
   - `task-manager-mcp`: Issue backlog and sprint DAG dispatching.

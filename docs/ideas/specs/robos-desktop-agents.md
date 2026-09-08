@@ -70,31 +70,12 @@ The core value proposition is **"Proof of Work" Verification**: when an agent fi
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    subgraph Host Session (User: robos)
-        H_APP[RobOS Apps: Dev Central / Issue Manager]
-        LIB[packages/robos-agent-session]
-        VIEWER[packages/desktop-agents Electron App]
-        DAEMON[robos-agentd Daemon]
-        CRED[Host Credentials & SSH/GPG Sockets]
-    end
-
-    subgraph Agent Session (User: agent-jira-1234)
-        DISPLAY[Virtual Display :10 / Xvfb / Wayland]
-        SIDEBAR[packages/agent-sidebar - Locked Right Panel]
-        AGENT_APPS[Agent Apps: Chromium, VS Code, Terminals]
-        AGENT_CLI[AI Agent Engine CLI / Executor]
-    end
-
-    H_APP --> LIB
-    LIB --> DAEMON
-    CRED -->|Unix Socket & Mount Plumbing| AGENT_CLI
-    DAEMON -->|useradd & launch| DISPLAY
-    DISPLAY --> SIDEBAR
-    DISPLAY --> AGENT_APPS
-    DISPLAY -->|VNC / PipeWire Stream| VIEWER
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/secure-desktop-bridge-architecture.jpg' | relative_url }}" alt="RobOS Desktop Agent Sessions Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Desktop Agent Sessions & Streaming Architecture</strong>: Isolated sub-user Linux sessions, Xvfb virtual displays, right-pinned agent sidebar, and low-latency desktop streaming. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Impacted Packages & Repositories
 
@@ -112,13 +93,12 @@ graph TD
 
 ## 5. Proposed Implementation Plan
 
-```mermaid
-graph TD
-    P1[Phase 1: Sub-User & Tunneling Daemon] --> P2[Phase 2: Headless Display Stream Engine]
-    P2 --> P3[Phase 3: Pinned Agent Sidebar App]
-    P3 --> P4[Phase 4: robos-agent-session API & Viewer App]
-    P4 --> P5[Phase 5: Proof of Work Verification Workflow]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/desktop-agents-roadmap.jpg' | relative_url }}" alt="Desktop Agents 5-Phase Implementation Plan" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Desktop Agents 5-Phase Implementation Plan</strong>: Milestone progression from sub-user tunneling daemons to display streaming, pinned sidebars, viewer GUI, and proof-of-work workflows. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Phase 1: Sub-User Spawning & Host Credential Tunneling Daemon
 - Implement `robos-agentd` system daemon with root helper for `useradd`/`userdel`.

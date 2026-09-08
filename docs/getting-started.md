@@ -98,12 +98,12 @@ ssh -p 2224 robos@localhost
 
 RobOS applications are built using pure Electron and vanilla JavaScript with zero framework overhead, making them inherently cross-platform.
 
-```mermaid
-flowchart LR
-    Linux["Ubuntu GNOME Linux (Available Now)"] --- Ready["✅ Full Support"]
-    Mac["macOS / OS X (Apple Silicon & Intel)"] --- Soon1["⏳ Coming Soon"]
-    Win["Windows 11 / WSL2"] --- Soon2["⏳ Coming Soon"]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/cross-platform-desktop-architecture.jpg' | relative_url }}" alt="RobOS Cross-Platform Desktop Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Cross-Platform Desktop Architecture</strong>: Ubuntu GNOME Linux available now with native macOS and Windows 11/WSL2 desktop support. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 🍎 macOS / OS X Support (Coming Soon)
 - **Native Apple Silicon & Intel Packages**: Universal `.dmg` installers and Homebrew Cask distribution (`brew install --cask robos-desktop`).

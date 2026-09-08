@@ -60,39 +60,12 @@ RobOS includes purpose-built onboarding wizards across 7 essential infrastructur
 
 ## Technical Architecture: GPG Encryption & First-Class KGraph References
 
-```mermaid
-graph TD
-    subgraph UI [1. DevOps Integration Wizard (packages/devops)]
-        Wizard[Guided 4-Step Connection Wizard]
-        PromptUser[User Enters API Key / Token]
-    end
-
-    subgraph PassStore [2. Local UNIX Password Store (pass)]
-        GPG[GPG Asymmetric Keyring Encryption]
-        EncryptedFile["~/.password-store/devops/<category>/<provider>/<key>.gpg"]
-    end
-
-    subgraph KGraphStore [3. Modular KGraph Packages .robos/]
-        DevOpsNode[robos:DevOpsIntegration Node]
-        PassNode[robos:PassCredential Node<br/>Declares robos:passPath only]
-        ZeroSecret[Zero Plaintext Secrets Committed to Git]
-    end
-
-    subgraph RuntimeUsage [4. Runtime Injection into Ephemeral Sandboxes]
-        Agent[Autonomous Agent / Deployer]
-        RuntimeInject[In-Memory Decryption at Runtime via pass]
-    end
-
-    Wizard --> PromptUser
-    PromptUser --> GPG
-    GPG --> EncryptedFile
-    Wizard --> PassNode
-    PassNode --> DevOpsNode
-    PassNode -.-> ZeroSecret
-    DevOpsNode --> RuntimeInject
-    EncryptedFile --> RuntimeInject
-    RuntimeInject --> Agent
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/devops-security-pass-pipeline.jpg' | relative_url }}" alt="DevOps Security with GPG Password Store Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>DevOps Security & GPG Password Store Pipeline</strong>: Guided connection wizards encrypting tokens into UNIX <code>pass</code> with GPG, referenced by KGraph nodes with zero plaintext in Git. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Zero Plaintext in the Knowledge Graph
 When a cloud integration is registered, RobOS creates a linked node in the Knowledge Graph declaring metadata (provider name, API endpoints, enabled regions) and links it to a `robos:PassCredential` reference node:
@@ -130,7 +103,7 @@ When an autonomous AI agent executes a build or deployment in an ephemeral RAM s
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how ephemeral Linux accounts isolate agents from host keys.
 - **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Read about the 6 standard namespaced package stores and 9 application archetypes.
 - **[Existing Company Setup Guide]({{ site.baseurl }}{% link existing-company-setup.md %})**: Walk through configuring enterprise SSO and directory synchronization.

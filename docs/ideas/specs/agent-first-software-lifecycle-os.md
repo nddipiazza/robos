@@ -65,39 +65,12 @@ The entire RobOS desktop environment and application suite acts as the command c
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    subgraph GitRepo [Git Repository .robos/ Directory]
-        T[topology.yaml<br/>C4 / Backstage]
-        P[teams.yaml<br/>Human & Agent Roster]
-        E[entities/<br/>TypeSpec / JSON Schema]
-        C[contracts/<br/>OpenAPI / AsyncAPI / Pact]
-        PKG[packages.yaml<br/>Devcontainers / Mise]
-        PRJ[projects.yaml<br/>Multi-Repo Graph]
-        TSK[tasks/<br/>DAG Task Graph]
-    end
-
-    subgraph RobOSApps [RobOS Desktop App Suite]
-        DC[Dev Central<br/>Review & Command Hub]
-        TopApp[Topology Manager]
-        HRApp[People & Agent Manager]
-        SchemaApp[Entity Schema Studio]
-        ContractApp[API Contract Studio]
-        PkgApp[App & Package Manager]
-        WSApp[Workspace Manager]
-    end
-
-    subgraph AgentLayer [RobOS Agent Execution Engine]
-        PlanEng[Planning Mode & Human Alignment]
-        ExecEng[Agent Swarm Executor]
-        GateEng[Pact & Buf Verification Gate]
-        WalkEng[Proof-of-Work Walkthrough]
-    end
-
-    GitRepo <--> RobOSApps
-    RobOSApps --> AgentLayer
-    AgentLayer --> GitRepo
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="Agent-First Software Lifecycle OS Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Agent-First Software Lifecycle OS Architecture</strong>: Connecting .robos/ GitOps stores, desktop suite applications, and autonomous agent execution engines. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Impacted Packages/Apps
 - `packages/dev-central`: Central orchestrator for planning, task dispatching, review gates, and blocker radar.

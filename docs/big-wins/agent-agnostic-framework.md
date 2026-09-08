@@ -49,38 +49,12 @@ Engineering teams maintain complete sovereignty: swap underlying models at will,
 
 Instead of inventing proprietary formats, RobOS anchors every layer of the Software Delivery Lifecycle to **battle-tested global open standards** developed by international standards bodies (OASIS, W3C, Linux Foundation):
 
-```mermaid
-graph TD
-    subgraph RobOSOpenStandards ["RobOS Open Standards Foundation (Zero Vendor Lock-In)"]
-        OSLC["<b>OASIS OSLC Core 3.0</b><br/>Requirements, Change Requests, Architecture, Test Plans"]
-        JSONLD["<b>W3C JSON-LD 1.1</b><br/>Semantic linked-data graph stored directly in Git"]
-        SHACL["<b>W3C SHACL</b><br/>Schema constraint validation for architecture nodes"]
-        MCP["<b>Model Context Protocol (MCP)</b><br/>Standardized tool & context discovery"]
-        Contracts["<b>OpenAPI 3.1 & Protobuf & GraphQL</b><br/>Language-neutral API specifications"]
-        Security["<b>UNIX pass & GPG & POSIX Shell</b><br/>Zero plaintext secrets & hermetic sandboxes"]
-    end
-
-    subgraph AgentDispatcher ["RobOS Agent Dispatcher & Session Manager"]
-        Router["Task-to-Value Router & Budget Allocator"]
-    end
-
-    subgraph PluggableAgents ["Pluggable Intelligence Engines (Swappable at Runtime)"]
-        Claude["Claude 3.7 Sonnet / Opus<br/>(Anthropic)"]
-        OpenAI["o3 / GPT-4.5<br/>(OpenAI)"]
-        Gemini["Gemini 2.5 Flash / Pro<br/>(Google)"]
-        Local["DeepSeek R1 / Llama 3<br/>(Local Ollama / vLLM)"]
-    end
-
-    RobOSOpenStandards --> Router
-    Router --> Claude
-    Router --> OpenAI
-    Router --> Gemini
-    Router --> Local
-
-    style RobOSOpenStandards fill:#161b22,stroke:#00bcd4,stroke-width:2px,color:#fff
-    style AgentDispatcher fill:#161b22,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    style PluggableAgents fill:#161b22,stroke:#10b981,stroke-width:2px,color:#fff
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-agnostic-standards.jpg' | relative_url }}" alt="RobOS Open Standards Foundation and Agent Dispatcher" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Open Standards Foundation</strong>: Anchored to OASIS OSLC Core 3.0, W3C JSON-LD, W3C SHACL, and MCP, dynamically routing to pluggable agents. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. OASIS Open Services for Lifecycle Collaboration (OSLC)
 RobOS structures software lifecycle objects using **OASIS OSLC Core 3.0**:
@@ -105,32 +79,20 @@ Not every programming task requires a massive frontier reasoning model. Invoking
 
 RobOS incorporates a **Task-to-Value Dispatch Matrix**, routing tasks to the optimal intelligence tier:
 
-```mermaid
-quadrantChart
-    title Task Complexity vs. Model Cost Optimization
-    x-axis Low Reasoning Complexity --> High Reasoning Complexity
-    y-axis Low Computational Cost --> High Computational Cost
-    quadrant-1 Frontier Heavy Reasoning
-    quadrant-2 Inefficient Overkill (Avoid)
-    quadrant-3 Fast Utility / Local Execution
-    quadrant-4 Cost-Optimized Workhorses
-    "Syntax formatting": [0.15, 0.20]
-    "Unit test boilerplate": [0.30, 0.25]
-    "Schema SHACL validation": [0.20, 0.15]
-    "REST API client generation": [0.45, 0.35]
-    "Microservice refactoring": [0.85, 0.85]
-    "Cross-service blast radius analysis": [0.75, 0.70]
-    "Multi-repo architectural synthesis": [0.92, 0.90]
-    "Security vulnerability mitigation": [0.80, 0.75]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/model-cost-matrix.jpg' | relative_url }}" alt="Task Complexity vs Model Cost Optimization Matrix" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Task-to-Value Dispatch Matrix</strong>: Matching task reasoning complexity against computational cost to optimize engineering velocity and budget. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### The 3 Agent Tiers in RobOS
 
 | Tier | Typical Models | Optimal SDLC Tasks | Cost Profile |
 |:---|:---|:---|:---|
-| **Tier 1: Fast Utility & Local** | Gemini 2.5 Flash, Claude 3.5 Haiku, Local Ollama (Llama 3, DeepSeek) | Commit message generation, lint fixing, schema validation, test stub boilerplate, and offline air-gapped tasks. | Ultra-low cost (<$0.10/M tokens) or $0 (Local GPU). |
-| **Tier 2: Workhorse Implementation** | Claude 3.7 Sonnet, GPT-4.5, Gemini 2.5 Pro | Feature implementation, REST/gRPC API controllers, database migrations, and component unit tests. | Balanced efficiency ($3–$15/M tokens). |
-| **Tier 3: Frontier Deep Reasoning** | Claude 3.7 Thinking / Opus, OpenAI o3, DeepSeek R1 | Multi-app architectural synthesis, cross-microservice refactoring, distributed consensus tracing, and security audits. | Premium high-reasoning tier ($15–$60/M tokens). |
+| **Tier 1: Fast Utility & Local** | Gemini Flash, Claude Haiku, Local Ollama (Llama, DeepSeek) | Commit message generation, lint fixing, schema validation, test stub boilerplate, and offline air-gapped tasks. | Ultra-low cost (<$0.10/M tokens) or $0 (Local GPU). |
+| **Tier 2: Workhorse Implementation** | Claude Sonnet, GPT, Gemini Pro | Feature implementation, REST/gRPC API controllers, database migrations, and component unit tests. | Balanced efficiency ($3–$15/M tokens). |
+| **Tier 3: Frontier Deep Reasoning** | Claude Thinking / Opus, OpenAI Reasoning, DeepSeek | Multi-app architectural synthesis, cross-microservice refactoring, distributed consensus tracing, and security audits. | Premium high-reasoning tier ($15–$60/M tokens). |
 
 ---
 
@@ -171,7 +133,7 @@ For enterprises with strict data sovereignty, GDPR, HIPAA, or defense compliance
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[Universal Web & API Clients]({{ site.baseurl }}{% link big-wins/api-and-web-clients.md %})**: Explore Git-backed REST, gRPC, and GraphQL client tools.
 - **[RobOS Skills Catalog]({{ site.baseurl }}{% link robos-skills.md %})**: Review the open catalog of cross-agent developer skills.

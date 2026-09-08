@@ -2,7 +2,7 @@
 title: Dual-State SDLC Knowledge Graph
 layout: default
 parent: RobOS Big Wins
-nav_order: 9
+nav_order: 10
 permalink: /big-wins/dual-state-knowledge-graph.html
 ---
 
@@ -44,33 +44,12 @@ Instead of treating codebases as isolated silos, RobOS maintains an executable, 
 
 RobOS leverages Git branching to maintain two simultaneous representations of architectural reality:
 
-```mermaid
-graph LR
-    subgraph World1 [World 1: Live Production Reality (main branch)]
-        P_Svc[Order Service v2.4]
-        P_DB[(PostgreSQL orders table)]
-        P_API[OpenAPI 3.1: /orders POST]
-        P_Consumer[Mobile App Consumer v1.8]
-        P_Svc --> P_DB
-        P_Svc --> P_API
-        P_Consumer --> P_API
-    end
-
-    subgraph World2 [World 2: Proposed Feature Branch (feature/order-tax)]
-        F_Svc[Order Service v2.5]
-        F_DB[(PostgreSQL orders table + tax_rate)]
-        F_API[OpenAPI 3.1: /orders POST + tax_cents]
-        F_Svc --> F_DB
-        F_Svc --> F_API
-    end
-
-    subgraph DiffEngine [RobOS Semantic Diff & Blast Radius Engine]
-        Blast[💥 Blast Radius: Breaking change detected on Mobile App Consumer v1.8]
-    end
-
-    World1 -.-> DiffEngine
-    World2 -.-> DiffEngine
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-State SDLC Knowledge Graph World 1 vs World 2 Blast Radius" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Dual-State Blast Radius Detection</strong>: Comparing World 1 (Production <code>main</code>) against World 2 (Proposed Feature Branch) to flag breaking downstream impacts before code is written. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### World 1: Production Reality (`main`)
 World 1 represents what is actively running in production:
@@ -132,29 +111,12 @@ When developers rely on file-local configurations (`.cursorrules`, `CLAUDE.md`, 
 
 RobOS leverages the Knowledge Graph hierarchy to define agent context, skills, and rules **once at the appropriate level**, dynamically synthesizing the effective context whenever an agent session starts:
 
-```mermaid
-graph TD
-    Global["🌐 Level 1: Global / Workstation Level<br/><i>System-wide defaults, base skills, RobOS Preferences</i>"]
-    Company["🏢 Level 2: Company / Enterprise Level<br/><i>Corporate security baseline, approved tech stacks, compliance standards</i>"]
-    Org["🏛️ Level 3: Git Project Organization Level<br/><i>e.g. Apache Software Foundation, GitHub Org rules, licensing, dev@ consensus</i>"]
-    Team["👥 Level 4: Team / Squad Level<br/><i>Team Topologies, ownership domains, PR review SLAs, service standards</i>"]
-    Repo["📦 Level 5: Repository / Component Level<br/><i>Microservice OpenAPI 3.1 contracts, TypeSpec schemas, Gherkin BDD specs</i>"]
-
-    Global --> Company
-    Company --> Org
-    Org --> Team
-    Team --> Repo
-
-    Agent["🤖 AI Agent Session<br/><i>Dynamically receives effective context & rules</i>"]
-    Repo -.->|Inherits entire chain with zero duplication| Agent
-
-    style Global fill:#161b22,stroke:#00bcd4,stroke-width:2px,color:#fff
-    style Company fill:#161b22,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    style Org fill:#161b22,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style Team fill:#161b22,stroke:#10b981,stroke-width:2px,color:#fff
-    style Repo fill:#161b22,stroke:#f59e0b,stroke-width:2px,color:#fff
-    style Agent fill:#0d1117,stroke:#ec4899,stroke-width:2px,color:#fff
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-context-hierarchy.jpg' | relative_url }}" alt="5-Tier Hierarchical Agent Rules and Context Inheritance" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>5-Tier Hierarchical Agent Rules & Context Inheritance</strong>: Dynamically compiling global, enterprise, organization, team, and repository context with zero duplicated prompt rules. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### The 5 Hierarchical Context Levels
 
@@ -218,7 +180,7 @@ RobOS builds upon established, battle-tested open standards rather than propriet
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute safely in RAM with zero machine clutter.
 - **[Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Understand automated headless screen recordings and neural voiceovers.
 - **[Dedicated Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %})**: Read the full technical specification for RobOS Knowledge Graph packages and schemas.

@@ -25,35 +25,12 @@ While AI agent skills handle complex multi-step orchestration across the codebas
 
 The **RobOS Skills Manager** (`packages/skills-manager`) provides an interactive GUI skill catalog shipping with **74+ built-in shell skills** across 10 operational categories:
 
-```mermaid
-flowchart TD
-    subgraph UI ["Desktop & AI Prompt Surfaces"]
-        App["🖥️ Skills Manager App<br/><i>(packages/skills-manager)</i>"]
-        Textarea["💬 &lt;robos-ai-textarea&gt;<br/><i>(@-skill prompt typeahead)</i>"]
-    end
-
-    subgraph Store ["Skills Registry & Store"]
-        Builtin["📦 Built-In Skills (74+)<br/><i>(packages/skills-manager/skills-data.js)</i>"]
-        Custom["🛠️ Custom User Skills<br/><i>(~/.config/robos/skills.json)</i>"]
-        Community["🌐 Community Packs<br/><i>(GitHub Repositories)</i>"]
-    end
-
-    subgraph Exec ["Deterministic Local Execution"]
-        Shell["⚡ POSIX Shell & Tilix Terminal"]
-        IPC["🔒 Desktop Manager IPC Server"]
-    end
-
-    App --> Builtin
-    App --> Custom
-    App --> Community
-    Textarea --> Builtin
-    Textarea --> Custom
-
-    Builtin --> Shell
-    Custom --> Shell
-    Community --> Shell
-    Shell --> IPC
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}" alt="RobOS Skills Manager & Shell Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Skills Manager & Shell Architecture</strong>: Interactive catalog of 74+ shell skills and custom macros accessible via GUI and prompt completion, executing deterministically in POSIX shell and Tilix terminal. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

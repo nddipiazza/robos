@@ -15,7 +15,7 @@ Story 31.03 introduces the **Human & Agent Personnel Manager** (`packages/people
 ### Core Capabilities
 - **Team Topologies Classification**: Structures teams into Stream-Aligned, Platform, Enabling, and Complicated-Subsystem archetypes with defined interaction modes (X-as-a-Service, Collaboration, Facilitating).
 - **Human-in-the-Loop Pair Architecture**: Pairs autonomous AI agent swarms with human Lead Architects for plan review and code approval.
-- **AI Agent Persona Configuration**: Configures model selections (`claude-3.7-sonnet`, `gemini-2.5-pro`, `gpt-4o`) and execution permissions.
+- **AI Agent Persona Configuration**: Configures model selections (`claude-sonnet`, `gemini-pro`, `gpt`) and execution permissions.
 - **Model Context Protocol (MCP) Skill Matrices**: Binds MCP servers (`chrome-devtools`, `git-repo-tools`, `system-services`, `test-fabric`) and RobOS skills (`e2e-driven-dev`, `contract-drift-detector`, `create-feature-spec`) directly to agent personas.
 - **Declarative GitOps Persistence**: Synchronizes all team structures and personas directly to `.robos/teams.yaml`.
 

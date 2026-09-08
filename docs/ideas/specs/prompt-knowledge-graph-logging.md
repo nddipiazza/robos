@@ -77,49 +77,12 @@ Each prompt run is tagged with an explicit origin taxonomy:
 
 ### Ingestion Flow Diagram
 
-```mermaid
-graph TD
-    subgraph CaptureSurfaces [Prompt Capture Surfaces]
-        UI["RobOS Electron App<br/>&lt;robos-ai-textarea&gt;<br/>(User Input)"]
-        Auto["RobOS Background Agents<br/>Cron / Schedulers / Reviewers<br/>(No User Input)"]
-        Term["Terminal CLI (Tilix / zsh)<br/>gh copilot / claude / agy<br/>(External Terminal)"]
-        Sub["Sub-Agent Spawner<br/>(Subagent Delegation)"]
-    end
-
-    subgraph LoggerEngine [RobOS Prompt Ingestion Service]
-        Interceptor[Prompt Logging Middleware / IPC]
-        TaxonomyClassifier[Origin Taxonomy Tagging]
-        SHACLValidator[W3C SHACL Validator]
-    end
-
-    subgraph GitStore [Git Repository .robos/]
-        PromptStore[".robos/prompts/YYYY-MM-DD/&lt;uuid&gt;.jsonld"]
-        KGraph["Modular KGraph Packages"]
-    end
-
-    subgraph DownstreamArtifacts [Linked SDLC Entities]
-        Plan["robos:ImplementationPlan"]
-        Ticket["oslc_cm:ChangeRequest"]
-        Commit["robos:Commit"]
-    end
-
-    subgraph AnalyticsUI [Observability & Inspection]
-        DC["Dev Central Prompt Audit View"]
-        GS["Knowledge Graph Studio"]
-    end
-
-    UI -->|OriginRobOSUserInteractive| Interceptor
-    Auto -->|OriginRobOSAutonomous| Interceptor
-    Term -->|OriginExternalTerminal| Interceptor
-    Sub -->|OriginSubagentDelegation| Interceptor
-
-    Interceptor --> TaxonomyClassifier
-    TaxonomyClassifier --> SHACLValidator
-    SHACLValidator --> PromptStore
-    PromptStore --> KGraph
-    PromptStore --> DownstreamArtifacts
-    KGraph --> DC & GS
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/prompt-logging-architecture.jpg' | relative_url }}" alt="Prompt Knowledge Graph Logging Pipeline Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Prompt Knowledge Graph Logging Pipeline Architecture</strong>: Capturing prompts across UI textareas, background cron jobs, and CLI terminals into validated OSLC JSON-LD and linked SDLC entities. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### JSON-LD Object Representation (`robos:Prompt`)
 

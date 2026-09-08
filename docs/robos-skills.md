@@ -34,41 +34,12 @@ In conventional development setups, AI coding assistants are trapped in vendor-s
 
 A RobOS Skill is an executable, portable capability packaged as open, plain-text markdown specifications (`SKILL.md`) and companion CLI engines. Skills provide deterministic, cross-agent workflows that teach any AI agent—as well as human engineers—how to carry out complex SDLC operations with zero guesswork.
 
-```mermaid
-flowchart TD
-    subgraph Marketplace ["RobOS Plugin Marketplace (plugins/robos/)"]
-        direction TB
-        SkillDef["📄 SKILL.md<br/><i>(Standard Frontmatter & Procedures)</i>"]
-        CmdDef["⚡ Command Bridges<br/><i>(/slash-commands & CLI scripts)</i>"]
-        Manifest["📦 plugin.json<br/><i>(Manifest & Compatibility)</i>"]
-        SkillDef --- CmdDef --- Manifest
-    end
-
-    Sync["🔄 ./plugins/install.sh --sync"]
-    Marketplace --> Sync
-
-    subgraph Agents ["Supported AI Agent Platforms"]
-        Claude["🟣 Claude Code<br/><i>.claude/commands/</i>"]
-        Codex["🟢 OpenAI Codex<br/><i>.agents/skills/</i>"]
-        AGY["🔵 Google Antigravity<br/><i>.antigravity/commands/</i>"]
-        Copilot["⚫ GitHub Copilot<br/><i>.github/skills/</i>"]
-        Gemini["🟡 Gemini CLI<br/><i>.gemini/commands/</i>"]
-    end
-
-    Sync --> Claude
-    Sync --> Codex
-    Sync --> AGY
-    Sync --> Copilot
-    Sync --> Gemini
-
-    subgraph Desktop ["RobOS Desktop & Runtime Integration"]
-        GUI["🖥️ Skills Manager App<br/><i>(packages/skills-manager)</i>"]
-        Textarea["💬 &lt;robos-ai-textarea&gt;<br/><i>(@-skill prompt typeahead)</i>"]
-        KGraph["🌐 SDLC Knowledge Graph<br/><i>(Living Architecture Sync)</i>"]
-    end
-
-    Agents --> Desktop
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/robos-skills-architecture.jpg' | relative_url }}" alt="RobOS Skills Standard & Marketplace Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Skills Standard & Marketplace Architecture</strong>: Synchronizing vendor-agnostic AI agent skills and shell skills across Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -280,6 +251,6 @@ node packages/robos-test/demos/skills-manager-demo.js
 ## Next Steps
 
 - **[Agent-Agnostic Framework]({{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %})**: Learn how universal skills eliminate vendor lock-in.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural innovations and strategic advantages.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

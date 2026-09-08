@@ -122,35 +122,12 @@ A GraphQL IDE inspired by GraphiQL and Altair:
 
 RobOS tightly couples its API clients with **Consumer-Driven Contract Testing**:
 
-```mermaid
-graph LR
-    subgraph Design [1. Contract Design]
-        Contract[OpenAPI 3.1 / Protobuf Contract]
-    end
-
-    subgraph Mocking [2. Ephemeral Mock Servers]
-        Prism[Stoplight Prism Mock Server<br/>Instant Response Simulation]
-    end
-
-    subgraph ClientExecution [3. Git-Backed Client Execution]
-        REST[REST .bru Collection Runner]
-        gRPC[gRPC Dynamic Reflection Client]
-        GraphQL[GraphQL Introspection Client]
-    end
-
-    subgraph Verification [4. Verification Gates]
-        Pact[Pact Consumer Verification Gate]
-        Diff[Semantic Contract Drift Detection]
-    end
-
-    Contract --> Prism
-    Contract --> REST
-    Contract --> gRPC
-    Contract --> GraphQL
-    REST --> Pact
-    gRPC --> Pact
-    Pact --> Diff
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/api-clients-verification-lifecycle.jpg' | relative_url }}" alt="RobOS Universal Web and API Verification Lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Universal Web & API Verification Lifecycle</strong>: From OpenAPI 3.1 & Protobuf contracts through ephemeral mock servers and Git-backed execution to Pact verification gates. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 - **Stoplight Prism Mock Servers**: When designing a new microservice in the Knowledge Graph, RobOS spins up a local Prism mock server. Frontend and client developers can immediately begin issuing real HTTP requests against mock endpoints before backend implementation begins.
 - **Pact Consumer Contracts**: RobOS validates that changes made by AI agents or developers do not break downstream consumers before pull requests can be merged.
@@ -159,7 +136,7 @@ graph LR
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Connect and explore databases alongside API contracts.
 - **[Interactive Task Planning Studio]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**: Explore 66+ default task templates and structured planning.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: View detailed specifications for the REST API Client, gRPC Client, and GraphQL Client.

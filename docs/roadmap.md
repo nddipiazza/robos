@@ -29,57 +29,12 @@ In RobOS, every architectural phase is validated through containerized headless 
 
 ## 6-Phase Dependency Roadmap
 
-```mermaid
-graph TD
-    subgraph Phase0 [Phase 0: Bootstrapped Foundation & Setup]
-        DF[Desktop Foundation]
-        AF[App Framework & Shared Libraries]
-        DT[Software Center & Dev Tools]
-        SA[Security Setup & GPG Secrets]
-        SU[Unified Onboarding Wizard & Group Manager]
-    end
-
-    subgraph Phase1 [Phase 1: Agent Identity, Isolation & System Services]
-        SS[System Services & Notification Engine]
-        EP[Ephemeral Agent User Profiles & tmpfs]
-        DA[Desktop Agent Sessions & Tunneling]
-        MCP[First-Class Model Context Protocol Servers]
-    end
-
-    subgraph Phase2 [Phase 2: World State Modeling & GitOps Schema]
-        KG[Dual-State SDLC Knowledge Graph]
-        SLOS[8-Pillar Declarative SDLC Engine]
-        PG[Contract-Driven Project Graph & Archetypes]
-        EK[Engineering Knowledge Graph & Living Docs]
-    end
-
-    subgraph Phase3 [Phase 3: Work Items, Multi-Repo Workspaces & Review Hub]
-        TM[Task & Issue Management DAGs]
-        WM[Multi-Repo Workspace Orchestrator]
-        EE[Event Engine & Agent Scheduler]
-        DC[Dev Central — AI Agent Review Hub]
-    end
-
-    subgraph Phase4 [Phase 4: Autonomous E2E-Driven Dev & Verification]
-        EDD[App Test Framework & Test Fabric]
-        REV[Interactive Reviewer & Video Proof]
-        AI[AI Agent Integration & Questionnaire]
-        CR[PR Review Board & CI Monitor]
-    end
-
-    subgraph Phase5 [Phase 5: Extended Experience & Distribution]
-        WJ[Work Journal & Activity Feed]
-        VI[Voice Dictation & Local STT]
-        MR[Management Dashboards & DORA KPIs]
-        RP[Release Packaging & VM Distribution]
-    end
-
-    Phase0 --> Phase1
-    Phase1 --> Phase2
-    Phase2 --> Phase3
-    Phase3 --> Phase4
-    Phase4 --> Phase5
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/roadmap-phases-architecture.jpg' | relative_url }}" alt="RobOS 6-Phase Dependency Roadmap" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS 6-Phase Dependency Roadmap</strong>: Milestone progression from Bootstrapped Foundation (Phase 0) to Agent Isolation, World State, Workspaces, Autonomous EDD, and Distribution. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

@@ -72,18 +72,12 @@ Furthermore, by integrating with the **RobOS People & Groups directory**, **RobO
 
 ## 4. Architectural & System Integration
 
-```mermaid
-graph TD
-    A[RobOS AI Agent] -->|MCP Tool Calls| B[robos-file-storage-mcp]
-    C[RobOS File Storage App] -->|IPC Invocation| D[Storage Core Engine]
-    B --> D
-    D --> E[AWS S3 Adapter]
-    D --> F[Google Cloud Adapter]
-    D --> G[Azure Blob Adapter]
-    D --> H[Drive / OneDrive Adapter]
-    D -->|Lookup User Identities & Groups| I[People & Groups Service]
-    D -->|Store/Retrieve Encrypted Keys| J[GPG Pass Store]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/file-storage-sharing-architecture.jpg' | relative_url }}" alt="RobOS File Storage & Cloud Sharing Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS File Storage & Cloud Sharing Architecture</strong>: MCP tools, desktop GUI app, People Directory identity resolution, and multi-cloud adapters (S3, GCS, Azure, OneDrive). <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 - **Impacted Packages/Apps**:
   - `packages/file-storage` (new Electron desktop app)

@@ -44,40 +44,12 @@ Whenever an autonomous agent implements a task, it executes an End-to-End Driven
 
 ## The 4-Stage Proof-of-Work Pipeline
 
-```mermaid
-graph TD
-    subgraph Execution [1. Headless Execution Engine]
-        Xvfb[Xvfb Virtual Display :99]
-        AppUI[Running Application UI]
-        DB[(Live Database Queries)]
-        API[API Contract Assertions]
-        Xvfb --- AppUI
-    end
-
-    subgraph Capture [2. Multi-Modal Evidence Capture]
-        FFmpeg[FFmpeg 1080p 60fps Screen Recording]
-        Piper[Piper Neural TTS Voiceover Synthesis]
-        VTT[WebVTT Timestamped Subtitles]
-    end
-
-    subgraph Packaging [3. Proof-of-Work Package]
-        WebM[walkthrough.webm Video]
-        Audio[audio.wav Track]
-        Transcript[transcript.vtt Subtitles]
-        Markdown[step-by-step-summary.md]
-    end
-
-    subgraph Review [4. Dev Central Review Experience]
-        Player[Interactive Video Player with Jump-to-Step]
-        AST[IDE AST Navigation & Diff Review]
-        Approve[1-Click Approval & Merge]
-    end
-
-    Execution --> Capture
-    Capture --> Packaging
-    Packaging --> Review
-    Review --> Approve
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/video-proof-of-work-pipeline.jpg' | relative_url }}" alt="Automated Video Proof-of-Work Pipeline Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The 4-Stage Proof-of-Work Pipeline</strong>: Headless execution with multi-layer assertions to multi-modal capture (FFmpeg + Piper TTS), unified packaging, and interactive Dev Central review. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Deterministic Multi-Layer Assertions
 The test harness (`packages/robos-test`) runs deterministic assertions across every architectural layer:
@@ -124,7 +96,7 @@ In **RobOS Dev Central** (`packages/dev-central`), pull requests are presented w
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[100% Declarative GitOps Storage]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual topologies compile into cloud-ready Kubernetes manifests.
 - **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Discover RobOS's integrated relational and NoSQL database suite.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch recorded video walkthroughs and view sample test suites.

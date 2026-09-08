@@ -20,21 +20,12 @@ Instead of developers writing code line-by-line and conducting post-hoc pull req
 
 Dev Central serves as the operational headquarters where lead developers manage organizations, oversee interconnected projects/apps, dispatch high-level goals, and orchestrate the review-driven lifecycle across local workspaces, RobOS IDE instances, and isolated Desktop Agent sessions.
 
-```mermaid
-graph TD
-    A[Lead Developer Goal / Prompt] --> B[Dev Central: Goal Dispatcher]
-    B --> C[Agent Autonomous Research]
-    C --> D[Implementation Plan Proposal: implementation_plan.md]
-    D --> E{Dev Central: Plan Review Hub}
-    E -->|Probe / Refine / Align| C
-    E -->|Approved| F[Agent Swarm Execution in Workspace]
-    G[Subagents: Research, Coding, Test Runner]
-    F --> G
-    G --> H[Proof-of-Work & Walkthrough: walkthrough.md]
-    H --> I{Dev Central: Walkthrough Review}
-    I -->|Changes Requested| F
-    I -->|Sign-Off| J[Automated PR Merge & CI/CD Release]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}" alt="Dev Central AI Agent Review-Driven Development Lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Dev Central AI Agent Review-Driven Lifecycle</strong>: Lead developer goal dispatching, implementation plan review, agent swarm execution, and walkthrough sign-off. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 

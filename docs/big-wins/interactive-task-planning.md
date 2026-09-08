@@ -54,42 +54,12 @@ RobOS provides **66+ pre-configured, battle-tested task templates** organized ac
 
 ## Technical Architecture: From Template Form to Executable DAG
 
-```mermaid
-graph TD
-    subgraph UI [1. RobOS Task Planner Studio (packages/task-planner)]
-        Selector[Select Domain Template]
-        Form[Interactive Web Form: Endpoints / Schemas / DBs]
-        Builder[Custom Template Authoring Studio]
-    end
-
-    subgraph PlanningEngine [2. Phased DAG Synthesis Engine]
-        LLM[Agent Reasoning & Architecture Synthesis]
-        DAG[Phased Directed Acyclic Graph]
-        PlanArtifact[Git-Backed Plan: .robos/plans/<id>.jsonld]
-    end
-
-    subgraph IssueSync [3. Bidirectional Issue Trackers]
-        GH[GitHub Issues]
-        Jira[Jira Cloud & Server]
-        LocalServer[RobOS Local Task Server]
-    end
-
-    subgraph Execution [4. Autonomous Agent Execution]
-        DevCentral[Dev Central Milestone Checkpoints]
-        Agents[Agents Manager Autonomous Swarms]
-    end
-
-    Selector --> Form
-    Builder --> Form
-    Form --> LLM
-    LLM --> DAG
-    DAG --> PlanArtifact
-    PlanArtifact --> GH
-    PlanArtifact --> Jira
-    PlanArtifact --> LocalServer
-    DAG --> DevCentral
-    DevCentral --> Agents
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/interactive-task-planning-flow.jpg' | relative_url }}" alt="RobOS Interactive Task Planning Studio Software Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Interactive Task Planning & Synthesis Pipeline</strong>: From 66+ domain web forms through phased DAG reasoning to bidirectional GitHub/Jira synchronization and agent swarms. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. Custom Template Authoring Studio
 Every engineering organization has unique conventions, compliance rules, and architectural standards. RobOS includes a visual **Custom Template Builder**:
@@ -114,7 +84,7 @@ RobOS bridges the gap between local GitOps planning and enterprise issue trackin
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Discover how RobOS partitions architectures into namespaced packages and synthesizes full applications.
 - **[DevOps Security & Password Store]({{ site.baseurl }}{% link big-wins/devops-security-pass.md %})**: Learn about GPG-encrypted credential management.
 - **[Task Planner Application Guide]({{ site.baseurl }}{% link apps.md %})**: Read the complete manual for the Task Planner desktop app.

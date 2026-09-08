@@ -31,17 +31,12 @@ The open repository of community feature proposals, raw idea notes, structured a
 
 RobOS turns rough thoughts into executable software blueprints through a 4-stage automated pipeline:
 
-```mermaid
-graph LR
-    A["1. Raw Idea Dump<br/><i>docs/ideas/inbox/</i>"] -->|AI Spec Generation| B["2. Structured Spec<br/><i>docs/ideas/specs/</i>"]
-    B -->|Lead Architect Approval| C["3. Project Epic & Tasks<br/><i>docs/project-plan/</i>"]
-    C -->|Autonomous Agent Swarms| D["4. Verified Software<br/><i>Code + Video Proof</i>"]
-
-    style A fill:#161b22,stroke:#8b5cf6,stroke-width:1.5px,color:#fff
-    style B fill:#161b22,stroke:#00bcd4,stroke-width:1.5px,color:#fff
-    style C fill:#161b22,stroke:#10b981,stroke-width:1.5px,color:#fff
-    style D fill:#161b22,stroke:#3b82f6,stroke-width:2px,color:#fff
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}" alt="RobOS Ideas 4-Stage Lifecycle Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Ideas & Specs Pipeline</strong>: 4-stage automated lifecycle from raw notes in inbox to structured specs, approved project epics, and verified software implementations. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 1. **Inbox / Raw Ideas ([`docs/ideas/inbox/`](https://github.com/nddipiazza/robos/tree/main/docs/ideas/inbox))**: Dump quick bullet points, voice recordings, raw user feedback, or terminal logs.
 2. **Structured Feature Specs ([`docs/ideas/specs/`](https://github.com/nddipiazza/robos/tree/main/docs/ideas/specs))**: AI agents use the `create-feature-spec` skill to convert raw notes into formalized requirements, SHACL schema impacts, and architecture diagrams.
@@ -93,4 +88,4 @@ The agent will run the `create-feature-spec` skill to produce a validated specif
 
 - **[Browse Raw Ideas on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas/inbox)**: Read unformatted notes and community feature brainstorms.
 - **[View All Feature Specs on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas/specs)**: Inspect detailed architectural specifications.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover the 10 core architectural advantages powering RobOS.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover the 11 core architectural advantages powering RobOS.

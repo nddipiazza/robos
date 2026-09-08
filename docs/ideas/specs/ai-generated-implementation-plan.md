@@ -75,43 +75,12 @@ Whenever the **RobOS Task Planner** (`packages/task-planner`) analyzes a require
 
 ### System Architecture Flow
 
-```mermaid
-graph TD
-    subgraph UI [Developer & Agent Interfaces]
-        TP[RobOS Task Planner<br/>packages/task-planner]
-        DC[RobOS Dev Central<br/>packages/dev-central]
-        GS[Knowledge Graph Studio<br/>packages/robos-graph]
-    end
-
-    subgraph PlannerEngine [Task Planning & Synthesis Engine]
-        LLM[Agent Reasoning / Copilot Engine]
-        SchemaGen[Implementation Plan Synthesizer]
-        SHACLVal[W3C SHACL Shape Validator]
-    end
-
-    subgraph GitStore [Git Repository .robos/]
-        PlanJSONLD[.robos/plans/<plan-id>.jsonld]
-        PlanMD[.robos/plans/<plan-id>.md]
-        KGraph[Modular KGraph Packages]
-    end
-
-    subgraph ExternalTrackers [Task Backends]
-        Jira[Jira Cloud / Server]
-        GH[GitHub Issues]
-        Local[RobOS Local Task Server]
-    end
-
-    TP -->|Prompt / Requirement| LLM
-    LLM --> SchemaGen
-    SchemaGen --> SHACLVal
-    SHACLVal -->|Write Artifacts| GitStore
-    SchemaGen -->|Sync Tickets| ExternalTrackers
-
-    PlanJSONLD & PlanMD --> KGraph
-    KGraph --> GS
-    GitStore --> DC
-    DC -->|Approve & Dispatch| TP
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/interactive-task-planning-flow.jpg' | relative_url }}" alt="AI Task Planning & Synthesis Engine Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>AI Task Planning & Synthesis Engine Architecture</strong>: Developer requirements transformed through AI reasoning, SHACL shape validation, and Git-backed plan synthesis to external issue trackers. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### JSON-LD Object Representation (`robos:ImplementationPlan`)
 

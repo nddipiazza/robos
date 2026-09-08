@@ -191,25 +191,12 @@ When migrating an existing company, organization, or division into RobOS, instit
 
 RobOS equips autonomous AI agents with the **`import-company-kgraph`** skill to discover, analyze, and convert any source into standard, validated OSLC JSON-LD Knowledge Graph entries:
 
-```mermaid
-flowchart LR
-    subgraph Sources ["External & Enterprise Sources"]
-        HTTP["🌐 HTTP / HTTPS REST API<br/>(Backstage catalog-entities.json)"]
-        S3["🪣 AWS S3 Bucket<br/>(s3://company/sdlc-catalog.json)"]
-        FS["📁 Local FileSystem<br/>(~/.config/robos/git-projects.json)"]
-        Git["🐙 Git Forges<br/>(GitHub / GitLab / Bitbucket Orgs)"]
-    end
-
-    Skill["🤖 AI Agent Skill<br/><b>import-company-kgraph</b>"]
-
-    subgraph Generated ["RobOS Knowledge Graph Artifacts"]
-        KGraph["📄 company-kgraph.jsonld<br/>(Valid OSLC JSON-LD & C4 Nodes)"]
-        Contracts["📜 OpenAPI 3.1 Contracts<br/>(specs/contracts/*-v1.yaml)"]
-        Stores["📦 .robos/kgraphs/ Stores<br/>(services, applications, devops)"]
-    end
-
-    Sources --> Skill --> Generated
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/import-company-kgraph-pipeline.jpg' | relative_url }}" alt="Enterprise Knowledge Graph Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Enterprise Knowledge Graph Ingestion Pipeline</strong>: How import-company-kgraph ingests HTTP, S3, FileSystem, and Git forge inventories into validated OSLC JSON-LD and C4 architecture nodes. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Ingestion CLI Commands
 AI agents or developers can execute the companion engine directly:
@@ -260,29 +247,12 @@ A Git Project Organization captures both external forge metadata and living inte
 2. **Documentation Context (`robos:documentation`)**: Preserves canonical documentation hubs (`docsUrl`), documentation paths (`docsPaths`), corporate/foundation licensing (`license`), and high-level architectural guidelines (`architectureGuidelines`).
 3. **Organization-Wide Agent Rules (`robos:agentRules`)**: Declares standard rules, constraints, and severity levels (e.g., license header requirements, consensus tracing, dependency hygiene) enforced across all child repositories.
 
-```mermaid
-graph TD
-    subgraph OrgBox ["Git Project Organization: Apache (urn:robos:git-org:apache)"]
-        Org["robos:GitProjectOrganization<br/>Apache Software Foundation<br/>github.com/apache"]
-        Docs["robos:documentation<br/>docsUrl: apache.org/dev/<br/>guidelines: The Apache Way"]
-        Rules["robos:agentRules<br/>• RULE-APACHE-001 (License Header)<br/>• RULE-APACHE-002 (Consensus Tracing)<br/>• RULE-APACHE-003 (Semantic Commits)<br/>• RULE-APACHE-004 (Supply Chain Security)"]
-        Org --> Docs
-        Org --> Rules
-    end
-
-    subgraph ReposBox ["Governed Member Repositories"]
-        Kafka["Kafka Service<br/>github.com/apache/kafka"]
-        Spark["Spark Data Pipeline<br/>github.com/apache/spark"]
-        Lucene["Lucene Core<br/>github.com/apache/lucene"]
-    end
-
-    Org --> Kafka
-    Org --> Spark
-    Org --> Lucene
-    Kafka -.-> Rules
-    Spark -.-> Rules
-    Lucene -.-> Rules
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/agent-context-hierarchy.jpg' | relative_url }}" alt="Git Organization Policy and Agent Rules Inheritance" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Hierarchical Context & Agent Rules Inheritance</strong>: How Git Project Organizations cascade documentation, licensing guidelines, and agent rules to member repositories without duplicate configuration. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Automatic Rule Inheritance for AI Agents
 
@@ -495,6 +465,6 @@ From the single source of truth in the Knowledge Graph, the companion desktop ap
 ## Next Steps
 
 - **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 18+ SHACL constraint shapes across the 6 standard RobOS package stores.
-- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural advantages powering RobOS.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

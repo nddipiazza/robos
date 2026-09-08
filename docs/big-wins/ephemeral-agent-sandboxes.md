@@ -45,31 +45,12 @@ Instead of executing directly on your workstation, RobOS dynamically provisions 
 
 Every autonomous agent session in RobOS is orchestrated by `robos-profiled` and the desktop agent manager:
 
-```mermaid
-graph TD
-    subgraph HostOS [Host Workstation / RobOS Desktop]
-        DevUser[Developer User Session<br/>Display :0 / Protected Keys]
-        Manager[Desktop Agent Manager<br/>packages/desktop-agents]
-    end
-
-    subgraph SandboxedAgent [Isolated Ephemeral Profile (/home/agent-b3eec328)]
-        RAM[High-Speed In-Memory RAM tmpfs<br/>Zero Disk Footprint]
-        Display[Virtual Display :99<br/>Xvfb + Picom Compositor]
-        DebugPorts[DOM Snapshot Debug Ports<br/>19100 - 19183]
-        AgentProcess[Autonomous Agent Process<br/>Claude / Codex / Antigravity]
-    end
-
-    subgraph MemoryCleanup [Lifecycle Teardown]
-        InstantWipe[Instant RAM Wipe<br/>Zero Residual Node Modules or Containers]
-    end
-
-    DevUser -->|Dispatch Task| Manager
-    Manager -->|Spawn Ephemeral Sandbox| SandboxedAgent
-    RAM --- Display
-    Display --- DebugPorts
-    DebugPorts --- AgentProcess
-    AgentProcess -->|Task Complete / Abort| InstantWipe
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/ephemeral-sandboxes-architecture.jpg' | relative_url }}" alt="Ephemeral In-Memory Agent Sandboxes Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Ephemeral In-Memory Sandbox Lifecycle</strong>: Task dispatched to temporary <code>tmpfs</code> profile on virtual display :99 with instant memory wipe on teardown. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 1. High-Speed RAM Execution (`tmpfs`)
 - Workspaces and build directories are mounted directly to a RAM-backed `tmpfs` file system at `/home/agent-<session-id>/`.
@@ -107,7 +88,7 @@ Even though the agent operates on an isolated virtual display, the human develop
 
 ## Next Steps
 
-- **[Explore All 10 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
+- **[Explore All 11 RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Big Wins executive overview.
 - **[Autonomous Video Proof-of-Work]({{ site.baseurl }}{% link big-wins/video-proof-of-work.md %})**: Discover how sandboxed agents record 1080p walkthrough videos and neural voiceovers.
 - **[100% Declarative GitOps]({{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %})**: Learn how visual topologies compile into cloud-ready Kubernetes manifests.
 - **[Feature Spec: Ephemeral Agent User Profiles]({{ site.baseurl }}{% link ideas/specs/ephemeral-agent-user-profiles.md %})**: Review the deep architectural specification.
