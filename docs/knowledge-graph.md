@@ -494,6 +494,7 @@ From the single source of truth in the Knowledge Graph, the companion desktop ap
 
 ## Next Steps
 
+- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 18+ SHACL constraint shapes across the 6 standard RobOS package stores.
 - **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 10 core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
