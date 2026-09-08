@@ -26,6 +26,13 @@ While AI agent skills handle complex multi-step orchestration across the codebas
 The **RobOS Skills Manager** (`packages/skills-manager`) provides an interactive GUI skill catalog shipping with **74+ built-in shell skills** across 10 operational categories:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-overview.png' | relative_url }}" alt="RobOS Skills Manager Catalog Overview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Skills Manager Live Catalog</strong>: Interactive desktop grid displaying 61+ built-in workstation skills, category navigation pills, fast typeahead search, and inline parameter fields. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}" alt="RobOS Skills Manager & Shell Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
     <strong>RobOS Skills Manager & Shell Architecture</strong>: Interactive catalog of 74+ shell skills and custom macros accessible via GUI and prompt completion, executing deterministically in POSIX shell and Tilix terminal. <em>(Click image to zoom full screen)</em>
@@ -51,19 +58,58 @@ The Skills Manager organizes commands into 10 structured categories:
 | **Security & Auditing** | 5 | SSH key inventory and fingerprints (`ssh-keygen -lf`), GPG key list, recent user login history (`last`), sudo usage audit, open file descriptors count. |
 | **Development Runtimes**| 4 | Node & npm versions, Python version, current environment variables, port-in-use finder (`ss -tlnp | grep :<port>`). |
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-git-category.png' | relative_url }}" alt="Category Navigation — Git Operations" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Category Filtering (Git Operations)</strong>: Instantly focus on version control macros, commit log visualizers, branch cleanup, and contributor statistics with one-click terminal execution. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
 ---
 
 ## Interactive Features
 
 ### 1. Instant Parameterization & Search
-- Filter by category tab (File, Process, Git, Network, Docker, etc.) or type instant search terms.
-- For commands requiring parameters (e.g. `$PORT`, `$FILE`, `$PATTERN`), the UI renders dynamic input fields to customize arguments before execution.
+
+Filter by category tab (File, Process, Git, Network, Docker, etc.) or type instant search terms. For commands requiring runtime parameters (such as `$PORT`, `$FILE`, `$PATTERN`, or `$BRANCH`), the UI automatically detects bash variables and renders dynamic inline input boxes so arguments can be customized prior to execution:
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-search-parameter.png' | relative_url }}" alt="Dynamic Search and Inline Parameter Fields" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Instant Search & Parameter Binding</strong>: Typing "port" instantly narrows the view to port-related utilities, rendering an editable input field for <code>$PORT</code> that seamlessly interpolates into <code>ss -tlnp | grep :$PORT</code>. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### 2. Custom User Skills
-Developers can add personal bash commands and scripts directly from the UI by clicking **+ Create Custom Skill**. Custom skills are saved to `~/.config/robos/skills.json` and persist across reboots.
 
-### 3. Community Skill Packs
-Install shared skill packs directly from GitHub repositories under the **Skill Packs** tab, expanding your workstation toolchain with squad-specific deployment macros and database helpers.
+Developers can add personal bash commands and scripts directly from the UI by clicking **+ New Skill**. Custom skills are saved to `~/.config/robos/skills.json` and persist across reboots, instantly becoming available in the desktop grid and across all AI prompt bars.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-create-modal.png' | relative_url }}" alt="Authoring Custom Skills Modal" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Custom Skill Authoring Dialog</strong>: Declare custom shell macros with variable placeholders (e.g. <code>git stash push -m "$MSG"</code>), assigning categories and descriptions for immediate workstation availability. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+### 3. Community Skill Packs & Pattern Inspection
+
+Under the **Skill Packs** tab, developers can browse curated collections of skills and patterns tailored for specific engineering domains: SDLC Essentials, Cloud Native, Security Hardening, and Frontend Toolkit.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-packs-marketplace.png' | relative_url }}" alt="Skill Packs Marketplace" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Skill Packs Marketplace</strong>: Browse, install, and manage curated skill bundles designed for Kubernetes, SDLC workflows, security auditing, and modern frontend frameworks. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+Clicking **View Patterns** opens an in-depth pattern inspector showing the full library of prompt engineering templates, required parameters, and generated context instructions:
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/skills-manager-pattern-browser.png' | relative_url }}" alt="Pattern Browser & Prompt Preview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Pattern Browser & Live Prompt Preview</strong>: Inspect structured AI prompt templates (Code Review, Refactoring, Test Generation) with markdown formatting, parameter placeholders, and direct copy-to-clipboard functionality. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -82,6 +128,9 @@ Every skill registered in the Skills Manager is automatically wired into the `<r
 ```bash
 # Launch the Skills Manager (or open "Skills Manager" in RobOS App Launcher):
 electron packages/skills-manager
+
+# Run the comprehensive End-to-End test suite with screenshot capture:
+node --test packages/robos-test/tests/skills-manager/e2e.test.js
 
 # Run the automated smoke test suite:
 node --test packages/robos-test/tests/skills-manager/smoke.test.js

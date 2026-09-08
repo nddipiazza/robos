@@ -102,9 +102,11 @@ describe('skills-manager smoke', () => {
         `document.querySelectorAll('.skill-card').length`);
 
       await evalJS(app.port, `
-        const input = document.getElementById('search-input');
-        input.value = 'docker';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        (() => {
+          const input = document.getElementById('search-input');
+          input.value = 'docker';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        })()
       `);
       await new Promise(r => setTimeout(r, 200));
 
@@ -121,11 +123,13 @@ describe('skills-manager smoke', () => {
         `document.querySelectorAll('.skill-card').length`);
 
       await evalJS(app.port, `
-        const input = document.getElementById('search-input');
-        input.value = '';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        (() => {
+          const input = document.getElementById('search-input');
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        })()
       `);
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 400));
 
       const restored = await evalJS(app.port,
         `document.querySelectorAll('.skill-card').length`);

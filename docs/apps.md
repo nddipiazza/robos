@@ -262,7 +262,7 @@ The complete suite of 51 native developer desktop applications covering the enti
           <p class="robos-app-desc">Curate files, web URLs, Git repos, and Jira tickets for high-signal AI agent context.</p>
         </div>
       </div>
-      <a href="{{ '/robos-skills.html' | relative_url }}" class="robos-app-card">
+      <a href="#skills-manager--cross-agent-ai-skills-library" class="robos-app-card">
         <div class="robos-app-icon-wrap">
           <img src="{{ '/assets/images/icons/skills-manager.svg' | relative_url }}" width="38" height="38" alt="Skills Manager icon" loading="lazy">
         </div>
@@ -765,7 +765,8 @@ The semantic command center and ontology explorer bridging Schema.org, OASIS OSL
 ![Schema Studio]({{ '/assets/images/screenshots/schema-studio-frame_01.png' | relative_url }})
 
 ### Skills Manager & Cross-Agent AI Skills Library
-Access 74+ parameterized system, Git, and Docker diagnostic commands alongside standardized cross-agent AI skills for Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. Read the full [RobOS Skills Guide]({{ site.baseurl }}{% link robos-skills.md %}).
+Access 74+ parameterized system, Git, and Docker diagnostic commands alongside standardized cross-agent AI skills for Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. Read the full [RobOS Skills Guide]({{ site.baseurl }}{% link robos-skills.md %}) and [Skills Manager Desktop App Guide]({{ site.baseurl }}{% link skills/skills-manager.md %}).
+![Skills Manager]({{ '/assets/images/screenshots/skills-manager-overview.png' | relative_url }})
 
 ---
 
