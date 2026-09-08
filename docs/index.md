@@ -31,6 +31,7 @@ RobOS is the developer operating system and native 30+ desktop application suite
 > **Built on Battle-Tested Open Standards.** RobOS invents no proprietary locks or closed SaaS silos. Everything is backed by plain-text files in your Git repository under `.robos/` and built on open industry standards: **OASIS OSLC 3.0**, **W3C JSON-LD**, **Spotify Backstage**, **C4 Architecture Model**, **Microsoft TypeSpec**, **Pact Consumer Contracts**, **Kubernetes & Helm**, and **Model Context Protocol (MCP)**.
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
+[💬 Join Discord](https://discord.gg/6PjxzkHujE){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -42,6 +43,8 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+  <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="btn fs-3" style="border-color: #5865F2; color: #a5b4fc;">💬 Discord Server</a>
+  <a href="https://discord.com/channels/1546926331193725029/" target="_blank" rel="noopener" class="btn fs-3">🗣️ #general Discussion</a>
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link schemas.md %}" class="btn fs-3">📐 KGraph Schemas</a>
   <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Big Wins</a>
@@ -332,3 +335,13 @@ infra/desktop/run.sh
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch high-definition video walkthroughs of real-world engineering scenarios.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: Browse raw idea notes, community feature proposals, and structured architecture specs.
+
+---
+
+## 💬 Community & Discussion
+
+Join the growing community of AI developers, system architects, and platform engineers:
+
+- 🎮 **[RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Get real-time help, share architecture ideas, and participate in community office hours.
+- 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — General chat, Q&A, and community announcements.
+- 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** & **[GitHub Issues](https://github.com/nddipiazza/robos/issues)** — File bugs, track roadmap progress, and discuss RFCs.

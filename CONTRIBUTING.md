@@ -185,8 +185,10 @@ Look for issues tagged [`good first issue`](https://github.com/nddipiazza/robos/
 
 ## Community
 
-- **GitHub Discussions** — questions, ideas, show-and-tell
-- **GitHub Issues** — bugs and feature requests
-- **[Model Problem](https://nddipiazza.github.io/robos/model-problem/)** — watch RobOS in action end-to-end
+- 🎮 **[Discord Server](https://discord.gg/6PjxzkHujE)** — join the community for live chat, office hours, and developer support
+- 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — ask questions, share architecture ideas, and collaborate on AI workflows
+- 🐙 **GitHub Discussions** — questions, ideas, show-and-tell
+- 🐞 **GitHub Issues** — bugs and feature requests
+- 🎥 **[Model Problem](https://nddipiazza.github.io/robos/model-problem/)** — watch RobOS in action end-to-end
 
-We're early-stage and very open to direction from contributors. If you have ideas about what RobOS should become, open a Discussion — we read everything.
+We're early-stage and very open to direction from contributors. If you have ideas about what RobOS should become, join our Discord or open a Discussion — we read everything.

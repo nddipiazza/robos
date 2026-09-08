@@ -1,8 +1,9 @@
 # RobOS — Knowledge Graph-First Developer OS & Application Suite
 
-📖 **[Documentation](https://nddipiazza.github.io/robos/)** · **[RobOS Big Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
+📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Big Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
 
 [![Documentation](https://img.shields.io/badge/docs-nddipiazza.github.io%2Frobos-blue?style=flat&logo=read-the-docs&logoColor=white)](https://nddipiazza.github.io/robos/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/6PjxzkHujE)
 [![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)
 [![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen)](packages/robos-test)
@@ -187,3 +188,13 @@ Visit the official documentation portal for complete guides, architecture specif
 - 🏢 **[Existing Company Setup](https://nddipiazza.github.io/robos/existing-company-setup.html)** — Enterprise directory sync (Okta, Azure AD, LDAP) and Team Topologies.
 - 🚀 **[New Company Greenfield Setup](https://nddipiazza.github.io/robos/new-company-setup.html)** — Company bootstrap, administrator keyrings, and C4 starter topology.
 - 📦 **[App Suite Catalog](https://nddipiazza.github.io/robos/apps.html)** — Detailed specifications for all 30+ native desktop applications.
+
+---
+
+## 💬 Community & Discussion
+
+Connect with the RobOS team, core contributors, and developers exploring AI-first operating systems:
+
+- 🎮 **[Join the RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Get real-time support, discuss ideas, and follow autonomous agent demos.
+- 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — General chat, Q&A, and community announcements.
+- 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** & **[Issues](https://github.com/nddipiazza/robos/issues)** — Architectural feedback, bug reports, and roadmap feature requests.

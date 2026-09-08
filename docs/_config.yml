@@ -18,6 +18,8 @@ logo: "/assets/images/logo.png"
 aux_links:
   "GitHub":
     - "https://github.com/nddipiazza/robos"
+  "💬 Discord":
+    - "https://discord.gg/6PjxzkHujE"
   "💡 Ideas Store":
     - "https://github.com/nddipiazza/robos/tree/main/docs/ideas"
 
@@ -30,7 +32,7 @@ nav_sort: case_insensitive
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "RobOS &mdash; AI-First Developer Operating System & Application Suite. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>. &bull; 💡 <a href=\"https://github.com/nddipiazza/robos/tree/main/docs/ideas\" target=\"_blank\" rel=\"noopener\">Ideas Store on GitHub</a>"
+footer_content: "RobOS &mdash; AI-First Developer Operating System & Application Suite. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>. &bull; 💬 <a href=\"https://discord.gg/6PjxzkHujE\" target=\"_blank\" rel=\"noopener\">Discord Community</a> (<a href=\"https://discord.com/channels/1546926331193725029/\" target=\"_blank\" rel=\"noopener\">#general</a>) &bull; 💡 <a href=\"https://github.com/nddipiazza/robos/tree/main/docs/ideas\" target=\"_blank\" rel=\"noopener\">Ideas Store on GitHub</a>"
 
 mermaid:
   version: "10.9.0"
