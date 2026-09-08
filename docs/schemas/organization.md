@@ -26,7 +26,7 @@ People, developer profiles, team topologies, and cross-team communication channe
 - **Package Store ID**: `organization`
 - **Ontology Namespace**: `robos.org`
 - **GitOps Package File**: `.robos/kgraphs/organization/package.jsonld`
-- **Schemas Defined**: 2
+- **Schemas Defined**: 4
 
 ---
 
@@ -36,6 +36,8 @@ People, developer profiles, team topologies, and cross-team communication channe
 |---|---|---|---|
 | [**Team** (`robos:Team`)]({{ '/schemas/organization/team.html' | relative_url }}) | `urn:robos:shape:TeamShape` | `dcterms:title` | [View Schema &rarr;]({{ '/schemas/organization/team.html' | relative_url }}) |
 | [**Git Project Organization** (`robos:GitProjectOrganization`)]({{ '/schemas/organization/git-project-organization.html' | relative_url }}) | `urn:robos:shape:GitProjectOrganizationShape` | `dcterms:title`, `robos:url`, `robos:orgName`, `robos:forgeType` | [View Schema &rarr;]({{ '/schemas/organization/git-project-organization.html' | relative_url }}) |
+| [**Agent Persona** (`robos:AgentPersona`)]({{ '/schemas/organization/agent-persona.html' | relative_url }}) | `urn:robos:shape:AgentPersonaShape` | `dcterms:title`, `robos:role`, `robos:systemPrompt` | [View Schema &rarr;]({{ '/schemas/organization/agent-persona.html' | relative_url }}) |
+| [**Task Server** (`robos:TaskServer`)]({{ '/schemas/organization/task-server.html' | relative_url }}) | `urn:robos:shape:TaskServerShape` | `dcterms:title`, `robos:serverType`, `robos:url` | [View Schema &rarr;]({{ '/schemas/organization/task-server.html' | relative_url }}) |
 
 ---
 

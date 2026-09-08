@@ -26,7 +26,7 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 - **Package Store ID**: `services`
 - **Ontology Namespace**: `robos.services`
 - **GitOps Package File**: `.robos/kgraphs/services/package.jsonld`
-- **Schemas Defined**: 3
+- **Schemas Defined**: 5
 
 ---
 
@@ -37,6 +37,8 @@ Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BD
 | [**Microservice** (`robos:Microservice`)]({{ '/schemas/services/microservice.html' | relative_url }}) | `urn:robos:shape:MicroserviceShape` | `robos:repository`, `robos:ownerTeam`, `dcterms:title` | [View Schema &rarr;]({{ '/schemas/services/microservice.html' | relative_url }}) |
 | [**Contract** (`robos:Contract`)]({{ '/schemas/services/contract.html' | relative_url }}) | `urn:robos:shape:ContractShape` | `robos:specFile`, `robos:protocol` | [View Schema &rarr;]({{ '/schemas/services/contract.html' | relative_url }}) |
 | [**Requirement** (`oslc_rm:Requirement`)]({{ '/schemas/services/requirement.html' | relative_url }}) | `urn:robos:shape:RequirementShape` | `dcterms:title`, `robos:featureFile` | [View Schema &rarr;]({{ '/schemas/services/requirement.html' | relative_url }}) |
+| [**Protobuf Contract** (`robos:ProtobufContract`)]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) | `urn:robos:shape:ProtobufContractShape` | `dcterms:title`, `robos:specFile`, `robos:packageName`, `robos:rpcMethods` | [View Schema &rarr;]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) |
+| [**Graph QLContract** (`robos:GraphQLContract`)]({{ '/schemas/services/graph-qlcontract.html' | relative_url }}) | `urn:robos:shape:GraphQLContractShape` | `dcterms:title`, `robos:specFile`, `robos:schemaType` | [View Schema &rarr;]({{ '/schemas/services/graph-qlcontract.html' | relative_url }}) |
 
 ---
 

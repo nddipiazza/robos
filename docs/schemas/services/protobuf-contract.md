@@ -1,16 +1,16 @@
 ---
-title: Contract
+title: Protobuf Contract
 layout: default
 parent: Services & Contracts (robos.services)
 grand_parent: KGraph Schemas
-nav_order: 2
-permalink: /schemas/services/contract.html
+nav_order: 4
+permalink: /schemas/services/protobuf-contract.html
 ---
 
-# Schema: `robos:Contract`
+# Schema: `robos:ProtobufContract`
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Contract` in the `services` package store.
+Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ProtobufContract` in the `services` package store.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -23,9 +23,9 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 
 ## Specification Metadata
 
-- **RDF / OWL Class**: `robos:Contract`
-- **Aliases / Target Classes**: `robos:Contract`
-- **SHACL Shape ID**: `urn:robos:shape:ContractShape`
+- **RDF / OWL Class**: `robos:ProtobufContract`
+- **Aliases / Target Classes**: `robos:ProtobufContract`, `robos:GRPCContract`
+- **SHACL Shape ID**: `urn:robos:shape:ProtobufContractShape`
 - **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
 - **Namespace**: `robos.services`
 
@@ -35,13 +35,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 
 <div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Contract</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:Contract</span>
+    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Protobuf Contract</span>
+    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ProtobufContract</span>
   </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ContractShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
+  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ProtobufContractShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:specFile</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:protocol</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:packageName</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:rpcMethods</code></span>
   </div>
 </div>
 
@@ -51,8 +53,10 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Cont
 
 | Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
 |---|---|---|---|---|
-| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contract must specify a specification file path. |
-| **`robos:protocol`** | Protocol / Standard | `1..*` | `xsd:string` | Contract must declare a protocol (OpenAPI, Pact, etc.). |
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Protobuf Contract must have a title. |
+| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Protobuf Contract must specify .proto file path. |
+| **`robos:packageName`** | packageName | `1..*` | `xsd:string` | Protobuf Contract must specify protobuf package name. |
+| **`robos:rpcMethods`** | rpcMethods | `1..*` | `xsd:string` | Protobuf Contract must declare RPC methods. |
 
 ---
 

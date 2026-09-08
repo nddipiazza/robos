@@ -338,6 +338,26 @@ const BUILTIN_SHACL_SHAPES = [
       { path: 'robos:workflowFile', minCount: 1, message: 'CI/CD Pipeline must specify workflow file path (.github/workflows/...).' },
     ],
   },
+  {
+    shapeId: 'urn:robos:shape:TaskServerShape',
+    targetClass: 'robos:TaskServer',
+    targetClasses: ['robos:TaskServer'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Task Server must have a title or display name.' },
+      { path: 'robos:serverType', minCount: 1, message: 'Task Server must declare server type (jira, github).' },
+      { path: 'robos:url', minCount: 1, message: 'Task Server must specify server URL.' },
+    ],
+  },
+  {
+    shapeId: 'urn:robos:shape:ContextSourceShape',
+    targetClass: 'robos:ContextSource',
+    targetClasses: ['robos:ContextSource'],
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Context Source must have a title.' },
+      { path: 'robos:sourceType', minCount: 1, message: 'Context Source must declare source type (file, folder, url, github, repo, ticket).' },
+      { path: 'robos:location', minCount: 1, message: 'Context Source must specify location path, URL, or repository identifier.' },
+    ],
+  },
 ];
 
 class SHACLValidator {
@@ -370,7 +390,7 @@ class SHACLValidator {
 
         for (const propRule of shape.properties) {
           const val = node[propRule.path];
-          const count = val === undefined || val === null ? 0 : Array.isArray(val) ? val.length : 1;
+          const count = val === undefined || val === null || (typeof val === 'string' && val.trim() === '') ? 0 : Array.isArray(val) ? val.length : 1;
 
           if (propRule.minCount && count < propRule.minCount) {
             results.push({

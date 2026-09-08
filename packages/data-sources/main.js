@@ -397,37 +397,65 @@ function saveDataSources(data) {
   } catch {}
 }
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
 function syncToKnowledgeGraph(dataSources) {
   try {
-    if (!fs.existsSync(KGRAPH_FILE)) return;
-    const kg = JSON.parse(fs.readFileSync(KGRAPH_FILE, 'utf8'));
-    if (!kg['robos:nodes']) kg['robos:nodes'] = [];
-
-    // Update or append data source nodes
+    const store = getKGraphStore();
+    if (!store) return;
     for (const ds of dataSources) {
-      const urn = `urn:robos:datasource:${ds.id}`;
-      const existingIdx = kg['robos:nodes'].findIndex(n => n['@id'] === urn);
-      const node = {
-        '@id': urn,
-        '@type': ['oslc_am:Resource', 'robos:DataSource', ds.category === 'sql' ? 'robos:Database' : 'robos:StorageStore'],
-        'dcterms:title': ds.name,
-        'robos:driverType': ds.driverType,
-        'robos:category': ds.category,
-        'robos:host': ds.host,
-        'robos:port': ds.port,
-        'robos:database': ds.database || ds.bucket || ds.folderId,
-        'robos:boundServices': ds.boundServices || [],
-        'robos:status': ds.status,
-      };
-
-      if (existingIdx >= 0) {
-        kg['robos:nodes'][existingIdx] = { ...kg['robos:nodes'][existingIdx], ...node };
+      if (ds.category === 'sql') {
+        store.createDatabase({
+          '@id': `urn:robos:datasource:${ds.id}`,
+          title: ds.name,
+          engine: ds.driverType || 'postgresql',
+          databaseName: ds.database || ds.id,
+          host: ds.host || '127.0.0.1',
+          port: ds.port,
+          boundServices: ds.boundServices || [],
+        });
+      } else if (ds.category === 'nosql' || ds.driverType === 'redis' || ds.driverType === 'mongodb') {
+        store.createNoSQLDatabase({
+          '@id': `urn:robos:datasource:${ds.id}`,
+          title: ds.name,
+          engine: ds.driverType || 'redis',
+          databaseName: ds.database,
+          host: ds.host || '127.0.0.1',
+          port: ds.port,
+        });
       } else {
-        kg['robos:nodes'].push(node);
+        const urn = `urn:robos:datasource:${ds.id}`;
+        store.addNode({
+          '@id': urn,
+          '@type': ['oslc_am:Resource', 'robos:DataSource', 'robos:StorageStore'],
+          'dcterms:title': ds.name,
+          'robos:driverType': ds.driverType || 'generic',
+          'robos:category': ds.category || 'storage',
+          'robos:host': ds.host || '127.0.0.1',
+          'robos:port': ds.port,
+          'robos:databaseName': ds.database || ds.bucket || ds.folderId || ds.id,
+          'robos:boundServices': ds.boundServices || [],
+          'robos:status': ds.status || 'Configured',
+          'robos:package': 'core-platform',
+          'robos:namespace': 'robos.core',
+          'robos:updatedAt': new Date().toISOString(),
+        });
       }
     }
-
-    fs.writeFileSync(KGRAPH_FILE, JSON.stringify(kg, null, 2), 'utf8');
   } catch (_) {}
 }
 

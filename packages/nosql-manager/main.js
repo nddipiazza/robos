@@ -119,7 +119,107 @@ const SAMPLE_REDIS_KEYS = [
   { key: "stream:deploy:events", type: "LIST", ttl: -1, value: '["deploy_started","k8s_reconciled","ready_1_1"]' },
 ];
 
-ipcMain.handle('nosql-get-connections', async () => DEFAULT_NOSQL_CONNS);
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToNoSQLConnection(node) {
+  const slug = (node['@id'] || '').split(':').pop() || 'nosql';
+  return {
+    id: `conn-${slug}`,
+    name: node['dcterms:title'] || slug,
+    type: node['robos:engine'] || 'redis',
+    host: node['robos:host'] || '127.0.0.1',
+    port: node['robos:port'] || (node['robos:engine'] === 'mongodb' ? 27017 : 6379),
+    database: node['robos:databaseName'] || slug,
+    status: 'Connected',
+    collections: node['robos:collections'] || (node['robos:engine'] === 'mongodb' ? ['documents'] : undefined),
+    keysCount: node['robos:engine'] === 'redis' ? 4280 : undefined,
+    kgraphId: node['@id'],
+  };
+}
+
+function syncNoSQLToKGraph(conn) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const slug = (conn.id || conn.name || 'nosql').replace(/^conn-/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createNoSQLDatabase({
+    '@id': conn.kgraphId || `urn:robos:nosql:${slug}`,
+    title: conn.name || `${slug} Store`,
+    engine: conn.type || 'redis',
+    host: String(conn.host || '127.0.0.1').split(':')[0],
+    port: conn.port || (String(conn.host || '').includes(':') ? Number(conn.host.split(':')[1]) : undefined),
+    databaseName: conn.database,
+    collections: conn.collections,
+  });
+}
+
+function loadConnections() {
+  let conns = [];
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      conns = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    }
+  } catch {}
+
+  if (!conns || conns.length === 0) {
+    conns = JSON.parse(JSON.stringify(DEFAULT_NOSQL_CONNS));
+    saveConnections(conns);
+  }
+
+  const store = getKGraphStore();
+  if (store) {
+    const kgDbs = store.getNoSQLDatabases();
+    if (kgDbs && kgDbs.length > 0) {
+      for (const node of kgDbs) {
+        const mapped = kgraphNodeToNoSQLConnection(node);
+        const existingIdx = conns.findIndex(c => c.id === mapped.id || c.kgraphId === node['@id']);
+        if (existingIdx >= 0) {
+          conns[existingIdx] = { ...mapped, ...conns[existingIdx], kgraphId: node['@id'] };
+        } else {
+          conns.push(mapped);
+        }
+      }
+    } else {
+      for (const conn of conns) {
+        syncNoSQLToKGraph(conn);
+      }
+    }
+  }
+
+  return conns;
+}
+
+function saveConnections(conns) {
+  try {
+    fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(conns, null, 2), 'utf8');
+  } catch {}
+}
+
+ipcMain.handle('nosql-get-connections', async () => loadConnections());
+
+ipcMain.handle('nosql-save-connection', async (_, conn) => {
+  const list = loadConnections();
+  const idx = list.findIndex(c => c.id === conn.id);
+  if (idx >= 0) list[idx] = { ...list[idx], ...conn };
+  else list.push(conn);
+  saveConnections(list);
+  syncNoSQLToKGraph(conn);
+  return list;
+});
 
 ipcMain.handle('nosql-get-documents', async (_, { connId, collection, filter }) => {
   return SAMPLE_MONGO_DOCS;

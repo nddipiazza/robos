@@ -3,7 +3,7 @@ title: Front End App
 layout: default
 parent: Applications (robos.apps)
 grand_parent: KGraph Schemas
-nav_order: 6
+nav_order: 5
 permalink: /schemas/applications/front-end-app.html
 ---
 
@@ -72,7 +72,10 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Fron
   "dcterms:title": "Billing Web Portal",
   "robos:framework": "React 19 / Vite",
   "robos:package": "applications",
-  "robos:namespace": "robos.applications"
+  "robos:namespace": "robos.applications",
+  "robos:repository": "github.com/acme/billing-portal",
+  "robos:technology": "React 19 / TypeScript / Vite",
+  "robos:frontendFramework": "React"
 }
 ```
 
@@ -97,7 +100,10 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "dcterms:title": "Billing Web Portal",
         "robos:framework": "React 19 / Vite",
         "robos:package": "applications",
-        "robos:namespace": "robos.applications"
+        "robos:namespace": "robos.applications",
+        "robos:repository": "github.com/acme/billing-portal",
+        "robos:technology": "React 19 / TypeScript / Vite",
+        "robos:frontendFramework": "React"
     }
   ],
 }));

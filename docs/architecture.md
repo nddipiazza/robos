@@ -79,7 +79,13 @@ RobOS applications are built using lightweight vanilla JavaScript and Electron, 
 ### Core Architectural Applications
 - **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across 9 multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
 - **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
-- **IDE Review Bridges**: Native IPC servers and extensions bridging RobOS reviews to IntelliJ IDEA (port `63343`) and VS Code (`vscode://github.vscode-pull-request-github/open-pr`).
+### Universal Knowledge Graph Data Backing (Zero Unbacked Data)
+Every application in the RobOS 30+ suite is backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`):
+- **Databases & Caches**: `db-manager`, `nosql-manager`, and `data-sources` persist relational and NoSQL datastores as `robos:Database` and `robos:NoSQLDatabase` nodes in the `core-platform` package with W3C SHACL shape enforcement.
+- **Microservices & APIs**: OpenAPI 3.1 contracts, Protobuf gRPC definitions, and GraphQL schemas are linked directly to `robos:Microservice` nodes.
+- **Cloud & Kubernetes**: `kube-studio` reconciles clusters (`robos:KubernetesCluster`) and GitOps applications (`robos:GitOpsDeployment`) in the `devops` package.
+- **AI Tooling & Context**: `mcp-manager` (`robos:MCPServer`), `agents-manager` (`robos:AgentPersona`), `task-servers` (`robos:TaskServer`), and `context-manager` (`robos:ContextSource`) are first-class ontology nodes.
+- **Zero Plaintext Credentials**: All credentials across all apps link to UNIX `pass` password-store paths via `robos:hasCredential` (`urn:robos:credential:...`).
 
 ---
 

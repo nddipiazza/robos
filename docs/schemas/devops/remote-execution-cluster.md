@@ -3,7 +3,7 @@ title: Remote Execution Cluster
 layout: default
 parent: DevOps & Cloud (robos.devops)
 grand_parent: KGraph Schemas
-nav_order: 1
+nav_order: 2
 permalink: /schemas/devops/remote-execution-cluster.html
 ---
 

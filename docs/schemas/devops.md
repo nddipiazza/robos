@@ -26,7 +26,7 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 - **Package Store ID**: `devops`
 - **Ontology Namespace**: `robos.devops`
 - **GitOps Package File**: `.robos/kgraphs/devops/package.jsonld`
-- **Schemas Defined**: 1
+- **Schemas Defined**: 6
 
 ---
 
@@ -34,7 +34,12 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 
 | Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |
 |---|---|---|---|
+| [**Data Pipeline** (`robos:DataPipeline`)]({{ '/schemas/devops/data-pipeline.html' | relative_url }}) | `urn:robos:shape:DataPipelineShape` | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:pipelineEngine` | [View Schema &rarr;]({{ '/schemas/devops/data-pipeline.html' | relative_url }}) |
 | [**Remote Execution Cluster** (`robos:RemoteExecutionCluster`)]({{ '/schemas/devops/remote-execution-cluster.html' | relative_url }}) | `urn:robos:shape:RemoteExecutionClusterShape` | `dcterms:title`, `robos:protocol`, `robos:provider`, `robos:executionEndpoint`, `robos:casEndpoint` | [View Schema &rarr;]({{ '/schemas/devops/remote-execution-cluster.html' | relative_url }}) |
+| [**Kubernetes Cluster** (`robos:KubernetesCluster`)]({{ '/schemas/devops/kubernetes-cluster.html' | relative_url }}) | `urn:robos:shape:KubernetesClusterShape` | `dcterms:title`, `robos:provider`, `robos:apiEndpoint`, `robos:clusterContext` | [View Schema &rarr;]({{ '/schemas/devops/kubernetes-cluster.html' | relative_url }}) |
+| [**Environment** (`robos:Environment`)]({{ '/schemas/devops/environment.html' | relative_url }}) | `urn:robos:shape:EnvironmentShape` | `dcterms:title`, `robos:environmentType`, `robos:tier` | [View Schema &rarr;]({{ '/schemas/devops/environment.html' | relative_url }}) |
+| [**Git Ops Deployment** (`robos:GitOpsDeployment`)]({{ '/schemas/devops/git-ops-deployment.html' | relative_url }}) | `urn:robos:shape:GitOpsDeploymentShape` | `dcterms:title`, `robos:gitopsEngine`, `robos:sourceRepo`, `robos:targetCluster`, `robos:targetNamespace` | [View Schema &rarr;]({{ '/schemas/devops/git-ops-deployment.html' | relative_url }}) |
+| [**CICDPipeline** (`robos:CICDPipeline`)]({{ '/schemas/devops/cicdpipeline.html' | relative_url }}) | `urn:robos:shape:CICDPipelineShape` | `dcterms:title`, `robos:platform`, `robos:workflowFile` | [View Schema &rarr;]({{ '/schemas/devops/cicdpipeline.html' | relative_url }}) |
 
 ---
 

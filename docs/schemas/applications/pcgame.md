@@ -3,7 +3,7 @@ title: PCGame
 layout: default
 parent: Applications (robos.apps)
 grand_parent: KGraph Schemas
-nav_order: 7
+nav_order: 6
 permalink: /schemas/applications/pcgame.html
 ---
 

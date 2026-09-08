@@ -245,19 +245,23 @@ const DEFAULT_GRAPH_DATA = {
       '@id': 'urn:robos:k8s:cluster:eks-acme-prod',
       '@type': ['robos:KubernetesCluster', 'c4:DeploymentNode'],
       'dcterms:title': 'Acme EKS Production Cluster (v1.30)',
+      'robos:provider': 'eks',
       'robos:flavor': 'eks',
       'robos:cloudProvider': 'urn:robos:cloud:aws-prod',
       'robos:nodeCount': 12,
       'robos:apiEndpoint': 'https://eks.us-east-1.acme.aws:6443',
+      'robos:clusterContext': 'eks-acme-prod',
     },
     {
       '@id': 'urn:robos:k8s:cluster:kind-local',
       '@type': ['robos:KubernetesCluster', 'c4:DeploymentNode'],
       'dcterms:title': 'Local Kind Development Cluster',
+      'robos:provider': 'kind',
       'robos:flavor': 'kind',
       'robos:cloudProvider': 'local',
       'robos:nodeCount': 3,
       'robos:apiEndpoint': 'https://127.0.0.1:6443',
+      'robos:clusterContext': 'kind-local',
     },
     {
       '@id': 'urn:robos:k8s:namespace:acme-petshop-prod',
@@ -289,14 +293,18 @@ const DEFAULT_GRAPH_DATA = {
     },
     {
       '@id': 'urn:robos:gitops:app:acme-petshop',
-      '@type': ['robos:ArgoCDApplication'],
+      '@type': ['robos:GitOpsDeployment', 'robos:ArgoCDApplication'],
       'dcterms:title': 'ArgoCD GitOps App: acme-petshop',
+      'robos:gitopsEngine': 'argocd',
       'robos:appName': 'acme-petshop-prod',
       'robos:syncStatus': 'Synced',
       'robos:healthStatus': 'Healthy',
+      'robos:sourceRepo': 'https://github.com/acme-corp/petstore-infra',
       'robos:repoURL': 'https://github.com/acme-corp/petstore-infra',
       'robos:targetRevision': 'main',
+      'robos:targetCluster': 'urn:robos:k8s:cluster:eks-acme-prod',
       'robos:destinationServer': 'https://eks.us-east-1.acme.aws:6443',
+      'robos:targetNamespace': 'acme-petshop-prod',
       'robos:destinationNamespace': 'acme-petshop-prod',
     },
     {
@@ -928,12 +936,15 @@ ${suggestedFiles.map(f => `   - ${f}`).join('\n')}
   }
 
   addNode(node) {
-    const exists = this.parser.nodes.some(n => n['@id'] === node['@id']);
-    if (!exists) {
+    const idx = this.parser.nodes.findIndex(n => n['@id'] === node['@id']);
+    const exists = idx >= 0;
+    if (exists) {
+      this.parser.nodes[idx] = node;
+    } else {
       this.parser.nodes.push(node);
-      this.parser.loadNodes(this.parser.nodes);
-      this.save();
     }
+    this.parser.loadNodes(this.parser.nodes);
+    this.save();
     this.latestDocSyncPrompt = this.discernDocUpdates({ action: exists ? 'updated' : 'added', node });
     return node;
   }
@@ -2139,6 +2150,701 @@ Apply the requested updates to the targeted documentation files, ensuring accura
       if (n['@id'] && n['@id'].toLowerCase() === query) return true;
       if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${query}`)) return true;
       if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === query) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Relational Databases ──────────────────────────────────────────────────
+  createDatabase(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.databaseName || data.database || 'relational-db')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:db:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Database`;
+    const engine = data['robos:engine'] !== undefined ? data['robos:engine'] : (data.engine !== undefined ? data.engine : (data.type !== undefined ? data.type : 'postgresql'));
+    const databaseName = data['robos:databaseName'] !== undefined ? data['robos:databaseName'] : (data.databaseName !== undefined ? data.databaseName : (data.database !== undefined ? data.database : (data.slug || data.name || '')));
+    const host = data['robos:host'] !== undefined ? data['robos:host'] : (data.host !== undefined ? data.host : '127.0.0.1');
+    const port = data['robos:port'] !== undefined ? data['robos:port'] : (data.port !== undefined ? data.port : (engine === 'mysql' ? 3306 : engine === 'oracle' ? 1521 : 5432));
+
+    const dbNode = {
+      '@id': id,
+      '@type': ['robos:Database', 'robos:RelationalDatabase', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `${engine} relational database instance.`,
+      'robos:engine': engine,
+      'robos:databaseName': databaseName,
+      'robos:host': host,
+      'robos:port': port,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:username'] || data.user || data.username) {
+      dbNode['robos:username'] = data['robos:username'] || data.user || data.username;
+    }
+    if (data['robos:hasCredential'] || data.hasCredential || data.passPath) {
+      dbNode['robos:hasCredential'] = data['robos:hasCredential'] || data.hasCredential || (data.passPath ? `urn:robos:credential:${data.passPath}` : null);
+    }
+    if (data['robos:tables'] || data.tables) {
+      dbNode['robos:tables'] = data['robos:tables'] || data.tables;
+    }
+    if (data['robos:schemas'] || data.schemas) {
+      dbNode['robos:schemas'] = data['robos:schemas'] || data.schemas;
+    }
+    if (data['robos:boundServices'] || data.boundServices) {
+      dbNode['robos:boundServices'] = data['robos:boundServices'] || data.boundServices;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [dbNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Database: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(dbNode);
+    return { ok: true, node: dbNode, message: `Successfully registered Database: ${title} (${id})` };
+  }
+
+  getDatabases() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('Database') || t.includes('RelationalDatabase')) && !types.some(t => t.includes('NoSQLDatabase'));
+    });
+  }
+
+  getDatabase(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getDatabases().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      if (n['robos:databaseName'] && n['robos:databaseName'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── NoSQL Databases & Cache Stores ─────────────────────────────────────────
+  createNoSQLDatabase(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.databaseName || data.database || 'nosql-store')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:nosql:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} NoSQL Store`;
+    const engine = data['robos:engine'] || data.engine || data.type || 'redis';
+    const host = data['robos:host'] || data.host || '127.0.0.1';
+
+    const subType = engine === 'mongodb' || engine === 'couchdb' ? 'robos:DocumentStore' : 'robos:CacheStore';
+    const noSqlNode = {
+      '@id': id,
+      '@type': ['robos:NoSQLDatabase', subType, 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `${engine} NoSQL / Cache datastore.`,
+      'robos:engine': engine,
+      'robos:host': host,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:port'] || data.port) {
+      noSqlNode['robos:port'] = data['robos:port'] || data.port;
+    }
+    if (data['robos:databaseName'] || data.databaseName || data.database) {
+      noSqlNode['robos:databaseName'] = data['robos:databaseName'] || data.databaseName || data.database;
+    }
+    if (data['robos:collections'] || data.collections) {
+      noSqlNode['robos:collections'] = data['robos:collections'] || data.collections;
+    }
+    if (data['robos:hasCredential'] || data.hasCredential) {
+      noSqlNode['robos:hasCredential'] = data['robos:hasCredential'] || data.hasCredential;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [noSqlNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for NoSQL Database: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(noSqlNode);
+    return { ok: true, node: noSqlNode, message: `Successfully registered NoSQL Database: ${title} (${id})` };
+  }
+
+  getNoSQLDatabases() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('NoSQLDatabase') || t.includes('CacheStore') || t.includes('DocumentStore') || t.includes('KeyValueStore'));
+    });
+  }
+
+  getNoSQLDatabase(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getNoSQLDatabases().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Message Brokers & Event Buses ──────────────────────────────────────────
+  createMessageBroker(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.brokerType || 'event-broker')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:broker:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Event Broker`;
+    const brokerType = data['robos:brokerType'] || data.brokerType || data.type || 'kafka';
+    const endpoint = data['robos:endpoint'] || data.endpoint || data.host || 'localhost:9092';
+
+    const brokerNode = {
+      '@id': id,
+      '@type': ['robos:MessageBroker', 'robos:EventBus', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `${brokerType} distributed message broker.`,
+      'robos:brokerType': brokerType,
+      'robos:endpoint': endpoint,
+      'robos:topics': data['robos:topics'] || data.topics || [],
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:hasCredential'] || data.hasCredential) {
+      brokerNode['robos:hasCredential'] = data['robos:hasCredential'] || data.hasCredential;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [brokerNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Message Broker: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(brokerNode);
+    return { ok: true, node: brokerNode, message: `Successfully registered Message Broker: ${title} (${id})` };
+  }
+
+  getMessageBrokers() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('MessageBroker') || t.includes('EventBus'));
+    });
+  }
+
+  getMessageBroker(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getMessageBrokers().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Model Context Protocol (MCP) Servers ────────────────────────────────────
+  createMCPServer(data = {}) {
+    const slug = (data.slug || data.name || data.appId || data['dcterms:title'] || data.title || 'mcp-server')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:mcp:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} MCP Server`;
+    const transport = data['robos:transport'] || data.transport || (data.endpoint ? 'sse' : 'stdio');
+    const toolsProvided = data['robos:toolsProvided'] || data.toolsProvided || data.tools || [`robos_${slug.replace(/-/g, '_')}_default_tool`];
+
+    const mcpNode = {
+      '@id': id,
+      '@type': ['robos:MCPServer', 'robos:ToolProvider', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `Model Context Protocol server for ${title}.`,
+      'robos:transport': transport,
+      'robos:toolsProvided': Array.isArray(toolsProvided) ? toolsProvided : [toolsProvided],
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data.appId || data['robos:appId']) {
+      mcpNode['robos:appId'] = data.appId || data['robos:appId'];
+    }
+    if (data.endpoint || data['robos:endpoint']) {
+      mcpNode['robos:endpoint'] = data.endpoint || data['robos:endpoint'];
+    }
+    if (data.port || data['robos:port']) {
+      mcpNode['robos:port'] = data.port || data['robos:port'];
+    }
+    if (data.resources || data['robos:resources']) {
+      mcpNode['robos:resources'] = data.resources || data['robos:resources'];
+    }
+    if (data.status || data['robos:status']) {
+      mcpNode['robos:status'] = data.status || data['robos:status'];
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [mcpNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for MCP Server: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(mcpNode);
+    return { ok: true, node: mcpNode, message: `Successfully registered MCP Server: ${title} (${id})` };
+  }
+
+  getMCPServers() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('MCPServer') || t.includes('ToolProvider'));
+    });
+  }
+
+  getMCPServer(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getMCPServers().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['robos:appId'] && n['robos:appId'].toLowerCase() === q) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Agent Personas ────────────────────────────────────────────────────────
+  createAgentPersona(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.role || 'ai-agent')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:agent:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Persona`;
+    const role = data['robos:role'] || data.role || 'Autonomous Developer Agent';
+    const systemPrompt = data['robos:systemPrompt'] || data.systemPrompt || 'You are an autonomous AI software engineer in RobOS.';
+
+    const personaNode = {
+      '@id': id,
+      '@type': ['robos:AgentPersona', 'robos:AIAgent', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `AI agent persona specialized in ${role}.`,
+      'robos:role': role,
+      'robos:systemPrompt': systemPrompt,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:tools'] || data.tools) {
+      personaNode['robos:tools'] = data['robos:tools'] || data.tools;
+    }
+    if (data['robos:model'] || data.model) {
+      personaNode['robos:model'] = data['robos:model'] || data.model;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [personaNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Agent Persona: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(personaNode);
+    return { ok: true, node: personaNode, message: `Successfully registered Agent Persona: ${title} (${id})` };
+  }
+
+  getAgentPersonas() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('AgentPersona') || t.includes('AIAgent'));
+    });
+  }
+
+  getAgentPersona(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getAgentPersonas().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      if (n['robos:role'] && n['robos:role'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Kubernetes Clusters ───────────────────────────────────────────────────
+  createKubernetesCluster(data = {}) {
+    const slug = (data.slug || data.name || data.id || data['dcterms:title'] || data.title || 'k8s-cluster')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:k8s:cluster:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Cluster`;
+    const provider = data['robos:provider'] || data.provider || 'local';
+    const apiEndpoint = data['robos:apiEndpoint'] || data.apiEndpoint || (provider === 'local' ? 'https://127.0.0.1:6443' : `https://${slug}.k8s.internal:6443`);
+    const clusterContext = data['robos:clusterContext'] || data.clusterContext || data.kubecontext || (provider === 'local' ? 'kind-robos-local' : slug);
+
+    const clusterNode = {
+      '@id': id,
+      '@type': ['robos:KubernetesCluster', 'robos:K8sCluster', 'c4:DeploymentNode'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `Kubernetes cluster hosted on ${provider}.`,
+      'robos:provider': provider,
+      'robos:apiEndpoint': apiEndpoint,
+      'robos:clusterContext': clusterContext,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:flavor'] || data.flavor) clusterNode['robos:flavor'] = data['robos:flavor'] || data.flavor;
+    if (data['robos:nodeCount'] !== undefined || data.nodeCount !== undefined) clusterNode['robos:nodeCount'] = data['robos:nodeCount'] !== undefined ? data['robos:nodeCount'] : data.nodeCount;
+    if (data['robos:region'] || data.region) clusterNode['robos:region'] = data['robos:region'] || data.region;
+    if (data['robos:version'] || data.version) clusterNode['robos:version'] = data['robos:version'] || data.version;
+    if (data['robos:status'] || data.status) clusterNode['robos:status'] = data['robos:status'] || data.status;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [clusterNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Kubernetes Cluster: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(clusterNode);
+    return { ok: true, node: clusterNode, message: `Successfully registered Kubernetes Cluster: ${title} (${id})` };
+  }
+
+  getKubernetesClusters() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('KubernetesCluster') || t.includes('K8sCluster'));
+    });
+  }
+
+  getKubernetesCluster(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getKubernetesClusters().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      if (n['robos:clusterContext'] && n['robos:clusterContext'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Environments ──────────────────────────────────────────────────────────
+  createEnvironment(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.environmentType || 'production')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:env:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Environment`;
+    const environmentType = data['robos:environmentType'] || data.environmentType || data.type || 'production';
+    const tier = data['robos:tier'] || data.tier || 'Tier-1';
+
+    const envNode = {
+      '@id': id,
+      '@type': ['robos:Environment', 'robos:DeploymentEnvironment', 'c4:DeploymentNode'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `${title} deployment environment.`,
+      'robos:environmentType': environmentType,
+      'robos:tier': tier,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:targetCluster'] || data.targetCluster || data.cluster) {
+      envNode['robos:targetCluster'] = data['robos:targetCluster'] || data.targetCluster || data.cluster;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [envNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Environment: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(envNode);
+    return { ok: true, node: envNode, message: `Successfully registered Environment: ${title} (${id})` };
+  }
+
+  getEnvironments() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('Environment') || t.includes('DeploymentEnvironment'));
+    });
+  }
+
+  getEnvironment(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getEnvironments().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── GitOps Deployments ────────────────────────────────────────────────────
+  createGitOpsDeployment(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || 'deployment')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:gitops:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} GitOps Deployment`;
+    const gitopsEngine = data['robos:gitopsEngine'] || data.gitopsEngine || 'argocd';
+    const sourceRepo = data['robos:sourceRepo'] || data.sourceRepo || 'github.com/acme/gitops-deployments';
+    const targetCluster = data['robos:targetCluster'] || data.targetCluster || 'urn:robos:k8s:cluster:eks-acme-prod';
+    const targetNamespace = data['robos:targetNamespace'] || data.targetNamespace || 'default';
+
+    const depNode = {
+      '@id': id,
+      '@type': ['robos:GitOpsDeployment', 'robos:ArgoCDApplication', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `GitOps continuous deployment managed by ${gitopsEngine}.`,
+      'robos:gitopsEngine': gitopsEngine,
+      'robos:sourceRepo': sourceRepo,
+      'robos:targetCluster': targetCluster,
+      'robos:targetNamespace': targetNamespace,
+      'robos:package': 'devops',
+      'robos:namespace': 'robos.devops',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:syncPolicy'] || data.syncPolicy) depNode['robos:syncPolicy'] = data['robos:syncPolicy'] || data.syncPolicy;
+    if (data['robos:targetService'] || data.targetService) depNode['robos:targetService'] = data['robos:targetService'] || data.targetService;
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [depNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for GitOps Deployment: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(depNode);
+    return { ok: true, node: depNode, message: `Successfully registered GitOps Deployment: ${title} (${id})` };
+  }
+
+  getGitOpsDeployments() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('GitOpsDeployment') || t.includes('ArgoCDApplication'));
+    });
+  }
+
+  getGitOpsDeployment(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getGitOpsDeployments().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Task Servers ──────────────────────────────────────────────────────────
+  createTaskServer(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.serverType || data.type || 'task-server')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:taskserver:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Task Server`;
+    const serverType = data['robos:serverType'] || data.serverType || data.type || 'jira';
+    const url = data['robos:url'] || data.url || 'https://jira.company.internal';
+
+    const serverNode = {
+      '@id': id,
+      '@type': ['robos:TaskServer', 'oslc:ServiceProvider', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `${serverType} task tracking and issue management server.`,
+      'robos:serverType': serverType,
+      'robos:url': url,
+      'robos:package': 'organization',
+      'robos:namespace': 'robos.org',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:projectKey'] || data.projectKey) {
+      serverNode['robos:projectKey'] = data['robos:projectKey'] || data.projectKey;
+    }
+    if (data['robos:ownerTeam'] || data.ownerTeam) {
+      serverNode['robos:ownerTeam'] = data['robos:ownerTeam'] || data.ownerTeam;
+    }
+    if (data['robos:hasCredential'] || data.hasCredential || data.passPath) {
+      serverNode['robos:hasCredential'] = data['robos:hasCredential'] || data.hasCredential || (data.passPath ? `urn:robos:credential:${data.passPath}` : null);
+    }
+    if (data['robos:username'] || data.username || data.user) {
+      serverNode['robos:username'] = data['robos:username'] || data.username || data.user;
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [serverNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Task Server: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(serverNode);
+    return { ok: true, node: serverNode, message: `Successfully registered Task Server: ${title} (${id})` };
+  }
+
+  getTaskServers() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('TaskServer'));
+    });
+  }
+
+  getTaskServer(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getTaskServers().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
+      return false;
+    }) || null;
+  }
+
+  // ── Context Sources ───────────────────────────────────────────────────────
+  createContextSource(data = {}) {
+    const slug = (data.slug || data.name || data['dcterms:title'] || data.title || data.id || 'context-source')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-');
+    const id = data['@id'] || `urn:robos:context:${slug}`;
+    const title = data['dcterms:title'] || data.title || data.name || `${slug} Context Source`;
+    const sourceType = data['robos:sourceType'] || data.sourceType || data.type || 'local';
+    const location = data['robos:location'] || data.location || data.path || data.ghRepo || data.url || 'local-repo';
+
+    const sourceNode = {
+      '@id': id,
+      '@type': ['robos:ContextSource', 'oslc_am:Resource'],
+      'dcterms:title': title,
+      'dcterms:description': data['dcterms:description'] || data.description || `AI context source (${sourceType}).`,
+      'robos:sourceType': sourceType,
+      'robos:location': location,
+      'robos:package': 'core-platform',
+      'robos:namespace': 'robos.core',
+      'robos:updatedAt': new Date().toISOString(),
+    };
+
+    if (data['robos:tags'] || data.tags) {
+      sourceNode['robos:tags'] = data['robos:tags'] || data.tags;
+    }
+    if (data.enabled !== undefined) {
+      sourceNode['robos:enabled'] = Boolean(data.enabled);
+    }
+
+    const shaclRes = this.validator.validateGraph(new OSLCGraphParser({
+      '@context': OSLC_CONTEXT,
+      '@id': 'urn:robos:graph:temp',
+      '@type': ['robos:SystemGraph'],
+      'robos:nodes': [sourceNode],
+    }));
+
+    if (!shaclRes.conforms) {
+      return {
+        ok: false,
+        error: `SHACL validation failed for Context Source: ${shaclRes.results.map(r => r.resultMessage).join(', ')}`,
+        results: shaclRes.results,
+      };
+    }
+
+    this.addNode(sourceNode);
+    return { ok: true, node: sourceNode, message: `Successfully registered Context Source: ${title} (${id})` };
+  }
+
+  getContextSources() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type'] || ''];
+      return types.some(t => t.includes('ContextSource'));
+    });
+  }
+
+  getContextSource(idOrSlug) {
+    if (!idOrSlug) return null;
+    const q = String(idOrSlug).trim().toLowerCase();
+    return this.getContextSources().find(n => {
+      if (n['@id'] && n['@id'].toLowerCase() === q) return true;
+      if (n['@id'] && n['@id'].toLowerCase().endsWith(`:${q}`)) return true;
+      if (n['dcterms:title'] && n['dcterms:title'].toLowerCase() === q) return true;
       return false;
     }) || null;
   }

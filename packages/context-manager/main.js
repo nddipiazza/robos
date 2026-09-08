@@ -34,14 +34,91 @@ const CONTEXT_FILE_PATTERNS = [
   '.github/copilot-instructions.md',
 ];
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToContextSource(node) {
+  const slug = (node['@id'] || '').split(':').pop() || 'source';
+  const type = node['robos:sourceType'] || 'local';
+  const loc = node['robos:location'] || '';
+  return {
+    id: slug,
+    name: node['dcterms:title'] || slug,
+    type,
+    path: type === 'local' ? loc : undefined,
+    ghRepo: type === 'github' ? loc : undefined,
+    url: type === 'url' ? loc : undefined,
+    enabled: node['robos:enabled'] !== undefined ? node['robos:enabled'] : true,
+    tags: node['robos:tags'] || [],
+    kgraphId: node['@id'],
+  };
+}
+
+function syncContextSourceToKGraph(src) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const slug = (src.id || src.name || src.type || 'context-source').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createContextSource({
+    '@id': src.kgraphId || `urn:robos:context:${slug}`,
+    title: src.name || `${slug} Context Source`,
+    sourceType: src.type || 'local',
+    location: src.path || src.ghRepo || src.url || 'local-repo',
+    tags: src.tags || [],
+    enabled: src.enabled !== false,
+  });
+}
+
 function readSources() {
-  try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
-  catch { return { sources: [] }; }
+  let data = { sources: [] };
+  try { data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
+  catch {}
+  if (!data || !Array.isArray(data.sources)) data = { sources: [] };
+
+  const store = getKGraphStore();
+  if (store) {
+    const kgSources = store.getContextSources();
+    if (kgSources && kgSources.length > 0) {
+      for (const node of kgSources) {
+        const mapped = kgraphNodeToContextSource(node);
+        const existingIdx = data.sources.findIndex(s => s.id === mapped.id || s.kgraphId === node['@id']);
+        if (existingIdx >= 0) {
+          data.sources[existingIdx] = { ...mapped, ...data.sources[existingIdx], kgraphId: node['@id'] };
+        } else {
+          data.sources.push(mapped);
+        }
+      }
+    } else {
+      for (const s of data.sources) {
+        syncContextSourceToKGraph(s);
+      }
+    }
+  }
+
+  return data;
 }
 
 function writeSources(data) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+
+  if (data && Array.isArray(data.sources)) {
+    for (const src of data.sources) {
+      syncContextSourceToKGraph(src);
+    }
+  }
 }
 
 // ── Journal event logging ─────────────────────────────────────────────────────

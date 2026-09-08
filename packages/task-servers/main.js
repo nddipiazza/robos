@@ -44,15 +44,86 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
 }
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToTaskServer(node) {
+  const slug = (node['@id'] || '').split(':').pop() || 'task-server';
+  return {
+    id: slug,
+    name: node['dcterms:title'] || slug,
+    type: node['robos:serverType'] || 'jira',
+    url: node['robos:url'] || '',
+    username: node['robos:username'] || '',
+    projectKey: node['robos:projectKey'] || '',
+    passPath: (node['robos:hasCredential'] || '').replace('urn:robos:credential:', '') || undefined,
+    kgraphId: node['@id'],
+  };
+}
+
+function syncTaskServerToKGraph(server) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const slug = (server.id || server.name || server.type || 'task-server').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createTaskServer({
+    '@id': server.kgraphId || `urn:robos:taskserver:${slug}`,
+    title: server.name || `${slug} Task Server`,
+    serverType: server.type || 'jira',
+    url: server.url || 'https://jira.company.internal',
+    username: server.username,
+    projectKey: server.projectKey,
+    passPath: server.passPath,
+  });
+}
+
 function loadTaskServers() {
   const s = loadSettings();
-  return s.task_servers || [];
+  let servers = s.task_servers || [];
+
+  const store = getKGraphStore();
+  if (store) {
+    const kgServers = store.getTaskServers();
+    if (kgServers && kgServers.length > 0) {
+      for (const node of kgServers) {
+        const mapped = kgraphNodeToTaskServer(node);
+        const existingIdx = servers.findIndex(srv => srv.id === mapped.id || srv.kgraphId === node['@id']);
+        if (existingIdx >= 0) {
+          servers[existingIdx] = { ...mapped, ...servers[existingIdx], kgraphId: node['@id'] };
+        } else {
+          servers.push(mapped);
+        }
+      }
+    } else {
+      for (const srv of servers) {
+        syncTaskServerToKGraph(srv);
+      }
+    }
+  }
+
+  return servers;
 }
 
 function saveTaskServers(servers) {
   const s = loadSettings();
   s.task_servers = servers;
   saveSettings(s);
+
+  for (const srv of (servers || [])) {
+    syncTaskServerToKGraph(srv);
+  }
 }
 
 // Single-instance lock

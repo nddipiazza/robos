@@ -205,10 +205,82 @@ function calculateAge(timestamp) {
   return `${diffDays}d`;
 }
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToCluster(node) {
+  const slug = (node['@id'] || '').split(':').pop() || 'cluster';
+  const provider = node['robos:provider'] || 'local';
+  return {
+    id: slug,
+    name: node['dcterms:title'] || slug,
+    provider: provider,
+    region: node['robos:region'] || (provider === 'local' ? 'localhost' : 'us-east-1'),
+    version: node['robos:version'] || 'v1.31.0',
+    nodeCount: node['robos:nodeCount'] !== undefined ? node['robos:nodeCount'] : 1,
+    status: node['robos:status'] || 'Active',
+    isReal: provider === 'local' || provider === 'kind' || provider === 'minikube',
+    kgraphId: node['@id'],
+  };
+}
+
+function syncClusterToKGraph(c) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const slug = (c.id || c.name || 'cluster').replace(/^cluster-/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createKubernetesCluster({
+    '@id': c.kgraphId || `urn:robos:k8s:cluster:${slug}`,
+    title: c.name || `${slug} Cluster`,
+    provider: c.provider || 'local',
+    apiEndpoint: c.provider === 'local' ? 'https://127.0.0.1:6443' : `https://${slug}.k8s.internal:6443`,
+    clusterContext: c.kubecontext || (c.provider === 'local' ? 'kind-robos-local' : slug),
+    region: c.region,
+    version: c.version,
+    nodeCount: c.nodeCount,
+    status: c.status,
+  });
+}
+
+function getClusters() {
+  const store = getKGraphStore();
+  if (store) {
+    const kgClusters = store.getKubernetesClusters();
+    if (kgClusters && kgClusters.length > 0) {
+      for (const node of kgClusters) {
+        const mapped = kgraphNodeToCluster(node);
+        const existingIdx = CLUSTERS.findIndex(c => c.id === mapped.id || c.kgraphId === node['@id']);
+        if (existingIdx >= 0) {
+          CLUSTERS[existingIdx] = { ...mapped, ...CLUSTERS[existingIdx], kgraphId: node['@id'] };
+        } else {
+          CLUSTERS.push(mapped);
+        }
+      }
+    } else {
+      for (const c of CLUSTERS) {
+        syncClusterToKGraph(c);
+      }
+    }
+  }
+  return CLUSTERS;
+}
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
 ipcMain.handle('kube-get-clusters', () => {
-  return { ok: true, clusters: CLUSTERS };
+  return { ok: true, clusters: getClusters() };
 });
 
 ipcMain.handle('kube-add-cluster', (_, { id, name, provider, region, kubecontext }) => {
@@ -223,6 +295,7 @@ ipcMain.handle('kube-add-cluster', (_, { id, name, provider, region, kubecontext
     isReal: provider === 'local' || provider === 'kind' || provider === 'minikube',
   };
   CLUSTERS.unshift(newCluster);
+  syncClusterToKGraph(newCluster);
   return { ok: true, cluster: newCluster };
 });
 

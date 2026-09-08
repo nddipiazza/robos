@@ -26,7 +26,7 @@ Foundational architectural graph, system roots, and platform configuration.
 - **Package Store ID**: `core-platform`
 - **Ontology Namespace**: `robos.platform`
 - **GitOps Package File**: `.robos/kgraphs/core-platform/package.jsonld`
-- **Schemas Defined**: 3
+- **Schemas Defined**: 8
 
 ---
 
@@ -37,6 +37,11 @@ Foundational architectural graph, system roots, and platform configuration.
 | [**Project** (`robos:Project`)]({{ '/schemas/core-platform/project.html' | relative_url }}) | `urn:robos:shape:ProjectShape` | `dcterms:title`, `robos:status` | [View Schema &rarr;]({{ '/schemas/core-platform/project.html' | relative_url }}) |
 | [**Epic** (`robos:Epic`)]({{ '/schemas/core-platform/epic.html' | relative_url }}) | `urn:robos:shape:EpicShape` | `dcterms:title` | [View Schema &rarr;]({{ '/schemas/core-platform/epic.html' | relative_url }}) |
 | [**Build System** (`robos:BuildSystem`)]({{ '/schemas/core-platform/build-system.html' | relative_url }}) | `urn:robos:shape:BuildSystemShape` | `dcterms:title`, `robos:buildTool`, `robos:configFile` | [View Schema &rarr;]({{ '/schemas/core-platform/build-system.html' | relative_url }}) |
+| [**Database** (`robos:Database`)]({{ '/schemas/core-platform/database.html' | relative_url }}) | `urn:robos:shape:DatabaseShape` | `dcterms:title`, `robos:engine`, `robos:databaseName`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/database.html' | relative_url }}) |
+| [**No SQLDatabase** (`robos:NoSQLDatabase`)]({{ '/schemas/core-platform/no-sqldatabase.html' | relative_url }}) | `urn:robos:shape:NoSQLDatabaseShape` | `dcterms:title`, `robos:engine`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/no-sqldatabase.html' | relative_url }}) |
+| [**Message Broker** (`robos:MessageBroker`)]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) | `urn:robos:shape:MessageBrokerShape` | `dcterms:title`, `robos:brokerType`, `robos:endpoint` | [View Schema &rarr;]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) |
+| [**MCPServer** (`robos:MCPServer`)]({{ '/schemas/core-platform/mcpserver.html' | relative_url }}) | `urn:robos:shape:MCPServerShape` | `dcterms:title`, `robos:transport`, `robos:toolsProvided` | [View Schema &rarr;]({{ '/schemas/core-platform/mcpserver.html' | relative_url }}) |
+| [**Context Source** (`robos:ContextSource`)]({{ '/schemas/core-platform/context-source.html' | relative_url }}) | `urn:robos:shape:ContextSourceShape` | `dcterms:title`, `robos:sourceType`, `robos:location` | [View Schema &rarr;]({{ '/schemas/core-platform/context-source.html' | relative_url }}) |
 
 ---
 

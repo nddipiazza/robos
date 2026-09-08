@@ -3,7 +3,7 @@ title: Mobile Game
 layout: default
 parent: Applications (robos.apps)
 grand_parent: KGraph Schemas
-nav_order: 8
+nav_order: 7
 permalink: /schemas/applications/mobile-game.html
 ---
 

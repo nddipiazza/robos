@@ -69,45 +69,120 @@ function httpJsonRpc(url, payload) {
   });
 }
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToMCPServer(node) {
+  const appId = node['robos:appId'] || (node['@id'] || '').split(':').pop() || 'mcp-server';
+  return {
+    appId,
+    name: node['dcterms:title'] || appId,
+    version: '1.0.0',
+    status: node['robos:status'] || 'RUNNING',
+    port: node['robos:port'] || 19130,
+    endpoint: node['robos:endpoint'] || (node['robos:port'] ? `http://localhost:${node['robos:port']}/mcp` : undefined),
+    tools: node['robos:toolsProvided'] || [],
+    resources: node['robos:resources'] || [],
+    kgraphId: node['@id'],
+  };
+}
+
+function syncServerToKGraph(server) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const appId = server.appId || (server.name || 'mcp-server').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createMCPServer({
+    '@id': server.kgraphId || `urn:robos:mcp:${appId}`,
+    appId,
+    title: server.name || `${appId} MCP Server`,
+    transport: server.endpoint ? 'sse' : 'stdio',
+    endpoint: server.endpoint,
+    port: server.port,
+    toolsProvided: server.tools && server.tools.length > 0 ? server.tools : [`robos_${appId.replace(/-/g, '_')}_inspect`],
+    resources: server.resources || [],
+    status: server.status || 'RUNNING',
+  });
+}
+
+function saveRegistry(registry) {
+  try {
+    fs.mkdirSync(path.dirname(REGISTRY_FILE), { recursive: true });
+    fs.writeFileSync(REGISTRY_FILE, JSON.stringify(registry, null, 2), 'utf8');
+  } catch {}
+}
+
 function loadRegistry() {
+  let reg = {};
   if (fs.existsSync(REGISTRY_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
+      reg = JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
     } catch {}
   }
-  // Mock default built-in servers if none registered yet
-  return {
-    'task-manager': {
-      appId: 'task-manager',
-      name: 'Task Manager MCP Server',
-      version: '1.2.0',
-      status: 'RUNNING',
-      port: 19131,
-      endpoint: 'http://localhost:19131/mcp',
-      tools: ['robos_task_manager_get_task', 'robos_task_manager_update_status', 'robos_task_manager_list_tasks'],
-      resources: ['robos://task-manager/tasks/active', 'robos://task-manager/sprints/current'],
-    },
-    'workspace-manager': {
-      appId: 'workspace-manager',
-      name: 'Workspace Manager MCP Server',
-      version: '1.1.0',
-      status: 'RUNNING',
-      port: 19132,
-      endpoint: 'http://localhost:19132/mcp',
-      tools: ['robos_workspace_manager_create_branch', 'robos_workspace_manager_list_repos'],
-      resources: ['robos://workspace-manager/repos'],
-    },
-    'dev-tools': {
-      appId: 'dev-tools',
-      name: 'Developer Tool Center MCP Server',
-      version: '1.0.0',
-      status: 'RUNNING',
-      port: 19133,
-      endpoint: 'http://localhost:19133/mcp',
-      tools: ['robos_dev_tools_check_tool', 'robos_dev_tools_install_tool'],
-      resources: ['robos://dev-tools/installed'],
-    },
-  };
+  if (!reg || Object.keys(reg).length === 0) {
+    reg = {
+      'task-manager': {
+        appId: 'task-manager',
+        name: 'Task Manager MCP Server',
+        version: '1.2.0',
+        status: 'RUNNING',
+        port: 19131,
+        endpoint: 'http://localhost:19131/mcp',
+        tools: ['robos_task_manager_get_task', 'robos_task_manager_update_status', 'robos_task_manager_list_tasks'],
+        resources: ['robos://task-manager/tasks/active', 'robos://task-manager/sprints/current'],
+      },
+      'workspace-manager': {
+        appId: 'workspace-manager',
+        name: 'Workspace Manager MCP Server',
+        version: '1.1.0',
+        status: 'RUNNING',
+        port: 19132,
+        endpoint: 'http://localhost:19132/mcp',
+        tools: ['robos_workspace_manager_create_branch', 'robos_workspace_manager_list_repos'],
+        resources: ['robos://workspace-manager/repos'],
+      },
+      'dev-tools': {
+        appId: 'dev-tools',
+        name: 'Developer Tool Center MCP Server',
+        version: '1.0.0',
+        status: 'RUNNING',
+        port: 19133,
+        endpoint: 'http://localhost:19133/mcp',
+        tools: ['robos_dev_tools_check_tool', 'robos_dev_tools_install_tool'],
+        resources: ['robos://dev-tools/installed'],
+      },
+    };
+    saveRegistry(reg);
+  }
+
+  const store = getKGraphStore();
+  if (store) {
+    const kgServers = store.getMCPServers();
+    if (kgServers && kgServers.length > 0) {
+      for (const node of kgServers) {
+        const mapped = kgraphNodeToMCPServer(node);
+        reg[mapped.appId] = { ...(reg[mapped.appId] || {}), ...mapped };
+      }
+    } else {
+      for (const s of Object.values(reg)) {
+        syncServerToKGraph(s);
+      }
+    }
+  }
+
+  return reg;
 }
 
 function loadConfig() {

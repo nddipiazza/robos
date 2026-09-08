@@ -71,7 +71,15 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Micr
   "robos:technology": "Go 1.22 / Gin",
   "robos:repository": "github.com/acme/billing-api",
   "robos:package": "services",
-  "robos:namespace": "robos.services"
+  "robos:namespace": "robos.services",
+  "robos:ownerTeam": "urn:robos:team:order-processing",
+  "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+  "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+  "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+  "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+  "robos:implementsContract": [
+    "urn:robos:contract:orders-grpc"
+  ]
 }
 ```
 
@@ -97,7 +105,15 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:technology": "Go 1.22 / Gin",
         "robos:repository": "github.com/acme/billing-api",
         "robos:package": "services",
-        "robos:namespace": "robos.services"
+        "robos:namespace": "robos.services",
+        "robos:ownerTeam": "urn:robos:team:order-processing",
+        "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+        "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+        "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
+        "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+        "robos:implementsContract": [
+            "urn:robos:contract:orders-grpc"
+        ]
     }
   ],
 }));

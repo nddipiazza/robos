@@ -195,13 +195,92 @@ CREATE INDEX idx_pets_status ON public.pets(status);`,
   ],
 };
 
+let _kgraphStore = null;
+function getKGraphStore() {
+  if (!_kgraphStore) {
+    try {
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      _kgraphStore = new SDLCKnowledgeGraphStore();
+    } catch {
+      try {
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        _kgraphStore = new SDLCKnowledgeGraphStore();
+      } catch {}
+    }
+  }
+  return _kgraphStore;
+}
+
+function kgraphNodeToConnection(node) {
+  const slug = (node['@id'] || '').split(':').pop() || 'db';
+  return {
+    id: `conn-${slug}`,
+    name: node['dcterms:title'] || slug,
+    type: node['robos:engine'] || 'postgres',
+    host: node['robos:host'] || '127.0.0.1',
+    port: node['robos:port'] || 5432,
+    database: node['robos:databaseName'] || slug,
+    user: node['robos:username'] || 'postgres',
+    ssl: false,
+    status: 'Connected',
+    latencyMs: 1.2,
+    schemas: node['robos:schemas'] || ['public'],
+    kgraphId: node['@id'],
+  };
+}
+
+function syncConnectionToKGraph(conn) {
+  const store = getKGraphStore();
+  if (!store) return;
+  const slug = (conn.id || conn.name || 'db').replace(/^conn-/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  store.createDatabase({
+    '@id': conn.kgraphId || `urn:robos:db:${slug}`,
+    title: conn.name || `${slug} Database`,
+    engine: conn.type || 'postgresql',
+    databaseName: conn.database || slug,
+    host: conn.host || '127.0.0.1',
+    port: Number(conn.port) || 5432,
+    user: conn.user,
+    passPath: conn.passPath,
+    schemas: conn.schemas || ['public'],
+  });
+}
+
 function loadConnections() {
+  let conns = [];
   try {
     if (fs.existsSync(CONFIG_FILE)) {
-      return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+      conns = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
     }
   } catch {}
-  return JSON.parse(JSON.stringify(DEFAULT_CONNECTIONS));
+
+  if (!conns || conns.length === 0) {
+    conns = JSON.parse(JSON.stringify(DEFAULT_CONNECTIONS));
+    saveConnections(conns);
+  }
+
+  const store = getKGraphStore();
+  if (store) {
+    const kgDbs = store.getDatabases();
+    if (kgDbs && kgDbs.length > 0) {
+      for (const node of kgDbs) {
+        const mapped = kgraphNodeToConnection(node);
+        const existingIdx = conns.findIndex(c => c.id === mapped.id || c.kgraphId === node['@id']);
+        if (existingIdx >= 0) {
+          conns[existingIdx] = { ...mapped, ...conns[existingIdx], kgraphId: node['@id'] };
+        } else {
+          conns.push(mapped);
+        }
+      }
+    } else {
+      // Seed default connections into Knowledge Graph
+      for (const conn of conns) {
+        syncConnectionToKGraph(conn);
+      }
+    }
+  }
+
+  return conns;
 }
 
 function saveConnections(conns) {
@@ -219,6 +298,7 @@ ipcMain.handle('db-save-connection', async (_, conn) => {
   if (idx >= 0) list[idx] = { ...list[idx], ...conn };
   else list.push(conn);
   saveConnections(list);
+  syncConnectionToKGraph(conn);
   return list;
 });
 
