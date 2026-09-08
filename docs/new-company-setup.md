@@ -186,3 +186,12 @@ This starter graph serves as the foundation for the visual architecture canvas i
 
 See the complete, live end-to-end walkthrough video, audio narration, and verification logs:
 * [👉 **New Company Greenfield Setup Walkthrough Video & Proof-of-Work**]({{ site.baseurl }}{% link walkthroughs.md %}#step-18-new-company-setup--greenfield-startup-bootstrap)
+
+---
+
+## Next Steps
+
+- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Scaffold a new application across 9 archetypes.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

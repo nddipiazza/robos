@@ -94,3 +94,12 @@ Turning user requirements into clear, actionable sprint tickets, managing team t
 3. **Sprint & Blocker Oversight**: Monitors automated task movement and blocker radar on the Dev Central dashboard.
 4. **Release Verification**: Inspects verified video walkthroughs before production rollouts.
 
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience an end-to-end developer journey.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
+

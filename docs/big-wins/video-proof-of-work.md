@@ -2,7 +2,7 @@
 title: Video Proof-of-Work
 layout: default
 parent: RobOS Big Wins
-nav_order: 4
+nav_order: 1
 permalink: /big-wins/video-proof-of-work.html
 ---
 

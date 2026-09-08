@@ -434,3 +434,10 @@ node --test --test-concurrency=1 \
   packages/robos-test/tests/sdlc-graph/elearning-doc-sync.test.js
 ```
 
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural advantages powering RobOS.
+- **[A Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %})**: Trace a feature from business concept to production deployment.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

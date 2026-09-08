@@ -2,7 +2,7 @@
 title: Interactive Planning & 66+ Templates
 layout: default
 parent: RobOS Big Wins
-nav_order: 8
+nav_order: 2
 permalink: /big-wins/interactive-task-planning.html
 ---
 

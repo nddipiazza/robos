@@ -125,3 +125,12 @@ Define your domain models once in Microsoft TypeSpec; RobOS automatically genera
 ### Skills Manager & Cross-Agent AI Skills Library
 Access 74+ parameterized system, Git, and Docker diagnostic commands alongside standardized cross-agent AI skills for Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. Read the full [RobOS Skills Guide]({{ site.baseurl }}{% link robos-skills.md %}).
 
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
+

@@ -330,3 +330,5 @@ Follow the four foundational onboarding and application provisioning guides, or 
 * [🏗️ **System Architecture & The Dual-State Comparison Engine**]({{ site.baseurl }}{% link architecture.md %})
 * [🤖 **AI Agent Review-Based Software Development (The 5-Stage Lifecycle)**]({{ site.baseurl }}{% link agent-review-development.md %})
 * [💻 **Browse All 30+ Applications in the RobOS Suite**]({{ site.baseurl }}{% link apps.md %})
+* [💡 **Explore the Ideas Store on GitHub**](https://github.com/nddipiazza/robos/tree/main/docs/ideas)
+

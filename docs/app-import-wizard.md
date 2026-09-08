@@ -140,3 +140,12 @@ Watch the live end-to-end verification video showing deep inspection, AI prompt 
 
 * [👉 **Full Walkthrough Archive & Audio Script**]({{ site.baseurl }}{% link walkthroughs.md %}#step-20-import-existing-apps--codebase-ingestion--archetype-detection)
 
+---
+
+## Next Steps
+
+- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
+

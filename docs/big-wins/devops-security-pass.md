@@ -2,7 +2,7 @@
 title: DevOps Security & Password Store
 layout: default
 parent: RobOS Big Wins
-nav_order: 10
+nav_order: 7
 permalink: /big-wins/devops-security-pass.html
 ---
 

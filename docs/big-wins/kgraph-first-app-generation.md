@@ -2,7 +2,7 @@
 title: KGraph-First App Generation
 layout: default
 parent: RobOS Big Wins
-nav_order: 1
+nav_order: 8
 permalink: /big-wins/kgraph-first-app-generation.html
 ---
 

@@ -917,3 +917,12 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/agy-mcp-d
 xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/robos-graph-demo.js
 ```
 
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
+

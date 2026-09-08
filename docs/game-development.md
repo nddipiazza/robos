@@ -114,3 +114,12 @@ Conforms to `urn:robos:shape:MobileGameShape`:
 2. Select **PC Game** (🎮) or **Mobile Game** (🕹️).
 3. Specify engine, repository slug, and platform targets.
 4. Click **Generate Scaffolding** to produce build configuration templates, `dev-setup.sh`, and `.robos/packages.yaml` registration.
+
+---
+
+## Next Steps
+
+- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all 9 multi-app archetypes.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

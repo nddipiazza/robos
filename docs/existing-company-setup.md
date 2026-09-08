@@ -237,3 +237,12 @@ Enterprise Kubernetes infrastructure connects seamlessly into **Kube Studio** (`
 
 See the complete, live end-to-end walkthrough video, audio narration, and verification logs:
 * [👉 **Existing Company Setup Walkthrough Video & Proof-of-Work**]({{ site.baseurl }}{% link walkthroughs.md %}#step-17-existing-company-setup--directory-sync-okta-azure-ad-ldap)
+
+---
+
+## Next Steps
+
+- **[New Company Setup Guide]({{ site.baseurl }}{% link new-company-setup.md %})**: Bootstrap a new greenfield organization and foundational squads.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

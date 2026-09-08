@@ -81,3 +81,12 @@ RobOS applications are built using lightweight vanilla JavaScript and Electron, 
 - **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
 - **IDE Review Bridges**: Native IPC servers and extensions bridging RobOS reviews to IntelliJ IDEA (port `63343`) and VS Code (`vscode://github.vscode-pull-request-github/open-pr`).
 
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
+

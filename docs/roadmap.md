@@ -183,3 +183,12 @@ Every phase is validated against complete multi-tier enterprise applications and
 17. **Step 18: New Company Setup** — Greenfield startup bootstrap, tenant isolation, root admin provisioning, and core squad configuration.
 18. **Step 19: Develop a New App** — RobOS App Wizard greenfield scaffolding across 6 archetypes, Spectral contract linting, and runnable `dev-setup.sh`.
 19. **Step 20: Import Existing Apps** — Brownfield codebase ingestion, heuristic runtime/manifest detection, Backstage `catalog-info.yaml` synthesis, and automated KGraph synchronization.
+
+---
+
+## Next Steps
+
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover all 11 core architectural innovations and strategic advantages.
+- **[Real-World E2E Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch all 20 reference lifecycle steps executed live.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

@@ -86,3 +86,12 @@ To scaffold a new Front End Application:
 2. Select the **Front End Application** archetype (🌐).
 3. Specify package slug, target framework, and dev server port.
 4. Click **Generate Scaffolding** to produce `dev-setup.sh`, `catalog-info.yaml`, and Vite configuration.
+
+---
+
+## Next Steps
+
+- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all 9 multi-app archetypes.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

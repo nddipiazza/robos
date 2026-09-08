@@ -245,3 +245,12 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-w
 # Launch the App Wizard interactively in the RobOS Dev Harness:
 node packages/robos-test/lib/harness.js --app app-wizard --scenario all-good
 ```
+
+---
+
+## Next Steps
+
+- **[Import Existing Apps Guide]({{ site.baseurl }}{% link app-import-wizard.md %})**: Ingest brownfield codebases with automatic archetype detection.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+

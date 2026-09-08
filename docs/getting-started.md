@@ -163,3 +163,4 @@ xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle
 - [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.
 - [**System Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Explore the 8-pillar SDLC architecture and Knowledge Graph.
 - [**App Suite Catalog**]({{ site.baseurl }}{% link apps.md %}) — Explore all 30+ applications.
+- [**💡 Feature Ideas Store on GitHub**](https://github.com/nddipiazza/robos/tree/main/docs/ideas) — Explore raw ideas, structured specs, and community feature requests.

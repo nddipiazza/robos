@@ -2,7 +2,7 @@
 title: Unified Data Sources Management
 layout: default
 parent: RobOS Big Wins
-nav_order: 6
+nav_order: 4
 permalink: /big-wins/data-sources-management.html
 ---
 

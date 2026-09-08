@@ -2,7 +2,7 @@
 title: Ephemeral In-Memory Sandboxes
 layout: default
 parent: RobOS Big Wins
-nav_order: 3
+nav_order: 6
 permalink: /big-wins/ephemeral-agent-sandboxes.html
 ---
 

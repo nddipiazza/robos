@@ -91,3 +91,12 @@ RobOS equips all AI coding assistants (Claude Code, Google Antigravity, GitHub C
 - **Workspace Tool**: Automatically create, switch, and manage Git branches.
 - **Cloud & Kubernetes Tool**: Trigger container deployments and stream live server logs.
 - **Database & REST Tool**: Run live SQL queries and execute REST API test suites.
+
+---
+
+## Next Steps
+
+- **[RobOS Skills & CLI Macros]({{ site.baseurl }}{% link robos-skills.md %})**: Master cross-agent AI skills and parameter validation.
+- **[RobOS Big Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
+- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
