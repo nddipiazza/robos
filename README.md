@@ -1,5 +1,8 @@
 # RobOS — Knowledge Graph-First Developer OS & Application Suite
 
+📖 **[Documentation](https://nddipiazza.github.io/robos/)** · **[RobOS Big Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
+
+[![Documentation](https://img.shields.io/badge/docs-nddipiazza.github.io%2Frobos-blue?style=flat&logo=read-the-docs&logoColor=white)](https://nddipiazza.github.io/robos/)
 [![License](https://img.shields.io/github/license/nddipiazza/robos)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/nddipiazza/robos?style=social)](https://github.com/nddipiazza/robos/stargazers)
 [![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen)](packages/robos-test)
@@ -215,3 +218,10 @@ RobOS is built entirely upon established, battle-tested open standards. Instead 
 
 Visit the official documentation portal for complete guides, architecture specifications, and walkthrough archives:
 👉 **[https://nddipiazza.github.io/robos/](https://nddipiazza.github.io/robos/)**
+
+- 🏆 **[RobOS Big Wins: Core Innovations & Strategic Advantages](https://nddipiazza.github.io/robos/big-wins.html)** — The 9 architectural breakthroughs separating RobOS from traditional IDEs and coding assistants.
+- 🌐 **[SDLC Knowledge Graph Specification](https://nddipiazza.github.io/robos/knowledge-graph.html)** — OASIS OSLC Core 3.0, W3C JSON-LD, and SHACL standards engine.
+- ⚡ **[RobOS Skills & AI Capabilities](https://nddipiazza.github.io/robos/robos-skills.html)** — Cross-agent marketplace skills for Claude, Codex, Antigravity, Copilot, and Gemini.
+- 🏢 **[Existing Company Setup](https://nddipiazza.github.io/robos/existing-company-setup.html)** — Enterprise directory sync (Okta, Azure AD, LDAP) and Team Topologies.
+- 🚀 **[New Company Greenfield Setup](https://nddipiazza.github.io/robos/new-company-setup.html)** — Company bootstrap, administrator keyrings, and C4 starter topology.
+- 📦 **[App Suite Catalog](https://nddipiazza.github.io/robos/apps.html)** — Detailed specifications for all 30+ native desktop applications.
