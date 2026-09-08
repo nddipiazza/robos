@@ -112,14 +112,14 @@ pre {
 }
 
 .side-bar .site-header {
-  min-height: 5.5rem !important;
+  min-height: 6rem !important;
   padding-top: 0.75rem !important;
   border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
 }
 
 .side-bar .site-logo {
-  height: 4.5rem !important;
-  min-height: 4.5rem !important;
+  height: 5rem !important;
+  min-height: 5rem !important;
   background-size: contain !important;
   background-position: left center !important;
 }
