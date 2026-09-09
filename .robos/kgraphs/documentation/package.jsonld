@@ -178,6 +178,127 @@
       "robos:namespace": "robos.docs",
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject"
+    },
+    {
+      "@id": "urn:robos:diagram:stochastic-guessing-game",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution",
+      "dcterms:description": "Cloud data center prompt loops burning energy in token gambling vs. deterministic compiled execution.",
+      "robos:imagePath": "assets/images/stochastic-guessing-game.jpg",
+      "robos:diagramType": "architecture",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:turing-skill-architecture",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Standardized Turing Machine-Inspired Skill Architecture",
+      "dcterms:description": "Formal Turing skill with typed Input Tapes, state machine invariants, leaf transition execution, and Output Tapes.",
+      "robos:imagePath": "assets/images/turing-skill-architecture.jpg",
+      "robos:diagramType": "flowchart",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:leaf-skill-compilation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code",
+      "dcterms:description": "Pipeline from exploratory generative LLMs through formal BDD verification and Turing specification into signed native binaries.",
+      "robos:imagePath": "assets/images/leaf-skill-compilation.jpg",
+      "robos:diagramType": "pipeline",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:local-edge-assembly",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Local Edge Assembly on Consumer Hardware Independent of Data Centers",
+      "dcterms:description": "Local open-weight model acting as Semantic Graph Linker wiring pre-compiled leaf skills into complete native applications offline.",
+      "robos:imagePath": "assets/images/local-edge-assembly.jpg",
+      "robos:diagramType": "architecture",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:asymptotic-convergence",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly",
+      "dcterms:description": "Declining generative prompt loops as primitives are solved, transitioning to deterministic assembly and re-use.",
+      "robos:imagePath": "assets/images/asymptotic-convergence.jpg",
+      "robos:diagramType": "chart",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:global-consortium-registry",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "The Global Consortium: A Planetary Commons of Compiled Skills",
+      "dcterms:description": "Decentralized planetary network with Turing specifications, verification oracles, cryptographic binary stores, and local assembly.",
+      "robos:imagePath": "assets/images/global-consortium-registry.jpg",
+      "robos:diagramType": "network",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:future-vision",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "The Future of Software Development: Turing Skills, Compiled Machine Code & Local Edge Assembly",
+      "robos:slug": "future-vision",
+      "dcterms:description": "Vision for standardized Turing machine-inspired skills, leaf skill compilation to machine code, and local edge assembly on consumer hardware without data centers.",
+      "robos:docPath": "docs/future.md",
+      "robos:category": "Vision",
+      "robos:hasFlowDiagram": "urn:robos:diagram:stochastic-guessing-game",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
     }
   ],
   "@graph": [
@@ -338,6 +459,127 @@
       "robos:namespace": "robos.docs",
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject"
+    },
+    {
+      "@id": "urn:robos:diagram:stochastic-guessing-game",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution",
+      "dcterms:description": "Cloud data center prompt loops burning energy in token gambling vs. deterministic compiled execution.",
+      "robos:imagePath": "assets/images/stochastic-guessing-game.jpg",
+      "robos:diagramType": "architecture",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:turing-skill-architecture",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Standardized Turing Machine-Inspired Skill Architecture",
+      "dcterms:description": "Formal Turing skill with typed Input Tapes, state machine invariants, leaf transition execution, and Output Tapes.",
+      "robos:imagePath": "assets/images/turing-skill-architecture.jpg",
+      "robos:diagramType": "flowchart",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:leaf-skill-compilation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code",
+      "dcterms:description": "Pipeline from exploratory generative LLMs through formal BDD verification and Turing specification into signed native binaries.",
+      "robos:imagePath": "assets/images/leaf-skill-compilation.jpg",
+      "robos:diagramType": "pipeline",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:local-edge-assembly",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Local Edge Assembly on Consumer Hardware Independent of Data Centers",
+      "dcterms:description": "Local open-weight model acting as Semantic Graph Linker wiring pre-compiled leaf skills into complete native applications offline.",
+      "robos:imagePath": "assets/images/local-edge-assembly.jpg",
+      "robos:diagramType": "architecture",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:asymptotic-convergence",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly",
+      "dcterms:description": "Declining generative prompt loops as primitives are solved, transitioning to deterministic assembly and re-use.",
+      "robos:imagePath": "assets/images/asymptotic-convergence.jpg",
+      "robos:diagramType": "chart",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:diagram:global-consortium-registry",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "dcterms:title": "The Global Consortium: A Planetary Commons of Compiled Skills",
+      "dcterms:description": "Decentralized planetary network with Turing specifications, verification oracles, cryptographic binary stores, and local assembly.",
+      "robos:imagePath": "assets/images/global-consortium-registry.jpg",
+      "robos:diagramType": "network",
+      "robos:aspectRatio": "16:9",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:future-vision",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "The Future of Software Development: Turing Skills, Compiled Machine Code & Local Edge Assembly",
+      "robos:slug": "future-vision",
+      "dcterms:description": "Vision for standardized Turing machine-inspired skills, leaf skill compilation to machine code, and local edge assembly on consumer hardware without data centers.",
+      "robos:docPath": "docs/future.md",
+      "robos:category": "Vision",
+      "robos:hasFlowDiagram": "urn:robos:diagram:stochastic-guessing-game",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
     }
   ]
 }

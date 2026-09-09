@@ -33,15 +33,12 @@ Today, the software industry is caught on a **data center treadmill**. Every dev
 
 This approach treats software generation as an unending, stochastic guessing game.
 
-```mermaid
-timeline
-    title The Evolution of Software Engineering & AI Synthesis
-    Phase 1 : Artisanal Craft : Manual keyboard coding, syntax boilerplate, fragmented tools
-    Phase 2 : Generative Exploration : Cloud LLM copilot craze, prompt loops, massive data centers, hallucinations
-    Phase 3 : Asymptotic Convergence : Finite problem space charted, primitives solved & formally verified
-    Phase 4 : Compiled Turing Skills : Leaf skills compiled to native machine code method calls
-    Phase 5 : Local Edge Assembly : Small local models (Ollama) wiring compiled skills on consumer PCs via Global Consortium
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/stochastic-guessing-game.jpg' | relative_url }}" alt="Software Engineering: Stochastic Guessing Game vs. Deterministic Execution" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Stochastic Guessing Game vs. Deterministic Execution</strong>: Centralized hyperscaler data centers burning millions of watts in a casino of token predictions and hallucination spirals, contrasted with deterministic, verified execution paths. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 RobOS envisions a different trajectory—an **asymptotic convergence** where software engineering evolves through three distinct laws of technological maturation:
 
@@ -61,26 +58,12 @@ $$\delta: Q \times \Gamma \rightarrow Q \times \Gamma \times \{L, R\}$$
 
 In the RobOS future architecture, every skill is structured as a **Standardized Turing Skill**:
 
-```mermaid
-flowchart LR
-    subgraph TuringSkill["Standardized Turing Skill (Formal Specification)"]
-        direction TB
-        INPUT["Input Tape<br/><code>Strict OSLC / JSON-LD / TypeSpec</code>"]
-        STATE["State Machine & Invariants<br/><code>Hermetic Context & Pre-conditions</code>"]
-        EXEC["Deterministic Transition<br/><code>Leaf Execution Unit</code>"]
-        OUTPUT["Output Tape<br/><code>Strict Return Schema & Post-conditions</code>"]
-
-        INPUT --> STATE
-        STATE --> EXEC
-        EXEC --> OUTPUT
-    end
-
-    CALLER["Caller / Orchestrator"] -->|Provides Typed Payload| INPUT
-    OUTPUT -->|Emits Deterministic Value| RESULT["Next State / Caller"]
-
-    style TuringSkill fill:#0d1424,stroke:#38bdf8,stroke-width:2px;
-    style EXEC fill:#1e293b,stroke:#10b981,stroke-width:2px;
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/turing-skill-architecture.jpg' | relative_url }}" alt="Standardized Turing Machine-Inspired Skill Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Standardized Turing Machine-Inspired Skill Architecture</strong>: Formally modeled with typed Input Tapes (OSLC/JSON-LD), hermetic State Machine invariants, deterministic leaf transition execution, and guaranteed Output Tapes with halting proofs. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### The 4 Formal Pillars of a Turing Skill
 
@@ -111,19 +94,12 @@ The RobOS future establishes a rigorous **Compilation Boundary**:
 
 > **The Law of Leaf Compilation**: Once an atomic leaf skill's Turing contract is satisfied and passes automated formal verification, it is compiled into **native machine code** and exported through a standard C-Application Binary Interface (C-ABI) or ahead-of-time WebAssembly (Wasm AOT) module.
 
-```mermaid
-flowchart TD
-    A["Raw Idea / Problem Statement"] --> B["LLM Synthesis & Exploration<br/><i>(Generative Phase)</i>"]
-    B --> C["Formal Verification & BDD Proof<br/><i>(Headless Xvfb / Test Harness)</i>"]
-    C -->|Fails Tests| B
-    C -->|100% Proven| D["Turing Machine Formalization<br/><i>(Typed Input/Output Schemas)</i>"]
-    D --> E["Compiler Pipeline<br/><i>(Rust / C / LLVM / Wasm AOT)</i>"]
-    E --> F["Native Machine Code Leaf Skill<br/><code>.so / .dylib / ELF / Wasm</code>"]
-    F --> G["Global Consortium Registry<br/><i>(Cryptographically Signed Binary)</i>"]
-
-    style F fill:#064e3b,stroke:#10b981,stroke-width:2px;
-    style G fill:#1e1b4b,stroke:#818cf8,stroke-width:2px;
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/leaf-skill-compilation.jpg' | relative_url }}" alt="The Compilation Pipeline: Verified Leaf Skills into Native Machine Code" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Compilation Pipeline: Verified Leaf Skills into Native Machine Code</strong>: Progression from exploratory generative LLMs through formal BDD verification chambers and Turing specification into high-speed compilers emitting signed native binaries (.so, .dylib, ELF, WebAssembly). <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### From Interpretation to Direct Method Invocations
 
@@ -176,38 +152,12 @@ In the future architecture, an open-weight model running on consumer hardware (v
 
 Instead, the local model acts as a **Semantic Graph Linker**:
 
-```mermaid
-flowchart TB
-    USER["User Request<br/><i>'Build a private, encrypted sync daemon for my SQLite databases'</i>"] --> LOCAL_LLM["Local Open-Weight Model<br/><i>(Ollama / llama.cpp on Consumer PC)</i>"]
-    
-    subgraph EdgeDevice["Local Consumer Workstation (Offline / Air-Gapped)"]
-        LOCAL_LLM --> ARCH["1. Synthesizes Application Topology<br/><i>(Nodes, Dataflow, Inputs/Outputs)</i>"]
-        ARCH --> RESOLVER["2. Skill Registry Lookup & Contract Matcher<br/><i>(Local Turing Skill Cache)</i>"]
-        
-        subgraph SkillRepo["Local Pre-Compiled Skill Cache"]
-            S1["Compiled Leaf Skill: SQLite WAL Ingest<br/><code>[lib_sqlite_ingest.so]</code>"]
-            S2["Compiled Leaf Skill: ChaCha20-Poly1305 Encrypt<br/><code>[lib_chacha_encrypt.so]</code>"]
-            S3["Compiled Leaf Skill: Noise Protocol Handshake<br/><code>[lib_noise_transport.so]</code>"]
-            S4["Compiled Leaf Skill: P2P mDNS Discovery<br/><code>[lib_mdns_peer.so]</code>"]
-        end
-        
-        RESOLVER --> S1
-        RESOLVER --> S2
-        RESOLVER --> S3
-        RESOLVER --> S4
-        
-        LINKER["3. RobOS Local Native Linker"]
-        S1 --> LINKER
-        S2 --> LINKER
-        S3 --> LINKER
-        S4 --> LINKER
-        
-        LINKER --> RUNTIME["4. Running, Fully-Compiled Native Application<br/><i>(Sub-millisecond latency, zero cloud dependencies)</i>"]
-    end
-
-    style EdgeDevice fill:#0b101b,stroke:#0284c7,stroke-width:2px;
-    style RUNTIME fill:#064e3b,stroke:#10b981,stroke-width:2px;
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/local-edge-assembly.jpg' | relative_url }}" alt="Local Edge Assembly on Consumer Hardware Independent of Data Centers" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Local Edge Assembly on Consumer Hardware</strong>: A local open-weight model (Ollama / llama.cpp) acting as a Semantic Graph Linker—reading user intent, matching contracts in a local cache of pre-compiled leaf skills, and wiring together complete applications 100% offline with zero data center egress. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Why Local Hardware Can Assemble Any Conceivable Application
 
@@ -224,14 +174,12 @@ A fundamental philosophical shift underpins this vision:
 
 > **The Finite Primitive Hypothesis**: The set of primitive computational problems required to construct all conceivable software applications is asymptotically finite.
 
-```mermaid
-xychart-beta
-    title "The Shift from Continuous Generation to Catalog Re-use"
-    x-axis ["Year 1", "Year 3", "Year 5", "Year 7", "Year 10", "Year 15"]
-    y-axis "Percentage of Effort (%)" 0 --> 100
-    line "LLM Generative Exploration" [95, 75, 50, 25, 10, 2]
-    line "Compiled Skill Assembly & Re-use" [5, 25, 50, 75, 90, 98]
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/asymptotic-convergence.jpg' | relative_url }}" alt="Asymptotic Endpoint: The Transition from Generative Exploration to Planetary Catalog Assembly" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Asymptotic Endpoint: The Transition from Generative Exploration to Planetary Catalog Assembly</strong>: Generative prompt exploration exponentially declines as primitive computational problems are solved, giving way to deterministic assembly and re-use of compiled Turing skills. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### The 3 Stages of the Transition
 
@@ -250,26 +198,12 @@ How is this vast repository of compiled skills governed, secured, and distribute
 
 The answer is a **Global Open Source Consortium**: an open, decentralized federation operating under peer-reviewed open governance (similar to the Linux Foundation, W3C, and IETF).
 
-```mermaid
-graph TD
-    subgraph Consortium["Global Consortium & Decentralized Registry"]
-        SPEC["Turing Skill Standard Specification<br/><i>(OASIS OSLC / W3C JSON-LD)</i>"]
-        ORACLE["Distributed Verification Oracles<br/><i>(Headless Matrix Testing & SHACL Proofs)</i>"]
-        REGISTRY["Content-Addressed Binary Artifact Store<br/><i>(IPFS / Git / BitTorrent / Signed Mirrors)</i>"]
-        CRYPTO["Ed25519 Cryptographic Signatures & SBOMs<br/><i>(Sigstore / in-toto Attestations)</i>"]
-    end
-
-    DEV["Developer / Squad / Edge AI"] -->|Submits New Leaf Skill Spec| SPEC
-    SPEC --> ORACLE
-    ORACLE -->|Generates Formal Proof| CRYPTO
-    CRYPTO --> REGISTRY
-
-    LOCAL_PC["Local Workstations (RobOS)"] -->|Pulls Signed Machine Code Primitives| REGISTRY
-    LOCAL_PC -->|Assembles Offline via Ollama| RUN["Native Applications"]
-
-    style Consortium fill:#0f172a,stroke:#6366f1,stroke-width:2px;
-    style LOCAL_PC fill:#0b101b,stroke:#0284c7,stroke-width:2px;
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/global-consortium-registry.jpg' | relative_url }}" alt="The Global Consortium: A Planetary Commons of Compiled Skills" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>The Global Consortium: A Planetary Commons of Compiled Skills</strong>: A decentralized planetary network featuring standard Turing specifications, distributed verification oracles, content-addressed cryptographic binary stores, and local developer workstations assembling applications offline. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ### Core Principles of the Consortium
 
