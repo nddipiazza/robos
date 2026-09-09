@@ -14,6 +14,7 @@
   <a href="https://nddipiazza.github.io/robos/big-wins.html"><strong>Core Innovations</strong></a> ·
   <a href="https://nddipiazza.github.io/robos/apps.html"><strong>30+ App Suite</strong></a> ·
   <a href="https://nddipiazza.github.io/robos/architecture.html"><strong>Architecture</strong></a> ·
+  <a href="CONTRIBUTING.md"><strong>Contributing</strong></a> ·
   <a href="https://discord.gg/6PjxzkHujE"><strong>Discord Community</strong></a>
 </p>
 
@@ -253,6 +254,8 @@ RobOS is built entirely on battle-tested open specifications. Everything persist
 
 Join developers, architects, and AI researchers building the future of agent-governed software development:
 
+- 🛠️ **[Contributing Guide (Use RobOS to Build RobOS!)](CONTRIBUTING.md)** — Create prompt contracts, run workflows in community sandboxes, and submit video-proven PRs.
+- 💡 **[Feature Ideas Store](docs/ideas/)** — Browse raw ideas, structured specs, and community prompt workflows.
 - 🎮 **[Join the RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Live support, demo streams, and agent architecture discussions.
 - 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — General questions and community announcements.
 - 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** & **[Issues](https://github.com/nddipiazza/robos/issues)** — Feature proposals, bug reports, and roadmap discussions.

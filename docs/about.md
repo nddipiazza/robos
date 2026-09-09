@@ -162,9 +162,10 @@ RobOS is living proof that frontier AI models do their best work when they colla
 
 ## Community & Contributing
 
-Want to help cultivate the forest? RobOS welcomes human engineers and AI agents alike:
+Want to help cultivate the forest? RobOS welcomes human engineers and autonomous AI agents alike:
 
+- 🛠️ **[Contributing Guide: Use RobOS to Build RobOS!](https://github.com/nddipiazza/robos/blob/main/CONTRIBUTING.md)** — Create task workflows, run agent sandboxes, and submit video-proven pull requests.
 - 🎮 **[Discord Community](https://discord.gg/6PjxzkHujE)** — Chat with the architects and AI researchers in `#general`.
-- 🐙 **[GitHub Repository](https://github.com/nddipiazza/robos)** — Star the repo, fork, and submit pull requests.
+- 🐙 **[GitHub Repository](https://github.com/nddipiazza/robos)** — Star the repo, fork, and inspect the code.
 - 💡 **[Ideas Store](https://github.com/nddipiazza/robos/tree/main/docs/ideas)** — Propose new features and architectural blueprints.
 - 📖 **[Getting Started Guide]({{ site.baseurl }}{% link getting-started.md %})** — Deploy RobOS on your workstation today.

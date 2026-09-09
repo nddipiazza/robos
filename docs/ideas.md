@@ -69,19 +69,100 @@ RobOS turns rough thoughts into executable software blueprints through a 4-stage
 
 ---
 
-## How to Submit a New Idea
+## Prompt-Driven Open Source: How RobOS Changes Community Contribution
 
-You can submit raw ideas by creating a `.txt` file in `docs/ideas/inbox/` or prompting your AI agent directly:
+RobOS fundamentally changes how open-source software is conceived, specified, and built:
 
-```bash
-# Add a raw note in your local repository:
-echo "Add support for Apache Iceberg table format in RobOS Data Sources" > docs/ideas/inbox/apache-iceberg-support.txt
+> **"RobOS changes how open source works: we just create task workflows we want to run, and ask someone in the community (or their autonomous AI agent) to run them for us!"**
 
-# Or instruct your AI agent:
-"Create a new feature spec in docs/ideas/specs/ for Apache Iceberg table management"
+In traditional open source, feature proposals often become abandoned text threads. Someone requests a capability, maintainers ask for an implementation, and contributors struggle with complex local setup, missing dependencies, and unverified diffs that linger in PR purgatory.
+
+In RobOS, every feature idea is an **executable prompt contract**. Because RobOS provides disposable in-memory sandboxes (`tmpfs`), containerized headless E2E verification (`scripts/e2e-container.sh`), and the Dual-State Knowledge Graph, **anyone in the community can act as an AI Task Runner**. You don't need to spend 40 hours hand-writing boilerplate. You simply trigger an AI agent workflow, review the automated 1080p video proof-of-work, and submit an airtight pull request.
+
+---
+
+### The 4-Stage Prompt-Driven Workflow
+
+```mermaid
+flowchart LR
+    A["💡 1. Draft Task Workflow<br/><i>Author / Community</i>"] --> B["🤖 2. Community Runner<br/><i>Autonomous Agent Execution</i>"]
+    B --> C["🎥 3. Video Proof-of-Work<br/><i>Docker + Xvfb 1080p</i>"]
+    C --> D["🛡️ 4. Blast-Radius PR<br/><i>KGraph Diff & IDE Bridge</i>"]
 ```
 
-The agent will run the `create-feature-spec` skill to produce a validated specification linked to Knowledge Graph schemas and user workflows.
+#### Stage 1: Authoring the Feature Specification
+
+If you have a feature idea or architectural improvement, create an executable specification in `docs/ideas/specs/`. Provide your agent (Claude Code, Google Antigravity, GitHub Copilot, or Gemini CLI) with this prompt:
+
+```text
+You are a Lead System Architect for RobOS. I want to specify a new feature:
+"<BRIEF_IDEA_DESCRIPTION>"
+
+Please execute the following:
+1. Run the `create-feature-spec` skill (or read docs/ideas/TEMPLATE.md guidelines).
+2. Save a raw concept summary to `docs/ideas/inbox/<spec-slug>.txt`.
+3. Synthesize a formal engineering specification at `docs/ideas/specs/<spec-slug>.md` containing:
+   - Problem statement and high-leverage architectural rationale
+   - C4 component topology diagram (Mermaid) showing impacted RobOS apps/services
+   - W3C SHACL shape impacts and OASIS OSLC JSON-LD Knowledge Graph node updates
+   - Concrete BDD Gherkin user scenarios (Given/When/Then)
+   - Step-by-step implementation plan across packages/
+   - Verification plan using containerized headless E2E tests and 1080p video proofs
+4. Register the new specification in docs/ideas/README.md and docs/ideas.md.
+```
+
+#### Stage 2: The Community Runner Execution (Run for Us!)
+
+Found an idea in [`docs/ideas/specs/`](https://github.com/nddipiazza/robos/tree/main/docs/ideas/specs) that you want to see in RobOS? **You can be the hero who runs it!**
+
+Feed this prompt to your local AI coding agent inside the RobOS repository:
+
+```text
+You are an autonomous RobOS Core Engineer. We need you to implement the approved specification:
+`docs/ideas/specs/<spec-slug>.md`
+
+Follow the RobOS Agent Review-Based Development harness (AGENTS.md):
+1. Workspace Isolation: Create a git branch `feat/<spec-slug>`.
+2. Architecture & KGraph:
+   - If new apps or services are added, register them in `.robos/kgraphs/` conforming to W3C SHACL shapes.
+   - Follow standard Electron conventions: contextBridge IPC (no nodeIntegration), config strictly in ~/.config/robos/, and shared robos-lib requires wrapped in try/catch.
+3. Code Implementation:
+   - Implement the required Electron apps or modules under `packages/<app-id>/`.
+   - Register the app icon in `packages/robos-icons/index.js` (alphabetical order).
+   - Assign a DOM snapshot debug port in `packages/robos-lib/snapshot-cli.js`.
+4. E2E Verification:
+   - Add automated BDD tests in `packages/robos-test/tests/`.
+   - Ensure DOM tree snapshots and event handlers are validated.
+```
+
+#### Stage 3: Automated Verification & 1080p Video Proof-of-Work
+
+RobOS eliminates blind trust in AI diffs. Before submitting code, the agent generates undeniable visual proof:
+
+```text
+Run the RobOS containerized headless verification fabric:
+1. Execute `./scripts/e2e-container.sh` to run the test suite inside an isolated Docker container with Xvfb virtual framebuffer and Picom compositor.
+2. Record a 1080p narrated video walkthrough proof using the `record-demo` skill or `packages/robos-test/demos/`.
+3. Verify that the video recording, WebVTT subtitles, and test pass assertions are generated in `~/.robos/development/walkthroughs/` or test output logs.
+4. Ensure all unit and integration tests pass with 0 regressions.
+```
+
+#### Stage 4: Dual-State Blast-Radius Diff & PR Submission
+
+The agent produces a clean, architecturally validated pull request:
+
+```text
+Prepare the Pull Request for RobOS maintainers:
+1. Run `kgraph-diff` to compare the feature branch against `main`. Ensure zero unauthorized schema drift or orphan nodes.
+2. Format commit messages following Conventional Commits (`feat(<app-id>): ...` or `fix(<app-id>): ...`).
+3. Draft a PR description linking to the spec `docs/ideas/specs/<spec-slug>.md`, embedding test run logs, the 1080p walkthrough video, and the RobOS IDE Review Bridge URI (IntelliJ IDEA / VS Code).
+```
+
+---
+
+### Ready to Contribute?
+
+See [**CONTRIBUTING.md**](https://github.com/nddipiazza/robos/blob/main/CONTRIBUTING.md) for the complete guide to using RobOS to contribute to RobOS, including pre-configured agent commands and development best practices.
 
 ---
 
