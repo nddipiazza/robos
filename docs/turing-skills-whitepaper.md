@@ -46,31 +46,77 @@ This paper presents the **Standardized Turing Skill Architecture**, a mathematic
 
 We define the **Compilation Boundary**: once an atomic capability's Turing contract is formally verified via automated Behavior-Driven Development (BDD) verification chambers, it is compiled ahead-of-time (AOT) into signed native machine code (`.so`, `.dylib`, ELF, WebAssembly) exporting a zero-overhead C-Application Binary Interface (C-ABI). Finally, we demonstrate how lightweight, quantized open-weight models (3B–8B parameters) running locally on commodity consumer hardware act as **Semantic Graph Linkers**, assembling verified leaf binaries into full-scale applications with zero cloud egress, sub-microsecond invocation latency, and mathematical determinism.
 
-```mermaid
-graph LR
-    subgraph S1["1. Stochastic Frontier"]
-      LLM["Cloud LLM<br/>(400B+ Params)"] -->|Probabilistic Sampling| PromptTool["Informal Tool Prompt<br/>(Loose JSON / Ambiguous)"]
-      PromptTool -->|Host Pollution| Host["Uncontrolled Host Mutation<br/>(Non-deterministic)"]
-    end
-
-    subgraph S2["2. Formal Turing Boundary"]
-      FormalSpec["Turing Specification<br/>(Input Tape, State, δ, Halting)"] -->|BDD Verification| Sandbox["Hermetic Virtual Chamber<br/>(tmpfs / Zero Side-Effects)"]
-      Sandbox -->|Leaf Compilation| MachineCode["Native Machine Code<br/>(C-ABI / Wasm Binary)"]
-    end
-
-    subgraph S3["3. Local Edge Assembly"]
-      LocalModel["Local Model (3B-8B)<br/>(Ollama / llama.cpp)"] -->|Topological Wiring| Manifest["Wiring Manifest<br/>(200-500 Tokens)"]
-      Manifest -->|Sub-microsecond Linking| App["Air-Gapped Native App<br/>(Zero Cloud Egress)"]
-      MachineCode -.-> App
-    end
-
-    S1 ==>|Paradigm Shift| S2
-    S2 ==>|Assembly Phase| S3
-
-    style S1 fill:#1c1917,stroke:#78350f,stroke-width:1px,color:#fef3c7
-    style S2 fill:#0f172a,stroke:#0284c7,stroke-width:1px,color:#e0f2fe
-    style S3 fill:#064e3b,stroke:#059669,stroke-width:1px,color:#d1fae5
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure1-paradigm-shift.jpg' | relative_url }}" alt="Figure 1: Comparison of a three-tier software paradigm shift from the current cloud-dependent stochastic LLM approach to a formal Turing boundary and local edge assembly." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 1</strong>: The Three-Tier Architectural Paradigm Shift from Stochastic Cloud Prompt Loops (Tier 1) to Formal Turing Boundaries (Tier 2) and Local Edge Assembly on Consumer Silicon (Tier 3).
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
++---------------------------------------------------------------------------------------------------------+
+|                              THREE-TIER SOFTWARE PARADIGM SHIFT                                         |
++---------------------------------------------------------------------------------------------------------+
+|                                                                                                         |
+|  [TIER 1: CURRENT STOCHASTIC FRONTIER]                                                                  |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Data Acquisition (Stochastic Input)                               |                                 |
+|  +-----------------------------------+--------------------------------+                                 |
+|                                      |                                                                  |
+|                                      v                                                                  |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Cloud-Based Large Language Model (400B+ Parameters)               |                                 |
+|  |  * Probabilistic Token Sampling    * High Latency (250ms - 5000ms) |                                 |
+|  |  * Unpredictable Output Entropy    * Cloud Lock-in / Multi-Megawatt|                                 |
+|  +-----------------------------------+--------------------------------+                                 |
+|                                      |                                                                  |
+|                                      v                                                                  |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Downstream Application (e.g. Chatbot / Weak Tool Calling)         |                                 |
+|  |  * Ambient Workstation Pollution   * Non-Deterministic Transitions |                                 |
+|  +--------------------------------------------------------------------+                                 |
+|                                                                                                         |
+|                                      |                                                                  |
+|               PARADIGM SHIFT: FORMAL COMPUTABILITY & COMPILATION                                        |
+|                                      v                                                                  |
+|                                                                                                         |
+|  [TIER 2: FORMAL TURING BOUNDARY & COMPILATION]                                                         |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Formal Input Specification (W3C JSON-LD / SHACL Shape Invariant)  |                                 |
+|  +-----------------------------------+--------------------------------+                                 |
+|                                      |                                                                  |
+|                                      v                                                                  |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Hermetic Virtual Chamber (tmpfs / Isolated Linux Namespaces)      |                                 |
+|  |  * Deterministic State Machine     * Provable Invariants           |                                 |
+|  |  * Automated BDD Verification      * Halting Guarantee (K_max)     |                                 |
+|  +-----------------------------------+--------------------------------+                                 |
+|                                      |                                                                  |
+|                                      v  Leaf Compilation (C-ABI / Wasm AOT)                            |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Signed Native Machine Code Library (.so / .dylib / ELF / Wasm)    |                                 |
+|  +--------------------------------------------------------------------+                                 |
+|                                                                                                         |
+|                                      |                                                                  |
+|               ASSEMBLY PHASE: TOPOLOGICAL LINKING ON LOCAL SILICON                                      |
+|                                      v                                                                  |
+|                                                                                                         |
+|  [TIER 3: LOCAL EDGE ASSEMBLY (ZERO DATA CENTERS)]                                                      |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Local Edge Model (3B-8B Quantized Parameters: Ollama / llama.cpp)  |                                 |
+|  |  * Semantic Graph Linker           * Compact Manifest (200-500 Tok)|                                 |
+|  +-----------------------------------+--------------------------------+                                 |
+|                                      |                                                                  |
+|                                      v  Sub-microsecond Dynamic Linking (<1 microsecond)                |
+|  +--------------------------------------------------------------------+                                 |
+|  |  Air-Gapped Native Application (100% Offline / Zero Cloud Egress)   |                                 |
+|  +--------------------------------------------------------------------+                                 |
++---------------------------------------------------------------------------------------------------------+
+    </pre>
+  </details>
+</figure>
 
 ---
 
@@ -141,22 +187,57 @@ Recall that a deterministic Turing Machine is formally defined as a 7-tuple:
 
 In the RobOS architecture, an agent capability is not an arbitrary script. It is an instantiated, hermetic Turing Skill $\mathcal{T}_{\text{skill}}$ strictly mapped to the formal 7-tuple:
 
-```mermaid
-stateDiagram-v2
-    [*] --> q0_Initialized: Mount Input Tape & Validate Shape (SHACL)
-    
-    state "State Register (Hermetic Sandbox)" as Sandbox {
-        q0_Initialized --> q1_PreconditionsVerified: Assert Pre-Condition Invariants Φ(q)
-        q1_PreconditionsVerified --> q2_Executing: Execute Transition Function δ(q, γ)
-        q2_Executing --> q3_PostconditionsAsserted: Verify Post-Condition Invariants Ψ(q')
-    }
-
-    q3_PostconditionsAsserted --> q_Accept: Valid Output Tape Written (Status: 0)
-    q3_PostconditionsAsserted --> q_Reject: Invariant Violation / Bounded Step Exceeded (Status > 0)
-    
-    q_Accept --> [*]: Halt Execution
-    q_Reject --> [*]: Halt Execution
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure2-state-machine.jpg' | relative_url }}" alt="Figure 2: Standardized Turing Skill Execution State Machine showing transition flow through hermetic sandbox invariants to halting states." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 2</strong>: Standardized Turing Skill Execution State Machine &mdash; Tracing execution from SHACL shape initialization through hermetic pre/post-condition invariants to guaranteed halting states.
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
+                                        HERMETIC SANDBOX (tmpfs / Linux Namespace)
+                      +----------------------------------------------------------------------------+
+                      |                                                                            |
+                      |   +---------------------+        +--------------------+                    |
+                      |   |         q1          |        |         q2         |                    |
+                      |   |    Preconditions    | -----> |     Executing      |                    |
+                      |   |      Verified       |        |     Transition     |                    |
+                      |   |    (Assert Phi)     |        |    Function delta  |                    |
+                      |   +---------------------+        +---------+----------+                    |
+                      |                                            |                               |
+                      |                                            v                               |
+                      |                                  +--------------------+                    |
+                      |                                  |         q3         |                    |
+                      |                                  |   Postconditions   |                    |
+                      |                                  |      Asserted      |                    |
+                      |                                  |    (Verify Psi)    |                    |
+                      |                                  +---------+----------+                    |
+                      |                                            |                               |
+                      +--------------------------------------------|-------------------------------+
+                                                                   |
+          +-----------------------+                                |
+          |          q0           |                                |
+  ------> |     Initialized       | -------------------------------+
+          |   (Input Tape Valid   |
+          |    via SHACL Shape)   |
+          +-----------------------+
+                                                                   |
+                                          +------------------------+------------------------+
+                                          | (Status == 0)                                   | (Status > 0)
+                                          v                                                 v
+                              +-----------------------+                         +-----------------------+
+                              |       q_accept        |                         |       q_reject        |
+                              |   Valid Output Tape   |                         |  Invariant Violation  |
+                              |     Halting State     |                         |  or Step Exceeded     |
+                              +-----------+-----------+                         +-----------+-----------+
+                                          |                                                 |
+                                          v                                                 v
+                                        HALT                                              HALT
+    </pre>
+  </details>
+</figure>
 
 ### 3.3 The 4 Formal Pillars of a Turing Skill
 
@@ -236,45 +317,47 @@ The following rigorous comparative matrix contrasts current industry-standard AI
 
 To manage real-world software engineering complexity, skills cannot exist as an undifferentiated flat list. They must be structured as a strict **Directed Acyclic Graph (DAG)** of hierarchical capabilities.
 
-```mermaid
-graph TD
-    subgraph L1["Level 1: Composite Meta-Skills (High-Level Orchestration)"]
-      CS1["Deploy Multi-Tenant Microservice"]
-      CS2["Ingest Enterprise Repository Catalog"]
-    end
-
-    subgraph L2["Level 2: Sub-Workflow Pipelines (Sequential / Branching Logic)"]
-      SW1["Validate OAuth & Provision Schema"]
-      SW2["Generate OpenAPI 3.1 & BDD Tests"]
-      SW3["Verify Semantic Blast Radius"]
-    end
-
-    subgraph L3["Level 3: Atomic Leaf Skills (Irreducible Primitives)"]
-      LS1["Compute SHA-256 HMAC"]
-      LS2["Parse YAML AST to Memory"]
-      LS3["Derive Ed25519 Public Key"]
-      LS4["Validate JSON-LD Against SHACL Shape"]
-      LS5["Emit Linux Mount Namespace"]
-    end
-
-    CS1 --> SW1
-    CS1 --> SW2
-    CS2 --> SW3
-
-    SW1 --> LS1
-    SW1 --> LS4
-    SW2 --> LS2
-    SW3 --> LS4
-    SW3 --> LS5
-
-    classDef meta fill:#312e81,stroke:#6366f1,stroke-width:1px,color:#e0e7ff;
-    classDef sub fill:#0c4a6e,stroke:#0284c7,stroke-width:1px,color:#e0f2fe;
-    classDef leaf fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#d1fae5;
-
-    class CS1,CS2 meta;
-    class SW1,SW2,SW3 sub;
-    class LS1,LS2,LS3,LS4,LS5 leaf;
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure3-hierarchical-dag.jpg' | relative_url }}" alt="Figure 3: Hierarchical Directed Acyclic Graph (DAG) Decomposition of Skills from Meta-Skills to Atomic Leaf Primitives." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 3</strong>: Hierarchical Directed Acyclic Graph (DAG) Decomposition &mdash; Stratifying agent capabilities into Composite Meta-Skills (Level 1), Sub-Workflow Pipelines (Level 2), and Atomic Leaf Skills (Level 3).
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
+====================================================================================================
+LEVEL 1: COMPOSITE META-SKILLS (High-Level User Intent & System Orchestration)
+====================================================================================================
+  +--------------------------------------+            +---------------------------------------+
+  |  Deploy Multi-Tenant Microservice    |            |  Ingest Enterprise Repository Catalog  |
+  +-------------------+------------------+            +-------------------+-------------------+
+                      |                                                   |
+           +----------+----------+                                        |
+           |                     |                                        |
+           v                     v                                        v
+====================================================================================================
+LEVEL 2: SUB-WORKFLOW PIPELINES (Sequential & Branching Deterministic Subgraphs)
+====================================================================================================
+  +-------------------+  +-------------------+        +---------------------------------------+
+  |  Validate OAuth & |  |  Generate OpenAPI |        |     Verify Semantic Blast Radius      |
+  |  Provision Schema |  |  3.1 & BDD Tests  |        |      (World 1 vs. World 2 Diff)       |
+  +--------+----+-----+  +--------+----+-----+        +-------------------+-------------------+
+           |    |                 |    |                                  |
+           |    +-----------+     |    +------------------+               |
+           |                |     |                       |               |
+           v                v     v                       v               v
+====================================================================================================
+LEVEL 3: ATOMIC LEAF SKILLS (Irreducible Computational Primitives -> C-ABI Machine Code)
+====================================================================================================
+  +---------------+ +---------------+ +---------------+ +------------------+ +------------------+
+  | Compute       | | Parse YAML    | | Derive        | | Validate JSON-LD | | Emit Linux Mount |
+  | SHA-256 HMAC  | | AST to Memory | | Ed25519 Key   | | via SHACL Shape  | | Namespace (tmpfs)|
+  +---------------+ +---------------+ +---------------+ +------------------+ +------------------+
+    </pre>
+  </details>
+</figure>
 
 ### 5.1 The Stratification Levels
 
@@ -383,24 +466,57 @@ When a comprehensive registry of verified leaf primitives has been compiled into
 
 Instead of generating raw source code line-by-line, the LLM is elevated to its proper intellectual tier: **The Semantic Graph Linker**.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Architect as Human System Architect
-    participant LocalLLM as Local Edge Model (3B-8B)
-    participant Registry as Local Leaf Binary Cache (.so / Wasm)
-    participant Linker as RobOS Dynamic Linker / Runtime
-    actor System as Running Application
-
-    Architect->>LocalLLM: Declare User Intent ("Authenticate OAuth & Store Encrypted Profile")
-    Note over LocalLLM: Reads Intent + W3C Ontologies<br/>Topological Graph Matching (200-500 Tokens)
-    LocalLLM->>Linker: Emit Wiring Manifest (JSON-LD DAG)
-    Note over Linker: Resolves Leaf Nodes in Local Cache<br/>Validates Tape Compatibility (SHACL)
-    Linker->>Registry: Load Compiled Binaries (dlopen / Wasm AOT)
-    Registry-->>Linker: Sub-microsecond Function Pointers
-    Linker->>System: Instantiate Hermetic Execution Pipeline
-    System-->>Architect: 100% Offline, Deterministic Application Ready (<1 sec)
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure4-local-edge-assembly.jpg' | relative_url }}" alt="Figure 4: Local Edge Assembly Architecture showing human architect intent routed to local model, linker, binary cache, and offline application synthesis." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 4</strong>: Local Edge Assembly Architecture &mdash; A local open-weight model (3B&ndash;8B parameters) acting as a Semantic Graph Linker, wiring verified leaf binaries directly on consumer hardware without data center egress.
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
++---------------------------------------------------------------------------------------------------+
+|                                  LOCAL EDGE ASSEMBLY ARCHITECTURE                                 |
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|     +-----------------------------------------------------------------------+                     |
+|     |                         Human System Architect                        |                     |
+|     +-----------------------------------+-----------------------------------+                     |
+|                                         | User Intent Definition                                  |
+|                                         v                                                         |
+|     +-----------------------------------------------------------------------+                     |
+|     |           Local Edge Model (3B-8B Parameters / Ollama / llama.cpp)    |                     |
+|     |                 * Reads Intent + W3C SDLC Ontologies                  |                     |
+|     |                 * Performs Topological Semantic Graph Matching        |                     |
+|     +-----------------------------------+-----------------------------------+                     |
+|                                         | Compact Wiring Manifest (200-500 Tokens)                |
+|                                         v                                                         |
+|     +-----------------------------------------------------------------------+                     |
+|     |                         RobOS Dynamic Linker                          |                     |
+|     |                 * Validates Tape Compatibility via SHACL              |                     |
+|     |                 * Instantiates Hermetic Sub-Microsecond Execution     |                     |
+|     +--------------------+--------------------------------------------------+                     |
+|                          | Query Leaf           ^ Resolve Pre-compiled                            |
+|                          | Binaries             | Native Leaf Binaries                            |
+|                          v                      | (dlopen / Wasm AOT)                             |
+|     +-------------------------------------------+---------------------------+                     |
+|     |               Local Leaf Binary Cache (~/.robos/cache/binaries/)      |                     |
+|     |                 * libcrypto_ed25519.so    * libjsonld_validator.so    |                     |
+|     |                 * libyaml_ast_parser.so   * libsqlite_tenant_store.so |                     |
+|     +-----------------------------------------------------------------------+                     |
+|                                         |                                                         |
+|                                         v Direct CPU Machine-Code Execution                       |
+|     +-----------------------------------------------------------------------+                     |
+|     |                   Air-Gapped Standalone Application                   |                     |
+|     |         * 100% Offline Assembly      * Zero Data Center Egress        |                     |
+|     |         * Sub-Microsecond Invocations* Zero Hallucination Risk        |                     |
+|     +-----------------------------------------------------------------------+                     |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+    </pre>
+  </details>
+</figure>
 
 ### 6.2 The Compact Assembly Manifest
 
@@ -463,13 +579,43 @@ A foundational philosophical and mathematical proposition underpins this archite
 
 Historically, software engineering progresses by freezing solved abstractions into lower, faster, deterministic layers:
 
-```mermaid
-timeline
-    title The Three Great Transitions of Software Engineering
-    1950s - 1970s : First Transition : Manual Machine Switches to Compilers : Assemblers, Fortran, C standardize hardware abstractions
-    1980s - 2020s : Second Transition : Isolated Scripts to Shared Package Registries : Unix pipes, POSIX, open-source libraries, npm, crates.io
-    Present - Future : Third Transition : Cloud Prompt Loops to Standardized Turing Skills : Formally verified Turing leaf primitives, native AOT machine code, local edge assembly
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure5-transitions-timeline.jpg' | relative_url }}" alt="Figure 5: The Three Great Transitions of Software Engineering timeline showing manual switches to compilers, isolated scripts to registries, and cloud prompt loops to standardized Turing skills." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 5</strong>: The Three Great Transitions of Software Engineering &mdash; Freezing artisanal human workflows into deterministic, compiled computational layers across computing history.
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
++---------------------------------------------------------------------------------------------------+
+|                        THE THREE GREAT TRANSITIONS OF SOFTWARE ENGINEERING                        |
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|  FIRST TRANSITION (1950s - 1970s)                                                                 |
+|  Manual Machine Switches  ======>  High-Level Compilers (Fortran, C)                              |
+|  [Problem]: Manual electrical wiring & raw CPU opcodes were artisanal & hardware-locked.          |
+|  [Solution]: Standardized compilers froze hardware abstractions into deterministic machine code.  |
+|                                                                                                   |
+|  -----------------------------------------------------------------------------------------------  |
+|                                                                                                   |
+|  SECOND TRANSITION (1980s - 2020s)                                                                |
+|  Isolated Personal Scripts =====>  Shared Package Registries (POSIX, npm, crates.io)              |
+|  [Problem]: Every developer rewrote standard utilities, data structures, and hash routines.       |
+|  [Solution]: Open-source repositories modularized algorithms into reusable, versioned packages.   |
+|                                                                                                   |
+|  -----------------------------------------------------------------------------------------------  |
+|                                                                                                   |
+|  THIRD TRANSITION (Present - Future)                                                              |
+|  Cloud Prompt Loops        =====>  Standardized Turing Skills & Local Edge Assembly               |
+|  [Problem]: Centralized clouds waste gigawatts probabilistically predicting solved boilerplate.   |
+|  [Solution]: Atomic leaf primitives compiled to native C-ABI binaries; assembled locally offline.  |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+    </pre>
+  </details>
+</figure>
 
 1. **First Transition (1950s–1970s)**: From manual electrical switches and patch cables to symbolic assembly and high-level compilers (Fortran, C). Developers stopped hand-crafting opcodes.
 2. **Second Transition (1980s–2020s)**: From bespoke in-house algorithms to open-source package repositories (npm, PyPI, crates.io, Maven). Developers stopped re-writing standard string splitters and cryptographic hashes.
@@ -481,29 +627,41 @@ timeline
 
 To prevent this universal library of compiled capabilities from being monopolized by proprietary cloud vendors, RobOS proposes a **Global Open Source Consortium** governed under the stewardship of international open-standards bodies (analogous to the Linux Foundation, W3C, and IETF).
 
-```mermaid
-graph TD
-    subgraph Consortium["Planetary Open Source Consortium"]
-      Spec["Open Turing Specifications<br/>(W3C JSON-LD / SHACL Shapes)"]
-      Oracles["Distributed Verification Oracles<br/>(Containerized BDD Test Chambers)"]
-      Registry["Content-Addressed Binary Registry<br/>(Cryptographic in-toto / Sigstore Attestation)"]
-    end
-
-    subgraph Mirrors["Federated Mirrors & Sovereign Nodes"]
-      Corp["Enterprise Air-Gapped Mirror"]
-      Gov["Sovereign National Defense Mirror"]
-      Dev["Local Developer Workstation Mirror"]
-    end
-
-    Spec --> Oracles
-    Oracles -->|Verify & Sign| Registry
-    Registry -->|Immutable Replication| Corp
-    Registry -->|Immutable Replication| Gov
-    Registry -->|Immutable Replication| Dev
-
-    style Consortium fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
-    style Mirrors fill:#1e1b4b,stroke:#818cf8,stroke-width:1px,color:#e0e7ff
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure6-planetary-consortium.jpg' | relative_url }}" alt="Figure 6: The Planetary Open Source Consortium and Federated Distribution Network showing open specifications, verification oracles, content-addressed registry, and sovereign mirrors." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 6</strong>: The Planetary Open Source Consortium and Federated Distribution Network &mdash; Open Turing specifications, distributed verification oracles, cryptographic provenance (Sigstore/in-toto), and local sovereign mirrors.
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
++---------------------------------------------------------------------------------------------------+
+|                          PLANETARY OPEN SOURCE CONSORTIUM (Governance Layer)                      |
+|                                                                                                   |
+|   +-----------------------+     +------------------------+     +------------------------------+   |
+|   |  Open Turing Skill    | <-> |  Distributed           | <-> |  Content-Addressed Registry  |   |
+|   |  Specifications       |     |  Verification Oracles  |     |  (Sigstore / in-toto Cryptic |   |
+|   |  (W3C SHACL / JSON-LD)|     |  (Hermetic BDD Chambers|     |   Attestations & Signatures) |   |
+|   +-----------------------+     +-----------+------------+     +--------------+---------------+   |
++---------------------------------------------|---------------------------------|-------------------+
+                                              | Immutable Replication           | Immutable Replication
+                                              | & Continuous Cryptographic Sync |
+                                              v                                 v
++---------------------------------------------------------------------------------------------------+
+|                       FEDERATED MIRRORS & SOVEREIGN WORKSTATION NODES                             |
+|                                                                                                   |
+|   +---------------------------+   +----------------------------+   +--------------------------+   |
+|   | Enterprise Air-Gapped     |   | Sovereign National Defense |   | Local Developer          |   |
+|   | Mirror (Intranet)         |   | Mirror (Zero External Net) |   | Workstation Mirror       |   |
+|   | * Internal Microservices  |   | * Critical Infrastructure  |   | * Laptop / Desktop Cache |   |
+|   | * 100% Egress Prohibited  |   | * Classified Enclaves      |   | * 100% Offline Edge Dev  |   |
+|   +---------------------------+   +----------------------------+   +--------------------------+   |
++---------------------------------------------------------------------------------------------------+
+    </pre>
+  </details>
+</figure>
 
 ### 8.1 Principles of the Global Commons
 
@@ -518,23 +676,44 @@ graph TD
 
 The principles articulated in this whitepaper are not theoretical conjectures—they represent the active architectural foundation of the RobOS platform:
 
-```mermaid
-graph LR
-    subgraph RobOS_Core["RobOS Active Implementation Fabric"]
-      KGraph["Dual-State Knowledge Graph<br/>(91 SHACL Shapes / JSON-LD)"]
-      SkillsStandard["RobOS Skills Standard<br/>(Portable SKILL.md Contracts)"]
-      SandboxFabric["Ephemeral tmpfs Sandboxes<br/>(Zero Host Pollution)"]
-      ProofEngine["Video Proof Engine<br/>(Xvfb + Piper TTS Walkthroughs)"]
-      ReviewBridge["Agent PR Review Platform<br/>(IntelliJ IDEA & VS Code Bridges)"]
-    end
-
-    KGraph --> SkillsStandard
-    SkillsStandard --> SandboxFabric
-    SandboxFabric --> ProofEngine
-    ProofEngine --> ReviewBridge
-
-    style RobOS_Core fill:#030712,stroke:#00bcd4,stroke-width:2px,color:#e0f7fa
-```
+<figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
+  <img src="{{ '/assets/images/whitepaper/figure7-robos-implementation.jpg' | relative_url }}" alt="Figure 7: Active Implementation Fabric of RobOS showing 5 pipeline steps: Knowledge Graph, Skills Standard, Ephemeral Sandboxes, Video Proof Engine, and Agent Review Bridge." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <figcaption style="padding: 0.85rem 1.25rem; font-size: 0.88rem; color: #94a3b8; border-top: 1px solid #21262d; background: #0b0f19;">
+    <strong>Figure 7</strong>: Active Implementation Fabric of RobOS &mdash; Realizing the Turing Skill theoretical foundation today through Knowledge Graphs, sandbox isolation, and automated video proofs.
+  </figcaption>
+  <details style="margin: 0; padding: 0.75rem 1.25rem; border-top: 1px solid #21262d; background: #080c14;">
+    <summary style="font-size: 0.82rem; color: #58a6ff; cursor: pointer; user-select: none; font-weight: 500;">
+      ▸ View ASCII Diagram (Screen Reader & Terminal Alternate)
+    </summary>
+    <pre style="margin-top: 0.6rem; padding: 0.85rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.75rem; line-height: 1.35; color: #79c0ff; overflow-x: auto;">
++---------------------------------------------------------------------------------------------------+
+|                               ACTIVE IMPLEMENTATION FABRIC OF ROBOS                               |
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|   +-------------------------------+         +----------------------------------+                  |
+|   | 1. Dual-State Knowledge Graph | ------> | 2. RobOS Skills Standard         |                  |
+|   |    * 91+ W3C SHACL Shapes     |         |    * Portable SKILL.md Contracts |                  |
+|   |    * OASIS OSLC 3.0 Ontologies|         |    * Typed Parameter Contracts   |                  |
+|   +-------------------------------+         +-----------------+----------------+                  |
+|                                                               |                                   |
+|                                                               v                                   |
+|   +-------------------------------+         +----------------------------------+                  |
+|   | 4. Headless Video Proof Engine| <------ | 3. Ephemeral tmpfs Sandboxes     |                  |
+|   |    * Xvfb Virtual Framebuffer |         |    * In-Memory Zero-Pollution    |                  |
+|   |    * Piper Neural Audio TTS   |         |    * Isolated Linux Namespaces   |                  |
+|   +---------------+---------------+         +----------------------------------+                  |
+|                   |                                                                               |
+|                   v                                                                               |
+|   +-------------------------------+                                                               |
+|   | 5. Agent PR Review Bridge     |                                                               |
+|   |    * JetBrains IntelliJ IDEA  |                                                               |
+|   |    * VS Code Pull Request Ext |                                                               |
+|   +-------------------------------+                                                               |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+    </pre>
+  </details>
+</figure>
 
 1. **Standardized Skill Directory Structure**: All RobOS agent skills (in `plugins/robos/skills/` and `.agents/skills/`) are structured with validated YAML frontmatter, typed arguments, and explicit execution steps.
 2. **Rigorous Ontologies and SHACL Validation**: RobOS models all SDLC entities using **91+ W3C SHACL shape constraints** across modular packages (`.robos/kgraphs/`). Invocations are validated against schema shapes prior to execution.
