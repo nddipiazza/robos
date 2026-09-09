@@ -131,7 +131,7 @@ header {
 
 .main-view {
   flex: 1;
-  padding: 32px 40px;
+  padding: 22px 36px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -140,8 +140,8 @@ header {
 .step-panel {
   display: none;
   flex-direction: column;
-  gap: 20px;
-  max-width: 860px;
+  gap: 14px;
+  max-width: 900px;
 }
 
 .step-panel.active {
@@ -354,7 +354,7 @@ input:focus, select:focus, textarea:focus {
 .resource-queue-list {
   display: flex;
   flex-direction: column;
-  max-height: 240px;
+  max-height: 290px;
   overflow-y: auto;
 }
 
@@ -369,7 +369,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 7px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background 0.15s;
 }

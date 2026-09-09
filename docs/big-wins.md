@@ -42,10 +42,10 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 2. Interactive Planning & 66+ Templates -->
+<!-- 2. Interactive Multi-Domain Planning Studio -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 2. Interactive Planning & 66+ Templates</h3>
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 2. Interactive Multi-Domain Planning Studio</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
@@ -162,12 +162,12 @@ In RobOS, no code reaches human review on trust alone. Hallucinations and review
 Bridging high-level product intent and concrete engineering implementation is often the weakest link in SDLC automation. The **RobOS Task Planner** provides a structured, multi-domain planning studio:
 
 ### Key Capabilities
-- **66+ Default Interactive Web Form Templates**: Purpose-built templates spanning Web APIs (OpenAPI / Spring Boot), Frontend SPAs (React / Vue), Godot / Unity video games, Java libraries, Mobile apps, Knowledge Graph schemas, and Cloud infrastructure.
+- **Comprehensive Interactive Web Form Templates**: Purpose-built templates spanning Web APIs (OpenAPI / Spring Boot), Frontend SPAs (React / Vue), Godot / Unity video games, Java libraries, Mobile apps, Knowledge Graph schemas, and Cloud infrastructure.
 - **Custom Template Authoring Studio**: Visual builder empowering teams to define custom organizational task forms with input validations, default fields, and automated task breakdowns.
 - **Bidirectional Issue Tracker Sync**: Native two-way synchronization with **GitHub Issues** and **Jira Cloud/Server**, as well as the hermetic RobOS Local Task Server.
 - **Phased DAG Task Synthesis**: Converts high-level architectural requirements into a Directed Acyclic Graph (DAG) with milestone checkpoints and automated agent execution dispatch.
 
-👉 **[Read the Complete Guide: Interactive Task Planning & 66+ Templates →]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**
+👉 **[Read the Complete Guide: Interactive Multi-Domain Planning Studio →]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**
 
 ---
 
@@ -385,7 +385,7 @@ RobOS eliminates YAML sprawl and configuration fragility. All architecture, cont
 | Capability | Traditional IDEs & AI Plugins | RobOS Autonomous Developer OS |
 |:---|:---|:---|
 | **1. Verification & Review** | "Trust me, it works" walls of text | **Headless 1080p Video Proof-of-Work & Neural Voice** |
-| **2. Task Planning** | Ad-hoc tickets or markdown checklists | **66+ Interactive Templates & Phased DAG Planning** |
+| **2. Task Planning** | Ad-hoc tickets or markdown checklists | **Interactive Domain Templates & Phased DAG Planning** |
 | **3. Web & API Clients** | SaaS-locked apps (Postman, Insomnia) | **Universal Web, API & Microservice Suite (REST, gRPC, GraphQL)** |
 | **4. Data Source Management** | Heavy external tools (DBeaver, DataGrip) | **Native Relational DB, NoSQL, & Data Sources Manager** |
 | **5. AI Model & Agent Freedom** | Locked to a single proprietary LLM/vendor | **Universal Agent-Agnostic Framework (OSLC, MCP, Open Standards)** |

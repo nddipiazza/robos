@@ -600,8 +600,8 @@ ipcMain.handle('app-wizard:ingest-resources', async (_, payload = {}) => {
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
-    width: 1280,
-    height: 840,
+    width: 1400,
+    height: 1100,
     minWidth: 900,
     minHeight: 650,
     title: 'RobOS App Wizard',

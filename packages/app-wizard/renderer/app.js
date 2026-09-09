@@ -434,7 +434,7 @@ function setupResourceQueue() {
       }
 
       parseBtn.disabled = true;
-      if (parseStatus) parseStatus.textContent = 'AI extracting resources…';
+      if (parseStatus) parseStatus.innerHTML = '<span style="display:inline-flex; align-items:center; gap:6px;">🧠 <em>Deep Thinking AI Agent analyzing multi-resource topology…</em></span>';
 
       try {
         const res = await window.api.parsePrompt(prompt);
@@ -454,7 +454,7 @@ function setupResourceQueue() {
             }
           }
           if (parseStatus) {
-            parseStatus.textContent = '✓ Extracted ' + count + ' target' + (count === 1 ? '' : 's') + ' from prompt';
+            parseStatus.innerHTML = '✓ Deep Thinking AI Agent Extracted <strong>' + count + '</strong> SDLC targets into queue';
           }
         } else if (res && res.error) {
           if (parseStatus) parseStatus.textContent = '❌ ' + res.error;

@@ -52,7 +52,7 @@ Traditional developer tools only see the files currently sitting on your hard dr
 
 When an AI agent or developer makes changes, RobOS calculates the semantic difference between World 1 and World 2 before any code is merged. If a proposed change introduces a breaking schema change or violates an OpenAPI contract, RobOS instantly highlights the affected downstream nodes and prevents regressions.
 
-| Architecture Knowledge Graph Explorer | Dual-State Visual Difference Engine |
+| Architecture Knowledge Graph Explorer (World 1: Production Baseline) | Dual-State Visual Difference Engine (World 1 vs. World 2 Diff) |
 |:---:|:---:|
 | ![Knowledge Graph Explorer]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }}) | ![Dual-State Difference Engine]({{ '/assets/images/screenshots/robos-graph-frame_02.png' | relative_url }}) |
 
@@ -62,22 +62,22 @@ When an AI agent or developer makes changes, RobOS calculates the semantic diffe
 
 As organizations scale to hundreds of microservices, storing the entire architecture in a single monolithic file causes merge conflicts and performance degradation. 
 
-RobOS decomposes the Knowledge Graph into **modular, namespaced package stores** under `.robos/kgraphs/<package-id>/package.jsonld` indexed by `.robos/kgraph.yaml`. Each package represents a logical domain with independent lifecycle versioning:
+RobOS decomposes the Knowledge Graph into **modular, namespaced package stores** under [`.robos/kgraphs/<package-id>/package.jsonld`](https://github.com/nddipiazza/robos/tree/main/.robos/kgraphs) indexed by [`.robos/kgraph.yaml`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraph.yaml). Each package represents a logical domain with independent lifecycle versioning:
 
-| Package ID | Namespace Prefix | Purpose & Managed Entities |
+| Package ID & Live Source | Namespace Prefix | Purpose & Managed Entities |
 |:---|:---|:---|
-| **`core-platform`** | `robos.core` | System architecture, C4 container topology, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), MCP servers (`robos:MCPServer`), and distributed build systems. |
-| **`organization`** | `robos.org` | Team Topologies (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), and enterprise directory sync. |
-| **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and BDD verification features. |
-| **`applications`** | `robos.apps` | Single-page web apps, desktop apps, mobile apps, PC games, mobile games, and console CLI tools. |
-| **`devops`** | `robos.devops` | Kubernetes clusters (`robos:KubernetesCluster`), cloud environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
-| **`learning`** | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
-| **`documentation`** | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
-| **`testing`** | `robos.testing` | First-class Gherkin features (`robos:GherkinFeature`), backgrounds (`robos:GherkinBackground`), business rules (`robos:GherkinRule`), scenarios (`robos:Scenario`), outlines (`robos:ScenarioOutline`), examples tables (`robos:ExamplesTable`), step definitions (`robos:StepDefinition`), data tables (`robos:DataTable`), docstrings (`robos:DocString`), test plans (`robos:TestPlan`), test suites (`robos:TestSuite`), execution records (`robos:TestExecutionRecord`), and 16+ major testing frameworks (`robos:TestingLibrary`). |
+| [**`core-platform`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/core-platform/package.jsonld) | `robos.core` | System architecture, C4 container topology, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), MCP servers (`robos:MCPServer`), and distributed build systems. |
+| [**`organization`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld) | `robos.org` | Team Topologies (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), and enterprise directory sync. |
+| [**`services`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/services/package.jsonld) | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and BDD verification features. |
+| [**`applications`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/applications/package.jsonld) | `robos.apps` | Single-page web apps, desktop apps, mobile apps, PC games, mobile games, and console CLI tools. |
+| [**`devops`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld) | `robos.devops` | Kubernetes clusters (`robos:KubernetesCluster`), cloud environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
+| [**`learning`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/learning/package.jsonld) | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
+| [**`documentation`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/documentation/package.jsonld) | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
+| [**`testing`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/testing/package.jsonld) | `robos.testing` | First-class Gherkin features (`robos:GherkinFeature`), backgrounds (`robos:GherkinBackground`), business rules (`robos:GherkinRule`), scenarios (`robos:Scenario`), outlines (`robos:ScenarioOutline`), examples tables (`robos:ExamplesTable`), step definitions (`robos:StepDefinition`), data tables (`robos:DataTable`), docstrings (`robos:DocString`), test plans (`robos:TestPlan`), test suites (`robos:TestSuite`), execution records (`robos:TestExecutionRecord`), and 16+ major testing frameworks (`robos:TestingLibrary`). |
 
 ### Backwards-Compatible Aggregation
 
-While each package is stored in its own isolated file, RobOS automatically maintains an aggregated view in `.robos/knowledge-graph.jsonld` whenever packages are saved. This ensures existing scripts, Backstage catalog importers, and legacy tools continue to function without changes.
+While each package is stored in its own isolated file, RobOS automatically maintains an aggregated view in [`.robos/knowledge-graph.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/knowledge-graph.jsonld) whenever packages are saved, alongside canonical definitions in [`.robos/ontology.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/ontology.jsonld) and team structures in [`.robos/teams.yaml`](https://github.com/nddipiazza/robos/blob/main/.robos/teams.yaml). This ensures existing scripts, Backstage catalog importers, and legacy tools continue to function without changes.
 
 | SDLC Graph Telemetry & Packages Bar | Modular Package Stores (8 Namespaces) |
 |:---:|:---:|
@@ -273,6 +273,8 @@ In traditional workflows, maintaining agent rules across 350+ repositories requi
 
 ### Canonical Example: Apache Software Foundation (`package.jsonld`)
 
+> 🔗 **Live KGraph Entry**: View this organization node live in the project repository: [`.robos/kgraphs/organization/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld)
+
 ```json
 {
   "@id": "urn:robos:git-org:apache",
@@ -365,6 +367,8 @@ Databases and message brokers are modeled directly within the platform architect
   - `robos:usesDatabase`: Declares that a microservice queries and persists to a database.
   - `robos:publishesTo` / `robos:subscribesTo`: Declares event stream publishers and consumer groups.
 
+> 🔗 **Live KGraph Entry**: View this database node live in the project repository: [`.robos/kgraphs/core-platform/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/core-platform/package.jsonld)
+
 ```json
 {
   "@id": "urn:robos:db:acme-orders-postgres",
@@ -391,6 +395,8 @@ RobOS eliminates generic, ungrounded AI prompts by modeling specialized agent pe
   - Properties: `dcterms:title`, `robos:transport` (`stdio`, `sse`), `robos:command` or `robos:endpointUrl`, `robos:toolsProvided` (e.g. `["ast_search", "symbol_lookup", "query_nodes"]`).
 - **Semantic Edge**:
   - `robos:usesMCPServer`: Connects an AI Agent Persona to the specific MCP tool servers it is authorized to call.
+
+> 🔗 **Live KGraph Entry**: View this persona node live in the project repository: [`.robos/kgraphs/organization/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld)
 
 ```json
 {
@@ -422,6 +428,8 @@ Multi-cluster Kubernetes management (integrated with **Kube Studio**) and GitOps
 - **CI/CD Pipelines (`robos:CICDPipeline` / `robos:Pipeline`)**:
   - Enforced by `urn:robos:shape:CICDPipelineShape`.
   - Properties: `dcterms:title`, `robos:platform` (`github-actions`, `gitlab-ci`), `robos:workflowFile`, `robos:stages`.
+
+> 🔗 **Live KGraph Entry**: View this Kubernetes cluster node live in the project repository: [`.robos/kgraphs/devops/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld)
 
 ```json
 {
@@ -551,6 +559,8 @@ RobOS establishes complete semantic traceability and provenance for all 91 schem
 When autonomous agents generate or extend KGraph schemas or instances, they ground their representations in these upstream canonical references, maintaining interoperability while expanding upon them with RobOS-specific SDLC properties.
 
 ### JSON-LD Node Example
+
+> 🔗 **Live KGraph Entry**: View this remote execution cluster node live in the project repository: [`.robos/kgraphs/devops/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld)
 
 ```json
 {
@@ -699,6 +709,7 @@ Relational and NoSQL datastores decompose into schemas, tables, and columns:
 
 ## Next Steps
 
+- **[🌐 Browse Live Knowledge Graph Packages on GitHub](https://github.com/nddipiazza/robos/tree/main/.robos/kgraphs)**: Inspect the modular JSON-LD package stores, ontology schemas, and GitOps models live in the repository.
 - **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 79+ SHACL constraint shapes across the 7 standard RobOS package stores.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.

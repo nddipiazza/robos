@@ -261,7 +261,7 @@ class KGraphResourceImporter {
     }
 
     // 5. Extract Kafka / Message Brokers
-    const kafkaMatch = text.match(/kafka(?:\s+broker|\s+cluster)?\s*(?:at|on|:)\s*([^\s,;]+)/i);
+    const kafkaMatch = text.match(/kafka(?:[a-zA-Z\s]+)?(?:\s+broker|\s+cluster)?\s*(?:at|on|:)\s*([^\s,;]+)/i);
     if (kafkaMatch) {
       resources.push({
         type: 'message-broker',

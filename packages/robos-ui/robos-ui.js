@@ -45,8 +45,9 @@
 
   // ── Agent registry ────────────────────────────────────────────────────────────
   const DEFAULT_AGENTS = [
-    { id: 'copilot', name: 'Copilot CLI',   short: 'Copilot', icon: '⊕', color: '#79c0ff', borderColor: '#1f6feb44' },
-    { id: 'claude',  name: 'Claude Code',   short: 'Claude',  icon: '◆', color: '#d2a8ff', borderColor: '#6e40c944' },
+    { id: 'deep-thinking', name: 'Deep Thinking AI Agent', short: 'Deep Thinking', icon: '🧠', color: '#00bcd4', borderColor: '#00bcd444' },
+    { id: 'copilot',       name: 'Copilot CLI',            short: 'Copilot',       icon: '⊕', color: '#79c0ff', borderColor: '#1f6feb44' },
+    { id: 'claude',        name: 'Claude Code',            short: 'Claude',        icon: '◆', color: '#d2a8ff', borderColor: '#6e40c944' },
   ];
 
   // ── Styles (injected once) ────────────────────────────────────────────────────
@@ -648,6 +649,7 @@ robos-question-wizard {
   const _authCache = new Map(); // agentId → { ok: bool, ts: number }
 
   async function checkAgentAuthCached(agentId) {
+    if (agentId === 'deep-thinking') return true;
     const cached = _authCache.get(agentId);
     if (cached && (Date.now() - cached.ts) < AUTH_CACHE_TTL_MS) return cached.ok;
     // Call into the host app's robos API if available

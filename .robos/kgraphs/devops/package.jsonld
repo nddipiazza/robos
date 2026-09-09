@@ -202,7 +202,8 @@
       "@type": [
         "robos:RemoteExecutionCluster",
         "robos:RemoteBuildCluster",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
       "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
@@ -230,14 +231,17 @@
         "evictionPolicy": "lru"
       },
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
     },
     {
       "@id": "urn:robos:cluster:prod-us-east-eks",
       "@type": [
         "c4:DeploymentNode",
         "robos:KubernetesCluster",
-        "robos:K8sCluster"
+        "robos:K8sCluster",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Production US-East AWS EKS Cluster",
       "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
@@ -251,42 +255,51 @@
       ],
       "robos:inEnvironment": "urn:robos:env:production",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
     },
     {
       "@id": "urn:robos:env:production",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Production Environment",
       "dcterms:description": "High-availability production tier serving external customer traffic.",
       "robos:environmentType": "production",
       "robos:tier": "tier-1",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:env:staging",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Staging & Pre-Release Environment",
       "dcterms:description": "Pre-production verification environment matching production architecture.",
       "robos:environmentType": "staging",
       "robos:tier": "tier-2",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:gitops:checkout-service-argocd",
       "@type": [
         "oslc_config:ConfigurationItem",
         "robos:GitOpsDeployment",
-        "robos:ArgoCDApplication"
+        "robos:ArgoCDApplication",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
       "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
@@ -297,14 +310,17 @@
       "robos:targetNamespace": "production",
       "robos:syncPolicy": "automated",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://opengitops.dev/"
     },
     {
       "@id": "urn:robos:pipeline:checkout-service-ci",
       "@type": [
         "oslc_qm:TestPlan",
         "robos:CICDPipeline",
-        "robos:Pipeline"
+        "robos:Pipeline",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
       "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
@@ -318,7 +334,9 @@
         "argocd-sync"
       ],
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ]
 }

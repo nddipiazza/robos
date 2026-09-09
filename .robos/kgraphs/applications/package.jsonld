@@ -44,8 +44,7 @@
       "@type": [
         "robos:ConsoleApp",
         "oslc_am:Resource",
-        "c4:Container",
-        "schema:SoftwareApplication"
+        "c4:Container"
       ],
       "dcterms:title": "Rest Client CLI",
       "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
@@ -103,7 +102,8 @@
       "@id": "urn:robos:app:billing-portal",
       "@type": [
         "oslc_am:Resource",
-        "robos:FrontEndApp"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
@@ -111,7 +111,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/acme/billing-portal",
       "robos:technology": "React 19 / TypeScript / Vite",
-      "robos:frontendFramework": "React"
+      "robos:frontendFramework": "React",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:domainStandard": "https://schema.org/WebApplication"
     },
     {
       "@id": "urn:robos:console-app:rest-client",
@@ -166,7 +168,9 @@
       "robos:inOrganization": "urn:robos:git-org:acme",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ]
 }

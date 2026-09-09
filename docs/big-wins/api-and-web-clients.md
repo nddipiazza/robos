@@ -138,5 +138,5 @@ RobOS tightly couples its API clients with **Consumer-Driven Contract Testing**:
 
 - **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Unified Data Sources Management]({{ site.baseurl }}{% link big-wins/data-sources-management.md %})**: Connect and explore databases alongside API contracts.
-- **[Interactive Task Planning Studio]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**: Explore 66+ default task templates and structured planning.
+- **[Interactive Task Planning Studio]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**: Explore interactive task planning templates and structured execution.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: View detailed specifications for the REST API Client, gRPC Client, and GraphQL Client.

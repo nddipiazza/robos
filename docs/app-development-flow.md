@@ -96,20 +96,86 @@ Developers generate a production-ready repository skeleton across **9 core multi
 The wizard creates Spotify Backstage `catalog-info.yaml`, Docker build manifests, `dev-setup.sh`, and maps the component to your team in `.robos/teams.yaml`.
 * [👉 **Read the Full Develop a New App Guide**]({{ site.baseurl }}{% link new-app-wizard.md %})
 
-### Path B: Import Existing Apps (Deep Inspection & AI Refinement)
-For existing repositories, the **App Import Wizard** performs automated deep codebase inspection:
-* Analyzes build manifests (`pom.xml`, `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`).
-* Detects API specifications (`openapi.yaml`, `schema.graphql`, `*.proto`) and database migrations (Flyway, Liquibase, Prisma).
-* **Interactive AI Prompt Refinement (`<robos-ai-textarea>`)**:
-  
-  ![Deep Inspection & AI Prompt Refinement]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }})
+### Path B: Import Existing Apps & Multi-Resource Knowledge Graph Ingestion (Deep Thinking AI Agent)
 
-  Developers can enter natural language instructions directly into the `<robos-ai-textarea>` prompt bar to refine detected configurations:
-  - *"Treat this as a Microservice using Spring Boot instead of a library"*
-  - *"Change the runtime stack to Node 20 with Fastify and TypeScript"*
-  - *"Assign this component to team core-platform with package slug auth-gateway"*
-* Clicking **Apply AI Refinement** updates the detected archetype, stack, and team assignment instantly before generating configuration files.
-* Synthesizes missing Backstage `catalog-info.yaml`, `dev-setup.sh`, and registers the package in `.robos/packages.yaml`.
+For existing codebases, multi-repo architectures, and heterogeneous enterprise infrastructure, developers do not need to manually author dozens of manifest files. Instead, the **RobOS App Import Wizard** (`packages/app-wizard` in import mode) employs an autonomous **Deep Thinking AI Agent** equipped with multi-hop topological reasoning to parse unstructured inputs, extract SDLC Knowledge Graph entities across heterogeneous resources, enforce W3C SHACL shape conformance, and synthesize Backstage metadata in seconds.
+
+#### 1. Entering Heterogeneous Targets into the Deep Thinking AI Agent
+
+Rather than clicking through separate forms for every Git repository, database, and wiki space, developers declare their multi-resource targets directly in natural language inside the `<robos-ai-textarea id="ai-import-prompt" agent="deep-thinking">` prompt bar. 
+
+A developer can paste a heterogeneous list combining:
+* **4 GitHub Repository URLs**: `https://github.com/acme-retail/checkout-api`, `https://github.com/acme-payments/payment-gateway`, `https://github.com/acme-payments/fraud-detector`, and `https://github.com/acme-identity/oauth-server`
+* **A Local Filesystem Codebase Directory**: `/home/developer/source/repos/order-service`
+* **A Relational Database Connection**: `postgresql://admin:secret@db.internal:5432/acme_db`
+* **A Confluence Architecture Wiki Space**: `https://confluence.acme.corp/display/ARCH`
+* **An Apache Kafka Event Stream Broker**: `kafka.internal:9092`
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/app-flow-kgraph-ai-agent-prompt.png' | relative_url }}" alt="Deep Thinking AI Agent Multi-Resource Extractor Prompt" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 1: Deep Thinking AI Agent Prompt Bar</strong>: Declaring heterogeneous SDLC resources—including 4 GitHub repository URLs, a local filesystem codebase path, a PostgreSQL database, an architecture wiki, and an Apache Kafka broker—inside <code>&lt;robos-ai-textarea&gt;</code> with the Deep Thinking AI Agent active. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+#### 2. Autonomous Extraction & Queued SDLC Targets
+
+Clicking **Deep Thinking AI Extract & Queue Targets** invokes the `KGraphResourceImporter` agent intelligence:
+1. **Multi-Hop Extraction & Classification**: The Deep Thinking AI Agent analyzes the prompt syntax, detects URL protocols, extracts organization boundaries (`acme-retail`, `acme-payments`, `acme-identity`), classifies local codebase paths, extracts database connection parameters, and parses Kafka broker endpoints.
+2. **Company & Organization Context**: Automatically infers the corporate entity (`Acme Global`) and slug (`acme-global`).
+3. **Categorized Target Queue**: Populates the **Queued Resources for Ingestion** list with color-coded badges (`GIT REPO`, `CONFLUENCE`, `LOCAL PATH`, `DATABASE`, `KAFKA`), showing `8 items queued` and confirming extraction with `✓ Deep Thinking AI Agent Extracted 8 SDLC targets into queue`.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/app-flow-kgraph-queued-targets.png' | relative_url }}" alt="SDLC Targets Queued by Deep Thinking AI Agent" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 1 (Extracted): Queued SDLC Resources</strong>: The Deep Thinking AI Agent has successfully parsed, categorized, and queued all 8 heterogeneous targets (4 GitHub repos, 1 Confluence wiki, 1 local codebase, 1 PostgreSQL database, 1 Kafka broker), ready for deep cross-package inspection. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+#### 3. Deep Inspection, Graph Topology & 100% SHACL Conformance
+
+Clicking **Deep Inspect & Analyze Targets 🔍** transitions to **Step 2: Inspection & Knowledge Graph Topology**:
+* **Topology Entity Discovery**: The engine crawls the queued targets and identifies **21 total SDLC Graph Entities** across 4 Git organizations, 5 microservices/APIs, 5 OpenAPI 3.1 contracts, 3 living documentation pages and ADRs, 1 database, and 1 Kafka cluster.
+* **100% W3C SHACL Shape Conformance**: Every single discovered node is validated in real time against **91 W3C SHACL constraint shapes** across 8 standard modular packages (`organization`, `services`, `documentation`, `core-platform`).
+* **Deep Thinking AI Architectural Refinement (`<robos-ai-textarea>`)**:
+  Developers can use the dedicated **Deep Thinking AI Architectural Refinement** prompt bar to tune detected parameters before committing:
+  - *"Confirm microservice archetype robos:Microservice with Java 21 / Spring Boot 3, assign to Core Platform Team, and verify W3C SHACL 100% compliance across all 8 packages"*
+  - *"Reassign payment-gateway to Payments Stream Squad and set package slug to payment-gateway-api"*
+  - *"Map the Confluence wiki pages to living documentation with interactive Mermaid sequence flow"*
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/app-flow-kgraph-topology-inspection.png' | relative_url }}" alt="Step 2: Deep Inspection & Knowledge Graph Topology" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 2: Inspection & Knowledge Graph Topology</strong>: Discovered entities, 100% W3C SHACL shape conformance validation (0 violations), modular package breakdown (organization, services, documentation, core-platform), and interactive Deep Thinking AI Architectural Refinement. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+#### 4. Synthesis & Knowledge Graph Mapping Complete
+
+Proceeding to Step 3 and clicking **Complete Ingestion & Map ⚡** finalizes the import:
+1. **Backstage Manifest Synthesis**: Generates Spotify Backstage `catalog-info.yaml` with detected archetypes, technology stacks, and squad ownership.
+2. **Zero-Friction Dev Setup (`dev-setup.sh`)**: Generates an executable environment verification script checking required runtimes (Java JDK, Node, Docker) and pulling credentials from the UNIX `pass` GPG store.
+3. **Modular Package Ingestion**: Commits all 21 validated entities into `.robos/kgraphs/` (`package.jsonld`), updates `.robos/packages.yaml`, and automatically registers local workspaces in `~/.config/robos/git-projects.json`.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/app-flow-kgraph-ingest-complete.png' | relative_url }}" alt="Step 3: Synthesis & Knowledge Graph Mapping Complete" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Step 3: Synthesis & Knowledge Graph Mapping Complete</strong>: Automated synthesis of Backstage catalog manifests, dev-setup runners, and registration across modular packages in <code>.robos/kgraphs/</code>. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+#### 5. Exploring the Ingested Graph in SDLC Knowledge Graph Explorer
+
+Once ingested, the entire system topology is immediately visible and queryable in **SDLC Knowledge Graph Explorer** (`robos-graph`):
+* Developers can inspect linked microservices, browse contracts, examine Architecture Decision Records (ADRs), trace blast radius impact analysis, and trigger autonomous IDE reviews.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/kgraph-importer-overview.png' | relative_url }}" alt="SDLC Knowledge Graph Explorer Ingested Entities" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>SDLC Knowledge Graph Explorer</strong>: Visualizing all 21 ingested entities in the dual-state Knowledge Graph Explorer with BDD scenarios, OpenAPI contracts, and OSLC JSON-LD navigation. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
 * [👉 **Read the Full Import Existing Apps Guide**]({{ site.baseurl }}{% link app-import-wizard.md %})
 
 ---

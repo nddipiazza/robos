@@ -8,76 +8,273 @@
 </head>
 <body>
   <div class="app-wrapper">
+    <!-- Top Executive Header & Command Bar -->
     <header id="header">
-      <div class="header-title-wrap">
-        <h1 id="title">Dev Central</h1>
-        <span class="subtitle">Proof-of-Work Review & Daily Engineering Hub</span>
+      <div class="header-left">
+        <div class="brand-badge">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </div>
+          <div class="header-title-wrap">
+            <div class="title-row">
+              <h1 id="title">Dev Central</h1>
+              <span class="version-tag">v0.8.2</span>
+            </div>
+            <span class="subtitle">AI Developer Cockpit & Mission Control</span>
+          </div>
+        </div>
       </div>
-      <div id="status-bar">
-        <button class="btn btn-review-hub" id="btn-open-review-hub" onclick="window.openReviewModal('TASK-201')">⚡ Review TASK-201 Proof-of-Work</button>
-        <span id="server-badge" class="badge">--</span>
-        <span id="clock"></span>
+
+      <div class="header-center">
+        <div class="search-command-bar">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="global-search" placeholder="Search tasks, PRs, blockers (e.g. #201, forms-api)..." autocomplete="off" spellcheck="false">
+          <span class="search-shortcut">⌘K</span>
+        </div>
+      </div>
+
+      <div class="header-right" id="status-bar">
+        <span id="sprint-pill" class="sprint-pill">🏃 Sprint 42 • 4d left</span>
+        <div class="server-badge-wrap">
+          <span class="status-dot-pulse"></span>
+          <span id="server-badge" class="badge">Acme GitHub</span>
+        </div>
+        <div class="clock-wrap">
+          <span id="clock"></span>
+        </div>
       </div>
     </header>
 
+    <!-- Executive KPI Stat Ribbon -->
+    <section class="kpi-ribbon" id="kpi-ribbon">
+      <div class="kpi-card" id="kpi-card-tasks">
+        <div class="kpi-icon-wrap kpi-blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-tasks-val">0</span>
+            <span class="kpi-delta positive">2 in-flight</span>
+          </div>
+          <span class="kpi-label">Assigned Tasks</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-card-prs">
+        <div class="kpi-icon-wrap kpi-purple">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="18" r="3"></circle>
+            <circle cx="6" cy="6" r="3"></circle>
+            <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+            <line x1="6" y1="9" x2="6" y2="21"></line>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-prs-val">0</span>
+            <span class="kpi-delta neutral">1 ready to merge</span>
+          </div>
+          <span class="kpi-label">Open Pull Requests</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-card-reviews">
+        <div class="kpi-icon-wrap kpi-cyan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-reviews-val">0</span>
+            <span class="kpi-delta warning">Needs Review</span>
+          </div>
+          <span class="kpi-label">Review Requests</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-card-blockers">
+        <div class="kpi-icon-wrap kpi-red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-blockers-val">0</span>
+            <span class="kpi-delta alert">Active Blocker</span>
+          </div>
+          <span class="kpi-label">Blocker Radar</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpi-card-health">
+        <div class="kpi-icon-wrap kpi-green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-ci-health">92%</span>
+            <span class="kpi-delta positive">All Healthy</span>
+          </div>
+          <span class="kpi-label">Pipeline Health</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive View Navigation Tabs -->
+    <nav class="view-tabs" id="tab-bar">
+      <button class="tab-btn active" data-tab="all" id="tab-btn-all">
+        <span class="tab-icon">📊</span>
+        <span>Mission Control</span>
+      </button>
+      <button class="tab-btn" data-tab="tasks" id="tab-btn-tasks">
+        <span class="tab-icon">🎯</span>
+        <span>My Tasks & Sprint</span>
+        <span class="tab-badge" id="tab-tasks-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="prs" id="tab-btn-prs">
+        <span class="tab-icon">🌿</span>
+        <span>Pull Requests & CI</span>
+        <span class="tab-badge" id="tab-prs-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="blockers" id="tab-btn-blockers">
+        <span class="tab-icon">🚨</span>
+        <span>Blocker Radar</span>
+        <span class="tab-badge alert" id="tab-blockers-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="standup" id="tab-btn-standup">
+        <span class="tab-icon">🤖</span>
+        <span>AI Standup</span>
+      </button>
+      <button class="tab-btn" data-tab="activity" id="tab-btn-activity">
+        <span class="tab-icon">📜</span>
+        <span>Desktop Activity</span>
+      </button>
+    </nav>
+
+    <!-- Main Mission Control Grid -->
     <main id="dashboard">
-      <!-- Active Tasks -->
-      <section class="card" id="tasks-card">
+      <!-- Active Tasks Card -->
+      <section class="card" id="tasks-card" data-section="tasks">
         <div class="card-header">
-          <span class="card-title">My Tasks</span>
-          <span class="card-count" id="tasks-count">0</span>
+          <div class="card-title-group">
+            <span class="card-icon">🎯</span>
+            <span class="card-title">My Tasks</span>
+            <span class="card-count" id="tasks-count">0</span>
+          </div>
+          <div class="card-filters" id="task-filter-chips">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="in_progress">In Progress</button>
+            <button class="filter-chip" data-filter="review">Review</button>
+            <button class="filter-chip" data-filter="todo">Todo</button>
+          </div>
         </div>
         <div class="card-body" id="tasks-list">
           <div class="placeholder">Loading tasks...</div>
         </div>
       </section>
 
-      <!-- Open PRs -->
-      <section class="card" id="prs-card">
+      <!-- Open PRs Card -->
+      <section class="card" id="prs-card" data-section="prs">
         <div class="card-header">
-          <span class="card-title">My Pull Requests</span>
-          <span class="card-count" id="prs-count">0</span>
+          <div class="card-title-group">
+            <span class="card-icon">🌿</span>
+            <span class="card-title">My Pull Requests</span>
+            <span class="card-count" id="prs-count">0</span>
+          </div>
+          <div class="card-actions">
+            <span class="badge-subtle">Target: main</span>
+          </div>
         </div>
         <div class="card-body" id="prs-list">
           <div class="placeholder">Loading PRs...</div>
         </div>
       </section>
 
-      <!-- Review Requests -->
-      <section class="card" id="reviews-card">
+      <!-- Review Requests Card -->
+      <section class="card" id="reviews-card" data-section="reviews">
         <div class="card-header">
-          <span class="card-title">Review Requests</span>
-          <span class="card-count" id="reviews-count">0</span>
+          <div class="card-title-group">
+            <span class="card-icon">👀</span>
+            <span class="card-title">Review Requests</span>
+            <span class="card-count" id="reviews-count">0</span>
+          </div>
+          <div class="card-actions">
+            <span class="badge-subtle">Assigned to You</span>
+          </div>
         </div>
         <div class="card-body" id="reviews-list">
           <div class="placeholder">Loading review requests...</div>
         </div>
       </section>
 
-      <!-- Blocker Radar -->
-      <section class="card" id="blockers-card">
+      <!-- Blocker Radar Card -->
+      <section class="card" id="blockers-card" data-section="blockers">
         <div class="card-header">
-          <span class="card-title">Blocker Radar</span>
+          <div class="card-title-group">
+            <span class="card-icon alert-pulse">🚨</span>
+            <span class="card-title">Blocker Radar</span>
+            <span class="badge-alert" id="blockers-count">0 Alert</span>
+          </div>
+          <div class="card-actions">
+            <span class="badge-subtle">Early Warning</span>
+          </div>
         </div>
         <div class="card-body" id="blockers-list">
           <div class="placeholder">Scanning for blockers...</div>
         </div>
       </section>
 
-      <!-- AI Standup Summary -->
-      <section class="card wide" id="standup-card">
+      <!-- AI Standup Summary Card -->
+      <section class="card wide" id="standup-card" data-section="standup">
         <div class="card-header">
-          <span class="card-title">AI Standup Summary</span>
+          <div class="card-title-group">
+            <span class="card-icon">🤖</span>
+            <span class="card-title">AI Standup Summary</span>
+            <span class="badge-ai">Auto-Synthesized</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-secondary-sm" id="btn-copy-standup" onclick="window.copyStandupToClipboard()">
+              📋 Copy Standup
+            </button>
+            <button class="btn btn-secondary-sm" id="btn-refresh-standup" onclick="window.regenerateStandup()">
+              🔄 Regenerate
+            </button>
+          </div>
         </div>
         <div class="card-body" id="standup-content">
           <div class="placeholder">Preparing standup...</div>
         </div>
       </section>
 
-      <!-- Recent Activity -->
-      <section class="card" id="activity-card">
+      <!-- Recent Desktop Activity Card -->
+      <section class="card" id="activity-card" data-section="activity">
         <div class="card-header">
-          <span class="card-title">Recent Activity</span>
+          <div class="card-title-group">
+            <span class="card-icon">📜</span>
+            <span class="card-title">Recent Activity</span>
+            <span class="badge-subtle">Desktop Audit Trail</span>
+          </div>
+          <div class="card-actions">
+            <span class="live-dot-pulse"></span>
+            <span class="badge-subtle">Live</span>
+          </div>
         </div>
         <div class="card-body" id="activity-list">
           <div class="placeholder">Loading activity...</div>
@@ -85,7 +282,7 @@
       </section>
     </main>
 
-    <!-- Interactive Proof-of-Work Review Modal -->
+    <!-- Interactive Proof-of-Work Review Modal Backdrop -->
     <div class="modal-backdrop hidden" id="review-modal">
       <div class="modal-dialog" id="review-modal-body">
         <!-- Rendered by walkthrough-viewer.js -->

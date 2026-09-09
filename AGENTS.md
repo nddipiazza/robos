@@ -84,7 +84,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Workflow Studio** | Workflow and issue lifecycle management |
 | **Agent Scheduler** | Background cron-based AI agent jobs |
 | **Task Servers** | Jira / GitHub task server configuration |
-| **Task Planner** | AI task plan generator and issue creator with 66+ template web forms and custom template builder |
+| **Task Planner** | AI task plan generator and issue creator with interactive template web forms and custom template builder |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
 | **REST API Client** | Git-backed REST API client, collection runner, and microservice verifier |
 | **Data Sources** | Knowledge Graph data sources explorer, database schema inspector, and interactive query console |

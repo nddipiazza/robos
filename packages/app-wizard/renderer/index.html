@@ -218,32 +218,36 @@ paths:
           </div>
         </div>
 
-        <!-- AI Prompt & Multi-Resource Bulk Extractor Card -->
+        <!-- Deep Thinking AI Prompt & Multi-Resource Bulk Extractor Card -->
         <div class="ai-refine-box" style="background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); margin: 0;">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
-              AI Prompt & Multi-Resource Bulk Extractor
+              Deep Thinking AI Agent · Multi-Resource SDLC Graph Extractor
             </label>
-            <span style="font-size: 11px; color: var(--text-secondary);">Extract multiple URLs, paths, and services from unstructured text</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pkg-pill" style="font-size: 11px; color: var(--accent); border-color: var(--accent); background: rgba(0, 188, 212, 0.12); padding: 2px 8px; font-weight: 600;">🧠 Deep Thinking Agent</span>
+              <span style="font-size: 11px; color: var(--text-secondary);">Multi-hop topology reasoning</span>
+            </div>
           </div>
           <robos-ai-textarea
             id="ai-import-prompt"
+            agent="deep-thinking"
             show-submit="false"
             show-commands="false"
-            placeholder="Instruct AI to extract targets (e.g. 'Import Acme Payments org at https://github.com/acme-payments, Confluence at https://confluence.acme.corp/display/ARCH, checkout-api at https://github.com/acme-retail/checkout-api, and local path /home/user/checkout-service')..."
-            min-height="64">
+            placeholder="Instruct Deep Thinking AI to extract targets (e.g. 'Ingest resources for Acme Global: 4 GitHub repos, local path /home/developer/source/repos/order-service, PostgreSQL db, Kafka cluster, Confluence space')..."
+            min-height="72">
           </robos-ai-textarea>
           <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary" id="btn-parse-prompt" style="display: flex; align-items: center; gap: 6px;">
-              <span>✦</span> AI Extract & Queue Targets
+            <button type="button" class="btn btn-secondary" id="btn-parse-prompt" style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--accent); border-color: var(--accent);">
+              <span>🧠</span> Deep Thinking AI Extract & Queue Targets
             </button>
             <button type="button" class="btn btn-secondary" id="btn-load-sample" style="display: flex; align-items: center; gap: 6px;">
               <span>📋</span> Load Enterprise Sample Stack
             </button>
-            <div id="ai-parse-status" style="font-size: 12px; color: var(--accent); margin-left: auto;"></div>
+            <div id="ai-parse-status" style="font-size: 12px; color: var(--accent); margin-left: auto; font-weight: 500;"></div>
           </div>
         </div>
 
@@ -296,28 +300,32 @@ paths:
           <!-- Populated by app.js -->
         </div>
 
-        <!-- AI Prompt Refinement Section -->
+        <!-- Deep Thinking AI Prompt Refinement Section -->
         <div class="ai-refine-box" style="margin-top: 16px; background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); margin: 0;">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
-              AI Prompt Refinement
+              Deep Thinking AI Architectural Refinement
             </label>
-            <span style="font-size: 11px; color: var(--text-secondary);">Use AI to adjust detected archetype, stack, naming, or team mapping</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pkg-pill" style="font-size: 11px; color: var(--accent); border-color: var(--accent); background: rgba(0, 188, 212, 0.12); padding: 2px 8px; font-weight: 600;">🧠 Reasoning Engine</span>
+              <span style="font-size: 11px; color: var(--text-secondary);">Cross-package SHACL validator</span>
+            </div>
           </div>
           <robos-ai-textarea
             id="ai-inspection-refine-prompt"
+            agent="deep-thinking"
             show-submit="false"
             show-commands="false"
-            placeholder="Instruct AI to refine or change detected settings (e.g. 'Change archetype to robos:ConsoleApp, set runtime to Go 1.22, and assign to Core Platform Team')…"
+            placeholder="Instruct Deep Thinking AI to refine graph entities (e.g. 'Change archetype to robos:ConsoleApp, set runtime to Go 1.22, and assign to Core Platform Team')…"
             min-height="72">
           </robos-ai-textarea>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
             <div id="ai-refine-status" style="font-size: 12px; color: var(--accent); min-height: 18px;"></div>
-            <button class="btn btn-secondary" id="btn-apply-ai-refinement" disabled style="display: flex; align-items: center; gap: 6px;">
-              <span>✦</span> Refine with AI Prompt
+            <button class="btn btn-secondary" id="btn-apply-ai-refinement" disabled style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--accent); border-color: var(--accent);">
+              <span>🧠</span> Deep Thinking AI Refine
             </button>
           </div>
         </div>
