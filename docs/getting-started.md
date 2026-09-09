@@ -116,26 +116,106 @@ ssh -p 2224 robos@localhost
 
 ---
 
-## Option 3: Cross-Platform Desktop App Suite (Windows & macOS Coming Soon)
+## Cross-Platform Desktop Setup: macOS & Windows
 
-RobOS applications are built using pure Electron and vanilla JavaScript with zero framework overhead, making them inherently cross-platform.
+RobOS applications are built using pure Electron and vanilla JavaScript with zero framework overhead, making them inherently cross-platform and runnable across macOS, Windows, and Linux.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/cross-platform-desktop-architecture.jpg' | relative_url }}" alt="RobOS Cross-Platform Desktop Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Cross-Platform Desktop Architecture</strong>: Ubuntu GNOME Linux available now with native macOS and Windows 11/WSL2 desktop support. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Cross-Platform Architecture</strong>: Native execution on macOS (Apple Silicon & Intel), Windows 11/10 (WSL2 & PowerShell), and Ubuntu Linux. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
-### 🍎 macOS / OS X Support (Coming Soon)
-- **Native Apple Silicon & Intel Packages**: Universal `.dmg` installers and Homebrew Cask distribution (`brew install --cask robos-desktop`).
-- **macOS Menu Bar Widget**: System-wide status item in the top macOS menu bar with instant task switching and AI standup notifications.
-- **Darwin IPC & Keychain**: Native integration with macOS Keychain for GPG/SSH secret vaults.
+### 🍎 macOS Setup (Apple Silicon M1–M4 & Intel)
 
-### 🪟 Windows Support (Coming Soon)
-- **Windows 11 Installer & AppX**: One-click MSI installer and Windows Package Manager (`winget install RobOS.Desktop`).
-- **WSL2 Integration**: Ephemeral agent sessions execute inside lightweight WSL2 Linux containers with zero-residue tmpfs RAM mounts while bridging to native Windows GUI windows.
-- **Windows Terminal & Taskbar**: Native jumplists and system tray widgets.
+RobOS runs natively on macOS with full support for Apple Silicon and Intel architectures.
+
+#### 1. Prerequisites (via Homebrew)
+```bash
+brew install node git
+# Optional: Docker Desktop or OrbStack for containerized headless video proof-of-work
+brew install --cask docker
+```
+
+#### 2. Clone & Install
+```bash
+git clone https://github.com/nddipiazza/robos.git
+cd robos
+npm install
+```
+
+#### 3. Launch Standalone Applications
+Launch any RobOS application directly from your terminal:
+```bash
+# Launch Agent Code Review Platform & IDE Bridge
+npx electron packages/pr-review
+
+# Launch System Topology & C4 Architecture Studio
+npx electron packages/topology-manager
+
+# Launch Dev Central daily dashboard
+npx electron packages/dev-central
+
+# Launch Relational DB Manager (PostgreSQL, MySQL)
+npx electron packages/db-manager
+
+# Launch Bruno REST API Client
+npx electron packages/rest-client
+```
+
+#### 4. Run Headless Proof-of-Work in Docker
+```bash
+# Run containerized headless E2E verification & Piper TTS video proof-of-work
+./scripts/e2e-container.sh
+```
+
+---
+
+### 🪟 Windows 11 & 10 Setup (WSL2 & Native PowerShell)
+
+RobOS supports Windows both inside WSL2 (with WSLg hardware-accelerated GUI streaming) and natively via PowerShell.
+
+#### Method A: WSL2 with WSLg (Recommended)
+WSL2 provides the ideal environment for RobOS on Windows because it supports in-memory `tmpfs` agent sandboxes, virtual X11 framebuffers, and native Windows 11 window integration:
+
+```bash
+# 1. Inside your WSL2 Ubuntu terminal, install Node.js and Git:
+sudo apt update && sudo apt install -y nodejs npm git
+
+# 2. Clone the repository and install dependencies:
+git clone https://github.com/nddipiazza/robos.git
+cd robos
+npm install
+
+# 3. Launch applications (opens directly as native Windows 11 windows via WSLg):
+npx electron packages/pr-review
+npx electron packages/topology-manager
+npx electron packages/dev-central
+
+# 4. Run containerized headless verification & video proof-of-work:
+./scripts/e2e-container.sh
+```
+
+#### Method B: Native Windows (PowerShell)
+You can also run RobOS developer tools directly in Windows PowerShell:
+
+```powershell
+# 1. Install Node.js LTS and Git (if not already installed)
+winget install OpenJS.NodeJS.LTS
+winget install Git.Git
+
+# 2. Clone the repository and install dependencies:
+git clone https://github.com/nddipiazza/robos.git
+cd robos
+npm install
+
+# 3. Launch applications directly:
+npx electron packages\pr-review
+npx electron packages\topology-manager
+npx electron packages\dev-central
+npx electron packages\db-manager
+```
 
 ---
 
