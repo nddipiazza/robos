@@ -42,7 +42,7 @@ Modern artificial intelligence coding agents (such as OpenAI Assistants, Anthrop
 3. **The Agent Halting Problem**, wherein recursive agent reasoning loops run unbounded, consuming computational credits without termination proofs.
 4. **Catastrophic computational inefficiency**, where multi-hundred-billion-parameter cloud models burning megawatts of electrical energy are repeatedly queried to synthesize elementary, solved computational primitives.
 
-This paper presents the **Standardized Turing Skill Architecture**, a mathematically rigorous formulation that maps AI agent tools to the classical 7-tuple Turing Machine. We prove that by restricting atomic leaf skills to sub-Turing primitive recursive deciders with bounded step budgets ($K_{\max}$), we resolve the Agent Halting Problem while preserving universal computational power across composed skill Directed Acyclic Graphs (DAGs). 
+This paper presents the **Standardized Turing Skill Architecture**, a mathematically rigorous formulation that maps AI agent tools to the classical 7-tuple Turing Machine. We prove that by restricting atomic leaf skills to sub-Turing primitive recursive deciders with bounded step budgets (<em>K</em><sub>max</sub>), we resolve the Agent Halting Problem while preserving universal computational power across composed skill Directed Acyclic Graphs (DAGs). 
 
 We define the **Compilation Boundary**: once an atomic capability's Turing contract is formally verified via automated Behavior-Driven Development (BDD) verification chambers, it is compiled ahead-of-time (AOT) into signed native machine code (`.so`, `.dylib`, ELF, WebAssembly) exporting a zero-overhead C-Application Binary Interface (C-ABI). Finally, we demonstrate how lightweight, quantized open-weight models (3B–8B parameters) running locally on commodity consumer hardware act as **Semantic Graph Linkers**, assembling verified leaf binaries into full-scale applications with zero cloud egress, sub-microsecond invocation latency, and mathematical determinism.
 
@@ -185,7 +185,7 @@ Recall that a deterministic Turing Machine is formally defined as a 7-tuple:
 
 ### 3.2 The RobOS Turing Skill Mapping
 
-In the RobOS architecture, an agent capability is not an arbitrary script. It is an instantiated, hermetic Turing Skill $\mathcal{T}_{\text{skill}}$ strictly mapped to the formal 7-tuple:
+In the RobOS architecture, an agent capability is not an arbitrary script. It is an instantiated, hermetic Turing Skill <em>T</em><sub>skill</sub> strictly mapped to the formal 7-tuple:
 
 <figure style="margin: 2rem 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117;">
   <img src="{{ '/assets/images/whitepaper/figure2-state-machine.jpg' | relative_url }}" alt="Figure 2: Standardized Turing Skill Execution State Machine showing transition flow through hermetic sandbox invariants to halting states." class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -243,25 +243,27 @@ In the RobOS architecture, an agent capability is not an arbitrary script. It is
 
 Every RobOS skill is constructed upon four immutable structural pillars:
 
-#### Pillar I: The Input Tape ($\Sigma \subset \Gamma$)
+#### Pillar I: The Input Tape (&Sigma; &sub; &Gamma;)
 - **Formal Mapping**: The symbols written on the tape before execution commences.
 - **Implementation**: Formally typed, schema-validated input payload governed by **W3C JSON-LD**, **OASIS OSLC 3.0**, or **TypeSpec** domain models.
-- **Mathematical Guarantee**: An automated validation gate function $V_{\text{SHACL}}: \mathcal{I} \to \{0, 1\}$ evaluates the input tape against declared W3C SHACL shape constraints. If $V_{\text{SHACL}}(\text{input}) = 0$, execution is aborted before the state register is initialized. Malformed invocations are impossible.
+- **Mathematical Guarantee**: An automated validation gate function <code>V<sub>SHACL</sub> : I &rarr; {0, 1}</code> evaluates the input tape against declared W3C SHACL shape constraints. If <code>V<sub>SHACL</sub>(input) = 0</code>, execution is aborted before the state register is initialized. Malformed invocations are impossible.
 
-#### Pillar II: The State Register & Environmental Invariants ($Q$)
-- **Formal Mapping**: The discrete internal state $q \in Q$ of the finite control.
+#### Pillar II: The State Register & Environmental Invariants (<em>Q</em>)
+- **Formal Mapping**: The discrete internal state <code>q &isin; Q</code> of the finite control.
 - **Implementation**: A completely hermetic, disposable execution environment. RobOS utilizes ephemeral in-memory sandboxes (`tmpfs`), isolated Linux user and mount namespaces, and virtual X11 displays (`Xvfb`).
-- **Mathematical Guarantee**: Zero ambient leakage. For any skill execution, let $S_{\text{host}}$ represent the workstation state. The execution satisfies the invariant:
-  $$\Delta S_{\text{host}} = \emptyset$$
+- **Mathematical Guarantee**: Zero ambient leakage. For any skill execution, let <code>S<sub>host</sub></code> represent the workstation state. The execution satisfies the invariant:
+  <div style="margin: 0.75rem 0; padding: 0.75rem 1rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; text-align: center; font-family: monospace; font-size: 1.15rem; color: #38bdf8;">
+    &Delta;S<sub>host</sub> = &empty;
+  </div>
   Every modification is confined strictly to the skill's dedicated virtual boundary.
 
-#### Pillar III: The Deterministic Transition Function ($\delta$)
-- **Formal Mapping**: $\delta : Q \times \Gamma \to Q \times \Gamma \times \{L, R\}$.
+#### Pillar III: The Deterministic Transition Function (&delta;)
+- **Formal Mapping**: <code>&delta; : Q &times; &Gamma; &rarr; Q &times; &Gamma; &times; {L, R}</code>.
 - **Implementation**: The core algorithmic logic that reads symbols from the tape, modifies the internal state register, writes output symbols, and advances the head.
-- **Mathematical Guarantee**: Pure operational determinism. Given identical input tapes and initial states, the transition sequence $\tau = \langle (q_0, \gamma_0), (q_1, \gamma_1), \dots \rangle$ is completely invariant.
+- **Mathematical Guarantee**: Pure operational determinism. Given identical input tapes and initial states, the transition sequence <code>&tau; = &lang;(q<sub>0</sub>, &gamma;<sub>0</sub>), (q<sub>1</sub>, &gamma;<sub>1</sub>), &hellip;&rang;</code> is completely invariant.
 
-#### Pillar IV: The Output Tape & Decidable Halting ($F = \{q_{\text{accept}}, q_{\text{reject}}\}$)
-- **Formal Mapping**: The final symbol sequence remaining on the tape upon entering a terminal state in $F$.
+#### Pillar IV: The Output Tape & Decidable Halting (<em>F</em> = {<em>q</em><sub>accept</sub>, <em>q</em><sub>reject</sub>})
+- **Formal Mapping**: The final symbol sequence remaining on the tape upon entering a terminal state in <code>F</code>.
 - **Implementation**: A strongly typed output contract containing the computed result, verified cryptographic hashes, and exit status code.
 - **Mathematical Guarantee**: Guaranteed termination. See Section 3.4.
 
@@ -271,7 +273,14 @@ Every RobOS skill is constructed upon four immutable structural pillars:
 
 In general computation theory, the **Halting Problem** proved by Alan Turing demonstrates that no general algorithm can decide whether an arbitrary program will halt on a given input:
 
-$$H(M, w) \text{ is undecidable for general Turing Machines } \mathcal{M}.$$
+<div style="margin: 1.25rem 0; padding: 1rem 1.5rem; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; text-align: center;">
+  <span style="font-family: 'SF Pro Display', -apple-system, monospace; font-size: 1.25rem; font-weight: 700; color: #f87171; letter-spacing: 0.03em;">
+    H(M, w) &isin; {0, 1} &mdash; Undecidable for General Turing Machines &Mscr;
+  </span>
+  <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #8b949e;">
+    Turing's Halting Problem: No general algorithm can decide whether an arbitrary program <code>M</code> halts on input <code>w</code>.
+  </div>
+</div>
 
 When AI agents orchestrate chains of tools without formal boundaries, they run directly into this undecidability barrier—generating non-terminating recursion loops, deadlocked locks, and runaway resource consumption.
 
@@ -285,10 +294,10 @@ RobOS resolves this problem through **Intentional Sub-Turing Restriction**:
 </div>
 
 **Proof Sketch:**
-1. Every atomic leaf skill $\mathcal{T}$ defines a strictly monotonically increasing counter $k \in \mathbb{N}$ incremented on each state transition.
-2. The state transition function is augmented such that if $k > K_{\max}$, the transition function forces $\delta(q_k, \gamma) = (q_{\text{reject}}, \text{ERR\_STEP\_BUDGET\_EXCEEDED})$.
-3. Similarly, execution runs within a kernel-enforced `cgroup` timeout $\Delta t_{\max}$. If elapsed real time exceeds $\Delta t_{\max}$, a hardware interrupt halts execution and yields $q_{\text{reject}}$.
-4. Because the state space and step count are strictly bounded, $\mathcal{T}$ cannot contain an infinite loop. Therefore, every leaf skill halts in finite time. $\blacksquare$
+1. Every atomic leaf skill <code>&Tau;</code> defines a strictly monotonically increasing counter <code>k &isin; &Nopf;</code> incremented on each state transition.
+2. The state transition function is augmented such that if <code>k &gt; K<sub>max</sub></code>, the transition function forces <code>&delta;(q<sub>k</sub>, &gamma;) = (q<sub>reject</sub>, ERR_STEP_BUDGET_EXCEEDED)</code>.
+3. Similarly, execution runs within a kernel-enforced `cgroup` timeout <code>&Delta;t<sub>max</sub></code>. If elapsed real time exceeds <code>&Delta;t<sub>max</sub></code>, a hardware interrupt halts execution and yields <code>q<sub>reject</sub></code>.
+4. Because the state space and step count are strictly bounded, <code>&Tau;</code> cannot contain an infinite loop. Therefore, every leaf skill halts in finite time. &#9632;
 
 By bounding leaf skills to decidable deciders, we construct complex composite workflows as Directed Acyclic Graphs (DAGs) of halting nodes. Because a finite DAG composed of halting sub-machines is itself guaranteed to halt, the entire agent SDLC execution graph becomes **provably terminating**.
 
@@ -300,14 +309,14 @@ The following rigorous comparative matrix contrasts current industry-standard AI
 
 | Dimension | Heuristic Cloud Agent Skills (OpenAI / Claude / LangChain) | Standardized RobOS Turing Skills | Theoretical Advantage of Turing Grounding |
 |:---|:---|:---|:---|
-| **1. Theoretical Foundation** | Probabilistic next-token sampling: $\operatorname{argmax} P(w_t \mid w_{<t})$ over prompt text. | Formal Automata Theory: $\delta : Q \times \Gamma \to Q \times \Gamma \times \{L, R\}$. | Transforms tool use from statistical guesswork into provable automata state transitions. |
-| **2. Input Specification** | Unenforced or weakly checked JSON schema; partial string typing; implicit type coercions. | Formally typed, closed-world contracts validated against **W3C JSON-LD**, **OASIS OSLC 3.0**, and **SHACL shapes**. | Rejects malformed arguments before execution initializes ($V_{\text{SHACL}} = 0$); zero argument hallucination. |
-| **3. State Management** | Ambient host state; writes directly to developer filesystems, active ports, and global shells. | Hermetic, ephemeral state registers: dedicated in-memory `tmpfs`, isolated Linux namespaces. | Invariant $\Delta S_{\text{host}} = \emptyset$; zero machine pollution, zero credential leaks. |
-| **4. State Invariants** | None. Scripts assume implicit dependencies (Node version, global PATH, network access). | Explicit pre-condition invariants $\Phi(q)$ and post-condition invariants $\Psi(q')$. | Guaranteed environmental reproducibility across machines, CI runners, and air-gapped nodes. |
-| **5. Determinism & Repeatability** | Stochastic. Temperature $> 0$ and model drift yield different arguments and code across runs. | Bit-for-bit deterministic. Identical input tape symbols yield identical transition sequences $\tau$. | Eliminates flakiness; enables cryptographic caching and content-addressed re-use. |
-| **6. Termination Guarantees** | Undecidable. Vulnerable to infinite loops, recursive hallucinations, and runaway costs. | Decidable. Enforces primitive recursive bounds, step budgets $K_{\max}$, and hardware timeout bounds. | Eliminates the Agent Halting Problem; guarantees bounded termination across all workflows. |
-| **7. Execution Latency** | $250\text{ ms} - 5000\text{ ms}$ per tool invocation (network transit + cloud GPU inference queue). | $< 1\text{ \textmu s}$ (sub-microsecond) direct C-ABI / Wasm AOT method call. | $10^5 \times$ to $10^6 \times$ speedup; real-time application responsiveness. |
-| **8. Energy Consumption** | $\approx 10 - 50\text{ Joules}$ per tool call in hyperscaler data centers. | $\approx 10 - 100\text{ nanojoules}$ per invocation on local CPU/GPU silicon. | $10^8 \times$ reduction in carbon footprint and energy expenditure. |
+| **1. Theoretical Foundation** | Probabilistic next-token sampling: <code>argmax P(w<sub>t</sub> | w<sub>&lt;t</sub>)</code> over prompt text. | Formal Automata Theory: <code>&delta; : Q &times; &Gamma; &rarr; Q &times; &Gamma; &times; {L, R}</code>. | Transforms tool use from statistical guesswork into provable automata state transitions. |
+| **2. Input Specification** | Unenforced or weakly checked JSON schema; partial string typing; implicit type coercions. | Formally typed, closed-world contracts validated against **W3C JSON-LD**, **OASIS OSLC 3.0**, and **SHACL shapes**. | Rejects malformed arguments before execution initializes (<code>V<sub>SHACL</sub> = 0</code>); zero argument hallucination. |
+| **3. State Management** | Ambient host state; writes directly to developer filesystems, active ports, and global shells. | Hermetic, ephemeral state registers: dedicated in-memory `tmpfs`, isolated Linux namespaces. | Invariant <code>&Delta;S<sub>host</sub> = &empty;</code>; zero machine pollution, zero credential leaks. |
+| **4. State Invariants** | None. Scripts assume implicit dependencies (Node version, global PATH, network access). | Explicit pre-condition invariants <code>&Phi;(q)</code> and post-condition invariants <code>&Psi;(q')</code>. | Guaranteed environmental reproducibility across machines, CI runners, and air-gapped nodes. |
+| **5. Determinism & Repeatability** | Stochastic. Temperature &gt; 0 and model drift yield different arguments and code across runs. | Bit-for-bit deterministic. Identical input tape symbols yield identical transition sequences <code>&tau;</code>. | Eliminates flakiness; enables cryptographic caching and content-addressed re-use. |
+| **6. Termination Guarantees** | Undecidable. Vulnerable to infinite loops, recursive hallucinations, and runaway costs. | Decidable. Enforces primitive recursive bounds, step budgets <code>K<sub>max</sub></code>, and hardware timeout bounds. | Eliminates the Agent Halting Problem; guarantees bounded termination across all workflows. |
+| **7. Execution Latency** | 250 ms &ndash; 5000 ms per tool invocation (network transit + cloud GPU inference queue). | &lt; 1 &mu;s (sub-microsecond) direct C-ABI / Wasm AOT method call. | 10<sup>5</sup>&times; to 10<sup>6</sup>&times; speedup; real-time application responsiveness. |
+| **8. Energy Consumption** | &asymp; 10 &ndash; 50 Joules per tool call in hyperscaler data centers. | &asymp; 10 &ndash; 100 nanojoules per invocation on local CPU/GPU silicon. | 10<sup>8</sup>&times; reduction in carbon footprint and energy expenditure. |
 | **9. Blast Radius & Security** | Unbounded. Potential arbitrary command injection, prompt injection, and data exfiltration. | Strictly bounded capability tokens; zero-trust memory bounds; dual-state blast-radius diffing. | Guarantees least-privilege execution; completely prevents catastrophic workspace destruction. |
 | **10. Verification Fabric** | Vague post-hoc spot checks or brittle unit tests with mocked environments. | Automated formal verification chambers: headless **Xvfb virtual framebuffers** and 1080p video proof. | Visual, audio (Piper TTS), and DOM snapshot proof-of-work before any change merges. |
 
@@ -439,9 +448,11 @@ void robos_leaf_skill_free_result(RobOSTuringResult* result);
 
 A neural network produces tokens through stochastic matrix multiplications over weights:
 
-$$y = \operatorname{softmax}(W \cdot x + b)$$
+<div style="margin: 0.75rem 0; padding: 0.75rem 1rem; background: #010409; border: 1px solid #30363d; border-radius: 6px; text-align: center; font-family: monospace; font-size: 1.15rem; color: #38bdf8;">
+  y = softmax(W &middot; x + b)
+</div>
 
-Because floating-point calculations and probabilistic sampling are fundamentally continuous and stochastic, an LLM possesses a persistent probability $P(\text{hallucination}) > 0$.
+Because floating-point calculations and probabilistic sampling are fundamentally continuous and stochastic, an LLM possesses a persistent probability <code>P(hallucination) &gt; 0</code>.
 
 In stark contrast, compiled machine code executes discrete CPU instructions:
 ```nasm
@@ -556,7 +567,7 @@ Because the local model does not write raw source code, its output is reduced fr
 
 ### 6.3 Why Edge Hardware Can Assemble Any Application
 
-1. **Lightweight Parameter Requirements**: Solving topological graph matching and type routing does not require a 400B parameter model. A quantized 3B–8B parameter model (e.g., Llama-3-8B-Instruct, Mistral-7B, Phi-3) executing on a consumer Apple Silicon M-series chip, AMD Ryzen APU, or Intel Core Ultra NPU performs topological wiring with $>99\%$ precision.
+1. **Lightweight Parameter Requirements**: Solving topological graph matching and type routing does not require a 400B parameter model. A quantized 3B–8B parameter model (e.g., Llama-3-8B-Instruct, Mistral-7B, Phi-3) executing on a consumer Apple Silicon M-series chip, AMD Ryzen APU, or Intel Core Ultra NPU performs topological wiring with &gt; 99% precision.
 2. **100% Air-Gapped Operation**: Because the model and the pre-compiled leaf binaries reside entirely on the local disk (`~/.robos/cache/binaries/`), no packets leave the workstation. Proprietary corporate intellectual property, medical records, and sensitive customer data never traverse public networks.
 3. **Instantaneous Feedback**: Assembling pre-compiled native binaries takes milliseconds. The developer experiences near-instant application synthesis rather than waiting on cloud queues.
 
