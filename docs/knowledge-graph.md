@@ -1,7 +1,7 @@
 ---
 title: SDLC Knowledge Graph
 layout: default
-nav_order: 3
+nav_order: 8
 ---
 
 # The RobOS SDLC Knowledge Graph

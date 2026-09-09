@@ -1,7 +1,8 @@
 ---
 title: A Day in the Life: Idea to Production
 layout: default
-nav_order: 3
+parent: Application Development
+nav_order: 1
 ---
 
 # A Day in the Life: From Business Idea to Production

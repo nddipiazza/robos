@@ -1,7 +1,9 @@
 ---
-title: AI Agent Review-Based Development
+title: Agent Governance & Review
 layout: default
-nav_order: 10
+nav_order: 5
+has_children: true
+permalink: /agent-review-development.html
 ---
 
 # AI Agent Review-Based Development

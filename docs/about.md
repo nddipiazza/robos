@@ -1,7 +1,7 @@
 ---
 title: About RobOS
 layout: default
-nav_order: 2
+nav_order: 13
 permalink: /about.html
 ---
 

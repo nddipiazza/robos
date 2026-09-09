@@ -1,7 +1,8 @@
 ---
 title: Game Development
 layout: default
-nav_order: 15
+parent: Application Development
+nav_order: 5
 ---
 
 # Game Development: PC Games & Mobile Games

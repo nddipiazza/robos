@@ -1,7 +1,7 @@
 ---
 title: RobOS Skills
 layout: default
-nav_order: 11
+nav_order: 6
 has_children: true
 permalink: /robos-skills.html
 ---

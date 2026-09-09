@@ -1,7 +1,8 @@
 ---
 title: Agent Tiers & Model Dispatch
 layout: default
-nav_order: 4
+parent: Agent Governance & Review
+nav_order: 2
 permalink: /agent-tiers.html
 ---
 

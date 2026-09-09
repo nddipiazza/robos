@@ -1,7 +1,8 @@
 ---
 title: Existing App Import Wizard
 layout: default
-nav_order: 8
+parent: Application Development
+nav_order: 3
 ---
 
 # Existing App Import Wizard

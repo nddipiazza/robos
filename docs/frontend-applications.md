@@ -1,7 +1,8 @@
 ---
 title: Front End Applications
 layout: default
-nav_order: 14
+parent: Application Development
+nav_order: 4
 ---
 
 # Front End Applications

@@ -1,7 +1,8 @@
 ---
 title: E2E Walkthroughs & Proof of Work
 layout: default
-nav_order: 11
+parent: Agent Governance & Review
+nav_order: 1
 ---
 
 # Real-World Walkthroughs & Proof of Work

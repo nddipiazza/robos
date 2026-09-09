@@ -1,7 +1,8 @@
 ---
 title: User Personas
 layout: default
-nav_order: 14
+parent: Enterprise & Organization Setup
+nav_order: 2
 ---
 
 # User Personas & Real-World Workflows

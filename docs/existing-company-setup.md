@@ -1,7 +1,9 @@
 ---
-title: Existing Company Setup
+title: Enterprise & Organization Setup
 layout: default
-nav_order: 5
+nav_order: 11
+has_children: true
+permalink: /existing-company-setup.html
 ---
 
 # Existing Company Setup & Enterprise Onboarding

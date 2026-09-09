@@ -1,7 +1,9 @@
 ---
-title: Roadmap
+title: Roadmap & Future Vision
 layout: default
-nav_order: 15
+nav_order: 12
+has_children: true
+permalink: /roadmap.html
 ---
 
 # RobOS Product Roadmap: Future Vision & Unimplemented Ideas

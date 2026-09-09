@@ -1,7 +1,8 @@
 ---
-title: The Future
+title: The Future of Software Development
 layout: default
-nav_order: 16
+parent: Roadmap & Future Vision
+nav_order: 1
 permalink: /future.html
 ---
 

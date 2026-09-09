@@ -1,7 +1,8 @@
 ---
-title: "💡 Feature Ideas"
+title: "Feature Ideas Store"
 layout: default
-nav_order: 99
+parent: Roadmap & Future Vision
+nav_order: 2
 permalink: /ideas.html
 ---
 

@@ -1,7 +1,9 @@
 ---
-title: App Development Flow
+title: Application Development
 layout: default
-nav_order: 9
+nav_order: 4
+has_children: true
+permalink: /app-development-flow.html
 ---
 
 # The Flow of RobOS Apps Used to Create an Application

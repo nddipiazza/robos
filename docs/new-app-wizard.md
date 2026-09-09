@@ -1,7 +1,8 @@
 ---
 title: New App Development Wizard
 layout: default
-nav_order: 7
+parent: Application Development
+nav_order: 2
 ---
 
 # New App Development Wizard

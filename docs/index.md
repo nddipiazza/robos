@@ -33,18 +33,16 @@ Instead of letting agents run wild, RobOS gives you an **autonomous agent govern
 
 [⭐ Star on GitHub](https://github.com/nddipiazza/robos){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
 [💬 Join Discord](https://discord.gg/6PjxzkHujE){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 target="_blank" rel="noopener" }
-[About RobOS]({{ site.baseurl }}{% link about.md %}){: .btn .btn-blue .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[KGraph Schemas]({{ site.baseurl }}{% link schemas.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Day in the Life]({{ site.baseurl }}{% link day-in-the-life.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🚀 Get Started]({{ site.baseurl }}{% link getting-started.md %}){: .btn .btn-blue .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🏆 RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🧬 SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🤖 Agent Governance & Review]({{ site.baseurl }}{% link agent-review-development.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[📐 KGraph Schemas]({{ site.baseurl }}{% link schemas.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[⚡ RobOS Skills]({{ site.baseurl }}{% link robos-skills.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[📱 Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [System Architecture]({{ site.baseurl }}{% link architecture.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Agent Tiers & Optimization]({{ site.baseurl }}{% link agent-tiers.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[RobOS Skills]({{ site.baseurl }}{% link robos-skills.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[The Future]({{ site.baseurl }}{% link future.md %}){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
+[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🌱 About RobOS]({{ site.baseurl }}{% link about.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
   <a href="{{ site.baseurl }}{% link about.md %}" class="btn fs-3" style="border-color: #38bdf8; color: #38bdf8;">🌱 About RobOS</a>

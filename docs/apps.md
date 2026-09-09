@@ -1,7 +1,7 @@
 ---
 title: App Suite
 layout: default
-nav_order: 13
+nav_order: 10
 ---
 
 # RobOS App Suite
