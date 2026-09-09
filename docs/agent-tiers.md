@@ -194,39 +194,46 @@ flowchart TD
 ---
 
 #### Phase 2: Task Complexity Scoring (TCS) Engine
-RobOS computes a deterministic **Task Complexity Score (TCS)** normalized to the continuous interval $[1.0, 10.0]$:
+RobOS computes a deterministic **Task Complexity Score (TCS)** normalized to the continuous interval `[1.0, 10.0]`:
 
-$$\text{TCS} = w_{\text{ast}} \cdot S_{\text{ast}} + w_{\text{scope}} \cdot S_{\text{scope}} + w_{\text{crit}} \cdot S_{\text{crit}} + w_{\text{depth}} \cdot S_{\text{depth}}$$
+<div style="margin: 1.25rem 0; padding: 1rem 1.5rem; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; text-align: center;">
+  <span style="font-family: 'SF Pro Display', -apple-system, monospace; font-size: 1.25rem; font-weight: 700; color: #38bdf8; letter-spacing: 0.03em;">
+    TCS = (w_ast · S_ast) + (w_scope · S_scope) + (w_crit · S_crit) + (w_depth · S_depth)
+  </span>
+  <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #8b949e;">
+    Deterministic Task Complexity Score evaluated across 4 weighted AST and architectural dimensions
+  </div>
+</div>
 
 Where:
-- **$w_{\text{ast}} = 0.30$ (AST Blast Radius Weight)**: Measures structural code impact.
-  - $S_{\text{ast}} = 1$: Single symbol or trivial comment/docstring edit.
-  - $S_{\text{ast}} = 4$: Internal function or class implementation change without signature mutation.
-  - $S_{\text{ast}} = 8$: Public API contract signature or schema modification.
-  - $S_{\text{ast}} = 10$: Core architectural interface mutation affecting polyglot services.
-- **$w_{\text{scope}} = 0.25$ (Topological Scope Weight)**: Measures file and package boundaries.
-  - $S_{\text{scope}} = 1$: Single isolated file ($N_{\text{files}} = 1$).
-  - $S_{\text{scope}} = 4$: Multiple files within a single package ($2 \le N_{\text{files}} \le 5$).
-  - $S_{\text{scope}} = 7$: Cross-package boundaries within one repository ($N_{\text{files}} > 5$).
-  - $S_{\text{scope}} = 10$: Multi-repo, cross-service monorepo blast radius.
-- **$w_{\text{crit}} = 0.25$ (Criticality & Security Weight)**: Evaluates business and operational sensitivity.
-  - $S_{\text{crit}} = 1$: Formatting, linting, cosmetic UI layout.
-  - $S_{\text{crit}} = 5$: Standard CRUD business logic, domain entities.
-  - $S_{\text{crit}} = 9$: Authentication, cryptographic routines, payment processing, GPG credentials.
-  - $S_{\text{crit}} = 10$: Distributed consensus, zero-downtime database migration DDL.
-- **$w_{\text{depth}} = 0.20$ (Reasoning Depth Weight)**: Measures algorithmic and cognitive complexity.
-  - $S_{\text{depth}} = 1$: Linear, deterministic mapping (regex, formatting, string templating).
-  - $S_{\text{depth}} = 5$: Multi-step conditional control flow, error handling branches.
-  - $S_{\text{depth}} = 8$: Complex data transformation, state machine transitions.
-  - $S_{\text{depth}} = 10$: Distributed concurrency, asynchronous deadlock prevention, formal proofs.
+- **`w_ast = 0.30` (AST Blast Radius Weight)**: Measures structural code impact.
+  - `S_ast = 1`: Single symbol or trivial comment/docstring edit.
+  - `S_ast = 4`: Internal function or class implementation change without signature mutation.
+  - `S_ast = 8`: Public API contract signature or schema modification.
+  - `S_ast = 10`: Core architectural interface mutation affecting polyglot services.
+- **`w_scope = 0.25` (Topological Scope Weight)**: Measures file and package boundaries.
+  - `S_scope = 1`: Single isolated file (`N_files = 1`).
+  - `S_scope = 4`: Multiple files within a single package (`2 ≤ N_files ≤ 5`).
+  - `S_scope = 7`: Cross-package boundaries within one repository (`N_files > 5`).
+  - `S_scope = 10`: Multi-repo, cross-service monorepo blast radius.
+- **`w_crit = 0.25` (Criticality & Security Weight)**: Evaluates business and operational sensitivity.
+  - `S_crit = 1`: Formatting, linting, cosmetic UI layout.
+  - `S_crit = 5`: Standard CRUD business logic, domain entities.
+  - `S_crit = 9`: Authentication, cryptographic routines, payment processing, GPG credentials.
+  - `S_crit = 10`: Distributed consensus, zero-downtime database migration DDL.
+- **`w_depth = 0.20` (Reasoning Depth Weight)**: Measures algorithmic and cognitive complexity.
+  - `S_depth = 1`: Linear, deterministic mapping (regex, formatting, string templating).
+  - `S_depth = 5`: Multi-step conditional control flow, error handling branches.
+  - `S_depth = 8`: Complex data transformation, state machine transitions.
+  - `S_depth = 10`: Distributed concurrency, asynchronous deadlock prevention, formal proofs.
 
 ##### Tier Assignment Thresholds
 
 | Computed TCS Range | Assigned Tier | Rationale & Model Profile |
 |:---:|:---|:---|
-| **$1.0 \le \text{TCS} < 3.5$** | **Tier 1: Fast Utility & Local** | Tasks require zero deep reasoning. Sub-second latency, deterministic format adherence, ultra-low cost ($<$ $0.10 / M tokens). |
-| **$3.5 \le \text{TCS} < 7.5$** | **Tier 2: Workhorse Implementation** | Standard feature implementation, controller logic, BDD scenarios, unit test synthesis ($3.00 – $15.00 / M tokens). |
-| **$7.5 \le \text{TCS} \le 10.0$** | **Tier 3: Frontier Deep Reasoning** | Extended thinking budget, architectural synthesis, cross-microservice dependency resolution ($15.00 – $60.00 / M tokens). |
+| **1.0 ≤ TCS < 3.5** | **Tier 1: Fast Utility & Local** | Tasks require zero deep reasoning. Sub-second latency, deterministic format adherence, ultra-low cost (< $0.10 / M tokens). |
+| **3.5 ≤ TCS < 7.5** | **Tier 2: Workhorse Implementation** | Standard feature implementation, controller logic, BDD scenarios, unit test synthesis ($3.00 – $15.00 / M tokens). |
+| **7.5 ≤ TCS ≤ 10.0** | **Tier 3: Frontier Deep Reasoning** | Extended thinking budget, architectural synthesis, cross-microservice dependency resolution ($15.00 – $60.00 / M tokens). |
 
 ---
 
@@ -268,7 +275,14 @@ Every proposed change is evaluated against three non-negotiable verification gat
 #### Phase 6: Self-Healing Feedback & Dynamic Escalation Engine
 If any verification gate fails, RobOS engages its automated self-healing and escalation state machine:
 
-$$\text{Escalate}(\tau) \iff (\text{AttemptCount} \ge \text{MaxRetries}) \lor (\text{ErrorSeverity} \ge \Theta_{\text{arch}})$$
+<div style="margin: 1.25rem 0; padding: 1rem 1.5rem; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; text-align: center;">
+  <span style="font-family: 'SF Pro Display', -apple-system, monospace; font-size: 1.25rem; font-weight: 700; color: #38bdf8; letter-spacing: 0.03em;">
+    Escalate(τ) ⟺ (AttemptCount ≥ MaxRetries) ∨ (ErrorSeverity ≥ Θ_arch)
+  </span>
+  <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #8b949e;">
+    Automated Self-Healing & Dynamic Model Tier Escalation Condition
+  </div>
+</div>
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -298,8 +312,8 @@ $$\text{Escalate}(\tau) \iff (\text{AttemptCount} \ge \text{MaxRetries}) \lor (\
 
 - **Within-Tier Self-Healing**: For the first 2 failed attempts, RobOS feeds compiler diagnostics, Tree-sitter error spans, or SHACL violation messages back into the current tier for immediate correction.
 - **Dynamic Tier Escalation**: If an attempt counter exceeds `maxRetries` (default: 2), or if the failure reveals cross-module dependencies, the engine **dynamically escalates to the next higher tier**:
-  - **Tier 1 $\to$ Tier 2**: Upgrades from fast utility model to full coding workhorse, providing the failed output and compiler diagnostics.
-  - **Tier 2 $\to$ Tier 3**: Upgrades from workhorse to frontier reasoning model (e.g. OpenAI o3, Claude Opus 5 with Thinking mode), granting a high thinking token budget ($k \ge 16,000$) to perform cross-service root-cause analysis.
+  - **Tier 1 → Tier 2**: Upgrades from fast utility model to full coding workhorse, providing the failed output and compiler diagnostics.
+  - **Tier 2 → Tier 3**: Upgrades from workhorse to frontier reasoning model (e.g. OpenAI o3, Claude Opus 5 with Thinking mode), granting a high thinking token budget (`k ≥ 16,000`) to perform cross-service root-cause analysis.
 - **Exhaustion Safety Gate**: If Tier 3 fails after its maximum attempts, the task is safely quarantined, flagged with a `robos:ReviewBlocker` node in the Knowledge Graph, and elevated to the human Lead Architect with a forensic summary.
 
 ---
@@ -450,12 +464,12 @@ To quantify the efficiency of the RobOS 3-Tier Model Dispatch Matrix versus trad
 
 In a typical 50-engineer software organization performing 1,000 AI agent tasks daily (60% utility, 30% implementation, 10% deep reasoning):
 - **Without RobOS (100% Homogeneous Frontier Models)**:
-  - 1,000 tasks $\times$ \$0.18 avg = **\$180.00 / day (\$54,000 / year)**
+  - 1,000 tasks × $0.18 avg = **$180.00 / day ($54,000 / year)**
   - Median developer wait time: **12.4 seconds / interaction**.
 - **With RobOS 3-Tier Dynamic Dispatch + Caveman Optimization**:
-  - 600 Tier 1 tasks $\times$ \$0.0001 = \$0.06
-  - 300 Tier 2 tasks $\times$ \$0.0070 (Caveman compressed) = \$2.10
-  - 100 Tier 3 tasks $\times$ \$0.2600 = \$26.00
+  - 600 Tier 1 tasks × $0.0001 = $0.06
+  - 300 Tier 2 tasks × $0.0070 (Caveman compressed) = $2.10
+  - 100 Tier 3 tasks × $0.2600 = $26.00
   - Total: **\$28.16 / day (\$8,448 / year)**
   - Median developer wait time: **180 milliseconds (Tier 1) / 2.2 seconds (Tier 2)**.
 - **Net Impact**: **84.3% reduction in cloud AI expenditure** and a **72% reduction in median engineering turnaround latency**.

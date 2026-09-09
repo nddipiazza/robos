@@ -51,7 +51,7 @@ Whenever the **RobOS Task Planner** (`packages/task-planner`) analyzes a require
   - Linked properties: `dcterms:title`, `dcterms:description`, `robos:planStatus` (`Draft`, `UnderReview`, `Approved`, `InExecution`, `Verified`, `Superseded`), `robos:authorAgent`, `robos:sourcePrompt`, `robos:affectedPackage`, `robos:affectedContract`, `robos:tracksRequirement`, `robos:hasPhase`, `robos:hasTaskDAG`, `robos:verificationPlan`.
 - [ ] **Task Planner Artifact Generation Pipeline**:
   - Enhanced planning runner in `packages/task-planner` that outputs structured JSON-LD and readable markdown artifacts upon running.
-  - Multi-tier synthesis: High-level architectural impact analysis $\rightarrow$ execution phases $\rightarrow$ concrete issue tracker tickets $\rightarrow$ automated verification gates.
+  - Multi-tier synthesis: High-level architectural impact analysis → execution phases → concrete issue tracker tickets → automated verification gates.
 - [ ] **Git Store Persistence (`.robos/plans/`)**:
   - Declarative storage under `.robos/plans/<plan-slug>.jsonld` and `.robos/plans/<plan-slug>.md`.
   - Automatic registration in Modular KGraph Packages index.

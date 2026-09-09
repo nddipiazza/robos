@@ -41,7 +41,7 @@ Furthermore, RobOS integrates an **Autonomous Deployment Engine** where RobOS AI
 ### In Scope
 
 - [ ] **Standardized Project Knowledge Graph Schema (`.robos/project-graph.json-ld`)**:
-  - Unified 3-layer schema: **Feature Layer** (Intent & User Stories) $\rightarrow$ **Contract Layer** (Inputs/Outputs, Interfaces, Signals, State Machines) $\rightarrow$ **Code & Verification Layer** (Files, AST Nodes, Scenes, GUT/Unit Tests).
+  - Unified 3-layer schema: **Feature Layer** (Intent & User Stories) → **Contract Layer** (Inputs/Outputs, Interfaces, Signals, State Machines) → **Code & Verification Layer** (Files, AST Nodes, Scenes, GUT/Unit Tests).
   - Version-controlled directly inside the Git repository at `.robos/project-graph.json-ld`.
 - [ ] **Universal Repository Dumping Engine (`robos-graph dump <repo>`)**:
   - Bottom-up code parser utilizing `tree-sitter` and `SCIP` to extract scenes, scripts, functions, types, and dependencies.
@@ -54,7 +54,7 @@ Furthermore, RobOS integrates an **Autonomous Deployment Engine** where RobOS AI
   - Node.js / TypeScript shared library providing graph loading, diffing, querying, dependency resolution (topological sort), and schema validation APIs.
 - [ ] **Contract-Driven Autonomous Agent Deployment Pipeline**:
   - Integration with `packages/desktop-agents` and `packages/robos-agent-session`.
-  - Task execution loop: **Read Contract $\rightarrow$ Provision Workspace $\rightarrow$ Implement Code $\rightarrow$ Run Verification Gate $\rightarrow$ Update Graph State**.
+  - Task execution loop: **Read Contract → Provision Workspace → Implement Code → Run Verification Gate → Update Graph State**.
   - Automatic unlocked task cascading: when a parent task is verified, dependent child tasks automatically notify available agents.
 
 ### Out of Scope (Initial Release)

@@ -54,7 +54,14 @@ To make skills mechanically composable, they cannot remain informal prose prompt
 
 A classic Turing machine consists of a tape divided into discrete cells, a head that reads and writes symbols, a state register storing the finite state, and a deterministic finite state transition function:
 
-$$\delta: Q \times \Gamma \rightarrow Q \times \Gamma \times \{L, R\}$$
+<div style="margin: 1.25rem 0; padding: 1rem 1.5rem; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; text-align: center;">
+  <span style="font-family: 'SF Pro Display', -apple-system, monospace; font-size: 1.35rem; font-weight: 700; color: #38bdf8; letter-spacing: 0.05em;">
+    δ : Q × Γ → Q × Γ × { L, R }
+  </span>
+  <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #8b949e;">
+    Deterministic Transition Function mapping state <code>Q</code> and symbol <code>Γ</code> to next state, replacement symbol, and head movement direction (Left / Right)
+  </div>
+</div>
 
 In the RobOS future architecture, every skill is structured as a **Standardized Turing Skill**:
 
@@ -69,10 +76,10 @@ In the RobOS future architecture, every skill is structured as a **Standardized 
 
 | Element | Turing Analogue | RobOS Skill Implementation | Guarantee |
 |:---|:---|:---|:---|
-| **Input Tape** | Input Alphabet $\Sigma$ & Tape Symbols $\Gamma$ | Formally typed, schema-validated input contract (W3C JSON-LD, SHACL shape, or TypeSpec contract). | Zero ambiguous arguments. Rejects malformed invocations before execution starts. |
-| **State Register & Invariants** | Finite Set of States $Q$ | Hermetic, reproducible execution context with explicit pre-conditions and environmental bounds. | No hidden global state; zero side-effect leakage outside declared boundaries. |
-| **Transition Function** | Transition Rule $\delta$ | The algorithmic logic mapping input and current state to the next state and output payload. | Deterministic execution paths with provable invariants. |
-| **Output Tape & Halting** | Halting States $q_{accept}, q_{reject}$ | Strongly typed return schema with explicit success/error invariants and formal bounds on step count / runtime. | Provable termination guarantees; eliminates infinite loops and runaway agent processes. |
+| **Input Tape** | Input Alphabet `Σ` & Tape Symbols `Γ` | Formally typed, schema-validated input contract (W3C JSON-LD, SHACL shape, or TypeSpec contract). | Zero ambiguous arguments. Rejects malformed invocations before execution starts. |
+| **State Register & Invariants** | Finite Set of States `Q` | Hermetic, reproducible execution context with explicit pre-conditions and environmental bounds. | No hidden global state; zero side-effect leakage outside declared boundaries. |
+| **Transition Function** | Transition Rule `δ` | The algorithmic logic mapping input and current state to the next state and output payload. | Deterministic execution paths with provable invariants. |
+| **Output Tape & Halting** | Halting States `q_accept`, `q_reject` | Strongly typed return schema with explicit success/error invariants and formal bounds on step count / runtime. | Provable termination guarantees; eliminates infinite loops and runaway agent processes. |
 
 ### Hierarchical Decomposition: Meta-Skills Down to Leaf Primitives
 
