@@ -910,6 +910,25 @@
       "robos:namespace": "robos.docs"
     },
     {
+      "@id": "urn:robos:doc:whitepaper-turing-skills",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Standardized Turing Skills: Grounding AI Agent Capabilities in Automata Theory",
+      "robos:slug": "whitepaper-turing-skills",
+      "dcterms:description": "Foundational whitepaper on automata theory, halting proofs, C-ABI leaf compilation, and local edge assembly.",
+      "robos:docPath": "docs/turing-skills-whitepaper.md",
+      "robos:category": "Whitepaper",
+      "robos:hasFlowDiagram": "urn:robos:diagram:turing-skill-architecture",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
@@ -3310,6 +3329,25 @@
       "robos:docPath": "docs/future.md",
       "robos:category": "Vision",
       "robos:hasFlowDiagram": "urn:robos:diagram:stochastic-guessing-game",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:doc:whitepaper-turing-skills",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DocumentationPage",
+        "robos:DocArticle",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Standardized Turing Skills: Grounding AI Agent Capabilities in Automata Theory",
+      "robos:slug": "whitepaper-turing-skills",
+      "dcterms:description": "Foundational whitepaper on automata theory, halting proofs, C-ABI leaf compilation, and local edge assembly.",
+      "robos:docPath": "docs/turing-skills-whitepaper.md",
+      "robos:category": "Whitepaper",
+      "robos:hasFlowDiagram": "urn:robos:diagram:turing-skill-architecture",
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",

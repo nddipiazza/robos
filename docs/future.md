@@ -17,7 +17,10 @@ A vision for the post-cloud era of engineering: transitioning from continuous da
     <h3 style="margin: 0 0 0.5rem; color: #58a6ff; font-size: 1.15rem;">Beyond the Data Center Treadmill</h3>
     <p style="margin: 0; color: #8b949e; font-size: 0.92rem;">Why re-generating the same algorithms a billion times a day in hyperscaler clouds is a transient phase—and how software reaches a deterministic, compiled, and air-gapped equilibrium.</p>
   </div>
-  <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="btn btn-primary">Explore Current RobOS Skills →</a>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="{{ site.baseurl }}{% link turing-skills-whitepaper.md %}" class="btn btn-primary">📄 Read the Turing Skills Whitepaper →</a>
+    <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="btn">Explore Current RobOS Skills</a>
+  </div>
 </div>
 
 ## Table of contents
@@ -72,6 +75,9 @@ In the RobOS future architecture, every skill is structured as a **Standardized 
     <strong>Standardized Turing Machine-Inspired Skill Architecture</strong>: Formally modeled with typed Input Tapes (OSLC/JSON-LD), hermetic State Machine invariants, deterministic leaf transition execution, and guaranteed Output Tapes with halting proofs. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
+
+> [!TIP]
+> **Read the Technical Whitepaper**: For the full mathematical proof of halting decidability, the formal 10-vector comparative matrix against heuristic cloud agent skills, and the C-ABI leaf compilation specification, see [Standardized Turing Skills: Grounding AI Agent Capabilities in Automata Theory, Bounded State Invariants, and Native Machine Code Leaf Compilation]({{ site.baseurl }}{% link turing-skills-whitepaper.md %}).
 
 ### The 4 Formal Pillars of a Turing Skill
 
@@ -250,6 +256,7 @@ RobOS exists to lead this transformation: empowering human developers to step in
 
 ## Next Steps & Related Reading
 
+- **[Whitepaper: Standardized Turing Skills]({{ site.baseurl }}{% link turing-skills-whitepaper.md %})**: Read the companion formal whitepaper on automata theory, halting proofs, C-ABI leaf compilation, and local edge assembly.
 - **[RobOS Skills Standard & Complete Catalog]({{ site.baseurl }}{% link robos-skills.md %})**: Learn how RobOS packages vendor-agnostic AI agent capabilities today.
 - **[RobOS Product Roadmap]({{ site.baseurl }}{% link roadmap.md %})**: Review the near-term and medium-term tactical initiatives currently in development.
 - **[SDLC Knowledge Graph Architecture]({{ site.baseurl }}{% link knowledge-graph.md %})**: Understand how semantic linked data and SHACL validation drive application synthesis.
