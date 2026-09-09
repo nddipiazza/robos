@@ -42,12 +42,14 @@ RobOS is the developer operating system and native 30+ desktop application suite
 [Agent Tiers & Optimization]({{ site.baseurl }}{% link agent-tiers.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [RobOS Skills]({{ site.baseurl }}{% link robos-skills.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[The Future]({{ site.baseurl }}{% link future.md %}){: .btn .btn-purple .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %}){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 <div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
   <a href="{{ site.baseurl }}{% link about.md %}" class="btn fs-3" style="border-color: #38bdf8; color: #38bdf8;">🌱 About RobOS</a>
   <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="btn fs-3" style="border-color: #5865F2; color: #a5b4fc;">💬 Discord Server</a>
   <a href="https://discord.com/channels/1546926331193725029/" target="_blank" rel="noopener" class="btn fs-3">🗣️ #general Discussion</a>
+  <a href="{{ site.baseurl }}{% link future.md %}" class="btn fs-3" style="border-color: #a855f7; color: #d8b4fe;">🔮 The Future Vision</a>
   <a href="{{ site.baseurl }}{% link agent-tiers.md %}" class="btn fs-3">🤖 Agent Tiers & DSPy</a>
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link schemas.md %}" class="btn fs-3">📐 KGraph Schemas</a>
@@ -111,10 +113,10 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 <a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 2. Interactive Planning & 66+ Templates -->
+<!-- 2. Interactive Multi-Domain Planning Studio -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 2. Interactive Planning & 66+ Templates</h3>
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 2. Interactive Multi-Domain Planning Studio</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
@@ -381,6 +383,7 @@ infra/desktop/run.sh
 - **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Dive deep into the 8 architectural pillars and the Dual-State Comparison Engine.
 - **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch high-definition video walkthroughs of real-world engineering scenarios.
+- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: Read our vision for standardized Turing skills, machine-code leaf skills, and local edge assembly without data centers.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: Browse raw idea notes, community feature proposals, and structured architecture specs.
 
 ---

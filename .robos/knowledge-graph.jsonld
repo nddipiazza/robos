@@ -22,7 +22,8 @@
       "@id": "urn:robos:app:billing-portal",
       "@type": [
         "oslc_am:Resource",
-        "robos:FrontEndApp"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
@@ -30,7 +31,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/acme/billing-portal",
       "robos:technology": "React 19 / TypeScript / Vite",
-      "robos:frontendFramework": "React"
+      "robos:frontendFramework": "React",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:domainStandard": "https://schema.org/WebApplication"
     },
     {
       "@id": "urn:robos:console-app:rest-client",
@@ -85,7 +88,9 @@
       "robos:inOrganization": "urn:robos:git-org:acme",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -104,7 +109,8 @@
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Core Services Monorepo (Bazel)",
       "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
@@ -118,14 +124,17 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
       "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
@@ -139,13 +148,16 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-services-maven",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Enterprise Services (Apache Maven)",
       "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
@@ -154,13 +166,16 @@
       "robos:repository": "github.com/acme/enterprise-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-backend-gradle",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Kotlin Microservices (Gradle)",
       "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
@@ -169,13 +184,16 @@
       "robos:repository": "github.com/acme/kotlin-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-systems-cargo",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
       "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
@@ -184,13 +202,16 @@
       "robos:repository": "github.com/acme/crypto-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-cloud-go",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
       "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
@@ -199,14 +220,17 @@
       "robos:repository": "github.com/acme/k8s-operator",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-monorepo-pnpm",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
       "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
@@ -215,13 +239,16 @@
       "robos:repository": "github.com/acme/web-portal",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-native-cmake",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Native Video Engine (CMake)",
       "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
@@ -230,14 +257,17 @@
       "robos:repository": "github.com/acme/video-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",
       "@type": [
         "oslc_am:Resource",
         "robos:Database",
-        "robos:RelationalDatabase"
+        "robos:RelationalDatabase",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
       "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
@@ -247,14 +277,17 @@
       "robos:port": 5432,
       "robos:schemaMigration": "flyway",
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:db:acme-session-redis",
       "@type": [
         "oslc_am:Resource",
         "robos:NoSQLDatabase",
-        "robos:CacheStore"
+        "robos:CacheStore",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Distributed Session & Cache Store",
       "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
@@ -262,14 +295,17 @@
       "robos:host": "redis-cluster.internal.acme.corp",
       "robos:port": 6379,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
     },
     {
       "@id": "urn:robos:broker:acme-event-kafka",
       "@type": [
         "oslc_am:Resource",
         "robos:MessageBroker",
-        "robos:EventBus"
+        "robos:EventBus",
+        "schema:BroadcastService"
       ],
       "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
       "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
@@ -281,14 +317,17 @@
         "invoices.generated"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
     },
     {
       "@id": "urn:robos:mcp:context-engine",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Code Context MCP Server",
       "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
@@ -300,14 +339,17 @@
         "dependency_graph"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Knowledge Graph MCP Server",
       "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
@@ -319,14 +361,17 @@
         "validate_shacl"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
       "@type": [
         "oslc_am:Resource",
         "robos:PromptStrategy",
-        "robos:AIPromptTechnique"
+        "robos:AIPromptTechnique",
+        "schema:Intangible"
       ],
       "dcterms:title": "Caveman Algorithmic Prompt Compression",
       "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
@@ -345,7 +390,9 @@
         "preservePaths": true
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/Intangible",
+      "robos:domainStandard": "https://schema.org/Intangible"
     },
     {
       "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
@@ -387,7 +434,9 @@
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:broker:kafka-stream",
@@ -404,6 +453,23 @@
         "events.incoming",
         "events.processed"
       ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
+    },
+    {
+      "@id": "urn:robos:db:db-9wv0p",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "DB Database (acme_db)",
+      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
+      "robos:databaseName": "acme_db",
+      "robos:host": "db.internal",
+      "robos:port": 5432,
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
     },
@@ -428,7 +494,8 @@
       "@type": [
         "robos:RemoteExecutionCluster",
         "robos:RemoteBuildCluster",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
       "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
@@ -456,14 +523,17 @@
         "evictionPolicy": "lru"
       },
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
     },
     {
       "@id": "urn:robos:cluster:prod-us-east-eks",
       "@type": [
         "c4:DeploymentNode",
         "robos:KubernetesCluster",
-        "robos:K8sCluster"
+        "robos:K8sCluster",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Production US-East AWS EKS Cluster",
       "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
@@ -477,42 +547,51 @@
       ],
       "robos:inEnvironment": "urn:robos:env:production",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
     },
     {
       "@id": "urn:robos:env:production",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Production Environment",
       "dcterms:description": "High-availability production tier serving external customer traffic.",
       "robos:environmentType": "production",
       "robos:tier": "tier-1",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:env:staging",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Staging & Pre-Release Environment",
       "dcterms:description": "Pre-production verification environment matching production architecture.",
       "robos:environmentType": "staging",
       "robos:tier": "tier-2",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:gitops:checkout-service-argocd",
       "@type": [
         "oslc_config:ConfigurationItem",
         "robos:GitOpsDeployment",
-        "robos:ArgoCDApplication"
+        "robos:ArgoCDApplication",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
       "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
@@ -523,14 +602,17 @@
       "robos:targetNamespace": "production",
       "robos:syncPolicy": "automated",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://opengitops.dev/"
     },
     {
       "@id": "urn:robos:pipeline:checkout-service-ci",
       "@type": [
         "oslc_qm:TestPlan",
         "robos:CICDPipeline",
-        "robos:Pipeline"
+        "robos:Pipeline",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
       "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
@@ -544,13 +626,16 @@
         "argocd-sync"
       ],
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:diagram:order-lifecycle-flow",
       "@type": [
         "oslc_am:Resource",
-        "robos:FlowDiagram"
+        "robos:FlowDiagram",
+        "schema:ImageObject"
       ],
       "dcterms:title": "Order Lifecycle & Event Processing Flow",
       "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
@@ -566,14 +651,17 @@
         "EventDriven"
       ],
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
       "@id": "urn:robos:doc:sdlc-architecture-guide",
       "@type": [
         "oslc_am:Resource",
         "robos:DocumentationPage",
-        "robos:DocArticle"
+        "robos:DocArticle",
+        "schema:TechArticle"
       ],
       "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
       "robos:slug": "sdlc-architecture-guide",
@@ -582,14 +670,17 @@
       "robos:category": "Architecture",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:001-modular-kgraph",
       "@type": [
         "oslc_am:Resource",
         "robos:ArchitectureDecisionRecord",
-        "robos:ADR"
+        "robos:ADR",
+        "schema:TechArticle"
       ],
       "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
       "robos:adrNumber": "ADR-001",
@@ -600,13 +691,16 @@
       "robos:date": "2026-03-15",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:walkthrough:remote-execution",
       "@type": [
         "oslc_am:Resource",
-        "robos:InteractiveWalkthrough"
+        "robos:InteractiveWalkthrough",
+        "schema:Guide"
       ],
       "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
       "robos:slug": "remote-execution-studio-tour",
@@ -616,21 +710,26 @@
       "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
       "robos:stepsCount": 7,
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/Guide",
+      "robos:domainStandard": "https://schema.org/Guide"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",
       "@type": [
         "oslc_am:Resource",
         "robos:CodeSnippet",
-        "robos:CodeSample"
+        "robos:CodeSample",
+        "schema:SoftwareSourceCode"
       ],
       "dcterms:title": "SHACL Custom Shape Programmatic Validation",
       "robos:language": "javascript",
       "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
       "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:domainStandard": "https://schema.org/SoftwareSourceCode"
     },
     {
       "@id": "urn:robos:doc:acme-architecture-overview",
@@ -645,7 +744,9 @@
       "robos:category": "architecture",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:004-event-driven-orders",
@@ -664,7 +765,9 @@
       "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:diagram:checkout-payment-flow",
@@ -681,20 +784,34 @@
       "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
-        "robos:ELearningCourse"
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
       ],
       "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
       "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:topic": "SDLC Fundamentals",
       "robos:level": "Intermediate",
       "robos:modulesCount": 4,
+      "robos:gitopsFile": ".robos/elearning.yaml",
+      "robos:modules": [
+        {
+          "title": "Module 1: Dual-State Architecture",
+          "labFile": "labs/01-dual-state.md"
+        }
+      ],
       "robos:package": "learning",
-      "robos:namespace": "robos.learning"
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course"
     },
     {
       "@id": "urn:robos:person:sconnor",
@@ -713,7 +830,8 @@
     {
       "@id": "urn:robos:team:core-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Core Platform & Infrastructure",
       "robos:topology": "platform",
@@ -723,12 +841,15 @@
         "urn:robos:person:marcus-wright"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:order-processing",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Order Processing & Payments",
       "robos:topology": "stream-aligned",
@@ -737,12 +858,15 @@
         "urn:robos:person:kyle-reese"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:architecture-guild",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Enterprise Architecture Guild",
       "robos:topology": "enabling",
@@ -752,7 +876,9 @@
         "urn:robos:person:sconnor"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:person:admin",
@@ -783,12 +909,15 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:topologyType": "platform",
-      "robos:memberOf": "urn:robos:organization:acme-global"
+      "robos:memberOf": "urn:robos:organization:acme-global",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Cloud Platform & Infrastructure",
       "robos:topology": "platform",
@@ -797,7 +926,9 @@
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:git-org:apache",
@@ -872,14 +1003,17 @@
       ],
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:agent:pr-reviewer",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Autonomous PR Code Reviewer",
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
@@ -892,14 +1026,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:architecture-guardian",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Architecture & Governance Guardian",
       "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
@@ -911,14 +1048,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:sre-incident-triage",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS SRE Incident & Deployment Triager",
       "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
@@ -927,7 +1067,9 @@
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:organization:acme-global",
@@ -974,7 +1116,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:organization:at-https",
@@ -1026,7 +1170,9 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-retail",
@@ -1058,7 +1204,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-identity",
@@ -1095,13 +1243,31 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
+    },
+    {
+      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "SDLC resources for Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
+      "robos:slug": "sdlc-resources-for-acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
       "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:service:billing-api",
       "@type": [
         "oslc_am:Resource",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
@@ -1115,14 +1281,17 @@
       "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
       "robos:implementsContract": [
         "urn:robos:contract:orders-grpc"
-      ]
+      ],
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:orders-grpc",
       "@type": [
         "robos:Contract",
         "robos:ProtobufContract",
-        "robos:GRPCContract"
+        "robos:GRPCContract",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Orders gRPC Protobuf Contract",
       "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
@@ -1136,14 +1305,17 @@
         "StreamOrderEvents"
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:catalog-graphql",
       "@type": [
         "robos:Contract",
         "robos:GraphQLContract",
-        "robos:GraphQLSchema"
+        "robos:GraphQLSchema",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Catalog GraphQL SDL Schema",
       "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
@@ -1151,7 +1323,9 @@
       "robos:specFile": "schemas/catalog.graphql",
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:payment-gateway-v1",
@@ -1189,7 +1363,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:payment-gateway",
@@ -1211,7 +1387,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:fraud-detector-v1",
@@ -1249,7 +1427,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:fraud-detector",
@@ -1271,7 +1451,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:checkout-api-v1",
@@ -1308,7 +1490,9 @@
         }
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:checkout-api",
@@ -1330,7 +1514,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-retail",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:oauth-server-v1",
@@ -1368,7 +1554,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:oauth-server",
@@ -1390,7 +1578,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:user-directory-sync-v1",
@@ -1428,7 +1618,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:user-directory-sync",
@@ -1450,6 +1642,68 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
+    },
+    {
+      "@id": "urn:robos:contract:order-service-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Order Service (Local) OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/order-service-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Order Service (Local) REST API\n  description: High-performance microservice contract for Order Service (Local) in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/order-service\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/order-service:\n    get:\n      tags: [Core]\n      summary: Retrieve all order-service items\n      operationId: listOrder-serviceItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Order-serviceItem'\n    post:\n      tags: [Core]\n      summary: Create new order-service entry\n      operationId: createOrder-serviceItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Order-serviceItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/order-service/{id}:\n    get:\n      tags: [Core]\n      summary: Get order-service by identifier\n      operationId: getOrder-serviceById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Order-serviceItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary order-service record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme/order-service",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/order-service",
+          "method": "GET",
+          "description": "List Order Service (Local) records"
+        },
+        {
+          "path": "/api/v1/order-service",
+          "method": "POST",
+          "description": "Create Order Service (Local) record"
+        },
+        {
+          "path": "/api/v1/order-service/{id}",
+          "method": "GET",
+          "description": "Get Order Service (Local) by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:order-service",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Order Service (Local) Service",
+      "dcterms:description": "Backend microservice powering Order Service (Local) capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme/order-service",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:order-service-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/developer/source/repos/order-service",
+      "robos:package": "services",
       "robos:namespace": "robos.services"
     },
     {
@@ -1457,7 +1711,8 @@
       "@type": [
         "robos:GherkinFeature",
         "robos:BDDFeature",
-        "oslc_rm:Requirement"
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "E-Commerce Checkout & Cart Validation",
       "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
@@ -1480,13 +1735,16 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement"
     },
     {
       "@id": "urn:robos:gherkin:checkout-cart-validation:background",
       "@type": [
         "robos:GherkinBackground",
-        "robos:Background"
+        "robos:Background",
+        "schema:ItemList"
       ],
       "dcterms:title": "Customer Session & Cart Initialization",
       "robos:steps": [
@@ -1496,26 +1754,32 @@
       "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
     },
     {
       "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
       "@type": [
         "robos:GherkinRule",
-        "robos:Rule"
+        "robos:Rule",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Rule: Inventory must be verified before payment processing",
       "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
       "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule"
     },
     {
       "@id": "urn:robos:scenario:checkout-standard-items",
       "@type": [
         "robos:Scenario",
-        "oslc_qm:TestCase"
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
       "dcterms:title": "Successful checkout with in-stock items",
       "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
@@ -1528,24 +1792,30 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",
       "@type": [
-        "robos:ScenarioStep"
+        "robos:ScenarioStep",
+        "schema:HowToStep"
       ],
       "robos:keyword": "When",
       "robos:stepText": "the customer adds items to cart with configuration",
       "robos:dataTable": "urn:robos:datatable:cart-items",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
     },
     {
       "@id": "urn:robos:datatable:cart-items",
       "@type": [
-        "robos:DataTable"
+        "robos:DataTable",
+        "schema:Table"
       ],
       "robos:step": "urn:robos:step:checkout-add-item-with-table",
       "robos:tableRows": [
@@ -1567,37 +1837,46 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables"
     },
     {
       "@id": "urn:robos:step:checkout-payload-docstring",
       "@type": [
-        "robos:ScenarioStep"
+        "robos:ScenarioStep",
+        "schema:HowToStep"
       ],
       "robos:keyword": "Given",
       "robos:stepText": "the checkout order payload is provided as JSON",
       "robos:docString": "urn:robos:docstring:checkout-payload",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
     },
     {
       "@id": "urn:robos:docstring:checkout-payload",
       "@type": [
-        "robos:DocString"
+        "robos:DocString",
+        "schema:Text"
       ],
       "robos:step": "urn:robos:step:checkout-payload-docstring",
       "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
       "robos:contentType": "application/json",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
+      "robos:schemaOrgType": "https://schema.org/Text",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
     },
     {
       "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
       "@type": [
         "robos:ScenarioOutline",
-        "oslc_qm:TestCase"
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
       "dcterms:title": "Discount tier calculation for loyalty members",
       "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
@@ -1610,12 +1889,15 @@
       "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
     },
     {
       "@id": "urn:robos:examples:checkout-loyalty-tiers",
       "@type": [
-        "robos:ExamplesTable"
+        "robos:ExamplesTable",
+        "schema:Table"
       ],
       "dcterms:title": "Loyalty Tier Discounts",
       "robos:tableHeaders": [
@@ -1642,12 +1924,15 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
     },
     {
       "@id": "urn:robos:stepdef:customer-submits-order",
       "@type": [
-        "robos:StepDefinition"
+        "robos:StepDefinition",
+        "schema:SoftwareSourceCode"
       ],
       "dcterms:title": "StepDef: Customer Submits Order",
       "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
@@ -1655,26 +1940,32 @@
       "robos:functionName": "submitOrderStep",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
     },
     {
       "@id": "urn:robos:test-plan:q3-release-regression",
       "@type": [
         "robos:TestPlan",
-        "oslc_qm:TestPlan"
+        "oslc_qm:TestPlan",
+        "schema:Plan"
       ],
       "dcterms:title": "Q3 Release Acceptance & Regression Plan",
       "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
       "robos:testsService": "urn:robos:service:billing-api",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+      "robos:schemaOrgType": "https://schema.org/Plan",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
     },
     {
       "@id": "urn:robos:test-suite:billing-api-bdd",
       "@type": [
         "robos:TestSuite",
-        "oslc_qm:TestSuite"
+        "oslc_qm:TestSuite",
+        "schema:ItemList"
       ],
       "dcterms:title": "Billing API Cucumber BDD Test Suite",
       "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
@@ -1682,13 +1973,16 @@
       "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
     },
     {
       "@id": "urn:robos:test-exec:checkout-standard-items-latest",
       "@type": [
         "robos:TestExecutionRecord",
-        "oslc_qm:TestExecutionRecord"
+        "oslc_qm:TestExecutionRecord",
+        "schema:AssessAction"
       ],
       "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
       "oslc_qm:executionStatus": "PASS",
@@ -1699,14 +1993,17 @@
       "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:schemaOrgType": "https://schema.org/AssessAction",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
     },
     {
       "@id": "urn:robos:testing:cucumber",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Cucumber",
       "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
@@ -1715,14 +2012,17 @@
       "robos:website": "https://cucumber.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:jest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Jest",
       "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
@@ -1731,14 +2031,17 @@
       "robos:website": "https://jestjs.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:vitest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Vitest",
       "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
@@ -1747,14 +2050,17 @@
       "robos:website": "https://vitest.dev",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:playwright",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Playwright",
       "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
@@ -1763,14 +2069,17 @@
       "robos:website": "https://playwright.dev",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:cypress",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Cypress",
       "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
@@ -1779,14 +2088,17 @@
       "robos:website": "https://www.cypress.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:junit5",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "JUnit 5",
       "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
@@ -1795,14 +2107,17 @@
       "robos:website": "https://junit.org/junit5/",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:testng",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "TestNG",
       "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
@@ -1811,14 +2126,17 @@
       "robos:website": "https://testng.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:mockito",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Mockito",
       "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
@@ -1827,14 +2145,17 @@
       "robos:website": "https://site.mockito.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:pytest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Pytest",
       "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
@@ -1843,14 +2164,17 @@
       "robos:website": "https://pytest.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:robot-framework",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Robot Framework",
       "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
@@ -1859,14 +2183,17 @@
       "robos:website": "https://robotframework.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:pact",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Pact",
       "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
@@ -1875,14 +2202,17 @@
       "robos:website": "https://pact.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:k6",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Grafana k6",
       "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
@@ -1891,14 +2221,17 @@
       "robos:website": "https://k6.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:restassured",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "REST Assured",
       "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
@@ -1907,14 +2240,17 @@
       "robos:website": "https://rest-assured.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:testify",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Testify",
       "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
@@ -1923,14 +2259,17 @@
       "robos:website": "https://github.com/stretchr/testify",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:godog",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Godog",
       "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
@@ -1939,14 +2278,17 @@
       "robos:website": "https://github.com/cucumber/godog",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:mocha",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Mocha",
       "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
@@ -1955,7 +2297,9 @@
       "robos:website": "https://mochajs.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ],
   "@graph": [
@@ -1963,7 +2307,8 @@
       "@id": "urn:robos:app:billing-portal",
       "@type": [
         "oslc_am:Resource",
-        "robos:FrontEndApp"
+        "robos:FrontEndApp",
+        "schema:WebApplication"
       ],
       "dcterms:title": "Billing Web Portal",
       "robos:framework": "React 19 / Vite",
@@ -1971,7 +2316,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/acme/billing-portal",
       "robos:technology": "React 19 / TypeScript / Vite",
-      "robos:frontendFramework": "React"
+      "robos:frontendFramework": "React",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:domainStandard": "https://schema.org/WebApplication"
     },
     {
       "@id": "urn:robos:console-app:rest-client",
@@ -2026,7 +2373,9 @@
       "robos:inOrganization": "urn:robos:git-org:acme",
       "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
       "robos:package": "applications",
-      "robos:namespace": "robos.applications"
+      "robos:namespace": "robos.applications",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -2045,7 +2394,8 @@
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Core Services Monorepo (Bazel)",
       "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
@@ -2059,14 +2409,17 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-mobile-buck2",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cross-Platform Clients (Buck2)",
       "dcterms:description": "Mobile apps, desktop apps, and console tools built with Meta Buck2.",
@@ -2080,13 +2433,16 @@
       },
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-services-maven",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Enterprise Services (Apache Maven)",
       "dcterms:description": "Enterprise Java backend microservices and shared libraries built with Apache Maven.",
@@ -2095,13 +2451,16 @@
       "robos:repository": "github.com/acme/enterprise-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-backend-gradle",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Kotlin Microservices (Gradle)",
       "dcterms:description": "High-throughput asynchronous services and event listeners built with Gradle Kotlin DSL.",
@@ -2110,13 +2469,16 @@
       "robos:repository": "github.com/acme/kotlin-services",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-systems-cargo",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme High-Performance Engines (Rust Cargo)",
       "dcterms:description": "Core cryptographic routines and high-frequency settlement engine built with Cargo.",
@@ -2125,13 +2487,16 @@
       "robos:repository": "github.com/acme/crypto-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-cloud-go",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
       "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
@@ -2140,14 +2505,17 @@
       "robos:repository": "github.com/acme/k8s-operator",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-monorepo-pnpm",
       "@type": [
         "robos:BuildSystem",
         "robos:MonorepoBuild",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Web Frontends Workspace (pnpm)",
       "dcterms:description": "Next.js applications and shared UI component libraries orchestrated via pnpm workspaces.",
@@ -2156,13 +2524,16 @@
       "robos:repository": "github.com/acme/web-portal",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:build-system:acme-native-cmake",
       "@type": [
         "robos:BuildSystem",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Acme Native Video Engine (CMake)",
       "dcterms:description": "Cross-platform C++ rendering and streaming engine built with CMake.",
@@ -2171,14 +2542,17 @@
       "robos:repository": "github.com/acme/video-engine",
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://bazel.build/"
     },
     {
       "@id": "urn:robos:db:acme-orders-postgres",
       "@type": [
         "oslc_am:Resource",
         "robos:Database",
-        "robos:RelationalDatabase"
+        "robos:RelationalDatabase",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
       "dcterms:description": "High-availability relational PostgreSQL cluster housing transactional order and invoice schemas.",
@@ -2188,14 +2562,17 @@
       "robos:port": 5432,
       "robos:schemaMigration": "flyway",
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:db:acme-session-redis",
       "@type": [
         "oslc_am:Resource",
         "robos:NoSQLDatabase",
-        "robos:CacheStore"
+        "robos:CacheStore",
+        "schema:DataStore"
       ],
       "dcterms:title": "Acme Distributed Session & Cache Store",
       "dcterms:description": "Redis cluster for distributed session state, token revocation, and rate limiting.",
@@ -2203,14 +2580,17 @@
       "robos:host": "redis-cluster.internal.acme.corp",
       "robos:port": 6379,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
     },
     {
       "@id": "urn:robos:broker:acme-event-kafka",
       "@type": [
         "oslc_am:Resource",
         "robos:MessageBroker",
-        "robos:EventBus"
+        "robos:EventBus",
+        "schema:BroadcastService"
       ],
       "dcterms:title": "Acme Core Enterprise Event Stream (Kafka)",
       "dcterms:description": "High-throughput Kafka cluster mediating event-driven microservice workflows.",
@@ -2222,14 +2602,17 @@
         "invoices.generated"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
     },
     {
       "@id": "urn:robos:mcp:context-engine",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Code Context MCP Server",
       "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
@@ -2241,14 +2624,17 @@
         "dependency_graph"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
       "@type": [
         "oslc_am:Resource",
         "robos:MCPServer",
-        "robos:ToolProvider"
+        "robos:ToolProvider",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Knowledge Graph MCP Server",
       "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
@@ -2260,14 +2646,17 @@
         "validate_shacl"
       ],
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
       "@type": [
         "oslc_am:Resource",
         "robos:PromptStrategy",
-        "robos:AIPromptTechnique"
+        "robos:AIPromptTechnique",
+        "schema:Intangible"
       ],
       "dcterms:title": "Caveman Algorithmic Prompt Compression",
       "dcterms:description": "Heuristic token pruning removing conversational boilerplate and filler tokens to achieve 40-60% prompt compaction on high-frequency Tier 1 & Tier 2 tasks.",
@@ -2286,7 +2675,9 @@
         "preservePaths": true
       },
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/Intangible",
+      "robos:domainStandard": "https://schema.org/Intangible"
     },
     {
       "@id": "urn:robos:agent:optimizer:dspy-teleprompter",
@@ -2328,7 +2719,9 @@
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://www.iso.org/standard/63555.html"
     },
     {
       "@id": "urn:robos:broker:kafka-stream",
@@ -2345,6 +2738,23 @@
         "events.incoming",
         "events.processed"
       ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:schemaOrgType": "https://schema.org/BroadcastService",
+      "robos:domainStandard": "https://kafka.apache.org/"
+    },
+    {
+      "@id": "urn:robos:db:db-9wv0p",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "DB Database (acme_db)",
+      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
+      "robos:databaseName": "acme_db",
+      "robos:host": "db.internal",
+      "robos:port": 5432,
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
     },
@@ -2369,7 +2779,8 @@
       "@type": [
         "robos:RemoteExecutionCluster",
         "robos:RemoteBuildCluster",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
       "dcterms:description": "High-performance distributed remote execution & CAS caching cluster using Buildbarn suite.",
@@ -2397,14 +2808,17 @@
         "evictionPolicy": "lru"
       },
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://github.com/bazelbuild/remote-apis"
     },
     {
       "@id": "urn:robos:cluster:prod-us-east-eks",
       "@type": [
         "c4:DeploymentNode",
         "robos:KubernetesCluster",
-        "robos:K8sCluster"
+        "robos:K8sCluster",
+        "schema:ComputerPlatform"
       ],
       "dcterms:title": "Production US-East AWS EKS Cluster",
       "dcterms:description": "Primary Kubernetes multi-tenant production cluster in AWS us-east-1.",
@@ -2418,42 +2832,51 @@
       ],
       "robos:inEnvironment": "urn:robos:env:production",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/ComputerPlatform",
+      "robos:domainStandard": "https://kubernetes.io/docs/concepts/overview/"
     },
     {
       "@id": "urn:robos:env:production",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Production Environment",
       "dcterms:description": "High-availability production tier serving external customer traffic.",
       "robos:environmentType": "production",
       "robos:tier": "tier-1",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:env:staging",
       "@type": [
         "oslc_am:Resource",
         "robos:Environment",
-        "robos:DeploymentEnvironment"
+        "robos:DeploymentEnvironment",
+        "schema:DeploymentEnvironment"
       ],
       "dcterms:title": "Staging & Pre-Release Environment",
       "dcterms:description": "Pre-production verification environment matching production architecture.",
       "robos:environmentType": "staging",
       "robos:tier": "tier-2",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/DeploymentEnvironment",
+      "robos:domainStandard": "https://schema.org/DeploymentEnvironment"
     },
     {
       "@id": "urn:robos:gitops:checkout-service-argocd",
       "@type": [
         "oslc_config:ConfigurationItem",
         "robos:GitOpsDeployment",
-        "robos:ArgoCDApplication"
+        "robos:ArgoCDApplication",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
       "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
@@ -2464,14 +2887,17 @@
       "robos:targetNamespace": "production",
       "robos:syncPolicy": "automated",
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://opengitops.dev/"
     },
     {
       "@id": "urn:robos:pipeline:checkout-service-ci",
       "@type": [
         "oslc_qm:TestPlan",
         "robos:CICDPipeline",
-        "robos:Pipeline"
+        "robos:Pipeline",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing Service GitHub Actions CI/CD Pipeline",
       "dcterms:description": "Continuous integration pipeline executing lint, unit test, container build, and deployment.",
@@ -2485,13 +2911,16 @@
         "argocd-sync"
       ],
       "robos:package": "devops",
-      "robos:namespace": "robos.devops"
+      "robos:namespace": "robos.devops",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:diagram:order-lifecycle-flow",
       "@type": [
         "oslc_am:Resource",
-        "robos:FlowDiagram"
+        "robos:FlowDiagram",
+        "schema:ImageObject"
       ],
       "dcterms:title": "Order Lifecycle & Event Processing Flow",
       "dcterms:description": "End-to-end workflow tracing customer order ingestion from Webhook to Kafka events, payment capture, and inventory deduction.",
@@ -2507,14 +2936,17 @@
         "EventDriven"
       ],
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
       "@id": "urn:robos:doc:sdlc-architecture-guide",
       "@type": [
         "oslc_am:Resource",
         "robos:DocumentationPage",
-        "robos:DocArticle"
+        "robos:DocArticle",
+        "schema:TechArticle"
       ],
       "dcterms:title": "RobOS Living SDLC Architecture & Graph Guide",
       "robos:slug": "sdlc-architecture-guide",
@@ -2523,14 +2955,17 @@
       "robos:category": "Architecture",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:001-modular-kgraph",
       "@type": [
         "oslc_am:Resource",
         "robos:ArchitectureDecisionRecord",
-        "robos:ADR"
+        "robos:ADR",
+        "schema:TechArticle"
       ],
       "dcterms:title": "ADR-001: Modular Namespaced Knowledge Graph Architecture",
       "robos:adrNumber": "ADR-001",
@@ -2541,13 +2976,16 @@
       "robos:date": "2026-03-15",
       "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:walkthrough:remote-execution",
       "@type": [
         "oslc_am:Resource",
-        "robos:InteractiveWalkthrough"
+        "robos:InteractiveWalkthrough",
+        "schema:Guide"
       ],
       "dcterms:title": "Remote Execution Studio Interactive Guided Tour",
       "robos:slug": "remote-execution-studio-tour",
@@ -2557,21 +2995,26 @@
       "robos:videoPath": "assets/videos/walkthroughs/re-studio-demo.mp4",
       "robos:stepsCount": 7,
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/Guide",
+      "robos:domainStandard": "https://schema.org/Guide"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",
       "@type": [
         "oslc_am:Resource",
         "robos:CodeSnippet",
-        "robos:CodeSample"
+        "robos:CodeSample",
+        "schema:SoftwareSourceCode"
       ],
       "dcterms:title": "SHACL Custom Shape Programmatic Validation",
       "robos:language": "javascript",
       "robos:code": "const { SHACLValidator } = require('robos-graph');\nconst validator = new SHACLValidator();\nconst report = validator.validate(graphStore.parser);\nconsole.log('Conforms:', report.conforms);",
       "dcterms:description": "Canonical example of running in-memory SHACL validation against a parsed OSLC knowledge graph.",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:domainStandard": "https://schema.org/SoftwareSourceCode"
     },
     {
       "@id": "urn:robos:doc:acme-architecture-overview",
@@ -2586,7 +3029,9 @@
       "robos:category": "architecture",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-101",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
     },
     {
       "@id": "urn:robos:adr:004-event-driven-orders",
@@ -2605,7 +3050,9 @@
       "robos:consequences": "Improves peak throughput by 8x while requiring event versioning schemas across microservices.",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-102",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://adr.github.io/"
     },
     {
       "@id": "urn:robos:diagram:checkout-payment-flow",
@@ -2622,20 +3069,34 @@
       "robos:imagePath": "assets/diagrams/checkout-payment-flow.png",
       "robos:sourceUrl": "https://confluence.acme.corp/display/ARCH#page-103",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
       "@id": "urn:robos:elearning:course:sdlc-fundamentals",
       "@type": [
         "oslc_am:Resource",
-        "robos:ELearningCourse"
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
       ],
       "dcterms:title": "RobOS Dual-State SDLC Fundamentals",
       "dcterms:description": "Mastering the knowledge graph, branch diffing, and automated E2E verification in RobOS.",
+      "robos:topic": "SDLC Fundamentals",
       "robos:level": "Intermediate",
       "robos:modulesCount": 4,
+      "robos:gitopsFile": ".robos/elearning.yaml",
+      "robos:modules": [
+        {
+          "title": "Module 1: Dual-State Architecture",
+          "labFile": "labs/01-dual-state.md"
+        }
+      ],
       "robos:package": "learning",
-      "robos:namespace": "robos.learning"
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course"
     },
     {
       "@id": "urn:robos:person:sconnor",
@@ -2654,7 +3115,8 @@
     {
       "@id": "urn:robos:team:core-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Core Platform & Infrastructure",
       "robos:topology": "platform",
@@ -2664,12 +3126,15 @@
         "urn:robos:person:marcus-wright"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:order-processing",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Order Processing & Payments",
       "robos:topology": "stream-aligned",
@@ -2678,12 +3143,15 @@
         "urn:robos:person:kyle-reese"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:architecture-guild",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Enterprise Architecture Guild",
       "robos:topology": "enabling",
@@ -2693,7 +3161,9 @@
         "urn:robos:person:sconnor"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:person:admin",
@@ -2724,12 +3194,15 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:topologyType": "platform",
-      "robos:memberOf": "urn:robos:organization:acme-global"
+      "robos:memberOf": "urn:robos:organization:acme-global",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:team:cloud-platform",
       "@type": [
-        "robos:Team"
+        "robos:Team",
+        "schema:ProjectTeam"
       ],
       "dcterms:title": "Cloud Platform & Infrastructure",
       "robos:topology": "platform",
@@ -2738,7 +3211,9 @@
         "urn:robos:person:admin"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/ProjectTeam",
+      "robos:domainStandard": "https://schema.org/ProjectTeam"
     },
     {
       "@id": "urn:robos:git-org:apache",
@@ -2813,14 +3288,17 @@
       ],
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:agent:pr-reviewer",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Autonomous PR Code Reviewer",
       "dcterms:description": "Automated AI pull request auditor performing static analysis, contract checks, and semantic diff evaluation.",
@@ -2833,14 +3311,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:architecture-guardian",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS Architecture & Governance Guardian",
       "dcterms:description": "Continuous agent inspecting repository commits against living ADRs and organizational boundaries.",
@@ -2852,14 +3333,17 @@
         "urn:robos:mcp:kgraph-navigator"
       ],
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:agent:sre-incident-triage",
       "@type": [
         "oslc:Person",
         "robos:AgentPersona",
-        "robos:AIAgent"
+        "robos:AIAgent",
+        "schema:Person"
       ],
       "dcterms:title": "RobOS SRE Incident & Deployment Triager",
       "dcterms:description": "Intelligent agent correlating Kubernetes deployment health with recent Git commits and alerts.",
@@ -2868,7 +3352,9 @@
       "robos:modelPreference": "pro",
       "robos:assignedTeam": "urn:robos:team:cloud-platform",
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Person",
+      "robos:domainStandard": "https://schema.org/Person"
     },
     {
       "@id": "urn:robos:organization:acme-global",
@@ -2915,7 +3401,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:organization:at-https",
@@ -2967,7 +3455,9 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
-      "robos:namespace": "robos.org"
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-retail",
@@ -2999,7 +3489,9 @@
       "robos:agentRulesDoc": "AGENTS.md",
       "robos:package": "organization",
       "robos:namespace": "robos.org",
-      "robos:repoCount": 1
+      "robos:repoCount": 1,
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
     },
     {
       "@id": "urn:robos:git-org:acme-identity",
@@ -3036,13 +3528,31 @@
       },
       "robos:repoCount": 2,
       "robos:package": "organization",
+      "robos:namespace": "robos.org",
+      "robos:schemaOrgType": "https://schema.org/Organization",
+      "robos:domainStandard": "https://schema.org/Organization"
+    },
+    {
+      "@id": "urn:robos:organization:sdlc-resources-for-acme-global",
+      "@type": [
+        "oslc:Organization",
+        "robos:Company"
+      ],
+      "dcterms:title": "SDLC resources for Acme Global",
+      "dcterms:description": "Enterprise technology ecosystem for SDLC resources for Acme Global.",
+      "robos:slug": "sdlc-resources-for-acme-global",
+      "robos:hasTeam": [
+        "urn:robos:team:founding-core"
+      ],
+      "robos:package": "organization",
       "robos:namespace": "robos.org"
     },
     {
       "@id": "urn:robos:service:billing-api",
       "@type": [
         "oslc_am:Resource",
-        "robos:Microservice"
+        "robos:Microservice",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Billing API Service",
       "robos:technology": "Go 1.22 / Gin",
@@ -3056,14 +3566,17 @@
       "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
       "robos:implementsContract": [
         "urn:robos:contract:orders-grpc"
-      ]
+      ],
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:orders-grpc",
       "@type": [
         "robos:Contract",
         "robos:ProtobufContract",
-        "robos:GRPCContract"
+        "robos:GRPCContract",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Orders gRPC Protobuf Contract",
       "dcterms:description": "High-performance binary gRPC interface definition for transactional order lifecycle.",
@@ -3077,14 +3590,17 @@
         "StreamOrderEvents"
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:catalog-graphql",
       "@type": [
         "robos:Contract",
         "robos:GraphQLContract",
-        "robos:GraphQLSchema"
+        "robos:GraphQLSchema",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Acme Catalog GraphQL SDL Schema",
       "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
@@ -3092,7 +3608,9 @@
       "robos:specFile": "schemas/catalog.graphql",
       "robos:schemaType": "federated-subgraph",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:contract:payment-gateway-v1",
@@ -3130,7 +3648,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:payment-gateway",
@@ -3152,7 +3672,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:fraud-detector-v1",
@@ -3190,7 +3712,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:fraud-detector",
@@ -3212,7 +3736,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-payments",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:checkout-api-v1",
@@ -3249,7 +3775,9 @@
         }
       ],
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:checkout-api",
@@ -3271,7 +3799,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-retail",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:oauth-server-v1",
@@ -3309,7 +3839,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:oauth-server",
@@ -3331,7 +3863,9 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
     },
     {
       "@id": "urn:robos:contract:user-directory-sync-v1",
@@ -3369,7 +3903,9 @@
       ],
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
-      "robos:namespace": "robos.services"
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
     },
     {
       "@id": "urn:robos:service:user-directory-sync",
@@ -3391,6 +3927,68 @@
       "robos:healthCheckUrl": "/healthz",
       "robos:inOrganization": "urn:robos:git-org:acme-identity",
       "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://w3id.org/c4/Container"
+    },
+    {
+      "@id": "urn:robos:contract:order-service-v1",
+      "@type": [
+        "robos:Contract",
+        "c4:Component",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Order Service (Local) OpenAPI 3.1 Spec",
+      "robos:specFile": "specs/contracts/order-service-v1.yaml",
+      "robos:protocol": "OpenAPI 3.1",
+      "robos:contractYaml": "openapi: 3.1.0\ninfo:\n  title: Order Service (Local) REST API\n  description: High-performance microservice contract for Order Service (Local) in RobOS Universe.\n  version: 1.0.0\nservers:\n  - url: https://github.com/api/v1/order-service\n    description: Production Gateway\n  - url: http://localhost:8080\n    description: Local Dev Container\ntags:\n  - name: Core\n    description: Primary operations\n  - name: Health\n    description: Service diagnostics and liveliness\npaths:\n  /api/v1/order-service:\n    get:\n      tags: [Core]\n      summary: Retrieve all order-service items\n      operationId: listOrder-serviceItems\n      parameters:\n        - name: limit\n          in: query\n          required: false\n          schema:\n            type: integer\n            default: 50\n      responses:\n        '200':\n          description: Successful query result\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Order-serviceItem'\n    post:\n      tags: [Core]\n      summary: Create new order-service entry\n      operationId: createOrder-serviceItem\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Order-serviceItem'\n      responses:\n        '201':\n          description: Resource created successfully\n  /api/v1/order-service/{id}:\n    get:\n      tags: [Core]\n      summary: Get order-service by identifier\n      operationId: getOrder-serviceById\n      parameters:\n        - name: id\n          in: path\n          required: true\n          schema:\n            type: string\n      responses:\n        '200':\n          description: Resource found\n        '404':\n          description: Item not found\n  /healthz:\n    get:\n      tags: [Health]\n      summary: Liveness and readiness probe\n      responses:\n        '200':\n          description: Service is healthy and operational\ncomponents:\n  schemas:\n    Order-serviceItem:\n      type: object\n      required:\n        - id\n        - name\n        - createdAt\n      properties:\n        id:\n          type: string\n          format: uuid\n        name:\n          type: string\n          example: 'Primary order-service record'\n        status:\n          type: string\n          enum: [ACTIVE, PENDING, ARCHIVED]\n          default: ACTIVE\n        createdAt:\n          type: string\n          format: date-time\n",
+      "robos:repository": "github.com/acme/order-service",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/order-service",
+          "method": "GET",
+          "description": "List Order Service (Local) records"
+        },
+        {
+          "path": "/api/v1/order-service",
+          "method": "POST",
+          "description": "Create Order Service (Local) record"
+        },
+        {
+          "path": "/api/v1/order-service/{id}",
+          "method": "GET",
+          "description": "Get Order Service (Local) by ID"
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Health check"
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services"
+    },
+    {
+      "@id": "urn:robos:service:order-service",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Container",
+        "robos:Microservice"
+      ],
+      "dcterms:title": "Order Service (Local) Service",
+      "dcterms:description": "Backend microservice powering Order Service (Local) capabilities with containerized deployment.",
+      "robos:repository": "github.com/acme/order-service",
+      "robos:technology": "Node.js 20 / TypeScript",
+      "robos:implementsContract": "urn:robos:contract:order-service-v1",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:inOrganization": "urn:robos:git-org:acme",
+      "robos:localPath": "/home/developer/source/repos/order-service",
+      "robos:package": "services",
       "robos:namespace": "robos.services"
     },
     {
@@ -3398,7 +3996,8 @@
       "@type": [
         "robos:GherkinFeature",
         "robos:BDDFeature",
-        "oslc_rm:Requirement"
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "E-Commerce Checkout & Cart Validation",
       "dcterms:description": "Acceptance criteria validating transactional shopping cart checkout, inventory reservation, and payment processing.",
@@ -3421,13 +4020,16 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement"
+      "robos:refersFrom": "http://open-services.net/ns/rm#Requirement",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "http://open-services.net/ns/rm#Requirement"
     },
     {
       "@id": "urn:robos:gherkin:checkout-cart-validation:background",
       "@type": [
         "robos:GherkinBackground",
-        "robos:Background"
+        "robos:Background",
+        "schema:ItemList"
       ],
       "dcterms:title": "Customer Session & Cart Initialization",
       "robos:steps": [
@@ -3437,26 +4039,32 @@
       "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#background",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#background"
     },
     {
       "@id": "urn:robos:gherkin:checkout-cart-validation:rule-inventory",
       "@type": [
         "robos:GherkinRule",
-        "robos:Rule"
+        "robos:Rule",
+        "schema:DigitalDocument"
       ],
       "dcterms:title": "Rule: Inventory must be verified before payment processing",
       "dcterms:description": "Transactions fail early if any cart item quantity exceeds available stock warehouse ledger.",
       "robos:inFeature": "urn:robos:gherkin:checkout-cart-validation",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#rule",
+      "robos:schemaOrgType": "https://schema.org/DigitalDocument",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#rule"
     },
     {
       "@id": "urn:robos:scenario:checkout-standard-items",
       "@type": [
         "robos:Scenario",
-        "oslc_qm:TestCase"
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
       "dcterms:title": "Successful checkout with in-stock items",
       "dcterms:description": "Customer checks out with 2 items and successfully processes credit card payment.",
@@ -3469,24 +4077,30 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",
       "@type": [
-        "robos:ScenarioStep"
+        "robos:ScenarioStep",
+        "schema:HowToStep"
       ],
       "robos:keyword": "When",
       "robos:stepText": "the customer adds items to cart with configuration",
       "robos:dataTable": "urn:robos:datatable:cart-items",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
     },
     {
       "@id": "urn:robos:datatable:cart-items",
       "@type": [
-        "robos:DataTable"
+        "robos:DataTable",
+        "schema:Table"
       ],
       "robos:step": "urn:robos:step:checkout-add-item-with-table",
       "robos:tableRows": [
@@ -3508,37 +4122,46 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#data-tables",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#data-tables"
     },
     {
       "@id": "urn:robos:step:checkout-payload-docstring",
       "@type": [
-        "robos:ScenarioStep"
+        "robos:ScenarioStep",
+        "schema:HowToStep"
       ],
       "robos:keyword": "Given",
       "robos:stepText": "the checkout order payload is provided as JSON",
       "robos:docString": "urn:robos:docstring:checkout-payload",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
+      "robos:schemaOrgType": "https://schema.org/HowToStep",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
     },
     {
       "@id": "urn:robos:docstring:checkout-payload",
       "@type": [
-        "robos:DocString"
+        "robos:DocString",
+        "schema:Text"
       ],
       "robos:step": "urn:robos:step:checkout-payload-docstring",
       "robos:content": "{\n  \"cartId\": \"cart-9821\",\n  \"currency\": \"USD\",\n  \"paymentMethod\": \"credit_card\"\n}",
       "robos:contentType": "application/json",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#doc-strings",
+      "robos:schemaOrgType": "https://schema.org/Text",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#doc-strings"
     },
     {
       "@id": "urn:robos:scenario-outline:checkout-discount-tiers",
       "@type": [
         "robos:ScenarioOutline",
-        "oslc_qm:TestCase"
+        "oslc_qm:TestCase",
+        "schema:CheckAction"
       ],
       "dcterms:title": "Discount tier calculation for loyalty members",
       "dcterms:description": "Parameterized verification of discount percentages by customer loyalty membership level.",
@@ -3551,12 +4174,15 @@
       "robos:examplesTable": "urn:robos:examples:checkout-loyalty-tiers",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#scenario-outline",
+      "robos:schemaOrgType": "https://schema.org/CheckAction",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#scenario-outline"
     },
     {
       "@id": "urn:robos:examples:checkout-loyalty-tiers",
       "@type": [
-        "robos:ExamplesTable"
+        "robos:ExamplesTable",
+        "schema:Table"
       ],
       "dcterms:title": "Loyalty Tier Discounts",
       "robos:tableHeaders": [
@@ -3583,12 +4209,15 @@
       ],
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples"
+      "robos:refersFrom": "https://cucumber.io/docs/gherkin/reference/#examples",
+      "robos:schemaOrgType": "https://schema.org/Table",
+      "robos:domainStandard": "https://cucumber.io/docs/gherkin/reference/#examples"
     },
     {
       "@id": "urn:robos:stepdef:customer-submits-order",
       "@type": [
-        "robos:StepDefinition"
+        "robos:StepDefinition",
+        "schema:SoftwareSourceCode"
       ],
       "dcterms:title": "StepDef: Customer Submits Order",
       "robos:regexPattern": "^the customer submits order with total \\$(\\d+)$",
@@ -3596,26 +4225,32 @@
       "robos:functionName": "submitOrderStep",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/"
+      "robos:refersFrom": "https://cucumber.io/docs/cucumber/step-definitions/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareSourceCode",
+      "robos:domainStandard": "https://cucumber.io/docs/cucumber/step-definitions/"
     },
     {
       "@id": "urn:robos:test-plan:q3-release-regression",
       "@type": [
         "robos:TestPlan",
-        "oslc_qm:TestPlan"
+        "oslc_qm:TestPlan",
+        "schema:Plan"
       ],
       "dcterms:title": "Q3 Release Acceptance & Regression Plan",
       "dcterms:description": "Quality gate test plan covering billing API transactions, contract verifications, and E2E checkout workflows.",
       "robos:testsService": "urn:robos:service:billing-api",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestPlan",
+      "robos:schemaOrgType": "https://schema.org/Plan",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestPlan"
     },
     {
       "@id": "urn:robos:test-suite:billing-api-bdd",
       "@type": [
         "robos:TestSuite",
-        "oslc_qm:TestSuite"
+        "oslc_qm:TestSuite",
+        "schema:ItemList"
       ],
       "dcterms:title": "Billing API Cucumber BDD Test Suite",
       "dcterms:description": "Automated Cucumber test suite running BDD acceptance scenarios against billing API staging cluster.",
@@ -3623,13 +4258,16 @@
       "robos:inTestPlan": "urn:robos:test-plan:q3-release-regression",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
+      "robos:schemaOrgType": "https://schema.org/ItemList",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
     },
     {
       "@id": "urn:robos:test-exec:checkout-standard-items-latest",
       "@type": [
         "robos:TestExecutionRecord",
-        "oslc_qm:TestExecutionRecord"
+        "oslc_qm:TestExecutionRecord",
+        "schema:AssessAction"
       ],
       "dcterms:title": "Latest Execution: Successful checkout with in-stock items",
       "oslc_qm:executionStatus": "PASS",
@@ -3640,14 +4278,17 @@
       "robos:inTestSuite": "urn:robos:test-suite:billing-api-bdd",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord"
+      "robos:refersFrom": "http://open-services.net/ns/qm#TestExecutionRecord",
+      "robos:schemaOrgType": "https://schema.org/AssessAction",
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
     },
     {
       "@id": "urn:robos:testing:cucumber",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Cucumber",
       "dcterms:description": "Behavior-Driven Development (BDD) testing tool executing plain-text Gherkin specifications.",
@@ -3656,14 +4297,17 @@
       "robos:website": "https://cucumber.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:jest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Jest",
       "dcterms:description": "Delightful JavaScript and TypeScript testing framework with zero configuration and snapshot testing.",
@@ -3672,14 +4316,17 @@
       "robos:website": "https://jestjs.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:vitest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Vitest",
       "dcterms:description": "Blazing fast Vite-native unit and component test framework with out-of-the-box ESM and TypeScript support.",
@@ -3688,14 +4335,17 @@
       "robos:website": "https://vitest.dev",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:playwright",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Playwright",
       "dcterms:description": "Fast and reliable end-to-end cross-browser testing for modern web apps with Chromium, WebKit, and Firefox.",
@@ -3704,14 +4354,17 @@
       "robos:website": "https://playwright.dev",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:cypress",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Cypress",
       "dcterms:description": "Fast, easy and reliable testing for anything that runs in a browser.",
@@ -3720,14 +4373,17 @@
       "robos:website": "https://www.cypress.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:junit5",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "JUnit 5",
       "dcterms:description": "The standard unit testing framework for modern Java and JVM languages supporting Jupiter extensions and parameterized tests.",
@@ -3736,14 +4392,17 @@
       "robos:website": "https://junit.org/junit5/",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:testng",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "TestNG",
       "dcterms:description": "Testing framework inspired by JUnit and NUnit introducing data providers, parallel execution, and flexible test configuration.",
@@ -3752,14 +4411,17 @@
       "robos:website": "https://testng.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:mockito",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Mockito",
       "dcterms:description": "Most popular mocking framework for Java unit tests with clean and simple API.",
@@ -3768,14 +4430,17 @@
       "robos:website": "https://site.mockito.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:pytest",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Pytest",
       "dcterms:description": "Mature, full-featured Python testing framework supporting fixtures, parameterized testing, and extensive plugin ecosystem.",
@@ -3784,14 +4449,17 @@
       "robos:website": "https://pytest.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:robot-framework",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Robot Framework",
       "dcterms:description": "Generic open source automation framework for acceptance testing, acceptance test-driven development (ATDD), and RPA.",
@@ -3800,14 +4468,17 @@
       "robos:website": "https://robotframework.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:pact",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Pact",
       "dcterms:description": "Consumer-driven contract testing tool for microservices and APIs across polyglot ecosystems.",
@@ -3816,14 +4487,17 @@
       "robos:website": "https://pact.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:k6",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Grafana k6",
       "dcterms:description": "Modern load and performance testing tool built for engineering teams with developer-centric JavaScript test scripting.",
@@ -3832,14 +4506,17 @@
       "robos:website": "https://k6.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:restassured",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "REST Assured",
       "dcterms:description": "Java library for effortless REST service validation with fluent BDD-style given-when-then assertions.",
@@ -3848,14 +4525,17 @@
       "robos:website": "https://rest-assured.io",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:testify",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Testify",
       "dcterms:description": "Sacred extension toolkit with common assertions and mocking capabilities for the Go standard library testing package.",
@@ -3864,14 +4544,17 @@
       "robos:website": "https://github.com/stretchr/testify",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:godog",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Godog",
       "dcterms:description": "Official Cucumber BDD framework for Go providing high performance Gherkin step execution.",
@@ -3880,14 +4563,17 @@
       "robos:website": "https://github.com/cucumber/godog",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:testing:mocha",
       "@type": [
         "robos:TestingLibrary",
         "robos:TestFramework",
-        "oslc:Resource"
+        "oslc:Resource",
+        "schema:SoftwareApplication"
       ],
       "dcterms:title": "Mocha",
       "dcterms:description": "Feature-rich JavaScript test framework running on Node.js and in the browser, making asynchronous testing simple and fun.",
@@ -3896,7 +4582,9 @@
       "robos:website": "https://mochajs.org",
       "robos:package": "testing",
       "robos:namespace": "robos.testing",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
     }
   ]
 }
