@@ -11,6 +11,7 @@ __pycache__/
 
 # Videos
 *.mp4
+!docs/assets/videos/*.mp4
 *.mkv
 *.mov
 *.avi

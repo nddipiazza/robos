@@ -27,6 +27,14 @@
   <a href="https://nddipiazza.github.io/robos/"><img src="https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue" alt="Standards" /></a>
 </p>
 
+<p align="center">
+  <img src="docs/assets/images/robos-proof-of-work-demo.gif" alt="RobOS Autonomous Agent Proof-of-Work & PR Review in Action" width="100%" />
+</p>
+<p align="center">
+  <em>Watch an autonomous AI PR be audited against the Knowledge Graph, verified in IntelliJ & VS Code, and approved in 1 click.</em><br />
+  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (1:11)</a></strong>
+</p>
+
 ---
 
 ## ⚡ The Problem: AI Agents Are Coding Blind
