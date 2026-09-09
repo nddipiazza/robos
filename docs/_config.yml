@@ -1,6 +1,6 @@
 title: RobOS
-tagline: Knowledge Graph-First Developer Operating System & Application Suite
-description: "The developer-first operating system and 30+ desktop application suite engineered for Knowledge Graph-First Application Generation and Agent Review-Based Development. Build the KGraph, and full applications become auto-generated while human architects review and approve."
+tagline: AI-First SDLC Platform & Autonomous Agent Governance Harness
+description: "The AI-first SDLC platform and autonomous agent governance harness with automated 1080p video proof-of-work, semantic blast-radius checking, and Knowledge Graph-First application generation. Model your architecture once and govern coding agents with zero workstation pollution."
 url: "https://nddipiazza.github.io"
 baseurl: "/robos"
 
@@ -34,7 +34,7 @@ nav_sort: case_insensitive
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "RobOS &mdash; AI-First Developer Operating System & Application Suite. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>. &bull; 💬 <a href=\"https://discord.gg/6PjxzkHujE\" target=\"_blank\" rel=\"noopener\">Discord Community</a> (<a href=\"https://discord.com/channels/1546926331193725029/\" target=\"_blank\" rel=\"noopener\">#general</a>) &bull; 💡 <a href=\"https://github.com/nddipiazza/robos/tree/main/docs/ideas\" target=\"_blank\" rel=\"noopener\">Ideas Store on GitHub</a>"
+footer_content: "RobOS &mdash; AI-First SDLC Platform & Autonomous Agent Governance Harness. Built with <a href=\"https://github.com/nddipiazza/robos\">open source standards</a>. &bull; 💬 <a href=\"https://discord.gg/6PjxzkHujE\" target=\"_blank\" rel=\"noopener\">Discord Community</a> (<a href=\"https://discord.com/channels/1546926331193725029/\" target=\"_blank\" rel=\"noopener\">#general</a>) &bull; 💡 <a href=\"https://github.com/nddipiazza/robos/tree/main/docs/ideas\" target=\"_blank\" rel=\"noopener\">Ideas Store on GitHub</a>"
 
 mermaid:
   version: "10.9.0"

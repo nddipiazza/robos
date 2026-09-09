@@ -22,7 +22,7 @@ How an engineering team uses the unified suite of RobOS applications to take a r
 
 In traditional software engineering, delivering a new feature requires context-switching across a dozen disconnected tools—web issue trackers, architecture diagrams, terminal shells, database GUIs, API testing apps, and web pull request screens. 
 
-RobOS unifies this entire journey into a single **Knowledge Graph-First Developer Operating System**. Every application shares the same Git-backed **Modular KGraph Packages**, allowing autonomous AI swarms and human architects to collaborate seamlessly.
+RobOS unifies this entire journey into an **AI-First SDLC Platform & Agent Governance Harness**. Every application shares the same Git-backed **Modular KGraph Packages**, allowing autonomous AI swarms and human architects to collaborate seamlessly.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/day-in-the-life-flowchart.jpg' | relative_url }}" alt="RobOS Lifecycle: From Business Idea to Production Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />

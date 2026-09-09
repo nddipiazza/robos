@@ -2,19 +2,26 @@
 
 This file provides guidance to AI coding agents (Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, Gemini CLI, Cursor, etc.) when working with code in this repository.
 
-# RobOS — AI-First Developer Operating System & Application Suite
+# RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness
 
-RobOS is a developer-first operating system, 30+ native application suite, and IDE ecosystem that automates the entire Software Delivery Lifecycle (SDLC) using AI. From the moment you log in or launch an application, every surface is optimized for AI-assisted software development.
+RobOS is the AI-First SDLC platform and autonomous agent governance harness engineered for Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Development. It equips developers and AI agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex) with automated 1080p video proof-of-work, semantic blast-radius diffs, disposable in-memory sandboxes, and a 30+ native developer tool suite.
 
 ## Vision
 
-Every developer interaction — picking up a ticket, understanding a bug, reviewing a fix, shipping code — is augmented by AI. RobOS eliminates context-switching overhead by deeply integrating task management, code intelligence, and AI agents into the OS and IDE layers.
+Every developer interaction — picking up a ticket, understanding a bug, reviewing a fix, shipping code — is governed and augmented by AI. RobOS eliminates blind trust in AI diffs through automated proof-of-work, prevents machine pollution through ephemeral sandboxes, and protects system architecture through Knowledge Graph blast-radius checks. Human engineers act as **Lead System Architects**, guiding the system and reviewing proof-of-work while agents carry out the grueling background labor.
 
 ## Major Components
 
-### 1. RobOS Gnome — The Desktop OS
+### 1. Autonomous Agent Governance Harness & Sandboxes
 
-A purpose-built Ubuntu-based Linux desktop environment where every app, panel, and widget serves the SDLC.
+The core execution and verification fabric:
+- **Video Proof-of-Work Engine**: Autonomous headless execution in virtual framebuffers generating 1080p narrated video walkthroughs and Piper TTS audio.
+- **Dual-State Knowledge Graph**: Live blast-radius diffing between `main` and feature branches before code is written.
+- **Ephemeral In-Memory Sandboxes (`tmpfs`)**: Zero-pollution Linux accounts and virtual X11 displays preventing machine clutter and credential leaks.
+
+### 2. Optional Dedicated Appliance OS & Virtual Machine
+
+For teams requiring total physical isolation or air-gapped workstations, RobOS provides a turnkey Ubuntu 26.04 LTS OS image and QEMU/KVM virtual machine:
 
 **OS Stack:**
 - Ubuntu 26.04 LTS base (QEMU/KVM virtual machine, cloud-init provisioned)

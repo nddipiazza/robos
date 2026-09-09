@@ -7,7 +7,7 @@ nav_order: 4
 # Installation & Getting Started
 {: .no_toc }
 
-Install RobOS directly on your existing Ubuntu GNOME desktop, flash the full RobOS Ubuntu Developer OS Distro to bare metal or a VM, or explore upcoming cross-platform desktop packages.
+Run RobOS instantly on your existing macOS, Linux, or Windows WSL machine via Docker or standalone CLI/apps, or deploy the native developer desktop suite and optional appliance OS.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,16 +18,58 @@ Install RobOS directly on your existing Ubuntu GNOME desktop, flash the full Rob
 
 ---
 
-## Primary Option: Install on Current Ubuntu GNOME Desktop
+## Option 1: Instant Universal Quickstart & Agent Sandbox (macOS, Linux, Windows WSL)
 
-If you already run an **Ubuntu Linux (22.04 LTS, 24.04 LTS, or 26.04)** workstation with the GNOME desktop environment, you can install the complete RobOS desktop suite, app launchers, system tray daemons, and shared libraries directly onto your existing machine with a single setup command.
+The fastest way to experience RobOS without modifying your operating system. RobOS is engineered to run seamlessly alongside your existing IDE (VS Code, IntelliJ IDEA) and terminal workflows on **macOS**, **Linux**, or **Windows (WSL2)**.
 
 ### 1. Prerequisites
-- **Ubuntu Linux** with GNOME desktop
-- **Node.js 20+** and **npm** (`sudo apt install -y nodejs npm` or via `nvm`)
-- **Git**, **curl**, and **build-essential**
+- **Node.js 20+** and **npm**
+- **Git**
+- **Docker** (optional, recommended for headless virtual framebuffer & video proof-of-work)
 
-### 2. One-Line Desktop Installation
+### 2. Quick Setup & Headless Agent Verification
+```bash
+# 1. Clone the RobOS repository
+git clone https://github.com/nddipiazza/robos.git
+cd robos
+
+# 2. Run containerized headless verification & video proof-of-work
+./scripts/e2e-container.sh
+```
+
+### 3. Launch Standalone Tools
+You can launch any RobOS application individually without installing the desktop shell:
+
+```bash
+# Install package dependencies
+npm install
+
+# Launch Agent Code Review Platform
+electron packages/pr-review
+
+# Launch System Topology & C4 Architecture Studio
+electron packages/topology-manager
+
+# Launch Dev Central daily dashboard
+electron packages/dev-central
+
+# Launch Bruno REST API Client
+electron packages/rest-client
+
+# Launch Relational DB Manager (PostgreSQL, MySQL)
+electron packages/db-manager
+```
+
+### 4. Use Knowledge Graph in Existing Repositories
+Simply drop the `.robos/` directory into your project root to immediately enable declarative architecture modeling, TypeSpec schemas, W3C SHACL shape validation, and pre-code blast-radius diffing with any AI agent (Claude Code, Gemini, Copilot, Antigravity).
+
+---
+
+## Option 2: Full Native Developer Suite (Ubuntu / GNOME Desktop)
+
+If you run an **Ubuntu Linux (22.04 LTS, 24.04 LTS, or 26.04)** workstation with the GNOME desktop environment, you can install the complete RobOS desktop suite, app launchers, system tray daemons, and shared libraries directly alongside your existing desktop:
+
+### 1. One-Line Desktop Installation
 ```bash
 # Clone the RobOS repository
 git clone https://github.com/nddipiazza/robos.git
@@ -40,34 +82,14 @@ node scripts/install-dev-deps.js
 sudo bash packages/desktop-shell/install.sh
 ```
 
-### 3. Launching Applications
-All RobOS applications are accessible directly from the **RobOS App Launcher** (the searchable application grid in the desktop dock and top panel). Alternatively, you can launch any application directly from the command line:
-
-```bash
-# Launch Dev Central daily command center (or open "Dev Central" in RobOS App Launcher)
-electron packages/dev-central
-
-# Launch RobOS App Wizard (or open "RobOS App Wizard" in RobOS App Launcher)
-electron packages/app-wizard
-
-# Launch RobOS Group Manager (or open "Group Manager" in RobOS App Launcher)
-electron packages/group-manager
-
-# Launch Relational DB Manager (or open "Relational DB Manager" in RobOS App Launcher)
-electron packages/db-manager
-
-# Launch System Topology Studio (or open "System Topology" in RobOS App Launcher)
-electron packages/topology-manager
-
-# Launch Bruno REST API Client (or open "REST API Client" in RobOS App Launcher)
-electron packages/rest-client
-```
+### 2. Launching Applications from Desktop Panel
+All RobOS applications become accessible directly from the **RobOS App Launcher** in your desktop dock and top panel, or executable from the Tilix/bash terminal.
 
 ---
 
-## Option 2: Install Full RobOS Ubuntu OS Distro (Bare Metal & VM)
+## Option 3 (Optional Power-User Appliance): Dedicated RobOS OS Distro & QEMU VM
 
-For a dedicated, fully provisioned AI engineering workstation, RobOS provides a complete Ubuntu 26.04 LTS OS image with automated first-boot cloud-init provisioning, LightDM auto-login, Tilix terminal, dark navy/cyan theme, and ephemeral agent session daemons.
+For regulated environments, hardware air-gapping, or developers who want a dedicated appliance workstation, RobOS provides a fully provisioned, bootable Ubuntu 26.04 LTS developer OS image and local QEMU/KVM virtual machine.
 
 ### A. Bare Metal Deployment (Flash via Rufus / Etcher / dd)
 1. Download the latest `robos-v0.1.0.iso` from [GitHub Releases](https://github.com/nddipiazza/robos/releases).
@@ -77,7 +99,7 @@ For a dedicated, fully provisioned AI engineering workstation, RobOS provides a 
      ```bash
      sudo dd if=robos-v0.1.0.iso of=/dev/sdX bs=4M status=progress conv=fsync
      ```
-3. Insert the USB drive into your PC / ThinkPad, boot into UEFI, and let cloud-init configure the environment.
+3. Insert the USB drive into your PC, boot into UEFI, and let cloud-init automatically provision the environment.
 4. Default credentials: `robos` / `robos`.
 
 ### B. Virtual Machine Deployment (QEMU / KVM)

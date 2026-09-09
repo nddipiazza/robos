@@ -1,4 +1,4 @@
-# RobOS — Knowledge Graph-First Developer OS & Application Suite
+# RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness
 
 📖 **[Documentation](https://nddipiazza.github.io/robos/)** · 🌱 **[About RobOS](https://nddipiazza.github.io/robos/about.html)** · 💬 **[Discord Community](https://discord.gg/6PjxzkHujE)** ([#general](https://discord.com/channels/1546926331193725029/)) · **[RobOS Main Wins](https://nddipiazza.github.io/robos/big-wins.html)** · **[System Architecture](https://nddipiazza.github.io/robos/architecture.html)** · **[30+ App Suite](https://nddipiazza.github.io/robos/apps.html)**
 
@@ -9,8 +9,8 @@
 [![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen)](packages/robos-test)
 [![Standards](https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue)](https://nddipiazza.github.io/robos/)
 
-> **RobOS is the developer-first operating system and 30+ application suite engineered for Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Development.** 
-> In RobOS, the Knowledge Graph is the executable semantic blueprint: just as an OpenAPI contract automatically generates a typed REST web service client, a RobOS Knowledge Graph following our schema enables full applications to become, for all intents and purposes, **auto-generated**. Human engineers act as System Architects designing and evolving the KGraph, while autonomous AI agent swarms synthesize source code, scaffold databases, verify contracts, and deliver video proof-of-work under an Agent Review governance layer.
+> **RobOS is the AI-First SDLC platform and autonomous agent governance harness engineered for Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Development.**  
+> Stop letting coding agents make untrusted changes in your home directory or declare "Task complete!" without proof. RobOS governs autonomous AI agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex) in isolated in-memory sandboxes, proves assertions with automated **1080p narrated video proof-of-work**, checks **semantic blast-radiuses** before code merges, and auto-generates polyglot applications from declarative Knowledge Graphs. Human engineers act as **Lead System Architects**, guiding the system and reviewing proof-of-work while agents carry out the grueling background labor.
 
 ---
 
@@ -48,7 +48,7 @@ In modern software engineering, developers rely on contracts to eliminate manual
 
 ## 🚀 RobOS Main Wins (Why RobOS?)
 
-Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous engineering operating system and native developer application suite** anchored around core strategic breakthroughs:
+Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives you an **autonomous AI engineering platform, governance harness, and native developer application suite** anchored around core strategic breakthroughs:
 
 - 🧬 **KGraph-First Application Generation**: Applications are generated from the Knowledge Graph just as web clients are generated from OpenAPI contracts. By defining system topology, entity models, and contracts in the RobOS schema, full production applications (across 9 archetypes) are synthesized automatically with zero boilerplate.
 - 🧠 **Dual-State SDLC Knowledge Graph (OSLC Core 3.0 / W3C JSON-LD / SHACL)**: Models system topology, API contracts, entity schemas, devcontainers, repos, and tasks. Supports bulk-importing Git repositories into specialized application archetypes (Microservices with OpenAPI 3.1 YAML, Front End Web Apps, Desktop Apps, PC Games, Mobile Games, Console CLIs, Mobile Apps, Pipelines, Libraries) with automated continuous sync from RobOS Git Projects on main updates. Live semantic diffing between Production (`main`) and Future feature states flags breaking changes and blast radius before coding begins.
@@ -112,22 +112,35 @@ Agent Review-Based Development is the quality assurance and governance harness t
 
 ## 📦 Installation Options
 
-### ⭐️ Primary Option: Install on Current Ubuntu GNOME Desktop
-Deploy all 30+ RobOS apps, GNOME desktop launchers, and shared libraries directly onto your existing Ubuntu machine (22.04, 24.04, or 26.04):
+Choose the path that fits your development workflow:
+
+### ⭐️ Option 1: Instant Universal Quickstart & Agent Sandbox (macOS, Linux, Windows WSL)
+Run RobOS capabilities on your existing workstation with zero system modification:
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/nddipiazza/robos.git
 cd robos
 
-# Audit & install dependencies
-node scripts/install-dev-deps.js
+# 2. Run containerized headless E2E verification & video proof-of-work (Docker)
+./scripts/e2e-container.sh
 
+# 3. Launch any standalone RobOS app directly with Node.js 20+
+npm install
+electron packages/pr-review
+electron packages/topology-manager
+```
+> **Tip:** You can drop `.robos/` directly into your existing Git repositories to immediately enable Knowledge Graph architecture modeling, TypeSpec schemas, and pre-code blast-radius diffs with your favorite AI agent (Claude Code, Gemini, Copilot, Antigravity).
+
+### Option 2: Full Native Developer Suite (Ubuntu / GNOME Desktop)
+If you run an Ubuntu workstation, deploy all 30+ native developer applications, GNOME desktop launchers, and shared libraries directly alongside your existing daily environment:
+```bash
 # Install all apps and desktop integration to /usr/local/share/robos/
+node scripts/install-dev-deps.js
 sudo bash packages/desktop-shell/install.sh
 ```
 
-### Option 2: Install Full RobOS Ubuntu OS Distro (Bare Metal & VM)
-Build a dedicated bootable disk image (flashable via Rufus / Etcher) or run in a local QEMU/KVM virtual machine:
+### Option 3 (Optional Power-User Appliance): Dedicated RobOS OS Distro & QEMU VM
+Need total physical isolation, enterprise air-gapping, or a dedicated developer appliance? RobOS provides a fully provisioned, bootable Ubuntu 26.04 LTS developer OS image (flashable to USB via Rufus or Etcher) and a local QEMU/KVM virtual machine:
 ```bash
 # Build the disk image + cloud-init ISO
 infra/desktop/build.sh
@@ -135,11 +148,6 @@ infra/desktop/build.sh
 # Run VM (16GB RAM, all host CPUs, SSH on port 2224, VNC on port 5910)
 infra/desktop/run.sh
 ```
-
-### Option 3: Cross-Platform Desktop App Suite (Windows & macOS Coming Soon)
-- **Linux (Available Now)**: Run all 30+ Electron developer apps directly with Node.js 20+.
-- **macOS / OS X (Coming Soon)**: Universal `.dmg` installer and Homebrew Cask with native Apple Silicon (M1–M4) support and top menu bar widget.
-- **Windows (Coming Soon)**: One-click MSI package with WSL2 integration for ephemeral agent profile isolation.
 
 ---
 

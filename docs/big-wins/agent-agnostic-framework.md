@@ -9,7 +9,7 @@ permalink: /big-wins/agent-agnostic-framework.html
 # Agent-Agnostic Open Framework & Algorithmic Independence
 {: .no_toc }
 
-How RobOS decouples the developer operating system and SDLC architecture from proprietary AI models—using open global standards to eliminate vendor lock-in and assign the right agent to the right task for optimal value and cost.
+How RobOS decouples developer platform capabilities and SDLC architecture from proprietary AI models—using open global standards to eliminate vendor lock-in and assign the right agent to the right task for optimal value and cost.
 {: .fs-6 .fw-300 }
 
 ## Table of contents

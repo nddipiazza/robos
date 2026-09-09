@@ -23,7 +23,7 @@ The story behind the name, the multi-agent origin across Copilot, Claude, Codex,
 
 > **Pronunciation**: **RobOS** is pronounced **"row-bose"** (`/ˈroʊboʊs/`), rhyming with *rose* (or spoken like "Robo-S").
 
-While it is spelled with the familiar "OS" suffix of an operating system, its pronunciation honors its namesake—the legendary character **Robo** from *Chrono Trigger*.
+While spelled with the familiar "OS" suffix, RobOS is an AI-first SDLC platform and autonomous agent governance harness, and its pronunciation honors its spiritual namesake—the legendary character **Robo** from *Chrono Trigger*.
 
 ---
 
@@ -112,43 +112,12 @@ RobOS is not just software *for* AI agents—it was **built *by* AI agents**.
 
 Every major frontier AI coding model—**GitHub Copilot, Anthropic Claude, OpenAI Codex, and Google Gemini**—contributed equally to the conception, architecture, implementation, debugging, testing, and documentation of RobOS through agentic workflows.
 
-```mermaid
-graph TD
-    subgraph "The Four Frontier AI Contributors"
-        CP["GitHub Copilot"]
-        CL["Anthropic Claude"]
-        CD["OpenAI Codex"]
-        GM["Google Gemini"]
-    end
-
-    subgraph "Agent-Agnostic Core Infrastructure"
-        MCP["Model Context Protocol (MCP)"]
-        SKILLS["Standard Skills Engine (.agents/skills/)"]
-        SHACL["W3C SHACL Schema Validation Gate"]
-        KGRAPH["Modular KGraph Packages (.robos/kgraphs/)"]
-    end
-
-    subgraph "RobOS Engineering Platform"
-        APPS["30+ Desktop Applications"]
-        SHELL["Ubuntu GNOME Desktop Shell"]
-        SANDBOX["Ephemeral Linux Sandboxes"]
-        PROOF["Video Proof-of-Work Engine"]
-    end
-
-    CP --> MCP
-    CL --> MCP
-    CD --> MCP
-    GM --> MCP
-
-    MCP --> SKILLS
-    SKILLS --> SHACL
-    SHACL --> KGRAPH
-
-    KGRAPH --> APPS
-    KGRAPH --> SHELL
-    KGRAPH --> SANDBOX
-    KGRAPH --> PROOF
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/multi-agent-co-creation.jpg' | relative_url }}" alt="Multi-Agent Co-Creation: Copilot, Claude, Codex & Gemini Collaborating on RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Multi-Agent Co-Creation Architecture</strong>: GitHub Copilot, Anthropic Claude, OpenAI Codex, and Google Gemini collaborating through Model Context Protocol (MCP), portable skills, and W3C SHACL shape validation gates to engineer RobOS. <em>(Click image to zoom)</em>
+  </div>
+</div>
 
 ### Equal Collaboration via Agentic Workflows
 
@@ -163,7 +132,7 @@ Rather than locking into a single vendor's closed ecosystem or proprietary promp
 
 ### How Multi-Agent Engineering Succeeded Without Conflicts
 
-How do four different AI models from competing research labs collaborate on a complex 30+ application operating system without breaking each other's code?
+How do four different AI models from competing research labs collaborate on a complex 30+ application SDLC platform and suite without breaking each other's code?
 
 1. **The SDLC Knowledge Graph as the Universal Source of Truth**: All models read and write to the same standardized OSLC JSON-LD knowledge graph (`.robos/kgraphs/`). The graph guarantees that no model can invent imaginary APIs or violate service contracts.
 2. **W3C SHACL Shape Validation Gates**: Every architectural mutation is checked against 91+ strict SHACL shape constraints (`npm run kgraph:validate`). If an agent attempts to emit an invalid structure, the gate immediately blocks it with deterministic error diagnostics.
@@ -181,7 +150,7 @@ RobOS is living proof that frontier AI models do their best work when they colla
 > 
 > *Chrono Trigger*, the character *Robo* (also known as *R-66Y* and *Prometheus*), character names, lore, and related game elements are registered trademarks and copyrighted intellectual property of **Square Enix Holdings Co., Ltd.** Original character artwork and concepts are credited to **Akira Toriyama / Bird Studio**.
 > 
-> **RobOS** is an independent, community-driven open-source developer operating system and software suite. RobOS is **not** endorsed by, sponsored by, affiliated with, or associated with Square Enix Co., Ltd. or Bird Studio.
+> **RobOS** is an independent, community-driven open-source developer platform and software suite. RobOS is **not** endorsed by, sponsored by, affiliated with, or associated with Square Enix Co., Ltd. or Bird Studio.
 > 
 > References to *Robo* and *Chrono Trigger* in this documentation and project materials are made strictly under **nominative fair use** for cultural homage, character origin commentary, historical tribute, and educational attribution.
 > 

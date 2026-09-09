@@ -2,9 +2,9 @@
 nav_exclude: true
 ---
 
-# RobOS Project Plan — Agentic Review-Based Engineering OS
+# RobOS Project Plan — AI-First SDLC Platform & Governance Harness
 
-RobOS is the developer-first operating system and 30+ native application suite engineered for **Agentic Review-Based Software Development**. By consolidating open-source standards (OASIS OSLC, Backstage, TypeSpec, Pact, Devcontainers, C4 Model, Team Topologies, MCP, Piper TTS, and Gherkin BDD), RobOS enables autonomous AI agent swarms to plan, build, test, and demonstrate software while human developers act as Lead Architects and Code Reviewers.
+RobOS is the AI-First SDLC platform and autonomous agent governance harness engineered for **Agentic Review-Based Software Development**. By consolidating open-source standards (OASIS OSLC, Backstage, TypeSpec, Pact, Devcontainers, C4 Model, Team Topologies, MCP, Piper TTS, and Gherkin BDD), RobOS enables autonomous AI agent swarms to plan, build, test, and demonstrate software while human developers act as Lead Architects and Code Reviewers.
 
 ---
 
