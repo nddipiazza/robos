@@ -240,6 +240,18 @@
             </div>
           </div>
 
+          <!-- Anti-Rubber-Stamp Enforcement Notice Banner -->
+          <div class="anti-rubber-stamp-banner">
+            <div class="banner-icon">🛡️</div>
+            <div class="banner-body">
+              <strong>Anti-Rubber-Stamp Policy Enforced:</strong>
+              <span>Reviewers must pass the PR Knowledge Check (&ge;80% score) to unlock code diff inspection and merge sign-off. Prove you know what is being changed before looking at code!</span>
+            </div>
+            <button type="button" class="btn-app-elearning" id="btn-open-app-elearning" onclick="window.openAppCourseInHub()">
+              🎓 App Architecture Masterclass
+            </button>
+          </div>
+
           <div class="stage-grid-2col">
             <!-- Left: Curriculum Modules & Lessons -->
             <div class="theater-card" id="theater-elearning-modules-card">
@@ -287,7 +299,7 @@
           <div class="stage-header">
             <div class="stage-title-wrap">
               <h3>📖 Stage 2: Living Architecture Guide &amp; Dual-Reality Delta</h3>
-              <p>Contrast Production Reality against Proposed Reality and inspect verified runtime sequence diagrams.</p>
+              <p>Contrast Production Reality against Proposed Reality, inspect verified sequence flows, and verify REST API calls.</p>
             </div>
             <div class="stage-badge-wrap">
               <span class="gate-pill gate-pass" id="gate-pill-docs">Docs: Verified</span>
@@ -315,6 +327,42 @@
                 <h5>Blast Radius Entities (Dual-State KGraph)</h5>
                 <div id="theater-blast-radius-list"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Interactive REST API Verification Card -->
+          <div class="theater-card rest-runner-card" id="theater-rest-card">
+            <div class="card-head">
+              <span class="card-icon">📡</span>
+              <h4>Interactive REST API Verification</h4>
+              <span class="rest-method-badge" id="rest-method-badge">POST</span>
+            </div>
+            <p class="rest-card-desc">Execute and verify the PR endpoint with relevant parameters before inspecting code diffs or merging.</p>
+
+            <div class="rest-endpoint-bar">
+              <span class="rest-method-tag" id="rest-bar-method">POST</span>
+              <input type="text" id="rest-url-input" class="rest-url-field" value="http://localhost:8080/api/v1/pets/adopt" readonly>
+              <button type="button" class="btn-primary btn-execute-rest" id="btn-execute-rest" onclick="window.executeTheaterRestCall()">
+                🚀 Send Request
+              </button>
+            </div>
+
+            <div class="rest-details-grid">
+              <div class="rest-request-pane">
+                <div class="pane-title">Request Body &amp; Parameters (JSON)</div>
+                <textarea id="rest-request-body" class="rest-code-editor" rows="6"></textarea>
+              </div>
+              <div class="rest-response-pane">
+                <div class="pane-title">
+                  <span>Live Response</span>
+                  <span id="rest-response-status" class="rest-status-pill hidden">201 Created (38ms)</span>
+                </div>
+                <pre id="rest-response-body" class="rest-code-preview">// Click "Send Request" to execute REST call against service</pre>
+              </div>
+            </div>
+
+            <div class="rest-footer-bar">
+              <span class="contract-pass-tag" id="rest-contract-tag">✅ OpenAPI 3.1 &amp; Pact Contracts (14/14 Scenarios Pass)</span>
             </div>
           </div>
 
@@ -346,6 +394,15 @@
 
             <!-- Diff Content Area -->
             <div class="diff-content-area" id="theater-diff-display">
+              <!-- Anti-Rubber-Stamp Lock Overlay for Diffs -->
+              <div id="diff-anti-rubber-stamp-lock" class="anti-rubber-stamp-overlay hidden">
+                <div class="lock-modal-box">
+                  <div class="lock-icon">🔒</div>
+                  <h3>CODE DIFFS LOCKED</h3>
+                  <p><strong>Anti-Rubber-Stamp Policy Enforced:</strong> You must complete Stage 1 (PR Masterclass &amp; Knowledge Check) with &ge;80% score before inspecting raw code diffs.</p>
+                  <button type="button" class="btn-primary" onclick="window.setTheaterStage(1)">👉 Take Knowledge Check (Stage 1)</button>
+                </div>
+              </div>
               <div class="diff-file-header">
                 <span class="current-file-name" id="diff-current-file">Select a file</span>
                 <span class="diff-hunk-stats" id="diff-current-stats"></span>
@@ -360,12 +417,12 @@
           </div>
         </div>
 
-        <!-- STAGE 4: IDE Branch Diff Bridge -->
+        <!-- STAGE 4: IDE Branch Diff Bridge & Breakpoint Debugger -->
         <div class="theater-stage" id="stage-4">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>💻 Stage 4: IDE Branch Diff Viewer Bridge (IntelliJ IDEA &amp; VS Code)</h3>
-              <p>Launch native branch-level comparison and breakpoint debugging directly inside your local developer IDE.</p>
+              <h3>💻 Stage 4: IDE Branch Diff Bridge &amp; Breakpoint Debugger</h3>
+              <p>Launch native branch-level comparison and fire up breakpoints directly inside IntelliJ IDEA or VS Code.</p>
             </div>
             <div class="stage-badge-wrap">
               <span class="gate-pill gate-pass" id="gate-pill-ide">IDE Bridge: Active</span>
@@ -416,27 +473,93 @@
             </div>
           </div>
 
+          <!-- Interactive IDE Breakpoint Runner Card -->
+          <div class="theater-card debugger-card" id="theater-debugger-card">
+            <div class="card-head">
+              <span class="card-icon">🐞</span>
+              <h4>Interactive IDE App Starter &amp; Breakpoint Runner</h4>
+              <span class="debug-status-pill" id="debugger-status-pill">Ready to Debug</span>
+            </div>
+            <p class="debug-card-desc">Start up the target app in your IDE with debug breakpoints pre-set at the exact lines affected by this pull request.</p>
+
+            <div class="debugger-config-row">
+              <div class="debug-target-info">
+                <label>Breakpoint Target:</label>
+                <code id="debug-target-file">VaccineGatewayClient.java:34</code>
+                <span class="debug-target-desc">(mTLS Handshake before adoption transaction)</span>
+              </div>
+              <div class="debug-actions-btns">
+                <button type="button" class="btn-ide btn-ide-intellij" id="btn-fire-breakpoint-intellij" onclick="window.launchTheaterBreakpoint('intellij')">
+                  🔥 Start App with Breakpoint in IntelliJ (Port 63343)
+                </button>
+                <button type="button" class="btn-ide btn-ide-vscode" id="btn-fire-breakpoint-vscode" onclick="window.launchTheaterBreakpoint('vscode')">
+                  🔥 Start App with Breakpoint in VS Code
+                </button>
+              </div>
+            </div>
+
+            <!-- Suspended Thread & Variables Inspection View -->
+            <div id="debug-inspection-panel" class="debug-inspection-panel hidden">
+              <div class="debug-controls-toolbar">
+                <span class="thread-badge">⏸️ Thread Suspended: <strong id="debug-thread-name">http-nio-8080-exec-1</strong></span>
+                <div class="debug-step-buttons">
+                  <button type="button" class="btn-debug-step" onclick="window.resumeTheaterBreakpoint('step')">↷ Step Over (F8)</button>
+                  <button type="button" class="btn-debug-resume" onclick="window.resumeTheaterBreakpoint('resume')">▶ Resume Execution (F9)</button>
+                </div>
+              </div>
+
+              <div class="debug-inspection-grid">
+                <!-- Stack Trace -->
+                <div class="debug-pane">
+                  <div class="pane-title">Call Stack Frames</div>
+                  <div class="stack-frames-list" id="debug-stack-frames"></div>
+                </div>
+                <!-- Variables Frame -->
+                <div class="debug-pane">
+                  <div class="pane-title">Inspected Thread Variables</div>
+                  <table class="variables-table">
+                    <thead><tr><th>Variable</th><th>Type</th><th>Evaluated Value</th></tr></thead>
+                    <tbody id="debug-variables-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div id="debug-feedback-msg" class="debug-feedback-msg hidden"></div>
+          </div>
+
           <div class="ide-feedback-output" id="theater-ide-feedback" style="display:none;"></div>
 
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" onclick="window.setTheaterStage(3)">&larr; Previous: File Diff Viewer</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Proof-of-Work Video &rarr;</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Proof-of-Work Canvas &rarr;</button>
           </div>
         </div>
 
-        <!-- STAGE 5: Proof-of-Work Video Walkthrough -->
+        <!-- STAGE 5: Autonomous Proof-of-Work Canvas -->
         <div class="theater-stage" id="stage-5">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>🎬 Stage 5: Autonomous Proof-of-Work Video Walkthrough</h3>
-              <p>Inspect the 1080p narrated video proof demonstrating that the AI agent reproduced the issue and verified the fix in a sandbox.</p>
+              <h3>🎬 Stage 5: Autonomous Proof-of-Work Canvas</h3>
+              <p>A blank canvas for the robot to prove to you it works in a 1080p Xvfb recorded video... or right in your current desktop session if you prefer.</p>
             </div>
             <div class="stage-badge-wrap">
-              <span class="status-tag-pass">🟢 100% VERIFIED PROOF-OF-WORK</span>
+              <span class="status-tag-pass" id="proof-canvas-badge">🟢 100% VERIFIED PROOF-OF-WORK</span>
             </div>
           </div>
 
-          <div class="stage-grid-2col">
+          <!-- Dual-Mode Proof-of-Work Canvas Selector -->
+          <div class="canvas-mode-bar">
+            <button type="button" class="canvas-mode-btn active" id="btn-canvas-video" onclick="window.setProofCanvasMode('video')">
+              🎥 Recorded 1080p Xvfb Video Walkthrough
+            </button>
+            <button type="button" class="canvas-mode-btn" id="btn-canvas-desktop" onclick="window.setProofCanvasMode('desktop')">
+              🖥️ Run Live in Current Desktop Session
+            </button>
+          </div>
+
+          <!-- Mode 1: Recorded 1080p Video Walkthrough -->
+          <div id="canvas-video-view" class="stage-grid-2col">
             <div class="theater-card">
               <div class="card-head">
                 <span class="card-icon">📽️</span>
@@ -466,6 +589,32 @@
             </div>
           </div>
 
+          <!-- Mode 2: Live Desktop Session (Current Display) -->
+          <div id="canvas-desktop-view" class="canvas-desktop-container hidden">
+            <div class="desktop-session-header">
+              <div class="display-info">
+                <span class="display-badge" id="desktop-display-badge">DISPLAY=:0</span>
+                <span class="desktop-status-text">Autonomous Robot Ready to Execute on Current Workstation Display</span>
+              </div>
+              <div class="desktop-actions">
+                <button type="button" class="btn-primary btn-run-desktop" id="btn-run-desktop" onclick="window.runLiveDesktopSession()">
+                  ▶ Run Live Robot Proof on Display
+                </button>
+              </div>
+            </div>
+            <div class="desktop-console-box">
+              <div class="console-titlebar">
+                <span class="console-dot dot-red"></span>
+                <span class="console-dot dot-yellow"></span>
+                <span class="console-dot dot-green"></span>
+                <span class="console-title">RobOS Robot Session Terminal (Display :0)</span>
+              </div>
+              <div class="console-terminal-body" id="desktop-console-logs">
+                <div class="console-line line-dim">// Click "Run Live Robot Proof on Display" to watch the robot drive UI and API in real time on your desktop.</div>
+              </div>
+            </div>
+          </div>
+
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
             <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Sign-Off &amp; Merge &rarr;</button>
@@ -479,6 +628,16 @@
               <h3>✅ Stage 6: PR Review Sign-Off &amp; Dual-Branch Merge</h3>
               <p>Verify all required validation gates before approving. Approving merges both the Git code repository and Knowledge Graph branches.</p>
             </div>
+          </div>
+
+          <!-- Anti-Rubber-Stamp Lock Banner for Signoff -->
+          <div id="theater-signoff-lock-banner" class="anti-rubber-stamp-banner hidden" style="margin-bottom:12px;">
+            <div class="banner-icon">🔒</div>
+            <div class="banner-body">
+              <strong>Approval Locked by Anti-Rubber-Stamp Gate:</strong>
+              <span>You must achieve &ge;80% on Stage 1 Knowledge Check before approving or merging this pull request.</span>
+            </div>
+            <button type="button" class="btn-primary" onclick="window.setTheaterStage(1)">👉 Go to Stage 1</button>
           </div>
 
           <div class="signoff-gates-grid">

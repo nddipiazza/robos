@@ -21,6 +21,15 @@ const {
   REVIEW_FIX_PROMPT, PR_DESCRIPTION_PROMPT, interpolate,
 } = require('./prompt-templates');
 
+const {
+  HarnessRouterClient,
+  EmbeddedHarnessRouter,
+  getHarnessRouter,
+  UHP_SPEC_VERSION,
+  DEFAULT_UHP_URL,
+} = require('./harness-router');
+const { HarnessRouterBackend } = require('./harness-backend');
+
 module.exports = {
   // Registry
   listAgents,
@@ -35,6 +44,14 @@ module.exports = {
   // Backends
   ClaudeBackend,
   CopilotBackend,
+  HarnessRouterBackend,
+
+  // HarnessRouter / UHP Engine
+  HarnessRouterClient,
+  EmbeddedHarnessRouter,
+  getHarnessRouter,
+  UHP_SPEC_VERSION,
+  DEFAULT_UHP_URL,
 
   // Workflow stages
   questionnaire,

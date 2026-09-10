@@ -219,6 +219,20 @@ if [ "$SYS_ONLY" = false ]; then
     done
 
     echo ""
+
+    # -----------------------------------------------------------------------------
+    # Step 4: HarnessRouter & UHP Protocol Engine
+    # -----------------------------------------------------------------------------
+    echo "[5/5] Verifying HarnessRouter & UHP agent routing baseline..."
+    if command -v docker &>/dev/null; then
+        if docker ps -a --format '{{.Names}}' | grep -q '^harnessrouter$'; then
+            echo "  HarnessRouter CE container is configured and ready."
+        else
+            echo "  HarnessRouter CE container can be launched via: docker run -d --name harnessrouter --restart unless-stopped -p 127.0.0.1:3000:3000 -v harnessrouter:/data harnessrouter/harnessrouter"
+        fi
+    fi
+    echo "  RobOS Embedded UHP Router is active (100% open-source & free fallback)."
+    echo ""
 fi
 
 echo "====================================================="

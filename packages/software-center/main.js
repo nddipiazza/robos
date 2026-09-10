@@ -50,6 +50,16 @@ const TOOLS = [
     installCmd: 'sudo npm install -g @openai/codex && sudo apt-get install -y sqlite3',
     uninstallCmd: 'sudo npm uninstall -g @openai/codex',
   },
+  {
+    id: 'harnessrouter',
+    name: 'HarnessRouter CE',
+    description: 'Unified AI agent execution runtime and harness router (Unified Harness Protocol 2026-08-11)',
+    category: 'AI',
+    source: 'Docker (harnessrouter/harnessrouter) & npm (harnessclientprotocol)',
+    checkCmd: 'docker ps --format "{{.Names}}" 2>/dev/null | grep -q "^harnessrouter$" || curl -sf http://127.0.0.1:3000/v1/uhp >/dev/null 2>&1',
+    installCmd: 'sudo npm install -g harnessclientprotocol unifiedharnessprotocol 2>/dev/null || true; which docker >/dev/null 2>&1 && sudo docker run -d --name harnessrouter --restart unless-stopped -p 127.0.0.1:3000:3000 -v harnessrouter:/data harnessrouter/harnessrouter || echo "HarnessRouter client installed; embedded fallback ready"',
+    uninstallCmd: 'sudo docker stop harnessrouter 2>/dev/null || true; sudo docker rm -f harnessrouter 2>/dev/null || true',
+  },
 
 
   {

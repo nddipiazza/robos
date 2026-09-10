@@ -2192,6 +2192,26 @@ ${body}
 
     // 5. IDE Branch Diff Bridge Specifications
     const primaryFile = (fileDiffs[0] && fileDiffs[0].filePath) || 'src/main/java/com/acme/petshop/client/VaccineGatewayClient.java';
+    const breakpointSession = {
+      filePath: primaryFile,
+      line: 34,
+      method: 'verifyRabiesCertificate',
+      threadName: 'http-nio-8080-exec-1',
+      callStack: [
+        `com.acme.petshop.client.VaccineGatewayClient.verifyRabiesCertificate(${primaryFile.split('/').pop()}:34)`,
+        'com.acme.petshop.service.PetService.adoptPet(PetService.java:58)',
+        'com.acme.petshop.controller.PetController.adoptPet(PetController.java:42)',
+        'jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)'
+      ],
+      variables: [
+        { name: 'this.sslContext', type: 'SSLContextImpl', value: 'TLSv1.3 [ACME-ROOT-CA]' },
+        { name: 'this.rootCaPath', type: 'String', value: '"/etc/ssl/certs/acme-root-ca.crt"' },
+        { name: 'petId', type: 'String', value: '"PET-105-VAX"' },
+        { name: 'timeoutMs', type: 'int', value: '5000' },
+        { name: 'handshakeStatus', type: 'SSLEngineResult.HandshakeStatus', value: 'NEED_UNWRAP -> FINISHED' }
+      ]
+    };
+
     const ideBridge = {
       intellij: {
         title: 'IntelliJ IDEA Native PR Tool Window',
@@ -2208,10 +2228,83 @@ ${body}
         cliCommand: `code --diff ${primaryFile} ${primaryFile}`,
         breakpointTarget: `${primaryFile}:34`,
         status: 'Ready (URI Handler)'
+      },
+      breakpointSession
+    };
+
+    // 6. Interactive REST API Verification Call
+    const restCall = {
+      title: 'Adopt Pet with Verified Rabies Certificate',
+      endpoint: '/api/v1/pets/adopt',
+      url: 'http://localhost:8080/api/v1/pets/adopt',
+      method: 'POST',
+      headers: [
+        { key: 'Content-Type', value: 'application/json' },
+        { key: 'Accept', value: 'application/json' },
+        { key: 'X-Client-Cert-Verified', value: 'true' },
+        { key: 'X-Correlation-ID', value: `pr-${prNumber}-req-adopt-01` }
+      ],
+      body: JSON.stringify({
+        petId: 'PET-105-VAX',
+        adopterName: 'Alex Rivera',
+        vaccineCertificateId: 'VAX-2026-9814-CERT',
+        requireMtlsVerification: true
+      }, null, 2),
+      expectedResponse: {
+        status: 201,
+        statusText: 'Created',
+        headers: {
+          'content-type': 'application/json',
+          'x-mtls-verified': 'true',
+          'x-handshake-port': '8443'
+        },
+        body: {
+          status: 'ADOPTED',
+          petId: 'PET-105-VAX',
+          adoptionId: 'ADOPT-2026-0811-09',
+          adopterName: 'Alex Rivera',
+          rabiesVerified: true,
+          rabiesCertificate: {
+            certificateId: 'VAX-2026-9814-CERT',
+            status: 'VALID',
+            issuer: 'ACME State Veterinary Board',
+            verifiedOverMtls: true,
+            handshakePort: 8443
+          },
+          kafkaEvent: {
+            topic: 'petstore.adoptions.events',
+            offset: 418,
+            status: 'COMMITTED'
+          }
+        }
       }
     };
 
-    // 6. Proof-of-Work Video Walkthrough Telemetry
+    // 7. Desktop Session Configuration
+    const desktopSession = {
+      display: process.env.DISPLAY || ':0',
+      targetRunner: 'acme-petshop-step11-bruno-rest-client-demo.js',
+      status: 'ready',
+      steps: [
+        { id: 1, text: 'Initialize robot harness in current desktop session' },
+        { id: 2, text: 'Spin up PetStore API with mTLS keystore' },
+        { id: 3, text: 'Drive GUI & REST adoption submission' },
+        { id: 4, text: 'Verify TLS 1.3 handshake over port 8443' },
+        { id: 5, text: 'Assert Kafka adoption event emitted' }
+      ]
+    };
+
+    // 8. App-Level Architecture eLearning Link
+    const appElearning = {
+      courseId: `urn:robos:elearning:course:${appSlug}`,
+      title: `${appTitle} Architecture & Contract Masterclass`,
+      appTitle,
+      appSlug,
+      modulesCount: 4,
+      hubPackage: 'packages/robos-elearning'
+    };
+
+    // 9. Proof-of-Work Video Walkthrough Telemetry
     const proofOfWorkVideo = {
       title: `Proof-of-Work Walkthrough: ${title}`,
       status: 'verified',
@@ -2248,7 +2341,7 @@ mTLS client connects to vaccine-gateway over port 8443 using the ACME Root CA ke
 Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL errors.`
     };
 
-    // 7. Validation Gates Status
+    // 10. Validation Gates Status
     const validationGates = {
       elearningPassed: false,
       docsReviewed: false,
@@ -2285,9 +2378,12 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
         score: null,
         certificate: null
       },
+      appElearning,
       documentation,
       fileDiffs,
       ideBridge,
+      restCall,
+      desktopSession,
       proofOfWorkVideo,
       validationGates
     };

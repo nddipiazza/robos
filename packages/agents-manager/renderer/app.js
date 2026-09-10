@@ -6,6 +6,7 @@ var activeProviderId = null;
 var selectedProviderId = null;
 
 var PROVIDER_ICONS = {
+  'harnessrouter': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><circle cx="5" cy="5" r="2"/><path d="M12 9V5"/><path d="M12 15v4"/><path d="M9 12H5"/><path d="M15 12h4"/><path d="m14 10 3.5-3.5"/><path d="m10 14-3.5 3.5"/><path d="m14 14 3.5 3.5"/><path d="m10 10-3.5-3.5"/></svg>`,
   'github-copilot': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 19 4.77 5.07 5.07 0 0 0 18.91 1S17.73.65 15 2.48a13.38 13.38 0 0 0-7 0C5.27.65 4.09 1 4.09 1A5.07 5.07 0 0 0 4 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 8 18.13V22"/></svg>`,
   'claude-code': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>`,
   'codex': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg>`,
@@ -290,7 +291,9 @@ async function init() {
 
 async function refreshCurrentSessions() {
   if (!selectedProviderId) return;
-  if (selectedProviderId === 'github-copilot') {
+  if (selectedProviderId === 'harnessrouter') {
+    await refreshHarnessRouterSessions();
+  } else if (selectedProviderId === 'github-copilot') {
     const sessions = await window.agents.copilotSessions();
     renderCopilotSessions(sessions);
   } else if (selectedProviderId === 'claude-code') {
@@ -378,7 +381,9 @@ async function selectProvider(id) {
   const list = Array.isArray(providers) ? providers : (providers?.providers || []);
   const provider = list.find(p => p.id === id) || { id, name: id, installed: true, authenticated: true };
 
-  if (id === 'github-copilot') {
+  if (id === 'harnessrouter') {
+    await renderHarnessRouterDetail(provider);
+  } else if (id === 'github-copilot') {
     await renderCopilotDetail(provider);
   } else if (id === 'claude-code') {
     await renderClaudeDetail(provider);
@@ -387,6 +392,326 @@ async function selectProvider(id) {
   } else if (id === 'antigravity') {
     await renderAntigravityDetail(provider);
   }
+}
+
+// ── HarnessRouter (UHP) Detail ───────────────────────────────────────────────
+
+var _activeHarnessTaskId = null;
+
+async function refreshHarnessRouterSessions() {
+  if (selectedProviderId !== 'harnessrouter') return;
+  const listContainer = document.getElementById('hr-sessions-list');
+  if (!listContainer) return;
+  try {
+    const res = await window.agents.harnessRouterSessions();
+    const sessions = (res && res.data) || [];
+    if (!sessions || sessions.length === 0) {
+      listContainer.innerHTML = '<div class="empty-sessions">No active or archived UHP sessions yet. Run a task below to create one!</div>';
+      return;
+    }
+    listContainer.innerHTML = sessions.map(s => {
+      const turnCount = (s.turns && s.turns.length) || 0;
+      const lastUpdated = s.updated_at ? formatDate(s.updated_at) : 'recently';
+      return `
+        <div class="session-card" id="hr-sess-${esc(s.id)}">
+          <div class="session-card-main">
+            <div class="session-card-name">
+              <span class="mono" style="color:#79c0ff;font-weight:700;">${esc(s.id)}</span>
+              <span style="margin-left:8px;font-size:11px;color:#8b949e;">${esc(s.harness_id || 'default')} &middot; ${esc(s.model || 'auto')}</span>
+            </div>
+            <div class="session-card-message">${esc(s.turns && s.turns.length ? s.turns[s.turns.length - 1].input : 'New Session')}</div>
+            <div class="session-card-meta">
+              <span class="text-muted">Turns: <strong>${turnCount}</strong></span>
+              <span class="text-muted">Updated: ${lastUpdated}</span>
+            </div>
+          </div>
+          <div class="session-card-actions">
+            <button class="btn btn-sm" onclick="window.viewSessionTurns('${esc(s.id)}')">Turns (${turnCount})</button>
+            <button class="btn btn-danger btn-sm" onclick="window.deleteHarnessSession('${esc(s.id)}')">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    listContainer.innerHTML = `<div class="empty-sessions" style="color:#f85149;">Error loading sessions: ${esc(err.message)}</div>`;
+  }
+}
+
+async function renderHarnessRouterDetail(provider) {
+  const detail = document.getElementById('provider-detail');
+  const isActive = activeProviderId === 'harnessrouter';
+
+  // Fetch live router status & catalog
+  let routerStatus = { mode: 'embedded', url: 'in-process', info: { default_version: '2026-08-11', conformance_class: 'Full' } };
+  try { routerStatus = await window.agents.harnessRouterStatus(); } catch {}
+
+  const isService = routerStatus.mode === 'service';
+  const confClass = (routerStatus.info && routerStatus.info.conformance_class) || 'Full';
+  const uhpVer = (routerStatus.info && routerStatus.info.default_version) || '2026-08-11';
+
+  detail.innerHTML = `
+    <div class="detail-scroll">
+      <div class="detail-header">
+        <div class="detail-title-row">
+          <span class="detail-icon">${PROVIDER_ICONS['harnessrouter']}</span>
+          <h2>HarnessRouter &middot; Unified Harness Protocol (UHP)</h2>
+          ${isActive ? '<span class="active-badge">ACTIVE ROUTER</span>' : `<button class="btn btn-primary btn-sm" id="btn-hr-set-active">Set as Active</button>`}
+          <span class="active-badge" style="background:#16243b;border-color:#58a6ff;color:#79c0ff;">UHP ${esc(uhpVer)} ${esc(confClass)}</span>
+          <span class="active-badge" style="background:#13281a;border-color:#238636;color:#3fb950;">100% Free & Open Source (Apache-2.0)</span>
+        </div>
+        <p class="detail-sub">Unified execution interface and governance runtime across Codex, Claude Code, Copilot, Gemini CLI, and custom agent harnesses.</p>
+      </div>
+
+      <!-- Server & Router Gateway Status -->
+      <div class="detail-section">
+        <h3 class="section-title">Router Engine & Gateway Status</h3>
+        <div class="info-grid">
+          <span class="info-label">Runtime Mode</span>
+          <span class="info-value" style="font-weight:600;color:${isService ? '#3fb950' : '#79c0ff'};">
+            ${isService ? '● Self-Hosted Service (:3000)' : '● Embedded In-Process UHP Router (Local)'}
+          </span>
+          <span class="info-label">Endpoint</span>
+          <span class="info-value mono">${esc(routerStatus.url || 'http://127.0.0.1:3000')}</span>
+          <span class="info-label">Protocol Conformance</span>
+          <span class="info-value">UHP ${esc(uhpVer)} — Core, Extended & Full Conformance (${confClass})</span>
+          <span class="info-label">Cost & Licensing</span>
+          <span class="info-value" style="color:#3fb950;font-weight:600;">Free & Open Source forever &middot; Zero vendor lock-in &middot; Self-hosted</span>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-sm" id="btn-hr-refresh">↻ Refresh Status</button>
+          <button class="btn btn-primary btn-sm" id="btn-hr-start-container">▶ Start Container (Docker)</button>
+          <button class="btn btn-sm" id="btn-hr-restart-container">⟳ Restart</button>
+          <button class="btn btn-sm" id="btn-hr-stop-container">■ Stop</button>
+          <button class="btn btn-sm" id="btn-hr-open-console">🌐 Open Web Console (:3000)</button>
+        </div>
+      </div>
+
+      <!-- Configured Agent Harnesses -->
+      <div class="detail-section">
+        <h3 class="section-title">Configured Agent Harnesses</h3>
+        <p class="text-muted" style="margin-bottom:12px;">Agent harnesses discovered on local workstation and container runtime conforming to UHP specifications.</p>
+        <div id="hr-harnesses-grid" class="harness-grid">
+          <div class="text-muted" style="padding:12px;">Loading harness catalog...</div>
+        </div>
+      </div>
+
+      <!-- Unified Task Execution Console -->
+      <div class="detail-section">
+        <h3 class="section-title">Unified Task Runner (POST /v1/responses)</h3>
+        <div class="task-runner-container">
+          <div class="task-controls-row">
+            <div style="flex:1;min-width:200px;">
+              <label class="form-label">Target Harness</label>
+              <select id="hr-select-harness" class="form-input" style="width:100%;"></select>
+            </div>
+            <div style="flex:1;min-width:200px;">
+              <label class="form-label">Model</label>
+              <select id="hr-select-model" class="form-input" style="width:100%;"></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Task Instructions / Prompt</label>
+            <textarea id="hr-task-input" class="form-textarea mono" rows="3" placeholder="Enter task prompt for the agent harness (e.g. Inspect recent PR changes and summarize architectural blast radius)..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-primary btn-sm" id="btn-hr-run-task">▶ Run Task via UHP</button>
+            <button class="btn btn-danger btn-sm hidden" id="btn-hr-cancel-task">Cancel Running Task</button>
+            <span id="hr-task-status-badge" class="text-muted" style="font-size:12px;margin-left:auto;">Idle</span>
+          </div>
+          <div>
+            <label class="form-label" style="margin-bottom:6px;display:block;">Live SSE Stream Output & Events</label>
+            <div id="hr-stream-output" class="stream-terminal">[UHP Event Stream Ready] Select a harness and click "Run Task via UHP" to observe streaming events.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unified Sessions -->
+      <div class="detail-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 class="section-title" style="margin-bottom:0;">Active & Archived Sessions (GET /v1/sessions)</h3>
+          <button class="btn btn-sm" id="btn-hr-refresh-sessions">↻ Refresh Sessions</button>
+        </div>
+        <div id="hr-sessions-list" class="sessions-list">
+          <div class="text-muted" style="padding:12px;">Loading UHP sessions...</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Wire header actions
+  if (!isActive) {
+    const btnActive = document.getElementById('btn-hr-set-active');
+    if (btnActive) {
+      btnActive.onclick = async () => {
+        await window.agents.setActiveProvider('harnessrouter');
+        activeProviderId = 'harnessrouter';
+        renderSidebar();
+        await renderHarnessRouterDetail(provider);
+      };
+    }
+  }
+
+  document.getElementById('btn-hr-refresh')?.addEventListener('click', async () => {
+    await renderHarnessRouterDetail(provider);
+  });
+
+  document.getElementById('btn-hr-start-container')?.addEventListener('click', async () => {
+    await window.agents.harnessRouterToggleDocker('start');
+    await renderHarnessRouterDetail(provider);
+  });
+
+  document.getElementById('btn-hr-restart-container')?.addEventListener('click', async () => {
+    await window.agents.harnessRouterToggleDocker('restart');
+    await renderHarnessRouterDetail(provider);
+  });
+
+  document.getElementById('btn-hr-stop-container')?.addEventListener('click', async () => {
+    await window.agents.harnessRouterToggleDocker('stop');
+    await renderHarnessRouterDetail(provider);
+  });
+
+  document.getElementById('btn-hr-open-console')?.addEventListener('click', async () => {
+    await window.agents.openUrl('http://localhost:3000');
+  });
+
+  document.getElementById('btn-hr-refresh-sessions')?.addEventListener('click', async () => {
+    await refreshHarnessRouterSessions();
+  });
+
+  // Populate Harnesses & Models
+  const harnessSelect = document.getElementById('hr-select-harness');
+  const modelSelect = document.getElementById('hr-select-model');
+  const gridContainer = document.getElementById('hr-harnesses-grid');
+
+  try {
+    const hRes = await window.agents.harnessRouterHarnesses();
+    const harnesses = (hRes && hRes.data) || [];
+
+    if (gridContainer) {
+      gridContainer.innerHTML = harnesses.map(h => {
+        const isReady = h.status === 'ready' || h.installed;
+        return `
+          <div class="harness-card">
+            <div class="harness-card-header">
+              <span class="harness-card-title">${esc(h.name)}</span>
+              <span class="harness-pill ${isReady ? 'ready' : 'offline'}">${isReady ? 'READY' : 'AVAILABLE'}</span>
+            </div>
+            <div class="harness-meta">${esc(h.description || '')}</div>
+            <div>
+              <span class="text-muted">Base: </span><span class="mono" style="color:#e6edf3;">${esc(h.base || h.id)}</span>
+            </div>
+            <div>
+              <span class="harness-models-tag">UHP Protocol Node</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (harnessSelect) {
+      harnessSelect.innerHTML = harnesses.map(h => `<option value="${esc(h.id)}">${esc(h.name)} (${esc(h.base || h.id)})</option>`).join('');
+    }
+
+    const mRes = await window.agents.harnessRouterModels();
+    const models = (mRes && mRes.data) || [];
+    if (modelSelect) {
+      modelSelect.innerHTML = models.map(m => `<option value="${esc(m.id)}">${esc(m.id)} &mdash; ${esc(m.provider || 'default')}</option>`).join('');
+    }
+  } catch (err) {
+    if (gridContainer) gridContainer.innerHTML = `<div class="empty-sessions" style="color:#f85149;">Error loading harnesses: ${esc(err.message)}</div>`;
+  }
+
+  // Wire Task Runner
+  const runBtn = document.getElementById('btn-hr-run-task');
+  const cancelBtn = document.getElementById('btn-hr-cancel-task');
+  const taskInput = document.getElementById('hr-task-input');
+  const streamOutput = document.getElementById('hr-stream-output');
+  const statusBadge = document.getElementById('hr-task-status-badge');
+
+  if (runBtn) {
+    runBtn.onclick = async () => {
+      const prompt = taskInput.value.trim();
+      if (!prompt) return;
+
+      const harnessId = harnessSelect ? harnessSelect.value : 'chrn_gemini';
+      const model = modelSelect ? modelSelect.value : 'gemini-3.8-flash';
+
+      runBtn.disabled = true;
+      cancelBtn.classList.remove('hidden');
+      statusBadge.textContent = 'Running...';
+      statusBadge.style.color = '#e3b341';
+      streamOutput.textContent = `[UHP POST /v1/responses]\nHarness: ${harnessId}\nModel: ${model}\nStatus: Submitting task...\n\n`;
+
+      try {
+        const res = await window.agents.harnessRouterRunTask({
+          input: prompt,
+          harnessId,
+          model,
+        });
+
+        if (res && res.data && res.data.id) {
+          _activeHarnessTaskId = res.data.id;
+        }
+
+        statusBadge.textContent = res.ok ? 'Completed' : 'Failed';
+        statusBadge.style.color = res.ok ? '#3fb950' : '#f85149';
+        if (res && res.data && res.data.output) {
+          streamOutput.textContent += `\n[Final Output]:\n${res.data.output}\n`;
+        }
+      } catch (err) {
+        statusBadge.textContent = 'Error';
+        statusBadge.style.color = '#f85149';
+        streamOutput.textContent += `\n[Error]: ${err.message}\n`;
+      } finally {
+        runBtn.disabled = false;
+        cancelBtn.classList.add('hidden');
+        await refreshHarnessRouterSessions();
+      }
+    };
+  }
+
+  if (cancelBtn) {
+    cancelBtn.onclick = async () => {
+      if (_activeHarnessTaskId) {
+        await window.agents.harnessRouterCancelTask(_activeHarnessTaskId);
+        streamOutput.textContent += '\n[Task Cancelled by User]\n';
+        statusBadge.textContent = 'Cancelled';
+        statusBadge.style.color = '#8b949e';
+      }
+    };
+  }
+
+  // Wire turn inspector & session delete onto window
+  window.viewSessionTurns = async (sessionId) => {
+    const res = await window.agents.harnessRouterSessionTurns(sessionId);
+    const turns = (res && res.data) || [];
+    const text = turns.map((t, idx) => `=== Turn ${idx + 1} [${t.status}] ===\nInput: ${t.input}\nOutput: ${t.output || '(running)'}\n`).join('\n');
+    alert(text || 'No turns recorded for this session.');
+  };
+
+  window.deleteHarnessSession = async (sessionId) => {
+    if (!confirm(`Delete UHP session ${sessionId}?\nThis performs canonical session deletion (UHP 2026-08-11).`)) return;
+    await window.agents.harnessRouterDeleteSession(sessionId);
+    await refreshHarnessRouterSessions();
+  };
+
+  // Wire stream event listener
+  if (window.agents.onHarnessRouterEvent) {
+    window.agents.onHarnessRouterEvent((ev) => {
+      if (streamOutput) {
+        if (ev.type === 'delta') {
+          streamOutput.textContent += ev.delta || '';
+          streamOutput.scrollTop = streamOutput.scrollHeight;
+        } else {
+          streamOutput.textContent += `\n[Event: ${ev.type}]\n`;
+          streamOutput.scrollTop = streamOutput.scrollHeight;
+        }
+      }
+    });
+  }
+
+  // Load initial sessions
+  await refreshHarnessRouterSessions();
 }
 
 // ── GitHub Copilot Detail ───────────────────────────────────────────────────

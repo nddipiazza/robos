@@ -29,13 +29,13 @@ This homogeneous approach creates two severe failure modes:
 1. **Economic & Latency Inefficiency**: Invoking a high-latency, \$60/million-token frontier reasoning model for repetitive Tier 1 tasks (such as lint fixes, AST symbol lookup, or commit formatting) wastes computational budget and slows down continuous iteration.
 2. **Under-Reasoning on Complex Architecture**: Forcing a cheap, low-parameter model to perform cross-service refactoring or distributed consensus analysis results in silent hallucinations, incomplete implementations, and broken contract dependencies.
 
-**RobOS solves this through an architectural 3-Tier Model Dispatch Matrix coupled with algorithmic token compression (Caveman Mode) and programmatic prompt compilation (Stanford DSPy).**
+**RobOS solves this through an architectural 3-Tier Model Dispatch Matrix routed through HarnessRouter and the Unified Harness Protocol (UHP 2026-08-11), coupled with algorithmic token compression (Caveman Mode) and programmatic prompt compilation (Stanford DSPy).**
 
 ---
 
 ## The 3 Agent Tiers in RobOS
 
-RobOS structures AI agent execution into three specialized intelligence tiers. Each tier balances latency, reasoning capability, token cost, and context size for specific SDLC workflows:
+RobOS structures AI agent execution into three specialized intelligence tiers. Each tier balances latency, reasoning capability, token cost, context size, and agent harness runtime for specific SDLC workflows:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/model-cost-matrix.jpg' | relative_url }}" alt="Task Complexity vs Model Cost Optimization Matrix" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -46,11 +46,11 @@ RobOS structures AI agent execution into three specialized intelligence tiers. E
 
 ### Tier Comparison Matrix
 
-| Tier | Primary Capabilities | Typical Models | Optimal SDLC Tasks in RobOS | Cost Profile | Latency |
-|:---|:---|:---|:---|:---|:---|
-| **Tier 1: Fast Utility & Local** | Ultra-low latency, regex-like speed, offline execution, strict format following | Gemini 2.5 Flash, Claude Haiku 4.5, Local Ollama (`qwen2.5-coder:7b`, `llama3.3:8b`) | Commit messages, AST symbol search, SHACL shape validation, boilerplate test stubs, JSON/YAML reformatting, air-gapped tasks | <$0.10 / M tokens (or $0 on workstation GPU) | 100ms – 500ms |
-| **Tier 2: Workhorse Implementation** | Strong coding acumen, multi-file comprehension, tool execution, unit test synthesis | Claude Sonnet 5, GPT-5, Gemini 2.5 Pro | Feature implementation, REST/gRPC API controllers, database migrations, Gherkin BDD scenarios, PR code reviews | $3.00 – $15.00 / M tokens | 1s – 4s |
-| **Tier 3: Frontier Deep Reasoning** | Extended thinking tokens, backtracking search, deep architectural synthesis, formal verification | OpenAI o3, o3-mini, Claude Opus 5 (Thinking), DeepSeek R1 | Monorepo architecture design, distributed deadlock debugging, cross-microservice schema migration plans, security threat modeling | $15.00 – $60.00 / M tokens | 5s – 30s |
+| Tier | Primary Capabilities | Typical Models | Supported Harnesses (UHP) | Optimal SDLC Tasks in RobOS | Cost Profile | Latency |
+|:---|:---|:---|:---|:---|:---|:---|
+| **Tier 1: Fast Utility & Local** | Ultra-low latency, regex-like speed, offline execution, strict format following | Gemini 2.5 Flash, Claude Haiku 4.5, Local Ollama (`qwen2.5-coder:7b`, `llama3.3:8b`) | `google-gemini-cli`, `anthropic-claude-code`, `ollama-local` | Commit messages, AST symbol search, SHACL shape validation, boilerplate test stubs, JSON/YAML reformatting, air-gapped tasks | <$0.10 / M tokens (or $0 on workstation GPU) | 100ms – 500ms |
+| **Tier 2: Workhorse Implementation** | Strong coding acumen, multi-file comprehension, tool execution, unit test synthesis | Claude Sonnet 5, GPT-5, Gemini 2.5 Pro | `anthropic-claude-code`, `openai-codex`, `github-copilot-cli`, `hermes-agent` | Feature implementation, REST/gRPC API controllers, database migrations, Gherkin BDD scenarios, PR code reviews | $3.00 – $15.00 / M tokens | 1s – 4s |
+| **Tier 3: Frontier Deep Reasoning** | Extended thinking tokens, backtracking search, deep architectural synthesis, formal verification | OpenAI o3, o3-mini, Claude Opus 5 (Thinking), DeepSeek R1 | `openai-codex`, `anthropic-claude-code`, `oh-my-pi` | Monorepo architecture design, distributed deadlock debugging, cross-microservice schema migration plans, security threat modeling | $15.00 – $60.00 / M tokens | 5s – 30s |
 
 ---
 
@@ -140,8 +140,10 @@ flowchart TD
         OP5 --> OP6
     end
 
-    subgraph P4 ["Phase 4: Ephemeral Sandboxing and Inference"]
-        OP6 --> EX1["Dispatch Prompt to Resolved Model Endpoint"]:::trigger
+    subgraph P4 ["Phase 4: HarnessRouter Gateway and Ephemeral Sandboxing"]
+        OP6 --> HR1["Unified Harness Protocol (UHP 2026-08-11) Router<br/>(Service Mode :3000 or Embedded UHP Engine)"]:::trigger
+        HR1 --> HR2["Resolve Target Harness<br/>(Codex, Claude Code, Gemini/Antigravity, Copilot, Hermes, Oh My Pi)"]:::trigger
+        HR2 --> EX1["POST /v1/responses (Buffered or Real-Time SSE Stream)"]:::trigger
         EX1 --> EX2["Mount Ephemeral RAM-Disk Sandbox (/dev/shm/ephemeral-...)"]:::trigger
         EX2 --> EX3["Agent Synthesizes Code, AST Edits, and Schema Patches"]:::trigger
     end
@@ -251,10 +253,17 @@ Before dispatching to the resolved model endpoint, the prompt undergoes two spec
 
 ---
 
-#### Phase 4: Ephemeral Sandboxed Execution
-- Dispatches prompt to the model endpoint via Model Context Protocol (MCP) or local Unix socket.
-- Provisions an isolated **in-memory RAM-disk sandbox** (`/dev/shm/ephemeral-<task-id>`).
-- Mounts a copy-on-write workspace view, allowing the agent to execute shell commands, compile stubs, and apply file edits without risking corruption to working trees.
+#### Phase 4: HarnessRouter Gateway & Ephemeral Sandboxed Execution
+- **Unified Harness Protocol (UHP 2026-08-11) Routing Boundary**:
+  - Directs task dispatch through **HarnessRouter** via `getHarnessRouter()`, conforming to the open Unified Harness Protocol.
+  - Automatically resolves the assigned agent harness (`openai-codex`, `anthropic-claude-code`, `google-gemini-cli`, `github-copilot-cli`, `hermes-agent`, `oh-my-pi`, or local Ollama) based on tier policy.
+  - Executes task requests via `POST /v1/responses` with buffered output or real-time Server-Sent Events (SSE) streaming (`turn.start`, `text.delta`, `tool.call`, `tool.result`, `turn.complete`).
+  - Supports dual-mode execution: communicates with self-hosted Docker container (`127.0.0.1:3000`) or seamlessly falls back to the in-process `EmbeddedHarnessRouter` with zero external dependencies.
+- **In-Memory RAM-Disk Sandbox**:
+  - Provisions an isolated **ephemeral RAM-disk sandbox** (`/dev/shm/ephemeral-<task-id>`) preventing workstation machine pollution or credential leaks.
+  - Mounts a copy-on-write workspace view, allowing the agent to execute shell commands, compile stubs, and apply file edits without risking corruption to working trees.
+- **Canonical Session Teardown**:
+  - Automatically cleans up task turn sessions via `DELETE /v1/sessions/:id` (UHP F-08 conformance check) upon task completion.
 
 ---
 
@@ -375,7 +384,10 @@ async function evaluateAndDispatch(task: TaskContext, options: TaskDispatchOptio
   let diagnosticContext: string[] = [];
 
   // 4. Execution & Escalation Loop
+  const router = await getHarnessRouter(); // Connects to container :3000 or embedded in-process UHP
+
   while (true) {
+    const harness = resolveHarnessForTier(currentTier, settings); // e.g. 'anthropic-claude-code', 'openai-codex'
     const model = resolveModelForTier(currentTier, settings);
     
     // 5. Dual-Stage Prompt Optimization
@@ -392,9 +404,18 @@ async function evaluateAndDispatch(task: TaskContext, options: TaskDispatchOptio
       prompt = store.applyCavemanCompression(prompt, { mode: settings.cavemanMode }).compressedText;
     }
 
-    // 6. Sandboxed Execution
+    // 6. HarnessRouter & Ephemeral Sandboxed Execution
     const sandbox = await EphemeralRAMSandbox.create({ memoryMB: 1024 });
-    const inferenceResult = await sandbox.executeAgent({ model, prompt, task });
+    const session = await router.runTask({
+      harness,
+      model,
+      prompt,
+      cwd: sandbox.workspacePath,
+      stream: true,
+      onEvent: (event) => sandbox.logEvent(event)
+    });
+
+    const inferenceResult = await sandbox.waitForCompletion(session);
 
     // 7. Multi-Gate Verification
     const astValid = await sandbox.verifyASTSyntax(inferenceResult.modifiedFiles);
@@ -402,19 +423,24 @@ async function evaluateAndDispatch(task: TaskContext, options: TaskDispatchOptio
     const testsPass = await sandbox.runAutomatedTests();
 
     if (astValid && shaclResult.conforms && testsPass) {
-      // 8. Success: Dual-State Persistence & Telemetry
+      // 8. Success: Dual-State Persistence, Telemetry & Session Cleanup
       await sandbox.commitToWorkspace();
       await store.syncPackageNodes(inferenceResult.kgraphNodes);
       await logAuditTelemetry({ task, tier: currentTier, tokens: inferenceResult.tokens });
+      await router.deleteSession(session.id); // UHP F-08 Canonical Session Teardown
       
       return {
         success: true,
         tierUsed: currentTier,
+        harnessUsed: harness,
         output: inferenceResult.output,
         costEstimate: calculateCost(currentTier, inferenceResult.tokens),
         latencyMs: inferenceResult.durationMs,
       };
     }
+
+    // Teardown failed attempt session
+    if (session?.id) await router.deleteSession(session.id);
 
     // 9. Failure Handling & Dynamic Escalation
     attempt++;
@@ -474,6 +500,98 @@ In a typical 50-engineer software organization performing 1,000 AI agent tasks d
   - Total: **\$28.16 / day (\$8,448 / year)**
   - Median developer wait time: **180 milliseconds (Tier 1) / 2.2 seconds (Tier 2)**.
 - **Net Impact**: **84.3% reduction in cloud AI expenditure** and a **72% reduction in median engineering turnaround latency**.
+
+---
+
+## Unified Agent Routing: HarnessRouter & Unified Harness Protocol (UHP 2026-08-11)
+
+In traditional multi-agent systems, dispatching tasks across diverse LLM providers requires brittle, bespoke glue code for each proprietary CLI or SDK. Anthropic Claude Code, OpenAI Codex, Google Gemini / Antigravity, and GitHub Copilot each maintain conflicting argument flags, diverging session formats, and proprietary streaming protocols.
+
+RobOS eliminates fragmented execution by standardizing on **HarnessRouter** ([harnessrouter.ai](https://harnessrouter.ai)) and the **Unified Harness Protocol (UHP 2026-08-11)** as its foundational agent routing fabric.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ROBOS UNIFIED HARNESS ARCHITECTURE                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                  ┌────────────────────────────────────────┐
+                  │      RobOS SDLC Applications & UI      │
+                  │ (Agents Manager, Dev Central, IDE IPC) │
+                  └───────────────────┬────────────────────┘
+                                      │
+                                      ▼
+                  ┌────────────────────────────────────────┐
+                  │    Unified Harness Protocol (UHP)      │
+                  │        (Protocol: 2026-08-11)          │
+                  └─────────┬────────────────────┬─────────┘
+                            │                    │
+          [Docker Mode :3000]                    [In-Process Fallback]
+                            ▼                    ▼
+             ┌────────────────────────┐  ┌────────────────────────┐
+             │ HarnessRouter CE       │  │ RobOS Embedded Router  │
+             │ (harnessrouter/        │  │ (Zero-dependency FOSS  │
+             │  harnessrouter:latest) │  │  execution engine)     │
+             └──────────────┬─────────┘  └───────────┬────────────┘
+                            │                        │
+                            └───────────┬────────────┘
+                                        │
+                                        ▼
+             ┌────────────────────────────────────────────────────┐
+             │            Unified Agent Harness Catalog           │
+             │  • openai-codex       (OpenAI Codex / GPT-5 / o3)  │
+             │  • anthropic-claude-code (Claude Code 4.5 / 5)     │
+             │  • google-gemini-cli  (Gemini 2.5 / Antigravity)   │
+             │  • github-copilot-cli (GitHub Copilot CLI)         │
+             │  • hermes-agent       (Nous Hermes Reasoning)      │
+             │  • oh-my-pi           (Oh My Pi Autonomous Swarm)  │
+             │  • ollama-local       (Air-Gapped Sovereign Qwen)  │
+             └────────────────────────────────────────────────────┘
+```
+
+### 100% Free & Open Source: Zero Vendor Lock-In
+
+A core design tenet of RobOS is financial sovereignty:
+- **Zero Paid Subscriptions**: RobOS integrates HarnessRouter directly under the **Apache-2.0** license. Organizations are never subjected to per-seat router licensing fees, SaaS subscriptions, or proprietary billing gateways.
+- **Zero Cloud Relay Dependency**: Tasks execute strictly within developer workstations or enterprise-controlled servers. Code tokens are never relayed through third-party telemetry middleboxes.
+
+### Dual-Mode Runtime Architecture
+
+RobOS provides seamless dual-mode execution via the `getHarnessRouter()` factory:
+
+1. **Self-Hosted Service Mode (`127.0.0.1:3000`)**:
+   - Runs the official HarnessRouter Community Edition (CE) container (`harnessrouter/harnessrouter:latest`).
+   - Managed directly via **Software Center** (`packages/software-center`) or system provisioning scripts.
+   - Provides HTTP REST and SSE endpoints with connection pooling and multi-harness multiplexing.
+2. **RobOS Embedded In-Process UHP Engine**:
+   - Zero-dependency in-process runner (`EmbeddedHarnessRouter`) built directly into `packages/robos-agent-client/harness-router.js`.
+   - Automatically activates if Docker is offline, ensuring 100% platform uptime.
+   - Directly executes local agent binaries (`claude`, `codex`, `copilot`, `gemini`, `agy`, `ollama`) while translating output to standard UHP 2026-08-11 protocol streams.
+
+### Standardized UHP Protocol Specification (`2026-08-11`)
+
+All agent interactions conform to the formal UHP REST/SSE contract:
+
+| Endpoint | Method | Purpose & RobOS Integration |
+|:---|:---:|:---|
+| `/v1/uhp` | `GET` | Discovery endpoint returning protocol version (`2026-08-11`) and conformance classes (`full`, `streaming`, `sessions`). |
+| `/v1/harnesses` | `GET` | Discovers available agent harnesses installed on the system and their operational status (`ready`, `degraded`, `offline`). |
+| `/v1/harnesses/:id` | `GET` | Inspects harness capabilities, supported models, and runtime options for a specific agent. |
+| `/v1/models` | `GET` | Aggregated catalog of all models available across every configured agent harness. |
+| `/v1/responses` | `POST` | Dispatches task instructions with optional Server-Sent Events (SSE) streaming (`stream: true`). |
+| `/v1/sessions` | `GET` | Lists active agent sessions across all harnesses. |
+| `/v1/sessions/:id/turns` | `GET` | Retrieves full interaction history, tool executions, and diffs for a specific session. |
+| `/v1/sessions/:id/cancel` | `POST` | Immediately aborts a running agent task and reclaims process resources. |
+| `/v1/sessions/:id` | `DELETE` | **Canonical Session Teardown (UHP F-08 Conformance)**: Permanently purges session state and cleans up ephemeral storage. |
+
+### Real-Time Event Streaming & Telemetry
+
+When an agent executes an implementation task, HarnessRouter streams unified events over Server-Sent Events (SSE):
+
+- `turn.start`: Signals execution initiation with allocated token budget.
+- `text.delta`: Real-time streaming tokens rendered instantly in developer terminals and the **Agents Manager** live console.
+- `tool.call`: Structured execution requests (e.g. `read_file`, `write_to_file`, `bash_command`).
+- `tool.result`: Standardized output and error captures from sandboxed tool invocations.
+- `turn.complete`: Execution finalization with token consumption metrics and duration breakdown.
 
 ---
 
@@ -643,6 +761,27 @@ When you click **Save Settings** in RobOS Preferences:
   </div>
 </div>
 
+### Agents Manager: HarnessRouter (UHP) Control Center
+
+For real-time operational monitoring and interactive testing of the agent routing fabric, RobOS includes a dedicated **HarnessRouter (UHP)** dashboard inside **Agents Manager** (`packages/agents-manager`).
+
+#### Key Dashboard Capabilities:
+- **Router Gateway Status**: Displays the active UHP protocol version (`2026-08-11`), conformance profile (`Full`), and active runtime mode (`Service (:3000)` vs `Embedded In-Process`).
+- **Container Lifecycle Controls**: Start, stop, or restart the local HarnessRouter Docker container with one click directly from the UI.
+- **Configured Harnesses Grid**: Live status cards for every detected harness (`openai-codex`, `anthropic-claude-code`, `google-gemini-cli`, `github-copilot-cli`, `hermes-agent`, `oh-my-pi`), displaying health badges, base IDs, and available models.
+- **Unified Task Execution Console**:
+  - Select any configured harness and model.
+  - Enter task prompts and click **Run Task**.
+  - Renders real-time Server-Sent Events (SSE) streaming output in a dark console terminal.
+  - Abort in-flight tasks at any time using the **Cancel Task** button (`POST /v1/sessions/:id/cancel`).
+- **Sessions & Turns Explorer**: Browse active agent sessions, inspect step-by-step reasoning turns and tool invocations, and perform canonical session deletion (`DELETE /v1/sessions/:id`) to reclaim workspace resources.
+
+### Software Center: One-Click Installation
+
+The HarnessRouter Community Edition (CE) container is registered as a first-class utility under the **AI** category in **Software Center** (`packages/software-center`).
+
+Developers can install, verify, or remove the local routing container with one click without manually typing Docker commands. RobOS automatically maps port `127.0.0.1:3000:3000` and configures auto-restart policies.
+
 ---
 
 ## Air-Gapped & Sovereign Execution
@@ -718,6 +857,43 @@ const compiled = store.compileWithDSPy(signature, dataset, {
 console.log(`Teleprompter: ${compiled.teleprompter}`);
 console.log(`Calibrated Demonstrations: ${compiled.calibratedExemplarCount}`);
 console.log(compiled.compiledPrompt);
+```
+
+### HarnessRouter & UHP Client API
+
+Applications and background automation scripts can programmatically query capabilities, stream events, and execute tasks through HarnessRouter using `packages/robos-agent-client`:
+
+```javascript
+const { getHarnessRouter } = require('/usr/local/share/robos/robos-agent-client');
+
+async function runAutonomousTask() {
+  // 1. Connect to HarnessRouter (auto-detects Docker container or falls back to embedded UHP)
+  const router = await getHarnessRouter();
+
+  // 2. Discover available harnesses
+  const harnesses = await router.listHarnesses();
+  console.log(`Available harnesses: ${harnesses.map(h => h.id).join(', ')}`);
+
+  // 3. Dispatch task with real-time Server-Sent Events (SSE) streaming
+  const session = await router.runTask({
+    harness: 'anthropic-claude-code',
+    model: 'claude-sonnet-5',
+    prompt: 'Implement health check controller for auth service with 100% unit test coverage.',
+    stream: true,
+    onEvent: (event) => {
+      if (event.type === 'text.delta') {
+        process.stdout.write(event.text);
+      } else if (event.type === 'tool.call') {
+        console.log(`\n[Agent Tool Call]: ${event.toolName}`);
+      }
+    }
+  });
+
+  console.log(`\nTask completed. Total tokens: ${session.tokens.total}`);
+
+  // 4. Canonical Session Cleanup (UHP F-08 Conformance)
+  await router.deleteSession(session.id);
+}
 ```
 
 ---

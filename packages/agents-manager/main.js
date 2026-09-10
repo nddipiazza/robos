@@ -147,6 +147,17 @@ ipcMain.handle('detect-providers', async () => {
   ]);
 
   return [
+    {
+      id: 'harnessrouter',
+      name: 'HarnessRouter (UHP)',
+      category: 'Agent Router',
+      installed: true,
+      authenticated: true,
+      version: 'UHP 2026-08-11 (Full)',
+      user: 'router@robos.internal',
+      status: 'Active',
+      description: 'Unified Harness Protocol agent routing and execution gateway',
+    },
     copilotRes,
     claudeRes,
     codexRes,
@@ -1018,6 +1029,153 @@ ipcMain.handle('open-url', async (_, url) => {
     }
   }
   return { ok: false };
+});
+
+// ── HarnessRouter / Unified Harness Protocol (UHP 2026-08-11) ───────────────
+
+let _harnessRouterModule = null;
+function getHRModule() {
+  if (!_harnessRouterModule) {
+    try {
+      _harnessRouterModule = require('../robos-agent-client/harness-router');
+    } catch {
+      try {
+        _harnessRouterModule = require('/usr/local/share/robos/robos-agent-client/harness-router');
+      } catch {}
+    }
+  }
+  return _harnessRouterModule;
+}
+
+ipcMain.handle('harness-router-status', async () => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const info = await router.getUHPInfo();
+    const isLiveServer = router instanceof mod.HarnessRouterClient;
+    return {
+      ok: true,
+      mode: isLiveServer ? 'service' : 'embedded',
+      url: isLiveServer ? router.baseUrl : 'in-process',
+      info: info.data || info,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-harnesses', async () => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.listHarnesses();
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-models', async (_, harnessId) => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.listModels(harnessId);
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-sessions', async () => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.listSessions();
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-session-turns', async (_, sessionId) => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.getSessionTurns(sessionId);
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-delete-session', async (_, sessionId) => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.deleteSession(sessionId);
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-run-task', async (event, opts) => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.runTask({
+      ...opts,
+      stream: true,
+      onDelta: (delta) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('harness-router-event', { type: 'delta', delta });
+        }
+      },
+      onEvent: (type, data) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('harness-router-event', { type, data });
+        }
+      },
+    });
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-cancel-task', async (_, responseId) => {
+  const mod = getHRModule();
+  if (!mod) return { ok: false, error: 'HarnessRouter module not available' };
+  try {
+    const router = await mod.getHarnessRouter();
+    const res = await router.cancelTask(responseId);
+    return res.data || res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('harness-router-toggle-docker', async (_, action) => {
+  return new Promise((resolve) => {
+    let cmd = '';
+    if (action === 'start') {
+      cmd = 'which docker >/dev/null 2>&1 && docker run -d --name harnessrouter --restart unless-stopped -p 127.0.0.1:3000:3000 -v harnessrouter:/data harnessrouter/harnessrouter || echo "Docker not available; running embedded router"';
+    } else if (action === 'stop') {
+      cmd = 'docker stop harnessrouter 2>/dev/null && docker rm -f harnessrouter 2>/dev/null || true';
+    } else {
+      cmd = 'docker restart harnessrouter 2>/dev/null || true';
+    }
+    cp.exec(cmd, { timeout: 15000 }, (err, stdout, stderr) => {
+      resolve({ ok: !err, output: stdout || stderr });
+    });
+  });
 });
 
 

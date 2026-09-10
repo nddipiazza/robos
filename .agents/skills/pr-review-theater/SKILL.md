@@ -5,21 +5,35 @@ description: Inspect and orchestrate the full-featured PR Review Theater, verify
 
 # PR Review Theater & Interactive PR Validation
 
-The **PR Review Theater** is the immersive review and verification stage in the RobOS Agent Code Review Platform (`packages/pr-review`). It orchestrates a 6-stage review experience combining:
-1. **Interactive Training & eLearning**: PR-specific masterclass and knowledge checks with Certificate of Completion issuance.
-2. **Living Documentation & Mermaid Flow Diagrams**: Architecture guides and sequence diagrams contrasting Production Reality against Proposed Reality.
-3. **In-App File Diff Viewer**: Syntax-highlighted unified and side-by-side file diffs with line-by-line inspection.
-4. **IDE Branch Diff Viewer Bridge**: Direct one-click branch compare and breakpoint runner for IntelliJ IDEA (port 63343 IPC / `idea diff`) and VS Code (`code --diff` / `vscode://` PR extension).
-5. **Proof-of-Work Video Walkthrough**: 1080p narrated video player with chapter bookmarks and WebVTT subtitles.
-6. **Validation Gates & Dual-Branch Merge**: Strict gating requiring eLearning quiz pass before merging Git code and Knowledge Graph branches simultaneously into `main`.
+The **PR Review Theater** is the immersive review and verification stage in the RobOS Agent Code Review Platform (`packages/pr-review`). Engineered to eliminate "rubber stamp" code reviews, it orchestrates an active, multi-modal verification experience across 6 stages:
+
+1. **Anti-Rubber-Stamp Training & Knowledge Check**:
+   - Mandatory interactive PR masterclass and knowledge checks with Certificate of Completion issuance.
+   - **Gating**: Code diffs (Stage 3) and review approval (Stage 6) remain strictly locked until the reviewer scores &ge; 80% on the knowledge check.
+   - Quick one-click launch to the application's comprehensive curriculum in the **RobOS eLearning Hub** (`packages/robos-elearning`).
+2. **Living Documentation, Sequence Flows & Interactive REST API Verification**:
+   - Living Architecture Guides and Mermaid sequence flows contrasting Production Reality against Proposed Reality.
+   - **Interactive REST API Runner**: Inspect pre-populated endpoint parameters, headers (mTLS), and request payload. Send live requests with round-trip latency metrics, response previews, and OpenAPI 3.1 & Pact contract verification.
+3. **In-App Semantic File Diff Viewer**:
+   - Syntax-highlighted unified and side-by-side file diffs with line-by-line inspection (unlocked only after passing Stage 1).
+4. **IDE Branch Diff Bridge & Interactive Breakpoint Runner**:
+   - Direct one-click branch compare and breakpoint runner for IntelliJ IDEA (port 63343 IPC / `idea diff`) and VS Code (`code --diff` / `vscode://` PR extension).
+   - **Interactive Breakpoint Debugger**: Start up the app with pre-set breakpoints at critical PR change lines (e.g. `VaccineGatewayClient.java:34`), inspect suspended thread call stacks and evaluated local variables (`this.sslContext`, `rootCaPath`, `petId`), and step through or resume execution.
+5. **Dual-Mode Proof-of-Work Canvas**:
+   - **Mode A: 1080p Recorded Xvfb Walkthrough Video**: Headless recording in virtual framebuffer with Piper neural TTS audio narration and synchronized WebVTT subtitle stream.
+   - **Mode B: Live Desktop Session**: Execute the robot proof live on the reviewer's active workstation display (`DISPLAY=:0`), driving UI and API interactions in real time with live streaming telemetry.
+6. **Validation Gates & Dual-Branch Merge**:
+   - Strict gating requiring eLearning quiz pass before merging Git code and Knowledge Graph branches simultaneously into `main`.
 
 ## When to Use
 
 Use this skill whenever:
-- Reviewing an autonomous AI pull request or developer feature branch.
-- Validating that reviewers understand architectural and security implications prior to approving code changes.
-- Comparing Git branches in IntelliJ IDEA or VS Code with synchronized breakpoints.
-- Enforcing Dual-Branch merges (Git code + Knowledge Graph branches) backed by a verified Certificate of Completion.
+- Reviewing an autonomous AI pull request or developer feature branch without blind diff reading or rubber stamping.
+- Validating that reviewers genuinely understand architectural, contract, and security implications prior to approving code changes.
+- Verifying endpoint behavior via live interactive REST requests directly from the review interface.
+- Starting up the target application in IntelliJ IDEA or VS Code with synchronized breakpoints and suspended thread inspection.
+- Choosing between a recorded 1080p video proof and watching the robot execute live on the current desktop display session.
+- Enforcing Dual-Branch merges (Git code + Knowledge Graph branches) backed by an immutable Certificate of Completion.
 
 ## Programmatic Usage
 
@@ -37,8 +51,9 @@ const theaterCtx = store.generatePRReviewTheaterContext({
 });
 
 console.log('eLearning course:', theaterCtx.elearning.course['dcterms:title']);
-console.log('File diffs count:', theaterCtx.fileDiffs.length);
-console.log('IntelliJ branch command:', theaterCtx.ideBridge.intellij.cliCommand);
+console.log('REST API endpoint:', theaterCtx.restCall.endpoint);
+console.log('Breakpoint target:', theaterCtx.ideBridge.breakpointSession.breakpointTarget);
+console.log('Desktop session display:', theaterCtx.desktopSession.display);
 
 // 2. Verify Reviewer Knowledge Check & issue Certificate of Completion
 const quizResult = store.verifyPRELearningQuiz({
@@ -64,9 +79,9 @@ console.log('Certificate hash:', quizResult.certificate['robos:verificationHash'
 2. Select any Pull Request from the queue.
 3. Click **"🎭 PR Review Theater"** in the header.
 4. Progress through the 6 stages:
-   - Complete the knowledge check quiz and view your verified credential.
-   - Review the living architecture guide and Mermaid sequence flow.
-   - Inspect unified and side-by-side code diffs.
-   - Launch IDE branch diffs in IntelliJ IDEA or VS Code.
-   - Inspect the 1080p proof-of-work video walkthrough.
-   - Submit approval to merge both Git and Knowledge Graph branches into `main`.
+   - Complete the Stage 1 knowledge check quiz (score &ge;80%) to unlock code diff inspection and approval.
+   - Review living architecture docs and send live test requests from the Interactive REST API panel.
+   - Inspect unified and side-by-side code diffs in Stage 3.
+   - Fire up breakpoints in IntelliJ IDEA or VS Code and inspect paused thread variables.
+   - Choose between the 1080p video player or running the live proof in your current desktop session.
+   - Submit approval to merge both Git and Knowledge Graph branches simultaneously into `main`.

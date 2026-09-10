@@ -110,8 +110,10 @@ Before examining raw code diffs, the reviewer is enrolled in an **on-demand inte
   - *Module 1: Architecture & Rationale*: Why this change was made and how it fits into the broader enterprise topology.
   - *Module 2: Token Lifecycle & Cryptography*: Deep-dive into RFC 7636 PKCE code challenges and SHA-256 state hashing.
   - *Module 3: Blast Radius & Failure Modes*: Downstream consumer impacts, cache invalidation, and timeout recovery.
-- **Interactive Reviewer Knowledge Check**: The reviewer answers targeted scenario questions verifying they understand the security implications and edge cases.
-- **Validation Gate**: The reviewer must achieve a 100% passing score on the knowledge check to unlock the final merge sign-off gate in Stage 6.
+- **Dual App & PR eLearning**: Access both the PR-specific micro-masterclass and the broader application architecture curriculum in the standalone RobOS eLearning Hub with one click.
+- **Strict Anti-Rubber-Stamp Knowledge Gate**:
+  - Reviewers cannot bypass or rubber-stamp reviews: code diffs in Stage 3 and approval merge actions in Stage 6 remain **strictly locked** behind a cryptographic comprehension gate.
+  - The reviewer must answer scenario-based quiz questions verifying understanding of the system's operational invariants and achieve $\ge 80\%$ to unlock the diff viewer and sign-off console.
 
 ---
 
@@ -150,6 +152,10 @@ Stage 2 presents the **Living Architecture Guide**, automatically synthesized fr
   - *Production Reality*: Legacy session cookie auth without PKCE or mobile OAuth2 support.
   - *Proposed Reality*: RFC 7636 PKCE social login, JWT access tokens, and rolling refresh tokens.
 - **Contract Impact**: Live diff of modified OpenAPI 3.1 endpoints (`POST /api/v1/auth/token/refresh`) and database schema additions (`auth_sessions`, `refresh_tokens`).
+- **Interactive REST API Verification Panel**:
+  - Live execution harness testing the exact REST endpoints touched by the PR.
+  - Inspect simulated or real HTTP requests, headers (`Authorization: Bearer ...`, mTLS, content-type), query parameters, and JSON request bodies.
+  - Click **"Execute REST API Call"** to send the live request and view real-time response telemetry side-by-side against expected OpenAPI contract schema.
 
 ---
 
@@ -189,6 +195,10 @@ When a Lead Architect requires full IDE power—AST symbol navigation, type hier
   - Automatically fetches and checks out the PR branch.
   - Launches JetBrains' native **Pull Request Review Tool Window** with local AST symbol resolution and refactoring analyzers.
   - Sets breakpoint listeners at modified code sites for interactive step-through debugging.
+- **Interactive Breakpoint Debugger**:
+  - Automatically fires up the target app in the IDE and triggers a breakpoint relevant to the PR (e.g. at line 42 of `TokenController.java`).
+  - Halts execution and exposes real-time stack frames, thread status, and live variable inspection (`tokenRequest`, `clientSecret`, `grantType`, `expiresIn`).
+  - Reviewers can inspect variables directly in the Theater and click **"Resume Execution"** or step through in their IDE.
 - **VS Code Protocol Integration (`vscode://`)**:
   - Triggers the official `GitHub.vscode-pull-request-github` extension (`vscode://github.vscode-pull-request-github/open-pr?repo=...&number=12`).
   - Opens diff editors directly in VS Code with inline comment threads, Copilot completions, and terminal test runners.
@@ -196,22 +206,24 @@ When a Lead Architect requires full IDE power—AST symbol navigation, type hier
 
 ---
 
-### Stage 5: Autonomous Proof-of-Work Video Walkthrough
+### Stage 5: Dual-Mode Proof-of-Work Canvas (1080p Xvfb Video or Live Desktop)
 
-RobOS completely eliminates the question *"Did anyone actually run this to see if it works?"* Stage 5 embeds the **1080p narrated video walkthrough** recorded autonomously by the AI agent during task completion.
+RobOS completely eliminates the question *"Did anyone actually run this to see if it works?"* Stage 5 acts as a blank canvas for the robot to prove execution through either **autonomous 1080p recorded video walkthrough** or **live execution right in your current desktop session**.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/pr-review-theater-08-stage5-video.png' | relative_url }}" alt="Stage 5: Autonomous Proof-of-Work Video Walkthrough" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 5 — Video Proof-of-Work</strong>: Embedded HTML5 video player with synchronized WebVTT subtitles, Piper neural voice narration, and live step transcript verification. <em>(Click image to zoom full screen)</em>
+    <strong>Stage 5 — Proof-of-Work Canvas</strong>: Switchable proof canvas supporting 1080p Xvfb recorded video with Piper neural narration or real-time interactive desktop execution on DISPLAY=:0. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 #### Key Capabilities:
-- **Headless Execution in Ephemeral Xvfb**: The agent runs the full application in a private virtual framebuffer, interacting with UI buttons, typing into forms, and observing network responses.
+- **Dual-Mode Canvas Switcher**:
+  - **1080p Recorded Xvfb Video**: The agent runs headless inside a virtual framebuffer, interacting with UI buttons, submitting forms, and asserting responses with Piper neural speech and synchronized WebVTT captions.
+  - **Live Desktop Session (`DISPLAY=:0`)**: For reviewers who prefer to watch the app run live or interact with it directly in their active GNOME/X11 session. Launches the test reproduction harness right on the reviewer's screen with live terminal logs, process PID tracking, and exit telemetry.
 - **Piper Neural TTS Audio**: Explains each action in natural human speech, highlighting edge cases tested and test assertions validated.
 - **Synchronized WebVTT Subtitles**: Captions update in real time with interactive timeline jump markers (`00:04 Click Social Login`, `00:12 Submit PKCE Token`, `00:22 Validate Session Refresh`).
-- **Zero Fluff**: 30-to-60-second concise video proving end-to-end functionality before merge.
+- **Zero Fluff**: 30-to-60-second concise proof validating end-to-end functionality before merge.
 
 ---
 

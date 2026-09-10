@@ -18,6 +18,7 @@ The core execution and verification fabric:
 - **Video Proof-of-Work Engine**: Autonomous headless execution in virtual framebuffers generating 1080p narrated video walkthroughs and Piper TTS audio.
 - **Dual-State Knowledge Graph**: Live blast-radius diffing between `main` and feature branches before code is written.
 - **Ephemeral In-Memory Sandboxes (`tmpfs`)**: Zero-pollution Linux accounts and virtual X11 displays preventing machine clutter and credential leaks.
+- **Unified Agent Routing Engine (HarnessRouter / UHP `2026-08-11`)**: Standardized execution boundary and routing gateway conforming to the Unified Harness Protocol (UHP). Routes tasks across OpenAI Codex, Anthropic Claude Code, Google Gemini CLI / Antigravity, GitHub Copilot, Hermes, and Oh My Pi. 100% Free & Open Source (Apache-2.0) with zero SaaS subscriptions or proprietary cloud dependencies; dual-mode runtime supports self-hosted Docker container (`:3000`) and RobOS embedded in-process UHP runner.
 
 ### 2. Optional Dedicated Appliance OS & Virtual Machine
 

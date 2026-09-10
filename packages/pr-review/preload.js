@@ -18,5 +18,10 @@ contextBridge.exposeInMainWorld('api', {
   verifyPRTheaterQuiz:   (opts) => ipcRenderer.invoke('verify-pr-theater-quiz', opts),
   launchIDEBranchDiff:   (opts) => ipcRenderer.invoke('launch-ide-branch-diff', opts),
   submitPRTheaterReview: (opts) => ipcRenderer.invoke('submit-pr-theater-review', opts),
+  executePRRestCall:     (opts) => ipcRenderer.invoke('execute-pr-rest-call', opts),
+  launchIDEBreakpointSession: (opts) => ipcRenderer.invoke('launch-ide-breakpoint-session', opts),
+  resumeIDEBreakpointSession: (opts) => ipcRenderer.invoke('resume-ide-breakpoint-session', opts),
+  runLiveDesktopProof:   (opts) => ipcRenderer.invoke('run-live-desktop-proof', opts),
+  openAppELearning:      (opts) => ipcRenderer.invoke('open-app-elearning', opts),
 });
 

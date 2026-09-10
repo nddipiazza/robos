@@ -1,6 +1,22 @@
 {
   "name": "robos-agent-client",
-  "version": "0.0.5",
-  "description": "RobOS Agent Client — AI agent lifecycle management for Claude Code, GitHub Copilot CLI, and more",
-  "main": "index.js"
+  "version": "0.1.0",
+  "description": "RobOS Agent Client — AI agent routing and lifecycle management via HarnessRouter and Unified Harness Protocol (UHP)",
+  "main": "index.js",
+  "keywords": [
+    "robos",
+    "harnessrouter",
+    "uhp",
+    "unified-harness-protocol",
+    "agent-router",
+    "claude-code",
+    "codex",
+    "copilot",
+    "gemini"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "harnessclientprotocol": "^0.1.1",
+    "unifiedharnessprotocol": "^0.1.2"
+  }
 }

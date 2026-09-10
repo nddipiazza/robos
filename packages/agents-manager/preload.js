@@ -45,6 +45,18 @@ contextBridge.exposeInMainWorld('agents', {
   deleteMcpServer:  (providerId, serverId) => ipcRenderer.invoke('mcp-delete-provider-server', { providerId, serverId }),
   authMcpServer:    (providerId, serverId, credentials) => ipcRenderer.invoke('mcp-auth-provider-server', { providerId, serverId, credentials }),
 
+  // HarnessRouter / Unified Harness Protocol (UHP 2026-08-11)
+  harnessRouterStatus:        ()                       => ipcRenderer.invoke('harness-router-status'),
+  harnessRouterHarnesses:     ()                       => ipcRenderer.invoke('harness-router-harnesses'),
+  harnessRouterModels:        (harnessId)              => ipcRenderer.invoke('harness-router-models', harnessId),
+  harnessRouterSessions:      ()                       => ipcRenderer.invoke('harness-router-sessions'),
+  harnessRouterSessionTurns:  (sessionId)              => ipcRenderer.invoke('harness-router-session-turns', sessionId),
+  harnessRouterDeleteSession: (sessionId)              => ipcRenderer.invoke('harness-router-delete-session', sessionId),
+  harnessRouterRunTask:       (opts)                   => ipcRenderer.invoke('harness-router-run-task', opts),
+  harnessRouterCancelTask:    (responseId)             => ipcRenderer.invoke('harness-router-cancel-task', responseId),
+  harnessRouterToggleDocker:  (action)                 => ipcRenderer.invoke('harness-router-toggle-docker', action),
+  onHarnessRouterEvent:       (cb)                     => ipcRenderer.on('harness-router-event', (_, ev) => cb(ev)),
+
   // General
   openUrl:        (url) => ipcRenderer.invoke('open-url', url),
   readSettings:   ()    => ipcRenderer.invoke('read-settings'),

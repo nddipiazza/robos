@@ -8,6 +8,7 @@
 const { execSync } = require('node:child_process');
 const { ClaudeBackend } = require('./claude-backend');
 const { CopilotBackend } = require('./copilot-backend');
+const { HarnessRouterBackend } = require('./harness-backend');
 const { AgentSession } = require('./agent-session');
 
 // ── Backend catalogue ────────────────────────────────────────────────────────
@@ -26,6 +27,13 @@ const BACKENDS = {
     command: 'gh',
     description: 'GitHub Copilot CLI via the gh extension',
     BackendClass: CopilotBackend,
+  },
+  harnessrouter: {
+    id: 'harnessrouter',
+    name: 'HarnessRouter (UHP)',
+    command: 'node',
+    description: 'Unified Harness Protocol (UHP) router for Claude, Codex, Copilot, and Gemini',
+    BackendClass: HarnessRouterBackend,
   },
 };
 

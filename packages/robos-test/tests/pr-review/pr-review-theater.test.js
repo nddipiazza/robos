@@ -52,15 +52,40 @@ describe('PR Review Theater & Interactive PR Validation Engine', () => {
     assert.ok(ctx.fileDiffs[0].hunks.length > 0);
     assert.ok(ctx.fileDiffs[0].additions > 0);
 
-    // Stage 4: IDE Bridge
+    // Stage 4: IDE Bridge & Breakpoint Session
     assert.ok(ctx.ideBridge.intellij.cliCommand.includes('idea diff'));
     assert.ok(ctx.ideBridge.intellij.ipcEndpoint.includes('63343'));
     assert.ok(ctx.ideBridge.vscode.protocolUri.includes('vscode://github.vscode-pull-request-github'));
+    assert.ok(ctx.ideBridge.breakpointSession);
+    assert.strictEqual(ctx.ideBridge.breakpointSession.line, 34);
+    assert.strictEqual(ctx.ideBridge.breakpointSession.method, 'verifyRabiesCertificate');
+    assert.strictEqual(ctx.ideBridge.breakpointSession.threadName, 'http-nio-8080-exec-1');
+    assert.ok(ctx.ideBridge.breakpointSession.callStack.length >= 3);
+    assert.ok(ctx.ideBridge.breakpointSession.variables.some(v => v.name === 'this.sslContext'));
+    assert.ok(ctx.ideBridge.breakpointSession.variables.some(v => v.name === 'petId'));
 
-    // Stage 5: Video Walkthrough
+    // Stage 2: Interactive REST API Verification Call
+    assert.ok(ctx.restCall);
+    assert.strictEqual(ctx.restCall.method, 'POST');
+    assert.strictEqual(ctx.restCall.endpoint, '/api/v1/pets/adopt');
+    assert.ok(ctx.restCall.url.includes('8080'));
+    assert.ok(ctx.restCall.headers.some(h => h.key === 'X-Client-Cert-Verified'));
+    assert.strictEqual(ctx.restCall.expectedResponse.status, 201);
+    assert.strictEqual(ctx.restCall.expectedResponse.body.status, 'ADOPTED');
+    assert.strictEqual(ctx.restCall.expectedResponse.body.rabiesVerified, true);
+
+    // Stage 5: Dual-Mode Canvas (Video + Desktop Session)
     assert.strictEqual(ctx.proofOfWorkVideo.status, 'verified');
     assert.strictEqual(ctx.proofOfWorkVideo.chapters.length, 6);
     assert.ok(ctx.proofOfWorkVideo.vttTranscript.includes('WEBVTT'));
+    assert.ok(ctx.desktopSession);
+    assert.strictEqual(ctx.desktopSession.status, 'ready');
+    assert.ok(ctx.desktopSession.steps.length >= 5);
+
+    // App-Level eLearning Hub Link
+    assert.ok(ctx.appElearning);
+    assert.ok(ctx.appElearning.courseId.includes('urn:robos:elearning:course:'));
+    assert.strictEqual(ctx.appElearning.hubPackage, 'packages/robos-elearning');
 
     // Stage 6: Validation Gates
     assert.strictEqual(ctx.validationGates.elearningPassed, false);
@@ -142,12 +167,14 @@ index 1234..5678 100644
       baseBranch: 'main'
     });
 
-    const { intellij, vscode } = ctx.ideBridge;
+    const { intellij, vscode, breakpointSession } = ctx.ideBridge;
 
     assert.ok(intellij.cliCommand.includes('main...feature/PET-105-rabies-verification'));
     assert.ok(intellij.breakpointTarget.includes(':34'));
     assert.ok(vscode.protocolUri.includes('105'));
     assert.ok(vscode.protocolUri.includes('petstore-api'));
+    assert.strictEqual(breakpointSession.line, 34);
+    assert.strictEqual(breakpointSession.method, 'verifyRabiesCertificate');
   });
 
   it('5. Enforces validation gates and executes Dual-Branch merge sign-off (Git + KGraph branches)', () => {
@@ -183,5 +210,41 @@ index 1234..5678 100644
 
     assert.strictEqual(mergePayload.gitBranch, 'feature/PET-105-rabies-verification');
     assert.strictEqual(mergePayload.kgraphBranch, 'kgraph/PET-105-rabies-verification');
+  });
+
+  it('6. Validates Interactive REST API payload and contract assertion telemetry', () => {
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      headBranch: 'feature/PET-105-rabies-verification',
+      baseBranch: 'main'
+    });
+
+    const rest = ctx.restCall;
+    assert.ok(rest);
+    const parsedReq = JSON.parse(rest.body);
+    assert.strictEqual(parsedReq.petId, 'PET-105-VAX');
+    assert.strictEqual(parsedReq.requireMtlsVerification, true);
+    assert.strictEqual(rest.expectedResponse.status, 201);
+    assert.strictEqual(rest.expectedResponse.body.rabiesVerified, true);
+    assert.strictEqual(rest.expectedResponse.body.kafkaEvent.topic, 'petstore.adoptions.events');
+  });
+
+  it('7. Supports Dual-Mode Proof-of-Work telemetry: 1080p Xvfb video and live desktop session', () => {
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      headBranch: 'feature/PET-105-rabies-verification'
+    });
+
+    // Video Telemetry
+    assert.strictEqual(ctx.proofOfWorkVideo.resolution, '1080p (1920x1080 @ 30fps)');
+    assert.ok(ctx.proofOfWorkVideo.vttTranscript.includes('mTLS client connects'));
+
+    // Desktop Session Telemetry
+    assert.ok(ctx.desktopSession.display);
+    assert.strictEqual(ctx.desktopSession.status, 'ready');
+    assert.ok(ctx.desktopSession.steps.some(s => s.text.includes('mTLS')));
+    assert.ok(ctx.desktopSession.steps.some(s => s.text.includes('Kafka')));
   });
 });
