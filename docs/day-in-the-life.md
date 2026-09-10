@@ -48,6 +48,12 @@ Every new capability begins with clear alignment on business intent and architec
 - **Role in the Lifecycle**: Maps the proposed changes against the current system topology. It computes the **Automated Blast Radius**—immediately flagging which downstream microservices, mobile apps, database tables, or client SDKs will be affected *before* implementation starts.
 - **GitOps Backing**: Every node and edge is synchronized directly with Spotify Backstage `catalog-info.yaml` files and `.robos/topology.yaml`.
 
+### 🌐 SDLC Knowledge Graph Explorer & Dual-State Architecture
+- **What It Does**: Open-standard OASIS OSLC 3.0 & W3C JSON-LD living architecture explorer, resource catalog, and dual-state diff engine.
+- **Role in the Lifecycle**: 
+  - **Adding Resources to Build the App**: Engineers and AI agents add new architectural resources (microservices, databases, API contracts, Kafka topics, BDD test scenarios) directly to the Knowledge Graph, establishing the grounded context required for code generation.
+  - **Dual-State Synchronization (World 1 vs World 2)**: Maintains two simultaneous models of reality—**World 1 (Production `main`)** and **World 2 (Feature Branch `feature/*`)**. Before any code is written or merged, the engine runs sub-100ms semantic graph diffs (`+3 / ~0 / -0` delta), validates W3C SHACL constraint shapes, and computes the automated blast radius across all downstream consumers.
+
 ---
 
 ## Phase 2: Scaffolding & Contracts

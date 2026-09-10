@@ -31,8 +31,8 @@
   <img src="docs/assets/images/robos-proof-of-work-demo.gif" alt="RobOS Day in the Life: Idea to Production Walkthrough" width="100%" />
 </p>
 <p align="center">
-  <em>Complete Day-in-the-Life: from Onboarding Wizard & Git Projects to IntelliJ IDEA breakpoint debugging and Kube GitOps.</em><br />
-  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (1:46)</a></strong>
+  <em>Complete Day-in-the-Life: from Onboarding Wizard & Dual-State Knowledge Graph to IntelliJ IDEA breakpoint debugging and Kube GitOps.</em><br />
+  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (2:10)</a></strong>
 </p>
 
 ---

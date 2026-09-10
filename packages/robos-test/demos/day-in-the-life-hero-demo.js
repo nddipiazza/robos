@@ -47,6 +47,32 @@ const SEGMENTS = [
     subStart: 0.5,
     subDuration: 3.0,
   },
+  // Knowledge Graph & Dual-State Card
+  {
+    type: 'card',
+    image: path.join(ROOT_DIR, 'docs/assets/images/day-in-the-life/phase-kgraph-dual-state.jpg'),
+    duration: 2.5,
+  },
+  // Knowledge Graph: Adding Resources to Build App
+  {
+    type: 'video',
+    src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/kgraph-nodes-redesign/kgraph-nodes-redesign.webm'),
+    start: 0,
+    duration: 10,
+    subtitle: 'Knowledge Graph Explorer: Adding architectural resources & schemas to build the app',
+    subStart: 0.5,
+    subDuration: 3.2,
+  },
+  // Dual-State Architecture: Blast Radius Diffing
+  {
+    type: 'video',
+    src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/graph-diff/graph-diff.webm'),
+    start: 4,
+    duration: 11,
+    subtitle: 'Dual-State Sync: World 1 (main) vs World 2 (feature) automated blast radius diff',
+    subStart: 0.5,
+    subDuration: 3.2,
+  },
   // Phase 2 Card
   {
     type: 'card',
