@@ -21,7 +21,7 @@ window.startWorkspaceProvisioning = function() {
 
   const steps = [
     { id: 1, text: '✓ Branch checked out', delay: 400 },
-    { id: 2, text: '✓ Secrets injected from pass', delay: 1000 },
+    { id: 2, text: '✓ Secrets injected from GPG pass', delay: 1000 },
     { id: 3, text: '✓ Services active (:8443)', delay: 1600 },
     { id: 4, text: '⏸️ Breakpoint hit at PetService.java:48', delay: 2200 },
   ];
@@ -132,7 +132,19 @@ window._demoApprovePlan = function() {
 };
 
 // Listen for external IPC triggers if present
-if (window.electronAPI) {
-  window.electronAPI.on('ide-run', () => window.approveAndExecutePlan());
+if (window.ideBridge) {
+  window.ideBridge.onRun(() => window.approveAndExecutePlan());
+  window.ideBridge.onOpenFile((data) => {
+    console.log('[IntelliJ] IPC Open File:', data);
+  });
+  window.ideBridge.onSetBreakpoint((data) => {
+    console.log('[IntelliJ] IPC Set Breakpoint:', data);
+  });
+  window.ideBridge.onEphemeralWorkspace((ws) => {
+    console.log('[IntelliJ] IPC Ephemeral Workspace Loaded:', ws);
+    const titleEl = document.querySelector('.ij-title');
+    if (titleEl && ws.projects) {
+      titleEl.textContent = `[Ephemeral Workspace: ${ws.workspaceId}] — ${ws.projects.join(', ')}`;
+    }
+  });
 }
-

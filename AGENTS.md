@@ -188,6 +188,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `deploy-to-vm` — Deploy packages to running VM
 - `e2e-driven-dev` — Execute task development using text-narrated E2E tests and video generation
 - `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
+- `ide-java` — Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 - `kgraph-delete` — Safely remove an entity node from the Knowledge Graph with optional cascade reference pruning
 - `kgraph-diff` — Semantic blast radius diff comparing World 1 (main) against World 2 (feature branch)

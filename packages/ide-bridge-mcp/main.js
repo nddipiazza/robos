@@ -59,6 +59,7 @@ app.on('window-all-closed', () => {
 
 ipcMain.handle('ide-get-status', async () => service.getStatus());
 ipcMain.handle('ide-get-open-files', async () => service.getOpenFiles());
+ipcMain.handle('ide-get-breakpoints', async () => service.getBreakpoints());
 ipcMain.handle('ide-open-file', async (_, { file, line, col }) => service.openFile(file, line, col));
 ipcMain.handle('ide-set-breakpoint', async (_, { file, line }) => service.setBreakpoint(file, line));
 ipcMain.handle('ide-run-config', async (_, { name, mode }) => service.runConfig(name, mode));

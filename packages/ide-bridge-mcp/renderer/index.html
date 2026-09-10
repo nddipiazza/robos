@@ -18,10 +18,13 @@
         </div>
       </div>
       <div class="header-right">
+        <input type="text" id="bp-file" value="src/main/java/com/robos/HelloWorld.java" style="display:none;" />
+        <input type="number" id="bp-line" value="6" style="display:none;" />
         <button class="btn btn-secondary" id="btn-open-file">📄 Open HelloWorld.java</button>
         <button class="btn btn-secondary" id="btn-set-bp">🔴 Set Breakpoint (Line 6)</button>
         <button class="btn btn-primary" id="btn-run-debug">▶ Start Debug Session</button>
       </div>
+      <div id="event-logs" style="display:none;"></div>
     </header>
 
     <!-- Stat Bar -->

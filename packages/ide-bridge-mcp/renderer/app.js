@@ -2,6 +2,7 @@
 
 let openFiles = [];
 let ideStatus = {};
+let breakpoints = [];
 let reqId = 1;
 
 function logTrace(type, json) {
@@ -31,12 +32,15 @@ async function sendMcpToolCall(name, args) {
 async function load() {
   ideStatus = await window.ideMcp.getStatus();
   openFiles = await window.ideMcp.getOpenFiles();
+  breakpoints = (await window.ideMcp.getBreakpoints?.()) || [];
   render();
 }
 
 function render() {
   document.getElementById('stat-ide-name').textContent = `${ideStatus.name || 'IntelliJ IDEA Ultimate'} (Port ${ideStatus.port || 63343})`;
   document.getElementById('stat-open-files').textContent = `${openFiles.length} Files Open`;
+  const bpEl = document.getElementById('stat-breakpoints');
+  if (bpEl) bpEl.textContent = `${breakpoints.length} Active`;
 
   const filesEl = document.getElementById('files-list');
   filesEl.innerHTML = openFiles.map(f => `
@@ -71,7 +75,10 @@ window.openFile = async function(file = 'src/main/java/com/robos/HelloWorld.java
 };
 
 window.setBreakpoint = async function(file = 'src/main/java/com/robos/HelloWorld.java', line = 6) {
-  return sendMcpToolCall('robos_ide_set_breakpoint', { file, line, enabled: true });
+  const res = await sendMcpToolCall('robos_ide_set_breakpoint', { file, line, enabled: true });
+  const logEl = document.getElementById('event-logs');
+  if (logEl) logEl.textContent += `Breakpoint set at ${file}:${line}\n`;
+  return res;
 };
 
 window.runConfig = async function(name = 'Debug HelloWorld.main()', mode = 'debug') {
@@ -83,7 +90,9 @@ document.getElementById('btn-open-file').addEventListener('click', () => {
 });
 
 document.getElementById('btn-set-bp').addEventListener('click', () => {
-  window.setBreakpoint();
+  const file = document.getElementById('bp-file')?.value || 'src/main/java/com/robos/HelloWorld.java';
+  const line = parseInt(document.getElementById('bp-line')?.value || '6', 10);
+  window.setBreakpoint(file, line);
 });
 
 document.getElementById('btn-run-debug').addEventListener('click', () => {

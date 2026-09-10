@@ -86,8 +86,13 @@ copy_or_dry_run() {
   if [ "$DRY_RUN" = true ]; then
     echo "  [DRY-RUN] cp -r \"$src\" \"$dest\""
   else
-    mkdir -p "$(dirname "$dest")"
-    cp -r "$src" "$dest"
+    if [ -d "$src" ]; then
+      mkdir -p "$dest"
+      cp -r "$src"/. "$dest"/
+    else
+      mkdir -p "$(dirname "$dest")"
+      cp -r "$src" "$dest"
+    fi
   fi
 }
 

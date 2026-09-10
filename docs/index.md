@@ -29,9 +29,9 @@ Instead of letting agents run wild, RobOS gives you an **autonomous agent govern
 </div>
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/robos-proof-of-work-demo.gif' | relative_url }}" alt="RobOS Autonomous Agent Proof-of-Work & Code Review Platform in Action" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/robos-proof-of-work-demo.gif' | relative_url }}" alt="RobOS Day in the Life: Idea to Production Walkthrough" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Video Proof-of-Work in Action</strong>: Autonomous PR audited against the Knowledge Graph, verified across IDE bridges (IntelliJ port 63343 & VS Code), and merged with 1-click human sign-off.
+    <strong>Complete Day-in-the-Life Walkthrough</strong>: Autonomous lifecycle from Onboarding and Git Projects to IntelliJ IDEA breakpoint debugging, PR audit, and Kube GitOps.
   </div>
 </div>
 

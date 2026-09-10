@@ -1,0 +1,35 @@
+<idea-plugin>
+    <id>com.robos.intellij</id>
+    <name>RobOS IDE Review Bridge &amp; Autonomous Agent Harness</name>
+    <vendor email="support@rowbose.com" url="https://rowbose.com">RobOS Foundation</vendor>
+
+    <description><![CDATA[
+        <h2>RobOS IDE Review Bridge &amp; Autonomous Agent Harness</h2>
+        <p>Integrates JetBrains IntelliJ IDEA with the RobOS AI-First SDLC Platform and Autonomous Agent Governance Harness.</p>
+        <ul>
+            <li><b>Port 63343 IPC Server:</b> High-speed bi-directional JSON HTTP IPC server.</li>
+            <li><b>Secret-Managed Run Configurations:</b> Zero-plaintext secret injection resolving UNIX <code>pass</code> GPG credentials at runtime.</li>
+            <li><b>Interactive Breakpoint Debugger:</b> Webhook event notifications on breakpoint suspension with instant paused thread variables and stack frame inspection.</li>
+            <li><b>Ephemeral Multi-Project Workspaces:</b> Dynamic multi-repo project workspace orchestration with automated session lifecycle destruction.</li>
+            <li><b>Native PR Review Tool Window:</b> JetBrains tool window displaying active RobOS task, sprint status, and AI proposed diagnostic plans.</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.modules.xdebugger</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.robos.intellij.RobOSPluginService"/>
+        <toolWindow id="RobOS"
+                    anchor="right"
+                    secondary="false"
+                    icon="AllIcons.General.Modified"
+                    factoryClass="com.robos.intellij.RobOSToolWindowFactory"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.robos.intellij.RobOSPluginLifecycleListener"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+</idea-plugin>

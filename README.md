@@ -28,11 +28,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/images/robos-proof-of-work-demo.gif" alt="RobOS Autonomous Agent Proof-of-Work & PR Review in Action" width="100%" />
+  <img src="docs/assets/images/robos-proof-of-work-demo.gif" alt="RobOS Day in the Life: Idea to Production Walkthrough" width="100%" />
 </p>
 <p align="center">
-  <em>Watch an autonomous AI PR be audited against the Knowledge Graph, verified in IntelliJ & VS Code, and approved in 1 click.</em><br />
-  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (1:11)</a></strong>
+  <em>Complete Day-in-the-Life: from Onboarding Wizard & Git Projects to IntelliJ IDEA breakpoint debugging and Kube GitOps.</em><br />
+  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (1:46)</a></strong>
 </p>
 
 ---
