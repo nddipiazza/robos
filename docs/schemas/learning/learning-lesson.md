@@ -3,7 +3,7 @@ title: Learning Lesson
 layout: default
 parent: eLearning Curriculums (robos.learning)
 grand_parent: KGraph Schemas
-nav_order: 3
+nav_order: 4
 permalink: /schemas/learning/learning-lesson.html
 ---
 

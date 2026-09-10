@@ -116,6 +116,16 @@
       "robos:package": "learning"
     },
     {
+      "@id": "robos:CertificateOfCompletion",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CertificateOfCompletion",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/EducationalOccupationalCredential"
+      },
+      "robos:shaclShape": "urn:robos:shape:CertificateOfCompletionShape",
+      "robos:package": "learning"
+    },
+    {
       "@id": "robos:DesktopApp",
       "@type": "rdfs:Class",
       "rdfs:label": "DesktopApp",

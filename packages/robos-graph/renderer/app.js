@@ -1748,6 +1748,11 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
       </div>
     `;
   }
+
+  if (isAppOrProjectNode(node)) {
+    container.insertAdjacentHTML('beforeend', renderAppELearningAndDocCardsHtml(node));
+  }
+
   container.insertAdjacentHTML('afterbegin', renderNodeActionBarHtml(node));
 }
 
@@ -3469,6 +3474,207 @@ const btnCancelAppDoc = document.getElementById('btn-cancel-app-doc');
 if (btnCancelAppDoc) btnCancelAppDoc.addEventListener('click', () => window.closeAppDocModal());
 
 const btnSubmitAppDoc = document.getElementById('btn-submit-app-doc');
+if (btnSubmitAppDoc) btnSubmitAppDoc.addEventListener('click', () => window.submitAppDocUpdates());
+
+// ── Application-Attached eLearning & Living Documentation ───────────────────
+function isAppOrProjectNode(node) {
+  if (!node) return false;
+  const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+  const cat = getNodeCategory(node);
+  return [
+    'service', 'desktop-app', 'console-app', 'frontend-app',
+    'pc-game', 'mobile-game', 'data-pipeline', 'mobile-app',
+    'library', 'project'
+  ].includes(cat) || types.some(t => t && (t.includes('App') || t.includes('Microservice') || t.includes('Project') || t.includes('Container')));
+}
+
+function renderAppELearningAndDocCardsHtml(node) {
+  const hasELearning = node['robos:hasELearning'] && (Array.isArray(node['robos:hasELearning']) ? node['robos:hasELearning'].length > 0 : !!node['robos:hasELearning']);
+  const courseId = hasELearning ? (Array.isArray(node['robos:hasELearning']) ? node['robos:hasELearning'][0] : node['robos:hasELearning']) : null;
+  const course = courseId ? (nodes.find(n => n['@id'] === courseId) || null) : null;
+  const hasDoc = !!node['robos:hasDocumentationPage'];
+  const hasFlow = !!node['robos:hasFlowDiagram'];
+
+  return `
+    <div class="inspector-card" id="card-app-elearning">
+      <div class="card-title">
+        <span>🎓 Interactive eLearning & Verification</span>
+        ${hasELearning ? '<span class="status-tag-pass">✅ ELEARNING ATTACHED</span>' : '<span class="type-badge type-req">NOT CREATED</span>'}
+      </div>
+      <div class="card-desc">
+        ${hasELearning
+          ? `Interactive training curriculum and dedicated standalone Electron application attached to this component.`
+          : `No interactive eLearning course attached yet for <strong>${node['dcterms:title'] || 'this application'}</strong>. Generate an interactive curriculum with hands-on labs, BDD quizzes, and a standalone Electron eLearning app.`
+        }
+      </div>
+
+      ${course ? `
+        <div class="grid-2col" style="margin-bottom: 12px;">
+          <div>
+            <div class="field-label">Course Title</div>
+            <div class="field-value"><strong>${course['dcterms:title']}</strong></div>
+          </div>
+          <div>
+            <div class="field-label">Difficulty & Duration</div>
+            <div class="field-value"><span class="badge badge-difficulty">${course['robos:difficulty'] || 'Intermediate'}</span> &middot; ${course['robos:estimatedDuration'] || '45 mins'}</div>
+          </div>
+          <div>
+            <div class="field-label">Curriculum Modules</div>
+            <div class="field-value"><strong>${(course['robos:modules'] || []).length} Modules with Hands-On Labs</strong></div>
+          </div>
+          <div>
+            <div class="field-label">GitOps Catalog</div>
+            <div class="field-value"><code>${course['robos:gitopsFile'] || '.robos/elearning.yaml'}</code></div>
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+        ${hasELearning ? `
+          <button class="btn btn-primary" id="btn-launch-app-elearning" onclick="window.launchAppELearning('${node['@id']}')">🚀 Launch eLearning App</button>
+          <button class="btn btn-secondary" id="btn-award-app-cert" onclick="window.awardAppCertificate('${node['@id']}')">🏆 View / Award Certificate</button>
+        ` : `
+          <button class="btn btn-primary" id="btn-generate-app-elearning" onclick="window.generateAndLaunchAppELearning('${node['@id']}')">✨ Generate & Launch eLearning App</button>
+        `}
+      </div>
+      <div id="elearning-action-feedback" style="display:none; margin-top: 10px; font-size: 12px; padding: 8px 12px; border-radius: 4px;"></div>
+    </div>
+
+    <div class="inspector-card" id="card-app-living-doc">
+      <div class="card-title">
+        <span>📖 Living Documentation & Flow Diagram</span>
+        ${(hasDoc || hasFlow) ? '<span class="status-tag-pass">✅ LIVING DOC ATTACHED</span>' : '<span class="type-badge type-req">NOT CREATED</span>'}
+      </div>
+      <div class="card-desc">
+        ${(hasDoc || hasFlow)
+          ? `Living markdown architecture guide and Mermaid FlowDiagram synchronized with the Knowledge Graph.`
+          : `Synthesize living Markdown documentation and Mermaid sequence/flow diagrams from this application's latest Knowledge Graph state.`
+        }
+      </div>
+      ${hasDoc ? `
+        <div style="margin-bottom: 8px; font-size: 12px;">
+          <strong>Doc Page:</strong> <code>${node['robos:hasDocumentationPage']}</code>
+        </div>
+      ` : ''}
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+        <button class="btn btn-secondary" id="btn-generate-app-doc" onclick="window.generateAppDocumentation('${node['@id']}')">
+          ${(hasDoc || hasFlow) ? '🔄 Re-Generate Living Documentation' : '📝 Generate Living Documentation & Flow Diagram'}
+        </button>
+      </div>
+      <div id="doc-action-feedback" style="display:none; margin-top: 10px; font-size: 12px; padding: 8px 12px; border-radius: 4px;"></div>
+    </div>
+  `;
+}
+
+window.generateAndLaunchAppELearning = async function(nodeId) {
+  const targetId = nodeId || selectedNodeId;
+  const feedbackEl = document.getElementById('elearning-action-feedback');
+  if (feedbackEl) {
+    feedbackEl.style.display = 'block';
+    feedbackEl.style.background = 'rgba(56, 189, 248, 0.1)';
+    feedbackEl.style.color = '#38bdf8';
+    feedbackEl.textContent = '⏳ Synthesizing interactive eLearning course and scaffolding Electron app...';
+  }
+
+  try {
+    const res = await window.sdlcGraph.generateAppELearning({ appId: targetId });
+    if (res && res.ok) {
+      if (feedbackEl) {
+        feedbackEl.style.background = 'rgba(46, 160, 67, 0.15)';
+        feedbackEl.style.color = '#3fb950';
+        feedbackEl.textContent = `✅ ${res.message} Launching eLearning App...`;
+      }
+      await window.sdlcGraph.launchAppELearning({ appId: targetId });
+      if (typeof window.loadGraph === 'function') {
+        await window.loadGraph();
+      }
+      renderInspector();
+    } else {
+      if (feedbackEl) {
+        feedbackEl.style.background = 'rgba(248, 81, 73, 0.15)';
+        feedbackEl.style.color = '#f85149';
+        feedbackEl.textContent = `❌ ${res ? res.error : 'Failed to generate eLearning'}`;
+      }
+    }
+    return res;
+  } catch (err) {
+    if (feedbackEl) {
+      feedbackEl.style.background = 'rgba(248, 81, 73, 0.15)';
+      feedbackEl.style.color = '#f85149';
+      feedbackEl.textContent = `❌ Error: ${err.message}`;
+    }
+    return { ok: false, error: err.message };
+  }
+};
+
+window.launchAppELearning = async function(nodeId) {
+  const targetId = nodeId || selectedNodeId;
+  try {
+    return await window.sdlcGraph.launchAppELearning({ appId: targetId });
+  } catch (err) {
+    alert('Error launching eLearning app: ' + err.message);
+    return { ok: false, error: err.message };
+  }
+};
+
+window.awardAppCertificate = async function(nodeId) {
+  const targetId = nodeId || selectedNodeId;
+  try {
+    const res = await window.sdlcGraph.issueCertificate({ appId: targetId, userId: 'robos', scorePercentage: 100 });
+    if (res && res.ok) {
+      alert(`🎉 Certificate of Completion Awarded!\n\nTitle: ${res.certificate['dcterms:title']}\nHash: ${res.certificate['robos:verificationHash']}\nRecorded in Knowledge Graph under 'learning' package.`);
+      if (typeof window.loadGraph === 'function') {
+        await window.loadGraph();
+      }
+      renderInspector();
+    }
+    return res;
+  } catch (err) {
+    alert('Error issuing certificate: ' + err.message);
+    return { ok: false, error: err.message };
+  }
+};
+
+window.generateAppDocumentation = async function(nodeId) {
+  const targetId = nodeId || selectedNodeId;
+  const feedbackEl = document.getElementById('doc-action-feedback');
+  if (feedbackEl) {
+    feedbackEl.style.display = 'block';
+    feedbackEl.style.background = 'rgba(56, 189, 248, 0.1)';
+    feedbackEl.style.color = '#38bdf8';
+    feedbackEl.textContent = '⏳ Synthesizing living documentation and Mermaid FlowDiagram...';
+  }
+
+  try {
+    const res = await window.sdlcGraph.generateAppDoc({ appId: targetId });
+    if (res && res.ok) {
+      if (feedbackEl) {
+        feedbackEl.style.background = 'rgba(46, 160, 67, 0.15)';
+        feedbackEl.style.color = '#3fb950';
+        feedbackEl.textContent = `✅ ${res.message}`;
+      }
+      if (typeof window.loadGraph === 'function') {
+        await window.loadGraph();
+      }
+      renderInspector();
+    } else {
+      if (feedbackEl) {
+        feedbackEl.style.background = 'rgba(248, 81, 73, 0.15)';
+        feedbackEl.style.color = '#f85149';
+        feedbackEl.textContent = `❌ ${res ? res.error : 'Failed to generate documentation'}`;
+      }
+    }
+    return res;
+  } catch (err) {
+    if (feedbackEl) {
+      feedbackEl.style.background = 'rgba(248, 81, 73, 0.15)';
+      feedbackEl.style.color = '#f85149';
+      feedbackEl.textContent = `❌ Error: ${err.message}`;
+    }
+    return { ok: false, error: err.message };
+  }
+};
+
 // ── DevOps Integrations & Onboarding Wizard ──────────────────────────────────
 let devopsIntegrationsList = [];
 let devopsCategoriesList = [];

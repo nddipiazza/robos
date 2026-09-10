@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RobOS eLearning Player</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="elearning-app">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="app-icon">🎓</span>
+        <div>
+          <h1 id="course-title">RobOS Interactive eLearning Hub</h1>
+          <div class="course-meta">
+            <span class="badge badge-tech" id="course-tech">KGraph-First</span>
+            <span class="badge badge-difficulty" id="course-difficulty">Intermediate</span>
+            <span class="badge badge-duration" id="course-duration">⏱️ 45 mins</span>
+            <span class="badge badge-scorm">SCORM 2004 Verified</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
+          <option value="">Switch Course…</option>
+        </select>
+        <div class="progress-container">
+          <div class="progress-label">Course Progress: <span id="progress-percent">0%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="sidebar">
+        <h3>Curriculum Modules</h3>
+        <ul class="module-list" id="module-nav-list"></ul>
+        <div class="cert-status-box" id="cert-status-box">
+          <h4>🏆 Completion Certificate</h4>
+          <p id="cert-status-text">Complete all modules and score >= 80% to earn your Knowledge Graph Certificate of Completion.</p>
+          <button class="btn btn-cert" id="btn-view-certificate" style="display:none;" onclick="window.showCertificateModal()">View Verified Certificate</button>
+        </div>
+      </aside>
+
+      <main class="content-panel" id="content-panel">
+        <div id="module-content">
+          <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Certificate Modal -->
+    <div class="modal-overlay" id="cert-modal" style="display:none;">
+      <div class="modal-card">
+        <div class="cert-frame">
+          <div class="cert-badge">RobOS Verified Credential</div>
+          <h2>CERTIFICATE OF COMPLETION</h2>
+          <div class="cert-sub">Formal W3C SHACL verified credential registered in the RobOS Knowledge Graph</div>
+          <div class="cert-body">
+            <p>This certifies that</p>
+            <h3 class="cert-recipient" id="cert-recipient-name">robos</h3>
+            <p>has successfully passed and mastered</p>
+            <h4 class="cert-course-name" id="cert-course-name">RobOS Course</h4>
+            <div class="cert-meta-grid">
+              <div><strong>Score:</strong> <span id="cert-score">100%</span></div>
+              <div><strong>Issuance Date:</strong> <span id="cert-date">Today</span></div>
+              <div><strong>Target Application:</strong> <span id="cert-target-app">RobOS Platform</span></div>
+              <div><strong>Verification Hash:</strong> <code id="cert-hash">ROBOS-CERT-XXXX</code></div>
+            </div>
+          </div>
+          <div class="cert-footer">
+            <div class="cert-seal">RobOS Verified Credential &middot; schema:EducationalOccupationalCredential</div>
+            <button class="btn btn-primary" onclick="window.closeCertificateModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

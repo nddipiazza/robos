@@ -81,8 +81,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "@type": [
     "robos:ConsoleApp",
     "oslc_am:Resource",
-    "c4:Container",
-    "schema:SoftwareApplication"
+    "c4:Container"
   ],
   "dcterms:title": "Rest Client CLI",
   "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",
@@ -153,8 +152,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "@type": [
             "robos:ConsoleApp",
             "oslc_am:Resource",
-            "c4:Container",
-            "schema:SoftwareApplication"
+            "c4:Container"
         ],
         "dcterms:title": "Rest Client CLI",
         "dcterms:description": "Command-line terminal tool providing automated workflows and administration for Rest Client.",

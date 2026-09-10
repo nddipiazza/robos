@@ -103,6 +103,7 @@ const PORT_REGISTRY = {
   'graphql-client':    19182,
   'app-wizard':        19183,
   'remote-execution-studio': 19184,
+  'robos-elearning':   19185,
 };
 
 

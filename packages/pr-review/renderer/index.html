@@ -51,6 +51,9 @@
           <div id="detail-meta"></div>
         </div>
         <div class="ide-quick-launch-bar">
+          <button id="btn-enter-theater" class="btn-theater" title="Launch Full PR Review Theater (Training, Living Docs, Diff Viewer, IDE Bridge)">
+            <span class="theater-icon">🎭</span> PR Review Theater
+          </button>
           <button id="btn-open-intellij" class="btn-ide btn-ide-intellij" title="Review in IntelliJ IDEA Pull Request tool window">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
             Review in IntelliJ
@@ -172,14 +175,395 @@
       </div>
     </div>
 
-    <!-- Empty state -->
-    <div id="empty-state" class="hidden">
-      <div class="empty-icon">&#128269;</div>
-      <div class="empty-text" id="empty-text">No pull requests found</div>
+  <!-- PR Review Theater Overlay -->
+  <div id="pr-review-theater" class="theater-overlay hidden">
+    <div class="theater-window">
+      <!-- Theater Top Bar -->
+      <div class="theater-topbar">
+        <div class="theater-branding">
+          <span class="theater-badge">🎭 PR REVIEW THEATER</span>
+          <h2 id="theater-pr-title">PR #12: feat(service): verify rabies certificate over mTLS</h2>
+          <span class="theater-app-badge" id="theater-target-app">PetStore API</span>
+        </div>
+
+        <!-- Stage Navigation Stepper -->
+        <div class="theater-stepper" id="theater-stepper">
+          <button class="step-btn active" data-stage="1" id="step-btn-1" onclick="window.setTheaterStage(1)">
+            <span class="step-num">1</span> <span class="step-label">Training &amp; eLearning</span>
+            <span class="step-status" id="step-status-1">⏳</span>
+          </button>
+          <button class="step-btn" data-stage="2" id="step-btn-2" onclick="window.setTheaterStage(2)">
+            <span class="step-num">2</span> <span class="step-label">Living Docs &amp; Flow</span>
+            <span class="step-status" id="step-status-2">○</span>
+          </button>
+          <button class="step-btn" data-stage="3" id="step-btn-3" onclick="window.setTheaterStage(3)">
+            <span class="step-num">3</span> <span class="step-label">File Diff Viewer</span>
+            <span class="step-status" id="step-status-3">○</span>
+          </button>
+          <button class="step-btn" data-stage="4" id="step-btn-4" onclick="window.setTheaterStage(4)">
+            <span class="step-num">4</span> <span class="step-label">IDE Branch Diffs</span>
+            <span class="step-status" id="step-status-4">○</span>
+          </button>
+          <button class="step-btn" data-stage="5" id="step-btn-5" onclick="window.setTheaterStage(5)">
+            <span class="step-num">5</span> <span class="step-label">Proof-of-Work Video</span>
+            <span class="step-status" id="step-status-5">○</span>
+          </button>
+          <button class="step-btn" data-stage="6" id="step-btn-6" onclick="window.setTheaterStage(6)">
+            <span class="step-num">6</span> <span class="step-label">Sign-Off &amp; Merge</span>
+            <span class="step-status" id="step-status-6">○</span>
+          </button>
+        </div>
+
+        <div class="theater-actions">
+          <button id="btn-exit-theater" class="btn-theater-exit" onclick="window.exitTheater()" title="Exit Review Theater">&times; Exit Theater</button>
+        </div>
+      </div>
+
+      <!-- Theater Stage Content Area -->
+      <div class="theater-stage-content">
+
+        <!-- STAGE 1: Interactive Training & eLearning -->
+        <div class="theater-stage active" id="stage-1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>🎓 Stage 1: PR Masterclass &amp; Reviewer Knowledge Check</h3>
+              <p>Master the architectural rationale, protocols, and contract changes introduced in this PR before approval.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="gate-pill gate-pending" id="gate-pill-elearning">eLearning: Pending</span>
+            </div>
+          </div>
+
+          <div class="stage-grid-2col">
+            <!-- Left: Curriculum Modules & Lessons -->
+            <div class="theater-card" id="theater-elearning-modules-card">
+              <div class="card-head">
+                <span class="card-icon">📚</span>
+                <h4>Curriculum &amp; Pattern Analysis</h4>
+              </div>
+              <div class="course-brief-box" id="theater-course-brief"></div>
+              <div class="module-accordion" id="theater-modules-list"></div>
+            </div>
+
+            <!-- Right: Interactive Quiz & Certification -->
+            <div class="theater-card" id="theater-quiz-card">
+              <div class="card-head">
+                <span class="card-icon">🧠</span>
+                <h4>Reviewer Knowledge Check (Passing threshold: 80%)</h4>
+              </div>
+              <p class="quiz-instruction">Answer all questions to verify comprehension of mTLS security, Kafka transactional consistency, and Knowledge Graph merge behavior.</p>
+              <form id="theater-quiz-form" onsubmit="return false;">
+                <div id="theater-quiz-questions"></div>
+                <div class="quiz-actions-row">
+                  <button type="button" class="btn-primary" id="btn-submit-quiz" onclick="window.submitTheaterQuiz()">Submit Knowledge Check</button>
+                  <span id="quiz-feedback-pill" class="hidden"></span>
+                </div>
+              </form>
+
+              <!-- Verified Certificate Card (Appears upon passing) -->
+              <div id="theater-certificate-card" class="theater-cert-box hidden">
+                <div class="cert-ribbon">🏆 Knowledge Graph Verified Credential</div>
+                <h4 id="theater-cert-title">CERTIFICATE OF COMPLETION</h4>
+                <p>Awarded to <strong id="theater-cert-recipient">robos</strong> for mastering the PR Review Masterclass with a score of <span id="theater-cert-score">100%</span>.</p>
+                <div class="cert-meta-tag">Hash: <code id="theater-cert-hash">ROBOS-CERT-XXXX</code></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" disabled>&larr; Previous Stage</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(2)">Next: Living Docs &amp; Flow &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 2: Living Docs & Flow -->
+        <div class="theater-stage" id="stage-2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>📖 Stage 2: Living Architecture Guide &amp; Dual-Reality Delta</h3>
+              <p>Contrast Production Reality against Proposed Reality and inspect verified runtime sequence diagrams.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="gate-pill gate-pass" id="gate-pill-docs">Docs: Verified</span>
+            </div>
+          </div>
+
+          <div class="stage-grid-2col">
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">📑</span>
+                <h4>Living Architecture Documentation</h4>
+              </div>
+              <div class="markdown-body" id="theater-doc-markdown"></div>
+            </div>
+
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">☊</span>
+                <h4>Mermaid Interaction Flow &amp; Blast Radius</h4>
+              </div>
+              <div class="mermaid-diagram-box">
+                <pre class="mermaid-code-pre" id="theater-mermaid-pre"></pre>
+              </div>
+              <div class="blast-radius-section">
+                <h5>Blast Radius Entities (Dual-State KGraph)</h5>
+                <div id="theater-blast-radius-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(1)">&larr; Previous: Training &amp; eLearning</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(3)">Next: File Diff Viewer &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 3: In-App File Diff Viewer -->
+        <div class="theater-stage" id="stage-3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>📝 Stage 3: In-App Semantic File Diff Viewer</h3>
+              <p>Review code modifications with syntax highlighting, unified/split views, hunk line numbers, and inline audit notes.</p>
+            </div>
+            <div class="diff-view-controls">
+              <button class="btn-toggle active" id="btn-diff-mode-unified" onclick="window.setDiffMode('unified')">Unified</button>
+              <button class="btn-toggle" id="btn-diff-mode-split" onclick="window.setDiffMode('split')">Side-by-Side</button>
+            </div>
+          </div>
+
+          <div class="diff-viewer-layout">
+            <!-- Diff File Sidebar -->
+            <div class="diff-file-sidebar">
+              <div class="sidebar-header">Changed Files (<span id="diff-file-count">0</span>)</div>
+              <div class="diff-file-list" id="theater-diff-file-list"></div>
+            </div>
+
+            <!-- Diff Content Area -->
+            <div class="diff-content-area" id="theater-diff-display">
+              <div class="diff-file-header">
+                <span class="current-file-name" id="diff-current-file">Select a file</span>
+                <span class="diff-hunk-stats" id="diff-current-stats"></span>
+              </div>
+              <div class="diff-code-container" id="diff-code-lines"></div>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(2)">&larr; Previous: Living Docs</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(4)">Next: IDE Branch Diffs &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 4: IDE Branch Diff Bridge -->
+        <div class="theater-stage" id="stage-4">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>💻 Stage 4: IDE Branch Diff Viewer Bridge (IntelliJ IDEA &amp; VS Code)</h3>
+              <p>Launch native branch-level comparison and breakpoint debugging directly inside your local developer IDE.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="gate-pill gate-pass" id="gate-pill-ide">IDE Bridge: Active</span>
+            </div>
+          </div>
+
+          <div class="ide-bridge-grid">
+            <!-- IntelliJ Card -->
+            <div class="ide-bridge-card">
+              <div class="ide-card-header">
+                <div class="ide-badge ide-badge-intellij">IntelliJ IDEA</div>
+                <span class="bridge-status-dot">● IPC Port 63343</span>
+              </div>
+              <p class="ide-card-desc">JetBrains native Git Compare / Pull Request review tool window with side-by-side branch diffs, AST navigation, and automated breakpoint injection.</p>
+              <div class="ide-command-box">
+                <div class="cmd-label">CLI Branch Diff Command:</div>
+                <code id="intellij-branch-cmd">idea diff main...feature/PET-105-rabies-verification</code>
+              </div>
+              <div class="ide-target-box">
+                <strong>Breakpoint Target:</strong> <code id="intellij-breakpoint-target">VaccineGatewayClient.java:34</code> (SSLContext Handshake)
+              </div>
+              <div class="ide-action-buttons">
+                <button class="btn-ide btn-ide-intellij" onclick="window.launchTheaterIDE('intellij')">
+                  🚀 Compare Branches in IntelliJ
+                </button>
+              </div>
+            </div>
+
+            <!-- VS Code Card -->
+            <div class="ide-bridge-card">
+              <div class="ide-card-header">
+                <div class="ide-badge ide-badge-vscode">Visual Studio Code</div>
+                <span class="bridge-status-dot">● URI Protocol</span>
+              </div>
+              <p class="ide-card-desc">Official Microsoft GitHub Pull Requests and Issues extension review panel with branch compare mode, inline review comments, and suggestion acceptance.</p>
+              <div class="ide-command-box">
+                <div class="cmd-label">Protocol Link:</div>
+                <code id="vscode-branch-cmd">vscode://github.vscode-pull-request-github/open-pr</code>
+              </div>
+              <div class="ide-target-box">
+                <strong>Branch Diff Command:</strong> <code>code --diff &lt;base&gt; &lt;head&gt;</code>
+              </div>
+              <div class="ide-action-buttons">
+                <button class="btn-ide btn-ide-vscode" onclick="window.launchTheaterIDE('vscode')">
+                  🚀 Open in VS Code PR Extension
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ide-feedback-output" id="theater-ide-feedback" style="display:none;"></div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(3)">&larr; Previous: File Diff Viewer</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Proof-of-Work Video &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 5: Proof-of-Work Video Walkthrough -->
+        <div class="theater-stage" id="stage-5">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>🎬 Stage 5: Autonomous Proof-of-Work Video Walkthrough</h3>
+              <p>Inspect the 1080p narrated video proof demonstrating that the AI agent reproduced the issue and verified the fix in a sandbox.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="status-tag-pass">🟢 100% VERIFIED PROOF-OF-WORK</span>
+            </div>
+          </div>
+
+          <div class="stage-grid-2col">
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">📽️</span>
+                <h4>Narrated Video Player &amp; Chapter Timeline</h4>
+              </div>
+              <div class="video-preview-mockup">
+                <div class="video-screen-banner">
+                  <span class="rec-dot"></span> 1080p (1920x1080 @ 30fps) &middot; Piper TTS Audio Narration &middot; WebVTT Synced
+                </div>
+                <div class="video-center-art">
+                  <div class="play-circle">▶</div>
+                  <div class="video-title-label" id="theater-video-title">Proof-of-Work: PET-105 Rabies Verification</div>
+                </div>
+              </div>
+              <table class="matrix-table" id="theater-video-chapters-table">
+                <thead><tr><th>Timecode</th><th>Action / Chapter Title</th><th>Status</th></tr></thead>
+                <tbody id="theater-video-chapters-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">📜</span>
+                <h4>W3C WebVTT Subtitle Stream</h4>
+              </div>
+              <pre class="json-pre" id="theater-video-vtt-pre"></pre>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Sign-Off &amp; Merge &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 6: Review Validation & Sign-Off -->
+        <div class="theater-stage" id="stage-6">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>✅ Stage 6: PR Review Sign-Off &amp; Dual-Branch Merge</h3>
+              <p>Verify all required validation gates before approving. Approving merges both the Git code repository and Knowledge Graph branches.</p>
+            </div>
+          </div>
+
+          <div class="signoff-gates-grid">
+            <div class="gate-card" id="gate-card-elearning">
+              <div class="gate-icon">🎓</div>
+              <div class="gate-info">
+                <strong>Interactive eLearning</strong>
+                <span class="gate-subtext" id="gate-desc-elearning">Pending completion</span>
+              </div>
+              <span class="gate-status-badge gate-pending" id="gate-badge-elearning">Pending</span>
+            </div>
+
+            <div class="gate-card" id="gate-card-docs">
+              <div class="gate-icon">📖</div>
+              <div class="gate-info">
+                <strong>Living Documentation &amp; Flow</strong>
+                <span class="gate-subtext">Mermaid Sequence Diagram inspected</span>
+              </div>
+              <span class="gate-status-badge gate-pass" id="gate-badge-docs">Verified</span>
+            </div>
+
+            <div class="gate-card" id="gate-card-diffs">
+              <div class="gate-icon">📝</div>
+              <div class="gate-info">
+                <strong>File Diffs Inspected</strong>
+                <span class="gate-subtext">Unified hunks reviewed</span>
+              </div>
+              <span class="gate-status-badge gate-pass" id="gate-badge-diffs">Verified</span>
+            </div>
+
+            <div class="gate-card" id="gate-card-ide">
+              <div class="gate-icon">💻</div>
+              <div class="gate-info">
+                <strong>IDE Branch Diff Bridge</strong>
+                <span class="gate-subtext">IntelliJ / VS Code bridge ready</span>
+              </div>
+              <span class="gate-status-badge gate-pass" id="gate-badge-ide">Ready</span>
+            </div>
+
+            <div class="gate-card" id="gate-card-ci">
+              <div class="gate-icon">✓</div>
+              <div class="gate-info">
+                <strong>Automated CI &amp; SHACL Validation</strong>
+                <span class="gate-subtext">14/14 Pact + 0 SHACL errors</span>
+              </div>
+              <span class="gate-status-badge gate-pass" id="gate-badge-ci">Passing</span>
+            </div>
+          </div>
+
+          <div class="signoff-action-card">
+            <h4>Review Decision &amp; Feedback</h4>
+            <div class="decision-radio-group">
+              <label class="radio-label">
+                <input type="radio" name="theater-decision" value="approve" checked>
+                <strong>Submit Approval &amp; Merge Both Branches</strong>
+                <span>Merges Git code branch into main and syncs Knowledge Graph branch</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="theater-decision" value="request-changes">
+                <strong>Request Changes</strong>
+                <span>Provide revision guidance to the AI agent</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="theater-decision" value="comment">
+                <strong>Submit Comment Only</strong>
+                <span>Leave general observations without blocking or approving</span>
+              </label>
+            </div>
+
+            <label class="review-label" for="theater-review-notes">Reviewer Summary Notes</label>
+            <textarea id="theater-review-notes" rows="4" placeholder="Approved! Completed PR Review Theater masterclass (100% quiz score), inspected mTLS keystores in VaccineGatewayClient, and validated dual-branch Knowledge Graph sync."></textarea>
+
+            <div class="signoff-actions-row">
+              <button class="btn-action btn-approve btn-prominent" id="btn-theater-submit-review" onclick="window.submitTheaterReviewAction()">
+                <span class="btn-icon-symbol">✓</span> Execute Review &amp; Dual Merge
+              </button>
+              <div id="theater-review-feedback" class="hidden"></div>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Proof-of-Work Video</button>
+            <button class="btn-stage-nav" onclick="window.exitTheater()">Exit Review Theater &times;</button>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
-</div>
-<script src="../../robos-ui/robos-ui.js"></script>
-<script src="app.js"></script>
+
+  <script src="../../robos-ui/robos-ui.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -105,7 +105,7 @@ class KGraphPackageManager {
     if (typeStr.includes('Microservice') || typeStr.includes('Contract') || typeStr.includes('ProtobufContract') || typeStr.includes('GRPCContract') || typeStr.includes('GraphQLContract') || typeStr.includes('GraphQLSchema') || typeStr.includes('Requirement') || typeStr.includes('Feature') || typeStr.includes('APIEndpoint') || typeStr.includes('APIOperation') || typeStr.includes('DataModel') || typeStr.includes('SchemaModel') || typeStr.includes('DomainEntity') || typeStr.includes('DataSource')) {
       return 'services';
     }
-    if (typeStr.includes('ELearning') || typeStr.includes('LearningModule') || typeStr.includes('LearningLesson') || typeStr.includes('HandsOnLab') || typeStr.includes('QuizAssessment') || typeStr.includes('Tutorial') || typeStr.includes('Course')) {
+    if (typeStr.includes('ELearning') || typeStr.includes('LearningModule') || typeStr.includes('LearningLesson') || typeStr.includes('HandsOnLab') || typeStr.includes('QuizAssessment') || typeStr.includes('Tutorial') || typeStr.includes('Course') || typeStr.includes('CertificateOfCompletion') || typeStr.includes('CompletionCertificate')) {
       return 'learning';
     }
 

@@ -111,6 +111,11 @@ ipcMain.handle('graph-edd-run', async (_, config) => {
 });
 ipcMain.handle('graph-edd-status', async () => eddRunner ? eddRunner.getSummary() : { currentPhase: 'IDLE' });
 ipcMain.handle('graph-generate-elearning', async (_, prompt) => store.generateELearningCourse({ prompt }));
+ipcMain.handle('graph-app-elearning-generate', async (_, opts) => store.generateAppELearning(opts));
+ipcMain.handle('graph-app-elearning-launch', async (_, opts) => store.launchELearningApp(opts));
+ipcMain.handle('graph-app-doc-generate', async (_, opts) => store.generateAppDocumentation(opts));
+ipcMain.handle('graph-issue-certificate', async (_, opts) => store.issueCertificateOfCompletion(opts));
+ipcMain.handle('graph-get-certificates', async (_, opts) => store.getCertificatesForAppOrUser(opts));
 ipcMain.handle('graph-bulk-import-repos', async (_, repos) => store.bulkImportRepositories(repos));
 ipcMain.handle('graph-import-resources', async (_, { resources, options } = {}) => store.importResources(resources, options));
 ipcMain.handle('graph-import-prompt', async (_, { prompt, options } = {}) => store.importFromPrompt(prompt, options));

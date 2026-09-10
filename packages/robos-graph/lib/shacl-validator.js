@@ -141,6 +141,40 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://schema.org/Course"
   },
   {
+    "shapeId": "urn:robos:shape:CertificateOfCompletionShape",
+    "targetClass": "robos:CertificateOfCompletion",
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Certificate of Completion must have a title."
+      },
+      {
+        "path": "robos:recipientUser",
+        "minCount": 1,
+        "message": "Certificate of Completion must specify the recipient user."
+      },
+      {
+        "path": "robos:forCourse",
+        "minCount": 1,
+        "message": "Certificate of Completion must link to the completed course (robos:forCourse)."
+      },
+      {
+        "path": "robos:issueDate",
+        "minCount": 1,
+        "message": "Certificate of Completion must declare an issuance date."
+      },
+      {
+        "path": "robos:scorePercentage",
+        "minCount": 1,
+        "message": "Certificate of Completion must record the final score percentage."
+      }
+    ],
+    "refersFrom": "https://schema.org/EducationalOccupationalCredential",
+    "schemaOrgType": "https://schema.org/EducationalOccupationalCredential",
+    "domainStandard": "https://schema.org/EducationalOccupationalCredential"
+  },
+  {
     "shapeId": "urn:robos:shape:DesktopAppShape",
     "targetClass": "robos:DesktopApp",
     "properties": [

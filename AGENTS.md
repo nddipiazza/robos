@@ -104,6 +104,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
 | **Schema Studio & Registry** | Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape generation, and live JSON-LD validator |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
+| **RobOS eLearning** | Interactive eLearning player, hands-on lab runner, and Knowledge Graph completion certificate hub |
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |
 | **Icon Manager** | Manage and customize RobOS app icons |
@@ -187,6 +188,8 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `create-test` — Create a test file using the robos-test framework
 - `deploy-to-vm` — Deploy packages to running VM
 - `e2e-driven-dev` — Execute task development using text-narrated E2E tests and video generation
+- `generate-app-docs` — Inspect an application/project in KGraph, synthesize living Markdown architecture documentation and Mermaid FlowDiagram, and link to docs package
+- `generate-app-elearning` — Inspect an application/project in KGraph, synthesize interactive eLearning curriculum, scaffold standalone Electron app, and issue verified completion certificates
 - `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
 - `ide-java` — Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
@@ -201,6 +204,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `kgraph-validate` — Run full W3C SHACL shape validation across all Modular KGraph Packages
 - `kgraph-visualize` — Generate executable Mermaid diagram syntax or C4 component dependency visualizations
 - `manage-robos-skill` — Add, update, or remove a RobOS skill in the plugin marketplace
+- `pr-review-theater` — Inspect and orchestrate the full-featured PR Review Theater with training knowledge checks, living documentation, in-app file diffs, and IDE branch comparisons
 - `read-error-logs` — Inspect RobOS failure logs and Electron errors
 - `record-demo` — Record text-narrated video walkthrough script
 - `remove-robos-app` — Remove an app and deregister everywhere

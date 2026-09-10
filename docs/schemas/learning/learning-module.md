@@ -3,7 +3,7 @@ title: Learning Module
 layout: default
 parent: eLearning Curriculums (robos.learning)
 grand_parent: KGraph Schemas
-nav_order: 2
+nav_order: 3
 permalink: /schemas/learning/learning-module.html
 ---
 

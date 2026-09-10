@@ -26,7 +26,7 @@ Interactive developer courses, tutorials, and architectural training modules.
 - **Package Store ID**: `learning`
 - **Ontology Namespace**: `robos.learning`
 - **GitOps Package File**: `.robos/kgraphs/learning/package.jsonld`
-- **Schemas Defined**: 5
+- **Schemas Defined**: 6
 
 ---
 
@@ -35,6 +35,7 @@ Interactive developer courses, tutorials, and architectural training modules.
 | Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |
 |---|---|---|---|
 | [**eLearning Course** (`robos:ELearning`)]({{ '/schemas/learning/elearning.html' | relative_url }}) | `urn:robos:shape:ELearningShape` | `dcterms:title`, `robos:topic`, `robos:modules`, `robos:gitopsFile` | [View Schema &rarr;]({{ '/schemas/learning/elearning.html' | relative_url }}) |
+| [**Certificate Of Completion** (`robos:CertificateOfCompletion`)]({{ '/schemas/learning/certificate-of-completion.html' | relative_url }}) | `urn:robos:shape:CertificateOfCompletionShape` | `dcterms:title`, `robos:recipientUser`, `robos:forCourse`, `robos:issueDate`, `robos:scorePercentage` | [View Schema &rarr;]({{ '/schemas/learning/certificate-of-completion.html' | relative_url }}) |
 | [**Learning Module** (`robos:LearningModule`)]({{ '/schemas/learning/learning-module.html' | relative_url }}) | `urn:robos:shape:LearningModuleShape` | `dcterms:title`, `robos:course` | [View Schema &rarr;]({{ '/schemas/learning/learning-module.html' | relative_url }}) |
 | [**Learning Lesson** (`robos:LearningLesson`)]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) | `urn:robos:shape:LearningLessonShape` | `dcterms:title`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) |
 | [**Hands On Lab** (`robos:HandsOnLab`)]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) | `urn:robos:shape:HandsOnLabShape` | `dcterms:title`, `robos:labFile`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) |
