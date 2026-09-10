@@ -45,6 +45,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step1-tasks/acme-petshop-step1-tasks.webm'),
     start: 8,
     duration: 10,
+    crop: '1100:780:410:150',
     subtitle: 'Phase 1: Issue Manager decomposes prompt into executable task DAG',
     subStart: 0.5,
     subDuration: 3.0,
@@ -87,6 +88,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step3-contracts/acme-petshop-step3-contracts.webm'),
     start: 12,
     duration: 10,
+    crop: '1200:820:360:130',
     subtitle: 'Phase 2: TypeSpec domain modeling & OpenAPI 3.1 contract gates',
     subStart: 0.5,
     subDuration: 3.0,
@@ -103,6 +105,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step4-git-projects/acme-petshop-step4-git-projects.webm'),
     start: 10,
     duration: 10,
+    crop: '1100:750:410:165',
     subtitle: 'Phase 3: Git Projects loads polyglot repositories with GPG pass signed commits',
     subStart: 0.5,
     subDuration: 3.0,
@@ -119,6 +122,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step15-data-sources/acme-petshop-step15-data-sources.webm'),
     start: 8,
     duration: 10,
+    crop: '1200:780:360:150',
     subtitle: 'Phase 4: Data Sources & REST Client: Live SQL/NoSQL queries & API runner',
     subStart: 0.5,
     subDuration: 3.0,
@@ -135,6 +139,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step5-ide-execution/acme-petshop-step5-ide-execution.webm'),
     start: 2,
     duration: 18,
+    crop: '1040:680:440:200',
     cues: [
       { start: 0.5, duration: 3.2, text: 'Phase 5: IntelliJ IDEA Plugin: Port 63343 IPC, pass secrets, & reproduction breakpoint' },
       { start: 8.5, duration: 3.2, text: 'Paused Thread State: Inspecting stack frames, local variables, & 14/14 Pact tests pass' },
@@ -146,6 +151,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/agent-code-review-ide-plugins-e2e/agent-code-review-ide-plugins-e2e.webm'),
     start: 38,
     duration: 10,
+    crop: '1400:900:260:90',
     subtitle: 'Agent Code Review Platform: Autonomous PR audit & 1-click dual-branch merge',
     subStart: 0.5,
     subDuration: 3.0,
@@ -162,6 +168,7 @@ const SEGMENTS = [
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step10-continuous-deploy/acme-petshop-step10-continuous-deploy.webm'),
     start: 10,
     duration: 12,
+    crop: '1400:900:260:90',
     subtitle: 'Phase 6: Kube Studio & Dev Central: ArgoCD GitOps sync & engineering cockpit',
     subStart: 0.5,
     subDuration: 3.2,
@@ -179,8 +186,8 @@ function formatVttTime(seconds) {
 
 // 2. Transcode each segment into uniform 1080p 30fps H.264 mp4
 const segmentFiles = [];
-let cumulativeTimelineSec = 0;
 const vttCues = [];
+let cumulativeTimelineSec = 0;
 let cueIndex = 1;
 
 SEGMENTS.forEach((seg, idx) => {
@@ -192,13 +199,15 @@ SEGMENTS.forEach((seg, idx) => {
   if (seg.type === 'card') {
     execSync(
       `ffmpeg -y -loop 1 -i "${seg.image}" -c:v libx264 -t ${seg.duration} -pix_fmt yuv420p -r 30 ` +
-      `-vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" "${segOut}"`,
+      `-vf "scale=1920:1080" "${segOut}"`,
       { stdio: 'ignore' }
     );
   } else {
-    const vfFilter = seg.speed
-      ? `setpts=${seg.speed}*PTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`
-      : `scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`;
+    const filters = [];
+    if (seg.speed) filters.push(`setpts=${seg.speed}*PTS`);
+    if (seg.crop) filters.push(`crop=${seg.crop}`);
+    filters.push('scale=1920:1080');
+    const vfFilter = filters.join(',');
     execSync(
       `ffmpeg -y -ss ${seg.start} -i "${seg.src}" -t ${seg.duration} -c:v libx264 -pix_fmt yuv420p -r 30 ` +
       `-vf "${vfFilter}" "${segOut}"`,

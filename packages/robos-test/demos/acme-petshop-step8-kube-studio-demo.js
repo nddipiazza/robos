@@ -102,7 +102,6 @@ async function main() {
     appId: "kube-studio",
     windowTitle: "Kube Studio",
     scenario: scenarios["github-task-server"],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: "1" },
     script: SCRIPT,

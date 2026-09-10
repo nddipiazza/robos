@@ -23,7 +23,7 @@ const path = require('path');
 const fs   = require('fs');
 
 const { launchApp, killApp } = require('./harness');
-const { evalJS }             = require('./snapshot');
+const { evalJS, maximizeWindow } = require('./snapshot');
 const {
   findWindowGeometry, startRecording, stopRecording,
   createCaptionTrack, writeVttFile,
@@ -317,15 +317,22 @@ async function runDemo(config) {
       `);
     } catch(_) {}
 
-    let geom;
-    if (config.fullDesktop) {
-      const disp = process.env.ROBOS_DISPLAY || process.env.DISPLAY || ':99';
-      geom = { x: 0, y: 0, w: 1920, h: 1080, display: disp };
-      console.log(`[${slug}] full desktop: ${geom.w}x${geom.h} @ (${geom.x},${geom.y})`);
-    } else {
-      geom = await findWindowGeometry(windowTitle);
-      console.log(`[${slug}] window: ${geom.w}x${geom.h} @ (${geom.x},${geom.y})`);
+    // Maximize window to 100% full screen so recordings use entire window canvas with zero grey desktop borders
+    await maximizeWindow(app.port);
+    if (process.platform === 'linux' && process.env.DISPLAY) {
+      try {
+        const { execSync: runSync } = require('child_process');
+        runSync(`wmctrl -r "${windowTitle}" -b add,maximized_vert,maximized_horz || wmctrl -r "${windowTitle}" -e 0,0,0,1920,1080 || xdotool search --name "${windowTitle}" windowsize 1920 1080 windowmove 0 0`, {
+          env: process.env,
+          stdio: 'ignore',
+        });
+      } catch (_) {}
     }
+    await sleep(300);
+
+    // Video captures record 100% of the active window — never desktop grey space
+    const geom = await findWindowGeometry(windowTitle);
+    console.log(`[${slug}] window recording: ${geom.w}x${geom.h} @ (${geom.x},${geom.y})`);
 
     rec = startRecording({ geometry: geom, outPath: outVideo });
     const captions = createCaptionTrack(rec);

@@ -159,7 +159,6 @@ async function main() {
     appId: 'contract-studio',
     windowTitle: 'RobOS API Contract & Governance Engine',
     scenario: scenarios['all-good'],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },
     script: SCRIPT,

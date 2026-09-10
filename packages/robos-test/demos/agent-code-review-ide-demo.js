@@ -230,7 +230,6 @@ async function main() {
       appId: "pr-review",
       windowTitle: "RobOS Agent-Generated Code Review Platform",
       scenario: scenarios["pr-review-github"],
-      fullDesktop: true,
       audio: false,
       env: {
         ROBOS_DEMO_SHOW: "1",

@@ -384,6 +384,27 @@ function startDebugServer(win, port, appId) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
 
+      // ── Window Management (Full Screen / 100% Canvas) ─────────────────────
+      } else if (url === '/window/maximize' && req.method === 'POST') {
+        try {
+          if (win.isMinimized()) win.restore();
+          win.setResizable(true);
+          win.maximize();
+        } catch (_) {}
+        const bounds = win.getBounds ? win.getBounds() : {};
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, bounds }));
+
+      } else if (url === '/window/fullscreen' && req.method === 'POST') {
+        try {
+          if (win.isMinimized()) win.restore();
+          win.setResizable(true);
+          win.setBounds({ x: 0, y: 0, width: 1920, height: 1080 });
+        } catch (_) {}
+        const bounds = win.getBounds ? win.getBounds() : {};
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, bounds }));
+
       // ── Event recorder ───────────────────────────────────────────────────
       } else if (url === '/events/start' && req.method === 'POST') {
         const result = await win.webContents.executeJavaScript(RECORDER_START_SCRIPT);

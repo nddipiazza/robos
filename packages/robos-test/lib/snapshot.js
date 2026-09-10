@@ -92,6 +92,13 @@ function httpPost(url, body, timeoutMs = 25000) {
   });
 }
 
+/** Maximize window or resize to full screen (1920x1080) */
+async function maximizeWindow(port) {
+  try {
+    await httpPost(`http://localhost:${port}/window/fullscreen`, '{}', 5000);
+  } catch {}
+}
+
 /** Execute arbitrary JS in the renderer via POST /eval */
 async function evalJS(port, js, timeoutMs = 25000) {
   const res = await httpPost(`http://localhost:${port}/eval`, js, timeoutMs);
@@ -204,6 +211,7 @@ module.exports = {
   getAllText,
   flatText,
   evalJS,
+  maximizeWindow,
   evalClick,
   evalType,
   evalSelect,

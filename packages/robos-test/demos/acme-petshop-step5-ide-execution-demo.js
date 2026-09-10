@@ -97,7 +97,6 @@ async function main() {
     appId: 'intellij-idea',
     windowTitle: 'IntelliJ IDEA Ultimate 2026.1',
     scenario: scenarios['all-good'],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },
     script: SCRIPT,

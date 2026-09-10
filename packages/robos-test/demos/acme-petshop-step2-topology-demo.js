@@ -189,7 +189,6 @@ async function main() {
     appId: 'topology-manager',
     windowTitle: 'RobOS System Topology & Backstage C4 Studio',
     scenario: scenarios['all-good'],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },
     script: SCRIPT,

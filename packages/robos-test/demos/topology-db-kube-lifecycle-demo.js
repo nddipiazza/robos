@@ -68,7 +68,6 @@ async function main() {
       ...scenarios["all-good"],
       useRealBinaries: true,
     },
-    fullDesktop: true,
     audio: false,
     env: {
       ROBOS_DEMO_SHOW: "1",

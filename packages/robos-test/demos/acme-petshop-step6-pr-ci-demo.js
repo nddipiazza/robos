@@ -121,7 +121,6 @@ async function main() {
     appId: "pr-review",
     windowTitle: "RobOS PR Review Board",
     scenario: scenarios["pr-review-github"],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: "1" },
     script: SCRIPT,

@@ -303,7 +303,6 @@ async function main() {
     appId: 'git-projects',
     windowTitle: 'RobOS Git Projects',
     scenario: scenarios['all-good'],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },
     script: SCRIPT,

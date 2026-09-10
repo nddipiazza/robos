@@ -112,7 +112,6 @@ async function main() {
       ...scenarios["github-task-server"],
       useRealBinaries: true,
     },
-    fullDesktop: true,
     audio: false,
     env: {
       ROBOS_DEMO_SHOW: "1",

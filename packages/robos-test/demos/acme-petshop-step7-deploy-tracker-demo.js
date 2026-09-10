@@ -107,7 +107,6 @@ async function main() {
     appId: "deploy-tracker",
     windowTitle: "Deploy Tracker",
     scenario: scenarios["github-task-server"],
-    fullDesktop: true,
     audio: false,
     env: { ROBOS_DEMO_SHOW: "1" },
     script: SCRIPT,
