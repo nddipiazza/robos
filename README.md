@@ -32,7 +32,7 @@
 </p>
 <p align="center">
   <em>Complete Day-in-the-Life: from Onboarding Wizard & Dual-State Knowledge Graph to IntelliJ IDEA breakpoint debugging and Kube GitOps.</em><br />
-  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (2:10)</a></strong>
+  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (2:16)</a></strong>
 </p>
 
 ---

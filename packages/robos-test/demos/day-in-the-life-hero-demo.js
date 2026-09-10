@@ -21,15 +21,17 @@ const SEGMENTS = [
     image: path.join(ROOT_DIR, 'docs/assets/images/day-in-the-life/hero-title.jpg'),
     duration: 2.5,
   },
-  // Onboarding Wizard
+  // Onboarding Wizard (rapidly advancing through setup steps 1 to 11)
   {
     type: 'video',
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/robos-onboarding/robos-onboarding.webm'),
-    start: 22,
-    duration: 9,
-    subtitle: 'Onboarding Wizard: Initializing RobOS workstation & secure GPG password store',
-    subStart: 0.5,
-    subDuration: 3.0,
+    start: 42,
+    duration: 15,
+    speed: 0.18,
+    cues: [
+      { start: 0.5, duration: 3.2, text: 'Setup Assistant: Step 1 (GPG Key ready) ➔ Step 2 (Pass Store init) ➔ Step 3 (Pinentry)' },
+      { start: 7.5, duration: 3.2, text: 'Rapid Provisioning: Step 4 (Git Profile) ➔ Step 5 (SSH Key) ➔ Step 10 (Software Center)' },
+    ],
   },
   // Phase 1 Card
   {
@@ -194,9 +196,12 @@ SEGMENTS.forEach((seg, idx) => {
       { stdio: 'ignore' }
     );
   } else {
+    const vfFilter = seg.speed
+      ? `setpts=${seg.speed}*PTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`
+      : `scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`;
     execSync(
       `ffmpeg -y -ss ${seg.start} -i "${seg.src}" -t ${seg.duration} -c:v libx264 -pix_fmt yuv420p -r 30 ` +
-      `-vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" "${segOut}"`,
+      `-vf "${vfFilter}" "${segOut}"`,
       { stdio: 'ignore' }
     );
 
