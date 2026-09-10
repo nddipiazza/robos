@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38f8ff" class="cyan-stop-1"/>
+      <stop offset="50%" stop-color="#00d4f0" class="cyan-stop-2"/>
+      <stop offset="100%" stop-color="#029ae0" class="cyan-stop-3"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00d4f0" class="body-stop-1"/>
+      <stop offset="60%" stop-color="#0284c7" class="body-stop-2"/>
+      <stop offset="100%" stop-color="#0369a1" class="body-stop-3"/>
+    </linearGradient>
+    <style>
+      .eye { fill: #080c14; }
+      @media (prefers-color-scheme: light) {
+        .cyan-stop-1 { stop-color: #00b4d8; }
+        .cyan-stop-2 { stop-color: #0096c7; }
+        .cyan-stop-3 { stop-color: #0077b6; }
+        .body-stop-1 { stop-color: #0096c7; }
+        .body-stop-2 { stop-color: #0077b6; }
+        .body-stop-3 { stop-color: #023e8a; }
+        .eye { fill: #ffffff; }
+      }
+    </style>
+  </defs>
+
+  <g id="emblem">
+    <!-- Code Brackets -->
+    <path d="M 148 76 L 60 164 L 60 348 L 148 436" fill="none" stroke="url(#cyanGrad)" stroke-width="36" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="4"/>
+    <path d="M 364 76 L 452 164 L 452 348 L 364 436" fill="none" stroke="url(#cyanGrad)" stroke-width="36" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="4"/>
+
+    <!-- Antenna -->
+    <path d="M 250 90 L 250 134 L 262 134 L 262 90 Z" fill="url(#cyanGrad)"/>
+    <circle cx="256" cy="78" r="20" fill="url(#cyanGrad)"/>
+
+    <!-- Left and Right Ears (Speakers) -->
+    <rect x="136" y="154" width="24" height="72" rx="12" fill="url(#cyanGrad)"/>
+    <rect x="352" y="154" width="24" height="72" rx="12" fill="url(#cyanGrad)"/>
+
+    <!-- Head -->
+    <rect x="172" y="128" width="168" height="120" rx="28" fill="url(#cyanGrad)"/>
+    
+    <!-- Eyes -->
+    <circle cx="220" cy="188" r="18" class="eye"/>
+    <circle cx="292" cy="188" r="18" class="eye"/>
+
+    <!-- Body -->
+    <path d="M 182 280 A 18 18 0 0 1 200 262 L 312 262 A 18 18 0 0 1 330 280 L 330 366 L 302 394 L 210 394 L 182 366 Z" fill="url(#bodyGrad)"/>
+
+    <!-- Left Arm -->
+    <path d="M 166 274 L 136 304 L 136 366 L 152 382" fill="none" stroke="url(#bodyGrad)" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>
+
+    <!-- Right Arm -->
+    <path d="M 346 274 L 376 304 L 376 366 L 360 382" fill="none" stroke="url(#bodyGrad)" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "name": "RobOS",
+  "short_name": "RobOS",
+  "description": "The AI-First SDLC Platform & Autonomous Agent Governance Harness",
+  "icons": [
+    {
+      "src": "/assets/images/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/images/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#080b11",
+  "background_color": "#080b11",
+  "display": "standalone"
+}
