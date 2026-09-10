@@ -9,22 +9,22 @@
 </p>
 
 <p align="center">
-  <a href="https://nddipiazza.github.io/robos/"><strong>Documentation</strong></a> ·
-  <a href="https://nddipiazza.github.io/robos/getting-started.html"><strong>Quickstart</strong></a> ·
-  <a href="https://nddipiazza.github.io/robos/big-wins.html"><strong>Core Innovations</strong></a> ·
-  <a href="https://nddipiazza.github.io/robos/apps.html"><strong>30+ App Suite</strong></a> ·
-  <a href="https://nddipiazza.github.io/robos/architecture.html"><strong>Architecture</strong></a> ·
+  <a href="https://rowbose.com/"><strong>Documentation</strong></a> ·
+  <a href="https://rowbose.com/getting-started.html"><strong>Quickstart</strong></a> ·
+  <a href="https://rowbose.com/big-wins.html"><strong>Core Innovations</strong></a> ·
+  <a href="https://rowbose.com/apps.html"><strong>30+ App Suite</strong></a> ·
+  <a href="https://rowbose.com/architecture.html"><strong>Architecture</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a> ·
   <a href="https://discord.gg/6PjxzkHujE"><strong>Discord Community</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://nddipiazza.github.io/robos/"><img src="https://img.shields.io/badge/docs-nddipiazza.github.io%2Frobos-blue?style=flat&logo=read-the-docs&logoColor=white" alt="Documentation" /></a>
+  <a href="https://rowbose.com/"><img src="https://img.shields.io/badge/docs-rowbose.com-blue?style=flat&logo=read-the-docs&logoColor=white" alt="Documentation" /></a>
   <a href="https://discord.gg/6PjxzkHujE"><img src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/nddipiazza/robos" alt="License" /></a>
   <a href="https://github.com/nddipiazza/robos/stargazers"><img src="https://img.shields.io/github/stars/nddipiazza/robos?style=social" alt="Stars" /></a>
   <a href="packages/robos-test"><img src="https://img.shields.io/badge/tests-100%25%20passing-brightgreen" alt="Tests" /></a>
-  <a href="https://nddipiazza.github.io/robos/"><img src="https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue" alt="Standards" /></a>
+  <a href="https://rowbose.com/"><img src="https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue" alt="Standards" /></a>
 </p>
 
 <p align="center">
@@ -254,7 +254,7 @@ RobOS is built entirely on battle-tested open specifications. Everything persist
 - **The Lore**: Named after **Robo** (R-66Y / Prometheus) from the 1995 RPG classic *Chrono Trigger*. In the story, Robo spends **400 years** tilling and irrigating Fiona's scorched desert so it blossoms into a flourishing forest. RobOS does the same for developers: our autonomous agents tirelessly perform the grueling background labor of the SDLC (scaffolding, contracts, migrations, headless testing) so human architects can focus on creative engineering.
 - **Built by Agents**: **GitHub Copilot**, **Anthropic Claude**, **OpenAI Codex**, and **Google Gemini** contributed equally to building RobOS through agentic workflows, proving that diverse AI models excel when collaborating under open standards.
 
-👉 **[Read the complete backstory and multi-agent lore →](https://nddipiazza.github.io/robos/about.html)**
+👉 **[Read the complete backstory and multi-agent lore →](https://rowbose.com/about.html)**
 
 ---
 
@@ -267,7 +267,7 @@ Join developers, architects, and AI researchers building the future of agent-gov
 - 🎮 **[Join the RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Live support, demo streams, and agent architecture discussions.
 - 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — General questions and community announcements.
 - 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** & **[Issues](https://github.com/nddipiazza/robos/issues)** — Feature proposals, bug reports, and roadmap discussions.
-- 📖 **[Documentation Portal](https://nddipiazza.github.io/robos/)** — Complete guides, architecture specs, and walkthrough archives.
+- 📖 **[Documentation Portal](https://rowbose.com/)** — Complete guides, architecture specs, and walkthrough archives.
 
 ---
 

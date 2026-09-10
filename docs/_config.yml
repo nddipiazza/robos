@@ -1,11 +1,11 @@
 title: RobOS
 tagline: AI-First SDLC Platform & Autonomous Agent Governance Harness
 description: "The AI-first SDLC platform and autonomous agent governance harness with automated 1080p video proof-of-work, semantic blast-radius checking, and Knowledge Graph-First application generation. Model your architecture once and govern coding agents with zero workstation pollution."
-url: "https://nddipiazza.github.io"
-baseurl: "/robos"
+url: "https://rowbose.com"
+baseurl: ""
 
 # Open Graph / LinkedIn / Twitter preview
-og_image: "/robos/assets/images/screenshots/robos-desktop.png"
+og_image: "/assets/images/kgraph-autogen-architecture.jpg"
 twitter:
   card: summary_large_image
 
@@ -23,7 +23,7 @@ aux_links:
   "💡 Ideas Store":
     - "https://github.com/nddipiazza/robos/tree/main/docs/ideas"
   "🌱 About":
-    - "https://nddipiazza.github.io/robos/about.html"
+    - "/about.html"
 
 aux_links_new_tab: true
 
