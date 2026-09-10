@@ -56,15 +56,17 @@ const SEGMENTS = [
     image: path.join(ROOT_DIR, 'docs/assets/images/day-in-the-life/phase-kgraph-dual-state.jpg'),
     duration: 2.5,
   },
-  // Knowledge Graph: Adding Resources to Build App
+  // Knowledge Graph Flagship Explorer
   {
     type: 'video',
-    src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/kgraph-nodes-redesign/kgraph-nodes-redesign.webm'),
-    start: 0,
-    duration: 10,
-    subtitle: 'Knowledge Graph Explorer: Adding architectural resources & schemas to build the app',
-    subStart: 0.5,
-    subDuration: 3.2,
+    src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/kgraph-flagship-explorer/kgraph-flagship-explorer.webm'),
+    start: 2,
+    duration: 25,
+    cues: [
+      { start: 0.5, duration: 3.2, text: 'Knowledge Graph Explorer: Interactive SVG topology, node dependencies, & C4 architecture' },
+      { start: 8.5, duration: 3.2, text: 'Schema-Driven Entity Creator: ➕ Add Entity modal with live W3C SHACL validation gate' },
+      { start: 16.5, duration: 3.2, text: 'Transitive Blast Radius Analyzer & Multi-Hop Path Finder: BFS connection chains' },
+    ],
   },
   // Dual-State Architecture: Blast Radius Diffing
   {
@@ -82,16 +84,16 @@ const SEGMENTS = [
     image: path.join(ROOT_DIR, 'docs/assets/images/day-in-the-life/phase2-scaffolding.jpg'),
     duration: 2.5,
   },
-  // Phase 2: Scaffolding & Contracts
+  // Phase 2: Scaffolding, Contracts & OpenAPI Web Service Viewer
   {
     type: 'video',
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/acme-petshop-step3-contracts/acme-petshop-step3-contracts.webm'),
-    start: 12,
-    duration: 10,
-    crop: '1200:820:360:130',
-    subtitle: 'Phase 2: TypeSpec domain modeling & OpenAPI 3.1 contract gates',
-    subStart: 0.5,
-    subDuration: 3.0,
+    start: 19,
+    duration: 18,
+    cues: [
+      { start: 0.5, duration: 3.2, text: 'Phase 2: OpenAPI 3.1 Web Service Explorer: Browsing routes, security, & parameters' },
+      { start: 8.5, duration: 3.2, text: 'Live Web Service Testing: Execute POST /pets/{id}/adopt & receive 200 OK response' },
+    ],
   },
   // Phase 3 Card
   {

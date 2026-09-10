@@ -28,6 +28,7 @@
       </div>
 
       <div class="header-right">
+        <button class="btn btn-secondary" id="btn-open-openapi-viewer" onclick="window.openOpenApiViewer()">🌐 Browse OpenAPI Viewer</button>
         <button class="btn btn-secondary" id="btn-run-spectral" onclick="window.runSpectral()">🛡️ Run Spectral Lint</button>
         <button class="btn btn-secondary" id="btn-run-pact" onclick="window.runPact()">🤝 Run Pact Tests</button>
         <button class="btn btn-primary" id="btn-start-prism" onclick="window.startPrism()">⚡ Start Prism Mock</button>
@@ -98,6 +99,44 @@
         </section>
       </div>
     </main>
+
+    <!-- OpenAPI 3.1 Interactive Web Service Viewer & Browser Modal -->
+    <div id="openapi-viewer-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card openapi-modal-card">
+        <div class="modal-header">
+          <div class="openapi-modal-title">
+            <span class="openapi-badge">OpenAPI 3.1</span>
+            <strong id="openapi-modal-contract-title">Acme Petshop Core REST API</strong>
+            <span class="version-tag" id="openapi-modal-version">v3.1.0</span>
+          </div>
+          <div class="openapi-server-bar">
+            <label>Server:</label>
+            <select id="openapi-server-select" class="server-select" onchange="window.switchOpenApiServer(this.value)">
+              <option value="http://127.0.0.1:4010">⚡ Prism Mock Server (http://127.0.0.1:4010)</option>
+              <option value="http://localhost:8080">🚀 Spring Boot 3.3 Microservice (http://localhost:8080)</option>
+            </select>
+          </div>
+          <button class="modal-close-btn" onclick="window.closeOpenApiViewer()">&times;</button>
+        </div>
+
+        <div class="modal-body openapi-modal-body">
+          <!-- Left: Operations Sidebar -->
+          <div class="openapi-sidebar">
+            <div class="openapi-search-wrap">
+              <input type="text" id="openapi-op-search" class="search-input" placeholder="🔍 Filter endpoints..." oninput="window.filterOpenApiOps(this.value)" />
+            </div>
+            <div class="openapi-ops-list" id="openapi-ops-list">
+              <!-- Rendered by app.js -->
+            </div>
+          </div>
+
+          <!-- Right: Operation Details & Live Request/Response Runner -->
+          <div class="openapi-detail-pane" id="openapi-detail-pane">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="../../robos-ui/robos-ui.js"></script>

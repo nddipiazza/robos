@@ -58,13 +58,14 @@ async function findWindowGeometry(title, { display, timeoutMs = 10000 } = {}) {
         }
       }
       if (out) {
+        const id = (out.match(/Window id:\s+(0x[0-9a-fA-F]+)/) || [])[1];
         const x = parseInt((out.match(/Absolute upper-left X:\s+(-?\d+)/) || [])[1], 10);
         const y = parseInt((out.match(/Absolute upper-left Y:\s+(-?\d+)/) || [])[1], 10);
         const w = parseInt((out.match(/Width:\s+(\d+)/) || [])[1], 10);
         const h = parseInt((out.match(/Height:\s+(\d+)/) || [])[1], 10);
         const mapped = /Map State:\s+IsViewable/.test(out);
         if (Number.isFinite(x + y + w + h) && mapped) {
-          return { x, y, w, h, display: disp };
+          return { id, x, y, w, h, display: disp };
         }
       }
     } catch (e) { lastErr = e; }
@@ -79,9 +80,24 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
   const env = { ...process.env, DISPLAY: geometry.display };
   if (xauth) env.XAUTHORITY = xauth;
 
+  let safeX = Math.max(0, geometry.x || 0);
+  let safeY = Math.max(0, geometry.y || 0);
+  let w = geometry.w;
+  let h = geometry.h;
+
+  try {
+    const rootInfo = execSync(`xwininfo -root`, { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const rootW = parseInt((rootInfo.match(/Width:\s+(\d+)/) || [])[1], 10);
+    const rootH = parseInt((rootInfo.match(/Height:\s+(\d+)/) || [])[1], 10);
+    if (rootW && rootH) {
+      if (safeX + w > rootW) w = rootW - safeX;
+      if (safeY + h > rootH) h = rootH - safeY;
+    }
+  } catch {}
+
   // ffmpeg requires even dimensions for most codecs
-  const w = geometry.w - (geometry.w % 2);
-  const h = geometry.h - (geometry.h % 2);
+  w = Math.max(2, w - (w % 2));
+  h = Math.max(2, h - (h % 2));
   const disp = (geometry.display || process.env.DISPLAY || ':0').trim();
   const fullDisp = disp.includes('.') ? disp : `${disp}.0`;
   const args = [
@@ -90,15 +106,21 @@ function startRecording({ geometry, outPath, framerate = 30 }) {
     '-loglevel', 'warning',
     '-f', 'x11grab',
     '-framerate', String(framerate),
-    '-video_size', `${w}x${h}`,
-    '-i', `${fullDisp}+${geometry.x},${geometry.y}`,
+  ];
+  if (geometry.id) {
+    args.push('-window_id', geometry.id, '-i', fullDisp);
+  } else {
+    args.push('-video_size', `${w}x${h}`, '-i', `${fullDisp}+${safeX},${safeY}`);
+  }
+  args.push(
+    '-vf', 'scale=1920:1080',
     '-c:v', 'libvpx-vp9',
     '-b:v', '2M',
     '-deadline', 'realtime',
-    '-cpu-used', '4',
+    '-cpu-used', '8',
     '-pix_fmt', 'yuv420p',
     outPath,
-  ];
+  );
   const proc = spawn('ffmpeg', args, { env, stdio: ['pipe', 'pipe', 'pipe'] });
   let stderr = '';
   proc.stderr.on('data', d => { stderr += d.toString(); });
@@ -116,8 +138,8 @@ async function stopRecording(handle) {
       setTimeout(() => {
         try { handle.proc.kill('SIGKILL'); } catch {}
         resolve();
-      }, 2000);
-    }, 5000);
+      }, 5000);
+    }, 15000);
     handle.proc.on('exit', () => { clearTimeout(t); resolve(); });
     if (handle.proc.exitCode !== null) { clearTimeout(t); resolve(); }
   });

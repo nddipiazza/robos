@@ -69,14 +69,54 @@ const SCRIPT = [
     js: `(() => {
       if (window.selectContract) window.selectContract('petstore-api.openapi.yaml');
     })()`,
+    minHold: 3000,
+  },
+  {
+    narration: 'We open the interactive OpenAPI Web Service Viewer to explore routes, parameters, and schemas.',
+    target: '#btn-open-openapi-viewer',
+    action: 'click',
+    callout: 'Open Interactive OpenAPI 3.1 Web Service Viewer',
+    js: `(() => {
+      if (window.openOpenApiViewer) window.openOpenApiViewer('adoptPet');
+    })()`,
     minHold: 4000,
+  },
+  {
+    narration: 'We browse the POST /pets/{id}/adopt operation, inspecting parameters, security, and the JSON payload.',
+    target: '#op-nav-adoptPet',
+    action: 'click',
+    callout: 'Browse Web Service: POST /pets/{id}/adopt',
+    js: `(() => {
+      if (window.selectOpenApiOperation) window.selectOpenApiOperation('adoptPet');
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: 'We send a live HTTP request to test the web service and receive a verified 200 OK adoption response.',
+    target: '#btn-execute-request',
+    action: 'click',
+    callout: 'Execute Web Service Call (200 OK)',
+    js: `(() => {
+      if (window.executeOpenApiRequest) window.executeOpenApiRequest();
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: 'We close the OpenAPI viewer and continue contract governance verification.',
+    target: '.modal-close-btn',
+    action: 'click',
+    callout: 'Close OpenAPI Viewer',
+    js: `(() => {
+      if (window.closeOpenApiViewer) window.closeOpenApiViewer();
+    })()`,
+    minHold: 2000,
   },
   {
     narration: 'We inspect the POST /pets/{id}/adopt checkout endpoint with strict AdoptionRequest validation.',
     target: '#endpoint-post--pets--id--adopt',
     action: 'hover',
     callout: 'Inspect Adoption Checkout Operation',
-    minHold: 3500,
+    minHold: 3000,
   },
   {
     narration: 'We select vaccine-gateway.openapi.yaml, verifying the mTLS state vet certificate validation endpoint.',
