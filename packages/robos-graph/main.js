@@ -134,4 +134,12 @@ ipcMain.handle('devops-list-integrations', async () => store.listDevOpsIntegrati
 ipcMain.handle('devops-save-integration', async (_, payload) => store.saveDevOpsIntegration(payload));
 ipcMain.handle('devops-test-connection', async (_, payload) => store.testDevOpsConnection(payload));
 ipcMain.handle('devops-delete-integration', async (_, id) => store.deleteDevOpsIntegration(id));
-
+// ── Advanced KGraph GUI IPC Handlers ─────────────────────────────────────────
+ipcMain.handle('graph-add-node', async (_, nodeData) => store.addNode(nodeData));
+ipcMain.handle('graph-update-node', async (_, { id, patch } = {}) => store.updateNode(id, patch));
+ipcMain.handle('graph-delete-node', async (_, { id, cascade } = {}) => store.removeNode(id, { cascade }));
+ipcMain.handle('graph-find-path', async (_, { startId, endId, maxDepth } = {}) => store.findPath(startId, endId, maxDepth));
+ipcMain.handle('graph-get-impact', async (_, { id, depth } = {}) => store.findDependents(id, depth));
+ipcMain.handle('graph-generate-mermaid', async (_, opts = {}) => store.generateMermaidGraph(opts));
+ipcMain.handle('graph-export', async (_, { format, packageId } = {}) => store.exportGraph(format, packageId));
+ipcMain.handle('graph-search-nodes', async (_, { query, filter } = {}) => store.searchNodes(query, filter));

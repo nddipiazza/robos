@@ -1419,4 +1419,320 @@ h1 {
   margin-left: 4px;
 }
 
+/* ── Node Action Toolbar in Inspector ─────────────────────────────────────── */
+.node-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.btn-action-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-action-sm:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-action-sm.btn-danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ── Form Rows & Archetype Chips ─────────────────────────────────────────── */
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.archetype-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.archetype-chip {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.archetype-chip:hover {
+  border-color: var(--accent);
+  color: var(--text-bright);
+  background: var(--bg-card);
+}
+
+.archetype-chip.active {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.archetype-fields-box {
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Topology Graph Tab ─────────────────────────────────────────────────── */
+.topology-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 8px;
+}
+
+.topology-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.topology-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topology-canvas-wrap {
+  flex: 1;
+  background: #06090d;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: auto;
+  position: relative;
+  min-height: 440px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.topology-svg {
+  min-width: 100%;
+  min-height: 100%;
+  user-select: none;
+}
+
+.topology-node-rect {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topology-node-rect:hover {
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.topology-node-rect.selected {
+  stroke: var(--accent) !important;
+  stroke-width: 2.5px !important;
+}
+
+/* ── Blast Radius & Impact Analyzer Tab ─────────────────────────────────── */
+.impact-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.impact-summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.impact-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.risk-low { background: rgba(63, 185, 80, 0.15); color: var(--success); border: 1px solid var(--success); }
+.risk-medium { background: rgba(210, 153, 34, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+.risk-high { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+.risk-critical { background: rgba(248, 81, 73, 0.3); color: #ff7b72; border: 1px solid #ff7b72; font-weight: 800; }
+
+.impact-tree-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.impact-tree-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.impact-tree-item:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.impact-depth-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 188, 212, 0.15);
+  color: var(--accent);
+}
+
+/* ── Multi-Hop Path Finder & Query Console ───────────────────────────────── */
+.path-finder-box {
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.path-chain-view {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.path-hop-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.path-hop-card:hover {
+  border-color: var(--accent);
+}
+
+.path-hop-arrow {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ── SHACL Conformance & Health Dashboard ────────────────────────────────── */
+.shacl-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shacl-score-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shacl-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shacl-metric-val {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.shacl-metric-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.shacl-violation-row {
+  background: rgba(248, 81, 73, 0.08);
+  border-left: 3px solid var(--danger);
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
 

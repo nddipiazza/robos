@@ -46,4 +46,15 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   saveDevOpsIntegration: (payload) => ipcRenderer.invoke('devops-save-integration', payload),
   testDevOpsConnection: (payload) => ipcRenderer.invoke('devops-test-connection', payload),
   deleteDevOpsIntegration: (id) => ipcRenderer.invoke('devops-delete-integration', id),
+
+  // Advanced KGraph GUI Operations
+  addNode: (nodeData) => ipcRenderer.invoke('graph-add-node', nodeData),
+  updateNode: (id, patch) => ipcRenderer.invoke('graph-update-node', { id, patch }),
+  deleteNode: (id, options = {}) => ipcRenderer.invoke('graph-delete-node', { id, cascade: options.cascade }),
+  findPath: (startId, endId, maxDepth) => ipcRenderer.invoke('graph-find-path', { startId, endId, maxDepth }),
+  getImpact: (id, depth) => ipcRenderer.invoke('graph-get-impact', { id, depth }),
+  generateMermaid: (options) => ipcRenderer.invoke('graph-generate-mermaid', options),
+  exportGraph: (format, packageId) => ipcRenderer.invoke('graph-export', { format, packageId }),
+  searchNodes: (query, filter) => ipcRenderer.invoke('graph-search-nodes', { query, filter }),
 });
+

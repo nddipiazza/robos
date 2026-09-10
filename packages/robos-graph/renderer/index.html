@@ -103,6 +103,8 @@
               <span class="nodes-count-badge" id="nodes-count-badge">5 of 5 Nodes</span>
             </div>
             <div class="panel-header-actions">
+              <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new SDLC Resource Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
+              <button class="btn btn-secondary" id="btn-open-ingest-modal" title="Import / Ingest Nodes" style="padding: 2px 6px; font-size: 10px;">📥 Ingest</button>
               <div class="group-mode-toggle" id="group-mode-toggle" title="Group Nodes By">
                 <button class="group-btn active" id="btn-group-package" data-mode="package" title="Group by Package">📦 Package</button>
                 <button class="group-btn" id="btn-group-category" data-mode="category" title="Group by Category">🏷️ Type</button>
@@ -183,6 +185,9 @@
         <section class="panel inspector-panel">
           <div class="inspector-tabs">
             <button class="tab-btn active" id="tab-btn-visual">📋 Visual Inspector & BDD</button>
+            <button class="tab-btn" id="tab-btn-topology">🗺️ Topology Graph</button>
+            <button class="tab-btn" id="tab-btn-impact">💥 Blast Radius & Impact</button>
+            <button class="tab-btn" id="tab-btn-query">🔍 Query & Paths</button>
             <button class="tab-btn" id="tab-btn-gitops">📁 .robos/ GitOps SDLC</button>
             <button class="tab-btn" id="tab-btn-edd">🤖 Autonomous EDD Loop</button>
             <button class="tab-btn" id="tab-btn-video">🎬 Video Walkthrough</button>
@@ -363,6 +368,309 @@
           <div style="line-height: 1.45;">
             <strong style="color: var(--accent);">Need to import your company's full Knowledge Graph?</strong> Instruct your AI agent to use the <code>import-company-kgraph</code> skill (e.g. <code>/import-company-kgraph --source &lt;url | s3://... | path&gt;</code>) to extract entries from HTTP endpoints, AWS S3 buckets, or local filesystems and generate ready-to-import KGraph package files.
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Add SDLC Entity Modal ───────────────────────────────────────────── -->
+  <div id="add-entity-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">➕</span>
+          <div>
+            <h2>Add SDLC Resource Node</h2>
+            <div class="modal-subtitle">Schema-Driven Entity Scaffolding with W3C SHACL Validation Gate</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-add-entity-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="wizard-step-header">
+          <span>1. Select Entity Archetype:</span>
+        </div>
+        <div class="archetype-chips-grid" id="archetype-chips-grid">
+          <button class="archetype-chip active" data-archetype="Microservice">🔌 Microservice</button>
+          <button class="archetype-chip" data-archetype="FrontEndApp">🌐 Front End App</button>
+          <button class="archetype-chip" data-archetype="DesktopApp">🖥️ Desktop App</button>
+          <button class="archetype-chip" data-archetype="Database">🗄️ Relational DB</button>
+          <button class="archetype-chip" data-archetype="NoSQLDatabase">🍃 NoSQL Store</button>
+          <button class="archetype-chip" data-archetype="MessageBroker">📨 Message Broker</button>
+          <button class="archetype-chip" data-archetype="Contract">📜 API Contract</button>
+          <button class="archetype-chip" data-archetype="Feature">🥒 BDD Feature</button>
+          <button class="archetype-chip" data-archetype="DocumentationPage">📖 Living Doc</button>
+          <button class="archetype-chip" data-archetype="ADR">📋 Architecture Decision</button>
+          <button class="archetype-chip" data-archetype="ConsoleApp">⌨️ Console CLI</button>
+          <button class="archetype-chip" data-archetype="DataPipeline">🔄 Data Pipeline</button>
+          <button class="archetype-chip" data-archetype="Library">📦 Library / SDK</button>
+        </div>
+
+        <div class="wizard-step-header" style="margin-top: 14px;">
+          <span>2. Entity Properties & Metadata:</span>
+        </div>
+        <form id="add-entity-form" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="field-label">Display Title <span style="color: var(--danger);">*</span></label>
+              <input type="text" id="add-node-title" class="input-text" placeholder="e.g. Billing Microservice" required />
+            </div>
+            <div class="form-group">
+              <label class="field-label">Entity URI (@id) <span style="color: var(--danger);">*</span></label>
+              <input type="text" id="add-node-id" class="input-text" placeholder="urn:robos:service:billing-api" required />
+            </div>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="field-label">Target Package Store <span style="color: var(--danger);">*</span></label>
+              <select id="add-node-package" class="input-text">
+                <option value="services">services (Microservices & Contracts)</option>
+                <option value="applications">applications (Clients & Frontends)</option>
+                <option value="core-platform">core-platform (Architecture & Datastores)</option>
+                <option value="devops">devops (Cloud & Pass Vault)</option>
+                <option value="organization">organization (Teams & Topologies)</option>
+                <option value="documentation">documentation (Living Docs & Diagrams)</option>
+                <option value="learning">learning (eLearning & Curriculums)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="field-label">Owner Team</label>
+              <input type="text" id="add-node-team" class="input-text" placeholder="core-platform" value="core-platform" />
+            </div>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="field-label">Repository</label>
+              <input type="text" id="add-node-repo" class="input-text" placeholder="github.com/acme/service" />
+            </div>
+            <div class="form-group">
+              <label class="field-label">Technology / Tech Stack</label>
+              <input type="text" id="add-node-tech" class="input-text" placeholder="Node.js 20 / Express" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Description</label>
+            <input type="text" id="add-node-desc" class="input-text" placeholder="High-throughput payment and subscription processing service" />
+          </div>
+
+          <!-- Archetype specific dynamic fields -->
+          <div id="add-node-archetype-fields" class="archetype-fields-box"></div>
+
+          <div id="add-node-status" class="wizard-status-msg" style="display: none;"></div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-add-entity">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btn-submit-add-entity">💾 Save & Register Entity</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit SDLC Entity Modal ──────────────────────────────────────────── -->
+  <div id="edit-entity-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">✏️</span>
+          <div>
+            <h2 id="edit-modal-title">Edit SDLC Node</h2>
+            <div class="modal-subtitle" id="edit-modal-subtitle">Mutate Properties with Automated SHACL Re-Validation</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div class="group-mode-toggle">
+            <button class="group-btn active" id="btn-edit-mode-form">Form View</button>
+            <button class="group-btn" id="btn-edit-mode-json">JSON-LD Patch</button>
+          </div>
+          <button class="modal-close-btn" id="btn-close-edit-entity-modal">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id="edit-view-form">
+          <form id="edit-entity-form" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="field-label">Display Title</label>
+                <input type="text" id="edit-node-title" class="input-text" required />
+              </div>
+              <div class="form-group">
+                <label class="field-label">Entity URI (@id) [Read-Only]</label>
+                <input type="text" id="edit-node-id" class="input-text" readonly style="opacity: 0.7;" />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="field-label">Package Store</label>
+                <select id="edit-node-package" class="input-text">
+                  <option value="services">services</option>
+                  <option value="applications">applications</option>
+                  <option value="core-platform">core-platform</option>
+                  <option value="devops">devops</option>
+                  <option value="organization">organization</option>
+                  <option value="documentation">documentation</option>
+                  <option value="learning">learning</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="field-label">Owner Team</label>
+                <input type="text" id="edit-node-team" class="input-text" />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="field-label">Repository</label>
+                <input type="text" id="edit-node-repo" class="input-text" />
+              </div>
+              <div class="form-group">
+                <label class="field-label">Technology / Tech Stack</label>
+                <input type="text" id="edit-node-tech" class="input-text" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label">Description</label>
+              <textarea id="edit-node-desc" class="input-text" rows="2" style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="field-label">Tags (comma-separated)</label>
+              <input type="text" id="edit-node-tags" class="input-text" placeholder="production, critical, v2" />
+            </div>
+          </form>
+        </div>
+
+        <div id="edit-view-json" style="display: none;">
+          <div class="field-label" style="margin-bottom: 4px;">Edit Raw JSON-LD Representation:</div>
+          <textarea id="edit-node-json-textarea" class="input-text json-pre" rows="14" style="width: 100%; resize: vertical;"></textarea>
+        </div>
+
+        <div id="edit-node-status" class="wizard-status-msg" style="display: none;"></div>
+
+        <div class="modal-footer-actions" style="margin-top: 14px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-edit-entity">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-save-edit-entity">💾 Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Delete Node Confirmation Modal ──────────────────────────────────── -->
+  <div id="delete-confirm-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon" style="color: var(--danger);">🗑️</span>
+          <div>
+            <h2>Delete SDLC Node</h2>
+            <div class="modal-subtitle">Permanent Deletion from Knowledge Graph</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-delete-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-bright); line-height: 1.5;">
+          Are you sure you want to delete <strong id="delete-node-name" style="color: var(--danger);">this node</strong>?
+        </p>
+        <div style="margin: 10px 0; background: var(--bg-darker); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px;">
+          <div><strong>Node ID:</strong> <code id="delete-node-id-display"></code></div>
+          <div style="margin-top: 4px;"><strong>Dependent Blast Radius:</strong> <span id="delete-dependents-count" style="color: var(--warning);">0</span> dependent nodes</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
+          <input type="checkbox" id="delete-cascade-checkbox" checked />
+          <label for="delete-cascade-checkbox" style="font-size: 11px; cursor: pointer;">
+            <strong>Cascade Prune:</strong> Automatically remove references to this node from other nodes
+          </label>
+        </div>
+        <div id="delete-node-status" class="wizard-status-msg" style="display: none;"></div>
+        <div class="modal-footer-actions" style="margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-delete">Cancel</button>
+          <button type="button" class="btn btn-danger" id="btn-confirm-delete">🗑️ Delete Node</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Export Node Modal ───────────────────────────────────────────────── -->
+  <div id="export-node-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📤</span>
+          <div>
+            <h2>Export Knowledge Graph Entity</h2>
+            <div class="modal-subtitle">Standard RDF / Linked Data Formats</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-export-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="group-mode-toggle">
+            <button class="group-btn active" id="btn-export-fmt-jsonld">JSON-LD 1.1</button>
+            <button class="group-btn" id="btn-export-fmt-turtle">Turtle (.ttl)</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-copy-export-content">📋 Copy to Clipboard</button>
+        </div>
+        <pre class="json-pre" id="export-content-pre" style="max-height: 380px;"></pre>
+        <div id="export-status-msg" class="wizard-status-msg" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Ingest & Import Modal ───────────────────────────────────────────── -->
+  <div id="ingest-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📥</span>
+          <div>
+            <h2>Ingest & Import SDLC Nodes</h2>
+            <div class="modal-subtitle">Import from Git Projects, File System, or Raw JSON-LD Specifications</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btn-close-ingest-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2col" style="margin-bottom: 12px;">
+          <div class="inspector-card" style="cursor: pointer;" id="card-ingest-gitprojects">
+            <div class="card-title">
+              <span>📁 Git Projects Auto-Sync</span>
+              <span class="type-badge type-service">1-Click</span>
+            </div>
+            <div class="card-desc">
+              Discover and ingest repositories registered in RobOS Git Projects into the <code>services</code> and <code>applications</code> package stores.
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-run-ingest-gitprojects" style="margin-top: 8px;">⚡ Sync from Git Projects</button>
+          </div>
+
+          <div class="inspector-card" style="cursor: pointer;" id="card-ingest-company">
+            <div class="card-title">
+              <span>🏢 Company KGraph Ingestion</span>
+              <span class="type-badge type-contract">Skill Bridge</span>
+            </div>
+            <div class="card-desc">
+              Import company-wide microservices, repos, and teams from AWS S3, local directory, or Git forge URLs.
+            </div>
+            <div style="font-size: 11px; color: var(--accent); margin-top: 8px;">
+              Tip: Use skill <code>/import-company-kgraph</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-label" style="margin-bottom: 4px;">Or Paste JSON-LD Specification (Single Node or Array):</div>
+        <textarea id="ingest-json-input" class="input-text json-pre" rows="8" placeholder='[&#10;  {&#10;    "@id": "urn:robos:service:orders",&#10;    "@type": ["robos:Microservice"],&#10;    "dcterms:title": "Orders API",&#10;    "robos:package": "services"&#10;  }&#10;]'></textarea>
+        
+        <div id="ingest-status-msg" class="wizard-status-msg" style="display: none; margin-top: 8px;"></div>
+
+        <div class="modal-footer-actions" style="margin-top: 12px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-ingest">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-submit-ingest-json">⚡ Import JSON-LD Nodes</button>
         </div>
       </div>
     </div>

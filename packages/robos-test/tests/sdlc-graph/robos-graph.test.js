@@ -166,4 +166,121 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
       await killApp(app);
     }
   });
+
+  it('provides rich flagship GUI support: entity creator, editor, interactive topology diagram, impact analyzer, and path finder', async () => {
+    const app = await launchApp('robos-graph', {
+      ...scenarios['all-good'],
+      env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
+    });
+
+    try {
+      assert.ok(app.port, 'robos-graph debug port should be allocated');
+
+      // 1. Test Opening Add Entity Modal & Creating Node
+      await evalClick(app.port, '#btn-open-add-entity-modal');
+      await new Promise(r => setTimeout(r, 200));
+
+      const addModalDisplay = await evalJS(app.port, `document.getElementById('add-entity-modal').style.display`);
+      assert.strictEqual(addModalDisplay, 'flex', 'Add Entity modal must be displayed');
+
+      // Configure new Database entity
+      await evalJS(app.port, `
+        window.selectAddArchetype('Database');
+        document.getElementById('add-node-title').value = 'Payments Ledger Database';
+        document.getElementById('add-node-id').value = 'urn:robos:db:payments-ledger';
+        document.getElementById('add-node-package').value = 'core-platform';
+        document.getElementById('add-node-desc').value = 'ACID compliant financial transaction storage';
+      `);
+
+      const addResult = await evalJS(app.port, `window.submitAddEntity()`);
+      await new Promise(r => setTimeout(r, 600));
+
+      const modalAfterAdd = await evalJS(app.port, `document.getElementById('add-entity-modal').style.display`);
+      const statusText = await evalJS(app.port, `(document.getElementById('add-node-status') || {}).textContent || ''`);
+      assert.strictEqual(modalAfterAdd, 'none', `Add Entity modal should close on successful submission (status: ${statusText})`);
+
+      const createdNode = await evalJS(app.port, `
+        (async () => {
+          const list = await window.sdlcGraph.getAllNodes();
+          return list.find(n => n['@id'] === 'urn:robos:db:payments-ledger');
+        })()
+      `);
+      assert.ok(createdNode, `New entity must be registered in the Knowledge Graph (addResult: ${JSON.stringify(addResult)})`);
+      assert.strictEqual(createdNode['dcterms:title'], 'Payments Ledger Database');
+
+      // 2. Test Node Action Bar & Edit Node Modal
+      await evalJS(app.port, `window.selectNode('urn:robos:db:payments-ledger')`);
+      await new Promise(r => setTimeout(r, 200));
+
+      const actionBarExists = await evalJS(app.port, `!!document.querySelector('.node-action-bar')`);
+      assert.strictEqual(actionBarExists, true, 'Node Action Bar must be rendered on active node');
+
+      await evalJS(app.port, `window.openEditEntityModal('urn:robos:db:payments-ledger')`);
+      await new Promise(r => setTimeout(r, 200));
+
+      const editModalDisplay = await evalJS(app.port, `document.getElementById('edit-entity-modal').style.display`);
+      assert.strictEqual(editModalDisplay, 'flex', 'Edit Entity modal must be displayed');
+
+      await evalJS(app.port, `
+        (async () => {
+          document.getElementById('edit-node-title').value = 'High-Throughput Payments Ledger DB';
+          return await window.submitEditEntity();
+        })()
+      `);
+      await new Promise(r => setTimeout(r, 500));
+
+      const updatedNode = await evalJS(app.port, `
+        (async () => {
+          const list = await window.sdlcGraph.getAllNodes();
+          return list.find(n => n['@id'] === 'urn:robos:db:payments-ledger');
+        })()
+      `);
+      assert.strictEqual(updatedNode['dcterms:title'], 'High-Throughput Payments Ledger DB', 'Entity title must be updated');
+
+      // 3. Test Interactive Topology Graph View
+      await evalClick(app.port, '#tab-btn-topology');
+      await new Promise(r => setTimeout(r, 400));
+
+      const topologySvgExists = await evalJS(app.port, `!!document.querySelector('.topology-svg')`);
+      assert.strictEqual(topologySvgExists, true, 'Interactive Topology SVG must be rendered');
+
+      const nodeRectsCount = await evalJS(app.port, `document.querySelectorAll('.topology-node-rect').length`);
+      assert.ok(nodeRectsCount >= 1, 'Topology diagram must render node cards');
+
+      // 4. Test Blast Radius & Impact Analyzer Tab
+      await evalClick(app.port, '#tab-btn-impact');
+      await new Promise(r => setTimeout(r, 400));
+
+      const impactCardExists = await evalJS(app.port, `!!document.querySelector('.impact-summary-card')`);
+      assert.strictEqual(impactCardExists, true, 'Impact summary card must be rendered');
+
+      const riskBadgeText = await evalJS(app.port, `document.querySelector('.impact-risk-badge').textContent`);
+      assert.ok(riskBadgeText.includes('IMPACT') || riskBadgeText.includes('BLAST'), 'Must calculate impact risk badge');
+
+      // 5. Test Multi-Hop Path Finder Tab
+      await evalClick(app.port, '#tab-btn-query');
+      await new Promise(r => setTimeout(r, 400));
+
+      const pathBoxExists = await evalJS(app.port, `!!document.querySelector('.path-finder-box')`);
+      assert.strictEqual(pathBoxExists, true, 'Path Finder box must be rendered');
+
+      // 6. Test Safe Node Deletion
+      await evalJS(app.port, `window.openDeleteEntityModal('urn:robos:db:payments-ledger')`);
+      await new Promise(r => setTimeout(r, 200));
+
+      const deleteModalDisplay = await evalJS(app.port, `document.getElementById('delete-confirm-modal').style.display`);
+      assert.strictEqual(deleteModalDisplay, 'flex', 'Delete Confirmation modal must be displayed');
+
+      await evalJS(app.port, `window.confirmDeleteEntity()`);
+      await new Promise(r => setTimeout(r, 400));
+
+      const deletedNode = await evalJS(app.port, `
+        (await window.sdlcGraph.getAllNodes()).find(n => n['@id'] === 'urn:robos:db:payments-ledger')
+      `);
+      assert.strictEqual(deletedNode, undefined, 'Entity must be deleted from Knowledge Graph');
+    } finally {
+      await killApp(app);
+    }
+  });
 });
+
