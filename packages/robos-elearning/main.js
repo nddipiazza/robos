@@ -83,12 +83,7 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  if (_debugServer && win) {
-    try {
-      _debugServer.registerSnapshotIPC(win);
-      _debugServer.startDebugServer(win, PORT, 'robos-elearning');
-    } catch {}
-  }
+  if (_debugServer) _debugServer.startDebugServer(win, PORT);
 }
 
 app.whenReady().then(createWindow);
@@ -165,4 +160,3 @@ ipcMain.handle('elearning:list-certificates', async (_, opts = {}) => {
   }
   return [];
 });
-'

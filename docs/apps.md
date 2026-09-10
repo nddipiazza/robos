@@ -379,7 +379,7 @@ The complete suite of 51 native developer desktop applications covering the enti
   <div id="code-review" class="robos-cat-group">
     <div class="robos-cat-header">
       <h3 class="robos-cat-title">Code, Repositories & Review</h3>
-      <span class="robos-cat-badge">3 Apps</span>
+      <span class="robos-cat-badge">4 Apps</span>
     </div>
     <div class="robos-apps-grid">
       <a href="#git-projects-multi-repo-hub" class="robos-app-card">
@@ -393,14 +393,25 @@ The complete suite of 51 native developer desktop applications covering the enti
           <span class="robos-app-link-badge">Explore Guide ↗</span>
         </div>
       </a>
-      <a href="#robos-agent-generated-code-review-platform" class="robos-app-card">
+      <a href="{{ '/pr-review-theater.html' | relative_url }}" class="robos-app-card">
         <div class="robos-app-icon-wrap">
           <img src="{{ '/assets/images/icons/pr-review.svg' | relative_url }}" width="38" height="38" alt="Agent Code Review Platform icon" loading="lazy">
         </div>
         <div class="robos-app-body">
-          <div class="robos-app-name">Agent Code Review Platform</div>
+          <div class="robos-app-name">Agent Code Review & PR Review Theater</div>
           <span class="robos-app-pkg">robos:pr-review</span>
-          <p class="robos-app-desc">Autonomous AI pull request auditor, semantic diffs, and IntelliJ IDEA / VS Code review bridges.</p>
+          <p class="robos-app-desc">Autonomous AI pull request auditor, 6-stage Review Theater, knowledge checks, and IDE bridges.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="{{ '/pr-review-theater.html#standalone-robos-elearning-player-hub' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/robos-elearning.svg' | relative_url }}" width="38" height="38" alt="RobOS eLearning Hub icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">RobOS eLearning Hub</div>
+          <span class="robos-app-pkg">robos:robos-elearning</span>
+          <p class="robos-app-desc">Interactive developer eLearning player, hands-on lab runner, and Knowledge Graph certificates.</p>
           <span class="robos-app-link-badge">Explore Guide ↗</span>
         </div>
       </a>
@@ -746,11 +757,16 @@ Eliminate the friction, operational overhead, and vendor lock-in of distributed 
 
 ## 3. Code Review, Testing & Cloud Infrastructure
 
-### RobOS Agent-Generated Code Review Platform
-Autonomous AI-driven code review and audit hub for pull requests. Analyzes pull requests created by AI agents or human developers, provides side-by-side color-coded diffs, runs automatic security audits, tests OpenAPI contract compatibility, and connects directly with your preferred IDE via native plugins:
+### RobOS Agent-Generated Code Review Platform & PR Review Theater
+Autonomous AI-driven code review, audit hub, and 6-stage Review Theater for pull requests. Analyzes pull requests created by AI agents or human developers, provides side-by-side color-coded diffs, runs automatic security audits, tests OpenAPI contract compatibility, generates on-demand masterclasses with verified Knowledge Graph completion certificates, proves runtime correctness with 1080p narrated video proof-of-work, and connects directly with your preferred IDE via native plugins:
+- **6-Stage PR Review Theater**: Interactive masterclasses, Reviewer Knowledge Check quiz, living architecture deltas, in-app file diff viewer, IDE branch bridge, and video proof-of-work with atomic merge gates. Read the full guide in [PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %}).
 - **IntelliJ IDEA Pull Request Review Plugin**: Communicates over RobOS port `63343` IPC bridge and native JetBrains CLI integration to jump straight to modified files, set live breakpoints at change sites, and launch JetBrains' native Pull Request review tool window.
 - **VS Code Pull Request Review Plugin**: Deeply integrates with the industry-standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) to review diffs, leave inline line comments, and approve PRs right inside Visual Studio Code.
-![PR Review]({{ '/assets/images/screenshots/acme-petshop-step6-files_diff_frame.png' | relative_url }})
+![PR Review Theater]({{ '/assets/images/screenshots/pr-review-theater-02-pr-detail.png' | relative_url }})
+
+### RobOS eLearning Hub & Certification Player
+Standalone interactive developer training player and hands-on lab environment for the enterprise SDLC Knowledge Graph (`packages/robos-elearning`). Explore application courses, run local code labs in ephemeral sandboxes, and inspect cryptographically verified completion certificates. Read more in [PR Review Theater & eLearning Hub]({{ site.baseurl }}{% link pr-review-theater.md %}#standalone-robos-elearning-player-hub).
+![RobOS eLearning Hub]({{ '/assets/images/screenshots/robos-elearning-hub-player.png' | relative_url }})
 
 ### Kube Studio & Cloud Infrastructure Navigator
 A visual control room for Kubernetes clusters (local Kind clusters, AWS EKS, Google Cloud GKE, Azure AKS). View running containers, inspect Helm releases, check ArgoCD GitOps status, and stream live server logs.

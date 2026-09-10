@@ -62,9 +62,10 @@ Instead of simply claiming that the code works, the AI runs a complete automated
 - Records a 1080p video with spoken voiceover explanations detailing what was built and tested.
 - Packages the video, subtitles, and test results for your review.
 
-### 5. Human PR Review & IDE Review Integration
+### 5. Human PR Review & PR Review Theater
 The human developer opens the review dashboard:
 - Reviews the visual code diffs, automated security audits, and architectural changes.
+- **Launches the PR Review Theater**: Steps through on-demand interactive masterclasses, passes the Reviewer Knowledge Check for verified Knowledge Graph certification, inspects living architecture deltas, audits in-app code diffs, bridges to the IDE, and watches the 1080p narrated video proof-of-work. Read the complete guide in [PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %}).
 - **Optionally opens the project in their IDE (IntelliJ IDEA or VS Code) using RobOS** to review the PR directly inside the IDE with all IDE context (syntax tree, symbol lookup, type checking, local tests, and debugger) in tow.
 - Watches the 30-second narrated verification video.
 - Approves and merges the pull request with a single click.
@@ -98,6 +99,7 @@ RobOS equips all AI coding assistants (Claude Code, Google Antigravity, GitHub C
 
 ## Next Steps
 
+- **[PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %})**: Experience the 6-stage multi-modal review theater with verified Knowledge Graph certifications.
 - **[RobOS Skills & CLI Macros]({{ site.baseurl }}{% link robos-skills.md %})**: Master cross-agent AI skills and parameter validation.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

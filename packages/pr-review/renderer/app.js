@@ -129,10 +129,10 @@ function renderPRList() {
 
   if (prs.length === 0) {
     listEl.innerHTML = "";
-    emptyState.classList.remove("hidden");
+    if (emptyState) emptyState.classList.remove("hidden");
     return;
   }
-  emptyState.classList.add("hidden");
+  if (emptyState) emptyState.classList.add("hidden");
 
   listEl.innerHTML = prs.map(pr => {
     const ciDot = pr.ciStatus === "success" ? "ci-success" :
@@ -186,7 +186,7 @@ async function showDetail(pr) {
   selectedPR = pr;
   prListPanel.classList.add("hidden");
   prDetailPanel.classList.remove("hidden");
-  emptyState.classList.add("hidden");
+  if (emptyState) emptyState.classList.add("hidden");
 
   document.getElementById("detail-title").textContent = `#${pr.number} ${pr.title}`;
   document.getElementById("detail-meta").innerHTML = `
