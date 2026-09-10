@@ -60,12 +60,12 @@ const SEGMENTS = [
   {
     type: 'video',
     src: path.join(ROOT_DIR, 'packages/robos-test/run/demos/kgraph-flagship-explorer/kgraph-flagship-explorer.webm'),
-    start: 2,
+    start: 1,
     duration: 25,
     cues: [
       { start: 0.5, duration: 3.2, text: 'Knowledge Graph Explorer: Interactive SVG topology, node dependencies, & C4 architecture' },
-      { start: 8.5, duration: 3.2, text: 'Schema-Driven Entity Creator: ➕ Add Entity modal with live W3C SHACL validation gate' },
-      { start: 16.5, duration: 3.2, text: 'Transitive Blast Radius Analyzer & Multi-Hop Path Finder: BFS connection chains' },
+      { start: 5.5, duration: 3.2, text: 'Schema-Driven Entity Creator: ➕ Add Entity modal with live W3C SHACL validation gate' },
+      { start: 13.5, duration: 3.2, text: 'Transitive Blast Radius Analyzer & Multi-Hop Path Finder: BFS connection chains' },
     ],
   },
   // Dual-State Architecture: Blast Radius Diffing

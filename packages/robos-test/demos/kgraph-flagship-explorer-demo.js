@@ -10,14 +10,7 @@ const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/sc
 
 const SCRIPT = [
   {
-    narration: "We open the RobOS SDLC Knowledge Graph Explorer, the flagship governance cornerstone of the platform.",
-    target: '#sidebar-nodes',
-    action: 'hover',
-    callout: 'SDLC Knowledge Graph Explorer',
-    minHold: 3500,
-  },
-  {
-    narration: "We switch to the Interactive Topology Graph, rendering real-time SVG cards and directional dependency links.",
+    narration: "We open the RobOS SDLC Knowledge Graph Explorer and switch to the Interactive SVG Topology Graph.",
     target: '#tab-btn-topology',
     action: 'click',
     callout: 'Interactive SVG Topology & Dependency Diagram',
@@ -25,7 +18,7 @@ const SCRIPT = [
       const btn = document.getElementById('tab-btn-topology');
       if (btn) btn.click();
     })()`,
-    minHold: 4500,
+    minHold: 5000,
   },
   {
     narration: "We click the ➕ Add Entity modal to register a new architectural node across 13 supported archetypes.",
@@ -39,7 +32,7 @@ const SCRIPT = [
   },
   {
     narration: "We configure the Payments Ledger Database with URI urn:robos:db:payments-ledger and submit with live SHACL gate.",
-    target: '#btn-submit-add-node',
+    target: '#btn-submit-add-entity',
     action: 'click',
     callout: 'Live W3C SHACL Shape Validation Gate',
     js: `(() => {
@@ -47,6 +40,8 @@ const SCRIPT = [
       document.getElementById('add-node-id').value = 'urn:robos:db:payments-ledger';
       document.getElementById('add-node-package').value = 'core-platform';
       document.getElementById('add-node-desc').value = 'ACID compliant financial transaction storage';
+      const engineInput = document.getElementById('dyn-engine');
+      if (engineInput) engineInput.value = 'PostgreSQL 16';
       if (window.submitAddEntity) window.submitAddEntity();
     })()`,
     minHold: 4500,
@@ -74,11 +69,11 @@ const SCRIPT = [
         if (window.tracePathBetweenNodes) window.tracePathBetweenNodes();
       }, 500);
     })()`,
-    minHold: 4500,
+    minHold: 5000,
   },
   {
     narration: "We inspect node actions: in-place structured editing, raw JSON-LD patch editing, and cascade reference pruning.",
-    target: '#btn-node-edit',
+    target: '#tab-btn-topology',
     action: 'click',
     callout: 'Interactive In-Place Entity Editor',
     js: `(() => {
@@ -101,6 +96,7 @@ async function main() {
     slug: SLUG,
     appId: 'robos-graph',
     windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+    windowGeometry: { w: 2560, h: 1440 },
     scenario: scenarios['all-good'],
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },

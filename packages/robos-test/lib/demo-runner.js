@@ -317,16 +317,37 @@ async function runDemo(config) {
       `);
     } catch(_) {}
 
-    // Maximize window to 100% full screen so recordings use entire window canvas with zero grey desktop borders
-    await maximizeWindow(app.port);
+    // Ensure window uses optimal 16:9 dimensions with readable UI scale (avoiding multi-monitor/6K over-expansion)
     if (process.platform === 'linux' && process.env.DISPLAY) {
       try {
         const { execSync: runSync } = require('child_process');
-        runSync(`wmctrl -r "${windowTitle}" -b add,maximized_vert,maximized_horz || wmctrl -r "${windowTitle}" -e 0,0,0,1920,1080 || xdotool search --name "${windowTitle}" windowsize 1920 1080 windowmove 0 0`, {
+        runSync(`wmctrl -r "${windowTitle}" -b remove,maximized_vert,maximized_horz`, {
+          env: process.env,
+          stdio: 'ignore',
+        });
+        let targetW = 1920;
+        let targetH = 1080;
+        if (config.windowGeometry) {
+          targetW = config.windowGeometry.w || targetW;
+          targetH = config.windowGeometry.h || targetH;
+        } else {
+          try {
+            const rootInfo = runSync(`xwininfo -root`, { env: process.env, encoding: 'utf8' });
+            const rootW = parseInt((rootInfo.match(/Width:\s+(\d+)/) || [])[1], 10);
+            if (rootW && rootW >= 3000) {
+              // On multi-monitor or HiDPI 4K/6K displays, 2560x1440 yields crystal-clear 1280x720 CSS pixels
+              targetW = 2560;
+              targetH = 1440;
+            }
+          } catch (_) {}
+        }
+        runSync(`wmctrl -r "${windowTitle}" -e 0,0,0,${targetW},${targetH} || xdotool search --name "${windowTitle}" windowsize ${targetW} ${targetH} windowmove 0 0`, {
           env: process.env,
           stdio: 'ignore',
         });
       } catch (_) {}
+    } else {
+      await maximizeWindow(app.port);
     }
     await sleep(300);
 

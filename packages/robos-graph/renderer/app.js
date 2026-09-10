@@ -2653,6 +2653,17 @@ window.submitAddEntity = async function() {
   const dynDb = document.getElementById('dyn-db');
   if (dynDb && dynDb.value.trim()) newNode['robos:usesDatabase'] = dynDb.value.trim();
 
+  const dynEngine = document.getElementById('dyn-engine');
+  if (dynEngine && dynEngine.value.trim()) {
+    newNode['robos:engine'] = dynEngine.value.trim();
+    newNode['robos:databaseName'] = (dynEngine.value.trim().toLowerCase().includes('mongo') ? 'acme_nosql' : 'payments_db');
+    newNode['robos:host'] = 'postgres-primary.svc.cluster.local';
+  } else if (activeArchetype === 'Database' || activeArchetype === 'NoSQLDatabase') {
+    newNode['robos:engine'] = activeArchetype === 'Database' ? 'postgresql' : 'mongodb';
+    newNode['robos:databaseName'] = activeArchetype === 'Database' ? 'payments_db' : 'acme_nosql';
+    newNode['robos:host'] = 'postgres-primary.svc.cluster.local';
+  }
+
   if (statusEl) {
     statusEl.style.display = 'block';
     statusEl.className = 'wizard-status-msg info';
