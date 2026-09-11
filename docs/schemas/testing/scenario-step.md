@@ -60,12 +60,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Testing & behavior. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`robos:keyword`** | BDD Step Keyword | `1..*` | `xsd:string` | Scenario Step must specify keyword (Given, When, Then, And, But). |
-| **`robos:stepText`** | BDD Step Expression | `1..*` | `xsd:string` | Scenario Step must specify step expression text. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`robos:keyword`** | BDD Step Keyword | `1..*` | `xsd:string` | Testing & behavior | Scenario Step must specify keyword (Given, When, Then, And, But). |
+| **`robos:stepText`** | BDD Step Expression | `1..*` | `xsd:string` | Testing & behavior | Scenario Step must specify step expression text. |
 
 ---
 

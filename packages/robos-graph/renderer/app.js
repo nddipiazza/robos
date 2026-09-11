@@ -1,5 +1,7 @@
 'use strict';
 
+function escHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 function nodeText(value, fallback = '') { return value && typeof value === 'object' ? (value['@id'] || fallback) : String(value || fallback); }
 
 let branches = [];
@@ -10,7 +12,9 @@ let currentFilter = 'all';
 let currentPackageFilter = 'all';
 let searchKeyword = '';
 let currentTab = 'visual'; // 'visual' | 'topology' | 'impact' | 'query' | 'gitops' | 'edd' | 'video' | 'fabric' | 'traceability' | 'rdf'
-let nodeGroupMode = 'package'; // 'package' | 'category' | 'flat'
+let nodeGroupMode = 'classification'; // classification | package | type | flat
+const classification = window.RobosClassification;
+let currentClassificationFilter = 'all';
 const collapsedGroups = new Set();
 
 let topologyScope = 'neighborhood'; // 'neighborhood' | 'package' | 'all'
@@ -52,25 +56,6 @@ const PACKAGE_METADATA = {
   'learning': { title: 'Learning & Living Docs', icon: '🎓', ns: 'robos.learning' },
 };
 
-const CATEGORY_METADATA = {
-  'service': { title: 'Microservices & Containers', icon: '🔌' },
-  'contract': { title: 'API Contracts & Specs', icon: '📜' },
-  'frontend-app': { title: 'Front End Applications', icon: '🌐' },
-  'desktop-app': { title: 'Desktop Applications', icon: '🖥️' },
-  'pc-game': { title: 'PC Games', icon: '🎮' },
-  'mobile-game': { title: 'Mobile Games', icon: '🕹️' },
-  'console-app': { title: 'Console & CLI Utilities', icon: '⌨️' },
-  'data-pipeline': { title: 'Data Pipelines', icon: '🔄' },
-  'mobile-app': { title: 'Mobile Applications', icon: '📱' },
-  'library': { title: 'Libraries & SDKs', icon: '📦' },
-  'devops': { title: 'DevOps Integrations', icon: '☁️' },
-  'pass-credential': { title: 'Pass Credentials', icon: '🔑' },
-  'bdd': { title: 'BDD Features', icon: '🥒' },
-  'requirement': { title: 'Requirements', icon: '📋' },
-  'elearning': { title: 'eLearning Modules', icon: '🎓' },
-  'project': { title: 'Projects', icon: '📁' },
-  'other': { title: 'Other Resources', icon: '📁' },
-};
 
 let pendingMutation = null;
 let activeProbedResponse = null;
@@ -277,7 +262,9 @@ function isBDDNode(n) {
   return types.some(t => t.includes('Feature') || t.includes('Scenario'));
 }
 
-function getNodeCategory(n) {
+// Legacy inspector template dispatch only; classification and tree grouping use
+// RobosClassification and never infer categories from these presentation kinds.
+function getInspectorLayoutKind(n) {
   if (!n) return 'other';
   const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
   if (types.some(t => t.includes('FlowDiagram'))) return 'diagram';
@@ -304,7 +291,7 @@ function getNodeCategory(n) {
 }
 
 function getTypeBadge(n) {
-  const cat = getNodeCategory(n);
+  const cat = getInspectorLayoutKind(n);
   switch (cat) {
     case 'diagram': return { label: '📊 Flow Diagram', cls: 'type-contract' };
     case 'adr': return { label: '📋 ADR Record', cls: 'type-req' };
@@ -348,140 +335,56 @@ function renderBranchSelector() {
 }
 
 function renderNodeItemHtml(n, badge, isSelected) {
-  let metaInfo = n['@id'];
-  if (n['robos:targetService']) {
-    metaInfo = `🎯 Target: ${n['robos:targetService'].replace(/.*:/, '')} &middot; 📋 ${n['robos:requirementId'] || 'REQ'}`;
-  } else if (n['robos:repository']) {
-    metaInfo = `📁 ${nodeText(n['robos:repository'])}`;
-  } else if (n['robos:categoryName'] || n['robos:category'] || getNodeCategory(n) === 'devops') {
-    const catLabel = n['robos:categoryName'] || n['robos:category'] || 'DevOps Integration';
-    metaInfo = `☁️ ${catLabel} &middot; 📦 ${n['robos:package'] || 'devops'}`;
-  } else if (n['robos:passPath']) {
-    metaInfo = `🔒 pass: ${n['robos:passPath']}`;
-  }
-
-  const pkgTag = n['robos:package'] ? `<span class="node-pkg-badge">📦 ${n['robos:package']}</span>` : '';
+  const result = classification.resolveClassification(n);
   const nodeDomId = 'node-' + n['@id'].replace(/[^a-zA-Z0-9_-]/g, '_');
-  const cat = getNodeCategory(n);
+  const categoryLabels = result.categories.map(c => c.label).join(', ') || 'Unclassified';
+  const warning = result.warnings.map(w => w.message).join(' ');
+  return `<div class="node-item ${isSelected ? 'selected' : ''}" id="${nodeDomId}" data-node-id="${escHtml(n['@id'])}">
+    <div class="node-header"><span class="node-title">${escHtml(nodeText(n['dcterms:title'], n['@id']))}</span>
+    <span class="type-badge type-team">${escHtml([].concat(n['@type'] || []).map(classification.compact).sort().join(', ') || 'Untyped')}</span></div>
+    <div class="node-meta">${escHtml(n['@id'])} · ${escHtml(n['robos:package'] || 'Unpackaged')}</div>
+    <div class="node-classification" data-status="${result.status}">${escHtml(categoryLabels)} · ${result.status}</div>
+    ${warning ? `<div class="classification-warning" role="note">⚠ ${escHtml(warning)}</div>` : ''}
+  </div>`;
+}
 
-  return `
-    <div class="node-item cat-${cat} ${isSelected ? 'selected' : ''}" id="${nodeDomId}" onclick="window.selectNode('${n['@id']}')">
-      <div class="node-header">
-        <span class="node-title">${n['dcterms:title']} ${pkgTag}</span>
-        <span class="type-badge ${badge.cls}">${badge.label}</span>
-      </div>
-      <div class="node-meta">${metaInfo}</div>
-    </div>
-  `;
+function nodeTreeOptions() {
+  return { mode: nodeGroupMode, search: searchKeyword, classification: currentClassificationFilter,
+    type: currentFilter, package: currentPackageFilter, collapsed: [...collapsedGroups] };
+}
+
+function refreshNodeFilterOptions() {
+  const update = (id, values, selected, label) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    select.innerHTML = `<option value="all">${label}</option>` + values.map(([value, text]) => `<option value="${escHtml(value)}">${escHtml(text)}</option>`).join('');
+    select.value = selected;
+  };
+  update('node-type-filter', [...new Set(nodes.flatMap(n => [].concat(n['@type'] || []).map(classification.compact)))].sort().map(t => [t, t]), currentFilter, 'All Types');
+  update('node-package-filter', [...new Set(nodes.map(n => n['robos:package'] || 'Unpackaged'))].sort().map(p => [p, p]), currentPackageFilter, 'All Packages');
+  update('node-classification-filter', [...classification.CATALOG.map(c => [c.code, c.label]), ['unclassified', 'Unclassified']], currentClassificationFilter, 'All Classifications');
 }
 
 function renderNodeList() {
-  const filtered = nodes.filter(n => {
-    if (currentFilter !== 'all' && getNodeCategory(n) !== currentFilter) {
-      return false;
-    }
-    if (currentPackageFilter !== 'all') {
-      const nodePkg = n['robos:package'] || 'core-platform';
-      if (nodePkg !== currentPackageFilter) return false;
-    }
-    if (searchKeyword.trim()) {
-      const q = searchKeyword.toLowerCase();
-      const title = (n['dcterms:title'] || '').toLowerCase();
-      const id = (n['@id'] || '').toLowerCase();
-      const repo = nodeText(n['robos:repository']).toLowerCase();
-      const pkg = (n['robos:package'] || '').toLowerCase();
-      return title.includes(q) || id.includes(q) || repo.includes(q) || pkg.includes(q);
-    }
-    return true;
-  });
-
-  const statNodesEl = document.getElementById('stat-nodes');
-  if (statNodesEl) statNodesEl.textContent = `${nodes.length} SDLC Nodes`;
-  const countBadgeEl = document.getElementById('nodes-count-badge');
-  if (countBadgeEl) countBadgeEl.textContent = `${filtered.length} of ${nodes.length} Nodes`;
-
-  const listEl = document.getElementById('nodes-list');
-  if (!listEl) return;
-
-  if (filtered.length === 0) {
-    listEl.innerHTML = `
-      <div style="padding: 24px 12px; color: var(--text-muted); font-size: 11px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <span>🔍 No matching nodes found</span>
-        <button class="btn btn-secondary btn-sm" onclick="window.clearAllNodeFilters()">Clear Filters</button>
-      </div>
-    `;
-    return;
-  }
-
-  // Flat mode
-  if (nodeGroupMode === 'flat') {
-    listEl.innerHTML = filtered.map(n => {
-      const badge = getTypeBadge(n);
-      const isSelected = n['@id'] === selectedNodeId;
-      return renderNodeItemHtml(n, badge, isSelected);
-    }).join('');
-    return;
-  }
-
-  // Grouped mode (package or category)
-  const isPackage = nodeGroupMode === 'package';
-  const groups = new Map();
-
-  for (const n of filtered) {
-    const key = isPackage ? (n['robos:package'] || 'core-platform') : getNodeCategory(n);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(n);
-  }
-
-  // Preferred ordering
-  const preferredOrder = isPackage
-    ? ['services', 'applications', 'devops', 'core-platform', 'organization', 'learning']
-    : ['service', 'contract', 'frontend-app', 'desktop-app', 'pc-game', 'mobile-game', 'console-app', 'data-pipeline', 'mobile-app', 'library', 'devops', 'pass-credential', 'bdd', 'requirement', 'elearning', 'project', 'other'];
-
-  const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
-    const idxA = preferredOrder.indexOf(a);
-    const idxB = preferredOrder.indexOf(b);
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-    if (idxA !== -1) return -1;
-    if (idxB !== -1) return 1;
-    return a.localeCompare(b);
-  });
-
-  let html = '';
-  for (const key of sortedKeys) {
-    const groupNodes = groups.get(key);
-    const meta = isPackage
-      ? (PACKAGE_METADATA[key] || { title: key, icon: '📦', ns: `robos.${key}` })
-      : (CATEGORY_METADATA[key] || { title: key, icon: '🏷️' });
-
-    // When searching, auto-expand so results are visible
-    const isCollapsed = collapsedGroups.has(key) && !searchKeyword.trim();
-
-    const itemsHtml = groupNodes.map(n => {
-      const badge = getTypeBadge(n);
-      const isSelected = n['@id'] === selectedNodeId;
-      return renderNodeItemHtml(n, badge, isSelected);
-    }).join('');
-
-    html += `
-      <div class="node-group" id="node-group-${key}">
-        <div class="node-group-header ${isCollapsed ? 'collapsed' : ''}" onclick="window.toggleNodeGroup('${key}')">
-          <span class="group-chevron">${isCollapsed ? '▶' : '▼'}</span>
-          <span class="group-icon">${meta.icon}</span>
-          <span class="group-title">${meta.title}</span>
-          ${meta.ns ? `<span class="group-ns">${meta.ns}</span>` : ''}
-          <span class="group-count">${groupNodes.length}</span>
-        </div>
-        ${!isCollapsed ? `<div class="node-group-body">${itemsHtml}</div>` : ''}
-      </div>
-    `;
-  }
-
-  listEl.innerHTML = html;
+  refreshNodeFilterOptions();
+  const tree = classification.buildTree(nodes, nodeTreeOptions());
+  const stat = document.getElementById('stat-nodes');
+  if (stat) stat.textContent = `${tree.total} SDLC Nodes`;
+  document.getElementById('nodes-count-badge').textContent = `${tree.count} of ${tree.total} Nodes`;
+  const list = document.getElementById('nodes-list');
+  const item = entry => renderNodeItemHtml(entry.node, null, entry.node['@id'] === selectedNodeId);
+  if (!tree.count) list.innerHTML = '<p>No matching nodes found</p><button class="btn btn-secondary" onclick="window.clearAllNodeFilters()">Clear Filters</button>';
+  else if (nodeGroupMode === 'flat') list.innerHTML = tree.entries.map(item).join('');
+  else list.innerHTML = tree.groups.map(group => `<div class="node-group" data-group="${escHtml(group.id)}">
+    <button type="button" class="node-group-header ${group.collapsed ? 'collapsed' : ''}" data-group-toggle="${escHtml(group.id)}" aria-expanded="${!group.collapsed}">
+      <span class="group-chevron">${group.collapsed ? '▶' : '▼'}</span><span class="group-title">${escHtml(group.label)}</span><span class="group-count">${group.count}</span>
+    </button>${group.collapsed ? '' : `<div class="node-group-body">${group.entries.map(item).join('')}</div>`}</div>`).join('');
+  list.querySelectorAll('[data-group-toggle]').forEach(button => button.addEventListener('click', () => window.toggleNodeGroup(button.dataset.groupToggle)));
+  list.querySelectorAll('[data-node-id]').forEach(item => item.addEventListener('click', () => window.selectNode(item.dataset.nodeId)));
 }
 
 window.setNodeGroupMode = function(mode) {
-  nodeGroupMode = mode;
+  nodeGroupMode = mode === 'category' ? 'type' : mode;
   document.querySelectorAll('#group-mode-toggle .group-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
   });
@@ -503,15 +406,12 @@ window.expandAllNodeGroups = function() {
 };
 
 window.collapseAllNodeGroups = function() {
-  const isPackage = nodeGroupMode === 'package';
-  for (const n of nodes) {
-    const key = isPackage ? (n['robos:package'] || 'core-platform') : getNodeCategory(n);
-    collapsedGroups.add(key);
-  }
+  for (const group of classification.buildTree(nodes, nodeTreeOptions()).groups) collapsedGroups.add(group.id);
   renderNodeList();
 };
 
 window.clearAllNodeFilters = function() {
+  currentClassificationFilter = 'all';
   currentFilter = 'all';
   currentPackageFilter = 'all';
   searchKeyword = '';
@@ -994,7 +894,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
   }
 
   // Visual Inspector
-  const cat = getNodeCategory(node);
+  const cat = getInspectorLayoutKind(node);
   const badge = getTypeBadge(node);
 
   if (cat === 'bdd' && node['robos:scenarios']) {
@@ -2178,17 +2078,9 @@ async function renderImpactTab(container, node) {
     riskText = 'MODERATE IMPACT';
   }
 
-  const upstreamDeps = [];
-  if (node['robos:implementsContract']) upstreamDeps.push({ id: node['robos:implementsContract'], via: 'robos:implementsContract' });
-  if (node['robos:usesDatabase']) upstreamDeps.push({ id: node['robos:usesDatabase'], via: 'robos:usesDatabase' });
-  if (node['robos:usesMessageBroker']) upstreamDeps.push({ id: node['robos:usesMessageBroker'], via: 'robos:usesMessageBroker' });
-  if (Array.isArray(node['robos:dependsOn'])) {
-    for (const d of node['robos:dependsOn']) upstreamDeps.push({ id: d, via: 'robos:dependsOn' });
-  }
-
-  const items = impactDirection === 'downstream' 
+  const items = impactDirection === 'downstream'
     ? (blast && blast.dependents ? blast.dependents : [])
-    : upstreamDeps.map(u => ({ node: nodes.find(n => n['@id'] === u.id) || { '@id': u.id, 'dcterms:title': u.id.split(':').pop() }, depth: 1, via: u.via }));
+    : (blast && blast.dependencies ? blast.dependencies : []);
 
   container.innerHTML = `
     <div class="impact-container">
@@ -2229,7 +2121,7 @@ async function renderImpactTab(container, node) {
       <div class="impact-tree-list">
         ${items.length === 0 ? `
           <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px;">
-            ✅ Zero ${impactDirection} dependencies detected. Safe to modify without cascading regressions.
+            No modeled ${impactDirection} dependencies found within this depth. Missing links or source coverage may hide dependencies; this is not a safety guarantee.
           </div>
         ` : items.map(item => {
           const targetNode = item.node || {};
@@ -2241,7 +2133,7 @@ async function renderImpactTab(container, node) {
                 <span class="type-badge ${targetBadge.cls}">${targetBadge.label}</span>
                 <div>
                   <div style="font-weight: 700; color: var(--text-bright); font-size: 11.5px;">${targetNode['dcterms:title'] || targetNode['@id']}</div>
-                  <div style="font-size: 9.5px; color: var(--text-muted); font-family: monospace;">${targetNode['@id']} &middot; via <code>${item.via}</code></div>
+                  <div style="font-size: 9.5px; color: var(--text-muted); font-family: monospace;">${targetNode['@id']} &middot; via <code>${item.predicate || item.via}</code></div>
                 </div>
               </div>
               <button class="btn btn-secondary btn-sm" onclick="window.selectNode('${targetNode['@id']}')">🔍 Inspect Node</button>
@@ -3050,6 +2942,11 @@ if (collapseAllBtn) {
 }
 
 
+document.getElementById('node-classification-filter').addEventListener('change', e => {
+  currentClassificationFilter = e.target.value;
+  renderNodeList();
+});
+
 const typeFilterSelect = document.getElementById('node-type-filter');
 if (typeFilterSelect) {
   typeFilterSelect.addEventListener('change', (e) => {
@@ -3482,7 +3379,7 @@ if (btnSubmitAppDoc) btnSubmitAppDoc.addEventListener('click', () => window.subm
 function isAppOrProjectNode(node) {
   if (!node) return false;
   const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
-  const cat = getNodeCategory(node);
+  const cat = getInspectorLayoutKind(node);
   return [
     'service', 'desktop-app', 'console-app', 'frontend-app',
     'pc-game', 'mobile-game', 'data-pipeline', 'mobile-app',

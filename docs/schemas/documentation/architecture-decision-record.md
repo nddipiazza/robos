@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Documentation & decisions. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Architecture Decision Record must have a title. |
-| **`robos:status`** | Lifecycle Status | `1..*` | `xsd:string` | Architecture Decision Record must declare status (proposed, accepted, superseded, etc.). |
-| **`robos:context`** | Decision Context | `1..*` | `xsd:string` | Architecture Decision Record must provide architectural context and problem statement. |
-| **`robos:decision`** | Architectural Decision | `1..*` | `xsd:string` | Architecture Decision Record must state the architectural decision. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Architecture Decision Record must have a title. |
+| **`robos:status`** | Lifecycle Status | `1..*` | `xsd:string` | Projects & work items, Source control & artifacts, Documentation & decisions | Architecture Decision Record must declare status (proposed, accepted, superseded, etc.). |
+| **`robos:context`** | Decision Context | `1..*` | `xsd:string` | Documentation & decisions | Architecture Decision Record must provide architectural context and problem statement. |
+| **`robos:decision`** | Architectural Decision | `1..*` | `xsd:string` | Documentation & decisions | Architecture Decision Record must state the architectural decision. |
 
 ---
 

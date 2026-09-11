@@ -2378,6 +2378,14 @@ const BUILTIN_SHACL_SHAPES = [
 
 BUILTIN_SHACL_SHAPES.push(...require('./source-shapes').SOURCE_SHAPES);
 
+// Classification is metadata about every schema element, not a requirement to
+// persist inferred classification on instance nodes.
+const { resolveSchemaElement } = require('./classification');
+for (const shape of BUILTIN_SHACL_SHAPES) {
+  shape['robos:classification'] = resolveSchemaElement(shape.targetClass);
+  for (const property of shape.properties) property['robos:classification'] = resolveSchemaElement(property.path);
+}
+
 class SHACLValidator {
   constructor(shapes = BUILTIN_SHACL_SHAPES) {
     this.shapes = shapes;

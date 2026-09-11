@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Kubernetes Namespace must have a title. |
-| **`robos:namespaceName`** | Kubernetes Namespace Name | `1..*` | `xsd:string` | Kubernetes Namespace must specify namespace name. |
-| **`robos:cluster`** | Target Kubernetes Cluster | `1..*` | `URI (robos:KubernetesCluster)` | Kubernetes Namespace must link to parent cluster. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Kubernetes Namespace must have a title. |
+| **`robos:namespaceName`** | Kubernetes Namespace Name | `1..*` | `xsd:string` | Infrastructure & delivery | Kubernetes Namespace must specify namespace name. |
+| **`robos:cluster`** | Target Kubernetes Cluster | `1..*` | `URI (robos:KubernetesCluster)` | Infrastructure & delivery | Kubernetes Namespace must link to parent cluster. |
 
 ---
 

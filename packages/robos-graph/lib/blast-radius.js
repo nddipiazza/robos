@@ -48,7 +48,10 @@ class BlastRadiusAnalyzer {
     if (isReq) requirements.add(node['dcterms:title'] || node['@id']);
 
     if (node['robos:ownerTeam']) {
-      teams.add(node['robos:ownerTeam'].replace(/.*:/, ''));
+      for (const team of [].concat(node['robos:ownerTeam'])) {
+        const id = typeof team === 'string' ? team : team?.['@id'];
+        if (id) teams.add(id.replace(/.*:/, ''));
+      }
     }
   }
 }

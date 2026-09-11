@@ -79,6 +79,28 @@ AI agents never execute raw commands directly in your daily workstation environm
 
 ---
 
+## Knowledge graph classification
+
+The Knowledge Graph Explorer defaults to a classification tree backed by one
+shared catalog for the engine and browser. Built-in classes, SHACL shapes and
+predicates have deterministic metadata. Nodes show declared or inferred
+classification; custom types with no known category remain visible as
+**Unclassified** with warnings. Package, RDF type and flat views, combined
+filters, search, and collapse counts remain available.
+
+RobOS owns the SDLC codes and expresses them using Schema.org
+[CategoryCode](https://schema.org/CategoryCode) and
+[CategoryCodeSet](https://schema.org/CategoryCodeSet). They are not a Schema.org
+SDLC taxonomy. See the [classification and workspace guide](packages/robos-graph/WORKSPACES.md#classification-catalog-and-viewer-tree)
+for reference syntax, provenance, registry coverage, and the real Electron test.
+
+Dependency impact uses directed, evidenced relationships and separates them from
+repository membership and source provenance. The importer records dependency
+scopes and protobuf references; unresolved external dependencies remain explicit.
+Kube Studio can browse infrastructure declarations and their source evidence from
+the same graph workspace. See [dependency workflows](packages/robos-graph/WORKSPACES.md#dependency-evidence-and-impact)
+for commands, supported extraction and interpretation limits.
+
 ## 🧬 The Paradigm: Knowledge Graph-First (KGraph-First) Application Generation
 
 In modern software engineering:

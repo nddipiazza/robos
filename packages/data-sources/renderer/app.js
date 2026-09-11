@@ -26,6 +26,9 @@ const DRIVER_ICONS = {
 };
 
 async function init() {
+  const source = await window.dataSources.getSourceWorkspace();
+  if (source.sourceOnly) { window.renderSourceWorkspace(source); return; }
+
   allDrivers = await window.dataSources.getDrivers();
   allDataSources = await window.dataSources.getDataSources();
 

@@ -52,6 +52,9 @@ for (const appName of ['kube-studio', 'data-sources']) {
     const n = node('cluster:one', appName === 'kube-studio' ? 'robos:KubernetesCluster' : ['robos:NoSQLDatabase']);
     f.write([n]); const before = snapshot(f.dir);
     const api = load(appName, f.root, f.home);
+    const sourceView = api.invoke(appName === 'kube-studio' ? 'kube-source-workspace' : 'ds-source-workspace');
+    assert.equal(sourceView.nodes.length, 1);
+    assert.equal(sourceView.nodes[0]['@id'], n['@id']);
     const result = rows(api.invoke(read));
     assert.equal(result.length, 1); assert.equal(result[0].id, n['@id']);
     assert.equal(result[0].status, 'Unknown'); assert.equal(result[0].sourceOnly, true);
@@ -75,7 +78,7 @@ for (const appName of ['kube-studio', 'data-sources']) {
   test(`${appName}: all legacy mutation and simulated probe channels are blocked`, async t => {
     const f = fixture(t); f.write([]); const before = snapshot(f.dir);
     const api = load(appName, f.root, f.home);
-    const reads = new Set(['kube-get-clusters', 'kube-get-kgraph-apps', 'kube-get-namespaces', 'kube-get-resources', 'kube-get-helm-releases', 'kube-get-argocd-apps', 'ds-get-datasources', 'ds-get-drivers', 'open-url']);
+    const reads = new Set(['kube-source-workspace', 'ds-source-workspace', 'kube-get-clusters', 'kube-get-kgraph-apps', 'kube-get-namespaces', 'kube-get-resources', 'kube-get-helm-releases', 'kube-get-argocd-apps', 'ds-get-datasources', 'ds-get-drivers', 'open-url']);
     for (const channel of api.handlers.keys()) {
       if (!reads.has(channel)) await assert.rejects(async () => api.invoke(channel, {}), /graph review workflow/);
     }

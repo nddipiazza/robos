@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Testing & behavior. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Test Execution Record must have a title. |
-| **`oslc_qm:executionStatus`** | Execution Status | `1..*` | `xsd:string` | Test Execution Record must declare execution status (PASS, FAIL, BLOCKED, SKIPPED). |
-| **`oslc_qm:reportsOnTestCase`** | Reports On Test Case | `1..*` | `URI (robos:Scenario | oslc_qm:TestCase)` | Test Execution Record must link to target test case or scenario. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Test Execution Record must have a title. |
+| **`oslc_qm:executionStatus`** | Execution Status | `1..*` | `xsd:string` | Testing & behavior | Test Execution Record must declare execution status (PASS, FAIL, BLOCKED, SKIPPED). |
+| **`oslc_qm:reportsOnTestCase`** | Reports On Test Case | `1..*` | `URI (robos:Scenario | oslc_qm:TestCase)` | Testing & behavior | Test Execution Record must link to target test case or scenario. |
 
 ---
 

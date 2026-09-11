@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Libraries & build systems. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Build System must have a title. |
-| **`robos:buildTool`** | Build Tool | `1..*` | `xsd:string` | Build System must declare build tool (maven, gradle, cargo, go, pnpm, npm, cmake, bazel, buck2, pants). |
-| **`robos:configFile`** | Config File | `1..*` | `xsd:string` | Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Build System must have a title. |
+| **`robos:buildTool`** | Build Tool | `1..*` | `xsd:string` | Libraries & build systems | Build System must declare build tool (maven, gradle, cargo, go, pnpm, npm, cmake, bazel, buck2, pants). |
+| **`robos:configFile`** | Config File | `1..*` | `xsd:string` | Libraries & build systems | Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig). |
 
 ---
 

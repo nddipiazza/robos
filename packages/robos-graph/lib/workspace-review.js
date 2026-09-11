@@ -30,9 +30,23 @@ class WorkspaceReview {
   }
   propose(input) {
     if (typeof input === 'string') input = JSON.parse(input);
-    return this.workspace.propose({ mode: input.edits ? 'refine' : 'import', edits: input.edits, document: input.document || input, prompt: input.prompt || '', requireEvidence: true });
+    const { prompt, edits, questions, document, ...graph } = input;
+    return this.workspace.propose({ mode: edits ? 'refine' : 'import', edits, document: document || graph, prompt: prompt || '', requireEvidence: true });
   }
   apply(proposal) { return this.workspace.apply(proposal); }
+  preview(proposal) {
+    this.pendingProposal = proposal;
+    const { id, base, delta, conflicts, stale, validation } = proposal;
+    const changed = new Set([...delta.added.map(n => n['@id']), ...delta.changed.map(n => n.id)]);
+    return { id, base, delta, conflicts, stale, validation,
+      candidate: { 'robos:nodes': proposal.candidate['robos:nodes'].filter(n => changed.has(n['@id'])).map(n => ({ '@id': n['@id'], 'robos:evidence': n['robos:evidence'] })) } };
+  }
+  applyReviewed(id) {
+    if (!this.pendingProposal || this.pendingProposal.id !== id) throw new Error('Proposal does not match the reviewed ID; preview again');
+    const result = this.workspace.apply(this.pendingProposal, { expectedProposalId: id });
+    this.pendingProposal = null;
+    return result;
+  }
   async askAgent(input, config = {}) {
     const url = config.url || process.env.ROBOS_GRAPH_AGENT_URL;
     const harnessId = config.harnessId || process.env.ROBOS_GRAPH_AGENT_HARNESS;

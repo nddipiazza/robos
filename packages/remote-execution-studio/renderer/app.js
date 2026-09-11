@@ -338,6 +338,9 @@ document.getElementById('btn-save-cluster').addEventListener('click', async () =
 
 // Initial Load
 async function init() {
+  const source = await window.remoteExecutionStudio.getSourceWorkspace();
+  if (source.sourceOnly) { window.renderSourceWorkspace(source); return; }
+
   if (window.remoteExecutionStudio) {
     clusters = await window.remoteExecutionStudio.getClusters();
     buildSystems = await window.remoteExecutionStudio.getBuildSystems();

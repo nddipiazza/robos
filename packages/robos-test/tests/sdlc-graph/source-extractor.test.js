@@ -101,6 +101,78 @@ test('links package and Go dependencies across sources independent of collection
   for (const n of consumers) assert.ok(n['robos:dependsOn'][0]['@id'].includes(':producer:'));
 });
 
+test('Go excludes and unused replacements do not declare dependencies', t => {
+  const root = fixture(t, {
+    'go.mod': 'module example.test/app\nexclude (\n example.test/excluded v1.0.0\n)\nreplace (\n example.test/unused v1.0.0 => ./unused\n)\n',
+    'excluded/go.mod': 'module example.test/excluded\n',
+    'unused/go.mod': 'module example.test/unused\n',
+  });
+  const result = extractSources(manifest(['sample']), { sample: root });
+  const app = nodesOf(result).find(n => n['dcterms:title'] === 'example.test/app');
+  assert.equal(app['robos:dependsOn'], undefined);
+  assert.ok(!app['robos:relationshipEvidence'].some(e => e.predicate === 'robos:dependsOn'));
+  assert.ok(!result.warnings.some(w => w.code.endsWith('module-dependency')));
+});
+
+test('Go requirement evidence points to the actual single-line or block directive', t => {
+  const goMod = [
+    'module example.test/app',
+    'exclude (',
+    ' example.test/shared v0.9.0',
+    ')',
+    '// require example.test/commented v1.0.0',
+    'require example.test/single v1.0.0 // direct',
+    'require (',
+    ' example.test/shared v1.0.0 // indirect',
+    ')',
+    'replace (',
+    ' example.test/unused v1.0.0 => ./unused',
+    ')',
+    '',
+  ].join('\n');
+  const root = fixture(t, {
+    'go.mod': goMod,
+    'single/go.mod': 'module example.test/single\n',
+    'shared/go.mod': 'module example.test/shared\n',
+    'unused/go.mod': 'module example.test/unused\n',
+    'commented/go.mod': 'module example.test/commented\n',
+  });
+  const result = extractSources(manifest(['sample']), { sample: root });
+  const app = nodesOf(result).find(n => n['dcterms:title'] === 'example.test/app');
+  const edges = app['robos:relationshipEvidence'].filter(e => e.predicate === 'robos:dependsOn');
+  assert.deepEqual(edges.map(e => [nodesOf(result).find(n => n['@id'] === e.target['@id'])['dcterms:title'], e.evidence[0].line]), [
+    ['example.test/single', 6], ['example.test/shared', 8],
+  ]);
+  validates(result);
+});
+
+test('protobuf public re-exports resolve fields, enums and RPC types without exporting ordinary or weak imports', t => {
+  const root = fixture(t, {
+    'a.proto': 'syntax = "proto3";\npackage api;\nimport "b.proto";\nmessage Request { shared.Entry entry = 1; shared.State state = 2; hidden.Secret hidden = 3; weak.Hidden weak = 4; }\nservice API { rpc Get(shared.Entry) returns (shared.Entry); }\n',
+    'b.proto': 'syntax = "proto3";\nimport public "c.proto";\nimport "hidden.proto";\nimport weak "weak.proto";\n',
+    'c.proto': 'syntax = "proto3";\nimport public "shared.proto";\n',
+    'shared.proto': 'syntax = "proto3";\npackage shared;\nmessage Entry {}\nenum State { UNKNOWN = 0; }\n',
+    'hidden.proto': 'syntax = "proto3";\npackage hidden;\nmessage Secret {}\n',
+    'weak.proto': 'syntax = "proto3";\npackage weak;\nmessage Hidden {}\n',
+  });
+  const result = extractSources(manifest(['sample']), { sample: root });
+  const nodes = nodesOf(result), request = nodes.find(n => n['robos:modelName'] === 'Request');
+  const entry = nodes.find(n => n['robos:modelName'] === 'Entry');
+  const state = nodes.find(n => n['robos:sourceKind'] === 'protobuf-enum');
+  const rpc = nodes.find(n => n['robos:sourceKind'] === 'protobuf-rpc');
+  assert.deepEqual(request['robos:fieldType'], [{ '@id': entry['@id'] }, { '@id': state['@id'] }]);
+  assert.deepEqual(rpc['robos:inputType'], [{ '@id': entry['@id'] }]);
+  assert.deepEqual(rpc['robos:outputType'], [{ '@id': entry['@id'] }]);
+  assert.deepEqual(result.warnings.filter(w => w.code === 'unresolved-protobuf-type').map(w => w.type).sort(), ['hidden.Secret', 'weak.Hidden']);
+  assert.equal(request['robos:relationshipEvidence'].find(e => e.predicate === 'robos:fieldType').evidence[0].line, 4);
+  assert.equal(rpc['robos:relationshipEvidence'].find(e => e.predicate === 'robos:inputType').evidence[0].line, 5);
+  // Re-exports affect visibility, not the source's directly declared import edges.
+  const contract = nodes.find(n => n['robos:specFile'] === 'a.proto');
+  assert.equal(contract['robos:imports'].length, 1);
+  assert.ok(contract['robos:imports'][0]['@id'].includes('b.proto'));
+  validates(result);
+});
+
 test('counts exclusions, untracked files, tracked deletion and modifications honestly', t => {
   const root = fixture(t, { 'README.md': 'before', 'gone.md': 'gone', 'vendor/lib.go': 'bulk', 'generated/x.js': 'bulk', '.env': 'PASSWORD=hidden', 'skip/item.md': 'excluded', 'skip-other.md': 'kept', 'local/item.md': 'excluded', 'package.json': '{"name":"sample"}' });
   fs.unlinkSync(path.join(root, 'gone.md'));
@@ -318,4 +390,23 @@ test('repositories with only excluded files have metadata and inventory but no e
   assert.equal(result.sources[0].evidenceStatus, 'unresolved');
   assert.equal(result.coverage[0].representedRepositories, 0);
   assert.ok(result.warnings.some(w => w.code === 'repository-evidence-unavailable'));
+});
+
+test('retains package dependency scopes and evidence without cross-ecosystem matches', t => {
+  const root = fixture(t, {
+    'app/package.json': JSON.stringify({name:'@sample/app',dependencies:{'@sample/runtime':'*'},devDependencies:{'@sample/test':'*'},peerDependencies:{'@sample/peer':'*'},optionalDependencies:{'@sample/optional':'*'}}),
+    'runtime/package.json': '{"name":"@sample/runtime","main":"index.js"}',
+    'test/package.json': '{"name":"@sample/test","main":"index.js"}',
+    'peer/package.json': '{"name":"@sample/peer","main":"index.js"}',
+    'optional/package.json': '{"name":"@sample/optional","main":"index.js"}',
+  });
+  const result=extractSources(manifest(['sample']),{sample:root});
+  const app=nodesOf(result).find(n=>n['dcterms:title']==='@sample/app');
+  for(const predicate of ['dependsOn','developmentDependsOn','peerDependsOn','optionalDependsOn']) {
+    assert.equal(app['robos:'+predicate].length,1);
+    const edge=app['robos:relationshipEvidence'].find(e=>e.predicate==='robos:'+predicate);
+    assert.equal(edge.evidence[0].path,'app/package.json');
+    assert.match(edge.evidence[0].sha256,/^[a-f0-9]{64}$/);
+  }
+  assert.notEqual(app['robos:dependsOn'][0]['@id'],app['robos:developmentDependsOn'][0]['@id']);
 });

@@ -2,6 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('dataSources', {
+  getSourceWorkspace: () => ipcRenderer.invoke('ds-source-workspace'),
   getDrivers:      () => ipcRenderer.invoke('ds-get-drivers'),
   getDataSources:  () => ipcRenderer.invoke('ds-get-datasources'),
   saveDataSource:  (ds) => ipcRenderer.invoke('ds-save-datasource', ds),

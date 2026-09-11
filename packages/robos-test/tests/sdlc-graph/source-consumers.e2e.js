@@ -13,6 +13,7 @@ test('companion apps read the same external graph through real Electron IPC with
   const nodes = [
     { '@id': 'urn:example:remote:declared', '@type': ['robos:RemoteExecutionCluster'], 'dcterms:title': 'Declared remote build endpoint', 'robos:package': 'core-platform', 'robos:protocol': 'REAPI_v2', 'robos:provider': 'buildbarn', 'robos:executionEndpoint': 'grpc://localhost:8980', 'robos:casEndpoint': 'grpc://localhost:8980', 'robos:evidence': evidence },
     { '@id': 'urn:example:data:logical', '@type': ['robos:DataStore'], 'dcterms:title': 'Logical SQL store', 'robos:package': 'core-platform', 'robos:engine': 'postgresql', 'robos:evidence': evidence },
+    { '@id': 'urn:example:config:worker', '@type': ['robos:SourceArtifact'], 'dcterms:title': 'Worker configuration', 'robos:package': 'devops', 'robos:sourceKind': 'helm-template', 'robos:sourcePath': 'templates/worker.yaml', 'robos:inRepository': { '@id': 'urn:example:config:worker' }, 'robos:evidence': evidence },
   ];
   ws.apply(ws.propose({ document: { ...ws.empty('Example source graph'), 'robos:nodes': nodes } }));
   const before = hash(ws.read());
@@ -24,15 +25,27 @@ test('companion apps read the same external graph through real Electron IPC with
       if (name === 'remote-execution-studio') {
         const result = await page.evaluate(() => window.remoteExecutionStudio.getClusters());
         assert.deepEqual(result.map(n => n['@id']), ['urn:example:remote:declared']);
-        await page.locator('#stat-cas-hit').filter({ hasText: 'Unknown' }).waitFor();
+        await page.locator('#source-workspace').filter({ hasText: 'live health are unknown' }).waitFor();
+        await page.locator('[data-node-id="urn:example:remote:declared"]').click();
+        assert.match(await page.locator('#source-config-details').textContent(), /deployment.md:1/);
         await assert.rejects(page.evaluate(() => window.remoteExecutionStudio.testEndpoints('urn:example:remote:declared')), /source declarations/);
       } else if (name === 'data-sources') {
         const result = await page.evaluate(() => window.dataSources.getDataSources());
         assert.deepEqual(result.map(n => n.id), ['urn:example:data:logical']);
         assert.equal(result[0].status, 'Unknown');
+        await page.locator('#source-workspace').waitFor();
+        await page.locator('[data-node-id="urn:example:data:logical"]').click();
+        assert.match(await page.locator('#source-config-details').textContent(), /deployment.md:1/);
+        assert.equal(await page.locator('#app').isVisible(), false);
       } else {
         const result = await page.evaluate(() => window.api.getClusters());
         assert.equal(result.clusters.length, 0);
+        await page.locator('#source-workspace').waitFor();
+        await page.locator('#source-config-search').fill('Worker configuration');
+        await page.locator('[data-node-id="urn:example:config:worker"]').click();
+        assert.match(await page.locator('#source-config-details').textContent(), /deployment.md:1/);
+        assert.match(await page.locator('#source-config-count').textContent(), /1 of 1/);
+        assert.equal(await page.locator('#app').isVisible(), false);
       }
       assert.equal(hash(ws.read()), before);
     } finally { await app.close(); }

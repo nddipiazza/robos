@@ -74,3 +74,35 @@ test('source shapes are registered in the ontology and generic technologies are 
   assert.equal(nats['robos:endpoint'], undefined);
   assert.equal(nats['robos:ownerTeam'], undefined);
 });
+test('review prompt metadata cannot change graph content during unchanged source reimport', t => {
+  const {review,ws}=setup(t);
+  const before=hash(ws.read());
+  const proposal=review.propose({...ws.read(),prompt:'Reimport the unchanged source baseline',questions:[]});
+  assert.equal(proposal.prompt,'Reimport the unchanged source baseline');
+  assert.equal(proposal.candidate.prompt,undefined);
+  assert.equal(proposal.candidate.questions,undefined);
+  assert.equal(hash(proposal.candidate),before);
+  assert.equal(ws.apply(proposal).changed,false);
+});
+
+test('multi-property import proposal survives canonical JSON save/load before apply', t => {
+  const {ws}=setup(t);
+  const doc=ws.read();doc['robos:nodes'][0]['robos:zNew']='last';doc['robos:nodes'][0]['robos:aNew']='first';
+  const {serialize}=require('../../../robos-graph/lib/graph-workspace');
+  const proposal=JSON.parse(serialize(ws.propose({document:doc,requireEvidence:true})));
+  assert.equal(ws.apply(proposal).changed,true);
+  assert.equal(ws.read()['robos:nodes'][0]['robos:aNew'],'first');
+});
+
+test('IPC review sends only changed evidence and applies only the retained reviewed proposal', t => {
+  const { review, ws } = setup(t);
+  const proposal = review.propose({ edits: [{op:'update', id:'urn:example:one', set:{'dcterms:title':'reviewed'}}] });
+  const preview = review.preview(proposal);
+  assert.equal(preview.baseline, undefined);
+  assert.equal(preview.request, undefined);
+  assert.equal(preview.candidate['robos:nodes'].length, 1);
+  assert.throws(() => review.applyReviewed('unreviewed'), /reviewed ID/);
+  review.applyReviewed(preview.id);
+  assert.equal(ws.read()['robos:nodes'].find(n => n['@id']==='urn:example:one')['dcterms:title'], 'reviewed');
+  assert.throws(() => review.applyReviewed(preview.id), /reviewed ID/);
+});

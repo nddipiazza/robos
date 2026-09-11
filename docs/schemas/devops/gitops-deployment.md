@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | GitOps Deployment must have a title. |
-| **`robos:gitopsEngine`** | gitopsEngine | `1..*` | `xsd:string` | GitOps Deployment must declare engine (argocd, flux). |
-| **`robos:sourceRepo`** | sourceRepo | `1..*` | `xsd:string` | GitOps Deployment must specify source Git repository. |
-| **`robos:targetCluster`** | targetCluster | `1..*` | `xsd:string` | GitOps Deployment must link to target Kubernetes Cluster. |
-| **`robos:targetNamespace`** | targetNamespace | `1..*` | `xsd:string` | GitOps Deployment must specify target namespace. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | GitOps Deployment must have a title. |
+| **`robos:gitopsEngine`** | gitopsEngine | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must declare engine (argocd, flux). |
+| **`robos:sourceRepo`** | sourceRepo | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must specify source Git repository. |
+| **`robos:targetCluster`** | targetCluster | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must link to target Kubernetes Cluster. |
+| **`robos:targetNamespace`** | targetNamespace | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must specify target namespace. |
 
 ---
 

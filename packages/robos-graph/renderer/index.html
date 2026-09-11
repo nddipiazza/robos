@@ -107,8 +107,9 @@
               <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new SDLC Resource Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
               <button class="btn btn-secondary" id="btn-open-ingest-modal" title="Import / Ingest Nodes" style="padding: 2px 6px; font-size: 10px;">📥 Ingest</button>
               <div class="group-mode-toggle" id="group-mode-toggle" title="Group Nodes By">
-                <button class="group-btn active" id="btn-group-package" data-mode="package" title="Group by Package">📦 Package</button>
-                <button class="group-btn" id="btn-group-category" data-mode="category" title="Group by Category">🏷️ Type</button>
+                <button class="group-btn active" id="btn-group-classification" data-mode="classification" title="Group by Classification">Classification</button>
+                <button class="group-btn" id="btn-group-package" data-mode="package" title="Group by Package">📦 Package</button>
+                <button class="group-btn" id="btn-group-category" data-mode="type" title="Group by RDF Type">🏷️ Type</button>
                 <button class="group-btn" id="btn-group-flat" data-mode="flat" title="Flat List View">☰ Flat</button>
               </div>
               <div class="group-expand-collapse" id="group-expand-collapse">
@@ -133,50 +134,8 @@
                 <option value="documentation">documentation</option>
                 <option value="learning">learning</option>
               </select>
-              <select id="node-type-filter" class="filter-type-select" title="Filter by Type" style="max-width: 110px;">
-                <option value="all">🏷️ All Types</option>
-                <option value="organization">🏢 Org</option>
-                <option value="diagram">📊 Diagram</option>
-                <option value="adr">📋 ADR</option>
-                <option value="documentation">📖 Docs</option>
-                <option value="devops">☁️ DevOps</option>
-                <option value="pass-credential">🔑 Pass</option>
-                <option value="elearning">🎓 eLearning</option>
-                <option value="frontend-app">🌐 Front End</option>
-                <option value="desktop-app">🖥️ Desktop</option>
-                <option value="pc-game">🎮 PC Game</option>
-                <option value="mobile-game">🕹️ Mobile</option>
-                <option value="console-app">⌨️ Console</option>
-                <option value="data-pipeline">🔄 Pipeline</option>
-                <option value="mobile-app">📱 Mobile</option>
-                <option value="library">📦 Library</option>
-                <option value="bdd">🥒 BDD</option>
-                <option value="service">Services</option>
-                <option value="contract">Contracts</option>
-                <option value="requirement">Reqs</option>
-              </select>
-            </div>
-            <div class="filter-pills-wrap" id="filter-pills-wrap" title="Quick Filter by Type">
-              <button class="filter-pill active" data-filter="all">All</button>
-              <button class="filter-pill" data-filter="organization">🏢 Org</button>
-              <button class="filter-pill" data-filter="diagram">📊 Diagram</button>
-              <button class="filter-pill" data-filter="adr">📋 ADR</button>
-              <button class="filter-pill" data-filter="documentation">📖 Docs</button>
-              <button class="filter-pill" data-filter="devops">☁️ DevOps</button>
-              <button class="filter-pill" data-filter="pass-credential">🔑 Pass</button>
-              <button class="filter-pill" data-filter="elearning">🎓 eLearning</button>
-              <button class="filter-pill" data-filter="frontend-app">🌐 Front End</button>
-              <button class="filter-pill" data-filter="desktop-app">🖥️ Desktop</button>
-              <button class="filter-pill" data-filter="pc-game">🎮 PC Game</button>
-              <button class="filter-pill" data-filter="mobile-game">🕹️ Mobile</button>
-              <button class="filter-pill" data-filter="console-app">⌨️ Console</button>
-              <button class="filter-pill" data-filter="data-pipeline">🔄 Pipeline</button>
-              <button class="filter-pill" data-filter="mobile-app">📱 Mobile</button>
-              <button class="filter-pill" data-filter="library">📦 Library</button>
-              <button class="filter-pill" data-filter="bdd">🥒 BDD</button>
-              <button class="filter-pill" data-filter="service">Services</button>
-              <button class="filter-pill" data-filter="contract">Contracts</button>
-              <button class="filter-pill" data-filter="requirement">Reqs</button>
+              <select id="node-type-filter" class="filter-type-select" title="Filter by Type"><option value="all">All Types</option></select>
+              <select id="node-classification-filter" class="filter-type-select" title="Filter by Classification"><option value="all">All Classifications</option></select>
             </div>
           </div>
           <div class="panel-body node-list" id="nodes-list"></div>
@@ -690,11 +649,13 @@
     <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-context">Prepare agent brief</button><button class="btn btn-primary" id="workspace-agent">Ask configured agent</button></div>
     <details id="workspace-context-details"><summary>Agent brief and source evidence</summary><pre id="workspace-context-output" style="white-space:pre-wrap;max-height:260px;overflow:auto"></pre></details>
     <label for="workspace-edits" style="display:block;margin-top:16px">Proposed edits from your coding agent, or an imported graph</label>
+    <label style="display:block;margin:8px 0">Or choose a JSON/JSON-LD file: <input id="workspace-file" type="file" accept=".json,.jsonld,application/json"></label>
     <textarea id="workspace-edits" rows="5" style="width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;padding:10px;border:1px solid #30363d;border-radius:6px" placeholder='Paste {"edits": [...]} or a JSON-LD graph. Preview before saving.'></textarea>
     <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-propose">Preview changes</button><button class="btn btn-primary" id="workspace-apply" disabled>Save reviewed revision</button><button class="btn btn-secondary" id="workspace-discard">Discard proposal</button></div>
     <p id="workspace-status" role="status" aria-live="polite"></p>
     <pre id="workspace-diff" style="white-space:pre-wrap;background:#161b22;padding:12px;max-height:280px;overflow:auto"></pre>
   </dialog>
+  <script src="../lib/classification.js"></script>
   <script src="app.js"></script>
   <script src="workspace-review.js"></script>
 </body>

@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Data stores & messaging. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | NoSQL Database must have a title or display name. |
-| **`robos:engine`** | engine | `1..*` | `xsd:string` | NoSQL Database must declare engine (redis, mongodb, cassandra, dynamodb, elasticsearch). |
-| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | NoSQL Database must specify a host address or cluster endpoint. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | NoSQL Database must have a title or display name. |
+| **`robos:engine`** | engine | `1..*` | `xsd:string` | Data stores & messaging, Agents & MCP | NoSQL Database must declare engine (redis, mongodb, cassandra, dynamodb, elasticsearch). |
+| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | Data stores & messaging, Infrastructure & delivery | NoSQL Database must specify a host address or cluster endpoint. |
 
 ---
 

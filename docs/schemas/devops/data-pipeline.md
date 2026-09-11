@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Services & processing. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Data Pipeline must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Data Pipeline must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Data Pipeline must specify technology stack. |
-| **`robos:pipelineEngine`** | Pipeline Engine | `1..*` | `xsd:string` | Data Pipeline must declare execution engine (Kafka Streams, Spark, Celery). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Data Pipeline must have a title. |
+| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Data Pipeline must define a repository. |
+| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Data Pipeline must specify technology stack. |
+| **`robos:pipelineEngine`** | Pipeline Engine | `1..*` | `xsd:string` | Services & processing | Data Pipeline must declare execution engine (Kafka Streams, Spark, Celery). |
 
 ---
 

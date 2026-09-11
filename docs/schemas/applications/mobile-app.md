@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Mobile App must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Mobile App must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Mobile App must specify technology stack. |
-| **`robos:platform`** | Target Platform | `1..*` | `xsd:string` | Mobile App must specify mobile platform(s). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Mobile App must have a title. |
+| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Mobile App must define a repository. |
+| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Mobile App must specify technology stack. |
+| **`robos:platform`** | Target Platform | `1..*` | `xsd:string` | Applications & entry points, Infrastructure & delivery | Mobile App must specify mobile platform(s). |
 
 ---
 

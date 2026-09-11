@@ -60,12 +60,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Contracts & data models. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contract must specify a specification file path. |
-| **`robos:protocol`** | Protocol / Standard | `1..*` | `xsd:string` | Contract must declare a protocol (OpenAPI, Pact, etc.). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contracts & data models | Contract must specify a specification file path. |
+| **`robos:protocol`** | Protocol / Standard | `1..*` | `xsd:string` | Contracts & data models, Infrastructure & delivery | Contract must declare a protocol (OpenAPI, Pact, etc.). |
 
 ---
 

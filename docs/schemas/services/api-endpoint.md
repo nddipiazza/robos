@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Contracts & data models. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | API Endpoint must have a title or summary. |
-| **`robos:pathPattern`** | API Path Pattern | `1..*` | `xsd:string` | API Endpoint must declare path pattern (e.g. /api/v1/orders). |
-| **`robos:httpMethod`** | HTTP Method | `1..*` | `xsd:string` | API Endpoint must declare HTTP method (GET, POST, etc.). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | API Endpoint must have a title or summary. |
+| **`robos:pathPattern`** | API Path Pattern | `1..*` | `xsd:string` | Contracts & data models | API Endpoint must declare path pattern (e.g. /api/v1/orders). |
+| **`robos:httpMethod`** | HTTP Method | `1..*` | `xsd:string` | Contracts & data models | API Endpoint must declare HTTP method (GET, POST, etc.). |
 
 ---
 

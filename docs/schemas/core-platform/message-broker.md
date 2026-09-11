@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Data stores & messaging. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Message Broker must have a title or display name. |
-| **`robos:brokerType`** | brokerType | `1..*` | `xsd:string` | Message Broker must declare broker type (kafka, rabbitmq, sqs, nats, pulsar). |
-| **`robos:endpoint`** | endpoint | `1..*` | `xsd:string` | Message Broker must specify bootstrap endpoint URI. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Message Broker must have a title or display name. |
+| **`robos:brokerType`** | brokerType | `1..*` | `xsd:string` | Data stores & messaging | Message Broker must declare broker type (kafka, rabbitmq, sqs, nats, pulsar). |
+| **`robos:endpoint`** | endpoint | `1..*` | `xsd:string` | Data stores & messaging | Message Broker must specify bootstrap endpoint URI. |
 
 ---
 

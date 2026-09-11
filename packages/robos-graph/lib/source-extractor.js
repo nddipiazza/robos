@@ -74,6 +74,26 @@ function codeOnly(text) {
   return uncomment(text).replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`/g, token => token.replace(/[^\n]/g, ' '));
 }
 
+function goRequirements(clean) {
+  const requirements = [];
+  let block = null;
+  for (const [index, raw] of clean.split('\n').entries()) {
+    let line = raw.trim();
+    if (!line) continue;
+    if (line === ')') { block = null; continue; }
+    const opening = line.match(/^([A-Za-z]+)\s*\(\s*$/);
+    if (opening) { block = opening[1]; continue; }
+    if (block !== 'require') {
+      if (block || !/^require\s+/.test(line)) continue;
+      line = line.replace(/^require\s+/, '');
+    }
+    const requirement = line.match(/^(?:"([^"]+)"|(\S+))\s+v\S+\s*$/);
+    const name = requirement && (requirement[1] || requirement[2]);
+    if (identifier(name)) requirements.push({ name: 'go:' + name, predicate: 'robos:dependsOn', line: index + 1 });
+  }
+  return requirements;
+}
+
 /** Extract checkout declarations. Revision identifies HEAD; hashes identify working bytes.
  * No source contents, commands, configuration values or local paths are exported.
  * includeUnsupported defaults to false; inventory always covers every tracked file.
@@ -102,7 +122,7 @@ function extractSources(manifest, localPaths) {
     if (typeof localPaths[source.id] !== 'string' || !path.isAbsolute(localPaths[source.id])) throw new Error(`Missing absolute checkout for source ${source.id}`);
   }
   const nodes = [], sources = [], warnings = [], coverage = [], inventory = [];
-  const packages = new Map(), dependencies = [];
+  const packages = new Map(), dependencies = [], protoSources = [];
   const urn = `urn:${manifest.namespace}`;
 
   for (const source of manifest.sources) {
@@ -197,7 +217,7 @@ function extractSources(manifest, localPaths) {
       };
       const register = (name, node, deps) => {
         if (!packages.has(name)) packages.set(name, []);
-        packages.get(name).push(node['@id']); dependencies.push({ node, names: deps });
+        packages.get(name).push(node['@id']); dependencies.push({ node, names: deps, evidence });
       };
       try {
         if (kind === 'node-package') {
@@ -207,20 +227,20 @@ function extractSources(manifest, localPaths) {
             const framework = ['react', 'vue', 'svelte', '@angular/core', 'next'].find(d => deps.includes(d));
             const frontend = framework && !data.exports && !data.main;
             const node = child('package', frontend ? 'robos:FrontEndApp' : 'robos:Library', data.name, { 'robos:repository': ref(repoId), 'robos:technology': 'Node.js', ...(frontend ? { 'robos:frontendFramework': framework } : {}) });
-            register(data.name, node, deps);
+            register('npm:' + data.name, node, ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'].flatMap(section => Object.keys(data[section] || {}).filter(identifier).map(name => ({ name: 'npm:' + name, predicate: { dependencies: 'robos:dependsOn', devDependencies: 'robos:developmentDependsOn', peerDependencies: 'robos:peerDependsOn', optionalDependencies: 'robos:optionalDependsOn' }[section], line: text.slice(0, Math.max(0, text.indexOf(JSON.stringify(name), text.indexOf(JSON.stringify(section))))).split('\n').length }))));
           }
         } else if (kind === 'go-module') {
           const clean = uncomment(text), match = clean.match(/^module\s+(\S+)/m);
           if (match && identifier(match[1])) {
             const node = child('module', 'robos:Library', match[1], { 'robos:repository': ref(repoId), 'robos:technology': 'Go' });
-            const deps = [...clean.matchAll(/^(?:require\s+|\s+)([\w.-]+(?:\/[\w.+-]+)+)\s+v\S+/gm)].map(m => m[1]);
-            register(match[1], node, deps);
+            register('go:' + match[1], node, goRequirements(clean));
           }
         } else if (kind === 'protobuf') {
           const clean = codeOnly(text), contract = child('contract', 'robos:Contract', file, { 'robos:specFile': file, 'robos:protocol': 'protobuf' });
+          protoSources.push({ repository: source.id, file, text: uncomment(text), contract, evidence });
           // Scope names with brace nesting so nested messages and per-service RPCs stay distinct.
           const stack = []; let pending = null;
-          const tokens = /\b(service|message|rpc)\s+([A-Za-z_]\w*)|[{}]/g;
+          const tokens = /\b(service|message|enum|rpc)\s+([A-Za-z_]\w*)|[{}]/g;
           for (const match of clean.matchAll(tokens)) {
             if (match[1]) {
               const name = [...stack.filter(Boolean), match[2]].join('.');
@@ -294,14 +314,21 @@ function extractSources(manifest, localPaths) {
     }
     sources.push(metadata); coverage.push(count);
   }
-  for (const { node, names } of dependencies) {
-    const ids = new Set();
-    for (const name of names) {
-      const matches = packages.get(name) || [];
-      if (matches.length === 1 && matches[0] !== node['@id']) ids.add(matches[0]);
-      else if (matches.length > 1) warnings.push({ code: 'ambiguous-module-dependency', module: name });
+  const { addRelationship, linkProtobufDependencies } = require('./source-dependencies');
+  for (const { node, names, evidence } of dependencies) {
+    for (const dep of names) {
+      const matches = packages.get(dep.name) || [];
+      if (matches.length === 1 && matches[0] !== node['@id']) addRelationship(node, dep.predicate, matches[0], evidence(dep.line));
+      else warnings.push({ code: matches.length > 1 ? 'ambiguous-module-dependency' : 'unresolved-module-dependency', module: dep.name, from: node['@id'], predicate: dep.predicate });
     }
-    if (ids.size) node['robos:dependsOn'] = [...ids].sort().map(ref);
+  }
+  linkProtobufDependencies(nodes, protoSources, warnings);
+  // Provenance is explicit evidence of location/derivation, not runtime coupling.
+  for (const node of nodes) for (const key of ['robos:inRepository', 'robos:repository', 'robos:derivedFrom', 'robos:definedInContract']) {
+    for (const value of [].concat(node[key] || [])) {
+      const target = typeof value === 'string' ? value : value['@id'];
+      if (target && target !== node['@id']) addRelationship(node, key, target, node['robos:evidence']);
+    }
   }
   return { document: { '@context': OSLC_CONTEXT, '@id': `${urn}:graph:system`, '@type': ['oslc:ServiceProvider', 'robos:SystemGraph'], 'dcterms:title': manifest.title, 'robos:nodes': nodes }, sources, coverage, warnings, inventory };
 }

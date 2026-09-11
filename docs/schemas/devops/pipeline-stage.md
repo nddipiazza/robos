@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Pipeline Stage must have a title. |
-| **`robos:stageName`** | Pipeline Stage Name | `1..*` | `xsd:string` | Pipeline Stage must specify stage name. |
-| **`robos:pipeline`** | Parent CI/CD Pipeline | `1..*` | `URI (robos:CICDPipeline)` | Pipeline Stage must link to parent CI/CD pipeline. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Pipeline Stage must have a title. |
+| **`robos:stageName`** | Pipeline Stage Name | `1..*` | `xsd:string` | Infrastructure & delivery | Pipeline Stage must specify stage name. |
+| **`robos:pipeline`** | Parent CI/CD Pipeline | `1..*` | `URI (robos:CICDPipeline)` | Infrastructure & delivery | Pipeline Stage must link to parent CI/CD pipeline. |
 
 ---
 

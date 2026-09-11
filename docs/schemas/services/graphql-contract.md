@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Contracts & data models. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | GraphQL Contract must have a title. |
-| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | GraphQL Contract must specify schema file path (.graphql). |
-| **`robos:schemaType`** | schemaType | `1..*` | `xsd:string` | GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | GraphQL Contract must have a title. |
+| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contracts & data models | GraphQL Contract must specify schema file path (.graphql). |
+| **`robos:schemaType`** | schemaType | `1..*` | `xsd:string` | Contracts & data models | GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway). |
 
 ---
 

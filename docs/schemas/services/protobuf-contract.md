@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Contracts & data models. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Protobuf Contract must have a title. |
-| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Protobuf Contract must specify .proto file path. |
-| **`robos:packageName`** | packageName | `1..*` | `xsd:string` | Protobuf Contract must specify protobuf package name. |
-| **`robos:rpcMethods`** | rpcMethods | `1..*` | `xsd:string` | Protobuf Contract must declare RPC methods. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Protobuf Contract must have a title. |
+| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contracts & data models | Protobuf Contract must specify .proto file path. |
+| **`robos:packageName`** | packageName | `1..*` | `xsd:string` | Contracts & data models | Protobuf Contract must specify protobuf package name. |
+| **`robos:rpcMethods`** | rpcMethods | `1..*` | `xsd:string` | Contracts & data models | Protobuf Contract must declare RPC methods. |
 
 ---
 

@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | PC Game must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | PC Game must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | PC Game must specify technology stack. |
-| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy). |
-| **`robos:targetPlatform`** | Gaming Target Platform | `1..*` | `xsd:string` | PC Game must specify target PC platform(s) (Windows, Linux, macOS). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | PC Game must have a title. |
+| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | PC Game must define a repository. |
+| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | PC Game must specify technology stack. |
+| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | Applications & entry points | PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy). |
+| **`robos:targetPlatform`** | Gaming Target Platform | `1..*` | `xsd:string` | Applications & entry points | PC Game must specify target PC platform(s) (Windows, Linux, macOS). |
 
 ---
 

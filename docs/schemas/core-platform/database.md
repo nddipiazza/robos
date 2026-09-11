@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Data stores & messaging. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Database must have a title or display name. |
-| **`robos:engine`** | engine | `1..*` | `xsd:string` | Database must declare its engine (postgresql, mysql, sqlite, oracle, etc.). |
-| **`robos:databaseName`** | databaseName | `1..*` | `xsd:string` | Database must specify a logical database name. |
-| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | Database must specify a host address or service DNS. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Database must have a title or display name. |
+| **`robos:engine`** | engine | `1..*` | `xsd:string` | Data stores & messaging, Agents & MCP | Database must declare its engine (postgresql, mysql, sqlite, oracle, etc.). |
+| **`robos:databaseName`** | databaseName | `1..*` | `xsd:string` | Data stores & messaging | Database must specify a logical database name. |
+| **`robos:host`** | Routing Hostname | `1..*` | `xsd:string` | Data stores & messaging, Infrastructure & delivery | Database must specify a host address or service DNS. |
 
 ---
 

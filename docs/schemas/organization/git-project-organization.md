@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Organization & people. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Git Project Organization must have a title or display name. |
-| **`robos:url`** | Forge / Web URL | `1..*` | `xsd:anyURI` | Git Project Organization must specify forge URL (e.g. https://github.com/apache). |
-| **`robos:orgName`** | Organization Slug | `1..*` | `xsd:string` | Git Project Organization must specify organization handle/slug. |
-| **`robos:forgeType`** | Forge Type | `1..*` | `xsd:string` | Git Project Organization must declare forge type (github, gitlab, bitbucket, etc.). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Git Project Organization must have a title or display name. |
+| **`robos:url`** | Forge / Web URL | `1..*` | `xsd:anyURI` | Organization & people, Projects & work items, Source control & artifacts | Git Project Organization must specify forge URL (e.g. https://github.com/apache). |
+| **`robos:orgName`** | Organization Slug | `1..*` | `xsd:string` | Organization & people | Git Project Organization must specify organization handle/slug. |
+| **`robos:forgeType`** | Forge Type | `1..*` | `xsd:string` | Organization & people | Git Project Organization must declare forge type (github, gitlab, bitbucket, etc.). |
 
 ---
 

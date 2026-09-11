@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | MCP Server must have a title or display name. |
-| **`robos:transport`** | transport | `1..*` | `xsd:string` | MCP Server must declare transport protocol (stdio, sse). |
-| **`robos:toolsProvided`** | toolsProvided | `1..*` | `xsd:string` | MCP Server must list at least one provided tool. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | MCP Server must have a title or display name. |
+| **`robos:transport`** | transport | `1..*` | `xsd:string` | Agents & MCP | MCP Server must declare transport protocol (stdio, sse). |
+| **`robos:toolsProvided`** | toolsProvided | `1..*` | `xsd:string` | Agents & MCP | MCP Server must list at least one provided tool. |
 
 ---
 

@@ -58,7 +58,7 @@ Every single entity in the RobOS Knowledge Graph is formally mapped to a canonic
 
 The formal, machine-readable W3C RDF Schema / OWL ontology bridge is published at [**`ontology.jsonld`**]({{ '/schemas/ontology.jsonld' | relative_url }}).
 
-| RobOS Class | Package | Schema.org Classification | De Facto Domain Standard | Specification |
+| RobOS Class | Package | Schema.org Parent Type | De Facto Domain Standard | Specification |
 |---|---|---|---|---|
 | <code>robos:BuildSystem</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Standard](https://bazel.build/) | [Docs & SHACL]({{ '/schemas/core-platform/build-system.html' | relative_url }}) |
 | <code>robos:Database</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database.html' | relative_url }}) |

@@ -61,6 +61,26 @@ test('Explorer: prepare evidence brief, preview/refine/discard, save and reopen 
     await narrate('The reviewed revision is saved to the external package store.');
     assert.equal(ws.read()['robos:nodes'][0]['dcterms:title'], 'Engineering Service Catalog');
     await page.screenshot({ path: path.join(proof, '03-saved-revision.png') });
+    const incoming = { ...ws.read(), 'robos:nodes': structuredClone(ws.state().extracted) };
+    incoming['robos:nodes'][0]['dcterms:title'] = 'Concurrent source title';
+    const importFile = path.join(tmp, 'source-import.jsonld');
+    fs.writeFileSync(importFile, JSON.stringify(incoming));
+    await page.locator('#workspace-file').setInputFiles(importFile);
+    await page.locator('#workspace-propose').click();
+    await page.locator('#workspace-status').filter({ hasText: '1 conflicts' }).waitFor();
+    assert.equal(await page.locator('#workspace-apply').isDisabled(), true);
+    assert.equal(ws.read()['robos:nodes'][0]['dcterms:title'], 'Engineering Service Catalog');
+    await narrate('A source-file import surfaces a conflicting edit and blocks saving.');
+    await page.screenshot({ path: path.join(proof, '04-conflict.png') });
+    await page.locator('#workspace-discard').click();
+    incoming['robos:nodes'] = ws.state().extracted;
+    fs.writeFileSync(importFile, JSON.stringify(incoming));
+    await page.locator('#workspace-file').setInputFiles(importFile);
+    await page.locator('#workspace-propose').click();
+    await page.locator('#workspace-status').filter({ hasText: '0 changed' }).waitFor();
+    await page.locator('#workspace-apply').click();
+    await page.locator('#workspace-status').filter({ hasText: 'Saved revision' }).waitFor();
+    assert.equal(ws.read()['robos:nodes'][0]['dcterms:title'], 'Engineering Service Catalog');
     await app.close(); app = await startApp(); page = await app.firstWindow();
     await page.locator('#btn-workspace-review').click();
     await page.locator('#workspace-summary').filter({ hasText: 'Example Engineering' }).waitFor();
@@ -68,7 +88,7 @@ test('Explorer: prepare evidence brief, preview/refine/discard, save and reopen 
     await page.locator('#workspace-context-output').filter({ hasText: 'Engineering Service Catalog' }).waitFor();
     await narrate('Reopening the app preserves the accepted correction and its evidence.');
     await page.screenshot({ path: path.join(proof, '04-reopened.png') });
-    fs.writeFileSync(path.join(proof, 'result.json'), JSON.stringify({ passed: true, assertions: ['external root', 'evidence brief', 'preview does not mutate', 'discard preserves graph', 'save persists change', 'reopen retains correction'], captions }, null, 2));
+    fs.writeFileSync(path.join(proof, 'result.json'), JSON.stringify({ passed: true, assertions: ['external root', 'evidence brief', 'preview does not mutate', 'discard preserves graph', 'save persists change', 'reopen retains correction', 'file import surfaces conflicts', 'unchanged import preserves correction'], captions }, null, 2));
   } finally {
     if (app) await app.close();
     recorder.stdin.write('q');

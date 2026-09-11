@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Testing & behavior. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Examples Table must have a title. |
-| **`robos:tableHeaders`** | Table Headers | `1..*` | `Array of xsd:string` | Examples Table must define header column names. |
-| **`robos:tableRows`** | Table Rows | `1..*` | `Array of Arrays` | Examples Table must define parameter value rows. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Examples Table must have a title. |
+| **`robos:tableHeaders`** | Table Headers | `1..*` | `Array of xsd:string` | Testing & behavior | Examples Table must define header column names. |
+| **`robos:tableRows`** | Table Rows | `1..*` | `Array of Arrays` | Testing & behavior | Examples Table must define parameter value rows. |
 
 ---
 

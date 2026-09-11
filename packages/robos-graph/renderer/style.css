@@ -129,6 +129,7 @@ h1 {
 }
 
 .btn-primary { background-color: #238636; color: #ffffff; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-secondary { background: var(--bg-card); border-color: var(--border); color: var(--text-bright); }
 
 .copilot-bar {
@@ -1739,3 +1740,14 @@ h1 {
   font-size: 11px;
 }
 
+
+/* Classification remains visible independently of grouping and collapse state. */
+.node-classification { color: var(--accent, #00bcd4); font-size: 11px; margin-top: 5px; }
+.classification-warning { color: #f0bd67; font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; }
+button.node-group-header { width: 100%; text-align: left; color: inherit; font: inherit; border: 0; }
+.nodes-panel-header .panel-header-actions { flex-wrap: wrap; }
+.filter-search-row { flex-wrap: wrap; }
+.node-item .type-badge { white-space: normal; overflow-wrap: anywhere; }
+.nodes-panel-header { flex-direction: column; align-items: stretch; gap: 8px; }
+.nodes-panel-header .panel-header-actions { width: 100%; min-width: 0; }
+.nodes-panel-header .group-mode-toggle { flex-wrap: wrap; max-width: 100%; }

@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Documentation & decisions. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Flow Diagram must have a title. |
-| **`dcterms:description`** | Description | `1..*` | `xsd:string` | Flow Diagram must have a description. |
-| **`robos:mermaidText`** | Mermaid Graph Definition | `1..*` | `xsd:string` | Flow Diagram must contain raw Mermaid graph syntax (robos:mermaidText). |
-| **`robos:imagePath`** | AI-Rendered Diagram Image | `1..*` | `xsd:string` | Flow Diagram must specify relative path to AI-rendered image (robos:imagePath). |
-| **`robos:tooltip`** | Hover Tooltip Summary | `1..*` | `xsd:string` | Flow Diagram must declare hover tooltip text (robos:tooltip). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Flow Diagram must have a title. |
+| **`dcterms:description`** | Description | `1..*` | `xsd:string` | Documentation & decisions | Flow Diagram must have a description. |
+| **`robos:mermaidText`** | Mermaid Graph Definition | `1..*` | `xsd:string` | Documentation & decisions | Flow Diagram must contain raw Mermaid graph syntax (robos:mermaidText). |
+| **`robos:imagePath`** | AI-Rendered Diagram Image | `1..*` | `xsd:string` | Documentation & decisions | Flow Diagram must specify relative path to AI-rendered image (robos:imagePath). |
+| **`robos:tooltip`** | Hover Tooltip Summary | `1..*` | `xsd:string` | Documentation & decisions | Flow Diagram must declare hover tooltip text (robos:tooltip). |
 
 ---
 

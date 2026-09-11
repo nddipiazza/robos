@@ -97,10 +97,10 @@ function requireReview() {
   return workspaceReview;
 }
 ipcMain.handle('workspace-context', (_, input) => requireReview().context(input));
-ipcMain.handle('workspace-propose', (_, input) => requireReview().propose(input));
-ipcMain.handle('workspace-ask-agent', (_, input) => requireReview().askAgent(input));
+ipcMain.handle('workspace-propose', (_, input) => { const review = requireReview(); return review.preview(review.propose(input)); });
+ipcMain.handle('workspace-ask-agent', async (_, input) => { const review = requireReview(); const result = await review.askAgent(input); return { ...result, proposal: review.preview(result.proposal) }; });
 ipcMain.handle('workspace-apply', (_, proposal) => {
-  const result = requireReview().apply(proposal);
+  const result = requireReview().applyReviewed(proposal.id);
   store.init();
   store.packageManager.loadPackages();
   return result;
