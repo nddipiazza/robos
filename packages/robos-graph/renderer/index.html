@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RobOS SDLC Knowledge Graph Explorer</title>
+  <title>RobOS Knowledge Graph Explorer</title>
   <link rel="stylesheet" href="style.css" />
   <script src="../../robos-ui/robos-ui.js"></script>
   <script>
@@ -22,8 +22,8 @@
       <div class="header-left">
         <div class="logo-icon">🌐</div>
         <div>
-          <h1>SDLC Knowledge Graph Explorer</h1>
-          <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; GitOps SDLC Engine</div>
+          <h1>Knowledge Graph Explorer</h1>
+          <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; Git-backed Architecture</div>
         </div>
       </div>
       <div class="header-center">
@@ -50,7 +50,7 @@
         <div class="stat-label" id="stat-branch-type">Production Reality</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-nodes">5 SDLC Nodes</div>
+        <div class="stat-num" id="stat-nodes">5 Graph Nodes</div>
         <div class="stat-label">Active Resource Entities</div>
       </div>
       <div class="stat-card">
@@ -97,15 +97,15 @@
     <!-- Main Workspace Split -->
     <main class="main-content">
       <div class="workspace-grid">
-        <!-- Left Panel: SDLC Resource Nodes List with Grouping, Search & Accordion Controls -->
+        <!-- Left Panel: Graph Nodes List with Grouping, Search & Accordion Controls -->
         <section class="panel nodes-panel">
           <div class="panel-header nodes-panel-header">
             <div class="panel-header-left">
-              <span class="panel-title">SDLC Resource Nodes</span>
+              <span class="panel-title">Graph Nodes</span>
               <span class="nodes-count-badge" id="nodes-count-badge">5 of 5 Nodes</span>
             </div>
             <div class="panel-header-actions">
-              <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new SDLC Resource Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
+              <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new Graph Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
               <button class="btn btn-secondary" id="btn-open-ingest-modal" title="Import / Ingest Nodes" style="padding: 2px 6px; font-size: 10px;">📥 Ingest</button>
               <div class="group-mode-toggle" id="group-mode-toggle" title="Group Nodes By">
                 <button class="group-btn active" id="btn-group-classification" data-mode="classification" title="Group by Classification">Classification</button>
@@ -331,14 +331,14 @@
     </div>
   </div>
 
-  <!-- ── Add SDLC Entity Modal ───────────────────────────────────────────── -->
+  <!-- ── Add Graph Entity Modal ───────────────────────────────────────────── -->
   <div id="add-entity-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon">➕</span>
           <div>
-            <h2>Add SDLC Resource Node</h2>
+            <h2>Add Graph Node</h2>
             <div class="modal-subtitle">Schema-Driven Entity Scaffolding with W3C SHACL Validation Gate</div>
           </div>
         </div>
@@ -428,14 +428,14 @@
     </div>
   </div>
 
-  <!-- ── Edit SDLC Entity Modal ──────────────────────────────────────────── -->
+  <!-- ── Edit Graph Entity Modal ──────────────────────────────────────────── -->
   <div id="edit-entity-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon">✏️</span>
           <div>
-            <h2 id="edit-modal-title">Edit SDLC Node</h2>
+            <h2 id="edit-modal-title">Edit Graph Node</h2>
             <div class="modal-subtitle" id="edit-modal-subtitle">Mutate Properties with Automated SHACL Re-Validation</div>
           </div>
         </div>
@@ -525,7 +525,7 @@
         <div class="modal-title-group">
           <span class="modal-icon" style="color: var(--danger);">🗑️</span>
           <div>
-            <h2>Delete SDLC Node</h2>
+            <h2>Delete Graph Node</h2>
             <div class="modal-subtitle">Permanent Deletion from Knowledge Graph</div>
           </div>
         </div>
@@ -588,7 +588,7 @@
         <div class="modal-title-group">
           <span class="modal-icon">📥</span>
           <div>
-            <h2>Ingest & Import SDLC Nodes</h2>
+            <h2>Ingest & Import Graph Nodes</h2>
             <div class="modal-subtitle">Import from Git Projects, File System, or Raw JSON-LD Specifications</div>
           </div>
         </div>

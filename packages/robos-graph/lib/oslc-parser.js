@@ -44,7 +44,7 @@ class OSLCGraphParser {
     this.context = doc['@context'] || OSLC_CONTEXT;
     this.graphId = doc['@id'] || 'urn:robos:graph:system';
     this.graphType = doc['@type'] || ['oslc:ServiceProvider', 'robos:SystemGraph'];
-    this.title = doc['dcterms:title'] || 'RobOS SDLC Knowledge Graph';
+    this.title = doc['dcterms:title'] || 'RobOS Knowledge Graph';
     this.nodes = [];
     this.nodeIndex = new Map();
     this.incomingRefs = new Map(); // targetId -> Set(sourceIds)

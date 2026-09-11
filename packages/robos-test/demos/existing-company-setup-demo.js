@@ -98,7 +98,7 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: "RobOS synchronizes team boundaries to GitOps teams.yaml and the SDLC Knowledge Graph, making Sarah ready to contribute immediately.",
+    narration: "RobOS synchronizes team boundaries to GitOps teams.yaml and the Knowledge Graph, making Sarah ready to contribute immediately.",
     target: '.cat-item[data-cat="git"]',
     action: 'click',
     callout: 'Synchronized Declarative GitOps: .robos/teams.yaml & KGraph',

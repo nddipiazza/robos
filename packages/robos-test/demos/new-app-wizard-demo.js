@@ -123,7 +123,7 @@ This end-to-end walkthrough demonstrates developing a **brand-new application fr
 - **Identity, URN & Team Ownership**: Specifying package identifier (\`urn:robos:microservice:payment-gateway-api\`) and team owner in \`.robos/teams.yaml\`.
 - **Contract-First API Design**: Configuring OpenAPI 3.1 YAML specifications with ready-to-test endpoint definitions.
 - **Polyglot Scaffolding Generation**: Creating real project files on disk (\`catalog-info.yaml\`, \`dev-setup.sh\`, \`Dockerfile\`, starter tests).
-- **Knowledge Graph Registration**: Automatically registering the new component in \`.robos/packages.yaml\` and the Dual-State SDLC Knowledge Graph.
+- **Knowledge Graph Registration**: Automatically registering the new component in \`.robos/packages.yaml\` and the Dual-State Knowledge Graph.
 
 ## Execution Sequence
 1. **Launch App Wizard**: Open the application builder in "Develop New App" mode.

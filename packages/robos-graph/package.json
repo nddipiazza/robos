@@ -1,7 +1,7 @@
 {
   "name": "robos-graph",
   "version": "1.0.0",
-  "description": "OASIS OSLC Core 3.0 & W3C JSON-LD / SHACL Dual-State SDLC Knowledge Graph Engine",
+  "description": "OASIS OSLC Core 3.0 & W3C JSON-LD / SHACL Dual-State Knowledge Graph Engine",
   "main": "main.js",
   "bin": {
     "kgraph": "./bin/kgraph-cli.js"

@@ -52,7 +52,7 @@ const SCRIPT = [
 runDemo({
   slug: 'branch-manager',
   appId: 'robos-graph',
-  windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+  windowTitle: 'RobOS Knowledge Graph Explorer',
   scenario: scenarios['all-good'],
   audio: false,
   env: { ROBOS_DEMO_SHOW: '1' },

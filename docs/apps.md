@@ -808,7 +808,7 @@ A native conversational interface inspired by VS Code Copilot Chat and Cursor, e
 Manage multiple AI coding agents (Claude Code, Google Antigravity, GitHub Copilot, Gemini) with secure Model Context Protocol (MCP) tool authentication and OAuth login popups.
 ![Agents Manager]({{ '/assets/images/screenshots/agent-mcp-antigravity_servers_frame.png' | relative_url }})
 
-### Live Architecture Knowledge Graph Explorer
+### Knowledge Graph Explorer
 Explore the full connected map of your software ecosystem with visual comparisons between live production (`main`) and proposed feature branches.
 ![Knowledge Graph]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }})
 

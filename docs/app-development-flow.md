@@ -166,15 +166,15 @@ Proceeding to Step 3 and clicking **Complete Ingestion & Map ⚡** finalizes the
   </div>
 </div>
 
-#### 5. Exploring the Ingested Graph in SDLC Knowledge Graph Explorer
+#### 5. Exploring the Ingested Graph in Knowledge Graph Explorer
 
-Once ingested, the entire system topology is immediately visible and queryable in **SDLC Knowledge Graph Explorer** (`robos-graph`):
+Once ingested, the entire system topology is immediately visible and queryable in **Knowledge Graph Explorer** (`robos-graph`):
 * Developers can inspect linked microservices, browse contracts, examine Architecture Decision Records (ADRs), trace blast radius impact analysis, and trigger autonomous IDE reviews.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/kgraph-importer-overview.png' | relative_url }}" alt="SDLC Knowledge Graph Explorer Ingested Entities" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/kgraph-importer-overview.png' | relative_url }}" alt="Knowledge Graph Explorer Ingested Entities" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>SDLC Knowledge Graph Explorer</strong>: Visualizing all 21 ingested entities in the dual-state Knowledge Graph Explorer with BDD scenarios, OpenAPI contracts, and OSLC JSON-LD navigation. <em>(Click image to zoom full screen)</em>
+    <strong>Knowledge Graph Explorer</strong>: Visualizing all 21 ingested entities in the dual-state Knowledge Graph Explorer with BDD scenarios, OpenAPI contracts, and OSLC JSON-LD navigation. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 

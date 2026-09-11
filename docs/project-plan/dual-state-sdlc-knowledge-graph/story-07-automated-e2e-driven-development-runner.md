@@ -24,5 +24,5 @@ Story 32.07 builds the **Autonomous EDD Agent Runner** (`packages/robos-agent-se
 - [x] Agent autonomously completes Red -> Green -> Refactor cycle without human intervention for standard features.
 - [x] Runner verifies that tests fail meaningfully prior to code implementation.
 - [x] Full regression suite is executed prior to declaring a task ready for human review.
-- [x] Real-time execution logs and state stepper are rendered in the SDLC Knowledge Graph Explorer.
+- [x] Real-time execution logs and state stepper are rendered in the Knowledge Graph Explorer.
 - [x] Verified with unit and automated E2E tests (`packages/robos-test/tests/sdlc-graph/edd-runner.test.js`) and persistent walkthrough archive in `~/.robos/development/walkthroughs/edd-runner/`.

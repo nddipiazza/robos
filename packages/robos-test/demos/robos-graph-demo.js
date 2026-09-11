@@ -4,7 +4,7 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SCRIPT = [
   {
-    narration: 'The RobOS SDLC Knowledge Graph standardizes on OASIS OSLC Core 3.0 and W3C JSON-LD 1.1.',
+    narration: 'The RobOS Knowledge Graph standardizes on OASIS OSLC Core 3.0 and W3C JSON-LD 1.1.',
     target: '#stat-bar',
     action: 'hover',
     callout: 'Inspect OSLC Knowledge Graph Telemetry',
@@ -50,7 +50,7 @@ const SCRIPT = [
 runDemo({
   slug: 'robos-graph',
   appId: 'robos-graph',
-  windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+  windowTitle: 'RobOS Knowledge Graph Explorer',
   scenario: scenarios['all-good'],
   audio: false,
   env: { ROBOS_DEMO_SHOW: '1' },

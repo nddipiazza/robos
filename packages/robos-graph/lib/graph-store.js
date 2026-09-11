@@ -2762,7 +2762,7 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
           projectsCount: repositories.length,
           filesChanged: [],
           metrics: { projectsIngested: repositories.length },
-          output: `Started autonomous ingestion of ${repositories.length} Git project(s) into SDLC Knowledge Graph...\n`,
+          output: `Started autonomous ingestion of ${repositories.length} Git project(s) into Knowledge Graph...\n`,
         };
         fs.writeFileSync(path.join(sessionDir, `${sessionId}.json`), JSON.stringify(sess, null, 2), 'utf8');
       } catch {}
@@ -2825,7 +2825,7 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
         const notif = {
           id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           title: 'Knowledge Graph Ingestion Completed',
-          message: `Successfully ingested ${repositories.length} Git project(s) into SDLC Knowledge Graph with OpenAPI 3.1, gRPC, and CLI specs.`,
+          message: `Successfully ingested ${repositories.length} Git project(s) into Knowledge Graph with OpenAPI 3.1, gRPC, and CLI specs.`,
           category: 'agent',
           tier: 'info',
           ts: new Date().toISOString(),

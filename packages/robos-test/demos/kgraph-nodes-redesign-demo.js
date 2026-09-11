@@ -12,10 +12,10 @@ const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/sc
 
 const SCRIPT = [
   {
-    narration: "The SDLC Resource Nodes panel has been redesigned with collapsible package accordions, count badges, and clean high-density node cards.",
+    narration: "The Graph Nodes panel has been redesigned with collapsible package accordions, count badges, and clean high-density node cards.",
     target: '#sidebar-nodes',
     action: 'hover',
-    callout: 'Redesigned SDLC Resource Nodes Panel (Grouped by Package)',
+    callout: 'Redesigned Graph Nodes Panel (Grouped by Package)',
     minHold: 3500,
   },
   {
@@ -79,7 +79,7 @@ async function main() {
   await runDemo({
     slug: SLUG,
     appId: 'robos-graph',
-    windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+    windowTitle: 'RobOS Knowledge Graph Explorer',
     scenario: scenarios['all-good'],
     audio: false,
     env: { ROBOS_DEMO_SHOW: '1' },
@@ -90,10 +90,10 @@ async function main() {
   const vttPath = path.join(PERSIST_DIR, `${SLUG}.vtt`);
   const summaryMdPath = path.join(PERSIST_DIR, `${SLUG}-step-by-step.md`);
 
-  const summary = `# SDLC Resource Nodes Panel Redesign Walkthrough
+  const summary = `# Graph Nodes Panel Redesign Walkthrough
 
 ## Summary
-The SDLC Resource Nodes sidebar in the RobOS Knowledge Graph Explorer was previously cluttered with wrapping filter pills and an unbounded flat list of 50-100+ items. This update completely modernizes the sidebar:
+The Graph Nodes sidebar in the RobOS Knowledge Graph Explorer was previously cluttered with wrapping filter pills and an unbounded flat list of 50-100+ items. This update completely modernizes the sidebar:
 - **Collapsible Accordions**: Grouping by **Package** (default: \`services\`, \`applications\`, \`devops\`, \`core-platform\`, \`organization\`, \`learning\`) or **Category** (Microservice, Frontend App, Contract, etc.) with chevrons and count badges.
 - **Single-Row Horizontal Chip Track**: The 16 filter pills are consolidated into a clean, horizontally scrolling single-row track (\`overflow-x: auto\`), reducing vertical consumption by >100px.
 - **High-Density Node Cards**: Visual category indicator accent lines, crisp typography, and compact metadata badges.

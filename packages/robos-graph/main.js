@@ -57,7 +57,7 @@ app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1440,
     height: 960,
-    title: 'RobOS SDLC Knowledge Graph Explorer',
+    title: 'RobOS Knowledge Graph Explorer',
     backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

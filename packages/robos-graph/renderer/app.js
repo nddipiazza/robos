@@ -184,7 +184,7 @@ function renderNodeList() {
   refreshNodeFilterOptions();
   const tree = classification.buildTree(nodes, nodeTreeOptions());
   const stat = document.getElementById('stat-nodes');
-  if (stat) stat.textContent = `${tree.total} SDLC Nodes`;
+  if (stat) stat.textContent = `${tree.total} Graph Nodes`;
   document.getElementById('nodes-count-badge').textContent = `${tree.count} of ${tree.total} Nodes`;
   const list = document.getElementById('nodes-list');
   const item = entry => renderNodeItemHtml(entry.node, null, entry.node['@id'] === selectedNodeId);
@@ -832,7 +832,7 @@ async function renderQueryTab(container, selectedNode) {
           <span class="type-badge type-contract">Graph Traversal</span>
         </div>
         <div class="card-desc">
-          Discover transitive relationship paths and reference chains between any two entities in the SDLC Knowledge Graph.
+          Discover transitive relationship paths and reference chains between any two entities in the Knowledge Graph.
         </div>
         <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
           <div style="flex: 1;">
@@ -862,7 +862,7 @@ async function renderQueryTab(container, selectedNode) {
 
       <div class="inspector-card">
         <div class="card-title">
-          <span>🔍 Structured SDLC Graph Search & Query</span>
+          <span>🔍 Graph Search & Query</span>
           <span class="type-badge type-service">Fast Filter</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -1279,7 +1279,7 @@ window.runIngestGitProjects = async function() {
   const res = await window.syncFromGitProjects();
   if (statusEl) {
     statusEl.className = 'wizard-status-msg success';
-    statusEl.textContent = '✅ Synced Git Projects into SDLC Knowledge Graph!';
+    statusEl.textContent = '✅ Synced Git Projects into Knowledge Graph!';
     setTimeout(() => { window.closeIngestModal(); }, 1200);
   }
 };
@@ -1456,7 +1456,7 @@ window.validateSHACL = async function() {
       ` : `
         <div style="padding: 16px; background: rgba(63, 185, 80, 0.08); border: 1px solid rgba(63, 185, 80, 0.3); border-radius: 6px; font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 20px;">🛡️</span>
-          <div>All SDLC Resource Nodes strictly conform to their respective W3C SHACL shape constraints. No violations detected.</div>
+          <div>All Graph Nodes strictly conform to their respective W3C SHACL shape constraints. No violations detected.</div>
         </div>
       `}
     </div>
