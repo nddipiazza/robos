@@ -19,6 +19,25 @@ function substituteParams(command, params) {
   return command.replace(/\$([A-Z][A-Z0-9_]*)/g, (_, name) => params[name] || `$${name}`);
 }
 
+if (!window.robos) {
+  window.robos = {
+    listSkills: async () => ({
+      ok: true,
+      builtin: [
+        { id: 'db-migrate', name: 'PostgreSQL Migration', category: 'Database', description: 'Run DDL schema migrations across active PostgreSQL databases' },
+        { id: 'bruno-test', name: 'Bruno REST API Verification', category: 'API', description: 'Synthesize .bru requests and execute automated assertions' },
+        { id: 'kube-deploy', name: 'Kubernetes Pod Rollout', category: 'DevOps', description: 'Deploy manifests to cluster and stream live container logs' },
+        { id: 'pr-review', name: 'PR Review Theater Launch', category: 'Governance', description: 'Trigger 6-stage review cockpit with anti-rubber-stamp knowledge checks' },
+        { id: 'kgraph-sync', name: 'Knowledge Graph Living Docs Sync', category: 'Architecture', description: 'Synchronize C4 diagrams and blast radiuses across packages' }
+      ],
+      custom: []
+    }),
+    runPrompt: async () => ({ ok: true, steps: [] }),
+    historyList: async () => [],
+    historyClear: async () => ({ ok: true })
+  };
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function init() {
   const r = await window.robos.listSkills();
@@ -26,6 +45,17 @@ async function init() {
     customSkills = r.custom || [];
     allSkills = [...(r.builtin || []), ...customSkills];
     renderSidebar();
+    if (window.__mockMode || !window.robos || window.location.protocol === 'file:') {
+      toggleSkill('db-migrate');
+      toggleSkill('bruno-test');
+      setTimeout(() => {
+        const textarea = document.getElementById('prompt-input');
+        if (textarea) {
+          textarea.value = 'Implement rabies vaccination record tracking for Acme Petshop: add the endpoint in the REST client, migrate the PostgreSQL database, deploy to the local Kube cluster, and file the PR for review.';
+          updateRunButton();
+        }
+      }, 80);
+    }
   }
 }
 

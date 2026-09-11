@@ -1,0 +1,9 @@
+{
+  "name": "robos-agent-chat",
+  "version": "0.1.0",
+  "description": "VS Code-like autonomous agent chat, code generation, and multi-app orchestration console",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

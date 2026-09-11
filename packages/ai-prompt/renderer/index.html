@@ -5,7 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RobOS AI Prompt</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
+  <script>
+    (function() {
+      const s = document.createElement('script');
+      s.src = '../../robos-ui/robos-ui.js';
+      s.onerror = () => {
+        const s2 = document.createElement('script');
+        s2.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
   <div id="app">

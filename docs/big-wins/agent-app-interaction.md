@@ -76,12 +76,12 @@ The most vivid demonstration of agent-app interaction is the **RobOS Cross-App C
 
 ### Step 1: Trigger the RobOS Agent Prompt Popup
 
-The developer hits the global hotkey (`Super+Space` or launches **AI Prompt** from the panel dock). The sleek, dark-themed AI Prompt dialog appears over the desktop:
+The developer hits the global hotkey (`Ctrl+Space` or clicks **Pop Out Prompt** from **RobOS Agent Chat** or the panel dock). The sleek, dark-themed **AI Prompt** window pops up directly in the foreground, floating on top of the active RobOS workspace and developer tools:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/acme-petshop-step1-prompt_frame.png' | relative_url }}" alt="RobOS AI Prompt Popup with Skill Chips" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}" alt="RobOS Agent Prompt Window Popped Up Over Active RobOS Apps" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Agent Prompt Popup</strong>: The high-speed command palette featuring skill chips, prompt history, and direct dispatch to autonomous agent tiers. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Agent Prompt Popped Up Over Active Applications</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window floats directly over your active tools, dispatching live actions across all 30+ RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -118,6 +118,13 @@ CREATE TABLE vaccinations (
 - In the developer's open **Relational DB Manager** window, the schema tree immediately expands:
   - The new `vaccinations` table appears under `public.tables`.
   - Column types, foreign key constraints, and default indexes are visible in the data grid without the developer ever touching a mouse.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/agent-prompt-db-control-overlay.png' | relative_url }}" alt="RobOS Agent Prompt Controlling Relational DB Manager" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Prompt-Driven Database Management</strong>: The RobOS Agent Prompt pop-up issues DDL migrations directly to the active <strong>Relational DB Manager</strong> window in the background. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -221,6 +228,7 @@ Every RobOS application is assigned a unique port in `packages/robos-lib/snapsho
 - `nosql-manager` (`19135`)
 - `topology-manager` (`19136`)
 - `robos-elearning` (`19137`)
+- `agent-chat` (`19186`)
 
 ### Deterministic Selector Commands
 Agents never guess screen pixels. They target semantic CSS IDs and classes:
@@ -237,6 +245,24 @@ node packages/robos-lib/snapshot-cli.js task-servers --select 'select#server-typ
 # Run arbitrary JS in the renderer
 node packages/robos-lib/snapshot-cli.js pr-review --eval 'document.querySelector(".pr-card").dataset.id'
 ```
+
+---
+
+## The Conversational Hub: RobOS Agent Chat
+
+While the **RobOS Agent Prompt Popup** (`Ctrl+Space`) provides an ultra-lightweight pop-up window for instantaneous, modal commands across active apps, developers also have access to **RobOS Agent Chat** (`robos-agent-chat`)—a full VS Code Copilot Chat and Cursor-inspired conversational command console:
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/agent-chat.png' | relative_url }}" alt="RobOS Agent Chat Conversational Interface" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Agent Chat</strong>: Multi-model AI chat interface with real-time MCP tool cards, thought traces, code insertion, and direct pop-up prompt launching. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+### Dual Modality: Side-by-Side Console & Lightweight Pop-Up
+- **Full Conversation History**: Maintain active threads across tasks, workspaces, and Git branches with multi-model switching (Claude 3.7 Sonnet, OpenAI o3-mini, Gemini 2.5 Flash, Antigravity Harness, local Ollama).
+- **Inspectable MCP Tool Cards**: Expand and inspect each tool invocation card (`robos_ekgraph_update_node`, `robos_db_execute_sql`, `robos_rest_send_request`, `robos_kube_rollout_restart`, `robos_pr_review_theater_open`) as the agent drives background applications.
+- **One-Click Pop-Out**: Click **"Pop Out Prompt"** in the top navigation bar or the input tray to detach the floating **RobOS Agent Prompt** window over your active IDE or database editor, giving you instant keyboard-first orchestration without context switching.
 
 ---
 

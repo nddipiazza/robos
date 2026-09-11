@@ -354,19 +354,19 @@ In traditional software development, AI coding assistants (Claude Code, GitHub C
 
 > **In RobOS, autonomous AI agents can directly interact with all 30+ RobOS desktop applications.**
 
-Using a dual-surface control fabric—direct DOM snapshot automation (`snapshot-cli.js`) across dedicated debug ports (`19100–19183`) and the Unified MCP Router (`robos-mcp-router`)—agents can inspect UI elements, click buttons, fill forms, run SQL migrations, execute API requests, and stream Kubernetes logs.
+Using a dual-surface control fabric—direct DOM snapshot automation (`snapshot-cli.js`) across dedicated debug ports (`19100–19186`) and the Unified MCP Router (`robos-mcp-router`)—agents can inspect UI elements, click buttons, fill forms, run SQL migrations, execute API requests, and stream Kubernetes logs.
 
 ### Watch It in Action: From Agent Prompt Popup to Live Multi-App Cascade
 
 The ultimate demonstration of this architecture is the **RobOS Cross-App Cascade**. When a developer opens the **RobOS Agent Prompt Popup** and provides an overarching instruction, watch how multiple active RobOS desktop windows trigger changes simultaneously:
 
 #### Step 1: Trigger the RobOS Agent Prompt Popup
-The developer presses `Super+Space` (or clicks **AI Prompt** in the panel dock). The dark obsidian prompt palette appears with skill chips, prompt history, and agent tier selector:
+The developer presses `Ctrl+Space` (or clicks **Pop Out Prompt** in **RobOS Agent Chat** or the panel dock). The sleek, dark obsidian prompt window pops up directly in the foreground, floating over the active applications with skill chips, prompt history, and agent tier selector:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/acme-petshop-step1-prompt_frame.png' | relative_url }}" alt="RobOS Agent Prompt Popup with Skill Chips" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}" alt="RobOS Agent Prompt Window Popped Up Over Active RobOS Apps" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Agent Prompt Popup (<code>robos-ai-prompt</code>)</strong>: The centralized desktop command palette featuring skill chips, prompt history, and multi-tier agent dispatch. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Agent Prompt Popped Up Over Active RobOS Apps</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window pops up directly in the foreground over your running apps, dispatching live actions across all 30+ RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -503,6 +503,7 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 - **Pass Manager**: Encrypted local password and secret vault backed by GPG (`pass`), integrated with KGraph DevOps integrations for zero-plaintext secret references (`robos:PassCredential`).
 
 ### 🤖 AI Orchestration & Developer Tools
+- **RobOS Agent Chat**: VS Code Copilot Chat and Cursor-inspired conversational AI assistant with multi-model switcher (Claude 3.7 Sonnet, OpenAI o3-mini, Gemini 2.5 Flash, Antigravity Harness), live MCP tool cards, and quick prompt popup.
 - **Agents Manager & MCP Router**: Manage local AI agents (Claude Code, Google Antigravity, GitHub Copilot, Google Gemini) via standardized Model Context Protocol tools.
 - **Knowledge Graph Explorer**: Modular multi-file package browser (`.robos/kgraphs/`), multi-repo dependency manager with Git-tag versioning, DevOps onboarding wizards across 7 categories, and SHACL validation.
 - **Contract Studio**: OpenAPI 3.1 and AsyncAPI contract designer with instant mock servers and Spectral linting.

@@ -244,9 +244,10 @@ RobOS bridges agents and applications through a **dual-surface control fabric**:
 </div>
 
 ### Key Capabilities
-- **Programmatic DOM Snapshot CLI (`snapshot-cli.js`)**: Dedicated debug ports (`19100–19183`) give agents sub-pixel DOM inspection, element clicking (`--click`), text entry (`--fill`), JavaScript execution (`--eval`), and session recording (`--record-start`, `--record-drain`).
+- **Programmatic DOM Snapshot CLI (`snapshot-cli.js`)**: Dedicated debug ports (`19100–19186`) give agents sub-pixel DOM inspection, element clicking (`--click`), text entry (`--fill`), JavaScript execution (`--eval`), and session recording (`--record-start`, `--record-drain`).
 - **Unified MCP Router (`robos-mcp-router`)**: Multiplexes tools across all apps through standard Model Context Protocol: query and mutate Knowledge Graph entities (`robos_ekgraph_*`), inspect schemas and run SQL (`robos_db_*`), trigger Bruno API requests (`robos_rest_*`), deploy Kubernetes workloads (`robos_kube_*`), and manage issues (`robos_tasks_*`).
-- **Cross-App Live Cascade**: Prompting an agent in the **RobOS Agent Prompt Popup** (`robos-ai-prompt`) triggers simultaneous, observable mutations across active System Topology, Relational DB Manager, REST Client, and Kube Studio windows.
+- **Conversational Command & Floating Pop-Up Dual Modality**: Full conversational workflow inside **RobOS Agent Chat** (`robos-agent-chat`) paired with the lightweight floating **RobOS Agent Prompt** popup (`robos-ai-prompt`, `Ctrl+Space`) to issue quick commands that drive background tools.
+- **Cross-App Live Cascade**: Prompting an agent triggers simultaneous, observable mutations across active System Topology, Relational DB Manager, REST Client, and Kube Studio windows.
 - **Zero Hallucination Proof**: Agents verify their own changes using real app interfaces instead of guessing, catching visual glitches and missing fields before human review.
 
 👉 **[Read the Complete Guide: RobOS Agents Interact With All RobOS Apps →]({{ site.baseurl }}{% link big-wins/agent-app-interaction.md %})**
