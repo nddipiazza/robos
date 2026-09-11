@@ -158,7 +158,9 @@
       "robos:package": "applications",
       "robos:namespace": "robos.applications",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:command": "rest-client",
+      "robos:commandName": "inspect"
     },
     {
       "@id": "urn:robos:source:workspace-explorer",

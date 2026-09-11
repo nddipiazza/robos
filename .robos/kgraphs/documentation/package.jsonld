@@ -168,7 +168,8 @@
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
       "robos:schemaOrgType": "https://schema.org/Guide",
-      "robos:domainStandard": "https://schema.org/Guide"
+      "robos:domainStandard": "https://schema.org/Guide",
+      "robos:tooltip": "Interactive Guided Tour for Remote Execution Studio"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",

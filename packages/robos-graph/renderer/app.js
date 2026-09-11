@@ -1500,6 +1500,17 @@ function updateTabUI() {
       button.id = `tab-btn-${id}`; button.dataset.schemaGroup = group.id;
       button.addEventListener('click', () => window.switchTab(id));
     }
+    const hasTryIt = window.RobosTryItRunner && window.RobosTryItRunner.hasEndpoints(node, nodes) && ['contracts', 'services', 'mcp-server', 'mcp-tool'].includes(group.id);
+    const isSingleProperty = (group.fields.length + group.related.length) <= 1 && !hasTryIt;
+    if (isSingleProperty) {
+      button.setAttribute('tab', 'hidden');
+      button.hidden = true;
+      button.dataset.singleProperty = 'true';
+    } else {
+      button.removeAttribute('tab');
+      button.hidden = false;
+      delete button.dataset.singleProperty;
+    }
     tabs.insertBefore(button, anchor);
     button.classList.toggle('active', currentTab === id);
   }

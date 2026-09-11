@@ -107,7 +107,86 @@
         "urn:robos:contract:orders-grpc"
       ],
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://w3id.org/c4/Container"
+      "robos:domainStandard": "https://w3id.org/c4/Container",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/billing/invoices",
+          "method": "GET",
+          "description": "List customer billing invoices with payment status filtering",
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "type": "integer",
+              "default": 20,
+              "description": "Maximum number of records to return"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful invoice query result"
+            }
+          }
+        },
+        {
+          "path": "/api/v1/billing/invoices",
+          "method": "POST",
+          "description": "Create new billing invoice",
+          "requestBody": {
+            "customerId": "cust_98234",
+            "amount": 149.5,
+            "currency": "USD",
+            "description": "Enterprise Subscription - Sep 2026"
+          },
+          "responses": {
+            "201": {
+              "description": "Invoice issued successfully"
+            }
+          }
+        },
+        {
+          "path": "/api/v1/billing/invoices/{id}",
+          "method": "GET",
+          "description": "Get invoice details by identifier",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string",
+              "description": "Unique invoice identifier"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Invoice found"
+            },
+            "404": {
+              "description": "Invoice not found"
+            }
+          }
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Liveness and readiness probe",
+          "responses": {
+            "200": {
+              "description": "Service healthy"
+            }
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:contract:orders-grpc",
@@ -131,7 +210,61 @@
       "robos:package": "services",
       "robos:namespace": "robos.services",
       "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+      "robos:rpcDetails": {
+        "CreateOrder": {
+          "description": "Submit cart for payment processing and fulfillment",
+          "request": {
+            "customerId": "cust_88190",
+            "items": [
+              {
+                "sku": "SKU-PRO-42",
+                "quantity": 1,
+                "unitPrice": 89
+              }
+            ],
+            "shippingAddress": "123 Market St, San Francisco CA"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "ORDER_PLACED",
+            "total": 89
+          }
+        },
+        "GetOrderStatus": {
+          "description": "Query order status and tracking number",
+          "request": {
+            "orderId": "ord_99014"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "PROCESSING",
+            "estimatedDelivery": "2026-09-15"
+          }
+        },
+        "CancelOrder": {
+          "description": "Abort pending order prior to carrier dispatch",
+          "request": {
+            "orderId": "ord_99014",
+            "reason": "Customer requested cancellation"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "CANCELLED"
+          }
+        },
+        "StreamOrderEvents": {
+          "description": "Server-side stream of live fulfillment and tracking telemetry",
+          "request": {
+            "orderId": "ord_99014"
+          },
+          "response": {
+            "eventId": "evt_7701",
+            "state": "CARRIER_PICKED_UP",
+            "carrier": "FedEx Express"
+          }
+        }
+      }
     },
     {
       "@id": "urn:robos:contract:catalog-graphql",
@@ -149,7 +282,23 @@
       "robos:package": "services",
       "robos:namespace": "robos.services",
       "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+      "robos:sdlSchema": "type Query {\n  product(id: ID!): Product\n  products(category: String, limit: Int = 20): [Product!]!\n  searchCatalog(term: String!): [Product!]!\n}\n\ntype Mutation {\n  createProduct(input: ProductInput!): Product!\n  updatePrice(id: ID!, newPrice: Float!): Product!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n  inStock: Boolean!\n}\n\ninput ProductInput {\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n}",
+      "robos:graphqlOperations": [
+        {
+          "name": "ListCatalogProducts",
+          "type": "query",
+          "query": "query ListCatalogProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    inStock\n  }\n}"
+        },
+        {
+          "name": "GetProductById",
+          "type": "query",
+          "query": "query GetProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    sku\n    price\n    inStock\n  }\n}",
+          "variables": {
+            "id": "prod_101"
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:contract:payment-gateway-v1",
@@ -553,6 +702,119 @@
       "robos:dependsOn": {
         "@id": "urn:robos:source:graph-workspace"
       }
+    },
+    {
+      "@id": "urn:robos:endpoint:billing-invoices-list",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "List Billing Invoices",
+      "dcterms:description": "Retrieve paginated customer invoices with payment status filtering.",
+      "robos:pathPattern": "/api/v1/billing/invoices",
+      "robos:httpMethod": "GET",
+      "robos:service": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:parameters": [
+        {
+          "name": "status",
+          "in": "query",
+          "type": "string",
+          "description": "Filter by status: PAID, PENDING, OVERDUE"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "integer",
+          "default": 20
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:billing-invoices-create",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Create Billing Invoice",
+      "dcterms:description": "Issue a new billing invoice for account charge.",
+      "robos:pathPattern": "/api/v1/billing/invoices",
+      "robos:httpMethod": "POST",
+      "robos:service": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:requestBody": {
+        "customerId": "cust_98234",
+        "amount": 149.5,
+        "currency": "USD"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:payment-gateway-charge",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Authorize & Capture Payment Charge",
+      "dcterms:description": "Process credit card or digital wallet payment authorization.",
+      "robos:pathPattern": "/api/v1/payment-gateway",
+      "robos:httpMethod": "POST",
+      "robos:service": {
+        "@id": "urn:robos:service:payment-gateway"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:payment-gateway"
+      },
+      "robos:contract": {
+        "@id": "urn:robos:contract:payment-gateway-v1"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:orders-list",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Query Orders",
+      "dcterms:description": "Retrieve customer purchase orders.",
+      "robos:pathPattern": "/api/v1/orders",
+      "robos:httpMethod": "GET",
+      "robos:service": {
+        "@id": "urn:robos:service:order-service"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:order-service"
+      },
+      "robos:contract": {
+        "@id": "urn:robos:contract:order-service-v1"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
     }
   ],
   "@graph": [

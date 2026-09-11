@@ -3193,7 +3193,9 @@
       "robos:package": "applications",
       "robos:namespace": "robos.applications",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:command": "rest-client",
+      "robos:commandName": "inspect"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -3444,7 +3446,73 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "ast_search",
+          "description": "Perform structural AST pattern matching across source files",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "AST pattern or symbol name"
+              },
+              "filePattern": {
+                "type": "string",
+                "description": "Glob filter (e.g. **/*.js)"
+              },
+              "maxResults": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        },
+        {
+          "name": "symbol_lookup",
+          "description": "Resolve declaration location, signature, and usages of a code symbol",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Identifier name"
+              },
+              "includeReferences": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "name": "dependency_graph",
+          "description": "Calculate import and call graph for target module or package",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "entrypoint": {
+                "type": "string",
+                "description": "Path to entrypoint file"
+              },
+              "depth": {
+                "type": "integer",
+                "default": 2
+              }
+            },
+            "required": [
+              "entrypoint"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
@@ -3466,7 +3534,54 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "query_nodes",
+          "description": "Search and filter knowledge graph nodes by type or keyword",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "RDF type filter"
+              },
+              "text": {
+                "type": "string",
+                "description": "Full-text search query"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 20
+              }
+            }
+          }
+        },
+        {
+          "name": "blast_radius",
+          "description": "Perform recursive dependency and impact traversal for a graph node",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "description": "Target URN"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ],
+                "default": "downstream"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
@@ -3816,7 +3931,8 @@
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
       "robos:schemaOrgType": "https://schema.org/Guide",
-      "robos:domainStandard": "https://schema.org/Guide"
+      "robos:domainStandard": "https://schema.org/Guide",
+      "robos:tooltip": "Interactive Guided Tour for Remote Execution Studio"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",
@@ -4116,7 +4232,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:team:architecture-guild",
@@ -4134,7 +4255,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:person:admin",
@@ -4184,7 +4310,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:git-org:apache",
@@ -4539,7 +4670,86 @@
         "urn:robos:contract:orders-grpc"
       ],
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://w3id.org/c4/Container"
+      "robos:domainStandard": "https://w3id.org/c4/Container",
+      "robos:ports": [
+        8080
+      ],
+      "robos:healthCheckUrl": "/healthz",
+      "robos:endpoints": [
+        {
+          "path": "/api/v1/billing/invoices",
+          "method": "GET",
+          "description": "List customer billing invoices with payment status filtering",
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "type": "string",
+              "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "type": "integer",
+              "default": 20,
+              "description": "Maximum number of records to return"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful invoice query result"
+            }
+          }
+        },
+        {
+          "path": "/api/v1/billing/invoices",
+          "method": "POST",
+          "description": "Create new billing invoice",
+          "requestBody": {
+            "customerId": "cust_98234",
+            "amount": 149.5,
+            "currency": "USD",
+            "description": "Enterprise Subscription - Sep 2026"
+          },
+          "responses": {
+            "201": {
+              "description": "Invoice issued successfully"
+            }
+          }
+        },
+        {
+          "path": "/api/v1/billing/invoices/{id}",
+          "method": "GET",
+          "description": "Get invoice details by identifier",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string",
+              "description": "Unique invoice identifier"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Invoice found"
+            },
+            "404": {
+              "description": "Invoice not found"
+            }
+          }
+        },
+        {
+          "path": "/healthz",
+          "method": "GET",
+          "description": "Liveness and readiness probe",
+          "responses": {
+            "200": {
+              "description": "Service healthy"
+            }
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:contract:orders-grpc",
@@ -4563,7 +4773,61 @@
       "robos:package": "services",
       "robos:namespace": "robos.services",
       "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+      "robos:rpcDetails": {
+        "CreateOrder": {
+          "description": "Submit cart for payment processing and fulfillment",
+          "request": {
+            "customerId": "cust_88190",
+            "items": [
+              {
+                "sku": "SKU-PRO-42",
+                "quantity": 1,
+                "unitPrice": 89
+              }
+            ],
+            "shippingAddress": "123 Market St, San Francisco CA"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "ORDER_PLACED",
+            "total": 89
+          }
+        },
+        "GetOrderStatus": {
+          "description": "Query order status and tracking number",
+          "request": {
+            "orderId": "ord_99014"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "PROCESSING",
+            "estimatedDelivery": "2026-09-15"
+          }
+        },
+        "CancelOrder": {
+          "description": "Abort pending order prior to carrier dispatch",
+          "request": {
+            "orderId": "ord_99014",
+            "reason": "Customer requested cancellation"
+          },
+          "response": {
+            "orderId": "ord_99014",
+            "status": "CANCELLED"
+          }
+        },
+        "StreamOrderEvents": {
+          "description": "Server-side stream of live fulfillment and tracking telemetry",
+          "request": {
+            "orderId": "ord_99014"
+          },
+          "response": {
+            "eventId": "evt_7701",
+            "state": "CARRIER_PICKED_UP",
+            "carrier": "FedEx Express"
+          }
+        }
+      }
     },
     {
       "@id": "urn:robos:contract:catalog-graphql",
@@ -4581,7 +4845,23 @@
       "robos:package": "services",
       "robos:namespace": "robos.services",
       "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-      "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+      "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+      "robos:sdlSchema": "type Query {\n  product(id: ID!): Product\n  products(category: String, limit: Int = 20): [Product!]!\n  searchCatalog(term: String!): [Product!]!\n}\n\ntype Mutation {\n  createProduct(input: ProductInput!): Product!\n  updatePrice(id: ID!, newPrice: Float!): Product!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n  inStock: Boolean!\n}\n\ninput ProductInput {\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n}",
+      "robos:graphqlOperations": [
+        {
+          "name": "ListCatalogProducts",
+          "type": "query",
+          "query": "query ListCatalogProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    inStock\n  }\n}"
+        },
+        {
+          "name": "GetProductById",
+          "type": "query",
+          "query": "query GetProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    sku\n    price\n    inStock\n  }\n}",
+          "variables": {
+            "id": "prod_101"
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:contract:payment-gateway-v1",
@@ -5231,7 +5511,9 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
       "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:testingType": "BDD Acceptance"
     },
     {
       "@id": "urn:robos:test-exec:checkout-standard-items-latest",
@@ -5582,7 +5864,9 @@
           "@id": "https://robos.dev/ns/sdlc#classification/source"
         }
       ],
-      "robos:classificationOrigin": "inferred"
+      "robos:classificationOrigin": "inferred",
+      "robos:declaredName": "RobosInspectorGroups",
+      "robos:version": "1.0.0"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -5630,7 +5914,9 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Recordedpropertygroupresolution"
     },
     {
       "@id": "urn:robos:source:schema-group-view",
@@ -5678,7 +5964,9 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "SchemaawareKnowledgeGraphExplorerviews"
     },
     {
       "@id": "urn:robos:source:inspector-groups-e2e",
@@ -5726,7 +6014,556 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "SchemaawareinspectorElectronchecks"
+    },
+    {
+      "@id": "urn:robos:agent-router:harnessrouter",
+      "@type": [
+        "robos:AgentRouter",
+        "robos:HarnessRouter",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
+      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
+      "robos:protocol": "UHP",
+      "robos:protocolVersion": "2026-08-11",
+      "robos:conformanceClass": "Full",
+      "robos:openSource": true,
+      "robos:license": "Apache-2.0",
+      "robos:defaultEndpoint": "http://127.0.0.1:3000",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://harnessrouter.ai/",
+      "robos:supportedHarnesses": [
+        "claude-code",
+        "codex",
+        "github-copilot",
+        "gemini-cli",
+        "hermes",
+        "oh-my-pi"
       ]
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "PostgreSQL",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "postgresql",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Redis",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "redis",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "NATS JetStream",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "nats-jetstream",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaMetrics",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victoriametrics",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaLogs",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victorialogs",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "buildbarn",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "React",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "react",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Protocol Buffers",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "protobuf",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Helm",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "helm",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Pulumi",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "pulumi",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Remote Execution API v2",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "reapi-v2",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel Build Event Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel-bep",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "completed-action-logger",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#mcp",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Model Context Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "mcp",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "urn:robos:source:graph-workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "External graph workspace and revision store",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/graph-workspace.js",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Externalgraphworkspaceandrevisionstore"
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Trackedsourceevidenceextractor"
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "WorkspaceCLIcommands"
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Agentreviewandproposalworkflow"
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Sourcedeclarationshapes"
+    },
+    {
+      "@id": "urn:robos:source:workspace-explorer",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Explorer import and refinement panel",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/workspace-review.js",
+          "line": 1
+        }
+      ],
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:workspace-review"
+      },
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Explorerimportandrefinementpanel"
+    },
+    {
+      "@id": "urn:robos:source:sdlc-mcp",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Shared-workspace SDLC MCP tools",
+      "robos:package": "services",
+      "robos:sourcePath": "packages/ekgraph-mcp/sdlc-tools.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/ekgraph-mcp/sdlc-tools.js",
+          "line": 1
+        }
+      ],
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:graph-workspace"
+      },
+      "robos:version": "1.0.0",
+      "robos:declaredName": "SharedworkspaceSDLCMCPtools"
+    },
+    {
+      "@id": "urn:robos:endpoint:billing-invoices-list",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "List Billing Invoices",
+      "dcterms:description": "Retrieve paginated customer invoices with payment status filtering.",
+      "robos:pathPattern": "/api/v1/billing/invoices",
+      "robos:httpMethod": "GET",
+      "robos:service": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:parameters": [
+        {
+          "name": "status",
+          "in": "query",
+          "type": "string",
+          "description": "Filter by status: PAID, PENDING, OVERDUE"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "integer",
+          "default": 20
+        }
+      ],
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:billing-invoices-create",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Create Billing Invoice",
+      "dcterms:description": "Issue a new billing invoice for account charge.",
+      "robos:pathPattern": "/api/v1/billing/invoices",
+      "robos:httpMethod": "POST",
+      "robos:service": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:billing-api"
+      },
+      "robos:requestBody": {
+        "customerId": "cust_98234",
+        "amount": 149.5,
+        "currency": "USD"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:payment-gateway-charge",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Authorize & Capture Payment Charge",
+      "dcterms:description": "Process credit card or digital wallet payment authorization.",
+      "robos:pathPattern": "/api/v1/payment-gateway",
+      "robos:httpMethod": "POST",
+      "robos:service": {
+        "@id": "urn:robos:service:payment-gateway"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:payment-gateway"
+      },
+      "robos:contract": {
+        "@id": "urn:robos:contract:payment-gateway-v1"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:endpoint:orders-list",
+      "@type": [
+        "robos:APIEndpoint",
+        "robos:APIOperation",
+        "c4:Component"
+      ],
+      "dcterms:title": "Query Orders",
+      "dcterms:description": "Retrieve customer purchase orders.",
+      "robos:pathPattern": "/api/v1/orders",
+      "robos:httpMethod": "GET",
+      "robos:service": {
+        "@id": "urn:robos:service:order-service"
+      },
+      "robos:endpointOf": {
+        "@id": "urn:robos:service:order-service"
+      },
+      "robos:contract": {
+        "@id": "urn:robos:contract:order-service-v1"
+      },
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:schemaOrgType": "https://schema.org/EntryPoint",
+      "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:package": "organization",
+      "robos:sourcePath": "AGENTS.md",
+      "robos:sourceKind": "git-repository",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "AGENTS.md",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "RobOSsourceworkspace"
+    },
+    {
+      "@id": "urn:robos:source:workspace-docs",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source-backed workspace guide",
+      "robos:package": "documentation",
+      "robos:sourcePath": "packages/robos-graph/WORKSPACES.md",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/WORKSPACES.md",
+          "line": 1
+        }
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Sourcebackedworkspaceguide"
+    },
+    {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      },
+      "robos:version": "1.0.0",
+      "robos:declaredName": "RealElectronreviewsavereopentest"
     }
   ]
 }

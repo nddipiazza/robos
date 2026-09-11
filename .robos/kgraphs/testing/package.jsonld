@@ -355,7 +355,9 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
       "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:testingType": "BDD Acceptance"
     },
     {
       "@id": "urn:robos:test-exec:checkout-standard-items-latest",

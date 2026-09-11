@@ -365,7 +365,73 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "ast_search",
+          "description": "Perform structural AST pattern matching across source files",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "AST pattern or symbol name"
+              },
+              "filePattern": {
+                "type": "string",
+                "description": "Glob filter (e.g. **/*.js)"
+              },
+              "maxResults": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        },
+        {
+          "name": "symbol_lookup",
+          "description": "Resolve declaration location, signature, and usages of a code symbol",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Identifier name"
+              },
+              "includeReferences": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "name": "dependency_graph",
+          "description": "Calculate import and call graph for target module or package",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "entrypoint": {
+                "type": "string",
+                "description": "Path to entrypoint file"
+              },
+              "depth": {
+                "type": "integer",
+                "default": 2
+              }
+            },
+            "required": [
+              "entrypoint"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
@@ -387,7 +453,54 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "query_nodes",
+          "description": "Search and filter knowledge graph nodes by type or keyword",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "RDF type filter"
+              },
+              "text": {
+                "type": "string",
+                "description": "Full-text search query"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 20
+              }
+            }
+          }
+        },
+        {
+          "name": "blast_radius",
+          "description": "Perform recursive dependency and impact traversal for a graph node",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "description": "Target URN"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ],
+                "default": "downstream"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
@@ -793,7 +906,9 @@
           "@id": "https://robos.dev/ns/sdlc#classification/source"
         }
       ],
-      "robos:classificationOrigin": "inferred"
+      "robos:classificationOrigin": "inferred",
+      "robos:declaredName": "RobosInspectorGroups",
+      "robos:version": "1.0.0"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -1236,7 +1351,9 @@
           "@id": "https://robos.dev/ns/sdlc#classification/source"
         }
       ],
-      "robos:classificationOrigin": "inferred"
+      "robos:classificationOrigin": "inferred",
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Schemapropertygroupcatalog"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -1284,7 +1401,9 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:version": "1.0.0",
+      "robos:declaredName": "Recordedpropertygroupresolution"
     }
   ]
 }

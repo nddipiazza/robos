@@ -60,6 +60,9 @@ window.RobosSchemaGroupView = (() => {
     if (selected?.['dcterms:description']) view.append(el('p', selected['dcterms:description'], 'schema-description'));
     if (group.description) view.append(el('p', group.description));
     if (group.fields.length) view.append(fieldsView(group.fields));
+    if (window.RobosTryItRunner && window.RobosTryItRunner.hasEndpoints(selected, nodes)) {
+      window.RobosTryItRunner.render(view, selected, nodes);
+    }
     const sections = new Map(), unique = new Map();
     for (const relation of group.related) {
       const id = relation.node['@id'];
