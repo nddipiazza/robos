@@ -4,10 +4,10 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SCRIPT = [
   {
-    narration: 'The RobOS Knowledge Graph standardizes on OASIS OSLC Core 3.0 and W3C JSON-LD 1.1.',
-    target: '#stat-bar',
+    narration: 'We inspect the loaded graph name, source location, node count and registered schema count.',
+    target: '#graph-status-bar',
     action: 'hover',
-    callout: 'Inspect OSLC Knowledge Graph Telemetry',
+    callout: 'Inspect Loaded Graph Context',
     minHold: 3200,
   },
   {

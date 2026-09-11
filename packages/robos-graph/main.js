@@ -72,6 +72,11 @@ app.whenReady().then(() => {
     if (safe) shell.openExternal(safe).catch(error => console.error('Unable to open documentation URL:', error.message));
     return { action: 'deny' };
   });
+  win.on('app-command', (event, command) => {
+    if (command !== 'browser-backward' && command !== 'browser-forward') return;
+    event.preventDefault();
+    win.webContents.send('graph-navigate', command === 'browser-backward' ? 'back' : 'forward');
+  });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
 
@@ -89,6 +94,14 @@ app.on('window-all-closed', () => {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+ipcMain.handle('graph-info', () => ({
+  title: store.parser.title,
+  root: store.workspace?.root || path.dirname(store.filePath),
+  path: store.filePath,
+  nodeCount: store.parser.nodes.length,
+  schemaCount: store.validator.shapes.length,
+  branch: store.getActiveBranch()?.name || 'main',
+}));
 ipcMain.handle('workspace-info', () => workspaceReview ? workspaceReview.info() : null);
 ipcMain.handle('workspace-open', async () => {
   const selected = await dialog.showOpenDialog(win, { properties: ['openDirectory'], title: 'Open graph workspace (contains .robos)' });

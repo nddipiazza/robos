@@ -12,10 +12,10 @@ const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/sc
 
 const SCRIPT = [
   {
-    narration: "The RobOS Knowledge Graph is organized into modular, namespaced package stores instead of a monolithic file.",
-    target: '#stat-bar',
+    narration: 'We inspect the loaded graph name, source location, node count and registered schema count.',
+    target: '#graph-status-bar',
     action: 'hover',
-    callout: 'Modular Knowledge Graph Architecture',
+    callout: 'Inspect Loaded Graph Context',
     minHold: 3500,
   },
   {

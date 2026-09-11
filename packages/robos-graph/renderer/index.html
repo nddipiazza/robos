@@ -20,6 +20,10 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
+        <nav class="graph-navigation" aria-label="Graph history">
+          <button type="button" id="btn-nav-back" class="btn btn-secondary" title="Back (Alt+Left)" aria-label="Back" disabled>←</button>
+          <button type="button" id="btn-nav-forward" class="btn btn-secondary" title="Forward (Alt+Right)" aria-label="Forward" disabled>→</button>
+        </nav>
         <div class="logo-icon">🌐</div>
         <div>
           <h1>Knowledge Graph Explorer</h1>
@@ -42,26 +46,6 @@
         <button class="btn btn-primary" id="btn-validate-shacl">🛡️ Validate SHACL</button>
       </div>
     </header>
-
-    <!-- Stat Bar -->
-    <div id="stat-bar">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-branch-name">main</div>
-        <div class="stat-label" id="stat-branch-type">Production Reality</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-nodes">5 Graph Nodes</div>
-        <div class="stat-label">Active Resource Entities</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-bdd-scenarios">2 BDD Scenarios</div>
-        <div class="stat-label">Executable Features</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-traceability-status">100% VERIFIED</div>
-        <div class="stat-label">Requirement Traceability</div>
-      </div>
-    </div>
 
     <!-- AI Co-Pilot Multiline Textarea Bar -->
     <div class="copilot-bar">
@@ -162,6 +146,12 @@
         </section>
       </div>
     </main>
+    <footer id="graph-status-bar" role="status" aria-live="polite" aria-atomic="true">
+      <span id="graph-status-name" class="graph-status-name">Loading graph…</span>
+      <span id="graph-status-path" class="graph-status-path" title="Graph location unavailable">Location unavailable</span>
+      <span id="graph-status-nodes" class="graph-status-count">Nodes: —</span>
+      <span id="graph-status-schemas" class="graph-status-count" title="Registered validation schemas">Schemas: —</span>
+    </footer>
   </div>
 
   <!-- eLearning Generator Modal Overlay -->
@@ -662,6 +652,8 @@
   <script src="../lib/inspector-capabilities.js"></script>
   <script src="schema-group-view.js"></script>
   <script src="panel-resizer.js"></script>
+  <script src="graph-status.js"></script>
+  <script src="navigation.js"></script>
   <script src="app.js"></script>
   <script src="workspace-review.js"></script>
 </body>

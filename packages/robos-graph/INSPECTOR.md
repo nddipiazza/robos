@@ -52,3 +52,20 @@ text is rendered as text, including code and schemas.
 Validation: `npm --prefix packages/robos-test run test:inspector` checks catalog and
 capability behavior. `npm --prefix packages/robos-test run test:inspector:e2e` runs
 the real Electron inspector suites, including recorded type-specific navigation.
+
+
+## Workspace context and navigation
+
+The bottom status bar shows the selected graph name, full workspace location,
+node count and number of registered validation schemas. Hover a truncated name
+or path to read it in full; the path is selectable. Counts describe the entire
+graph, including when the tree is filtered. The four summary cards were removed,
+and classification provenance remains in JSON-LD without a repeated “inferred”
+label on every card.
+
+Use the header Back/Forward arrows, Alt+Left/Right (or Command+[/] on macOS),
+or the mouse's extra back/forward buttons to retrace object visits. Each visit
+remembers its inspector tab and tree filters. Changing tabs updates the current
+visit. A new object selection after Back discards the old forward path. Browser
+reload preserves history; opening a different workspace or branch starts a new
+history so Back cannot silently change the graph being edited.

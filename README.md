@@ -94,7 +94,9 @@ data models and databases, messaging, infrastructure, pipelines, source control,
 work items, testing, learning and agent configuration. Tabs require both an
 applicable type and actual data. Child objects are discovered through forward
 and inverse references; their declarations and source evidence are available
-without leaving the graph. See the [inspector guide](packages/robos-graph/INSPECTOR.md).
+without leaving the graph. Back/Forward navigation restores object visits, tabs
+and filters, including mouse side-button navigation. A bottom status bar identifies
+the graph and its location and counts. See the [inspector guide](packages/robos-graph/INSPECTOR.md).
 
 RobOS owns the SDLC codes and expresses them using Schema.org
 [CategoryCode](https://schema.org/CategoryCode) and

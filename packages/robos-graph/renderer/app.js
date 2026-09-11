@@ -59,16 +59,38 @@ const PACKAGE_METADATA = {
 
 let pendingMutation = null;
 
+function navigationView() {
+  return { node: selectedNodeId, tab: currentTab, search: searchKeyword, type: currentFilter,
+    package: currentPackageFilter, classification: currentClassificationFilter,
+    grouping: nodeGroupMode, collapsed: [...collapsedGroups] };
+}
+async function restoreGraphVisit(view) {
+  searchKeyword = view.search || ''; currentFilter = view.type || 'all';
+  currentPackageFilter = view.package || 'all'; currentClassificationFilter = view.classification || 'all';
+  nodeGroupMode = view.grouping || 'classification'; collapsedGroups.clear();
+  for (const group of view.collapsed || []) collapsedGroups.add(group);
+  document.getElementById('node-search-input').value = searchKeyword;
+  document.getElementById('btn-clear-node-search').style.display = searchKeyword.trim() ? 'flex' : 'none';
+  document.querySelectorAll('.filter-pill').forEach(button => button.classList.toggle('active', button.dataset.filter === currentFilter));
+  document.querySelectorAll('.group-btn').forEach(button => button.classList.toggle('active', button.dataset.mode === nodeGroupMode));
+  currentTab = view.tab || 'visual';
+  await selectNode(view.node);
+  const item = document.getElementById('node-' + view.node.replace(/[^a-zA-Z0-9_-]/g, '_'));
+  if (selectedNodeId === view.node) item?.scrollIntoView({ block: 'nearest' });
+}
 async function load() {
   branches = await window.sdlcGraph.listBranches();
   activeBranch = await window.sdlcGraph.getActiveBranch();
   nodes = await window.sdlcGraph.getAllNodes();
-
+  const info = await window.sdlcGraph.graphInfo();
+  await window.RobosGraphStatus.refresh(info);
+  const visit = window.RobosGraphNavigation.initialize(`${info.path}#${activeBranch?.name || 'main'}`,
+    nodes.map(node => node['@id']), restoreGraphVisit);
   renderBranchSelector();
   renderNodeList();
-
   if (nodes.length > 0) {
-    selectNode(nodes[0]['@id']);
+    if (visit) await restoreGraphVisit(visit);
+    else { currentTab = 'visual'; await selectNode(nodes[0]['@id']); }
   } else { selectedNodeId = null; queryPathFrom = null; queryPathTo = null; queryPathResult = null; await renderInspector(); }
 }
 
@@ -145,8 +167,6 @@ function renderBranchSelector() {
   badgeEl.textContent = cls.badge;
   badgeEl.className = `branch-badge ${cls.badgeClass}`;
 
-  document.getElementById('stat-branch-name').textContent = activeBranch ? activeBranch.name : 'main';
-  document.getElementById('stat-branch-type').textContent = cls.label;
 }
 
 function renderNodeItemHtml(n, badge, isSelected) {
@@ -158,7 +178,7 @@ function renderNodeItemHtml(n, badge, isSelected) {
     <div class="node-header"><span class="node-title">${escHtml(nodeText(n['dcterms:title'], n['@id']))}</span>
     <span class="type-badge type-team">${escHtml([].concat(n['@type'] || []).map(classification.compact).sort().join(', ') || 'Untyped')}</span></div>
     <div class="node-meta">${escHtml(n['@id'])} · ${escHtml(n['robos:package'] || 'Unpackaged')}</div>
-    <div class="node-classification" data-status="${result.status}">${escHtml(categoryLabels)} · ${result.status}</div>
+    <div class="node-classification" data-status="${result.status}">${escHtml(categoryLabels)}</div>
     ${warning ? `<div class="classification-warning" role="note">⚠ ${escHtml(warning)}</div>` : ''}
   </div>`;
 }
@@ -181,10 +201,11 @@ function refreshNodeFilterOptions() {
 }
 
 function renderNodeList() {
+  window.RobosGraphNavigation?.updateNodes(nodes.map(node => node['@id']));
+  window.RobosGraphNavigation?.updateView(navigationView());
   refreshNodeFilterOptions();
   const tree = classification.buildTree(nodes, nodeTreeOptions());
-  const stat = document.getElementById('stat-nodes');
-  if (stat) stat.textContent = `${tree.total} Graph Nodes`;
+  window.RobosGraphStatus?.updateNodeCount(tree.total);
   document.getElementById('nodes-count-badge').textContent = `${tree.count} of ${tree.total} Nodes`;
   const list = document.getElementById('nodes-list');
   const item = entry => renderNodeItemHtml(entry.node, null, entry.node['@id'] === selectedNodeId);
@@ -245,6 +266,7 @@ window.clearAllNodeFilters = function() {
 };
 
 async function selectNode(id) {
+  if (!nodes.some(node => node['@id'] === id)) return;
   if (selectedNodeId !== id) { queryPathFrom = id; queryPathTo = null; queryPathResult = null; structuredQueryResults = null; }
   selectedNodeId = id;
   renderNodeList();
@@ -290,6 +312,7 @@ async function renderInspector() {
   try { await ensureInspectorRelations(); } catch (error) { if(revision===inspectorRevision) { container.replaceChildren(inspectorElement('p', `Unable to read graph relationships: ${error.message}`)); } return; }
   if (revision !== inspectorRevision) return;
   currentTab = inspectorCapabilities.selectTab(currentTab, node || {}, nodes, inspectorRelationIndex);
+  window.RobosGraphNavigation.record(navigationView());
   updateTabUI();
   container.replaceChildren();
   if (!node) { container.append(inspectorElement('p', 'No node selected.')); return; }
@@ -339,7 +362,7 @@ async function renderInspector() {
   const heading = inspectorElement('section', undefined, 'inspector-card');
   heading.append(inspectorElement('h2', node['dcterms:title'] || node['@id']), inspectorElement('code', node['@id']));
   const result = classification.resolveClassification(node);
-  heading.append(inspectorElement('p', `${result.categories.map(c=>c.label).join(', ') || 'Unclassified'} · ${result.status}`));
+  heading.append(inspectorElement('p', result.categories.map(c=>c.label).join(', ') || 'Unclassified'));
   for (const warning of result.warnings) heading.append(inspectorElement('p', warning.message, 'classification-warning'));
   container.append(heading);
   const relationSection = inspectorElement('section', undefined, 'inspector-card'); relationSection.id = 'overview-relationships';
@@ -379,15 +402,7 @@ window.generateStepDefsForSelected = async function() {
 window.switchBranch = async function(branchName) {
   const res = await window.sdlcGraph.switchBranch(branchName);
 
-  branches = await window.sdlcGraph.listBranches();
-  activeBranch = await window.sdlcGraph.getActiveBranch();
-  nodes = await window.sdlcGraph.getAllNodes();
-
-  renderBranchSelector();
-  renderNodeList();
-  if (nodes.length > 0) {
-    selectNode(nodes[0]['@id']);
-  } else { selectedNodeId = null; queryPathFrom = null; queryPathTo = null; queryPathResult = null; await renderInspector(); }
+  await load();
   return res;
 };
 

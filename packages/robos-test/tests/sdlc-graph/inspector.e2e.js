@@ -33,7 +33,7 @@ test('Electron inspector capabilities: faithful data, safe documents, source con
  assert.ok(Math.abs(await sidebarWidth()-490)<2);
  await step('#nodes-resizer','Resizing the window keeps both panels usable and restores the preferred width.',async()=>{
    await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(760,960));
-   await page.waitForFunction(()=>document.querySelector('.workspace-grid').clientWidth<760);
+   await page.waitForFunction(()=>document.querySelector('.workspace-grid').clientWidth<760 && document.querySelector('.nodes-panel').getBoundingClientRect().width<=360);
    assert.ok(await sidebarWidth()<=360);
    assert.ok((await page.locator('.inspector-panel').boundingBox()).width>=340);
    await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1440,960));

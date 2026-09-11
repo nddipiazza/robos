@@ -4,10 +4,10 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SCRIPT = [
   {
-    narration: 'RobOS computes structural semantic graph diffs between production main and proposed feature branches.',
-    target: '#stat-bar',
+    narration: 'We inspect the loaded graph name, source location, node count and registered schema count.',
+    target: '#graph-status-bar',
     action: 'hover',
-    callout: 'Inspect Semantic Diff Metrics',
+    callout: 'Inspect Loaded Graph Context',
     minHold: 3200,
   },
   {
@@ -18,17 +18,17 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: 'We inspect the delta summary: +3 added nodes (Auth Gateway, OpenAPI 3.1 Spec, OAuth Requirement).',
-    target: '#stat-diff-summary',
+    narration: 'We inspect the selected base and target branches and the displayed graph change summary.',
+    target: '#inspector-content .grid-2col',
     action: 'hover',
-    callout: 'Inspect +3 / ~0 / -0 Node Delta',
+    callout: 'Inspect Graph Change Summary',
     minHold: 3200,
   },
   {
-    narration: 'The engine evaluates breaking change risk scoring, certifying LOW RISK with 0 broken contract specs.',
-    target: '#stat-risk-level',
+    narration: 'We inspect the displayed modeled risk assessment; it is not a live deployment health check.',
+    target: '#inspector-content .card-title .status-tag-pass',
     action: 'hover',
-    callout: 'Verify Low Risk Rating',
+    callout: 'Inspect Modeled Risk Assessment',
     minHold: 3200,
   },
   {

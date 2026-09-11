@@ -2,6 +2,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('sdlcGraph', {
+  graphInfo: () => ipcRenderer.invoke('graph-info'),
+  onNavigate: callback => {
+    const listener = (_, direction) => callback(direction);
+    ipcRenderer.on('graph-navigate', listener);
+    return () => ipcRenderer.removeListener('graph-navigate', listener);
+  },
   workspaceInfo: () => ipcRenderer.invoke('workspace-info'),
   openWorkspace: () => ipcRenderer.invoke('workspace-open'),
   workspaceContext: input => ipcRenderer.invoke('workspace-context', input),

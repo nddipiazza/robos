@@ -89,8 +89,8 @@ describe('RobOS eLearning Generator & Living Documentation Sync E2E Test Suite',
       assert.ok(app.port, 'robos-graph debug server port should be active');
 
       // 1. Check Initial State & Nodes Count
-      const statNodes = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
-      assert.ok(statNodes.includes('Nodes'), 'Stat bar must render active nodes count');
+      const statNodes = await evalJS(app.port, `document.getElementById('graph-status-nodes').textContent`);
+      assert.match(statNodes, /^Nodes: \p{N}[\p{N}\p{Zs},.\u066B\u066C]*$/u, 'Graph status must render the loaded node count');
 
       // 2. Filter by eLearning Category
       await evalClick(app.port, '.filter-pill[data-filter="elearning"]');

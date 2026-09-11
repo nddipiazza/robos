@@ -130,8 +130,8 @@ describe('SDLC Knowledge Graph Engine (robos-graph) Tests with In-Depth Assertio
       assert.ok(app.port, 'robos-graph debug port should be allocated');
 
       // 1. Initial State
-      const nodeCount = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
-      assert.ok(nodeCount.includes('Nodes'), 'Must render initial graph nodes');
+      const nodeCount = await evalJS(app.port, `document.getElementById('graph-status-nodes').textContent`);
+      assert.match(nodeCount, /^Nodes: \p{N}[\p{N}\p{Zs},.\u066B\u066C]*$/u, 'Must render initial graph nodes');
 
       // 2. Validate SHACL Shapes
       await evalClick(app.port, '#btn-validate-shacl');

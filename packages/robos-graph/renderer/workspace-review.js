@@ -6,12 +6,10 @@
   function discard() { proposal = null; el('workspace-apply').disabled = true; el('workspace-diff').textContent = ''; }
   async function updateInfo() {
     const info = await window.sdlcGraph.workspaceInfo();
+    await window.RobosGraphStatus?.refresh();
     if (!info) return;
     const oldCopilot = document.querySelector('.copilot-bar');
     if (oldCopilot) oldCopilot.hidden = true;
-    el('stat-traceability-status').textContent = info.validation.conforms ? 'STRUCTURE VALID' : 'NEEDS REVIEW';
-    el('stat-traceability-status').nextElementSibling.textContent = 'Source evidence and validation';
-    el('stat-bdd-scenarios').textContent = `${nodes.filter(n => [].concat(n['@type']).includes('robos:Scenario')).length} Scenarios`;
     el('workspace-coverage-details').hidden = !info.sourceSummary;
     el('workspace-coverage').textContent = info.sourceSummary ? JSON.stringify(info.sourceSummary, null, 2) : '';
     el('workspace-summary').textContent = `${info.title} · ${info.nodeCount} nodes`;
