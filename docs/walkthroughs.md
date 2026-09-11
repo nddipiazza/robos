@@ -555,7 +555,8 @@ Beyond the Acme Petshop reference application, each RobOS core subsystem has ded
 
 #### The Real-World Scenario
 In a fast-moving engineering organization with 20+ teams, developers frequently make pull requests that inadvertently change shared data models or API response shapes. RobOS acts as an automated guardian by comparing "World 1" (Live Production `main`) against "World 2" (Feature Branches). If a pull request modifies a required field, RobOS flags every affected microservice across all Git repositories before any code is merged.
-- **Source Demo Scripts**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`gitops-schema-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/gitops-schema-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
+- **Source Demo Scripts**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
+- **Retired object-panel demos:** GitOps schema, Gherkin traceability, EDD, test fabric and video-generator walkthroughs no longer represent the current graph viewer. Their old entry points report retirement without recording. See [retirement notes](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/RETIRED.md); historical panel screenshots are not current verification evidence.
 
 | Architecture Knowledge Graph Explorer | Dual-State Visual Difference Engine |
 |:---:|:---:|

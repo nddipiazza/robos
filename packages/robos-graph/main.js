@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { SDLCKnowledgeGraphStore, SAMPLE_GHERKIN_FEATURE } = require('./lib/graph-store');
 
@@ -66,6 +66,12 @@ app.whenReady().then(() => {
     },
   });
 
+  // Documentation links open in the system browser, never an Electron child.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    const safe = require('./lib/inspector-capabilities').safeUrl(url);
+    if (safe) shell.openExternal(safe).catch(error => console.error('Unable to open documentation URL:', error.message));
+    return { action: 'deny' };
+  });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
 

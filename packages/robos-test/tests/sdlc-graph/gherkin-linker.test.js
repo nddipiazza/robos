@@ -11,7 +11,7 @@ const {
   SAMPLE_GHERKIN_FEATURE,
 } = require('../../../robos-graph/index');
 const { launchApp, killApp } = require('../../lib/harness');
-const { evalJS, evalClick } = require('../../lib/snapshot');
+const { evalJS } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
 
 describe('Gherkin BDD Feature & Scenario Graph (GherkinLinker) Tests with In-Depth Assertions', () => {
@@ -44,47 +44,29 @@ describe('Gherkin BDD Feature & Scenario Graph (GherkinLinker) Tests with In-Dep
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('launches SDLC Knowledge Graph GUI, selects BDD Feature node, and inspects scenarios & traceability matrix', async () => {
+  it('renders recorded BDD fields and falls back from the removed traceability tab', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
     });
-
     try {
       assert.ok(app.port, 'robos-graph debug port should be allocated');
-
-      // 1. Initial State: Select Multi-Step Form Feature
       await evalJS(app.port, `window.inspectBDD()`);
-      await new Promise(r => setTimeout(r, 400));
-
-      const activeInspectorTitle = await evalJS(app.port, `
-        const span = document.querySelector('.inspector-card .card-title span') || document.querySelector('.inspector-card');
-        span ? span.textContent : ''
-      `);
-      assert.ok(activeInspectorTitle.includes('Multi-Step Form') || activeInspectorTitle.includes('REQ-201') || activeInspectorTitle.includes('Feature'), 'Must display selected BDD Feature');
-
-      // 2. Verify Scenarios are rendered in inspector
-      const scenarioBoxes = await evalJS(app.port, `document.querySelectorAll('.scenario-box').length`);
-      assert.strictEqual(scenarioBoxes, 2, 'Must render 2 scenario boxes');
-
-      // 3. Verify Step definitions exist inside scenario
-      const stepRows = await evalJS(app.port, `document.querySelectorAll('.step-row').length`);
-      assert.strictEqual(stepRows, 13, 'Must render 13 total Given/When/Then step rows across 2 scenarios');
-
-      // 4. Switch to Traceability Matrix Tab
-      await evalClick(app.port, '#tab-btn-traceability');
-      await new Promise(r => setTimeout(r, 400));
-
-      const matrixRows = await evalJS(app.port, `document.querySelectorAll('.matrix-table tbody tr').length`);
-      assert.strictEqual(matrixRows, 2, 'Traceability matrix must render 2 rows');
-
-      // 5. Select Forms API Service node in Left Panel
+      await evalJS(app.port, `window.switchTab('visual')`);
+      const recorded = await evalJS(app.port, `document.getElementById('inspector-content').textContent`);
+      assert.ok(recorded.includes('Multi-Step Form'), 'Overview must identify the selected BDD feature');
+      assert.ok(recorded.includes('robos:scenarios'), 'Overview must render the recorded scenario property');
+      assert.ok(recorded.includes('REQ-201'), 'Overview must include the recorded requirement');
+      assert.strictEqual(await evalJS(app.port, `document.querySelectorAll('#tab-btn-traceability, .matrix-table, .scenario-box').length`), 0,
+        'Removed traceability tab and canned BDD panels must not exist');
+      await evalJS(app.port, `window.switchTab('rdf')`);
+      await evalJS(app.port, `window.switchTab('traceability')`);
+      assert.strictEqual(await evalJS(app.port, `document.querySelector('.tab-btn.active').id`), 'tab-btn-visual',
+        'Old traceability deep links must fall back to Overview');
       await evalJS(app.port, `window.selectNode('urn:robos:service:forms-api')`);
-      await evalClick(app.port, '#tab-btn-visual');
-      await new Promise(r => setTimeout(r, 400));
-
-      const serviceTitle = await evalJS(app.port, `document.querySelector('.inspector-card .card-title span').textContent`);
-      assert.ok(serviceTitle.includes('Forms API Service'), 'Must inspect Forms API Service');
+      await evalJS(app.port, `window.switchTab('visual')`);
+      const serviceTitle = await evalJS(app.port, `document.querySelector('#inspector-content h2').textContent`);
+      assert.ok(serviceTitle.includes('Forms API Service'), 'Generic Overview must inspect the selected service');
     } finally {
       await killApp(app);
     }

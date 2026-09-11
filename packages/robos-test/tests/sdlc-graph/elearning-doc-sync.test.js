@@ -127,14 +127,16 @@ describe('RobOS eLearning Generator & Living Documentation Sync E2E Test Suite',
       await new Promise(r => setTimeout(r, 600));
       const inspectorTitle = await evalJS(app.port, `
         (() => {
-          const t = document.querySelector('.inspector-card .card-title span');
+          const t = document.querySelector('#inspector-content h2');
           return t ? t.textContent : '';
         })()
       `);
       assert.ok(inspectorTitle.includes('Building Event-Driven Microservices'), 'Inspector must render course title');
 
-      const moduleCardsCount = await evalJS(app.port, `document.querySelectorAll('.elearning-module-card').length`);
-      assert.ok(moduleCardsCount >= 3, 'Must render at least 3 curriculum module cards');
+      const overview = await evalJS(app.port, `document.getElementById('inspector-content').textContent`);
+      assert.ok(overview.includes('robos:modules'), 'Overview must display recorded curriculum data');
+      assert.strictEqual(await evalJS(app.port, `document.querySelectorAll('.elearning-module-card').length`), 0,
+        'Generic Overview must not invent curriculum cards');
 
       // 7. Submit Course Prompt: Generate a brand new course
       await evalClick(app.port, '#btn-open-elearning-modal');
@@ -157,20 +159,14 @@ describe('RobOS eLearning Generator & Living Documentation Sync E2E Test Suite',
       assert.ok(bannerDesc.includes('Noticeable updates detected'), 'Banner must describe detected KGraph update');
       assert.ok(bannerDesc.includes('AI prompted to discern documentation updates'), 'Banner must state AI documentation prompt');
 
-      // 9. Inspect GitOps Tab for elearning.yaml
-      await evalClick(app.port, '#tab-btn-gitops');
-      await new Promise(r => setTimeout(r, 400));
-      await evalClick(app.port, '#gitops-file-elearning');
-      await new Promise(r => setTimeout(r, 400));
-
-      const filePreContent = await evalJS(app.port, `
-        (() => {
-          const pre = document.getElementById('gitops-file-content-pre');
-          return pre ? pre.textContent : '';
-        })()
-      `);
-      assert.ok(filePreContent.includes('kind: ELearningCatalog'), 'GitOps pre must render ELearningCatalog YAML');
-      assert.ok(filePreContent.includes('microservices-contracts'), 'GitOps pre must contain courses');
+      // 9. Legacy GitOps links fall back; catalog generation is checked through
+      // the real backend/file assertions above, not a canned file-browser panel.
+      assert.strictEqual(await evalJS(app.port, `document.querySelectorAll('#tab-btn-gitops, #gitops-file-elearning, #gitops-file-content-pre').length`), 0,
+        'GitOps tab and canned file browser must be absent');
+      await evalJS(app.port, `window.switchTab('rdf')`);
+      await evalJS(app.port, `window.switchTab('gitops')`);
+      assert.strictEqual(await evalJS(app.port, `document.querySelector('.tab-btn.active').id`), 'tab-btn-visual',
+        'Old GitOps requests must fall back to Overview');
 
       // 10. Trigger Auto-Sync Docs Action
       const syncResult = await evalJS(app.port, `window.syncDocsAction()`);

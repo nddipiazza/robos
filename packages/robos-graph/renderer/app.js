@@ -11,7 +11,7 @@ let selectedNodeId = null;
 let currentFilter = 'all';
 let currentPackageFilter = 'all';
 let searchKeyword = '';
-let currentTab = 'visual'; // 'visual' | 'topology' | 'impact' | 'query' | 'gitops' | 'edd' | 'video' | 'fabric' | 'traceability' | 'rdf'
+let currentTab = 'visual'; // Overview, topology, impact, query, documentation, evidence, JSON-LD
 let nodeGroupMode = 'classification'; // classification | package | type | flat
 const classification = window.RobosClassification;
 let currentClassificationFilter = 'all';
@@ -58,188 +58,6 @@ const PACKAGE_METADATA = {
 
 
 let pendingMutation = null;
-let activeProbedResponse = null;
-let eddState = null;
-let activeChapterIndex = 0;
-let activeGitOpsFile = 'topology';
-let gitOpsValidated = false;
-
-const GITOPS_FILES = {
-  topology: {
-    name: 'topology.yaml',
-    schema: 'schemas/topology.schema.json',
-    desc: 'System topology, microservices, databases, and C4 communication links',
-    parsed: {
-      type: 'Topology Architecture',
-      title: '3 System Nodes & 2 C4 Links',
-      items: [
-        { label: '🌐 web-client', detail: 'Frontend (React / Vite) &middot; repo: github.com/acme/buildbarn-web' },
-        { label: '⚙️ forms-api', detail: 'Microservice (Node.js / Express) &middot; contracts: forms-api.openapi.yaml' },
-        { label: '🗄️ db-primary', detail: 'Database (PostgreSQL 16) &middot; protocol: TCP / SQL' },
-        { label: '🔗 C4 Link 1', detail: 'web-client ──[HTTPS / REST]──▶ forms-api' },
-        { label: '🔗 C4 Link 2', detail: 'forms-api ──[TCP / SQL]──▶ db-primary' },
-      ],
-    },
-    content: `version: "1.0"
-kind: Topology
-system:
-  id: "buildbarn-platform"
-  name: "BuildBarn Platform"
-  description: "Distributed form processing and workflow orchestration system"
-nodes:
-  - id: "web-client"
-    name: "Web Portal"
-    type: "frontend"
-    technology: "React / Vite"
-    repo: "github.com/acme/buildbarn-web"
-  - id: "forms-api"
-    name: "Forms API Service"
-    type: "service"
-    technology: "Node.js / Express"
-    contracts: ["contracts/forms-api.openapi.yaml"]
-    entities: ["entities/form.typespec"]
-  - id: "db-primary"
-    name: "PostgreSQL Database"
-    type: "database"
-    technology: "PostgreSQL 16"
-links:
-  - from: "web-client"
-    to: "forms-api"
-    protocol: "HTTPS / REST"
-    contract: "contracts/forms-api.openapi.yaml"
-  - from: "forms-api"
-    to: "db-primary"
-    protocol: "TCP / SQL"`,
-  },
-  teams: {
-    name: 'teams.yaml',
-    schema: 'schemas/teams.schema.json',
-    desc: 'Team Topologies, human architects, and AI agent personas with MCP skill bindings',
-    parsed: {
-      type: 'Team & Agent Personas',
-      title: 'Core Platform Engineering (Platform Topology)',
-      items: [
-        { label: '👤 user-ndipiazza', detail: 'Human Lead Architect &middot; Role: Reviewer & Approver' },
-        { label: '🤖 agent-gemini-planner', detail: 'Gemini 2.5 Pro &middot; Skills: [create-feature-spec, contract-drift-detector]' },
-        { label: '🤖 agent-claude-coder', detail: 'Claude 3.7 Sonnet &middot; Skills: [e2e-driven-dev, app-snapshot]' },
-      ],
-    },
-    content: `version: "1.0"
-kind: TeamRoster
-teams:
-  - id: "core-platform"
-    name: "Core Platform Team"
-    topology: "platform"
-    description: "Core platform and shared API infrastructure"
-    members:
-      - id: "user-ndipiazza"
-        name: "Lead Architect"
-        type: "human"
-        role: "Reviewer & Approver"
-      - id: "agent-gemini-planner"
-        name: "Gemini Strategic Planner"
-        type: "agent"
-        model: "gemini-2.5-pro"
-        role: "Architecture Planning & Task Breakdown"
-        skills: ["create-feature-spec", "contract-drift-detector"]
-      - id: "agent-claude-coder"
-        name: "Claude Code Executor"
-        type: "agent"
-        model: "claude-3.7-sonnet"
-        role: "Implementation & Refactoring"
-        skills: ["e2e-driven-dev", "app-snapshot"]`,
-  },
-  packages: {
-    name: 'packages.yaml',
-    schema: 'schemas/packages.schema.json',
-    desc: 'Applications, desktop apps, daemons, and devcontainer runtime environments',
-    parsed: {
-      type: 'Packages & Devcontainers',
-      title: '3 Packages & 1 Devcontainer Runtime',
-      items: [
-        { label: '🖥️ dev-central', detail: 'Desktop App &middot; Runtime: Electron 30 / Node.js 20' },
-        { label: '🖥️ robos-graph', detail: 'Desktop App &middot; Runtime: Electron 30 / Node.js 20' },
-        { label: '🐳 forms-api (Devcontainer)', detail: 'Microservice &middot; Runtime: .devcontainer/devcontainer.json (Node.js 20 Isolated)' },
-      ],
-    },
-    content: `version: "1.0"
-kind: Packages
-packages:
-  - id: "dev-central"
-    name: "Dev Central"
-    type: "desktop-app"
-    runtime: "Electron 30 / Node.js 20"
-    entry: "packages/dev-central/main.js"
-  - id: "robos-graph"
-    name: "SDLC Knowledge Graph"
-    type: "desktop-app"
-    runtime: "Electron 30 / Node.js 20"
-    entry: "packages/robos-graph/main.js"
-  - id: "forms-api"
-    name: "Forms API Service"
-    type: "service"
-    runtime: "Node.js 20"
-    devcontainer: ".devcontainer/devcontainer.json"`,
-  },
-  projects: {
-    name: 'projects.yaml',
-    schema: 'schemas/projects.schema.json',
-    desc: 'Multi-repo workspace mappings, repository URLs, and branch dependencies',
-    parsed: {
-      type: 'Projects & Workspaces',
-      title: 'RobOS Platform Repository',
-      items: [
-        { label: '📦 robos-platform', detail: 'Repo: github.com/nddipiazza/robos &middot; Default Branch: main &middot; Path: .' },
-      ],
-    },
-    content: `version: "1.0"
-kind: Projects
-projects:
-  - id: "robos-platform"
-    name: "RobOS Platform Repository"
-    repos:
-      - id: "robos"
-        url: "github.com/nddipiazza/robos"
-        defaultBranch: "main"
-        path: "."`,
-  },
-  elearning: {
-    name: 'elearning.yaml',
-    schema: 'schemas/elearning.schema.json',
-    desc: 'Declarative eLearning courses, interactive developer curriculums, and lab exercises',
-    parsed: {
-      type: 'eLearning & Training Catalog',
-      title: 'Interactive Developer Curriculums',
-      items: [
-        { label: '🎓 Building Event-Driven Microservices', detail: 'Topic: Microservices & Contracts &middot; 45 mins &middot; Difficulty: Intermediate' },
-        { label: '🧪 Module 1: OpenAPI 3.1 & Mock Stubs', detail: 'Prism mock on :18081 &middot; contracts/forms-api-v1.yaml' },
-        { label: '🧪 Module 2: Gherkin BDD Specs', detail: 'specs/features/multi-step-form.feature &middot; Red-Green Guards' },
-        { label: '🧪 Module 3: GitOps Topology Delivery', detail: '.robos/topology.yaml &middot; Automated Reconciler' },
-      ],
-    },
-    content: `version: "1.0"
-kind: ELearningCatalog
-courses:
-  - id: "microservices-contracts"
-    title: "Building Event-Driven Microservices with OpenAPI & Gherkin BDD"
-    topic: "Microservices & Contracts"
-    difficulty: "Intermediate"
-    duration: "45 minutes"
-    gitopsFile: ".robos/elearning.yaml"
-    targetService: "urn:robos:service:forms-api"
-    targetContract: "urn:robos:contract:forms-api-v1"
-    modules:
-      - id: "mod-01-openapi"
-        title: "Module 1: OpenAPI 3.1 Contract-First Design"
-        durationMinutes: 15
-      - id: "mod-02-gherkin"
-        title: "Module 2: Gherkin BDD Specifications & Red-Green Verification"
-        durationMinutes: 15
-      - id: "mod-03-gitops"
-        title: "Module 3: GitOps Topology & Continuous Delivery Reconciler"
-        durationMinutes: 15`,
-  },
-};
 
 async function load() {
   branches = await window.sdlcGraph.listBranches();
@@ -249,12 +67,9 @@ async function load() {
   renderBranchSelector();
   renderNodeList();
 
-  const serviceNode = nodes.find(n => n['@id'] === 'urn:robos:service:forms-api');
-  if (serviceNode) {
-    selectNode(serviceNode['@id']);
-  } else if (nodes.length > 0) {
+  if (nodes.length > 0) {
     selectNode(nodes[0]['@id']);
-  }
+  } else { selectedNodeId = null; queryPathFrom = null; queryPathTo = null; queryPathResult = null; await renderInspector(); }
 }
 
 function isBDDNode(n) {
@@ -430,1299 +245,115 @@ window.clearAllNodeFilters = function() {
 };
 
 async function selectNode(id) {
+  if (selectedNodeId !== id) { queryPathFrom = id; queryPathTo = null; queryPathResult = null; structuredQueryResults = null; }
   selectedNodeId = id;
   renderNodeList();
-  renderInspector();
+  return renderInspector();
 }
 window.selectNode = selectNode;
 
+const inspectorCapabilities = window.RobosInspector;
+let inspectorRevision = 0;
+let inspectorSelectedContext = null;
+let inspectorRelationIndex = new Map(), inspectorRelationsNodes = null, inspectorRelationsPromise = null;
+async function ensureInspectorRelations() {
+  if (inspectorRelationsNodes !== nodes) {
+    const snapshot = nodes;
+    inspectorRelationsNodes = snapshot;
+    inspectorRelationsPromise = window.sdlcGraph.getGraphRelations().then(relations => {
+      if (snapshot === nodes) inspectorRelationIndex = inspectorCapabilities.relationIndex(relations);
+    }).catch(error => { inspectorRelationsNodes = null; throw error; });
+  }
+  await inspectorRelationsPromise;
+}
+function inspectorElement(tag, text, cls) {
+  const el = document.createElement(tag);
+  if (text !== undefined) el.textContent = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+  if (cls) el.className = cls;
+  return el;
+}
+function appendRecordedFields(parent, value) {
+  for (const [key, field] of Object.entries(value).sort(([a],[b]) => a.localeCompare(b))) {
+    const section = inspectorElement('div', undefined, 'inspector-card');
+    section.append(inspectorElement('div', key, 'field-label'), inspectorElement('pre', field, 'json-pre'));
+    parent.append(section);
+  }
+}
+function appendInspectLink(parent, id, label) {
+  const button = inspectorElement('button', label, 'btn btn-secondary btn-sm');
+  button.dataset.inspectId = id; parent.append(button);
+}
 async function renderInspector() {
+  const revision = ++inspectorRevision;
   const container = document.getElementById('inspector-content');
   const node = nodes.find(n => n['@id'] === selectedNodeId) || nodes[0];
-  if (!node) {
-    container.innerHTML = '<div class="card-desc">No node selected.</div>';
-    return;
-  }
-
-  if (currentTab === 'rdf') {
-    container.innerHTML = `<pre class="json-pre">${JSON.stringify(node, null, 2)}</pre>`;
-    return;
-  }
-
-  if (currentTab === 'topology') {
-    await renderTopologyTab(container, node);
-    return;
-  }
-
-  if (currentTab === 'impact') {
-    await renderImpactTab(container, node);
-    return;
-  }
-
-  if (currentTab === 'query') {
-    await renderQueryTab(container, node);
-    return;
-  }
-
-  if (currentTab === 'gitops') {
-    const file = GITOPS_FILES[activeGitOpsFile] || GITOPS_FILES.topology;
-
-    container.innerHTML = `
-      <div class="gitops-container">
-        <!-- Left Sidebar: File Tree & Validation Action -->
-        <div class="gitops-sidebar">
-          <div class="panel-header" style="background: var(--bg-darker); border-radius: 6px;">
-            <span>📂 .robos/ GitOps Tree</span>
-            <span class="status-tag-pass" id="gitops-status-badge">${gitOpsValidated ? '✨ 100% VALID' : '🟢 READY'}</span>
-          </div>
-
-          <div class="gitops-file-item ${activeGitOpsFile === 'topology' ? 'active' : ''}" id="gitops-file-topology" onclick="window.selectGitOpsFile('topology')">
-            <span class="gitops-file-name">📄 topology.yaml</span>
-            <span class="gitops-file-badge">VALID</span>
-          </div>
-
-          <div class="gitops-file-item ${activeGitOpsFile === 'teams' ? 'active' : ''}" id="gitops-file-teams" onclick="window.selectGitOpsFile('teams')">
-            <span class="gitops-file-name">📄 teams.yaml</span>
-            <span class="gitops-file-badge">VALID</span>
-          </div>
-
-          <div class="gitops-file-item ${activeGitOpsFile === 'packages' ? 'active' : ''}" id="gitops-file-packages" onclick="window.selectGitOpsFile('packages')">
-            <span class="gitops-file-name">📄 packages.yaml</span>
-            <span class="gitops-file-badge">VALID</span>
-          </div>
-
-          <div class="gitops-file-item ${activeGitOpsFile === 'projects' ? 'active' : ''}" id="gitops-file-projects" onclick="window.selectGitOpsFile('projects')">
-            <span class="gitops-file-name">📄 projects.yaml</span>
-            <span class="gitops-file-badge">VALID</span>
-          </div>
-
-          <div class="gitops-file-item ${activeGitOpsFile === 'elearning' ? 'active' : ''}" id="gitops-file-elearning" onclick="window.selectGitOpsFile('elearning')">
-            <span class="gitops-file-name">📄 elearning.yaml</span>
-            <span class="gitops-file-badge">VALID</span>
-          </div>
-
-          <div style="margin-top: 6px;">
-            <button class="btn btn-primary" id="btn-run-gitops-validate" style="width: 100%;" onclick="window.validateGitOpsTree()">⚡ Validate .robos/ Tree</button>
-          </div>
-
-          <div class="parsed-box" id="gitops-validation-summary-card" style="font-size: 10px;">
-            <div class="parsed-header">🛡️ Schema Conformance</div>
-            <div>Standard: <code>JSON Schema 2020-12</code></div>
-            <div>Violations: <strong style="color: var(--success);">${gitOpsValidated ? '0 Shape Errors' : '0 (Clean)'}</strong></div>
-          </div>
-        </div>
-
-        <!-- Right Pane: Active File Details & Structured Content -->
-        <div class="gitops-viewer-pane">
-          <div class="inspector-card" id="gitops-viewer-card" style="margin-bottom: 0;">
-            <div class="card-title">
-              <span>📄 Active File: <strong>${file.name}</strong></span>
-              <span class="status-tag-pass">🟢 Conforms to ${file.schema}</span>
-            </div>
-            <div class="card-desc">${file.desc}</div>
-
-            <!-- Structured Visual Inspection Breakdown -->
-            <div class="parsed-box" id="gitops-parsed-highlights" style="margin-top: 6px;">
-              <div class="parsed-header">${file.parsed.type}: ${file.parsed.title}</div>
-              ${file.parsed.items.map(item => `
-                <div class="parsed-item">
-                  <strong>${item.label}</strong>
-                  <span>${item.detail}</span>
-                </div>
-              `).join('')}
-            </div>
-
-            <!-- Raw YAML Code Block -->
-            <div style="margin-top: 8px;">
-              <div class="field-label">Declarative File Content:</div>
-              <pre class="json-pre" id="gitops-file-content-pre">${file.content}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (currentTab === 'video') {
-    const chapters = [
-      { id: '1', timecode: '00:00:00.000', title: 'Ingest BDD Feature AST & Requirements', status: '✅ SYNCED' },
-      { id: '2', timecode: '00:00:03.500', title: 'Verify Strict RED Failure Guard (404 Error)', status: '✅ SYNCED' },
-      { id: '3', timecode: '00:00:07.000', title: 'Apply Minimal Implementation & Contract Mocks', status: '✅ ACTIVE' },
-      { id: '4', timecode: '00:00:11.000', title: 'Confirm 100% GREEN Step Pass Rate', status: '✅ SYNCED' },
-      { id: '5', timecode: '00:00:15.500', title: 'Full Regression & SHACL Shape Verification', status: '✅ SYNCED' },
-      { id: '6', timecode: '00:00:20.000', title: 'Proof-of-Work Artifact Ready for Dev Central', status: '✅ READY' },
-    ];
-
-    container.innerHTML = `
-      <div class="inspector-card" id="video-player-card">
-        <div class="card-title">
-          <span>🎬 Proof-of-Work Video Walkthrough: Multi-Step Form Submission</span>
-          <span class="status-tag-pass" id="video-status-badge">🟢 100% VERIFIED PROOF-OF-WORK</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Resolution & Framerate</div>
-            <div class="field-value"><code>1080p (1920x1080 @ 30fps)</code></div>
-          </div>
-          <div>
-            <div class="field-label">Subtitle & Caption Standard</div>
-            <div class="field-value"><span class="type-badge type-bdd">W3C WebVTT Synchronized</span></div>
-          </div>
-          <div>
-            <div class="field-label">Total Duration</div>
-            <div class="field-value"><strong>24.6 Seconds (6 Chapters)</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Persistent Artifact Location</div>
-            <div class="field-value"><code>~/.robos/development/walkthroughs/</code></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="inspector-card" id="video-chapters-card">
-        <div class="card-title">
-          <span>📑 Interactive Chapter Bookmarks & Action Timeline</span>
-          <span class="type-badge type-contract">Click to Seek</span>
-        </div>
-        <table class="matrix-table" id="video-chapters-table">
-          <thead>
-            <tr>
-              <th>Chapter</th>
-              <th>Timecode</th>
-              <th>Action / Narration Title</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${chapters.map((ch, idx) => `
-              <tr id="chapter-item-${ch.id}" style="${idx === activeChapterIndex ? 'background: var(--bg-hover); border-left: 3px solid var(--accent);' : ''}" onclick="window.seekChapter(${idx})">
-                <td><strong>Chapter ${ch.id}</strong></td>
-                <td><code>${ch.timecode}</code></td>
-                <td>${ch.title}</td>
-                <td><span class="status-tag-pass">${ch.status}</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="inspector-card" id="video-vtt-card">
-        <div class="card-title">
-          <span>📜 Synchronized W3C WebVTT Subtitle Stream</span>
-          <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="window.exportVideoArtifact()">💾 Export JSON Artifact</button>
-        </div>
-        <pre class="json-pre" id="vtt-stream-console">WEBVTT - RobOS Automated Walkthrough
-
-1
-00:00:00.000 --> 00:00:03.500
-RobOS Video Walkthrough Generator ingests step cues and execution telemetry from EDD runs.
-
-2
-00:00:03.500 --> 00:00:07.000
-The engine synthesizes synchronized W3C WebVTT subtitle tracks aligned with each action.
-
-3
-00:00:07.000 --> 00:00:11.000
-FFmpeg captures smooth 1080p screen stream from Xvfb virtual display with zero frame dropping.
-
-4
-00:00:11.000 --> 00:00:15.500
-Step timestamps, callout banners, and action ripples are multiplexed into the final container.
-
-5
-00:00:15.500 --> 00:00:20.000
-Searchable JSON metadata and chapter indexes are automatically exported for reviewer hubs.
-
-6
-00:00:20.000 --> 00:00:24.600
-The proof-of-work video walkthrough is archived and ready for 1-click merge review in Dev Central.</pre>
-      </div>
-    `;
-    return;
-  }
-
-  if (currentTab === 'edd') {
-    const serviceNode = nodes.find(n => n['@id'] === 'urn:robos:service:forms-api') || node;
-    const isCompleted = eddState && eddState.ok;
-    const duration = eddState && eddState.telemetry ? eddState.telemetry.durationMs : 240;
-
-    container.innerHTML = `
-      <div class="inspector-card" id="edd-header-card">
-        <div class="card-title">
-          <span>🤖 Autonomous End-to-End Driven Development (EDD) Engine</span>
-          <span class="status-tag-pass" id="edd-status-badge">${isCompleted ? '✨ VERIFIED & READY FOR REVIEW' : '🟢 READY TO EXECUTE'}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Target BDD Scenario</div>
-            <div class="field-value"><code>Scenario: Successfully submitting all form steps</code></div>
-          </div>
-          <div>
-            <div class="field-label">Target Service</div>
-            <div class="field-value"><span class="type-badge type-service">${serviceNode['dcterms:title']}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Strict Red-Green Guard</div>
-            <div class="field-value"><span class="status-tag-pass">🛡️ Enforced (False-Positive Protection)</span></div>
-          </div>
-          <div>
-            <div class="field-label">Execution Duration</div>
-            <div class="field-value"><strong>${duration}ms</strong></div>
-          </div>
-        </div>
-        <div style="margin-top: 6px;">
-          <button class="btn btn-primary" id="btn-run-edd-action" onclick="window.runEDDAction()">⚡ Run Autonomous EDD Loop</button>
-        </div>
-      </div>
-
-      <div class="inspector-card" id="edd-stepper-card">
-        <div class="card-title">
-          <span>🔄 Strict Red-Green-Refactor State Machine</span>
-          <span class="type-badge type-contract">TDD / EDD Methodology</span>
-        </div>
-        <table class="matrix-table" id="edd-stepper-table">
-          <thead>
-            <tr>
-              <th>Phase</th>
-              <th>State Description</th>
-              <th>Assertion / Guard</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr id="step-row-ingest">
-              <td><strong>1. INGESTION</strong></td>
-              <td>Parse Gherkin feature AST & OSLC nodes</td>
-              <td><code>specs/features/multi-step-form.feature</code></td>
-              <td><span class="status-tag-pass">✅ INGESTED</span></td>
-            </tr>
-            <tr id="step-row-red">
-              <td><strong>2. RED PHASE</strong></td>
-              <td>Verify initial test failure in Test Fabric</td>
-              <td><code>Expect 404 Not Found before code written</code></td>
-              <td><span class="status-tag-pass" style="color: ${isCompleted ? '#3fb950' : '#f85149'}; font-weight:700;">${isCompleted ? '✅ RED VERIFIED' : '🔴 PENDING RED'}</span></td>
-            </tr>
-            <tr id="step-row-impl">
-              <td><strong>3. IMPLEMENTATION</strong></td>
-              <td>Apply minimal code changes & contract stubs</td>
-              <td><code>Forms API POST /submit handler + Prism</code></td>
-              <td><span class="status-tag-pass">✅ APPLIED</span></td>
-            </tr>
-            <tr id="step-row-green">
-              <td><strong>4. GREEN PHASE</strong></td>
-              <td>Re-run scenario in Test Fabric to confirm pass</td>
-              <td><code>All 9 Given/When/Then steps PASS</code></td>
-              <td><span class="status-tag-pass">✅ GREEN PASS</span></td>
-            </tr>
-            <tr id="step-row-regression">
-              <td><strong>5. REGRESSION CHECK</strong></td>
-              <td>Execute full 14-suite regression & SHACL guard</td>
-              <td><code>0 breaking changes detected</code></td>
-              <td><span class="status-tag-pass">✅ 100% CLEAN</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="inspector-card" id="edd-log-card">
-        <div class="card-title">
-          <span>📜 Autonomous Agent Diagnostic Stream</span>
-          <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="window.runEDDAction()">🔄 Re-Run Cycle</button>
-        </div>
-        <pre class="json-pre" id="edd-diagnostic-console">${eddState ? JSON.stringify(eddState.log, null, 2) : `[EDD_RUNNER] Ingested BDD scenario: "Scenario: Successfully submitting all form steps"
-[EDD_RUNNER] RED State Confirmed: AssertionError: Expected POST /api/v1/forms/form-101/submit status 201 Created but received 404 Not Found
-[EDD_RUNNER] Implementation: Synthesizing endpoint handler and mock stubs in packages/robos-test...
-[EDD_RUNNER] GREEN State Confirmed: 9/9 Given/When/Then steps executed with 100% pass rate.
-[EDD_RUNNER] Regression Check: 14 test suites passing, 0 regressions detected.
-[EDD_RUNNER] Status: Task verified and ready for 1-click human merge review in Dev Central.`}</pre>
-      </div>
-    `;
-    return;
-  }
-
-  if (currentTab === 'fabric') {
-    const health = await window.sdlcGraph.getFabricHealth();
-    const serviceNode = nodes.find(n => n['@id'] === 'urn:robos:service:forms-api') || node;
-    const outboundDeps = serviceNode['robos:outboundDependencies'] || [
-      {
-        id: 'acme-tax',
-        name: 'Acme Tax Forms API',
-        url: 'https://api.acme-tax.com/v2/forms/2026/vendor-1099',
-        method: 'GET',
-        contract: 'specs/contracts/acme-tax-api-v2.yaml',
-        mockProxyUrl: 'http://localhost:18081/v2/forms/2026/vendor-1099',
-        status: 'MOCKED VIA CONTRACT',
-        mockResponse: {
-          formId: 'tax-1099-2026-v88',
-          formType: '1099-MISC',
-          taxYear: 2026,
-          vendorName: 'Acme Global Seller LLC',
-          ein: 'XX-XXX8921',
-          status: 'CERTIFIED_READY',
-        },
-      },
-      {
-        id: 'stripe-pay',
-        name: 'Stripe Payment Gateway',
-        url: 'https://api.stripe.com/v1/charges',
-        method: 'POST',
-        contract: 'specs/contracts/stripe-v1.yaml',
-        mockProxyUrl: 'http://localhost:18082/v1/charges',
-        status: 'MOCKED (WireMock)',
-        mockResponse: { id: 'ch_mock123456789', status: 'succeeded', amount: 5000, currency: 'usd' },
-      },
-      {
-        id: 'auth0-oauth',
-        name: 'OAuth2 Identity Provider',
-        url: 'https://auth.acme.com/oauth/token',
-        method: 'POST',
-        contract: 'specs/contracts/auth0-oauth2.yaml',
-        mockProxyUrl: 'http://localhost:18083/oauth/token',
-        status: 'MOCKED',
-        mockResponse: { access_token: 'mock-jwt-token-standard-user', token_type: 'Bearer', expires_in: 3600 },
-      },
-    ];
-
-    container.innerHTML = `
-      <div class="inspector-card" id="fabric-header-card">
-        <div class="card-title">
-          <span>🧪 Local Test Fabric: Outbound HTTP Mocks for ${serviceNode['dcterms:title']}</span>
-          <span class="status-tag-pass" id="fabric-status-badge">🟢 100% ONLINE (Offline-First)</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Target Service</div>
-            <div class="field-value"><code>${serviceNode['dcterms:title']} (${nodeText(serviceNode['robos:repository'], 'unrecorded')})</code></div>
-          </div>
-          <div>
-            <div class="field-label">Virtual Framebuffer</div>
-            <div class="field-value"><code>Xvfb :99 (1920x1080x24)</code></div>
-          </div>
-          <div>
-            <div class="field-label">Cold-Start Spin-Up</div>
-            <div class="field-value"><span class="status-tag-pass">⚡ ${health.spinUpDurationMs || 12}ms (&lt;3s Limit)</span></div>
-          </div>
-          <div>
-            <div class="field-label">Contract-First Mock Stubs</div>
-            <div class="field-value"><strong>${outboundDeps.length} Outbound HTTP Endpoints MOCKED</strong></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="inspector-card" id="fabric-deps-card">
-        <div class="card-title">
-          <span>🌐 Outbound External HTTP Dependencies (Replaced with Contract Stubs)</span>
-          <span class="type-badge type-contract">Contract-First Mocking</span>
-        </div>
-        <table class="matrix-table" id="fabric-deps-table">
-          <thead>
-            <tr>
-              <th>Outbound External URL</th>
-              <th>Contract Spec</th>
-              <th>Localhost Proxy</th>
-              <th>Mock Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${outboundDeps.map((dep, idx) => `
-              <tr id="dep-row-${dep.id || idx}">
-                <td><strong>${dep.name}</strong><br><code>${dep.method} ${dep.url}</code></td>
-                <td><code>${dep.contract}</code></td>
-                <td><code>${dep.mockProxyUrl}</code></td>
-                <td><span class="status-tag-pass">🟢 ${dep.status}</span></td>
-                <td>
-                  <button class="btn btn-primary" id="btn-probe-${dep.id || idx}" style="padding: 3px 8px; font-size: 10px;" onclick="window.probeMock('${dep.name}', ${idx})">⚡ Probe Mock</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="inspector-card" id="fabric-console-card">
-        <div class="card-title">
-          <span>📡 Live Contract Mock Probe Response & Verification Console</span>
-          <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="window.resetFabricDemo()">🔄 Snapshot Rollback & Reset</button>
-        </div>
-        <pre class="json-pre" id="probe-response-console">${activeProbedResponse ? JSON.stringify(activeProbedResponse, null, 2) : `// Click "⚡ Probe Mock" above to simulate outbound HTTP requests to external endpoints (e.g. Acme Tax Forms API)...
-// Your app will automatically reach out to these local contract stubs instead of fragile remote staging servers.`}</pre>
-      </div>
-    `;
-    return;
-  }
-
-  if (currentTab === 'traceability') {
-    const matrix = await window.sdlcGraph.getTraceability();
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📊 End-to-End Requirements Traceability Matrix</span>
-          <span class="status-tag-pass">100% VERIFIED</span>
-        </div>
-        <div class="card-desc">
-          Bidirectional linkage connecting business requirements to Gherkin BDD features, microservice targets, and automated test execution records.
-        </div>
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th>Requirement</th>
-              <th>BDD Feature</th>
-              <th>Scenario</th>
-              <th>Target Service</th>
-              <th>Test Suite</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${matrix.map(m => `
-              <tr>
-                <td><code>${m.requirementId}</code></td>
-                <td><strong>${m.featureTitle}</strong></td>
-                <td>${m.scenarioTitle}</td>
-                <td><span class="type-badge type-service">${m.targetService}</span></td>
-                <td><code>${m.testSuite}</code></td>
-                <td><span class="status-tag-pass">✅ PASS</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-    return;
-  }
-
-  // Visual Inspector
-  const cat = getInspectorLayoutKind(node);
-  const badge = getTypeBadge(node);
-
-  if (cat === 'bdd' && node['robos:scenarios']) {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🥒 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Feature File</div>
-            <div class="field-value"><code>${node['robos:featureFile'] || node['robos:filePath'] || 'specs/features/multi-step-form.feature'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Linked Requirement</div>
-            <div class="field-value"><span class="type-badge type-req">${node['robos:requirementId'] || 'REQ-201'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Target Microservice</div>
-            <div class="field-value"><span class="type-badge type-service">${(node['robos:targetService'] || 'urn:robos:service:forms-api').replace(/.*:/, '')}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Execution Status</div>
-            <div class="field-value"><span class="status-tag-pass">✅ ALL SCENARIOS PASS</span></div>
-          </div>
-        </div>
-        ${node['robos:narrative'] ? `
-          <div style="margin-top: 6px; padding: 6px 10px; background: rgba(188,140,255,0.05); border-left: 3px solid var(--purple); font-style: italic; font-size: 11px;">
-            ${node['robos:narrative']}
-          </div>
-        ` : ''}
-      </div>
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>Scenarios & Step Definitions (${node['robos:scenarios'].length})</span>
-          <button class="btn btn-secondary" onclick="window.generateStepDefsForSelected()">⚡ Generate Step Defs (.js)</button>
-        </div>
-
-        ${node['robos:scenarios'].map(s => `
-          <div class="scenario-box">
-            <div class="scenario-header">
-              <span>${s['dcterms:title']}</span>
-              <span class="status-tag-pass">${s['oslc_qm:executionStatus'] || 'PASS'}</span>
-            </div>
-            <div class="step-list">
-              ${(s['robos:steps'] || []).map(st => `
-                <div class="step-row">
-                  <span class="step-keyword">${st.keyword}</span>
-                  <span class="step-text">${st.text}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  } else if (cat === 'service') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📦 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'])}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
-          </div>
-          <div>
-            <div class="field-label">API Contract</div>
-            <div class="field-value"><span class="type-badge type-contract">${(node['robos:implementsContract'] || '').replace(/.*:/, '')}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Outbound Dependencies</div>
-            <div class="field-value"><span class="status-tag-pass">3 HTTP Endpoints Mocked in Test Fabric</span></div>
-          </div>
-        </div>
-        <div style="margin-top: 8px; display: flex; gap: 8px;">
-          <button class="btn btn-primary" id="btn-open-fabric-service" onclick="window.openFabricForService()">🧪 Open Local Test Fabric for ${node['dcterms:title']}</button>
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'elearning') {
-    const modules = node['robos:modules'] || [];
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🎓 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'AI-synthesized interactive developer training curriculum.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Topic Domain</div>
-            <div class="field-value"><strong>${node['robos:topic'] || 'Architecture'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Difficulty & Duration</div>
-            <div class="field-value"><span class="type-badge type-contract">${node['robos:difficulty'] || 'Intermediate'} &middot; ${node['robos:estimatedDuration'] || '30 mins'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Target Audience</div>
-            <div class="field-value"><code>${node['robos:targetAudience'] || 'Engineers'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">GitOps Storage Location</div>
-            <div class="field-value"><code>${node['robos:gitopsFile'] || '.robos/elearning.yaml'}</code></div>
-          </div>
-          ${node['robos:teachesService'] ? `
-            <div>
-              <div class="field-label">Target Microservice</div>
-              <div class="field-value"><span class="type-badge type-service">${node['robos:teachesService'].replace(/.*:/, '')}</span></div>
-            </div>
-          ` : ''}
-          ${node['robos:teachesContract'] ? `
-            <div>
-              <div class="field-label">Enforced Contract</div>
-              <div class="field-value"><span class="type-badge type-contract">${node['robos:teachesContract'].replace(/.*:/, '')}</span></div>
-            </div>
-          ` : ''}
-        </div>
-        <div style="margin-top: 8px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.viewInGitOpsTab('elearning')">📁 View in .robos/ GitOps Tab</button>
-          <button class="btn btn-primary" onclick="console.log('Starting interactive lab session for: ' + ${JSON.stringify(node['dcterms:title'])})">🚀 Launch Interactive Lab</button>
-        </div>
-      </div>
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📚 Curriculum Modules & Hands-On Exercises (${modules.length})</span>
-          <span class="status-tag-pass">100% SHACL VERIFIED</span>
-        </div>
-        ${modules.map((m, idx) => `
-          <div class="elearning-module-card">
-            <div class="elearning-module-header">
-              <span class="elearning-module-title">${m.title || `Module ${idx + 1}`}</span>
-              <span class="elearning-module-duration">⏱️ ${m.durationMinutes || 15} mins</span>
-            </div>
-            ${m.overview ? `<div class="elearning-module-overview">${m.overview}</div>` : ''}
-            ${Array.isArray(m.labSteps) && m.labSteps.length > 0 ? `
-              <div class="elearning-lab-box">
-                <div style="font-weight: 700; margin-bottom: 4px; color: var(--accent);">🧪 Hands-On Lab Instructions:</div>
-                ${m.labSteps.map((step, sIdx) => `
-                  <div class="elearning-lab-step">
-                    <span class="elearning-lab-step-num">${sIdx + 1}.</span>
-                    <span>${step}</span>
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
-            ${Array.isArray(m.quiz) && m.quiz.length > 0 ? `
-              <div class="elearning-quiz-box">
-                <div style="font-weight: 700; margin-bottom: 4px; color: var(--purple);">💡 Knowledge Check:</div>
-                ${m.quiz.map(q => `
-                  <div><strong>Q:</strong> ${q.question}</div>
-                  <div style="color: var(--success); font-size: 10px; margin-top: 2px;"><strong>A:</strong> ${q.answer}</div>
-                `).join('')}
-              </div>
-            ` : ''}
-          </div>
-        `).join('')}
-      </div>
-    `;
-  } else if (cat === 'desktop-app') {
-    const winCfg = node['robos:windowConfig'] || {};
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🖥️ ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Local workstation desktop application.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Desktop Framework</div>
-            <div class="field-value"><strong>${node['robos:desktopFramework'] || 'Electron'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Technology Stack</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'Node.js'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Executable Binary</div>
-            <div class="field-value"><code>${node['robos:executableName'] || 'app-gui'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Window Dimensions</div>
-            <div class="field-value">${winCfg.defaultWidth || 1200} &times; ${winCfg.defaultHeight || 800} px</div>
-          </div>
-          <div>
-            <div class="field-label">Desktop Category</div>
-            <div class="field-value">${node['robos:desktopCategory'] || 'Development'}</div>
-          </div>
-        </div>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-primary" onclick="console.log('Launching desktop app: ' + ${JSON.stringify(node['dcterms:title'])})">🚀 Launch Desktop App</button>
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'console-app') {
-    const subcmds = node['robos:subcommands'] || [];
-    const flags = node['robos:globalFlags'] || [];
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>⌨️ ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Terminal CLI application.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">CLI Command</div>
-            <div class="field-value"><code>${node['robos:cliCommand'] || 'cli'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Technology Stack</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'Go / Cobra'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
-          </div>
-        </div>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>Subcommands & Operations (${subcmds.length})</span>
-        </div>
-        <table class="matrix-table" style="width: 100%;">
-          <thead>
-            <tr><th>Command</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            ${subcmds.map(s => `
-              <tr>
-                <td><code>${node['robos:cliCommand'] || 'cli'} ${s.name}</code></td>
-                <td>${s.description}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      ${flags.length > 0 ? `
-        <div class="inspector-card">
-          <div class="card-title">
-            <span>Global Flags & Options (${flags.length})</span>
-          </div>
-          <table class="matrix-table" style="width: 100%;">
-            <thead>
-              <tr><th>Flag</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              ${flags.map(f => `
-                <tr>
-                  <td><code>${f.flag}</code></td>
-                  <td>${f.description}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      ` : ''}
-    `;
-  } else if (cat === 'frontend-app') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🌐 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Single-page web frontend application.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Frontend Framework</div>
-            <div class="field-value"><strong>${node['robos:frontendFramework'] || 'React'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Build Tool / Bundler</div>
-            <div class="field-value"><code>${node['robos:buildTool'] || 'Vite'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Technology Stack</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'TypeScript'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Dev Server Port</div>
-            <div class="field-value"><code>:${node['robos:devServerPort'] || 3000}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
-          </div>
-        </div>
-        ${node['schema:browserRequirements'] ? `
-          <div style="margin-top: 10px; font-size: 11px; color: var(--text-dim);">
-            <strong>Browser Requirements:</strong> ${node['schema:browserRequirements']}
-          </div>
-        ` : ''}
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'pc-game') {
-    const platforms = Array.isArray(node['robos:targetPlatform']) ? node['robos:targetPlatform'].join(', ') : (node['robos:targetPlatform'] || 'Windows, Linux');
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🎮 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Interactive PC video game.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Game Engine</div>
-            <div class="field-value"><strong>${node['robos:gameEngine'] || 'Unreal Engine'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Target PC Platforms</div>
-            <div class="field-value">${platforms}</div>
-          </div>
-          <div>
-            <div class="field-label">Graphics API</div>
-            <div class="field-value"><code>${node['robos:graphicsApi'] || 'DirectX 12 / Vulkan'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Technology Stack</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'C++'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Play Mode</div>
-            <div class="field-value">${node['schema:playMode'] || 'SinglePlayer'}</div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-        </div>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'mobile-game') {
-    const platforms = Array.isArray(node['robos:platform']) ? node['robos:platform'].join(', ') : (node['robos:platform'] || 'iOS, Android');
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🕹️ ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Interactive mobile video game.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Game Engine</div>
-            <div class="field-value"><strong>${node['robos:gameEngine'] || 'Unity'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Mobile Platforms</div>
-            <div class="field-value">${platforms}</div>
-          </div>
-          <div>
-            <div class="field-label">Bundle Identifier</div>
-            <div class="field-value"><code>${node['robos:bundleId'] || 'com.robos.game'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Technology Stack</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:technology'] || 'C#'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Play Mode</div>
-            <div class="field-value">${node['schema:playMode'] || 'SinglePlayer'}</div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-        </div>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.openAppDocModal('${node['@id']}')">📝 Request Doc Updates</button>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'contract' && node['robos:contractYaml']) {
-    const endpoints = node['robos:endpoints'] || [];
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📄 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Protocol</div>
-            <div class="field-value"><strong>${node['robos:protocol'] || 'OpenAPI 3.1'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Specification Path</div>
-            <div class="field-value"><code>${node['robos:specFile'] || 'specs/contracts/api.yaml'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Repository</div>
-            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
-          </div>
-        </div>
-      </div>
-
-      ${endpoints.length > 0 ? `
-        <div class="inspector-card">
-          <div class="card-title">
-            <span>REST API Endpoints (${endpoints.length})</span>
-          </div>
-          <table class="matrix-table" style="width: 100%;">
-            <thead>
-              <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-            </thead>
-            <tbody>
-              ${endpoints.map(e => `
-                <tr>
-                  <td><span class="type-badge ${e.method === 'GET' ? 'type-service' : 'type-contract'}">${e.method}</span></td>
-                  <td><code>${e.path}</code></td>
-                  <td>${e.description}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      ` : ''}
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>OpenAPI 3.1 YAML Definition</span>
-        </div>
-        <pre class="json-pre">${node['robos:contractYaml']}</pre>
-      </div>
-    `;
-  } else if (cat === 'devops') {
-    const settings = node['robos:settings'] || {};
-    const creds = Array.isArray(node['robos:hasCredential']) ? node['robos:hasCredential'] : [];
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>☁️ ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Provider</div>
-            <div class="field-value"><strong>${node['robos:providerName'] || node['robos:provider'] || 'Custom Provider'}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Category</div>
-            <div class="field-value"><span class="type-badge type-service">${node['robos:categoryName'] || node['robos:category'] || 'DevOps'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Endpoint URL</div>
-            <div class="field-value"><code>${node['robos:endpointUrl'] || 'Cloud Provider'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">KGraph Package</div>
-            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'devops'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Status</div>
-            <div class="field-value"><span class="status-tag-pass">🟢 ${node['robos:status'] || 'connected'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Last Updated</div>
-            <div class="field-value">${node['robos:updatedAt'] ? new Date(node['robos:updatedAt']).toLocaleString() : 'Active'}</div>
-          </div>
-        </div>
-        <div style="margin-top: 10px; display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="window.testDevOpsIntegrationById('${node['@id']}', '${node['robos:provider'] || ''}')">⚡ Test Connection</button>
-          <button class="btn btn-danger" onclick="window.deleteDevOpsIntegrationById('${node['@id']}')">🗑️ Delete Integration</button>
-        </div>
-      </div>
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🔒 Password-Store Credentials (${creds.length})</span>
-          <span class="status-tag-pass">GPG ENCRYPTED</span>
-        </div>
-        <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px;">
-          Zero plaintext secrets in Knowledge Graph. Encrypted credentials reside inside standard pass tree:
-        </div>
-        ${creds.length > 0 ? creds.map(c => `
-          <div class="parsed-item" style="margin-bottom: 6px;">
-            <strong>🔑 ${c}</strong>
-            <span style="font-family: monospace; font-size: 10px; color: var(--accent);">GPG encrypted &middot; ~/.password-store/</span>
-          </div>
-        `).join('') : '<div style="color: var(--text-muted); font-size: 11px;">No credential nodes linked</div>'}
-      </div>
-
-      ${Object.keys(settings).length > 0 ? `
-        <div class="inspector-card">
-          <div class="card-title">
-            <span>⚙️ Configuration Settings</span>
-          </div>
-          <table class="matrix-table" style="width: 100%;">
-            <thead><tr><th>Key</th><th>Value</th></tr></thead>
-            <tbody>
-              ${Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `
-                <tr><td><code>${k}</code></td><td><code>${typeof v === 'object' ? JSON.stringify(v) : v}</code></td></tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      ` : ''}
-    `;
-  } else if (cat === 'pass-credential') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🔑 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          First-class Knowledge Graph secret reference pointing to encrypted local UNIX password store.
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Password Store Path</div>
-            <div class="field-value"><code>~/.password-store/${node['robos:passPath']}.gpg</code></div>
-          </div>
-          <div>
-            <div class="field-label">Storage Backend</div>
-            <div class="field-value"><span class="status-tag-pass">🔐 GPG pass CLI</span></div>
-          </div>
-          <div>
-            <div class="field-label">Credential Key Type</div>
-            <div class="field-value"><span class="type-badge type-contract">${node['robos:credentialType'] || 'secret'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">KGraph Package</div>
-            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'devops'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Last Rotated</div>
-            <div class="field-value">${node['robos:lastRotated'] ? new Date(node['robos:lastRotated']).toLocaleString() : 'N/A'}</div>
-          </div>
-          <div>
-            <div class="field-label">Plaintext Exposure</div>
-            <div class="field-value"><strong style="color: var(--success);">0% (Always Encrypted)</strong></div>
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'diagram') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📊 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'System architecture and sequence flow diagram.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Diagram Type</div>
-            <div class="field-value"><span class="type-badge type-contract">${(node['robos:diagramType'] || 'Sequence').toUpperCase()}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Tooltip & Summary</div>
-            <div class="field-value"><code>${node['robos:tooltip'] || node['dcterms:title']}</code></div>
-          </div>
-          <div>
-            <div class="field-label">KGraph Package</div>
-            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'documentation'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Source Space</div>
-            <div class="field-value"><code>${node['robos:sourceUrl'] || 'Confluence Wiki'}</code></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>Mermaid Syntax Flow</span>
-          <span class="status-tag-pass">100% SHACL VERIFIED</span>
-        </div>
-        <pre class="json-pre" style="color: #58a6ff; font-family: monospace; white-space: pre-wrap;">${node['robos:mermaidText'] || 'sequenceDiagram\n  autonumber\n  Customer->>Service: Request\n  Service-->>Customer: Response'}</pre>
-      </div>
-    `;
-  } else if (cat === 'adr') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📋 ${node['dcterms:title']}</span>
-          <span class="status-tag-pass">${(node['robos:status'] || 'accepted').toUpperCase()}</span>
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">ADR Number</div>
-            <div class="field-value"><strong>ADR-${String(node['robos:adrNumber'] || 1).padStart(3, '0')}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Governance Status</div>
-            <div class="field-value"><span class="status-tag-pass">${node['robos:status'] || 'accepted'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Context</div>
-            <div class="field-value">${node['robos:context'] || 'Architecture decision context.'}</div>
-          </div>
-          <div>
-            <div class="field-label">Decision</div>
-            <div class="field-value"><strong style="color: var(--accent);">${node['robos:decision'] || node['dcterms:description']}</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Consequences</div>
-            <div class="field-value">${node['robos:consequences'] || 'Standard system consequences.'}</div>
-          </div>
-          <div>
-            <div class="field-label">Source Reference</div>
-            <div class="field-value"><code>${node['robos:sourceUrl'] || node['robos:sourcePath'] || 'Confluence / Local'}</code></div>
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'documentation') {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>📖 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Living documentation page.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Documentation Category</div>
-            <div class="field-value"><span class="type-badge type-contract">${(node['robos:category'] || 'Architecture').toUpperCase()}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Markdown Storage Path</div>
-            <div class="field-value"><code>${node['robos:docPath'] || 'docs/'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">KGraph Package</div>
-            <div class="field-value"><span class="type-badge type-team">📦 ${node['robos:package'] || 'documentation'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Source URL</div>
-            <div class="field-value"><code>${node['robos:sourceUrl'] || 'Confluence Space'}</code></div>
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (cat === 'organization') {
-    const rules = node['robos:agentRules'] || [];
-    const repos = node['robos:hasRepository'] || [];
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>🏢 ${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          ${node['dcterms:description'] || 'Enterprise Git Forge Organization.'}
-        </div>
-        <div class="grid-2col">
-          <div>
-            <div class="field-label">Organization Slug</div>
-            <div class="field-value"><code>${node['robos:orgName'] || 'org'}</code></div>
-          </div>
-          <div>
-            <div class="field-label">Forge Type & Visibility</div>
-            <div class="field-value"><span class="type-badge type-service">${(node['robos:forgeType'] || 'GitHub').toUpperCase()}</span> &middot; <span class="status-tag-pass">${node['robos:visibility'] || 'Internal'}</span></div>
-          </div>
-          <div>
-            <div class="field-label">Member Repositories</div>
-            <div class="field-value"><strong>${repos.length} Repositories Registered</strong></div>
-          </div>
-          <div>
-            <div class="field-label">Forge URL</div>
-            <div class="field-value"><code>${node['robos:url'] || 'https://github.com'}</code></div>
-          </div>
-        </div>
-      </div>
-
-      ${rules.length > 0 ? `
-        <div class="inspector-card">
-          <div class="card-title">
-            <span>🤖 Inherited Agent Rules (${rules.length})</span>
-            <span class="status-tag-pass">ENFORCED FOR ALL AGENTS</span>
-          </div>
-          <div class="card-desc" style="margin-bottom: 6px;">
-            All AI agents working on repositories in this organization automatically inherit and obey these rules:
-          </div>
-          <ul style="margin: 0; padding-left: 20px; font-size: 11px; line-height: 1.6;">
-            ${rules.map(r => `<li><span style="color: var(--accent); font-weight: 600;">Rule:</span> ${r}</li>`).join('')}
-          </ul>
-        </div>
-      ` : ''}
-    `;
-  } else {
-    container.innerHTML = `
-      <div class="inspector-card">
-        <div class="card-title">
-          <span>${node['dcterms:title']}</span>
-          <span class="type-badge ${badge.cls}">${badge.label}</span>
-        </div>
-        <div class="card-desc">
-          <code>${node['@id']}</code>
-        </div>
-        <div class="grid-2col">
-          ${Object.entries(node).filter(([k]) => !k.startsWith('@') && k !== 'dcterms:title').map(([k, v]) => `
-            <div>
-              <div class="field-label">${k}</div>
-              <div class="field-value">${typeof v === 'object' ? JSON.stringify(v) : v}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  if (isAppOrProjectNode(node)) {
-    container.insertAdjacentHTML('beforeend', renderAppELearningAndDocCardsHtml(node));
-  }
-
-  container.insertAdjacentHTML('afterbegin', renderNodeActionBarHtml(node));
-}
-
-window.selectGitOpsFile = function(fileKey) {
-  activeGitOpsFile = fileKey;
-  renderInspector();
-};
-
-window.validateGitOpsTree = function() {
-  gitOpsValidated = true;
-  renderInspector();
-  return { valid: true, errorCount: 0 };
-};
-
-window.seekChapter = function(index) {
-  activeChapterIndex = index;
-  renderInspector();
-};
-
-window.exportVideoArtifact = function() {
-  alert('Walkthrough video and JSON metadata exported to ~/.robos/development/walkthroughs/video-generator/');
-};
-
-window.runEDDAction = async function() {
-  eddState = await window.sdlcGraph.runEDD({
-    featureTitle: 'Multi-Step Form Wizard Requirement',
-    scenarioTitle: 'Scenario: Successfully submitting all form steps',
-    targetService: 'forms-api',
-  });
-  renderInspector();
-  return eddState;
-};
-
-window.openFabricForService = function() {
-  currentTab = 'fabric';
+  try { await ensureInspectorRelations(); } catch (error) { if(revision===inspectorRevision) { container.replaceChildren(inspectorElement('p', `Unable to read graph relationships: ${error.message}`)); } return; }
+  if (revision !== inspectorRevision) return;
+  currentTab = inspectorCapabilities.selectTab(currentTab, node || {}, nodes, inspectorRelationIndex);
   updateTabUI();
-  renderInspector();
-};
-
-window.probeMock = async function(depName, idx = 0) {
-  let res;
-  if (depName.includes('Tax')) {
-    res = await window.sdlcGraph.dispatchFabric('GET', '/v2/forms/2026/vendor-1099');
-  } else if (depName.includes('Stripe')) {
-    res = await window.sdlcGraph.dispatchFabric('POST', '/v1/charges', { amount: 5000 });
-  } else {
-    res = await window.sdlcGraph.dispatchFabric('POST', '/oauth/token');
+  container.replaceChildren();
+  if (!node) { container.append(inspectorElement('p', 'No node selected.')); return; }
+  if (inspectorSelectedContext !== node['@id']) { queryPathFrom = node['@id']; queryPathTo = null; queryPathResult = null; structuredQueryResults = null; inspectorSelectedContext = node['@id']; }
+  const capability = inspectorCapabilities.capabilities(node, nodes, inspectorRelationIndex);
+  if (currentTab === 'rdf') { container.append(inspectorElement('pre', JSON.stringify(node, null, 2), 'json-pre')); return; }
+  if (currentTab === 'topology') { await renderTopologyTab(container, node); return; }
+  if (currentTab === 'impact') { await renderImpactTab(container, node); return; }
+  if (currentTab === 'query') { await renderQueryTab(container, node); return; }
+  if (currentTab === 'documentation') {
+    for (const doc of capability.documents) {
+      const card = inspectorElement('section', undefined, 'inspector-card');
+      card.append(inspectorElement('h3', doc.kind === 'path' ? 'Source document' : doc.kind === 'url' ? 'Documentation link' : doc.kind === 'node' ? 'Documentation record' : 'Recorded documentation'));
+      if (doc.kind === 'path') {
+        card.classList.add('source-document-card');
+        card.append(inspectorElement('p', 'Source reference; content not embedded. File contents have not been loaded.'));
+        for (const record of doc.sourceEvidence || []) {
+          const details = inspectorElement('dl');
+          for (const [key, label] of [['repository','Repository'],['line','Line'],['revision','Recorded revision']]) if(record[key] !== undefined) details.append(inspectorElement('dt',label),inspectorElement('dd',record[key]));
+          card.append(details);
+        }
+        for (const url of doc.recordedSourceLinks || []) { const link = inspectorElement('a', 'Open recorded revision on GitHub'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; card.append(link); }
+        if (doc.sourceEvidence?.length) {
+          const button = inspectorElement('button', 'View Source Evidence', 'btn btn-secondary');
+          button.classList.add('view-source-evidence');
+          button.addEventListener('click', async () => { if(doc.sourceNodeId !== selectedNodeId) await selectNode(doc.sourceNodeId); await window.switchTab('evidence'); });
+          card.append(button);
+        }
+      }
+      if (doc.kind === 'node') appendInspectLink(card, doc.id, doc.value);
+      else if (doc.kind === 'url') { const link = inspectorElement('a', doc.value); link.href = doc.value; link.target = '_blank'; link.rel = 'noopener noreferrer'; card.append(link); }
+      else card.append(inspectorElement('pre', doc.value, 'json-pre'));
+      container.append(card);
+    }
+    return;
   }
-
-  activeProbedResponse = {
-    dependency: depName,
-    status: res.status || 200,
-    headers: res.headers || { 'content-type': 'application/json' },
-    mockResponseBody: res.body,
-    timestamp: new Date().toISOString(),
-    source: 'Contract-First Mock Stub Generator (Prism / WireMock)',
-  };
-
-  renderInspector();
-  return activeProbedResponse;
-};
-
-window.resetFabricDemo = async function() {
-  const res = await window.sdlcGraph.resetFabric();
-  activeProbedResponse = null;
-  renderInspector();
-  return res;
-};
+  if (currentTab === 'evidence') {
+    container.append(inspectorElement('p', 'Recorded source evidence. Paths identify source locations; file contents have not been loaded.'));
+    capability.evidence.forEach((evidence, i) => {
+      const card = inspectorElement('section', undefined, 'inspector-card');
+      card.append(inspectorElement('h3', `Evidence ${i + 1}`)); appendRecordedFields(card, evidence); container.append(card);
+    });
+    return;
+  }
+  const heading = inspectorElement('section', undefined, 'inspector-card');
+  heading.append(inspectorElement('h2', node['dcterms:title'] || node['@id']), inspectorElement('code', node['@id']));
+  const result = classification.resolveClassification(node);
+  heading.append(inspectorElement('p', `${result.categories.map(c=>c.label).join(', ') || 'Unclassified'} · ${result.status}`));
+  for (const warning of result.warnings) heading.append(inspectorElement('p', warning.message, 'classification-warning'));
+  container.append(heading);
+  const relationSection = inspectorElement('section', undefined, 'inspector-card'); relationSection.id = 'overview-relationships';
+  relationSection.append(inspectorElement('h3', 'Recorded relationships')); container.append(relationSection);
+  appendRecordedFields(container, node);
+  try {
+    const related = capability.relations;
+    if (!related.length) relationSection.append(inspectorElement('p', 'No internal relationships recorded for this node.'));
+    for (const edge of related) {
+      const outgoing = edge.from === node['@id'], targetId = outgoing ? edge.to : edge.from;
+      const row = inspectorElement('div');
+      row.append(inspectorElement('span', `${outgoing ? 'Outgoing' : 'Incoming'} · ${edge.predicate} · ${edge.kind} `));
+      appendInspectLink(row, targetId, nodes.find(n=>n['@id']===targetId)?.['dcterms:title'] || targetId); relationSection.append(row);
+    }
+  } catch (error) { if(revision===inspectorRevision) relationSection.append(inspectorElement('p', `Relationships unavailable: ${error.message}`)); }
+}
 
 window.generateStepDefsForSelected = async function() {
   const node = nodes.find(n => n['@id'] === selectedNodeId);
@@ -1754,7 +385,7 @@ window.switchBranch = async function(branchName) {
   renderNodeList();
   if (nodes.length > 0) {
     selectNode(nodes[0]['@id']);
-  }
+  } else { selectedNodeId = null; queryPathFrom = null; queryPathTo = null; queryPathResult = null; await renderInspector(); }
   return res;
 };
 
@@ -2023,21 +654,7 @@ window.setImpactDirection = function(dir) {
 
 async function renderImpactTab(container, node) {
   const blast = await window.sdlcGraph.getImpact(node['@id'], impactDepth);
-  const count = blast ? (blast.blastRadiusCount || (blast.dependents ? blast.dependents.length : 0)) : 0;
-  
-  let riskClass = 'risk-low';
-  let riskText = 'LOW IMPACT';
-  if (count >= 5) {
-    riskClass = 'risk-critical';
-    riskText = 'CRITICAL BLAST RADIUS';
-  } else if (count >= 3) {
-    riskClass = 'risk-high';
-    riskText = 'HIGH IMPACT';
-  } else if (count >= 1) {
-    riskClass = 'risk-medium';
-    riskText = 'MODERATE IMPACT';
-  }
-
+  if (currentTab !== 'impact' || (selectedNodeId && selectedNodeId !== node['@id'])) return;
   const items = impactDirection === 'downstream'
     ? (blast && blast.dependents ? blast.dependents : [])
     : (blast && blast.dependencies ? blast.dependencies : []);
@@ -2047,16 +664,16 @@ async function renderImpactTab(container, node) {
       <div class="impact-summary-card">
         <div>
           <div style="font-size: 14px; font-weight: 700; color: var(--text-bright);">
-            Impact Analysis & Blast Radius: <span style="color: var(--accent);">${node['dcterms:title']}</span>
+            Impact Analysis & Blast Radius: <span style="color: var(--accent);">${escHtml(node['dcterms:title'])}</span>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-            <code>${node['@id']}</code> &middot; Package: <code>${node['robos:package'] || 'services'}</code>
+            <code>${escHtml(node['@id'])}</code> &middot; Package: <code>${escHtml(node['robos:package'] || 'services')}</code>
           </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <div class="impact-risk-badge ${riskClass}">
-            <span>⚠️</span>
-            <span>${riskText} (${count} Dependents)</span>
+          <div class="impact-risk-badge ">
+
+            <span>${items.length} modeled ${impactDirection === 'upstream' ? 'dependencies' : 'dependents'} · within ${impactDepth} hops</span>
           </div>
           <select class="filter-type-select" onchange="window.setImpactDepth(this.value)">
             <option value="1" ${impactDepth === 1 ? 'selected' : ''}>Depth: 1 Hop</option>
@@ -2092,11 +709,11 @@ async function renderImpactTab(container, node) {
                 <span class="impact-depth-pill">Level ${item.depth}</span>
                 <span class="type-badge ${targetBadge.cls}">${targetBadge.label}</span>
                 <div>
-                  <div style="font-weight: 700; color: var(--text-bright); font-size: 11.5px;">${targetNode['dcterms:title'] || targetNode['@id']}</div>
-                  <div style="font-size: 9.5px; color: var(--text-muted); font-family: monospace;">${targetNode['@id']} &middot; via <code>${item.predicate || item.via}</code></div>
+                  <div style="font-weight: 700; color: var(--text-bright); font-size: 11.5px;">${escHtml(targetNode['dcterms:title'] || targetNode['@id'])}</div>
+                  <div style="font-size: 9.5px; color: var(--text-muted); font-family: monospace;">${escHtml(targetNode['@id'])} &middot; via <code>${escHtml(item.predicate || item.via)}</code></div>
                 </div>
               </div>
-              <button class="btn btn-secondary btn-sm" onclick="window.selectNode('${targetNode['@id']}')">🔍 Inspect Node</button>
+              <button class="btn btn-secondary btn-sm" data-inspect-id="${escHtml(targetNode['@id'])}">🔍 Inspect Node</button>
             </div>
           `;
         }).join('')}
@@ -2117,7 +734,10 @@ window.setPathTo = function(id) {
 
 window.runFindPath = async function() {
   if (!queryPathFrom || !queryPathTo) return;
-  queryPathResult = await window.sdlcGraph.findPath(queryPathFrom, queryPathTo, 6);
+  const from = queryPathFrom, to = queryPathTo, selected = selectedNodeId;
+  const result = await window.sdlcGraph.findPath(from, to, 6);
+  if (currentTab !== 'query' || selected !== selectedNodeId || from !== queryPathFrom || to !== queryPathTo) return;
+  queryPathResult = result;
   const resultArea = document.getElementById('path-result-area');
   if (resultArea) {
     resultArea.innerHTML = renderPathChainHtml(queryPathResult);
@@ -2154,9 +774,9 @@ function renderPathChainHtml(pathRes) {
         const badge = getTypeBadge(hNode);
         const isLast = idx === pathRes.length - 1;
         return `
-          <div class="path-hop-card" onclick="window.selectNode('${hop.id}')">
+          <div class="path-hop-card" data-inspect-id="${escHtml(hop.id)}">
             <div style="font-size: 9px; color: var(--accent); font-weight: 700;">Hop ${idx + 1}</div>
-            <div style="font-weight: 700; font-size: 11px;">${hNode['dcterms:title'] || hop.id}</div>
+            <div style="font-weight: 700; font-size: 11px;">${escHtml(hNode['dcterms:title'] || hop.id)}</div>
             <span class="type-badge ${badge.cls}" style="margin-top: 2px;">${badge.label}</span>
           </div>
           ${!isLast ? `<span class="path-hop-arrow">➔</span>` : ''}
@@ -2187,11 +807,11 @@ function renderStructuredQueryTableHtml(results) {
           const badge = getTypeBadge(n);
           return `
             <tr>
-              <td><strong>${n['dcterms:title']}</strong><br><code style="font-size: 9px;">${n['@id']}</code></td>
+              <td><strong>${escHtml(n['dcterms:title'])}</strong><br><code style="font-size: 9px;">${escHtml(n['@id'])}</code></td>
               <td><span class="type-badge ${badge.cls}">${badge.label}</span></td>
-              <td><span class="node-pkg-badge">📦 ${n['robos:package'] || 'core'}</span></td>
-              <td><code>${nodeText(n['robos:repository'], 'unrecorded')}</code></td>
-              <td><button class="btn btn-secondary btn-sm" onclick="window.selectNode('${n['@id']}')">Select</button></td>
+              <td><span class="node-pkg-badge">📦 ${escHtml(n['robos:package'] || 'core')}</span></td>
+              <td><code>${escHtml(nodeText(n['robos:repository'], 'unrecorded'))}</code></td>
+              <td><button class="btn btn-secondary btn-sm" data-inspect-id="${escHtml(n['@id'])}">Select</button></td>
             </tr>
           `;
         }).join('')}
@@ -2201,8 +821,8 @@ function renderStructuredQueryTableHtml(results) {
 }
 
 async function renderQueryTab(container, selectedNode) {
-  if (!queryPathFrom) queryPathFrom = nodes[0] ? nodes[0]['@id'] : '';
-  if (!queryPathTo) queryPathTo = selectedNode ? selectedNode['@id'] : (nodes[1] ? nodes[1]['@id'] : '');
+  if (!queryPathFrom) queryPathFrom = selectedNode ? selectedNode['@id'] : '';
+  if (!queryPathTo) queryPathTo = nodes.find(n => n['@id'] !== queryPathFrom)?.['@id'] || queryPathFrom;
 
   container.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -2218,14 +838,14 @@ async function renderQueryTab(container, selectedNode) {
           <div style="flex: 1;">
             <label class="field-label">Source Node (From):</label>
             <select id="path-from-select" class="input-text" onchange="window.setPathFrom(this.value)">
-              ${nodes.map(n => `<option value="${n['@id']}" ${n['@id'] === queryPathFrom ? 'selected' : ''}>${n['dcterms:title']} (${n['@id'].split(':').pop()})</option>`).join('')}
+              ${nodes.map(n => `<option value="${escHtml(n['@id'])}" ${n['@id'] === queryPathFrom ? 'selected' : ''}>${escHtml(n['dcterms:title'])} (${escHtml(n['@id'].split(':').pop())})</option>`).join('')}
             </select>
           </div>
           <span style="margin-top: 18px; color: var(--accent); font-size: 18px;">➔</span>
           <div style="flex: 1;">
             <label class="field-label">Target Node (To):</label>
             <select id="path-to-select" class="input-text" onchange="window.setPathTo(this.value)">
-              ${nodes.map(n => `<option value="${n['@id']}" ${n['@id'] === queryPathTo ? 'selected' : ''}>${n['dcterms:title']} (${n['@id'].split(':').pop()})</option>`).join('')}
+              ${nodes.map(n => `<option value="${escHtml(n['@id'])}" ${n['@id'] === queryPathTo ? 'selected' : ''}>${escHtml(n['dcterms:title'])} (${escHtml(n['@id'].split(':').pop())})</option>`).join('')}
             </select>
           </div>
           <button class="btn btn-primary" style="margin-top: 18px; padding: 6px 12px;" onclick="window.runFindPath()">⚡ Trace Path</button>
@@ -2845,10 +1465,11 @@ window.validateSHACL = async function() {
 };
 
 function updateTabUI() {
-  const tabs = ['visual', 'topology', 'impact', 'query', 'gitops', 'edd', 'video', 'fabric', 'traceability', 'rdf'];
-  for (const t of tabs) {
-    const el = document.getElementById(`tab-btn-${t}`);
-    if (el) el.classList.toggle('active', currentTab === t);
+  const node = nodes.find(n=>n['@id'] === selectedNodeId) || nodes[0] || {};
+  const supported = inspectorCapabilities.capabilities(node, nodes, inspectorRelationIndex).tabs;
+  for (const tab of ['visual','topology','impact','query','documentation','evidence','rdf']) {
+    const el = document.getElementById(`tab-btn-${tab}`);
+    if (el) { el.hidden = !supported.includes(tab); el.classList.toggle('active', currentTab === tab); }
   }
 }
 
@@ -3044,47 +1665,17 @@ if (btnSubmitIngest) btnSubmitIngest.addEventListener('click', () => window.subm
 const btnRunGitSync = document.getElementById('btn-run-ingest-gitprojects');
 if (btnRunGitSync) btnRunGitSync.addEventListener('click', () => window.runIngestGitProjects());
 
-document.getElementById('tab-btn-gitops').addEventListener('click', () => {
-  currentTab = 'gitops';
-  updateTabUI();
-  renderInspector();
-});
-
-document.getElementById('tab-btn-edd').addEventListener('click', () => {
-  currentTab = 'edd';
-  updateTabUI();
-  renderInspector();
-});
-
-document.getElementById('tab-btn-video').addEventListener('click', () => {
-  currentTab = 'video';
-  updateTabUI();
-  renderInspector();
-});
-
-document.getElementById('tab-btn-fabric').addEventListener('click', () => {
-  currentTab = 'fabric';
-  updateTabUI();
-  renderInspector();
-});
-
-document.getElementById('tab-btn-traceability').addEventListener('click', () => {
-  currentTab = 'traceability';
-  updateTabUI();
-  renderInspector();
-});
-
-document.getElementById('tab-btn-rdf').addEventListener('click', () => {
-  currentTab = 'rdf';
-  updateTabUI();
-  renderInspector();
-});
-
+for (const tab of ['documentation', 'evidence', 'rdf']) document.getElementById(`tab-btn-${tab}`).addEventListener('click', () => window.switchTab(tab));
 window.switchTab = function(tabName) {
-  currentTab = tabName;
+  const node = nodes.find(n=>n['@id'] === selectedNodeId) || nodes[0] || {};
+  currentTab = inspectorCapabilities.selectTab(tabName, node, nodes, inspectorRelationIndex);
   updateTabUI();
-  renderInspector();
+  return renderInspector();
 };
+document.getElementById('inspector-content').addEventListener('click', event => {
+  const button = event.target.closest('[data-inspect-id]');
+  if (button) selectNode(button.dataset.inspectId);
+});
 
 document.getElementById('btn-copilot-generate').addEventListener('click', () => {
   window.generateCoPilot();
@@ -3106,12 +1697,7 @@ document.getElementById('btn-validate-shacl').addEventListener('click', () => {
 
 let currentDocSyncPrompt = null;
 
-window.viewInGitOpsTab = function(fileKey = 'elearning') {
-  currentTab = 'gitops';
-  activeGitOpsFile = fileKey;
-  updateTabUI();
-  renderInspector();
-};
+window.viewInGitOpsTab = function() { return window.switchTab('visual'); };
 
 window.openELearningModal = function() {
   const modal = document.getElementById('elearning-modal');

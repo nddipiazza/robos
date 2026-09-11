@@ -88,9 +88,12 @@ test('real Electron classification tree, filters, custom types, persistence and 
     assert.match(await page.locator('.impact-tree-list').textContent(), /data:store/);
     assert.match(await page.locator('.impact-tree-list').textContent(), /service:worker/);
     await page.screenshot({ path: path.join(proof, '03-upstream.png') });
-    await step('#node-urn_example_custom_unknown', 'An unregistered node remains selectable; absent edges do not establish safety.', el => el.click());
+    await step('[onclick="window.setImpactDirection(\'downstream\')"]', 'An empty modeled direction does not establish safety.', el => el.click());
     assert.match(await page.locator('.impact-tree-list').textContent(), /not a safety guarantee/);
     assert.doesNotMatch(await page.locator('.impact-tree-list').textContent(), /safe to (change|modify)/i);
+    await step('#node-urn_example_custom_unknown', 'An unregistered isolated node remains selectable and returns to Overview.', el => el.click());
+    assert.match(await page.locator('#tab-btn-visual').getAttribute('class'), /active/);
+    assert.equal(await page.locator('#tab-btn-impact').isVisible(), false);
     await page.screenshot({ path: path.join(proof, '04-unknown.png') });
     assert.equal(hash(ws.read()), before, 'read-only viewing preserves declared and inferred distinction');
     assert.deepEqual(errors, []);

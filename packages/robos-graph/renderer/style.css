@@ -1751,3 +1751,11 @@ button.node-group-header { width: 100%; text-align: left; color: inherit; font: 
 .nodes-panel-header { flex-direction: column; align-items: stretch; gap: 8px; }
 .nodes-panel-header .panel-header-actions { width: 100%; min-width: 0; }
 .nodes-panel-header .group-mode-toggle { flex-wrap: wrap; max-width: 100%; }
+
+/* Recorded documentation stays readable against the inspector's dark surface. */
+.inspector-content a { color: #58d5e2; text-decoration: underline; }
+.inspector-content a:focus-visible { outline: 2px solid #58d5e2; outline-offset: 3px; }
+.source-document-card dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; }
+.source-document-card dt { color: var(--text-muted); }
+.source-document-card dd { margin: 0; overflow-wrap: anywhere; }
+.source-document-card .view-source-evidence { display: block; margin-top: 12px; }

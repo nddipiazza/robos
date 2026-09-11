@@ -103,6 +103,11 @@ Kube Studio can browse infrastructure declarations and their source evidence fro
 the same graph workspace. See [dependency workflows](packages/robos-graph/WORKSPACES.md#dependency-evidence-and-impact)
 for commands, supported extraction and interpretation limits.
 
+The object inspector shows recorded fields and JSON-LD. Documentation, source
+evidence, topology and dependency tabs appear only when the selected object has
+the corresponding data. Unrelated demo workflows and fabricated verification
+claims have been removed; see the [tab audit](packages/robos-graph/INSPECTOR.md).
+
 ## 🧬 The Paradigm: Knowledge Graph-First (KGraph-First) Application Generation
 
 In modern software engineering:

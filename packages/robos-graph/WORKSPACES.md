@@ -260,3 +260,16 @@ slate dashed arrows identify other references. Neighborhood, package and all-nod
 scopes prioritize connected nodes and disclose the 48-node/160-link display limits.
 Use a narrower scope for detail. Top-to-bottom and left-to-right modes route arrows
 around boxes; labels and hover titles expose predicates and endpoints.
+
+## Object inspector
+
+Overview displays recorded properties and graph references without invented
+owners, defaults, runtime status or test results. JSON-LD displays the actual
+selected node. Documentation and Source Evidence are conditional on recorded
+content/references and evidence respectively; source paths are references, not
+embedded file contents. Relationship tabs require actual modeled relationships.
+Switching to an object that does not support the active tab returns to Overview.
+
+The inspector no longer includes the static GitOps tree, autonomous execution
+demo, walkthrough video, local test fabric or global traceability demo. These
+were not evidence about the selected object. See [the audit](INSPECTOR.md).
