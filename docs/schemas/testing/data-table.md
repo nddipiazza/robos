@@ -60,12 +60,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Testing & behavior. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`robos:tableRows`** | Table Rows | `1..*` | `Array of Arrays` | Data Table must specify data rows. |
-| **`robos:step`** | step | `1..*` | `xsd:string` | Data Table must link to parent scenario step. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`robos:tableRows`** | Table Rows | `1..*` | `Array of Arrays` | Testing & behavior | Data Table must specify data rows. |
+| **`robos:step`** | step | `1..*` | `xsd:string` | Testing & behavior | Data Table must link to parent scenario step. |
 
 ---
 

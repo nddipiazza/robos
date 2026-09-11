@@ -129,6 +129,7 @@ h1 {
 }
 
 .btn-primary { background-color: #238636; color: #ffffff; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-secondary { background: var(--bg-card); border-color: var(--border); color: var(--text-bright); }
 
 .copilot-bar {
@@ -160,36 +161,47 @@ h1 {
 .btn-apply { background: #238636; color: #ffffff; }
 .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
 
-#stat-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-}
-
-.stat-num {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.stat-label {
-  font-size: 9px;
+/* Persistent graph context; counts describe the full graph, not filtered rows. */
+#graph-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 30px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-darker);
   color: var(--text-muted);
-  text-transform: uppercase;
-  margin-top: 1px;
+  font-size: 11px;
+  user-select: text;
+}
+.graph-status-name {
+  flex: 0 1 auto;
+  max-width: 30%;
+  min-width: 0;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.graph-status-path { flex: 1 1 auto; min-width: 0; }
+.graph-status-name, .graph-status-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-status-count { flex: 0 0 auto; white-space: nowrap; }
+.graph-navigation { display: flex; gap: 4px; flex-shrink: 0; }
+.graph-navigation .btn { padding: 5px 9px; font-size: 16px; line-height: 1; }
+.graph-navigation .btn:disabled { opacity: 0.4; cursor: default; }
+@media (max-width: 700px) {
+  #graph-status-bar { flex-wrap: wrap; gap: 5px 12px; }
+  .graph-status-path { order: 1; flex-basis: 100%; }
+  .graph-status-name { max-width: none; flex: 1 1 auto; }
 }
 
 .main-content {
   flex: 1;
+  min-height: 0;
   padding: 10px 16px;
   overflow: hidden;
   display: flex;
@@ -197,8 +209,8 @@ h1 {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 12px;
+  grid-template-columns: var(--nodes-width, 360px) 12px minmax(0, 1fr);
+  gap: 0;
   width: 100%;
   height: 100%;
 }
@@ -324,7 +336,9 @@ h1 {
 }
 
 .search-input-wrap {
-  flex: 1;
+  flex: 1 0 260px;
+  min-width: min(260px, 100%);
+  max-width: 100%;
   position: relative;
   display: flex;
   align-items: center;
@@ -1739,3 +1753,43 @@ h1 {
   font-size: 11px;
 }
 
+
+/* Classification remains visible independently of grouping and collapse state. */
+.node-classification { color: var(--accent, #00bcd4); font-size: 11px; margin-top: 5px; }
+.classification-warning { color: #f0bd67; font-size: 11px; margin-top: 4px; overflow-wrap: anywhere; }
+button.node-group-header { width: 100%; text-align: left; color: inherit; font: inherit; border: 0; }
+.nodes-panel-header .panel-header-actions { flex-wrap: wrap; }
+.filter-search-row { flex-wrap: wrap; }
+.node-item .type-badge { white-space: normal; overflow-wrap: anywhere; }
+.nodes-panel-header { flex-direction: column; align-items: stretch; gap: 8px; }
+.nodes-panel-header .panel-header-actions { width: 100%; min-width: 0; }
+.nodes-panel-header .group-mode-toggle { flex-wrap: wrap; max-width: 100%; }
+
+/* Recorded documentation stays readable against the inspector's dark surface. */
+.inspector-content a { color: #58d5e2; text-decoration: underline; }
+.inspector-content a:focus-visible { outline: 2px solid #58d5e2; outline-offset: 3px; }
+.source-document-card dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; }
+.source-document-card dt { color: var(--text-muted); }
+.source-document-card dd { margin: 0; overflow-wrap: anywhere; }
+.source-document-card .view-source-evidence { display: block; margin-top: 12px; }
+
+/* The full gap is a pointer/keyboard target, with a visible central grip. */
+#nodes-resizer { cursor: col-resize; touch-action: none; position: relative; outline: none; }
+#nodes-resizer::after { content: ''; position: absolute; top: 0; bottom: 0; left: 5px; width: 2px; background: var(--border); border-radius: 2px; }
+#nodes-resizer:hover::after, #nodes-resizer:focus-visible::after,
+#nodes-resizer.resizing::after { background: var(--accent); width: 4px; left: 4px; }
+.workspace-grid > .panel { min-width: 0; }
+body.resizing-nodes { cursor: col-resize; user-select: none; }
+
+.schema-group-view { padding: 16px; min-width: 0; }
+.schema-group-view h2 { margin: 0 0 14px; }
+.schema-fields { margin: 12px 0; }
+.schema-property { display: grid; grid-template-columns: minmax(120px, 24%) minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.schema-property dt { color: var(--text-muted); font-weight: 600; }
+.schema-property dd { margin: 0; min-width: 0; }
+.schema-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+.schema-value ul { margin: 0; padding-left: 20px; }
+.schema-value a { color: var(--accent); }
+.schema-related-node > code { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+.schema-relation-context, .schema-unresolved { color: var(--text-muted); font-size: 12px; }
+.inspector-tabs { flex-wrap: wrap; flex-shrink: 0; }

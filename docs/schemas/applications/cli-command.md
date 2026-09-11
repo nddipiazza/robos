@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | CLI Command must have a title. |
-| **`robos:commandName`** | CLI Command Name | `1..*` | `xsd:string` | CLI Command must declare command name. |
-| **`robos:app`** | Parent Application | `1..*` | `URI (robos:FrontEndApp | robos:DesktopApp | robos:ConsoleApp)` | CLI Command must link to parent console application. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | CLI Command must have a title. |
+| **`robos:commandName`** | CLI Command Name | `1..*` | `xsd:string` | Applications & entry points | CLI Command must declare command name. |
+| **`robos:app`** | Parent Application | `1..*` | `URI (robos:FrontEndApp | robos:DesktopApp | robos:ConsoleApp)` | Applications & entry points | CLI Command must link to parent console application. |
 
 ---
 

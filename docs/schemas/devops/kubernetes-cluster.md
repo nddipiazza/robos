@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Kubernetes Cluster must have a title or display name. |
-| **`robos:provider`** | Backend Provider | `1..*` | `xsd:string` | Kubernetes Cluster must declare provider (eks, gke, aks, minikube, k3s, on-prem). |
-| **`robos:apiEndpoint`** | apiEndpoint | `1..*` | `xsd:string` | Kubernetes Cluster must specify API server endpoint URL. |
-| **`robos:clusterContext`** | clusterContext | `1..*` | `xsd:string` | Kubernetes Cluster must specify kubeconfig context name. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Kubernetes Cluster must have a title or display name. |
+| **`robos:provider`** | Backend Provider | `1..*` | `xsd:string` | Infrastructure & delivery | Kubernetes Cluster must declare provider (eks, gke, aks, minikube, k3s, on-prem). |
+| **`robos:apiEndpoint`** | apiEndpoint | `1..*` | `xsd:string` | Infrastructure & delivery | Kubernetes Cluster must specify API server endpoint URL. |
+| **`robos:clusterContext`** | clusterContext | `1..*` | `xsd:string` | Infrastructure & delivery | Kubernetes Cluster must specify kubeconfig context name. |
 
 ---
 

@@ -292,7 +292,7 @@ async function main() {
           if (isJson) {
             console.log(JSON.stringify(pathRes, null, 2));
           } else if (pathRes) {
-            console.log(`\n🛤️ Path found between ${flags['path-from']} and ${flags['path-to']} (${pathRes.length} hops):\n`);
+            console.log(`\n🛤️ Path found between ${flags['path-from']} and ${flags['path-to']} (${pathRes.length - 1} hops):\n`);
             for (let i = 0; i < pathRes.length; i++) {
               console.log(`  [${i + 1}] ${pathRes[i].id} (${pathRes[i].node ? pathRes[i].node['dcterms:title'] || '' : ''})`);
             }
@@ -308,7 +308,11 @@ async function main() {
         if (flags.package) filter.package = flags.package;
         if (flags.search) filter.search = flags.search;
 
-        const results = store.query(filter);
+        let results = store.query(filter);
+        if (flags['depends-on']) {
+          const dependents = new Set(store.findDependents(flags['depends-on'], Number(flags.depth || 1)).dependents.map(d => d.node['@id']));
+          results = results.filter(n => dependents.has(n['@id']));
+        }
         if (isJson) {
           console.log(JSON.stringify(results, null, 2));
         } else {

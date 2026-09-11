@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Mobile Game must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Mobile Game must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Mobile Game must specify technology stack. |
-| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | Mobile Game must specify game engine (Unity, Unreal Engine, Godot). |
-| **`robos:platform`** | Target Platform | `1..*` | `xsd:string` | Mobile Game must specify mobile platform(s) (iOS, Android). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Mobile Game must have a title. |
+| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Mobile Game must define a repository. |
+| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Mobile Game must specify technology stack. |
+| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | Applications & entry points | Mobile Game must specify game engine (Unity, Unreal Engine, Godot). |
+| **`robos:platform`** | Target Platform | `1..*` | `xsd:string` | Applications & entry points, Infrastructure & delivery | Mobile Game must specify mobile platform(s) (iOS, Android). |
 
 ---
 

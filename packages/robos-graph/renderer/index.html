@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RobOS SDLC Knowledge Graph Explorer</title>
+  <title>RobOS Knowledge Graph Explorer</title>
   <link rel="stylesheet" href="style.css" />
   <script src="../../robos-ui/robos-ui.js"></script>
   <script>
@@ -13,16 +13,21 @@
       document.head.appendChild(s);
     }
   </script>
+  <style>.inspector-tabs .tab-btn[hidden] { display: none !important; }</style>
 </head>
 <body>
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
+        <nav class="graph-navigation" aria-label="Graph history">
+          <button type="button" id="btn-nav-back" class="btn btn-secondary" title="Back (Alt+Left)" aria-label="Back" disabled>←</button>
+          <button type="button" id="btn-nav-forward" class="btn btn-secondary" title="Forward (Alt+Right)" aria-label="Forward" disabled>→</button>
+        </nav>
         <div class="logo-icon">🌐</div>
         <div>
-          <h1>SDLC Knowledge Graph Explorer</h1>
-          <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; GitOps SDLC Engine</div>
+          <h1>Knowledge Graph Explorer</h1>
+          <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; Git-backed Architecture</div>
         </div>
       </div>
       <div class="header-center">
@@ -41,26 +46,6 @@
         <button class="btn btn-primary" id="btn-validate-shacl">🛡️ Validate SHACL</button>
       </div>
     </header>
-
-    <!-- Stat Bar -->
-    <div id="stat-bar">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-branch-name">main</div>
-        <div class="stat-label" id="stat-branch-type">Production Reality</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-nodes">5 SDLC Nodes</div>
-        <div class="stat-label">Active Resource Entities</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-bdd-scenarios">2 BDD Scenarios</div>
-        <div class="stat-label">Executable Features</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-traceability-status">100% VERIFIED</div>
-        <div class="stat-label">Requirement Traceability</div>
-      </div>
-    </div>
 
     <!-- AI Co-Pilot Multiline Textarea Bar -->
     <div class="copilot-bar">
@@ -96,19 +81,20 @@
     <!-- Main Workspace Split -->
     <main class="main-content">
       <div class="workspace-grid">
-        <!-- Left Panel: SDLC Resource Nodes List with Grouping, Search & Accordion Controls -->
+        <!-- Left Panel: Graph Nodes List with Grouping, Search & Accordion Controls -->
         <section class="panel nodes-panel">
           <div class="panel-header nodes-panel-header">
             <div class="panel-header-left">
-              <span class="panel-title">SDLC Resource Nodes</span>
+              <span class="panel-title">Graph Nodes</span>
               <span class="nodes-count-badge" id="nodes-count-badge">5 of 5 Nodes</span>
             </div>
             <div class="panel-header-actions">
-              <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new SDLC Resource Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
+              <button class="btn btn-primary" id="btn-open-add-entity-modal" title="Add new Graph Node" style="padding: 2px 7px; font-size: 10px;">➕ Add Entity</button>
               <button class="btn btn-secondary" id="btn-open-ingest-modal" title="Import / Ingest Nodes" style="padding: 2px 6px; font-size: 10px;">📥 Ingest</button>
               <div class="group-mode-toggle" id="group-mode-toggle" title="Group Nodes By">
-                <button class="group-btn active" id="btn-group-package" data-mode="package" title="Group by Package">📦 Package</button>
-                <button class="group-btn" id="btn-group-category" data-mode="category" title="Group by Category">🏷️ Type</button>
+                <button class="group-btn active" id="btn-group-classification" data-mode="classification" title="Group by Classification">Classification</button>
+                <button class="group-btn" id="btn-group-package" data-mode="package" title="Group by Package">📦 Package</button>
+                <button class="group-btn" id="btn-group-category" data-mode="type" title="Group by RDF Type">🏷️ Type</button>
                 <button class="group-btn" id="btn-group-flat" data-mode="flat" title="Flat List View">☰ Flat</button>
               </div>
               <div class="group-expand-collapse" id="group-expand-collapse">
@@ -133,68 +119,25 @@
                 <option value="documentation">documentation</option>
                 <option value="learning">learning</option>
               </select>
-              <select id="node-type-filter" class="filter-type-select" title="Filter by Type" style="max-width: 110px;">
-                <option value="all">🏷️ All Types</option>
-                <option value="organization">🏢 Org</option>
-                <option value="diagram">📊 Diagram</option>
-                <option value="adr">📋 ADR</option>
-                <option value="documentation">📖 Docs</option>
-                <option value="devops">☁️ DevOps</option>
-                <option value="pass-credential">🔑 Pass</option>
-                <option value="elearning">🎓 eLearning</option>
-                <option value="frontend-app">🌐 Front End</option>
-                <option value="desktop-app">🖥️ Desktop</option>
-                <option value="pc-game">🎮 PC Game</option>
-                <option value="mobile-game">🕹️ Mobile</option>
-                <option value="console-app">⌨️ Console</option>
-                <option value="data-pipeline">🔄 Pipeline</option>
-                <option value="mobile-app">📱 Mobile</option>
-                <option value="library">📦 Library</option>
-                <option value="bdd">🥒 BDD</option>
-                <option value="service">Services</option>
-                <option value="contract">Contracts</option>
-                <option value="requirement">Reqs</option>
-              </select>
-            </div>
-            <div class="filter-pills-wrap" id="filter-pills-wrap" title="Quick Filter by Type">
-              <button class="filter-pill active" data-filter="all">All</button>
-              <button class="filter-pill" data-filter="organization">🏢 Org</button>
-              <button class="filter-pill" data-filter="diagram">📊 Diagram</button>
-              <button class="filter-pill" data-filter="adr">📋 ADR</button>
-              <button class="filter-pill" data-filter="documentation">📖 Docs</button>
-              <button class="filter-pill" data-filter="devops">☁️ DevOps</button>
-              <button class="filter-pill" data-filter="pass-credential">🔑 Pass</button>
-              <button class="filter-pill" data-filter="elearning">🎓 eLearning</button>
-              <button class="filter-pill" data-filter="frontend-app">🌐 Front End</button>
-              <button class="filter-pill" data-filter="desktop-app">🖥️ Desktop</button>
-              <button class="filter-pill" data-filter="pc-game">🎮 PC Game</button>
-              <button class="filter-pill" data-filter="mobile-game">🕹️ Mobile</button>
-              <button class="filter-pill" data-filter="console-app">⌨️ Console</button>
-              <button class="filter-pill" data-filter="data-pipeline">🔄 Pipeline</button>
-              <button class="filter-pill" data-filter="mobile-app">📱 Mobile</button>
-              <button class="filter-pill" data-filter="library">📦 Library</button>
-              <button class="filter-pill" data-filter="bdd">🥒 BDD</button>
-              <button class="filter-pill" data-filter="service">Services</button>
-              <button class="filter-pill" data-filter="contract">Contracts</button>
-              <button class="filter-pill" data-filter="requirement">Reqs</button>
+              <select id="node-type-filter" class="filter-type-select" title="Filter by Type"><option value="all">All Types</option></select>
+              <select id="node-classification-filter" class="filter-type-select" title="Filter by Classification"><option value="all">All Classifications</option></select>
             </div>
           </div>
           <div class="panel-body node-list" id="nodes-list"></div>
         </section>
 
+        <div id="nodes-resizer" role="separator" aria-label="Resize Graph Nodes column" aria-orientation="vertical" aria-controls="nodes-list" tabindex="0" title="Drag to resize; arrow keys to adjust; double-click to reset"></div>
+
         <!-- Right Panel: Resource Inspector with Tabbed Views -->
         <section class="panel inspector-panel">
           <div class="inspector-tabs">
-            <button class="tab-btn active" id="tab-btn-visual">📋 Visual Inspector & BDD</button>
-            <button class="tab-btn" id="tab-btn-topology">🗺️ Topology Graph</button>
-            <button class="tab-btn" id="tab-btn-impact">💥 Blast Radius & Impact</button>
-            <button class="tab-btn" id="tab-btn-query">🔍 Query & Paths</button>
-            <button class="tab-btn" id="tab-btn-gitops">📁 .robos/ GitOps SDLC</button>
-            <button class="tab-btn" id="tab-btn-edd">🤖 Autonomous EDD Loop</button>
-            <button class="tab-btn" id="tab-btn-video">🎬 Video Walkthrough</button>
-            <button class="tab-btn" id="tab-btn-fabric">🧪 Local Test Fabric</button>
-            <button class="tab-btn" id="tab-btn-traceability">📊 Traceability Matrix</button>
-            <button class="tab-btn" id="tab-btn-rdf">🌐 RDF Triples (JSON-LD)</button>
+            <button class="tab-btn active" id="tab-btn-visual">Overview</button>
+            <button class="tab-btn" id="tab-btn-topology">Topology</button>
+            <button class="tab-btn" id="tab-btn-impact">Impact</button>
+            <button class="tab-btn" id="tab-btn-query">Query &amp; Paths</button>
+            <button class="tab-btn" id="tab-btn-documentation" hidden>Documentation</button>
+            <button class="tab-btn" id="tab-btn-evidence" hidden>Source Evidence</button>
+            <button class="tab-btn" id="tab-btn-rdf">JSON-LD</button>
           </div>
 
           <div class="inspector-content" id="inspector-content">
@@ -203,6 +146,12 @@
         </section>
       </div>
     </main>
+    <footer id="graph-status-bar" role="status" aria-live="polite" aria-atomic="true">
+      <span id="graph-status-name" class="graph-status-name">Loading graph…</span>
+      <span id="graph-status-path" class="graph-status-path" title="Graph location unavailable">Location unavailable</span>
+      <span id="graph-status-nodes" class="graph-status-count">Nodes: —</span>
+      <span id="graph-status-schemas" class="graph-status-count" title="Registered validation schemas">Schemas: —</span>
+    </footer>
   </div>
 
   <!-- eLearning Generator Modal Overlay -->
@@ -374,14 +323,14 @@
     </div>
   </div>
 
-  <!-- ── Add SDLC Entity Modal ───────────────────────────────────────────── -->
+  <!-- ── Add Graph Entity Modal ───────────────────────────────────────────── -->
   <div id="add-entity-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon">➕</span>
           <div>
-            <h2>Add SDLC Resource Node</h2>
+            <h2>Add Graph Node</h2>
             <div class="modal-subtitle">Schema-Driven Entity Scaffolding with W3C SHACL Validation Gate</div>
           </div>
         </div>
@@ -471,14 +420,14 @@
     </div>
   </div>
 
-  <!-- ── Edit SDLC Entity Modal ──────────────────────────────────────────── -->
+  <!-- ── Edit Graph Entity Modal ──────────────────────────────────────────── -->
   <div id="edit-entity-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon">✏️</span>
           <div>
-            <h2 id="edit-modal-title">Edit SDLC Node</h2>
+            <h2 id="edit-modal-title">Edit Graph Node</h2>
             <div class="modal-subtitle" id="edit-modal-subtitle">Mutate Properties with Automated SHACL Re-Validation</div>
           </div>
         </div>
@@ -568,7 +517,7 @@
         <div class="modal-title-group">
           <span class="modal-icon" style="color: var(--danger);">🗑️</span>
           <div>
-            <h2>Delete SDLC Node</h2>
+            <h2>Delete Graph Node</h2>
             <div class="modal-subtitle">Permanent Deletion from Knowledge Graph</div>
           </div>
         </div>
@@ -631,7 +580,7 @@
         <div class="modal-title-group">
           <span class="modal-icon">📥</span>
           <div>
-            <h2>Ingest & Import SDLC Nodes</h2>
+            <h2>Ingest & Import Graph Nodes</h2>
             <div class="modal-subtitle">Import from Git Projects, File System, or Raw JSON-LD Specifications</div>
           </div>
         </div>
@@ -690,11 +639,21 @@
     <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-context">Prepare agent brief</button><button class="btn btn-primary" id="workspace-agent">Ask configured agent</button></div>
     <details id="workspace-context-details"><summary>Agent brief and source evidence</summary><pre id="workspace-context-output" style="white-space:pre-wrap;max-height:260px;overflow:auto"></pre></details>
     <label for="workspace-edits" style="display:block;margin-top:16px">Proposed edits from your coding agent, or an imported graph</label>
+    <label style="display:block;margin:8px 0">Or choose a JSON/JSON-LD file: <input id="workspace-file" type="file" accept=".json,.jsonld,application/json"></label>
     <textarea id="workspace-edits" rows="5" style="width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;padding:10px;border:1px solid #30363d;border-radius:6px" placeholder='Paste {"edits": [...]} or a JSON-LD graph. Preview before saving.'></textarea>
     <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-propose">Preview changes</button><button class="btn btn-primary" id="workspace-apply" disabled>Save reviewed revision</button><button class="btn btn-secondary" id="workspace-discard">Discard proposal</button></div>
     <p id="workspace-status" role="status" aria-live="polite"></p>
     <pre id="workspace-diff" style="white-space:pre-wrap;background:#161b22;padding:12px;max-height:280px;overflow:auto"></pre>
   </dialog>
+  <script src="../lib/classification.js"></script>
+  <script src="../lib/topology.js"></script>
+  <script src="../lib/inspector-groups.js"></script>
+  <script src="../lib/inspector-property-groups.js"></script>
+  <script src="../lib/inspector-capabilities.js"></script>
+  <script src="schema-group-view.js"></script>
+  <script src="panel-resizer.js"></script>
+  <script src="graph-status.js"></script>
+  <script src="navigation.js"></script>
   <script src="app.js"></script>
   <script src="workspace-review.js"></script>
 </body>

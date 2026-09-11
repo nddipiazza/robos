@@ -2,6 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('remoteExecutionStudio', {
+  getSourceWorkspace: () => ipcRenderer.invoke('re-source-workspace'),
   getClusters: () => ipcRenderer.invoke('re-get-clusters'),
   getCluster: (id) => ipcRenderer.invoke('re-get-cluster', id),
   saveCluster: (cluster) => ipcRenderer.invoke('re-save-cluster', cluster),

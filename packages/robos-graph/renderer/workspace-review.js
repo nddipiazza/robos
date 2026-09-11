@@ -6,12 +6,10 @@
   function discard() { proposal = null; el('workspace-apply').disabled = true; el('workspace-diff').textContent = ''; }
   async function updateInfo() {
     const info = await window.sdlcGraph.workspaceInfo();
+    await window.RobosGraphStatus?.refresh();
     if (!info) return;
     const oldCopilot = document.querySelector('.copilot-bar');
     if (oldCopilot) oldCopilot.hidden = true;
-    el('stat-traceability-status').textContent = info.validation.conforms ? 'STRUCTURE VALID' : 'NEEDS REVIEW';
-    el('stat-traceability-status').nextElementSibling.textContent = 'Source evidence and validation';
-    el('stat-bdd-scenarios').textContent = `${nodes.filter(n => [].concat(n['@type']).includes('robos:Scenario')).length} Scenarios`;
     el('workspace-coverage-details').hidden = !info.sourceSummary;
     el('workspace-coverage').textContent = info.sourceSummary ? JSON.stringify(info.sourceSummary, null, 2) : '';
     el('workspace-summary').textContent = `${info.title} · ${info.nodeCount} nodes`;
@@ -57,14 +55,15 @@
     preview(result.proposal);
     if (result.questions.length) el('workspace-diff').textContent += '\nOpen questions:\n' + JSON.stringify(result.questions, null, 2);
   });
-  action('workspace-propose', async () => { discard(); const edits = JSON.parse(el('workspace-edits').value); preview(await window.sdlcGraph.proposeWorkspace({ ...edits, prompt: el('workspace-prompt').value || edits.prompt || '' })); });
+  action('workspace-propose', async () => { discard(); const file = el('workspace-file').files[0]; const edits = JSON.parse(file ? await file.text() : el('workspace-edits').value); preview(await window.sdlcGraph.proposeWorkspace({ ...edits, prompt: el('workspace-prompt').value || edits.prompt || '' })); });
   action('workspace-apply', async () => {
     if (!proposal) return;
-    const result = await window.sdlcGraph.applyWorkspace(proposal);
+    const result = await window.sdlcGraph.applyWorkspace({ id: proposal.id });
     discard(); await load(); await updateInfo();
     el('workspace-status').textContent = `Saved revision ${result.revision.slice(0, 12)}. Continue refining or close to inspect the graph.`;
   });
   action('workspace-discard', async () => { discard(); el('workspace-status').textContent = 'Proposal discarded. The accepted graph is unchanged.'; });
-  el('workspace-edits').addEventListener('input', discard);
+  el('workspace-file').addEventListener('change', () => { el('workspace-edits').value = ''; discard(); });
+  el('workspace-edits').addEventListener('input', () => { el('workspace-file').value = ''; discard(); });
   window.addEventListener('DOMContentLoaded', () => updateInfo().catch(error => { el('workspace-status').textContent = error.message; }));
 })();

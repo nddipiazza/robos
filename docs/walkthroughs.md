@@ -555,7 +555,8 @@ Beyond the Acme Petshop reference application, each RobOS core subsystem has ded
 
 #### The Real-World Scenario
 In a fast-moving engineering organization with 20+ teams, developers frequently make pull requests that inadvertently change shared data models or API response shapes. RobOS acts as an automated guardian by comparing "World 1" (Live Production `main`) against "World 2" (Feature Branches). If a pull request modifies a required field, RobOS flags every affected microservice across all Git repositories before any code is merged.
-- **Source Demo Scripts**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`gitops-schema-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/gitops-schema-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
+- **Source Demo Scripts**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
+- **Retired object-panel demos:** GitOps schema, Gherkin traceability, EDD, test fabric and video-generator walkthroughs no longer represent the current graph viewer. Their old entry points report retirement without recording. See [retirement notes](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/RETIRED.md); historical panel screenshots are not current verification evidence.
 
 | Architecture Knowledge Graph Explorer | Dual-State Visual Difference Engine |
 |:---:|:---:|
@@ -791,7 +792,7 @@ As software ecosystems scale to dozens of engineering squads and hundreds of mic
 RobOS solves this by decomposing the dual-state Knowledge Graph into modular, namespaced packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`) indexed by `.robos/kgraph.yaml`. RobOS supports multi-repo composition with Git-tag version pinning and automatic local caching (`~/.robos/cache/kgraphs/<repo>@<tag>/`), while preserving backward compatibility through automated aggregation into `.robos/knowledge-graph.jsonld`.
 
 #### What the Test Actually Executes Step-by-Step
-1. **Inspect Graph Architecture**: Opens **RobOS SDLC Knowledge Graph Explorer** and inspects telemetry stats.
+1. **Inspect Graph Architecture**: Opens **RobOS Knowledge Graph Explorer** and inspects telemetry stats.
 2. **Open Packages & Repositories Console**: Clicks **📦 Packages & Repos** (`#btn-open-packages-modal`) to reveal the package management hub.
 3. **Inspect Standard Namespaces**: Audits the 6 foundational RobOS packages (`robos.core`, `robos.org`, `robos.services`, `robos.apps`, `robos.devops`, `robos.learning`) stored in `.robos/kgraphs/<pkg>/package.jsonld`.
 4. **Register External KGraph Dependency**: Enters Repository ID `enterprise-contracts`, Title `Enterprise Cloud Contracts`, Git URL `https://github.com/acme/cloud-contracts`, and Git Tag `v2.4.0`.

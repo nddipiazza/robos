@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Documentation & decisions. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Code Snippet must have a title. |
-| **`robos:language`** | Programming Language | `1..*` | `xsd:string` | Code Snippet must specify a programming language. |
-| **`robos:code`** | Source Code Content | `1..*` | `xsd:string` | Code Snippet must provide source code text. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Code Snippet must have a title. |
+| **`robos:language`** | Programming Language | `1..*` | `xsd:string` | Documentation & decisions, Testing & behavior | Code Snippet must specify a programming language. |
+| **`robos:code`** | Source Code Content | `1..*` | `xsd:string` | Documentation & decisions | Code Snippet must provide source code text. |
 
 ---
 

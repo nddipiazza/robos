@@ -5,6 +5,7 @@ const path = require('path');
 const { BUILTIN_SHACL_SHAPES } = require('./shacl-validator');
 const { DEFAULT_PACKAGES, KGraphPackageManager } = require('./package-manager');
 const { OSLC_CONTEXT } = require('./oslc-parser');
+const { resolveSchemaElement, CATALOG } = require('./classification');
 
 // Canonical property metadata dictionary
 const PROPERTY_METADATA = {
@@ -670,6 +671,18 @@ const PROPERTY_METADATA = {
   },
 };
 
+// Classification annotations come from the shared catalog.
+PROPERTY_METADATA['robos:classification'] = {
+  name: 'SDLC Classification', type: 'URI (schema:CategoryCode)',
+  description: 'A reference to a registered code in the RobOS-owned SDLC classification set.',
+};
+PROPERTY_METADATA['robos:classificationOrigin'] = {
+  name: 'Classification Origin', type: 'xsd:string',
+  description: 'declared or inferred; persisted inference is checked against current class metadata.',
+};
+for (const [id, metadata] of Object.entries(PROPERTY_METADATA)) metadata['robos:classification'] = resolveSchemaElement(id);
+const classificationLabels = id => resolveSchemaElement(id).map(ref => CATALOG.find(code => code.id === ref['@id']).label).join(', ');
+
 // Package display titles for Just the Docs navigation
 const PACKAGE_DISPLAY_TITLES = {
   'core-platform': 'Core Platform (robos.core)',
@@ -898,7 +911,7 @@ class SchemaDocGenerator {
       '',
       'The formal, machine-readable W3C RDF Schema / OWL ontology bridge is published at [**`ontology.jsonld`**]({{ \x27/schemas/ontology.jsonld\x27 | relative_url }}).',
       '',
-      '| RobOS Class | Package | Schema.org Classification | De Facto Domain Standard | Specification |',
+      '| RobOS Class | Package | Schema.org Parent Type | De Facto Domain Standard | Specification |',
       '|---|---|---|---|---|'
     );
 
@@ -1103,10 +1116,12 @@ class SchemaDocGenerator {
       '',
       '---',
       '',
+      `**RobOS classification:** ${classificationLabels(shape.targetClass)}. These RobOS-owned codes use Schema.org CategoryCode vocabulary.`,
+      '',
       '## Property Constraints & SHACL Rules',
       '',
-      '| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |',
-      '|---|---|---|---|---|',
+      '| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |',
+      '|---|---|---|---|---|---|',
     ];
 
     for (const prop of shape.properties) {
@@ -1119,7 +1134,7 @@ class SchemaDocGenerator {
       const maxCount = prop.maxCount !== undefined ? prop.maxCount : '*';
       const multiplicity = `${minCount}..${maxCount}`;
       const msg = prop.message || `Property ${prop.path} is required`;
-      lines.push(`| **\`${prop.path}\`** | ${meta.name} | \`${multiplicity}\` | \`${meta.type}\` | ${msg} |`);
+      lines.push(`| **\`${prop.path}\`** | ${meta.name} | \`${multiplicity}\` | \`${meta.type}\` | ${classificationLabels(prop.path)} | ${msg} |`);
     }
 
     // Canonical JSON-LD Example

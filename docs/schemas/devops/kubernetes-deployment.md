@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Kubernetes Deployment must have a title. |
-| **`robos:namespace`** | Namespace Reference | `1..*` | `URI (robos:KubernetesNamespace)` | Kubernetes Deployment must link to target namespace. |
-| **`robos:image`** | Container Image | `1..*` | `xsd:string` | Kubernetes Deployment must specify container image. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Kubernetes Deployment must have a title. |
+| **`robos:namespace`** | Namespace Reference | `1..*` | `URI (robos:KubernetesNamespace)` | Infrastructure & delivery | Kubernetes Deployment must link to target namespace. |
+| **`robos:image`** | Container Image | `1..*` | `xsd:string` | Infrastructure & delivery | Kubernetes Deployment must specify container image. |
 
 ---
 

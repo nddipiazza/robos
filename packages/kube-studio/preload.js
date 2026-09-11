@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("api", {
+  getSourceWorkspace: () => ipcRenderer.invoke("kube-source-workspace"),
   getClusters: () => ipcRenderer.invoke("kube-get-clusters"),
   addCluster: (opts) => ipcRenderer.invoke("kube-add-cluster", opts),
   getNamespaces: (opts) => ipcRenderer.invoke("kube-get-namespaces", opts),

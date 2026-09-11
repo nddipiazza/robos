@@ -406,3 +406,12 @@ ipcMain.handle('open-url', async (event, url) => {
   if (url) shell.openExternal(url);
   return true;
 });
+
+ipcMain.handle('re-source-workspace', () => {
+  if (!EXTERNAL_GRAPH) return { sourceOnly: false };
+  const store = getGraphStore(), document = store.workspace.read(), all = document['robos:nodes'];
+  const types = ['robos:RemoteExecutionCluster','robos:RemoteWorkerPool','robos:WorkerPool','robos:BuildSystem'];
+  return { sourceOnly: true, appName: 'Remote Execution Studio', title: document['dcterms:title'], root: store.workspace.root,
+    nodes: all.filter(n => [].concat(n['@type']).some(t => types.includes(t))),
+    labels: Object.fromEntries(all.map(n => [n['@id'], n['dcterms:title'] || n['@id']])) };
+});

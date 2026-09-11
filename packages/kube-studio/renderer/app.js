@@ -255,6 +255,9 @@ document.querySelectorAll(".nav-tab").forEach(tab => {
 // ── Initialization ──────────────────────────────────────────────────────────
 
 async function init() {
+  const sourceWorkspace = await window.api.getSourceWorkspace();
+  if (sourceWorkspace.sourceOnly) { window.renderSourceWorkspace(sourceWorkspace); return; }
+
   const clusterRes = await window.api.getClusters();
   if (clusterRes.ok) {
     clusters = clusterRes.clusters;

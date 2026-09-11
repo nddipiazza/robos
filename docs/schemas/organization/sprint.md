@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Projects & work items. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Sprint must have a title or name. |
-| **`robos:status`** | Lifecycle Status | `1..*` | `xsd:string` | Sprint must declare status (planning, active, completed). |
-| **`robos:startDate`** | Start Date | `1..*` | `xsd:date` | Sprint must specify a start date. |
-| **`robos:endDate`** | End Date | `1..*` | `xsd:date` | Sprint must specify an end date. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Sprint must have a title or name. |
+| **`robos:status`** | Lifecycle Status | `1..*` | `xsd:string` | Projects & work items, Source control & artifacts, Documentation & decisions | Sprint must declare status (planning, active, completed). |
+| **`robos:startDate`** | Start Date | `1..*` | `xsd:date` | Projects & work items | Sprint must specify a start date. |
+| **`robos:endDate`** | End Date | `1..*` | `xsd:date` | Projects & work items | Sprint must specify an end date. |
 
 ---
 

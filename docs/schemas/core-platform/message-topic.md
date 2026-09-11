@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Data stores & messaging. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Message Topic must have a title. |
-| **`robos:topicName`** | Topic / Queue Name | `1..*` | `xsd:string` | Message Topic must specify topic name. |
-| **`robos:broker`** | Parent Message Broker | `1..*` | `URI (robos:MessageBroker)` | Message Topic must link to parent message broker. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Message Topic must have a title. |
+| **`robos:topicName`** | Topic / Queue Name | `1..*` | `xsd:string` | Data stores & messaging | Message Topic must specify topic name. |
+| **`robos:broker`** | Parent Message Broker | `1..*` | `URI (robos:MessageBroker)` | Data stores & messaging | Message Topic must link to parent message broker. |
 
 ---
 

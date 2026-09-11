@@ -4,17 +4,17 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SCRIPT = [
   {
-    narration: 'RobOS features Git-Backed Dual-State Multi-Branch World State Versioning for production and future states.',
-    target: '#stat-bar',
+    narration: 'We inspect the loaded graph name, source location, node count and registered schema count.',
+    target: '#graph-status-bar',
     action: 'hover',
-    callout: 'Inspect Multi-Branch World State Metrics',
+    callout: 'Inspect Loaded Graph Context',
     minHold: 3200,
   },
   {
-    narration: 'We inspect main branch (Production Reality) with verified and deployed microservice topologies.',
+    narration: 'We inspect the recorded main-branch graph and its modeled service relationships.',
     target: '#nodes-list',
     action: 'hover',
-    callout: 'View Production Baseline (5 Nodes)',
+    callout: 'View Main-Branch Graph',
     minHold: 3200,
   },
   {
@@ -52,7 +52,7 @@ const SCRIPT = [
 runDemo({
   slug: 'branch-manager',
   appId: 'robos-graph',
-  windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+  windowTitle: 'RobOS Knowledge Graph Explorer',
   scenario: scenarios['all-good'],
   audio: false,
   env: { ROBOS_DEMO_SHOW: '1' },

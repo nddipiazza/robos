@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Learning & assessment. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Hands-on Lab must have a title. |
-| **`robos:labFile`** | Hands-on Lab Guide File | `1..*` | `xsd:string` | Hands-on Lab must specify lab guide file path. |
-| **`robos:module`** | Parent Learning Module | `1..*` | `URI (robos:LearningModule)` | Hands-on Lab must link to parent learning module. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Hands-on Lab must have a title. |
+| **`robos:labFile`** | Hands-on Lab Guide File | `1..*` | `xsd:string` | Learning & assessment | Hands-on Lab must specify lab guide file path. |
+| **`robos:module`** | Parent Learning Module | `1..*` | `URI (robos:LearningModule)` | Learning & assessment | Hands-on Lab must link to parent learning module. |
 
 ---
 

@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Data stores & messaging. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Database Index must have a title. |
-| **`robos:indexName`** | Index Name | `1..*` | `xsd:string` | Database Index must specify index name. |
-| **`robos:table`** | Parent Table | `1..*` | `URI (robos:DatabaseTable)` | Database Index must link to parent table. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Database Index must have a title. |
+| **`robos:indexName`** | Index Name | `1..*` | `xsd:string` | Data stores & messaging | Database Index must specify index name. |
+| **`robos:table`** | Parent Table | `1..*` | `URI (robos:DatabaseTable)` | Data stores & messaging | Database Index must link to parent table. |
 
 ---
 

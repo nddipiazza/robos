@@ -2947,6 +2947,177 @@
       "robos:uses": {
         "@id": "urn:robos:source:source-extractor"
       }
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema property-group catalog",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/inspector-groups.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred"
+    },
+    {
+      "@id": "urn:robos:source:inspector-property-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Recorded property-group resolution",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/inspector-property-groups.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/lib/inspector-property-groups.js",
+              "line": 2
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:schema-group-view",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "line": 11
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware inspector Electron checks",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+      "robos:sourceKind": "test-definition",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:schema-group-view"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:schema-group-view"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "line": 76
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ],
   "@graph": [
@@ -5385,6 +5556,177 @@
       "robos:refersFrom": "https://schema.org/SoftwareApplication",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema property-group catalog",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-groups.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/inspector-groups.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred"
+    },
+    {
+      "@id": "urn:robos:source:inspector-property-groups",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Recorded property-group resolution",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/inspector-property-groups.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/inspector-property-groups.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/lib/inspector-property-groups.js",
+              "line": 2
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:schema-group-view",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "line": 11
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware inspector Electron checks",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+      "robos:sourceKind": "test-definition",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:schema-group-view"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:schema-group-view"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "line": 76
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ]
 }

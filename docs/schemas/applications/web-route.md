@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Web Route must have a title. |
-| **`robos:routePath`** | Web Route Path | `1..*` | `xsd:string` | Web Route must specify route path (e.g. /dashboard). |
-| **`robos:app`** | Parent Application | `1..*` | `URI (robos:FrontEndApp | robos:DesktopApp | robos:ConsoleApp)` | Web Route must link to parent application. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Web Route must have a title. |
+| **`robos:routePath`** | Web Route Path | `1..*` | `xsd:string` | Applications & entry points | Web Route must specify route path (e.g. /dashboard). |
+| **`robos:app`** | Parent Application | `1..*` | `URI (robos:FrontEndApp | robos:DesktopApp | robos:ConsoleApp)` | Applications & entry points | Web Route must link to parent application. |
 
 ---
 

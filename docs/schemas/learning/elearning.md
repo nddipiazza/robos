@@ -62,14 +62,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Learning & assessment. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | eLearning course must have a title. |
-| **`robos:topic`** | Knowledge Domain Topic | `1..*` | `xsd:string` | eLearning course must specify a topic domain. |
-| **`robos:modules`** | Learning Modules | `1..*` | `Array<robos:LearningModule>` | eLearning course must have at least one learning module. |
-| **`robos:gitopsFile`** | GitOps Declarative File | `1..*` | `xsd:string` | eLearning course must declare its GitOps file location (.robos/elearning.yaml). |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | eLearning course must have a title. |
+| **`robos:topic`** | Knowledge Domain Topic | `1..*` | `xsd:string` | Data stores & messaging, Learning & assessment | eLearning course must specify a topic domain. |
+| **`robos:modules`** | Learning Modules | `1..*` | `Array<robos:LearningModule>` | Learning & assessment | eLearning course must have at least one learning module. |
+| **`robos:gitopsFile`** | GitOps Declarative File | `1..*` | `xsd:string` | Learning & assessment | eLearning course must declare its GitOps file location (.robos/elearning.yaml). |
 
 ---
 

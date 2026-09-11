@@ -4,10 +4,10 @@ const { runDemo } = require('../lib/demo-runner');
 
 const SCRIPT = [
   {
-    narration: 'The RobOS World Graph Authoring Studio embeds an AI Co-Pilot for natural language graph evolution.',
-    target: '#stat-bar',
+    narration: 'We inspect the loaded graph name, source location, node count and registered schema count.',
+    target: '#graph-status-bar',
     action: 'hover',
-    callout: 'Inspect AI Co-Pilot Authoring Studio',
+    callout: 'Inspect Loaded Graph Context',
     minHold: 3200,
   },
   {
@@ -25,10 +25,10 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: 'The AI Co-Pilot validates all proposed nodes against W3C SHACL shape constraints before committing.',
-    target: '#stat-shacl-badge',
+    narration: 'We inspect the proposal validation result before applying graph changes.',
+    target: '#inspector-content .card-title .status-tag-pass',
     action: 'hover',
-    callout: 'Verify 100% SHACL Conformance',
+    callout: 'Inspect Proposal Validation Result',
     minHold: 3200,
   },
   {
@@ -50,7 +50,7 @@ const SCRIPT = [
 runDemo({
   slug: 'graph-copilot',
   appId: 'robos-graph',
-  windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+  windowTitle: 'RobOS Knowledge Graph Explorer',
   scenario: scenarios['all-good'],
   audio: false,
   env: { ROBOS_DEMO_SHOW: '1' },

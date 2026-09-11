@@ -764,17 +764,32 @@ const BUILTIN_SHACL_SHAPES = [
       {
         "path": "robos:transport",
         "minCount": 1,
-        "message": "MCP Server must declare transport protocol (stdio, sse)."
+        "message": "MCP Server must declare transport (stdio, Streamable HTTP, or legacy SSE)."
       },
       {
         "path": "robos:toolsProvided",
-        "minCount": 1,
-        "message": "MCP Server must list at least one provided tool."
+        "minCount": 0,
+        "message": "Recorded tools are optional; resources-only and prompts-only MCP servers are valid."
+      },
+      {
+        "path": "robos:endpoint",
+        "minCount": 0,
+        "message": "Recorded server endpoint; optional for stdio and source declarations."
+      },
+      {
+        "path": "robos:resourcesProvided",
+        "minCount": 0,
+        "message": "Recorded resource node references; not live discovery."
+      },
+      {
+        "path": "robos:promptsProvided",
+        "minCount": 0,
+        "message": "Recorded prompt node references; not live discovery."
       }
     ],
     "refersFrom": "https://schema.org/SoftwareApplication",
     "schemaOrgType": "https://schema.org/SoftwareApplication",
-    "domainStandard": "https://modelcontextprotocol.io/specification"
+    "domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema"
   },
   {
     "shapeId": "urn:robos:shape:AgentPersonaShape",
@@ -1627,11 +1642,36 @@ const BUILTIN_SHACL_SHAPES = [
         "path": "robos:mcpServer",
         "minCount": 1,
         "message": "MCP Tool must link to parent MCP server."
+      },
+      {
+        "path": "robos:inputSchema",
+        "minCount": 0,
+        "message": "Recorded MCP tool input JSON Schema; optional in an incomplete knowledge graph."
+      },
+      {
+        "path": "robos:outputSchema",
+        "minCount": 0,
+        "message": "Recorded JSON Schema for structured tool output."
+      },
+      {
+        "path": "robos:annotations",
+        "minCount": 0,
+        "message": "Recorded MCP ToolAnnotations hints, not verified safety guarantees."
+      },
+      {
+        "path": "robos:toolAnnotations",
+        "minCount": 0,
+        "message": "Compatibility spelling for recorded MCP ToolAnnotations; preserve without inventing hints."
+      },
+      {
+        "path": "robos:parameters",
+        "minCount": 0,
+        "message": "Legacy parameter description; not automatically equivalent to inputSchema."
       }
     ],
     "refersFrom": "https://schema.org/Action",
     "schemaOrgType": "https://schema.org/Action",
-    "domainStandard": "https://modelcontextprotocol.io/specification"
+    "domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema"
   },
   {
     "shapeId": "urn:robos:shape:MCPResourceShape",
@@ -1644,18 +1684,33 @@ const BUILTIN_SHACL_SHAPES = [
       },
       {
         "path": "robos:uriTemplate",
-        "minCount": 1,
-        "message": "MCP Resource must declare URI template."
+        "minCount": 0,
+        "message": "Recorded URI template when applicable; concrete resources use uri instead."
       },
       {
         "path": "robos:mcpServer",
         "minCount": 1,
         "message": "MCP Resource must link to parent MCP server."
+      },
+      {
+        "path": "robos:uri",
+        "minCount": 0,
+        "message": "Recorded concrete resource URI; distinct from a URI template."
+      },
+      {
+        "path": "robos:mimeType",
+        "minCount": 0,
+        "message": "Recorded resource MIME type, when known."
+      },
+      {
+        "path": "robos:annotations",
+        "minCount": 0,
+        "message": "Recorded MCP resource audience, priority or lastModified annotations."
       }
     ],
     "refersFrom": "https://schema.org/MediaObject",
     "schemaOrgType": "https://schema.org/MediaObject",
-    "domainStandard": "https://modelcontextprotocol.io/specification"
+    "domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema"
   },
   {
     "shapeId": "urn:robos:shape:MCPPromptShape",
@@ -1675,11 +1730,16 @@ const BUILTIN_SHACL_SHAPES = [
         "path": "robos:mcpServer",
         "minCount": 1,
         "message": "MCP Prompt must link to parent MCP server."
+      },
+      {
+        "path": "robos:arguments",
+        "minCount": 0,
+        "message": "Recorded prompt argument descriptors, not invocation argument values."
       }
     ],
     "refersFrom": "https://schema.org/Text",
     "schemaOrgType": "https://schema.org/Text",
-    "domainStandard": "https://modelcontextprotocol.io/specification"
+    "domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema"
   },
   {
     "shapeId": "urn:robos:shape:KubernetesNamespaceShape",
@@ -2377,6 +2437,14 @@ const BUILTIN_SHACL_SHAPES = [
 ];
 
 BUILTIN_SHACL_SHAPES.push(...require('./source-shapes').SOURCE_SHAPES);
+
+// Classification is metadata about every schema element, not a requirement to
+// persist inferred classification on instance nodes.
+const { resolveSchemaElement } = require('./classification');
+for (const shape of BUILTIN_SHACL_SHAPES) {
+  shape['robos:classification'] = resolveSchemaElement(shape.targetClass);
+  for (const property of shape.properties) property['robos:classification'] = resolveSchemaElement(property.path);
+}
 
 class SHACLValidator {
   constructor(shapes = BUILTIN_SHACL_SHAPES) {

@@ -144,7 +144,7 @@ This end-to-end walkthrough demonstrates importing an **existing brownfield code
 - **Deep Codebase Inspection**: Analyzing build files (\`package.json\`, \`pom.xml\`, \`go.mod\`, etc.) to heuristically detect language, framework, dependencies, and API specs.
 - **Archetype Inference**: Accurately classifying the project into one of 6 RobOS archetypes (\`robos:DesktopApp\`, \`robos:Microservice\`, \`robos:ConsoleApp\`, \`robos:MobileApp\`, \`robos:DataPipeline\`, \`robos:Library\`).
 - **Backstage Catalog & Dev Setup Synthesis**: Generating or validating \`catalog-info.yaml\` and an executable \`dev-setup.sh\` environment runner.
-- **Knowledge Graph Ingestion**: Synchronizing the imported app into \`.robos/packages.yaml\`, \`~/.config/robos/git-projects.json\`, and the Dual-State SDLC Knowledge Graph.
+- **Knowledge Graph Ingestion**: Synchronizing the imported app into \`.robos/packages.yaml\`, \`~/.config/robos/git-projects.json\`, and the Dual-State Knowledge Graph.
 
 ## Execution Sequence
 1. **Switch to Import Mode**: Open App Wizard in "Import Existing App" mode.

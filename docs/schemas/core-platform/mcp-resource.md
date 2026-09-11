@@ -29,7 +29,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPR
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
 - **Schema.org Classification**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
-- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)
+- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
 
 ---
@@ -38,7 +38,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPR
 
 This RobOS schema is modeled after and directly aligns with two levels of global standards:
 - **Universal Schema.org Class**: [https://schema.org/MediaObject](https://schema.org/MediaObject) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
+- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
 - **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPResource`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
@@ -61,13 +61,18 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | MCP Resource must have a title. |
-| **`robos:uriTemplate`** | URI Template | `1..*` | `xsd:string` | MCP Resource must declare URI template. |
-| **`robos:mcpServer`** | Parent MCP Server | `1..*` | `URI (robos:MCPServer)` | MCP Resource must link to parent MCP server. |
+| Property Path | Multiplicity | Meaning |
+|---|---|---|
+| `dcterms:title` | `1..*` | MCP Resource must have a title. |
+| `robos:uriTemplate` | `0..*` | Recorded URI template when applicable; concrete resources use uri instead. |
+| `robos:mcpServer` | `1..*` | MCP Resource must link to parent MCP server. |
+| `robos:uri` | `0..*` | Recorded concrete resource URI; distinct from a URI template. |
+| `robos:mimeType` | `0..*` | Recorded resource MIME type, when known. |
+| `robos:annotations` | `0..*` | Recorded MCP resource audience, priority or lastModified annotations. |
 
 ---
 
@@ -127,3 +132,11 @@ const result = validator.validateGraph(new OSLCGraphParser({
 
 console.log("Conforms:", result.conforms); // Expected: true
 ```
+
+## MCP declaration semantics
+
+uri identifies a concrete resource; uriTemplate describes a template. Neither is fabricated for incomplete declarations. mimeType and resource annotations are optional. Resource annotations differ from ToolAnnotations. The graph cardinality validator does not enforce a URI/template alternative or validate nested content.
+
+Based on the [MCP 2025-11-25 schema](https://modelcontextprotocol.io/specification/2025-11-25/schema). These are recorded definitions; validation does not execute or discover an MCP server.
+
+Structured fields inputSchema, outputSchema, annotations, arguments, parameters and toolAnnotations use JSON-LD @json literals where present, preserving nested unprefixed keys and array order. This protects serialization; it does not validate the nested contract.

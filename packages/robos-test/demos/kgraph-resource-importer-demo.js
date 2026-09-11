@@ -104,7 +104,7 @@ Reduces deployment blast radius and enables team autonomy across domain boundari
   );
 
   // 2. Define the Smart Agent Prompt containing all 5 requested heterogeneous resource types
-  const promptText = `Import our enterprise infrastructure into the Acme Global SDLC Knowledge Graph:
+  const promptText = `Import our enterprise infrastructure into the Acme Global Knowledge Graph:
 1. Confluence architecture wiki: https://confluence.acme.corp/display/ARCH
 2. Payments organization: https://github.com/acme-payments
 3. Identity organization: https://github.com/acme-identity
@@ -213,7 +213,7 @@ Reduces deployment blast radius and enables team autonomy across domain boundari
   // 4. Generate Step-by-Step Markdown Walkthrough
   const walkthroughContent = `# RobOS Universal Knowledge Graph Resource Importer Walkthrough
 
-This walkthrough demonstrates the reusable **RobOS Knowledge Graph Resource Importer** (\`KGraphResourceImporter\`). The component accepts natural language requests, analyzes prompts with agent intelligence to discover infrastructure resources, and ingests heterogeneous assets across 5 distinct targets into namespaced dual-state SDLC Knowledge Graph packages.
+This walkthrough demonstrates the reusable **RobOS Knowledge Graph Resource Importer** (\`KGraphResourceImporter\`). The component accepts natural language requests, analyzes prompts with agent intelligence to discover infrastructure resources, and ingests heterogeneous assets across 5 distinct targets into namespaced dual-state Knowledge Graph packages.
 
 ---
 

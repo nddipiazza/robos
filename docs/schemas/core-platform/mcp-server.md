@@ -29,7 +29,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPS
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
 - **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)
+- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 
 ---
@@ -38,7 +38,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPS
 
 This RobOS schema is modeled after and directly aligns with two levels of global standards:
 - **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
+- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
 - **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPServer`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
@@ -61,13 +61,18 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | MCP Server must have a title or display name. |
-| **`robos:transport`** | transport | `1..*` | `xsd:string` | MCP Server must declare transport protocol (stdio, sse). |
-| **`robos:toolsProvided`** | toolsProvided | `1..*` | `xsd:string` | MCP Server must list at least one provided tool. |
+| Property Path | Multiplicity | Meaning |
+|---|---|---|
+| `dcterms:title` | `1..*` | MCP Server must have a title or display name. |
+| `robos:transport` | `1..*` | MCP Server must declare transport (stdio, Streamable HTTP, or legacy SSE). |
+| `robos:toolsProvided` | `0..*` | Recorded tools are optional; resources-only and prompts-only MCP servers are valid. |
+| `robos:endpoint` | `0..*` | Recorded server endpoint; optional for stdio and source declarations. |
+| `robos:resourcesProvided` | `0..*` | Recorded resource node references; not live discovery. |
+| `robos:promptsProvided` | `0..*` | Recorded prompt node references; not live discovery. |
 
 ---
 
@@ -137,3 +142,11 @@ const result = validator.validateGraph(new OSLCGraphParser({
 
 console.log("Conforms:", result.conforms); // Expected: true
 ```
+
+## MCP declaration semantics
+
+Server inventories are RobOS graph summaries, not MCP wire fields or live capability checks. toolsProvided, resourcesProvided and promptsProvided may be absent or empty. Canonical child linkage is robos:mcpServer; separate Tools/Resources/Prompts views must filter child types. endpoint is recorded configuration, not proof of reachability.
+
+Based on the [MCP 2025-11-25 schema](https://modelcontextprotocol.io/specification/2025-11-25/schema). These are recorded definitions; validation does not execute or discover an MCP server.
+
+New resourcesProvided/promptsProvided inventories contain node IRIs or explicit @id references, not embedded definitions or bare names. Their JSON-LD context uses @id coercion and @set. Legacy toolsProvided names remain literals. The mcpServer parent reference also uses @id coercion.

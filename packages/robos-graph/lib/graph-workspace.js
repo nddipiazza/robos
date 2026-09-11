@@ -140,6 +140,8 @@ function validateDocument(doc, { requireEvidence = false } = {}) {
   const errors = [];
   const warnings = [];
   if (!doc || !Array.isArray(doc['robos:nodes'])) return { conforms: false, errors: ['Missing robos:nodes array'], warnings };
+  const { resolveClassification, CATALOG, compact } = require('./classification');
+  const classificationIds = new Set(CATALOG.map(c => compact(c.id)));
   const nodes = doc['robos:nodes'];
   const ids = new Set();
   if (!doc['@context'] || typeof doc['@context'] !== 'object') errors.push('Missing local JSON-LD context');
@@ -153,6 +155,9 @@ function validateDocument(doc, { requireEvidence = false } = {}) {
     if (!types.length || types.some(t => typeof t !== 'string' || !t.includes(':'))) errors.push(`${id}: invalid @type`);
     if (typeof n['dcterms:title'] !== 'string' || !n['dcterms:title'].trim()) errors.push(`${id}: missing title`);
     if (!packageId(n['robos:package'])) errors.push(`${id}: invalid package ID`);
+    const classification = resolveClassification(n);
+    if (!classification.valid) errors.push(`${id}: invalid classification reference`);
+    else if (classification.status === 'unclassified') warnings.push(`${id}: classification unresolved`);
     const evidence = n['robos:evidence'];
     if (types.includes('robos:Microservice') && !n['robos:ownerTeam']) warnings.push(`${id}: ownership unresolved`);
     if (requireEvidence && (!Array.isArray(evidence) || !evidence.length)) errors.push(`${id}: missing evidence`);
@@ -179,7 +184,7 @@ function validateDocument(doc, { requireEvidence = false } = {}) {
       if (property === '@id' || property === '@type' || property === 'robos:evidence' || property === 'robos:relationshipEvidence') continue;
       for (const v of Array.isArray(value) ? value : [value]) {
         const ref = typeof v === 'string' && v.startsWith('urn:') ? v : v && typeof v === 'object' ? v['@id'] : null;
-        if (ref && !ids.has(ref)) errors.push(`${n['@id']}: unresolved ${property} → ${ref}`);
+        if (ref && !ids.has(ref) && !(compact(property) === 'robos:classification' && classificationIds.has(compact(ref)))) errors.push(`${n['@id']}: unresolved ${property} → ${ref}`);
       }
     }
   }
@@ -202,7 +207,7 @@ function diffNodes(before, after) {
   const added = [], changed = [], removed = [];
   for (const [id, node] of b) {
     if (!a.has(id)) added.push(node);
-    else if (!same(a.get(id), node)) changed.push({ id, properties: [...new Set([...Object.keys(a.get(id)), ...Object.keys(node)])].filter(k => !same(a.get(id)[k], node[k])).map(property => ({ property, before: a.get(id)[property], after: node[property] })) });
+    else if (!same(a.get(id), node)) changed.push({ id, properties: [...new Set([...Object.keys(a.get(id)), ...Object.keys(node)])].sort().filter(k => !same(a.get(id)[k], node[k])).map(property => ({ property, before: a.get(id)[property], after: node[property] })) });
   }
   for (const [id, node] of a) if (!b.has(id)) removed.push(node);
   return { added, changed, removed };
@@ -280,7 +285,7 @@ class GraphWorkspace {
         if (!accepted && !old && !retired.has(id)) { present.set(id, fresh); continue; }
         if (!accepted) { conflicts.push({ id, property: '@id', reason: 'Previously removed entity reappeared', incoming: fresh }); continue; }
         const merged = clone(accepted);
-        for (const key of new Set([...Object.keys(old || {}), ...Object.keys(fresh)])) {
+        for (const key of [...new Set([...Object.keys(old || {}), ...Object.keys(fresh)])].sort()) {
           if (key === '@id') continue;
           const prior = old && old[key], now = fresh[key], chosen = accepted[key];
           if (same(chosen, prior) || same(chosen, now)) {

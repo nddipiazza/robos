@@ -359,6 +359,15 @@ function registerIPC(channel, handler) {
   ipcMain.handle(channel, (event, ...args) => EXTERNAL_GRAPH ? externalRead(channel, args[0]) : handler(event, ...args));
 }
 
+ipcMain.handle('kube-source-workspace', () => {
+  if (!EXTERNAL_GRAPH) return { sourceOnly: false };
+  const store = getKGraphStore(), document = store.workspace.read();
+  const all = document['robos:nodes'];
+  return { sourceOnly: true, appName: 'Kube Studio', title: document['dcterms:title'], root: store.workspace.root,
+    nodes: all.filter(n => n['robos:package'] === 'devops' || hasType(n, ['robos:EnvironmentProfile', 'robos:KubernetesCluster'])),
+    labels: Object.fromEntries(all.map(n => [n['@id'], n['dcterms:title'] || n['@id']])) };
+});
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
 registerIPC('kube-get-clusters', () => {

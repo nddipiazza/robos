@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Testing & behavior. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Scenario Outline must have a title. |
-| **`robos:steps`** | Scenario Steps | `1..*` | `Array<robos:ScenarioStep>` | Scenario Outline must define template execution steps. |
-| **`robos:examplesTable`** | Examples Table | `1..*` | `URI (robos:ExamplesTable)` | Scenario Outline must link to an Examples table. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Scenario Outline must have a title. |
+| **`robos:steps`** | Scenario Steps | `1..*` | `Array<robos:ScenarioStep>` | Testing & behavior | Scenario Outline must define template execution steps. |
+| **`robos:examplesTable`** | Examples Table | `1..*` | `URI (robos:ExamplesTable)` | Testing & behavior | Scenario Outline must link to an Examples table. |
 
 ---
 

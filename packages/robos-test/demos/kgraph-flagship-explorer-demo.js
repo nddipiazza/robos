@@ -10,7 +10,7 @@ const DOCS_SCREENSHOTS = path.resolve(__dirname, '../../../docs/assets/images/sc
 
 const SCRIPT = [
   {
-    narration: "We open the RobOS SDLC Knowledge Graph Explorer and switch to the Interactive SVG Topology Graph.",
+    narration: "We open the RobOS Knowledge Graph Explorer and switch to the Interactive SVG Topology Graph.",
     target: '#tab-btn-topology',
     action: 'click',
     callout: 'Interactive SVG Topology & Dependency Diagram',
@@ -95,7 +95,7 @@ async function main() {
   await runDemo({
     slug: SLUG,
     appId: 'robos-graph',
-    windowTitle: 'RobOS SDLC Knowledge Graph Explorer',
+    windowTitle: 'RobOS Knowledge Graph Explorer',
     windowGeometry: { w: 2560, h: 1440 },
     scenario: scenarios['all-good'],
     audio: false,

@@ -159,8 +159,8 @@ describe('RobOS Bulk Repository Importer & Multi-App Archetype E2E Test Suite', 
       assert.ok(app.port, 'robos-graph debug server port must be active');
 
       // 1. Initial State Check
-      const statNodes = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
-      assert.ok(statNodes.includes('Nodes'), 'Stat bar must display active node count');
+      const statNodes = await evalJS(app.port, `document.getElementById('graph-status-nodes').textContent`);
+      assert.match(statNodes, /^Nodes: \p{N}[\p{N}\p{Zs},.\u066B\u066C]*$/u, 'Graph status must display the loaded node count');
 
       // 2. Configure Git Projects in RobOS configuration directory
       const gitProjectsConfig = {

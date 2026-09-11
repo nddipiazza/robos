@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Agent skill needs a title. |
-| **`robos:skillName`** | skillName | `1..*` | `xsd:string` | Agent skill needs its declared name. |
-| **`robos:sourcePath`** | sourcePath | `1..*` | `xsd:string` | Agent skill needs its instruction file. |
-| **`robos:inRepository`** | inRepository | `1..*` | `xsd:string` | Agent skill needs its repository reference. |
-| **`robos:evidence`** | evidence | `1..*` | `xsd:string` | Agent skill needs source evidence. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Agent skill needs a title. |
+| **`robos:skillName`** | skillName | `1..*` | `xsd:string` | Agents & MCP | Agent skill needs its declared name. |
+| **`robos:sourcePath`** | sourcePath | `1..*` | `xsd:string` | Source control & artifacts, Agents & MCP, Learning & assessment | Agent skill needs its instruction file. |
+| **`robos:inRepository`** | inRepository | `1..*` | `xsd:string` | Source control & artifacts, Agents & MCP | Agent skill needs its repository reference. |
+| **`robos:evidence`** | evidence | `1..*` | `xsd:string` | Data stores & messaging, Infrastructure & delivery, Source control & artifacts, Agents & MCP, Learning & assessment | Agent skill needs source evidence. |
 
 ---
 

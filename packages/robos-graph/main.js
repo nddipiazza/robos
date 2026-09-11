@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { SDLCKnowledgeGraphStore, SAMPLE_GHERKIN_FEATURE } = require('./lib/graph-store');
 
@@ -57,7 +57,7 @@ app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1440,
     height: 960,
-    title: 'RobOS SDLC Knowledge Graph Explorer',
+    title: 'RobOS Knowledge Graph Explorer',
     backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -66,6 +66,17 @@ app.whenReady().then(() => {
     },
   });
 
+  // Documentation links open in the system browser, never an Electron child.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    const safe = require('./lib/inspector-capabilities').safeUrl(url);
+    if (safe) shell.openExternal(safe).catch(error => console.error('Unable to open documentation URL:', error.message));
+    return { action: 'deny' };
+  });
+  win.on('app-command', (event, command) => {
+    if (command !== 'browser-backward' && command !== 'browser-forward') return;
+    event.preventDefault();
+    win.webContents.send('graph-navigate', command === 'browser-backward' ? 'back' : 'forward');
+  });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
 
@@ -83,6 +94,14 @@ app.on('window-all-closed', () => {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+ipcMain.handle('graph-info', () => ({
+  title: store.parser.title,
+  root: store.workspace?.root || path.dirname(store.filePath),
+  path: store.filePath,
+  nodeCount: store.parser.nodes.length,
+  schemaCount: store.validator.shapes.length,
+  branch: store.getActiveBranch()?.name || 'main',
+}));
 ipcMain.handle('workspace-info', () => workspaceReview ? workspaceReview.info() : null);
 ipcMain.handle('workspace-open', async () => {
   const selected = await dialog.showOpenDialog(win, { properties: ['openDirectory'], title: 'Open graph workspace (contains .robos)' });
@@ -97,16 +116,22 @@ function requireReview() {
   return workspaceReview;
 }
 ipcMain.handle('workspace-context', (_, input) => requireReview().context(input));
-ipcMain.handle('workspace-propose', (_, input) => requireReview().propose(input));
-ipcMain.handle('workspace-ask-agent', (_, input) => requireReview().askAgent(input));
+ipcMain.handle('workspace-propose', (_, input) => { const review = requireReview(); return review.preview(review.propose(input)); });
+ipcMain.handle('workspace-ask-agent', async (_, input) => { const review = requireReview(); const result = await review.askAgent(input); return { ...result, proposal: review.preview(result.proposal) }; });
 ipcMain.handle('workspace-apply', (_, proposal) => {
-  const result = requireReview().apply(proposal);
+  const result = requireReview().applyReviewed(proposal.id);
   store.init();
   store.packageManager.loadPackages();
   return result;
 });
 
 ipcMain.handle('graph-get-all', async () => store.parser.nodes);
+ipcMain.handle('graph-get-relations', async () => {
+  const { nodeRelations } = require('./lib/relationships');
+  const ids = new Set(store.parser.nodes.map(node => node['@id']));
+  return store.parser.nodes.flatMap(node => nodeRelations(node, ids)).filter(edge => edge.internal)
+    .map(({ from, to, predicate, kind }) => ({ from, to, predicate, kind }));
+});
 ipcMain.handle('graph-query', async (_, filter) => store.query(filter));
 ipcMain.handle('graph-get-node', async (_, id) => store.getNode(id));
 ipcMain.handle('graph-find-dependents', async (_, id) => store.findDependents(id));

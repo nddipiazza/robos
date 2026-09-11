@@ -39,3 +39,20 @@ accepted corrections; report missing facts explicitly.
 Validation covers supported structure, references and built-in cardinality
 constraints, not complete W3C SHACL semantics or source accuracy. A passing
 report is a structural check and must not be described as 100% verified truth.
+
+## Dependency semantics
+
+Use an explicit `--graph-root /absolute/workspace` for every command. Impact
+returns both `dependents` (who relies on this node) and `dependencies` (what this
+node relies on), with shortest-hop depth, predicate and available relationship
+evidence. Dependency direction is dependent → prerequisite. Repository membership,
+source derivation, ownership and generic reference links are not dependency edges.
+Conditional evidence remains conditional; transitive results identify candidates
+for review, not proof that every condition is active together.
+
+`query --depends-on <id> --depth 1 --json` filters direct modeled dependents;
+increase depth for transitive candidates. `query --path-from ... --path-to ...`
+traces directed reference connectivity, which is broader than dependency impact.
+Do not treat an undirected connection, a shared repository or a zero-result query
+as proof of dependency correctness or safe change. Inspect the cited source and
+report unmodeled external packages/types and unknown relationships explicitly.

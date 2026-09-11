@@ -60,7 +60,7 @@ describe('Multi-Branch World State Versioning (BranchManager) Tests with In-Dept
       assert.ok(app.port, 'robos-graph debug port should be allocated');
 
       // 1. Initial State: main branch
-      const initialBranch = await evalJS(app.port, `document.getElementById('stat-branch-name').textContent`);
+      const initialBranch = await evalJS(app.port, `document.getElementById('branch-select').value`);
       assert.strictEqual(initialBranch, 'main', 'Active branch must be main');
 
       const initialBadge = await evalJS(app.port, `document.getElementById('branch-badge').textContent`);
@@ -70,14 +70,14 @@ describe('Multi-Branch World State Versioning (BranchManager) Tests with In-Dept
       await evalJS(app.port, `window.switchBranch('feature/TASK-101-auth')`);
       await new Promise(r => setTimeout(r, 400));
 
-      const featureBranch = await evalJS(app.port, `document.getElementById('stat-branch-name').textContent`);
+      const featureBranch = await evalJS(app.port, `document.getElementById('branch-select').value`);
       assert.strictEqual(featureBranch, 'feature/TASK-101-auth');
 
       const featureBadge = await evalJS(app.port, `document.getElementById('branch-badge').textContent`);
       assert.strictEqual(featureBadge, 'FEATURE');
 
-      const featureNodes = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
-      assert.ok(featureNodes.includes('Nodes'), 'Feature branch must display nodes');
+      const featureNodes = await evalJS(app.port, `document.getElementById('graph-status-nodes').textContent`);
+      assert.match(featureNodes, /^Nodes: \p{N}[\p{N}\p{Zs},.\u066B\u066C]*$/u, 'Feature branch must display nodes');
 
       // 3. Switch to poc/v2-graphql
       await evalJS(app.port, `window.switchBranch('poc/v2-graphql')`);

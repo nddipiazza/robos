@@ -657,3 +657,13 @@ registerIPC('open-url', async (_, url) => {
   if (url) shell.openExternal(url);
   return { ok: true };
 });
+
+// Source workspaces use declaration UI, not the legacy live-driver demo panels.
+ipcMain.handle('ds-source-workspace', () => {
+  if (!EXTERNAL_GRAPH) return { sourceOnly: false };
+  const store = getKGraphStore(), document = store.workspace.read(), all = document['robos:nodes'];
+  const types = ['robos:DataStore','robos:Database','robos:NoSQLDatabase','robos:MessageBroker','robos:BrokerDefinition','robos:MessageTopic','robos:ConsumerGroup','robos:DataModel','robos:DatabaseTable','robos:DatabaseColumn'];
+  return { sourceOnly: true, appName: 'Data Sources', title: document['dcterms:title'], root: store.workspace.root,
+    nodes: all.filter(n => [].concat(n['@type']).some(t => types.includes(t))),
+    labels: Object.fromEntries(all.map(n => [n['@id'], n['dcterms:title'] || n['@id']])) };
+});

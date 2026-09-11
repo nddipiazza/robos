@@ -68,7 +68,7 @@ describe('Agent-Assisted World Graph Authoring Studio (GraphCoPilot) Tests with 
       // 1. Initial State
       await evalJS(app.port, `if (window.switchBranch) window.switchBranch('main')`);
       await new Promise(r => setTimeout(r, 200));
-      const initialBranch = await evalJS(app.port, `document.getElementById('stat-branch-name').textContent`);
+      const initialBranch = await evalJS(app.port, `document.getElementById('branch-select').value`);
       assert.ok(initialBranch === 'main' || initialBranch.length > 0);
 
       // 2. Trigger AI Co-Pilot Generation
@@ -85,8 +85,8 @@ describe('Agent-Assisted World Graph Authoring Studio (GraphCoPilot) Tests with 
       await evalClick(app.port, '#btn-copilot-apply');
       await new Promise(r => setTimeout(r, 600));
 
-      const updatedNodeCount = await evalJS(app.port, `document.getElementById('stat-nodes').textContent`);
-      assert.ok(updatedNodeCount.includes('Nodes'), 'Node count must update');
+      const updatedNodeCount = await evalJS(app.port, `document.getElementById('graph-status-nodes').textContent`);
+      assert.match(updatedNodeCount, /^Nodes: \p{N}[\p{N}\p{Zs},.\u066B\u066C]*$/u, 'Node count must update');
     } finally {
       await killApp(app);
     }

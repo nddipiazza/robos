@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Agent Persona must have a title or name. |
-| **`robos:role`** | role | `1..*` | `xsd:string` | Agent Persona must specify an autonomous role. |
-| **`robos:systemPrompt`** | systemPrompt | `1..*` | `xsd:string` | Agent Persona must provide a system prompt or core directive. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Agent Persona must have a title or name. |
+| **`robos:role`** | role | `1..*` | `xsd:string` | Agents & MCP | Agent Persona must specify an autonomous role. |
+| **`robos:systemPrompt`** | systemPrompt | `1..*` | `xsd:string` | Agents & MCP | Agent Persona must provide a system prompt or core directive. |
 
 ---
 

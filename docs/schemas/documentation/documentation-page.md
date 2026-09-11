@@ -61,13 +61,15 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Documentation & decisions. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Documentation Page must have a title. |
-| **`robos:slug`** | URL / Document Slug | `1..*` | `xsd:string` | Documentation Page must declare a URL slug. |
-| **`robos:docPath`** | Document File Path | `1..*` | `xsd:string` | Documentation Page must specify a relative markdown document path. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Documentation Page must have a title. |
+| **`robos:slug`** | URL / Document Slug | `1..*` | `xsd:string` | Documentation & decisions | Documentation Page must declare a URL slug. |
+| **`robos:docPath`** | Document File Path | `1..*` | `xsd:string` | Documentation & decisions | Documentation Page must specify a relative markdown document path. |
 
 ---
 

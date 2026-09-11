@@ -79,6 +79,45 @@ AI agents never execute raw commands directly in your daily workstation environm
 
 ---
 
+## Knowledge graph classification
+
+The Knowledge Graph Explorer defaults to a classification tree backed by one
+shared catalog for the engine and browser. Built-in classes, SHACL shapes and
+predicates have deterministic metadata. Nodes show declared or inferred
+classification; custom types with no known category remain visible as
+**Unclassified** with warnings. Package, RDF type and flat views, combined
+filters, search, and collapse counts remain available.
+
+The object inspector also offers schema-specific tabs for recorded property groups:
+MCP servers and actions, services and contracts, application routes and commands,
+data models and databases, messaging, infrastructure, pipelines, source control,
+work items, testing, learning and agent configuration. Tabs require both an
+applicable type and actual data. Child objects are discovered through forward
+and inverse references; their declarations and source evidence are available
+without leaving the graph. Back/Forward navigation restores object visits, tabs
+and filters, including mouse side-button navigation. A bottom status bar identifies
+the graph and its location and counts. See the [inspector guide](packages/robos-graph/INSPECTOR.md).
+
+RobOS owns the SDLC codes and expresses them using Schema.org
+[CategoryCode](https://schema.org/CategoryCode) and
+[CategoryCodeSet](https://schema.org/CategoryCodeSet). They are not a Schema.org
+SDLC taxonomy. See the [classification and workspace guide](packages/robos-graph/WORKSPACES.md#classification-catalog-and-viewer-tree)
+for reference syntax, provenance, registry coverage, and the real Electron test.
+
+Dependency impact uses directed, evidenced relationships and separates them from
+repository membership and source provenance. The importer records dependency
+scopes and protobuf references; unresolved external dependencies remain explicit.
+The topology view draws the same resolved JSON-LD relationships, with cyan
+dependency arrows, dashed reference arrows, and explicit limits on large views.
+Kube Studio can browse infrastructure declarations and their source evidence from
+the same graph workspace. See [dependency workflows](packages/robos-graph/WORKSPACES.md#dependency-evidence-and-impact)
+for commands, supported extraction and interpretation limits.
+
+The object inspector shows recorded fields and JSON-LD. Documentation, source
+evidence, topology and dependency tabs appear only when the selected object has
+the corresponding data. Unrelated demo workflows and fabricated verification
+claims have been removed; see the [tab audit](packages/robos-graph/INSPECTOR.md).
+
 ## 🧬 The Paradigm: Knowledge Graph-First (KGraph-First) Application Generation
 
 In modern software engineering:

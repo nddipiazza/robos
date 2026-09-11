@@ -63,15 +63,17 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ---
 
+**RobOS classification:** Learning & assessment. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
+
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
-|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Certificate of Completion must have a title. |
-| **`robos:recipientUser`** | recipientUser | `1..*` | `xsd:string` | Certificate of Completion must specify the recipient user. |
-| **`robos:forCourse`** | forCourse | `1..*` | `xsd:string` | Certificate of Completion must link to the completed course (robos:forCourse). |
-| **`robos:issueDate`** | issueDate | `1..*` | `xsd:string` | Certificate of Completion must declare an issuance date. |
-| **`robos:scorePercentage`** | scorePercentage | `1..*` | `xsd:string` | Certificate of Completion must record the final score percentage. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Certificate of Completion must have a title. |
+| **`robos:recipientUser`** | recipientUser | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must specify the recipient user. |
+| **`robos:forCourse`** | forCourse | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must link to the completed course (robos:forCourse). |
+| **`robos:issueDate`** | issueDate | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must declare an issuance date. |
+| **`robos:scorePercentage`** | scorePercentage | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must record the final score percentage. |
 
 ---
 
