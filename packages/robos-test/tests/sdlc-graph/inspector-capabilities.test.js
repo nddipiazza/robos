@@ -50,3 +50,12 @@ test('an empty graph has only Overview and cannot retain an old selected tab',()
  assert.deepEqual(c.capabilities({}).tabs,['visual']);
  for(const tab of ['query','rdf','documentation','evidence','impact','topology'])assert.equal(c.selectTab(tab,{},[]),'visual');
 });
+
+test('linked document text and URLs retain the document identity and evidence',()=>{
+ const evidence={path:'guide.md',line:2};
+ const doc=n('urn:doc',{'@type':['robos:DocumentationPage'],'robos:content':'Recorded guide','robos:docsUrl':'https://example.org/guide','robos:evidence':[evidence]});
+ const service=n('urn:service',{'robos:hasDocumentationPage':{'@id':'urn:doc'}});
+ const docs=c.capabilities(service,[service,doc]).documents.filter(d=>['text','url'].includes(d.kind));
+ assert.equal(docs.length,2);
+ for(const d of docs){assert.equal(d.sourceNodeId,'urn:doc');assert.deepEqual(d.sourceEvidence,[evidence]);}
+});

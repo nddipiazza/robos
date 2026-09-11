@@ -19,6 +19,19 @@ const OSLC_CONTEXT = {
   dcterms: 'http://purl.org/dc/terms/',
   schema: 'https://schema.org/',
   xsd: 'http://www.w3.org/2001/XMLSchema#',
+  // MCP contracts are JSON literals: JSON Schema and descriptor keys are not
+  // RDF predicates and must survive expansion without a vocabulary mapping.
+  'robos:inputSchema': { '@id': 'robos:inputSchema', '@type': '@json' },
+  'robos:outputSchema': { '@id': 'robos:outputSchema', '@type': '@json' },
+  'robos:annotations': { '@id': 'robos:annotations', '@type': '@json' },
+  'robos:arguments': { '@id': 'robos:arguments', '@type': '@json' },
+  'robos:parameters': { '@id': 'robos:parameters', '@type': '@json' },
+  'robos:toolAnnotations': { '@id': 'robos:toolAnnotations', '@type': '@json' },
+  'robos:mcpServer': { '@id': 'robos:mcpServer', '@type': '@id' },
+  // New inventories reference resource/prompt nodes. Legacy toolsProvided can
+  // contain plain tool names, so it must not be indiscriminately IRI-coerced.
+  'robos:resourcesProvided': { '@id': 'robos:resourcesProvided', '@type': '@id', '@container': '@set' },
+  'robos:promptsProvided': { '@id': 'robos:promptsProvided', '@type': '@id', '@container': '@set' },
   'robos:classification': { '@id': 'robos:classification', '@type': '@id', '@container': '@set' },
   'robos:technologyReference': { '@id': 'robos:technologyReference', '@type': '@id' },
   'robos:protocolReference': { '@id': 'robos:protocolReference', '@type': '@id' },

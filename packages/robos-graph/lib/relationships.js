@@ -19,10 +19,20 @@ const REFERENCE_PREDICATES = new Set([
   'forEnvironment', 'inEnvironment', 'ownerTeam', 'assignedTeam', 'managedByTeam',
   'developmentGuidance', 'relatedTo', 'relatesTo', 'teaches', 'modules', 'module',
   'course', 'provides', 'definesModel', 'exports', 'mcpServer', 'toolsProvided',
+  'resourcesProvided', 'promptsProvided',
   'hasPipeline', 'packages', 'produces', 'publishes', 'app', 'hosts', 'implementedBy',
   'runs', 'targets', 'configures', 'includes', 'deploys', 'references', 'composes',
   'technologyReference', 'protocolReference', 'classification',
+  // Schema containment and membership remain navigable without inflating impact.
+  'toolOfServer', 'resourceOfServer', 'promptOfServer', 'service', 'endpointOf',
+  'command', 'database', 'table', 'schemaOf', 'tableOfSchema', 'columnOfTable',
+  'indexOfTable', 'collectionOfDatabase', 'topicOfBroker', 'cluster', 'namespace',
+  'inNamespace', 'namespaceOfCluster', 'targetCluster', 'pipeline', 'stage', 'job',
+  'stageOfPipeline', 'inOrganization', 'inProject', 'inEpic', 'inFeature', 'inStory',
+  'inSprint', 'parentTask', 'parentWorkItem', 'inScenarioOutline', 'step',
+  'forCourse', 'docPage', 'adr',
 ].map(p => 'robos:' + p));
+REFERENCE_PREDICATES.add('oslc_qm:reportsOnTestCase');
 const referenceId = value => typeof value === 'string' ? value : value && value['@id'];
 function predicateKind(predicate) {
   if (DEPENDENCY_PREDICATES.has(predicate) || INVERSE_DEPENDENCIES.has(predicate)) return 'dependency';

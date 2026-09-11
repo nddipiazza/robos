@@ -704,6 +704,54 @@
       "robos:targets": {
         "@id": "urn:robos:source:workspace-explorer"
       }
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware inspector Electron checks",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+      "robos:sourceKind": "test-definition",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:schema-group-view"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:schema-group-view"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "line": 76
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ],
   "@graph": [
@@ -1301,6 +1349,54 @@
       "robos:refersFrom": "https://schema.org/SoftwareApplication",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:source:inspector-groups-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware inspector Electron checks",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+      "robos:sourceKind": "test-definition",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:schema-group-view"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:schema-group-view"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-test/tests/sdlc-graph/inspector-groups.e2e.js",
+              "line": 76
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ]
 }

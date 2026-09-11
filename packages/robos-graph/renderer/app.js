@@ -295,6 +295,8 @@ async function renderInspector() {
   if (!node) { container.append(inspectorElement('p', 'No node selected.')); return; }
   if (inspectorSelectedContext !== node['@id']) { queryPathFrom = node['@id']; queryPathTo = null; queryPathResult = null; structuredQueryResults = null; inspectorSelectedContext = node['@id']; }
   const capability = inspectorCapabilities.capabilities(node, nodes, inspectorRelationIndex);
+  const group = capability.groups.find(group => `group-${group.id}` === currentTab);
+  if (group) { window.RobosSchemaGroupView.render(container, group, nodes); return; }
   if (currentTab === 'rdf') { container.append(inspectorElement('pre', JSON.stringify(node, null, 2), 'json-pre')); return; }
   if (currentTab === 'topology') { await renderTopologyTab(container, node); return; }
   if (currentTab === 'impact') { await renderImpactTab(container, node); return; }
@@ -653,8 +655,9 @@ window.setImpactDirection = function(dir) {
 };
 
 async function renderImpactTab(container, node) {
+  const revision = inspectorRevision;
   const blast = await window.sdlcGraph.getImpact(node['@id'], impactDepth);
-  if (currentTab !== 'impact' || (selectedNodeId && selectedNodeId !== node['@id'])) return;
+  if (revision !== inspectorRevision || currentTab !== 'impact' || (selectedNodeId && selectedNodeId !== node['@id'])) return;
   const items = impactDirection === 'downstream'
     ? (blast && blast.dependents ? blast.dependents : [])
     : (blast && blast.dependencies ? blast.dependencies : []);
@@ -1466,7 +1469,26 @@ window.validateSHACL = async function() {
 
 function updateTabUI() {
   const node = nodes.find(n=>n['@id'] === selectedNodeId) || nodes[0] || {};
-  const supported = inspectorCapabilities.capabilities(node, nodes, inspectorRelationIndex).tabs;
+  const capability = inspectorCapabilities.capabilities(node, nodes, inspectorRelationIndex);
+  const supported = capability.tabs;
+  const tabs = document.querySelector('.inspector-tabs');
+  const focused = tabs.contains(document.activeElement) ? document.activeElement : null;
+  for (const button of tabs.querySelectorAll('[data-schema-group]')) {
+    if (!supported.includes(`group-${button.dataset.schemaGroup}`)) button.remove();
+  }
+  const anchor = document.getElementById('tab-btn-topology');
+  for (const group of capability.groups || []) {
+    const id = `group-${group.id}`;
+    let button = document.getElementById(`tab-btn-${id}`);
+    if (!button) {
+      button = inspectorElement('button', group.label, 'tab-btn');
+      button.id = `tab-btn-${id}`; button.dataset.schemaGroup = group.id;
+      button.addEventListener('click', () => window.switchTab(id));
+    }
+    tabs.insertBefore(button, anchor);
+    button.classList.toggle('active', currentTab === id);
+  }
+  if (focused?.isConnected) focused.focus({ preventScroll: true });
   for (const tab of ['visual','topology','impact','query','documentation','evidence','rdf']) {
     const el = document.getElementById(`tab-btn-${tab}`);
     if (el) { el.hidden = !supported.includes(tab); el.classList.toggle('active', currentTab === tab); }

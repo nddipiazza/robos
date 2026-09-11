@@ -170,6 +170,16 @@
   ]
 });
   const PREDICATE_CODES = {
+  "robos:uri": ["agents"],
+  "robos:toolAnnotations": ["agents"],
+  "robos:resourcesProvided": ["agents"],
+  "robos:promptsProvided": ["agents"],
+  "robos:parameters": ["agents"],
+  "robos:outputSchema": ["agents"],
+  "robos:mimeType": ["agents"],
+  "robos:inputSchema": ["agents"],
+  "robos:arguments": ["agents"],
+  "robos:annotations": ["agents"],
   "dcterms:description": [
     "documentation"
   ],
@@ -429,7 +439,8 @@
     "work"
   ],
   "robos:endpoint": [
-    "data"
+    "data",
+    "agents"
   ],
   "robos:enforcesContract": [
     "schema"
@@ -1274,6 +1285,214 @@
     "schema"
   ]
 };
+  // Explicit optional inspector fields and inverse relationships. Categories
+  // describe predicate semantics; group visibility is handled by the catalog.
+  Object.assign(PREDICATE_CODES, {
+    "robos:acceptanceCriteria": [
+      "work"
+    ],
+    "robos:appName": [
+      "applications"
+    ],
+    "robos:appVersion": [
+      "applications"
+    ],
+    "robos:assetEndpoint": [
+      "infrastructure"
+    ],
+    "robos:author": [
+      "source"
+    ],
+    "robos:availabilityStatus": [
+      "agents"
+    ],
+    "robos:boundServices": [
+      "services",
+      "data"
+    ],
+    "robos:branchMetadataStatus": [
+      "source"
+    ],
+    "robos:browserEndpoint": [
+      "infrastructure"
+    ],
+    "robos:buildCommand": [
+      "libraries",
+      "infrastructure"
+    ],
+    "robos:collectionOfDatabase": [
+      "data"
+    ],
+    "robos:collections": [
+      "data"
+    ],
+    "robos:columnOfTable": [
+      "data"
+    ],
+    "robos:configurationKind": [
+      "infrastructure"
+    ],
+    "robos:contractYaml": [
+      "contracts"
+    ],
+    "robos:currentBranch": [
+      "source"
+    ],
+    "robos:declaredName": [
+      "source"
+    ],
+    "robos:defaultExecProperties": [
+      "infrastructure"
+    ],
+    "robos:difficulty": [
+      "learning"
+    ],
+    "robos:documentation": [
+      "documentation"
+    ],
+    "robos:endpointOf": [
+      "services",
+      "contracts"
+    ],
+    "robos:estimatedDuration": [
+      "learning"
+    ],
+    "robos:executableName": [
+      "applications"
+    ],
+    "robos:indexOfTable": [
+      "data"
+    ],
+    "robos:inNamespace": [
+      "infrastructure"
+    ],
+    "robos:instanceName": [
+      "infrastructure"
+    ],
+    "robos:lessons": [
+      "learning"
+    ],
+    "robos:memberCount": [
+      "organization"
+    ],
+    "robos:model": [
+      "agents"
+    ],
+    "robos:modelKind": [
+      "contracts"
+    ],
+    "robos:namespaceOfCluster": [
+      "infrastructure"
+    ],
+    "robos:narrative": [
+      "work",
+      "testing"
+    ],
+    "robos:port": [
+      "data",
+      "infrastructure"
+    ],
+    "robos:ports": [
+      "infrastructure"
+    ],
+    "robos:priority": [
+      "work"
+    ],
+    "robos:promptOfServer": [
+      "agents"
+    ],
+    "robos:registrationCondition": [
+      "agents"
+    ],
+    "robos:replicas": [
+      "infrastructure"
+    ],
+    "robos:requirementId": [
+      "work",
+      "testing"
+    ],
+    "robos:resourceOfServer": [
+      "agents"
+    ],
+    "robos:resources": [
+      "infrastructure"
+    ],
+    "robos:revision": [
+      "source"
+    ],
+    "robos:runtimePrerequisites": [
+      "agents"
+    ],
+    "robos:scenarios": [
+      "testing"
+    ],
+    "robos:schemaOf": [
+      "data"
+    ],
+    "robos:schemas": [
+      "data"
+    ],
+    "robos:securityContext": [
+      "infrastructure"
+    ],
+    "robos:stageOfPipeline": [
+      "infrastructure"
+    ],
+    "robos:stateScope": [
+      "schema"
+    ],
+    "robos:stepCount": [
+      "testing"
+    ],
+    "robos:storyPoints": [
+      "work"
+    ],
+    "robos:tableOfSchema": [
+      "data"
+    ],
+    "robos:tables": [
+      "data"
+    ],
+    "robos:tags": [
+      "schema"
+    ],
+    "robos:targetAudience": [
+      "learning"
+    ],
+    "robos:targetService": [
+      "services",
+      "contracts"
+    ],
+    "robos:teachesApplication": [
+      "learning"
+    ],
+    "robos:tlsEnabled": [
+      "data",
+      "infrastructure"
+    ],
+    "robos:toolOfServer": [
+      "agents"
+    ],
+    "robos:tools": [
+      "agents"
+    ],
+    "robos:topicOfBroker": [
+      "data"
+    ],
+    "robos:topics": [
+      "data"
+    ],
+    "robos:verifiedByTest": [
+      "testing"
+    ],
+    "robos:version": [
+      "source",
+      "libraries"
+    ],
+    "robos:workerPools": [
+      "infrastructure"
+    ]
+  });
   const ordered = codes => [...new Set(codes)].sort((a, b) => CATALOG.findIndex(c => c.code === a) - CATALOG.findIndex(c => c.code === b));
   const reference = code => ({ '@id': NS + 'classification/' + code });
   function resolveSchemaElement(id) {

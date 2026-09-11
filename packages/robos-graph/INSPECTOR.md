@@ -18,3 +18,37 @@
 No application behavior or live runtime health is inferred from source declarations. Unsupported tabs must also be rejected by programmatic navigation; switching objects falls back to Overview when the previous tab no longer applies.
 
 The Graph Nodes divider is draggable and keyboard accessible (Left/Right, Shift for larger steps, Home/End for limits). Its width is saved locally across reopening; double-click resets it. Narrowing the window constrains the panels without discarding the preferred width.
+
+## Schema property groups
+
+The schema catalog in `lib/inspector-groups.js` assigns contextual property groups
+to built-in types and their aliases. Each group requires an applicable type and
+at least one populated domain property or recorded child relation. A type, title,
+or provenance path alone never creates an empty specialist tab. The catalog test
+checks every executable SHACL target and every domain constraint property, so new
+schema types cannot silently miss viewer coverage. The [type-by-type coverage audit](../../docs/inspector-schema-coverage.md) lists all 98 shapes, 141 targets/aliases, and 25 groups.
+
+Select an MCP server and open **MCP Server** to browse its recorded actions/tools,
+resources and prompts. Child cards show descriptions, declarations, parameter
+schemas and registration/availability conditions when recorded. Click an object
+name to inspect it, or **Source Evidence** to inspect its provenance. Input and
+output schemas follow the [MCP schema reference](https://modelcontextprotocol.io/specification/2025-11-25/schema).
+The viewer displays declarations; it does not connect to servers or execute actions.
+Missing input schemas or runtime observations are not filled with defaults.
+
+Services expose their contracts, implementations, data and messaging references.
+Other groups cover application configuration and routes, data models and database
+structure, brokers and consumers, Kubernetes and deployment configuration,
+pipeline stages/jobs/steps, Git history, work items, organizations, tests and BDD,
+learning, documentation structure, agent skills, and remote builds.
+
+Forward and inverse references are both visible. The same target appears once in
+a group, retaining each original predicate and direction. Unresolved explicit
+references remain visible as unavailable graph nodes. Large related-object lists
+load 40 cards at a time with an explicit **Show more** control. Property labels
+are human-readable; hover a label to see its exact schema predicate. All recorded
+text is rendered as text, including code and schemas.
+
+Validation: `npm --prefix packages/robos-test run test:inspector` checks catalog and
+capability behavior. `npm --prefix packages/robos-test run test:inspector:e2e` runs
+the real Electron inspector suites, including recorded type-specific navigation.

@@ -88,6 +88,14 @@ classification; custom types with no known category remain visible as
 **Unclassified** with warnings. Package, RDF type and flat views, combined
 filters, search, and collapse counts remain available.
 
+The object inspector also offers schema-specific tabs for recorded property groups:
+MCP servers and actions, services and contracts, application routes and commands,
+data models and databases, messaging, infrastructure, pipelines, source control,
+work items, testing, learning and agent configuration. Tabs require both an
+applicable type and actual data. Child objects are discovered through forward
+and inverse references; their declarations and source evidence are available
+without leaving the graph. See the [inspector guide](packages/robos-graph/INSPECTOR.md).
+
 RobOS owns the SDLC codes and expresses them using Schema.org
 [CategoryCode](https://schema.org/CategoryCode) and
 [CategoryCodeSet](https://schema.org/CategoryCodeSet). They are not a Schema.org

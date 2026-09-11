@@ -29,7 +29,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
 - **Schema.org Classification**: [https://schema.org/Action](https://schema.org/Action)
-- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)
+- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
 
 ---
@@ -38,7 +38,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPT
 
 This RobOS schema is modeled after and directly aligns with two levels of global standards:
 - **Universal Schema.org Class**: [https://schema.org/Action](https://schema.org/Action) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
+- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
 - **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPTool`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
@@ -65,11 +65,16 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ## Property Constraints & SHACL Rules
 
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | MCP Tool must have a title. |
-| **`robos:toolName`** | MCP Tool Name | `1..*` | `xsd:string` | Agents & MCP | MCP Tool must declare tool name. |
-| **`robos:mcpServer`** | Parent MCP Server | `1..*` | `URI (robos:MCPServer)` | Agents & MCP | MCP Tool must link to parent MCP server. |
+| Property Path | Multiplicity | Meaning |
+|---|---|---|
+| `dcterms:title` | `1..*` | MCP Tool must have a title. |
+| `robos:toolName` | `1..*` | MCP Tool must declare tool name. |
+| `robos:mcpServer` | `1..*` | MCP Tool must link to parent MCP server. |
+| `robos:inputSchema` | `0..*` | Recorded MCP tool input JSON Schema; optional in an incomplete knowledge graph. |
+| `robos:outputSchema` | `0..*` | Recorded JSON Schema for structured tool output. |
+| `robos:annotations` | `0..*` | Recorded MCP ToolAnnotations hints, not verified safety guarantees. |
+| `robos:toolAnnotations` | `0..*` | Compatibility spelling for recorded MCP ToolAnnotations; preserve without inventing hints. |
+| `robos:parameters` | `0..*` | Legacy parameter description; not automatically equivalent to inputSchema. |
 
 ---
 
@@ -129,3 +134,11 @@ const result = validator.validateGraph(new OSLCGraphParser({
 
 console.log("Conforms:", result.conforms); // Expected: true
 ```
+
+## MCP declaration semantics
+
+inputSchema describes tool input; outputSchema describes structured output. Both remain optional for partial graph declarations. annotations holds ToolAnnotations hints; toolAnnotations is a compatibility spelling. Hints are not verified safety guarantees. parameters is a legacy description, not automatically a JSON Schema or invocation values.
+
+Based on the [MCP 2025-11-25 schema](https://modelcontextprotocol.io/specification/2025-11-25/schema). These are recorded definitions; validation does not execute or discover an MCP server.
+
+Structured fields inputSchema, outputSchema, annotations, arguments, parameters and toolAnnotations use JSON-LD @json literals where present, preserving nested unprefixed keys and array order. This protects serialization; it does not validate the nested contract.

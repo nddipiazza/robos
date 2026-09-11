@@ -183,6 +183,54 @@
       "robos:dependsOn": {
         "@id": "urn:robos:source:workspace-review"
       }
+    },
+    {
+      "@id": "urn:robos:source:schema-group-view",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "line": 11
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ],
   "@graph": [
@@ -259,6 +307,54 @@
       "robos:namespace": "robos.applications",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:source:schema-group-view",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Schema-aware Knowledge Graph Explorer views",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/schema-group-view.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/schema-group-view.js",
+          "line": 1
+        }
+      ],
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ],
+      "robos:classificationOrigin": "inferred",
+      "robos:dependsOn": [
+        {
+          "@id": "urn:robos:source:inspector-property-groups"
+        }
+      ],
+      "robos:relationshipEvidence": [
+        {
+          "predicate": "robos:dependsOn",
+          "target": {
+            "@id": "urn:robos:source:inspector-property-groups"
+          },
+          "evidence": [
+            {
+              "repository": "robos",
+              "path": "packages/robos-graph/renderer/schema-group-view.js",
+              "line": 11
+            }
+          ],
+          "note": "Implementation uses this module, or test exercises its rendered behavior."
+        }
+      ]
     }
   ]
 }

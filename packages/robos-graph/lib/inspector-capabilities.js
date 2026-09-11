@@ -1,7 +1,7 @@
 (function(root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.RobosInspector = factory();
-})(globalThis, function() {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./inspector-property-groups'));
+  else root.RobosInspector = factory(root.RobosInspectorPropertyGroups);
+})(globalThis, function(propertyGroups) {
   'use strict';
   const BASE_TABS = ['visual', 'query', 'rdf'];
   const graphIndexes = new WeakMap();
@@ -36,7 +36,7 @@
     return `https://github.com/${parts[0]}/${repository}/blob/${evidence.revision}/${file.split('/').map(encodeURIComponent).join('/')}#L${evidence.line}`;
   }
   function capabilities(node = {}, nodes = [], relationships = new Map()) {
-    if (!node || !node['@id']) return { tabs: ['visual'], documents: [], evidence: [], relations: [] };
+    if (!node || !node['@id']) return { tabs: ['visual'], documents: [], evidence: [], relations: [], groups: [] };
     if (!graphIndexes.has(nodes)) graphIndexes.set(nodes, new Map(nodes.map(n => [n['@id'], n])));
     const byId = graphIndexes.get(nodes), documents = [], seen = new Set();
     const documentKeys = new Set();
@@ -49,9 +49,9 @@
     };
     const content = (doc, label) => {
       if (seen.has(doc['@id'])) return; seen.add(doc['@id']);
-      for (const key of ['robos:content','robos:markdown','robos:markdownContent','schema:text','robos:context','robos:decision','robos:consequences']) add('text',`${label}: ${key}`,doc[key]);
+      for (const key of ['robos:content','robos:markdown','robos:markdownContent','schema:text','robos:context','robos:decision','robos:consequences']) add('text',`${label}: ${key}`,doc[key],undefined,doc);
       for (const key of ['robos:docPath','robos:sourcePath']) add('path',`${label}: ${key}`,doc[key],undefined,doc);
-      for (const key of ['robos:docsUrl','robos:sourceUrl','schema:url']) { const url=safeUrl(doc[key]); if(url)add('url',label,url); }
+      for (const key of ['robos:docsUrl','robos:sourceUrl','schema:url']) { const url=safeUrl(doc[key]); if(url)add('url',label,url,undefined,doc); }
     };
     if (list(node['@type']).some(t=>DOC_TYPES.has(compact(t)))) content(node,node['dcterms:title']||node['@id']);
     for (const key of ['robos:documentation','robos:hasDocumentation','robos:hasDocumentationPage']) for (const value of list(node[key])) {
@@ -75,7 +75,8 @@
       for (const record of list(edge.evidence)) if(record && typeof record==='object' && !Array.isArray(record) && Object.keys(record).length) evidence.push({...record, 'relationship predicate':edge.predicate, 'relationship target':target});
     }
     const relations = relationships.get(node['@id']) || [];
-    return { tabs: ['visual',...(relations.length?['topology']:[]),...(relations.some(e=>e.kind==='dependency')?['impact']:[]),'query',...(documents.length?['documentation']:[]),...(evidence.length?['evidence']:[]),'rdf'], documents, evidence, relations };
+    const groups = propertyGroups.groups(node, nodes);
+    return { tabs: ['visual',...groups.map(group => `group-${group.id}`),...(relations.length?['topology']:[]),...(relations.some(e=>e.kind==='dependency')?['impact']:[]),'query',...(documents.length?['documentation']:[]),...(evidence.length?['evidence']:[]),'rdf'], documents, evidence, relations, groups };
   }
   function selectTab(requested,node,nodes,relationships) {
     const tab=({overview:'visual',jsonld:'rdf'})[requested]||requested;

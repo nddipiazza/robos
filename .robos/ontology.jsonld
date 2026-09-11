@@ -3301,6 +3301,9 @@
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/data"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
         }
       ]
     },
@@ -6243,6 +6246,783 @@
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:uri",
+      "@type": "rdf:Property",
+      "rdfs:label": "uri",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:toolAnnotations",
+      "@type": "rdf:Property",
+      "rdfs:label": "toolAnnotations",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:resourcesProvided",
+      "@type": "rdf:Property",
+      "rdfs:label": "resourcesProvided",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:promptsProvided",
+      "@type": "rdf:Property",
+      "rdfs:label": "promptsProvided",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:parameters",
+      "@type": "rdf:Property",
+      "rdfs:label": "parameters",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:outputSchema",
+      "@type": "rdf:Property",
+      "rdfs:label": "outputSchema",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:mimeType",
+      "@type": "rdf:Property",
+      "rdfs:label": "mimeType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:inputSchema",
+      "@type": "rdf:Property",
+      "rdfs:label": "inputSchema",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:arguments",
+      "@type": "rdf:Property",
+      "rdfs:label": "arguments",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:annotations",
+      "@type": "rdf:Property",
+      "rdfs:label": "annotations",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:acceptanceCriteria",
+      "@type": "rdf:Property",
+      "rdfs:label": "acceptanceCriteria",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:appName",
+      "@type": "rdf:Property",
+      "rdfs:label": "appName",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:appVersion",
+      "@type": "rdf:Property",
+      "rdfs:label": "appVersion",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:assetEndpoint",
+      "@type": "rdf:Property",
+      "rdfs:label": "assetEndpoint",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:author",
+      "@type": "rdf:Property",
+      "rdfs:label": "author",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:availabilityStatus",
+      "@type": "rdf:Property",
+      "rdfs:label": "availabilityStatus",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:boundServices",
+      "@type": "rdf:Property",
+      "rdfs:label": "boundServices",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/services"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:branchMetadataStatus",
+      "@type": "rdf:Property",
+      "rdfs:label": "branchMetadataStatus",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:browserEndpoint",
+      "@type": "rdf:Property",
+      "rdfs:label": "browserEndpoint",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:buildCommand",
+      "@type": "rdf:Property",
+      "rdfs:label": "buildCommand",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/libraries"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:collectionOfDatabase",
+      "@type": "rdf:Property",
+      "rdfs:label": "collectionOfDatabase",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:collections",
+      "@type": "rdf:Property",
+      "rdfs:label": "collections",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:columnOfTable",
+      "@type": "rdf:Property",
+      "rdfs:label": "columnOfTable",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:configurationKind",
+      "@type": "rdf:Property",
+      "rdfs:label": "configurationKind",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:contractYaml",
+      "@type": "rdf:Property",
+      "rdfs:label": "contractYaml",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/contracts"
+        }
+      ]
+    },
+    {
+      "@id": "robos:currentBranch",
+      "@type": "rdf:Property",
+      "rdfs:label": "currentBranch",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:declaredName",
+      "@type": "rdf:Property",
+      "rdfs:label": "declaredName",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:defaultExecProperties",
+      "@type": "rdf:Property",
+      "rdfs:label": "defaultExecProperties",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:difficulty",
+      "@type": "rdf:Property",
+      "rdfs:label": "difficulty",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/learning"
+        }
+      ]
+    },
+    {
+      "@id": "robos:documentation",
+      "@type": "rdf:Property",
+      "rdfs:label": "documentation",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/documentation"
+        }
+      ]
+    },
+    {
+      "@id": "robos:endpointOf",
+      "@type": "rdf:Property",
+      "rdfs:label": "endpointOf",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/services"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/contracts"
+        }
+      ]
+    },
+    {
+      "@id": "robos:estimatedDuration",
+      "@type": "rdf:Property",
+      "rdfs:label": "estimatedDuration",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/learning"
+        }
+      ]
+    },
+    {
+      "@id": "robos:executableName",
+      "@type": "rdf:Property",
+      "rdfs:label": "executableName",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:indexOfTable",
+      "@type": "rdf:Property",
+      "rdfs:label": "indexOfTable",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:inNamespace",
+      "@type": "rdf:Property",
+      "rdfs:label": "inNamespace",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:instanceName",
+      "@type": "rdf:Property",
+      "rdfs:label": "instanceName",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:lessons",
+      "@type": "rdf:Property",
+      "rdfs:label": "lessons",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/learning"
+        }
+      ]
+    },
+    {
+      "@id": "robos:memberCount",
+      "@type": "rdf:Property",
+      "rdfs:label": "memberCount",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:model",
+      "@type": "rdf:Property",
+      "rdfs:label": "model",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:modelKind",
+      "@type": "rdf:Property",
+      "rdfs:label": "modelKind",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/contracts"
+        }
+      ]
+    },
+    {
+      "@id": "robos:namespaceOfCluster",
+      "@type": "rdf:Property",
+      "rdfs:label": "namespaceOfCluster",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:narrative",
+      "@type": "rdf:Property",
+      "rdfs:label": "narrative",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:port",
+      "@type": "rdf:Property",
+      "rdfs:label": "port",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:ports",
+      "@type": "rdf:Property",
+      "rdfs:label": "ports",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:priority",
+      "@type": "rdf:Property",
+      "rdfs:label": "priority",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:promptOfServer",
+      "@type": "rdf:Property",
+      "rdfs:label": "promptOfServer",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:registrationCondition",
+      "@type": "rdf:Property",
+      "rdfs:label": "registrationCondition",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:replicas",
+      "@type": "rdf:Property",
+      "rdfs:label": "replicas",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:requirementId",
+      "@type": "rdf:Property",
+      "rdfs:label": "requirementId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:resourceOfServer",
+      "@type": "rdf:Property",
+      "rdfs:label": "resourceOfServer",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:resources",
+      "@type": "rdf:Property",
+      "rdfs:label": "resources",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:revision",
+      "@type": "rdf:Property",
+      "rdfs:label": "revision",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:runtimePrerequisites",
+      "@type": "rdf:Property",
+      "rdfs:label": "runtimePrerequisites",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:scenarios",
+      "@type": "rdf:Property",
+      "rdfs:label": "scenarios",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:schemaOf",
+      "@type": "rdf:Property",
+      "rdfs:label": "schemaOf",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:schemas",
+      "@type": "rdf:Property",
+      "rdfs:label": "schemas",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:securityContext",
+      "@type": "rdf:Property",
+      "rdfs:label": "securityContext",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:stageOfPipeline",
+      "@type": "rdf:Property",
+      "rdfs:label": "stageOfPipeline",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:stateScope",
+      "@type": "rdf:Property",
+      "rdfs:label": "stateScope",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/schema"
+        }
+      ]
+    },
+    {
+      "@id": "robos:stepCount",
+      "@type": "rdf:Property",
+      "rdfs:label": "stepCount",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:storyPoints",
+      "@type": "rdf:Property",
+      "rdfs:label": "storyPoints",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:tableOfSchema",
+      "@type": "rdf:Property",
+      "rdfs:label": "tableOfSchema",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:tables",
+      "@type": "rdf:Property",
+      "rdfs:label": "tables",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:tags",
+      "@type": "rdf:Property",
+      "rdfs:label": "tags",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/schema"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetAudience",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetAudience",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/learning"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetService",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetService",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/services"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/contracts"
+        }
+      ]
+    },
+    {
+      "@id": "robos:teachesApplication",
+      "@type": "rdf:Property",
+      "rdfs:label": "teachesApplication",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/learning"
+        }
+      ]
+    },
+    {
+      "@id": "robos:tlsEnabled",
+      "@type": "rdf:Property",
+      "rdfs:label": "tlsEnabled",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:toolOfServer",
+      "@type": "rdf:Property",
+      "rdfs:label": "toolOfServer",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:tools",
+      "@type": "rdf:Property",
+      "rdfs:label": "tools",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/agents"
+        }
+      ]
+    },
+    {
+      "@id": "robos:topicOfBroker",
+      "@type": "rdf:Property",
+      "rdfs:label": "topicOfBroker",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:topics",
+      "@type": "rdf:Property",
+      "rdfs:label": "topics",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:verifiedByTest",
+      "@type": "rdf:Property",
+      "rdfs:label": "verifiedByTest",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:version",
+      "@type": "rdf:Property",
+      "rdfs:label": "version",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/libraries"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:workerPools",
+      "@type": "rdf:Property",
+      "rdfs:label": "workerPools",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
         }
       ]
     }
