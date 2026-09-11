@@ -311,10 +311,10 @@ describe('robos-desktop (Taskbar Shell & Desktop Explorer) E2E', () => {
       assert.strictEqual(btnSize, '39px', 'Scale 0.75 sets --dock-btn-size to 39px');
     });
 
-    it('clamps dock resizing to min (0.55) and max (1.6) scale bounds', async () => {
+    it('clamps dock resizing to min (0.40) and max (1.6) scale bounds', async () => {
       await evalJS(app.port, `applyDockScale(0.1);`);
       let scale = await evalJS(app.port, `dockScale`);
-      assert.strictEqual(scale, 0.55, 'Scale clamps to min 0.55');
+      assert.strictEqual(scale, 0.40, 'Scale clamps to min 0.40');
 
       await evalJS(app.port, `applyDockScale(3.0);`);
       scale = await evalJS(app.port, `dockScale`);
