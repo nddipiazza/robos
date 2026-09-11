@@ -40,7 +40,9 @@ test('Electron inspector capabilities: faithful data, safe documents, source con
    await page.waitForFunction(()=>Number(document.getElementById('nodes-resizer').getAttribute('aria-valuenow'))===490);
  });
  await step('#nodes-resizer','Home and End respect panel limits; double-click restores the default width.',async el=>{
-   await el.focus();await el.press('Home');assert.equal(await sidebarWidth(),240);
+   await el.focus();await el.press('Home');assert.equal(await sidebarWidth(),360);
+   assert.ok((await page.locator('#node-search-input').boundingBox()).width>=260);
+   assert.equal(await page.locator('.filter-search-row').evaluate(el=>el.scrollWidth<=el.clientWidth),true);
    await el.press('End');assert.ok((await page.locator('.inspector-panel').boundingBox()).width>=359);
    await el.dblclick();assert.equal(await sidebarWidth(),360);
  });

@@ -10,7 +10,7 @@
   } catch { /* Resizing remains available without browser storage. */ }
   const limits = () => {
     const available = Math.max(0, grid.clientWidth - 12);
-    return { min: Math.min(240, available / 2), max: Math.max(available / 2, available - 360) };
+    return { min: Math.min(360, available / 2), max: Math.max(available / 2, available - 360) };
   };
   function render() {
     const { min, max } = limits();
