@@ -253,3 +253,10 @@ Refine. Preview shows the property-level changes, evidence, validation and
 conflicts. The main process retains the complete proposal; Save submits its
 reviewed ID, and rejects stale or replaced proposals before writing. Unchanged
 source reimports preserve accepted corrections.
+
+The topology view uses the shared relationship resolver for object, array and
+legacy string references. Cyan solid arrows identify dependency predicates;
+slate dashed arrows identify other references. Neighborhood, package and all-node
+scopes prioritize connected nodes and disclose the 48-node/160-link display limits.
+Use a narrower scope for detail. Top-to-bottom and left-to-right modes route arrows
+around boxes; labels and hover titles expose predicates and endpoints.

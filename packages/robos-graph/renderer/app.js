@@ -1872,65 +1872,15 @@ window.copyMermaidCode = async function() {
   }
 };
 
+let topologyRenderRevision = 0;
 async function renderTopologyTab(container, node) {
-  const currentPkg = node['robos:package'] || 'services';
-  
-  let displayNodes = [];
-  if (topologyScope === 'neighborhood') {
-    const rootId = node['@id'];
-    const visited = new Set([rootId]);
-    displayNodes.push(node);
-    
-    const outRefs = Array.isArray(node['robos:dependsOn']) ? [...node['robos:dependsOn']] : (node['robos:dependsOn'] ? [node['robos:dependsOn']] : []);
-    if (node['robos:implementsContract']) outRefs.push(node['robos:implementsContract']);
-    if (node['robos:usesDatabase']) outRefs.push(node['robos:usesDatabase']);
-    if (node['robos:publishesTo']) outRefs.push(node['robos:publishesTo']);
-    if (node['robos:subscribesTo']) outRefs.push(node['robos:subscribesTo']);
-    if (node['robos:targetService']) outRefs.push(node['robos:targetService']);
-
-    for (const ref of outRefs) {
-      if (!visited.has(ref)) {
-        visited.add(ref);
-        const target = nodes.find(n => n['@id'] === ref);
-        if (target) displayNodes.push(target);
-      }
-    }
-    for (const other of nodes) {
-      if (!visited.has(other['@id'])) {
-        const str = JSON.stringify(other);
-        if (str.includes(rootId)) {
-          visited.add(other['@id']);
-          displayNodes.push(other);
-        }
-      }
-    }
-  } else if (topologyScope === 'package') {
-    displayNodes = nodes.filter(n => (n['robos:package'] || 'core-platform') === currentPkg);
-  } else {
-    displayNodes = nodes.slice(0, 32);
-  }
-
-  const idSet = new Set(displayNodes.map(n => n['@id']));
-  const edges = [];
-  for (const n of displayNodes) {
-    const fromId = n['@id'];
-    const checkEdge = (toId, label) => {
-      if (toId && idSet.has(toId) && toId !== fromId) {
-        edges.push({ from: fromId, to: toId, label });
-      }
-    };
-    if (n['robos:implementsContract']) checkEdge(n['robos:implementsContract'], 'implements');
-    if (n['robos:usesDatabase']) checkEdge(n['robos:usesDatabase'], 'usesDb');
-    if (n['robos:publishesTo']) checkEdge(n['robos:publishesTo'], 'publishes');
-    if (n['robos:subscribesTo']) checkEdge(n['robos:subscribesTo'], 'subscribes');
-    if (n['robos:targetService']) checkEdge(n['robos:targetService'], 'targets');
-    if (Array.isArray(n['robos:dependsOn'])) {
-      for (const d of n['robos:dependsOn']) checkEdge(d, 'dependsOn');
-    } else if (n['robos:dependsOn']) {
-      checkEdge(n['robos:dependsOn'], 'dependsOn');
-    }
-  }
-
+  const revision = ++topologyRenderRevision;
+  const currentPkg = node['robos:package'] || 'Unpackaged';
+  const relations = await window.sdlcGraph.getGraphRelations();
+  if (revision !== topologyRenderRevision || currentTab !== 'topology') return;
+  const topology = window.RobosTopology.buildTopology(nodes, relations, { rootId: node['@id'], scope: topologyScope });
+  const displayNodes = topology.nodes;
+  const edges = topology.edges;
   const isTD = topologyDirection === 'TD';
   const nodeWidth = 200;
   const nodeHeight = 64;
@@ -1955,27 +1905,35 @@ async function renderTopologyTab(container, node) {
     nodePositions.set(n['@id'], { x, y });
   });
 
-  const svgWidth = Math.max(860, (cols + 1) * colSpacing);
-  const svgHeight = Math.max(520, (Math.ceil(displayNodes.length / cols) + 1) * rowSpacing);
+  const gridRight = Math.max(260, ...[...nodePositions.values()].map(p => p.x + nodeWidth));
+  const gridBottom = Math.max(130, ...[...nodePositions.values()].map(p => p.y + nodeHeight));
+  const svgWidth = Math.max(860, gridRight + (isTD ? 70 + edges.length * 14 : 60));
+  const svgHeight = Math.max(520, gridBottom + (isTD ? 60 : 70 + edges.length * 14));
 
+  // Route through the gaps and an outer rail so opaque boxes do not hide links.
+  // TD ports are bottom/top; LR ports are right/left. Rails also expose cycles.
   let edgeSvg = '';
-  for (const e of edges) {
-    const p1 = nodePositions.get(e.from);
-    const p2 = nodePositions.get(e.to);
-    if (p1 && p2) {
-      const startX = p1.x + nodeWidth / 2;
-      const startY = p1.y + nodeHeight;
-      const endX = p2.x + nodeWidth / 2;
-      const endY = p2.y;
-      const midY = (startY + endY) / 2;
-      
-      edgeSvg += `
-        <path d="M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}"
-          fill="none" stroke="rgba(0, 188, 212, 0.4)" stroke-width="1.8" stroke-dasharray="4 2" marker-end="url(#arrow)" />
-        <text x="${(startX + endX) / 2}" y="${midY - 2}" fill="#8b949e" font-size="8.5" font-family="monospace" text-anchor="middle">${e.label}</text>
-      `;
+  edges.forEach((e, index) => {
+    const p1 = nodePositions.get(e.from), p2 = nodePositions.get(e.to);
+    const dependency = e.kind === 'dependency';
+    const color = dependency ? '#22d3ee' : '#94a3b8';
+    const rail = (isTD ? gridRight : gridBottom) + 40 + index * 14;
+    let route, labelX, labelY;
+    if (isTD) {
+      const sx = p1.x + nodeWidth / 2, sy = p1.y + nodeHeight;
+      const tx = p2.x + nodeWidth / 2, ty = p2.y;
+      route = `M ${sx} ${sy} V ${sy + 20} H ${rail} V ${ty - 15} H ${tx} V ${ty}`;
+      labelX = rail + 4; labelY = (sy + ty) / 2;
+    } else {
+      const sx = p1.x + nodeWidth, sy = p1.y + nodeHeight / 2;
+      const tx = p2.x, ty = p2.y + nodeHeight / 2;
+      route = `M ${sx} ${sy} H ${sx + 20} V ${rail} H ${tx - 15} V ${ty} H ${tx}`;
+      labelX = (sx + tx) / 2; labelY = rail - 4;
     }
-  }
+    edgeSvg += `<path class="topology-edge" data-from="${escHtml(e.from)}" data-to="${escHtml(e.to)}" data-predicate="${escHtml(e.predicate)}" data-kind="${escHtml(e.kind)}"
+      d="${route}" fill="none" stroke="${color}" stroke-width="2.5" ${dependency ? '' : 'stroke-dasharray="7 5"'} marker-end="url(#topology-arrow-${dependency ? 'dependency' : 'reference'})"><title>${escHtml(e.from)} → ${escHtml(e.to)} (${escHtml(e.predicate)})</title></path>
+      <text class="topology-edge-label" x="${labelX}" y="${labelY}" ${isTD ? `transform="rotate(-90 ${labelX} ${labelY})"` : ''} fill="${color}" stroke="#0d1117" stroke-width="4" paint-order="stroke" font-size="10" font-family="monospace" text-anchor="middle">${escHtml(e.predicate)}</text>`;
+  });
 
   let nodeSvg = '';
   for (const n of displayNodes) {
@@ -1989,19 +1947,19 @@ async function renderTopologyTab(container, node) {
     const strokeWidth = isSelected ? '2.5' : '1';
 
     nodeSvg += `
-      <g class="topology-node-group" onclick="window.selectNode('${n['@id']}')" style="cursor: pointer;">
+      <g class="topology-node-group" data-node-id="${escHtml(n['@id'])}" style="cursor: pointer;"><title>${escHtml(n['@id'])}</title>
         <rect x="${pos.x}" y="${pos.y}" width="${nodeWidth}" height="${nodeHeight}" rx="6" ry="6"
           fill="#161b22" stroke="${strokeColor}" stroke-width="${strokeWidth}" class="topology-node-rect ${isSelected ? 'selected' : ''}" />
         <circle cx="${pos.x + 14}" cy="${pos.y + 16}" r="4.5" fill="${isSelected ? '#00bcd4' : '#3fb950'}" />
         <text x="${pos.x + 25}" y="${pos.y + 20}" fill="#f0f6fc" font-size="11" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
-          ${title}
+          ${escHtml(title)}
         </text>
         <text x="${pos.x + 12}" y="${pos.y + 42}" fill="#8b949e" font-size="9" font-family="monospace">
-          ${badge.label}
+          ${escHtml(badge.label)}
         </text>
         <rect x="${pos.x + nodeWidth - 75}" y="${pos.y + 32}" width="65" height="16" rx="3" fill="rgba(0, 188, 212, 0.12)" />
         <text x="${pos.x + nodeWidth - 42}" y="${pos.y + 44}" fill="#00bcd4" font-size="8.5" font-family="monospace" text-anchor="middle">
-          📦 ${pkg}
+          📦 ${escHtml(pkg)}
         </text>
       </g>
     `;
@@ -2013,26 +1971,27 @@ async function renderTopologyTab(container, node) {
         <div class="topology-toolbar-group">
           <label style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Scope:</label>
           <select id="topology-scope-select" class="filter-type-select" onchange="window.setTopologyScope(this.value)">
-            <option value="neighborhood" ${topologyScope === 'neighborhood' ? 'selected' : ''}>🔍 Neighborhood (${(node['dcterms:title'] || '').slice(0, 20)})</option>
-            <option value="package" ${topologyScope === 'package' ? 'selected' : ''}>📦 Package (${currentPkg})</option>
-            <option value="all" ${topologyScope === 'all' ? 'selected' : ''}>🌐 Entire SDLC Universe</option>
+            <option value="neighborhood" ${topologyScope === 'neighborhood' ? 'selected' : ''}>🔍 Neighborhood (${escHtml((node['dcterms:title'] || '').slice(0, 20))})</option>
+            <option value="package" ${topologyScope === 'package' ? 'selected' : ''}>📦 Package (${escHtml(currentPkg)})</option>
+            <option value="all" ${topologyScope === 'all' ? 'selected' : ''}>🌐 All nodes (connected first)</option>
           </select>
-          <button class="btn btn-secondary btn-sm" onclick="window.toggleTopologyDirection()">
+          <button id="topology-direction-toggle" class="btn btn-secondary btn-sm" onclick="window.toggleTopologyDirection()">
             ${isTD ? '⬇️ Top-to-Bottom' : '➡️ Left-to-Right'}
           </button>
         </div>
         <div class="topology-toolbar-group">
-          <span style="font-size: 11px; color: var(--accent); font-weight: 600;">${displayNodes.length} Nodes &middot; ${edges.length} Links</span>
+          <span id="topology-counts" style="font-size: 11px; color: var(--accent); font-weight: 600;">${displayNodes.length} Nodes &middot; ${edges.length} Links</span>
           <button class="btn btn-secondary btn-sm" onclick="window.copyMermaidCode()">📋 Copy Mermaid</button>
         </div>
       </div>
 
+      <div id="topology-legend" style="padding:8px;font-size:12px"><span style="color:#22d3ee">━━ Dependency</span> · <span style="color:#94a3b8">┄┄ Reference (unclassified predicates retain their label)</span></div>
+      ${topology.omittedNodes || topology.omittedEdges ? `<div id="topology-truncation" role="status" style="padding:8px;color:#f0bd67">Bounded view (limit 48 nodes / 160 links): ${topology.omittedNodes} of ${topology.totalNodes} nodes and ${topology.omittedEdges} of ${topology.totalEdges} links omitted. Selected connected nodes are prioritized; narrow the scope to inspect more.</div>` : ''}
+      ${edges.length ? '' : '<div id="topology-empty" style="padding:8px">No modeled links in this scope. Missing source coverage may hide relationships.</div>'}
       <div class="topology-canvas-wrap">
         <svg class="topology-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}">
           <defs>
-            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#00bcd4" />
-            </marker>
+            ${[['dependency', '#22d3ee'], ['reference', '#94a3b8']].map(([kind, color]) => `<marker id="topology-arrow-${kind}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${color}" /></marker>`).join('')}
           </defs>
           ${edgeSvg}
           ${nodeSvg}
@@ -2040,6 +1999,7 @@ async function renderTopologyTab(container, node) {
       </div>
     </div>
   `;
+  container.querySelectorAll('.topology-node-group[data-node-id]').forEach(el => el.addEventListener('click', () => window.selectNode(el.dataset.nodeId)));
 }
 
 // ── 2. Blast Radius & Impact Analyzer ──────────────────────────────────────────

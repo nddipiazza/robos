@@ -107,6 +107,12 @@ ipcMain.handle('workspace-apply', (_, proposal) => {
 });
 
 ipcMain.handle('graph-get-all', async () => store.parser.nodes);
+ipcMain.handle('graph-get-relations', async () => {
+  const { nodeRelations } = require('./lib/relationships');
+  const ids = new Set(store.parser.nodes.map(node => node['@id']));
+  return store.parser.nodes.flatMap(node => nodeRelations(node, ids)).filter(edge => edge.internal)
+    .map(({ from, to, predicate, kind }) => ({ from, to, predicate, kind }));
+});
 ipcMain.handle('graph-query', async (_, filter) => store.query(filter));
 ipcMain.handle('graph-get-node', async (_, id) => store.getNode(id));
 ipcMain.handle('graph-find-dependents', async (_, id) => store.findDependents(id));

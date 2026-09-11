@@ -11,8 +11,10 @@
     "test:vm:no-deploy": "node lib/vm-smoke.js --no-deploy",
     "test:container": "../../scripts/e2e-container.sh",
     "test:container:build": "../../scripts/e2e-container.sh --build",
-    "test:kgraph-workspace": "node --test tests/sdlc-graph/graph-workspace.test.js tests/sdlc-graph/source-extractor.test.js tests/sdlc-graph/workspace-review.test.js tests/mcp-servers/sdlc-tools.test.js tests/sdlc-graph/source-consumers.test.js tests/sdlc-graph/classification.test.js tests/sdlc-graph/dependency-semantics.test.js",
-    "test:kgraph-workspace:e2e": "node --test --test-concurrency=1 tests/sdlc-graph/workspace-review.e2e.js tests/sdlc-graph/source-consumers.e2e.js tests/sdlc-graph/classification.e2e.js"
+    "test:kgraph-workspace": "node --test tests/sdlc-graph/graph-workspace.test.js tests/sdlc-graph/source-extractor.test.js tests/sdlc-graph/workspace-review.test.js tests/mcp-servers/sdlc-tools.test.js tests/sdlc-graph/source-consumers.test.js tests/sdlc-graph/classification.test.js tests/sdlc-graph/dependency-semantics.test.js tests/sdlc-graph/topology.test.js",
+    "test:kgraph-workspace:e2e": "node --test --test-concurrency=1 tests/sdlc-graph/workspace-review.e2e.js tests/sdlc-graph/source-consumers.e2e.js tests/sdlc-graph/classification.e2e.js tests/sdlc-graph/topology.e2e.js",
+    "test:topology": "node --test tests/sdlc-graph/topology.test.js",
+    "test:topology:e2e": "node --test tests/sdlc-graph/topology.e2e.js"
   },
   "dependencies": {
     "electron": "^30.5.1",

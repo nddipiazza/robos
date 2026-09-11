@@ -97,6 +97,8 @@ for reference syntax, provenance, registry coverage, and the real Electron test.
 Dependency impact uses directed, evidenced relationships and separates them from
 repository membership and source provenance. The importer records dependency
 scopes and protobuf references; unresolved external dependencies remain explicit.
+The topology view draws the same resolved JSON-LD relationships, with cyan
+dependency arrows, dashed reference arrows, and explicit limits on large views.
 Kube Studio can browse infrastructure declarations and their source evidence from
 the same graph workspace. See [dependency workflows](packages/robos-graph/WORKSPACES.md#dependency-evidence-and-impact)
 for commands, supported extraction and interpretation limits.

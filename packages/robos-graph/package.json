@@ -9,7 +9,9 @@
   "scripts": {
     "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
     "generate:docs": "node ../../scripts/generate-kgraph-schema-docs.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:topology": "node --test ../robos-test/tests/sdlc-graph/topology.test.js",
+    "test:topology:e2e": "node --test ../robos-test/tests/sdlc-graph/topology.e2e.js"
   },
   "dependencies": {
     "electron": "^33.2.1"

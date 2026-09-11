@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   askWorkspaceAgent: input => ipcRenderer.invoke('workspace-ask-agent', input),
   applyWorkspace: proposal => ipcRenderer.invoke('workspace-apply', proposal),
   getAllNodes: () => ipcRenderer.invoke('graph-get-all'),
+  getGraphRelations: () => ipcRenderer.invoke('graph-get-relations'),
   query: (filter) => ipcRenderer.invoke('graph-query', filter),
   getNode: (id) => ipcRenderer.invoke('graph-get-node', id),
   findDependents: (id) => ipcRenderer.invoke('graph-find-dependents', id),
