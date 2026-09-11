@@ -142,6 +142,8 @@
           <div class="panel-body node-list" id="nodes-list"></div>
         </section>
 
+        <div id="nodes-resizer" role="separator" aria-label="Resize Graph Nodes column" aria-orientation="vertical" aria-controls="nodes-list" tabindex="0" title="Drag to resize; arrow keys to adjust; double-click to reset"></div>
+
         <!-- Right Panel: Resource Inspector with Tabbed Views -->
         <section class="panel inspector-panel">
           <div class="inspector-tabs">
@@ -656,6 +658,7 @@
   <script src="../lib/classification.js"></script>
   <script src="../lib/topology.js"></script>
   <script src="../lib/inspector-capabilities.js"></script>
+  <script src="panel-resizer.js"></script>
   <script src="app.js"></script>
   <script src="workspace-review.js"></script>
 </body>

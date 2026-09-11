@@ -198,8 +198,8 @@ h1 {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 12px;
+  grid-template-columns: var(--nodes-width, 360px) 12px minmax(0, 1fr);
+  gap: 0;
   width: 100%;
   height: 100%;
 }
@@ -1759,3 +1759,11 @@ button.node-group-header { width: 100%; text-align: left; color: inherit; font: 
 .source-document-card dt { color: var(--text-muted); }
 .source-document-card dd { margin: 0; overflow-wrap: anywhere; }
 .source-document-card .view-source-evidence { display: block; margin-top: 12px; }
+
+/* The full gap is a pointer/keyboard target, with a visible central grip. */
+#nodes-resizer { cursor: col-resize; touch-action: none; position: relative; outline: none; }
+#nodes-resizer::after { content: ''; position: absolute; top: 0; bottom: 0; left: 5px; width: 2px; background: var(--border); border-radius: 2px; }
+#nodes-resizer:hover::after, #nodes-resizer:focus-visible::after,
+#nodes-resizer.resizing::after { background: var(--accent); width: 4px; left: 4px; }
+.workspace-grid > .panel { min-width: 0; }
+body.resizing-nodes { cursor: col-resize; user-select: none; }

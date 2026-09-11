@@ -19,6 +19,33 @@ test('Electron inspector capabilities: faithful data, safe documents, source con
  const page=await app.firstWindow();page.on('pageerror',e=>errors.push(e.message));
  const step=async(selector,text,action)=>{await page.locator(selector).first().scrollIntoViewIfNeeded();captions.push({time:(Date.now()-start)/1000,text});await page.evaluate(({selector,text})=>{let b=document.getElementById('proof-caption');if(!b){b=document.createElement('div');b.id='proof-caption';b.style.cssText='position:fixed;bottom:10px;left:10px;right:10px;background:#163440;color:white;border:2px solid #22d3ee;padding:14px;z-index:999999;pointer-events:none;font:18px sans-serif';document.body.append(b);}b.textContent=text;document.querySelector(selector).style.outline='2px solid #22d3ee';},{selector,text});if(action)await action(page.locator(selector));await page.waitForTimeout(500);};
  await page.locator('#overview-relationships').waitFor();
+ await step('#nodes-resizer','Drag the divider to give Graph Nodes more room.',async el=>{
+   await el.dblclick();
+   const box=await el.boundingBox();
+   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);
+   await page.mouse.down();await page.mouse.move(box.x+box.width/2+140,box.y+box.height/2,{steps:12});await page.mouse.up();
+ });
+ const sidebarWidth=()=>page.locator('.nodes-panel').evaluate(el=>el.getBoundingClientRect().width);
+ assert.ok(Math.abs(await sidebarWidth()-500)<2);
+ await step('#nodes-resizer','Arrow keys resize the focused separator; the chosen width survives reload.',async el=>{await el.focus();await el.press('ArrowLeft');});
+ assert.ok(Math.abs(await sidebarWidth()-490)<2);
+ await page.reload();await page.locator('#overview-relationships').waitFor();
+ assert.ok(Math.abs(await sidebarWidth()-490)<2);
+ await step('#nodes-resizer','Resizing the window keeps both panels usable and restores the preferred width.',async()=>{
+   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(760,960));
+   await page.waitForFunction(()=>document.querySelector('.workspace-grid').clientWidth<760);
+   assert.ok(await sidebarWidth()<=360);
+   assert.ok((await page.locator('.inspector-panel').boundingBox()).width>=340);
+   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1440,960));
+   await page.waitForFunction(()=>Number(document.getElementById('nodes-resizer').getAttribute('aria-valuenow'))===490);
+ });
+ await step('#nodes-resizer','Home and End respect panel limits; double-click restores the default width.',async el=>{
+   await el.focus();await el.press('Home');assert.equal(await sidebarWidth(),240);
+   await el.press('End');assert.ok((await page.locator('.inspector-panel').boundingBox()).width>=359);
+   await el.dblclick();assert.equal(await sidebarWidth(),360);
+ });
+ await page.screenshot({path:path.join(proof,'00-resizable-sidebar.png')});
+
  assert.match(await page.locator('#inspector-content').textContent(),/robos:repository/);
  assert.equal(await page.locator('#inspector-content img').count(),0);
  for(const tab of ['gitops','edd','video','fabric','traceability'])assert.equal(await page.locator('#tab-btn-'+tab).count(),0);

@@ -16,3 +16,5 @@
 | Source Evidence (new) | Actual node/relationship evidence | Show only when matching evidence exists |
 
 No application behavior or live runtime health is inferred from source declarations. Unsupported tabs must also be rejected by programmatic navigation; switching objects falls back to Overview when the previous tab no longer applies.
+
+The Graph Nodes divider is draggable and keyboard accessible (Left/Right, Shift for larger steps, Home/End for limits). Its width is saved locally across reopening; double-click resets it. Narrowing the window constrains the panels without discarding the preferred width.
