@@ -936,12 +936,14 @@ class KGraphResourceImporter {
     let shaclSummary = { conforms: true, violations: 0 };
     if (this.validator && options.validateSHACL !== false) {
       try {
-        const valRes = this.validator.validateGraph(allNodes);
+        const valRes = this.validator.validateGraph({ nodes: allNodes });
         shaclSummary = {
           conforms: valRes.conforms !== false,
           violations: (valRes.violations || []).length,
         };
-      } catch {}
+      } catch (error) {
+        throw new Error(`Graph validation failed: ${error.message}`);
+      }
     }
 
     // 5. Package Breakdown Statistics

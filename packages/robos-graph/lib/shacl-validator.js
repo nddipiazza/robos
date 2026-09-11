@@ -13,8 +13,8 @@ const BUILTIN_SHACL_SHAPES = [
       },
       {
         "path": "robos:ownerTeam",
-        "minCount": 1,
-        "message": "Microservice must define an owner team."
+        "minCount": 0,
+        "message": "Record an owner team when known; unknown ownership must not be fabricated."
       },
       {
         "path": "dcterms:title",
@@ -2375,6 +2375,8 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
   }
 ];
+
+BUILTIN_SHACL_SHAPES.push(...require('./source-shapes').SOURCE_SHAPES);
 
 class SHACLValidator {
   constructor(shapes = BUILTIN_SHACL_SHAPES) {

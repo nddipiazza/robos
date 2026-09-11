@@ -113,7 +113,7 @@ Specify any combination of heterogeneous infrastructure resources to ingest into
 ### 2. Step 2: Inspection & Knowledge Graph Topology
 The inspection engine scans local manifests and simultaneously executes the `KGraphResourceImporter` pipeline:
 - **Topology Statistics**: Discovers all entities across 8 standard packages (Microservices, Git Organizations, Confluence Docs, ADRs, Flow Diagrams, OpenAPI/Protobuf contracts, Databases, and Kafka brokers).
-- **100% W3C SHACL Shape Conformance**: Every discovered node is validated in real time against 91 SHACL constraint shapes.
+- **100% W3C SHACL Shape Conformance**: Every discovered node is validated in real time against 98 SHACL constraint shapes.
 - **Interactive AI Prompt Refinement**: Use the `<robos-ai-textarea>` prompt bar to tune detected archetypes, technology stacks, naming, or team mapping in seconds.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">

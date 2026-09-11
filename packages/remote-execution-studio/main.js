@@ -7,6 +7,8 @@ const os = require('os');
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_FILE = path.join(HOME_DIR, '.config', 'robos', 'remote-execution.json');
 const KGRAPH_FILE = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
+const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
+const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
 const DEBUG_PORT = 19184;
 
 // Debug server (optional)
@@ -39,10 +41,16 @@ try {
 
 let kgraphStore = null;
 function getGraphStore() {
+  if (EXTERNAL_GRAPH && !GRAPH_ROOT.trim()) throw new Error("ROBOS_GRAPH_ROOT must name an available graph workspace");
   if (!kgraphStore && SDLCKnowledgeGraphStore) {
     try {
-      kgraphStore = new SDLCKnowledgeGraphStore(KGRAPH_FILE);
-    } catch {}
+      kgraphStore = new SDLCKnowledgeGraphStore(EXTERNAL_GRAPH ? { graphRoot: GRAPH_ROOT } : KGRAPH_FILE);
+    } catch (error) { if (EXTERNAL_GRAPH) throw error; }
+  }
+  if (EXTERNAL_GRAPH && !kgraphStore) throw new Error("Configured graph workspace is unavailable");
+  if (EXTERNAL_GRAPH) {
+    kgraphStore.init();
+    if (!fs.existsSync(kgraphStore.workspace.file)) throw new Error("Configured graph workspace is unavailable");
   }
   return kgraphStore;
 }
@@ -160,6 +168,7 @@ const DEFAULT_BUILD_SYSTEMS = [
 ];
 
 function loadLocalConfig() {
+  if (EXTERNAL_GRAPH) return { clusters: [], buildSystems: [] };
   if (fs.existsSync(CONFIG_FILE)) {
     try {
       return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
@@ -172,6 +181,7 @@ function loadLocalConfig() {
 }
 
 function saveLocalConfig(cfg) {
+  if (EXTERNAL_GRAPH) throw new Error("Use the graph workspace review workflow to save changes");
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
@@ -233,6 +243,7 @@ ipcMain.handle('re-get-clusters', async () => {
   const store = getGraphStore();
   if (store) {
     const kClusters = store.getRemoteExecutionClusters();
+    if (EXTERNAL_GRAPH) return kClusters.map(n => ({ ...n, "robos:stateScope": "source-only" }));
     if (kClusters.length > 0) return kClusters;
   }
   const cfg = loadLocalConfig();
@@ -243,13 +254,14 @@ ipcMain.handle('re-get-cluster', async (event, id) => {
   const store = getGraphStore();
   if (store) {
     const c = store.getRemoteExecutionCluster(id);
-    if (c) return c;
+    if (c) return EXTERNAL_GRAPH ? { ...c, "robos:stateScope": "source-only" } : c;
   }
   const cfg = loadLocalConfig();
   return (cfg.clusters || []).find(c => c['@id'] === id) || null;
 });
 
 ipcMain.handle('re-save-cluster', async (event, cluster) => {
+  if (EXTERNAL_GRAPH) throw new Error("Use Import & Refine for workspace changes; source declarations do not verify live endpoints");
   const store = getGraphStore();
   let kgraphResult = { ok: true };
   if (store) {
@@ -268,6 +280,7 @@ ipcMain.handle('re-save-cluster', async (event, cluster) => {
 });
 
 ipcMain.handle('re-delete-cluster', async (event, id) => {
+  if (EXTERNAL_GRAPH) throw new Error("Use Import & Refine for workspace changes; source declarations do not verify live endpoints");
   const cfg = loadLocalConfig();
   cfg.clusters = (cfg.clusters || []).filter(c => c['@id'] !== id);
   saveLocalConfig(cfg);
@@ -278,13 +291,14 @@ ipcMain.handle('re-get-build-systems', async () => {
   const store = getGraphStore();
   if (store) {
     const sys = store.getBuildSystems();
-    if (sys.length > 0) return sys;
+    if (EXTERNAL_GRAPH || sys.length > 0) return sys;
   }
   const cfg = loadLocalConfig();
   return cfg.buildSystems || DEFAULT_BUILD_SYSTEMS;
 });
 
 ipcMain.handle('re-save-build-system', async (event, sys) => {
+  if (EXTERNAL_GRAPH) throw new Error("Use Import & Refine for workspace changes; source declarations do not verify live endpoints");
   const store = getGraphStore();
   let kgraphResult = { ok: true };
   if (store) {
@@ -345,6 +359,7 @@ ipcMain.handle('re-generate-nativelink-config', async (event, clusterId) => {
 });
 
 ipcMain.handle('re-test-endpoints', async (event, clusterId) => {
+  if (EXTERNAL_GRAPH) throw new Error("Use Import & Refine for workspace changes; source declarations do not verify live endpoints");
   const cfg = loadLocalConfig();
   const c = (cfg.clusters || []).find(item => item['@id'] === clusterId) || cfg.clusters[0] || {};
   return {
@@ -373,6 +388,7 @@ ipcMain.handle('re-test-endpoints', async (event, clusterId) => {
 });
 
 ipcMain.handle('re-sync-kgraph', async () => {
+  if (EXTERNAL_GRAPH) { const store = getGraphStore(); return { ok: true, readOnly: true, nodesCount: store.parser.nodes.length }; }
   const store = getGraphStore();
   if (store) {
     store.save();

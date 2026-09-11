@@ -138,7 +138,7 @@ Clicking **Deep Thinking AI Extract & Queue Targets** invokes the `KGraphResourc
 
 Clicking **Deep Inspect & Analyze Targets 🔍** transitions to **Step 2: Inspection & Knowledge Graph Topology**:
 * **Topology Entity Discovery**: The engine crawls the queued targets and identifies **21 total SDLC Graph Entities** across 4 Git organizations, 5 microservices/APIs, 5 OpenAPI 3.1 contracts, 3 living documentation pages and ADRs, 1 database, and 1 Kafka cluster.
-* **100% W3C SHACL Shape Conformance**: Every single discovered node is validated in real time against **91 W3C SHACL constraint shapes** across 8 standard modular packages (`organization`, `services`, `documentation`, `core-platform`).
+* **100% W3C SHACL Shape Conformance**: Every single discovered node is validated in real time against **98 W3C SHACL constraint shapes** across 8 standard modular packages (`organization`, `services`, `documentation`, `core-platform`).
 * **Deep Thinking AI Architectural Refinement (`<robos-ai-textarea>`)**:
   Developers can use the dedicated **Deep Thinking AI Architectural Refinement** prompt bar to tune detected parameters before committing:
   - *"Confirm microservice archetype robos:Microservice with Java 21 / Spring Boot 3, assign to Core Platform Team, and verify W3C SHACL 100% compliance across all 8 packages"*

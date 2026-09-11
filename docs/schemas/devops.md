@@ -26,7 +26,7 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 - **Package Store ID**: `devops`
 - **Ontology Namespace**: `robos.devops`
 - **GitOps Package File**: `.robos/kgraphs/devops/package.jsonld`
-- **Schemas Defined**: 13
+- **Schemas Defined**: 14
 
 ---
 
@@ -47,6 +47,7 @@ Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains,
 | [**Pipeline Stage** (`robos:PipelineStage`)]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) | `urn:robos:shape:PipelineStageShape` | `dcterms:title`, `robos:stageName`, `robos:pipeline` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) |
 | [**Pipeline Job** (`robos:PipelineJob`)]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) | `urn:robos:shape:PipelineJobShape` | `dcterms:title`, `robos:jobName`, `robos:stage` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) |
 | [**Pipeline Step** (`robos:PipelineStep`)]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) | `urn:robos:shape:PipelineStepShape` | `dcterms:title`, `robos:stepName`, `robos:job` | [View Schema &rarr;]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) |
+| [**Environment Profile** (`robos:EnvironmentProfile`)]({{ '/schemas/devops/environment-profile.html' | relative_url }}) | `robos:EnvironmentProfileShape` | `dcterms:title`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/devops/environment-profile.html' | relative_url }}) |
 
 ---
 

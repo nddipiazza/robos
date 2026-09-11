@@ -247,7 +247,7 @@ describe('RobOS Universal KGraph Resource Importer Test Suite', () => {
     const outPath = path.join(tmpDir, 'prompt-cli-output.jsonld');
 
     const stdout = execSync(
-      `node "${scriptPath}" --prompt "Import Confluence https://confluence.acme.corp/display/ARCH and repo https://github.com/acme-retail/checkout-api" --output "${outPath}"`,
+      `node "${scriptPath}" --demo --prompt "Import Confluence https://confluence.acme.corp/display/ARCH and repo https://github.com/acme-retail/checkout-api" --output "${outPath}"`,
       { encoding: 'utf8' }
     );
 

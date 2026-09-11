@@ -1,5 +1,7 @@
 'use strict';
 
+function nodeText(value, fallback = '') { return value && typeof value === 'object' ? (value['@id'] || fallback) : String(value || fallback); }
+
 let branches = [];
 let activeBranch = null;
 let nodes = [];
@@ -350,7 +352,7 @@ function renderNodeItemHtml(n, badge, isSelected) {
   if (n['robos:targetService']) {
     metaInfo = `🎯 Target: ${n['robos:targetService'].replace(/.*:/, '')} &middot; 📋 ${n['robos:requirementId'] || 'REQ'}`;
   } else if (n['robos:repository']) {
-    metaInfo = `📁 ${n['robos:repository']}`;
+    metaInfo = `📁 ${nodeText(n['robos:repository'])}`;
   } else if (n['robos:categoryName'] || n['robos:category'] || getNodeCategory(n) === 'devops') {
     const catLabel = n['robos:categoryName'] || n['robos:category'] || 'DevOps Integration';
     metaInfo = `☁️ ${catLabel} &middot; 📦 ${n['robos:package'] || 'devops'}`;
@@ -386,7 +388,7 @@ function renderNodeList() {
       const q = searchKeyword.toLowerCase();
       const title = (n['dcterms:title'] || '').toLowerCase();
       const id = (n['@id'] || '').toLowerCase();
-      const repo = (n['robos:repository'] || '').toLowerCase();
+      const repo = nodeText(n['robos:repository']).toLowerCase();
       const pkg = (n['robos:package'] || '').toLowerCase();
       return title.includes(q) || id.includes(q) || repo.includes(q) || pkg.includes(q);
     }
@@ -891,7 +893,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
         <div class="grid-2col">
           <div>
             <div class="field-label">Target Service</div>
-            <div class="field-value"><code>${serviceNode['dcterms:title']} (${serviceNode['robos:repository'] || 'local'})</code></div>
+            <div class="field-value"><code>${serviceNode['dcterms:title']} (${nodeText(serviceNode['robos:repository'], 'unrecorded')})</code></div>
           </div>
           <div>
             <div class="field-label">Virtual Framebuffer</div>
@@ -1061,11 +1063,11 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
         <div class="grid-2col">
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository']}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'])}</code></div>
           </div>
           <div>
             <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${(node['robos:ownerTeam'] || '').replace(/.*:/, '')}</span></div>
+            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
           </div>
           <div>
             <div class="field-label">API Contract</div>
@@ -1187,7 +1189,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
           <div>
             <div class="field-label">Executable Binary</div>
@@ -1231,11 +1233,11 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
           <div>
             <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${(node['robos:ownerTeam'] || 'core-platform').replace(/.*:/, '')}</span></div>
+            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
           </div>
         </div>
         <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -1312,11 +1314,11 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
           <div>
             <div class="field-label">Owner Team</div>
-            <div class="field-value"><span class="type-badge type-team">${(node['robos:ownerTeam'] || 'frontend-team').replace(/.*:/, '')}</span></div>
+            <div class="field-value"><span class="type-badge type-team">${nodeText(node['robos:ownerTeam'], 'Unassigned').replace(/.*:/, '')}</span></div>
           </div>
         </div>
         ${node['schema:browserRequirements'] ? `
@@ -1363,7 +1365,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
         </div>
         <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -1405,7 +1407,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
         </div>
         <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -1432,7 +1434,7 @@ The proof-of-work video walkthrough is archived and ready for 1-click merge revi
           </div>
           <div>
             <div class="field-label">Repository</div>
-            <div class="field-value"><code>${node['robos:repository'] || 'local'}</code></div>
+            <div class="field-value"><code>${nodeText(node['robos:repository'], 'unrecorded')}</code></div>
           </div>
         </div>
       </div>
@@ -2336,7 +2338,7 @@ function renderStructuredQueryTableHtml(results) {
               <td><strong>${n['dcterms:title']}</strong><br><code style="font-size: 9px;">${n['@id']}</code></td>
               <td><span class="type-badge ${badge.cls}">${badge.label}</span></td>
               <td><span class="node-pkg-badge">📦 ${n['robos:package'] || 'core'}</span></td>
-              <td><code>${n['robos:repository'] || 'local'}</code></td>
+              <td><code>${nodeText(n['robos:repository'], 'unrecorded')}</code></td>
               <td><button class="btn btn-secondary btn-sm" onclick="window.selectNode('${n['@id']}')">Select</button></td>
             </tr>
           `;
@@ -2704,8 +2706,8 @@ window.openEditEntityModal = function(nodeId) {
   document.getElementById('edit-node-title').value = node['dcterms:title'] || '';
   document.getElementById('edit-node-id').value = node['@id'];
   document.getElementById('edit-node-package').value = node['robos:package'] || 'services';
-  document.getElementById('edit-node-team').value = node['robos:ownerTeam'] || '';
-  document.getElementById('edit-node-repo').value = node['robos:repository'] || '';
+  document.getElementById('edit-node-team').value = nodeText(node['robos:ownerTeam']);
+  document.getElementById('edit-node-repo').value = nodeText(node['robos:repository']);
   document.getElementById('edit-node-tech').value = node['robos:technology'] || '';
   document.getElementById('edit-node-desc').value = node['dcterms:description'] || '';
   document.getElementById('edit-node-tags').value = Array.isArray(node['robos:tags']) ? node['robos:tags'].join(', ') : '';

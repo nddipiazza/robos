@@ -37,6 +37,13 @@ RobOS Knowledge Graph CLI (kgraph)
 Usage: kgraph <command> [arguments] [options]
 
 Commands:
+  init | inspect | context      Work with an external graph (requires --graph-root)
+  propose --file <json>          Preview import or {edits: [...]} refinement
+                                 Options: --mode import|refine|replace, --output <proposal>
+  apply --file <proposal>        Validate and apply against the expected revision
+  recover                       Complete an interrupted write
+
+Global: --graph-root <workspace> (or ROBOS_GRAPH_ROOT), --require-evidence
   search <query>                 Search nodes across packages by text, title, tags, or URI
                                  Options: --type <type>, --package <pkg>, --json
 
@@ -91,7 +98,14 @@ async function main() {
   const { _, flags } = parseArgs(rawArgs);
   const command = _[0];
 
-  const store = new SDLCKnowledgeGraphStore();
+  const { workspaceCommand, COMMANDS } = require('../lib/workspace-commands');
+  if (COMMANDS.has(command) || (command === 'diff' && flags.file)) {
+    try { workspaceCommand(command, flags); }
+    catch (error) { console.error(JSON.stringify({ error: error.message })); process.exitCode = 1; }
+    return;
+  }
+
+  const store = new SDLCKnowledgeGraphStore({ graphRoot: flags['graph-root'] });
   const isJson = flags.json === true;
 
   try {
@@ -344,10 +358,11 @@ async function main() {
         } else {
           console.error(`\x1b[31m❌ Knowledge Graph validation failed with ${res.results ? res.results.length : 0} violation(s):\x1b[0m`);
           for (const v of res.results || []) {
-            console.error(`  - [${v.severity || 'Violation'}] ${v.message} (FocusNode: ${v.focusNode})`);
+            console.error(`  - [${v.severity || 'Violation'}] ${v.resultMessage || v.message} (FocusNode: ${v.focusNode})`);
           }
           process.exit(1);
         }
+        if (!res.conforms) process.exitCode = 1;
         break;
       }
 

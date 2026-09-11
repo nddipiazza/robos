@@ -11,6 +11,7 @@ const CONFIG_FILE = path.join(HOME_DIR, '.config', 'robos', 'kgraph-repos.json')
 
 class KGraphRepoManager {
   constructor(options = {}) {
+    this.readOnly = !!options.readOnly;
     this.workspaceDir = options.workspaceDir || options.rootDir || process.cwd();
     const robosDir = options.rootDir ? (options.rootDir.endsWith('.robos') ? options.rootDir : path.join(options.rootDir, '.robos')) : path.join(this.workspaceDir, '.robos');
     this.manifestPath = options.manifestPath || path.join(robosDir, 'kgraph.yaml');
@@ -26,7 +27,7 @@ class KGraphRepoManager {
   }
 
   init() {
-    this.ensureDirs();
+    if (!this.readOnly) this.ensureDirs();
     this.repos.clear();
 
     // 1. Always register default workspace repository
@@ -68,6 +69,7 @@ class KGraphRepoManager {
   }
 
   saveConfig() {
+    if (this.readOnly) throw new Error('Repository configuration is read-only for this external graph');
     this.ensureDirs();
     const list = Array.from(this.repos.values());
     fs.writeFileSync(this.configFile, JSON.stringify({ repositories: list }, null, 2), 'utf8');

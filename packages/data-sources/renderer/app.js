@@ -64,9 +64,9 @@ async function selectDataSource(id) {
   document.getElementById('ds-icon-avatar').textContent = DRIVER_ICONS[currentDataSource.driverType] || '🗄️';
   document.getElementById('ds-detail-type').textContent = `Type: ${currentDataSource.driverType.toUpperCase()}`;
   
-  const endpoint = currentDataSource.host ? `${currentDataSource.host}:${currentDataSource.port || ''}/${currentDataSource.database || currentDataSource.bucket || ''}` : currentDataSource.region || 'Local';
+  const endpoint = currentDataSource.host ? `${currentDataSource.host}:${currentDataSource.port || ''}/${currentDataSource.database || currentDataSource.bucket || ''}` : currentDataSource.region || (currentDataSource.sourceOnly ? 'Unknown' : 'Local');
   document.getElementById('ds-detail-endpoint').textContent = endpoint;
-  document.getElementById('ds-detail-latency').textContent = `Latency: ${currentDataSource.latencyMs || 1.2}ms`;
+  document.getElementById('ds-detail-latency').textContent = currentDataSource.sourceOnly && currentDataSource.latencyMs == null ? 'Latency: Unknown' : `Latency: ${currentDataSource.latencyMs ?? 1.2}ms`;
 
   const badge = document.getElementById('ds-detail-badge');
   badge.className = `badge ${currentDataSource.status === 'Connected' ? 'badge-green' : 'badge-yellow'}`;
@@ -212,7 +212,7 @@ function renderDataSourcesGrid() {
       <div class="ds-card-desc">${esc(ds.description || '')}</div>
       <div class="ds-card-footer">
         <span>${esc(ds.schemaSummary || '')}</span>
-        <span class="mono">${esc(ds.host || ds.region || 'local')}</span>
+        <span class="mono">${esc(ds.host || ds.region || (ds.sourceOnly ? 'Unknown' : 'local'))}</span>
       </div>
     `;
     card.onclick = () => {

@@ -3,6 +3,10 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+
+// An explicitly configured workspace is a source-only, read-only consumer.
+const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
+const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
 const cp = require('child_process');
 
 const HOME_DIR = process.env.HOME || os.homedir();
@@ -381,6 +385,7 @@ const SAMPLE_POSTGRES_SCHEMA = {
 };
 
 function loadDataSources() {
+  if (EXTERNAL_GRAPH) return sourceDataSources();
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
@@ -391,6 +396,7 @@ function loadDataSources() {
 }
 
 function saveDataSources(data) {
+  if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), 'utf8');
@@ -399,6 +405,28 @@ function saveDataSources(data) {
 
 let _kgraphStore = null;
 function getKGraphStore() {
+  if (EXTERNAL_GRAPH) {
+    if (!GRAPH_ROOT.trim()) throw new Error('ROBOS_GRAPH_ROOT must name an available graph workspace');
+    if (!_kgraphStore) {
+      // Load the shared store directly: package main.js is the Electron app entry.
+      let Store;
+      try { Store = require('../robos-graph/lib/graph-store').SDLCKnowledgeGraphStore; }
+      catch (error) {
+        if (error.code !== 'MODULE_NOT_FOUND') throw error;
+        Store = require('/usr/local/share/robos/robos-graph/lib/graph-store').SDLCKnowledgeGraphStore;
+      }
+      _kgraphStore = new Store({ graphRoot: GRAPH_ROOT });
+    } else {
+      // Re-read accepted state and fail if the workspace has become unavailable.
+      _kgraphStore.init();
+    }
+    const workspace = _kgraphStore.workspace;
+    const packages = path.join(workspace.root, 'kgraphs');
+    const hasPackages = fs.existsSync(packages) && fs.readdirSync(packages, { withFileTypes: true })
+      .some(entry => entry.isDirectory() && fs.existsSync(path.join(packages, entry.name, 'package.jsonld')));
+    if (!fs.existsSync(workspace.file) && !hasPackages) throw new Error('Configured graph workspace is unavailable');
+    return _kgraphStore;
+  }
   if (!_kgraphStore) {
     try {
       const { SDLCKnowledgeGraphStore } = require('../robos-graph');
@@ -414,6 +442,7 @@ function getKGraphStore() {
 }
 
 function syncToKnowledgeGraph(dataSources) {
+  if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   try {
     const store = getKGraphStore();
     if (!store) return;
@@ -459,17 +488,53 @@ function syncToKnowledgeGraph(dataSources) {
   } catch (_) {}
 }
 
+
+const READ_ONLY_MESSAGE = 'External graph mode is source-only. Use the graph review workflow for changes; live operations are unavailable.';
+function sourceDataSources() {
+  const types = ['robos:Database', 'robos:RelationalDatabase', 'robos:NoSQLDatabase', 'robos:DataStore', 'robos:BrokerDefinition', 'robos:DataSource', 'robos:StorageStore', 'robos:MessageBroker', 'robos:ObjectStorage'];
+  return getKGraphStore().query({}).filter(node => [].concat(node['@type'] || []).some(type => types.includes(type))).map(node => {
+    const nodeTypes = [].concat(node['@type'] || []);
+    const engine = node['robos:driverType'] ?? node['robos:engine'] ?? node['robos:brokerType'] ?? 'unknown';
+    // UI categories describe the declared technology, never connectivity or deployment.
+    const technology = String(engine).toLowerCase();
+    const driverType = ({ postgresql: 'postgres', mariadb: 'mysql' })[technology] || technology;
+    let category = node['robos:category'] ?? null;
+    if (!category) {
+      if (nodeTypes.some(type => ['robos:BrokerDefinition', 'robos:MessageBroker'].includes(type))) category = 'streaming';
+      else if (['postgres', 'mysql', 'sqlite', 'oracle', 'mssql'].includes(driverType) || nodeTypes.includes('robos:RelationalDatabase')) category = 'sql';
+      else if (['redis', 'mongodb', 'dynamodb'].includes(driverType) || nodeTypes.includes('robos:NoSQLDatabase')) category = 'nosql';
+      else if (nodeTypes.some(type => ['robos:StorageStore', 'robos:ObjectStorage'].includes(type))) category = 'storage';
+    }
+    return {
+      ...node, id: node['@id'], kgraphId: node['@id'], name: node['dcterms:title'] || node['@id'],
+      driverType, category, host: node['robos:host'] ?? null,
+      port: node['robos:port'] ?? null, database: node['robos:databaseName'] ?? null,
+      description: node['dcterms:description'] ?? '',
+      boundServices: [].concat(node['robos:boundServices'] || []).map(ref => typeof ref === 'string' ? ref : ref?.['@id']).filter(Boolean),
+      sourceOnly: true, status: 'Unknown', latencyMs: null, lastChecked: null, schemaSummary: null,
+    };
+  });
+}
+function registerIPC(channel, handler) {
+  ipcMain.handle(channel, (event, ...args) => {
+    if (!EXTERNAL_GRAPH) return handler(event, ...args);
+    if (channel === 'ds-get-datasources') return sourceDataSources();
+    if (channel === 'ds-get-drivers' || channel === 'open-url') return handler(event, ...args);
+    throw new Error(READ_ONLY_MESSAGE);
+  });
+}
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
-ipcMain.handle('ds-get-drivers', async () => {
+registerIPC('ds-get-drivers', async () => {
   return DRIVER_CATALOG;
 });
 
-ipcMain.handle('ds-get-datasources', async () => {
+registerIPC('ds-get-datasources', async () => {
   return loadDataSources();
 });
 
-ipcMain.handle('ds-save-datasource', async (_, ds) => {
+registerIPC('ds-save-datasource', async (_, ds) => {
   const list = loadDataSources();
   const idx = list.findIndex(d => d.id === ds.id);
   if (idx >= 0) {
@@ -482,7 +547,7 @@ ipcMain.handle('ds-save-datasource', async (_, ds) => {
   return list;
 });
 
-ipcMain.handle('ds-delete-datasource', async (_, id) => {
+registerIPC('ds-delete-datasource', async (_, id) => {
   let list = loadDataSources();
   list = list.filter(d => d.id !== id);
   saveDataSources(list);
@@ -490,7 +555,7 @@ ipcMain.handle('ds-delete-datasource', async (_, id) => {
   return list;
 });
 
-ipcMain.handle('ds-test-connection', async (_, ds) => {
+registerIPC('ds-test-connection', async (_, ds) => {
   const start = Date.now();
   // Simulate realistic network connection probe
   await new Promise(r => setTimeout(r, 450));
@@ -509,7 +574,7 @@ ipcMain.handle('ds-test-connection', async (_, ds) => {
   };
 });
 
-ipcMain.handle('ds-inspect-schema', async (_, { id, driverType }) => {
+registerIPC('ds-inspect-schema', async (_, { id, driverType }) => {
   if (driverType === 'postgres' || driverType === 'oracle' || driverType === 'mysql' || driverType === 'mssql' || driverType === 'sqlite') {
     return SAMPLE_POSTGRES_SCHEMA;
   }
@@ -539,7 +604,7 @@ ipcMain.handle('ds-inspect-schema', async (_, { id, driverType }) => {
   return { tables: [] };
 });
 
-ipcMain.handle('ds-execute-query', async (_, { id, driverType, query }) => {
+registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
   const start = Date.now();
   await new Promise(r => setTimeout(r, 200));
   const executionTimeMs = Date.now() - start;
@@ -588,7 +653,7 @@ ipcMain.handle('ds-execute-query', async (_, { id, driverType, query }) => {
   };
 });
 
-ipcMain.handle('open-url', async (_, url) => {
+registerIPC('open-url', async (_, url) => {
   if (url) shell.openExternal(url);
   return { ok: true };
 });

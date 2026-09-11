@@ -274,7 +274,7 @@ Every proposed change is evaluated against three non-negotiable verification gat
    - Parses modified files using language-specific Tree-sitter AST parsers.
    - Rejects unclosed brackets, syntax errors, or unparseable tokens.
 2. **Gate 2: W3C SHACL Shape Conformance**:
-   - Evaluates modified Knowledge Graph nodes against the full suite of **91 built-in SHACL constraint shapes**.
+   - Evaluates modified Knowledge Graph nodes against the full suite of **98 built-in SHACL constraint shapes**.
    - Requires zero violations (`conforms === true && resultsCount === 0`).
 3. **Gate 3: Automated Test Execution**:
    - Runs Cucumber BDD scenarios, Mocha/Jest/Vitest unit tests, and contract stubs in the ephemeral RAM-disk sandbox.

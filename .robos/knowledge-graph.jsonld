@@ -9,7 +9,71 @@
     "c4": "https://c4model.com/ns#",
     "pact": "https://pact.io/ns#",
     "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/"
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
+    },
+    "robos:provenance": {
+      "@id": "robos:provenance",
+      "@type": "@json"
+    },
+    "robos:relationshipEvidence": {
+      "@id": "robos:relationshipEvidence",
+      "@container": "@set",
+      "@context": {
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
+        },
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        },
+        "evidence": {
+          "@id": "robos:evidence",
+          "@container": "@set",
+          "@context": {
+            "repository": "robos:sourceRepository",
+            "path": "robos:sourcePath",
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          }
+        },
+        "note": "dcterms:description",
+        "condition": "robos:condition",
+        "status": "robos:evidenceStatus"
+      }
+    },
+    "robos:evidence": {
+      "@id": "robos:evidence",
+      "@container": "@set",
+      "@context": {
+        "repository": "robos:sourceRepository",
+        "path": "robos:sourcePath",
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      }
+    },
+    "robos:technologyReference": {
+      "@id": "robos:technologyReference",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
+    }
   },
   "@id": "urn:robos:graph:acme-enterprise-global",
   "@type": [
@@ -471,7 +535,8 @@
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:engine": "postgresql"
     },
     {
       "@id": "urn:robos:devops:github:enterprise",
@@ -803,7 +868,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "graph TD\n    subgraph Cloud[\"Current Paradigm: Hyperscaler Cloud Treadmill\"]\n        REQ[\"Developer / Feature Prompt\"] --> LLM[\"Centralized 70B+ / 400B+ Model<br/><i>(Megawatts, Network Latency, Token Fees)</i>\"]\n        LLM --> CODE[\"Stochastically Generated Code<br/><i>(Hallucinations, Flaky Diffs)</i>\"]\n        CODE --> FAIL[\"Validation / Test Failure\"]\n        FAIL -->|Loop Back & Burn Tokens| LLM\n        CODE --> PROD[\"Fragile Production Runtime\"]\n    end",
+      "robos:tooltip": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution"
     },
     {
       "@id": "urn:robos:diagram:turing-skill-architecture",
@@ -820,7 +887,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
+      "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
     },
     {
       "@id": "urn:robos:diagram:leaf-skill-compilation",
@@ -837,7 +906,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart TD\n    A[\"Exploratory Prompting<br/><i>(Agent Chat / Claude / Codex)</i>\"] --> B[\"BDD Gherkin Verification<br/><i>(Input/Output Invariants)</i>\"]\n    B --> C{\"Behavioral Verification<br/>& Halting Proof\"}\n    C -->|Fails Tests| B\n    C -->|100% Proven| D[\"Turing Machine Formalization<br/><i>(Typed Input/Output Schemas)</i>\"]\n    D --> E[\"Compiler Pipeline<br/><i>(Rust / C / LLVM / Wasm AOT)</i>\"]\n    E --> F[\"Native Machine Code Leaf Skill<br/><code>.so / .dylib / ELF / Wasm</code>\"]\n    F --> G[\"Global Consortium Registry<br/><i>(Cryptographically Signed Binary)</i>\"]",
+      "robos:tooltip": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code"
     },
     {
       "@id": "urn:robos:diagram:local-edge-assembly",
@@ -854,7 +925,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart TB\n    USER[\"User Request\"] --> LOCAL_LLM[\"Local Open-Weight Model\"]\n    subgraph EdgeDevice[\"Local Consumer Workstation\"]\n        LOCAL_LLM --> ARCH[\"1. Synthesizes Application Topology\"]\n        ARCH --> RESOLVER[\"2. Skill Registry Lookup & Contract Matcher\"]\n        subgraph SkillRepo[\"Local Pre-Compiled Skill Cache\"]\n            S1[\"Compiled Leaf Skill: SQLite WAL Ingest\"]\n            S2[\"Compiled Leaf Skill: ChaCha20-Poly1305 Encrypt\"]\n            S3[\"Compiled Leaf Skill: Noise Protocol Handshake\"]\n            S4[\"Compiled Leaf Skill: P2P mDNS Discovery\"]\n        end\n        RESOLVER --> S1\n        RESOLVER --> S2\n        RESOLVER --> S3\n        RESOLVER --> S4\n        LINKER[\"3. RobOS Local Native Linker\"]\n        S1 --> LINKER\n        S2 --> LINKER\n        S3 --> LINKER\n        S4 --> LINKER\n        LINKER --> RUNTIME[\"4. Running Native Application\"]\n    end",
+      "robos:tooltip": "Local Edge Assembly on Consumer Hardware Independent of Data Centers"
     },
     {
       "@id": "urn:robos:diagram:asymptotic-convergence",
@@ -871,7 +944,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "xychart-beta\n    title \"The Shift from Continuous Generation to Catalog Re-use\"\n    x-axis [\"Year 1\", \"Year 3\", \"Year 5\", \"Year 7\", \"Year 10\", \"Year 15\"]\n    y-axis \"Percentage of Effort (%)\" 0 --> 100\n    line \"LLM Generative Exploration\" [95, 75, 50, 25, 10, 2]\n    line \"Compiled Skill Assembly & Re-use\" [5, 25, 50, 75, 90, 98]",
+      "robos:tooltip": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly"
     },
     {
       "@id": "urn:robos:diagram:global-consortium-registry",
@@ -888,7 +963,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "graph TD\n    subgraph Consortium[\"Global Consortium & Decentralized Registry\"]\n        SPEC[\"Turing Skill Standard Specification\"]\n        ORACLE[\"Distributed Verification Oracles\"]\n        REGISTRY[\"Content-Addressed Binary Artifact Store\"]\n        CRYPTO[\"Ed25519 Cryptographic Signatures & SBOMs\"]\n    end\n    DEV[\"Developer / Squad / Edge AI\"] --> SPEC\n    SPEC --> ORACLE\n    ORACLE --> CRYPTO\n    CRYPTO --> REGISTRY\n    LOCAL_PC[\"Local Workstations (RobOS)\"] --> REGISTRY\n    LOCAL_PC --> RUN[\"Native Applications\"]",
+      "robos:tooltip": "The Global Consortium: A Planetary Commons of Compiled Skills"
     },
     {
       "@id": "urn:robos:doc:future-vision",
@@ -2440,6 +2517,436 @@
       "robos:refersFrom": "https://schema.org/SoftwareApplication",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "PostgreSQL",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "postgresql",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Redis",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "redis",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "NATS JetStream",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "nats-jetstream",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaMetrics",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victoriametrics",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaLogs",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victorialogs",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "buildbarn",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "React",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "react",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Protocol Buffers",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "protobuf",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Helm",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "helm",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Pulumi",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "pulumi",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Remote Execution API v2",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "reapi-v2",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel Build Event Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel-bep",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "completed-action-logger",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#mcp",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Model Context Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "mcp",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:package": "organization",
+      "robos:sourcePath": "AGENTS.md",
+      "robos:sourceKind": "git-repository",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "AGENTS.md",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:graph-workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "External graph workspace and revision store",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/graph-workspace.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-explorer",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Explorer import and refinement panel",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/workspace-review.js",
+          "line": 1
+        }
+      ],
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:workspace-review"
+      }
+    },
+    {
+      "@id": "urn:robos:source:sdlc-mcp",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Shared-workspace SDLC MCP tools",
+      "robos:package": "services",
+      "robos:sourcePath": "packages/ekgraph-mcp/sdlc-tools.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/ekgraph-mcp/sdlc-tools.js",
+          "line": 1
+        }
+      ],
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:graph-workspace"
+      }
+    },
+    {
+      "@id": "urn:robos:source:workspace-docs",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source-backed workspace guide",
+      "robos:package": "documentation",
+      "robos:sourcePath": "packages/robos-graph/WORKSPACES.md",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/WORKSPACES.md",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      }
+    },
+    {
+      "@id": "urn:robos:source:workspace-test-runtime",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Isolated Electron graph test runtime",
+      "robos:package": "devops",
+      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/docker/kgraph.Dockerfile",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:import-skill",
+      "@type": [
+        "robos:AgentSkill",
+        "schema:HowTo"
+      ],
+      "dcterms:title": "Evidence-backed graph import skill",
+      "robos:package": "learning",
+      "robos:sourcePath": "plugins/robos/skills/import-company-kgraph/SKILL.md",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "plugins/robos/skills/import-company-kgraph/SKILL.md",
+          "line": 1
+        }
+      ],
+      "robos:skillName": "import-company-kgraph",
+      "robos:uses": {
+        "@id": "urn:robos:source:source-extractor"
+      }
     }
   ],
   "@graph": [
@@ -2896,7 +3403,8 @@
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
+      "robos:namespace": "robos.platform",
+      "robos:engine": "postgresql"
     },
     {
       "@id": "urn:robos:devops:github:enterprise",
@@ -3228,7 +3736,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "graph TD\n    subgraph Cloud[\"Current Paradigm: Hyperscaler Cloud Treadmill\"]\n        REQ[\"Developer / Feature Prompt\"] --> LLM[\"Centralized 70B+ / 400B+ Model<br/><i>(Megawatts, Network Latency, Token Fees)</i>\"]\n        LLM --> CODE[\"Stochastically Generated Code<br/><i>(Hallucinations, Flaky Diffs)</i>\"]\n        CODE --> FAIL[\"Validation / Test Failure\"]\n        FAIL -->|Loop Back & Burn Tokens| LLM\n        CODE --> PROD[\"Fragile Production Runtime\"]\n    end",
+      "robos:tooltip": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution"
     },
     {
       "@id": "urn:robos:diagram:turing-skill-architecture",
@@ -3245,7 +3755,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
+      "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
     },
     {
       "@id": "urn:robos:diagram:leaf-skill-compilation",
@@ -3262,7 +3774,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart TD\n    A[\"Exploratory Prompting<br/><i>(Agent Chat / Claude / Codex)</i>\"] --> B[\"BDD Gherkin Verification<br/><i>(Input/Output Invariants)</i>\"]\n    B --> C{\"Behavioral Verification<br/>& Halting Proof\"}\n    C -->|Fails Tests| B\n    C -->|100% Proven| D[\"Turing Machine Formalization<br/><i>(Typed Input/Output Schemas)</i>\"]\n    D --> E[\"Compiler Pipeline<br/><i>(Rust / C / LLVM / Wasm AOT)</i>\"]\n    E --> F[\"Native Machine Code Leaf Skill<br/><code>.so / .dylib / ELF / Wasm</code>\"]\n    F --> G[\"Global Consortium Registry<br/><i>(Cryptographically Signed Binary)</i>\"]",
+      "robos:tooltip": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code"
     },
     {
       "@id": "urn:robos:diagram:local-edge-assembly",
@@ -3279,7 +3793,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "flowchart TB\n    USER[\"User Request\"] --> LOCAL_LLM[\"Local Open-Weight Model\"]\n    subgraph EdgeDevice[\"Local Consumer Workstation\"]\n        LOCAL_LLM --> ARCH[\"1. Synthesizes Application Topology\"]\n        ARCH --> RESOLVER[\"2. Skill Registry Lookup & Contract Matcher\"]\n        subgraph SkillRepo[\"Local Pre-Compiled Skill Cache\"]\n            S1[\"Compiled Leaf Skill: SQLite WAL Ingest\"]\n            S2[\"Compiled Leaf Skill: ChaCha20-Poly1305 Encrypt\"]\n            S3[\"Compiled Leaf Skill: Noise Protocol Handshake\"]\n            S4[\"Compiled Leaf Skill: P2P mDNS Discovery\"]\n        end\n        RESOLVER --> S1\n        RESOLVER --> S2\n        RESOLVER --> S3\n        RESOLVER --> S4\n        LINKER[\"3. RobOS Local Native Linker\"]\n        S1 --> LINKER\n        S2 --> LINKER\n        S3 --> LINKER\n        S4 --> LINKER\n        LINKER --> RUNTIME[\"4. Running Native Application\"]\n    end",
+      "robos:tooltip": "Local Edge Assembly on Consumer Hardware Independent of Data Centers"
     },
     {
       "@id": "urn:robos:diagram:asymptotic-convergence",
@@ -3296,7 +3812,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "xychart-beta\n    title \"The Shift from Continuous Generation to Catalog Re-use\"\n    x-axis [\"Year 1\", \"Year 3\", \"Year 5\", \"Year 7\", \"Year 10\", \"Year 15\"]\n    y-axis \"Percentage of Effort (%)\" 0 --> 100\n    line \"LLM Generative Exploration\" [95, 75, 50, 25, 10, 2]\n    line \"Compiled Skill Assembly & Re-use\" [5, 25, 50, 75, 90, 98]",
+      "robos:tooltip": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly"
     },
     {
       "@id": "urn:robos:diagram:global-consortium-registry",
@@ -3313,7 +3831,9 @@
       "robos:schemaOrgType": "https://schema.org/ImageObject",
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
-      "robos:namespace": "robos.docs"
+      "robos:namespace": "robos.docs",
+      "robos:mermaidText": "graph TD\n    subgraph Consortium[\"Global Consortium & Decentralized Registry\"]\n        SPEC[\"Turing Skill Standard Specification\"]\n        ORACLE[\"Distributed Verification Oracles\"]\n        REGISTRY[\"Content-Addressed Binary Artifact Store\"]\n        CRYPTO[\"Ed25519 Cryptographic Signatures & SBOMs\"]\n    end\n    DEV[\"Developer / Squad / Edge AI\"] --> SPEC\n    SPEC --> ORACLE\n    ORACLE --> CRYPTO\n    CRYPTO --> REGISTRY\n    LOCAL_PC[\"Local Workstations (RobOS)\"] --> REGISTRY\n    LOCAL_PC --> RUN[\"Native Applications\"]",
+      "robos:tooltip": "The Global Consortium: A Planetary Commons of Compiled Skills"
     },
     {
       "@id": "urn:robos:doc:future-vision",

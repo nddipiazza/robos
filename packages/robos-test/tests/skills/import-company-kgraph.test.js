@@ -224,7 +224,7 @@ describe('import-company-kgraph RobOS AI Skill Test Suite', () => {
 
     // 1. Dry run execution
     const stdout = execSync(
-      `node "${scriptPath}" --source "${mockProjectsPath}" --company-name "Test Corp" --dry-run`,
+      `node "${scriptPath}" --demo --source "${mockProjectsPath}" --company-name "Test Corp" --dry-run`,
       { encoding: 'utf8' }
     );
     assert.match(stdout, /RobOS Company KGraph Importer/);
@@ -235,7 +235,7 @@ describe('import-company-kgraph RobOS AI Skill Test Suite', () => {
 
     // 2. Real execution generating output file
     execSync(
-      `node "${scriptPath}" --source "https://github.com/test-org/analytics-service" --company-name "Analytics Corp" --output "${testOutputPath}"`,
+      `node "${scriptPath}" --demo --source "https://github.com/test-org/analytics-service" --company-name "Analytics Corp" --output "${testOutputPath}"`,
       { encoding: 'utf8' }
     );
     assert.ok(fs.existsSync(testOutputPath));

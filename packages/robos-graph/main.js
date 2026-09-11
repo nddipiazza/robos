@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { SDLCKnowledgeGraphStore, SAMPLE_GHERKIN_FEATURE } = require('./lib/graph-store');
 
@@ -30,9 +30,11 @@ try {
   } catch {}
 }
 
-const store = new SDLCKnowledgeGraphStore();
+let store = new SDLCKnowledgeGraphStore();
+const { WorkspaceReview } = require('./lib/workspace-review');
+let workspaceReview = store.workspace ? new WorkspaceReview(store.workspace.root) : null;
 let testFabric = null;
-if (LocalTestFabric) {
+if (LocalTestFabric && !store.workspace) {
   testFabric = new LocalTestFabric();
   testFabric.start().catch(() => {});
 }
@@ -53,8 +55,8 @@ let win;
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
-    width: 1040,
-    height: 680,
+    width: 1440,
+    height: 960,
     title: 'RobOS SDLC Knowledge Graph Explorer',
     backgroundColor: '#0d1117',
     webPreferences: {
@@ -80,6 +82,29 @@ app.on('window-all-closed', () => {
 });
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
+
+ipcMain.handle('workspace-info', () => workspaceReview ? workspaceReview.info() : null);
+ipcMain.handle('workspace-open', async () => {
+  const selected = await dialog.showOpenDialog(win, { properties: ['openDirectory'], title: 'Open graph workspace (contains .robos)' });
+  if (selected.canceled) return null;
+  const next = new SDLCKnowledgeGraphStore({ graphRoot: selected.filePaths[0] });
+  store = next;
+  workspaceReview = new WorkspaceReview(next.workspace.root);
+  return workspaceReview.info();
+});
+function requireReview() {
+  if (!workspaceReview) throw new Error('Open an external graph workspace first');
+  return workspaceReview;
+}
+ipcMain.handle('workspace-context', (_, input) => requireReview().context(input));
+ipcMain.handle('workspace-propose', (_, input) => requireReview().propose(input));
+ipcMain.handle('workspace-ask-agent', (_, input) => requireReview().askAgent(input));
+ipcMain.handle('workspace-apply', (_, proposal) => {
+  const result = requireReview().apply(proposal);
+  store.init();
+  store.packageManager.loadPackages();
+  return result;
+});
 
 ipcMain.handle('graph-get-all', async () => store.parser.nodes);
 ipcMain.handle('graph-query', async (_, filter) => store.query(filter));

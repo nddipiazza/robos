@@ -154,7 +154,7 @@ plugins/
 | **`create-test`** | `/create-test` | Generate unit/E2E tests using `robos-test` framework |
 | **`deploy-to-vm`** | `/deploy-to-vm` | Deploy packages and apps to the running RobOS VM |
 | **`e2e-driven-dev`** | `/e2e-driven-dev`, `/do-e2e-driven-dev` | Perform task development driven by narrated E2E tests and video generation |
-| **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files |
+| **`import-company-kgraph`** | `/import-company-kgraph` | Import tracked local sources with provenance into an explicit workspace; review and refine revisions iteratively |
 | **`ide-java`** | `/ide-java` | Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces |
 | **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies (QEMU, Electron, Java, Node) |
 | **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove a RobOS skill in the marketplace |

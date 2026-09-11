@@ -392,10 +392,17 @@ const DEFAULT_GRAPH_DATA = {
 class SDLCKnowledgeGraphStore {
   constructor(options = {}) {
     const opts = typeof options === 'string' ? { filePath: options } : (options || {});
+    const graphRoot = opts.graphRoot || process.env.ROBOS_GRAPH_ROOT;
+    if (graphRoot) {
+      const { GraphWorkspace } = require('./graph-workspace');
+      this.workspace = new GraphWorkspace(graphRoot);
+      opts.baseDir = this.workspace.root;
+      opts.filePath = this.workspace.file;
+    }
     this.filePath = opts.filePath || (opts.rootDir ? path.join(opts.rootDir, 'knowledge-graph.jsonld') : DEFAULT_GRAPH_PATH);
     const baseDir = opts.baseDir || (opts.rootDir ? (opts.rootDir.endsWith('.robos') ? opts.rootDir : path.join(opts.rootDir, '.robos')) : path.dirname(this.filePath));
-    this.packageManager = new KGraphPackageManager({ baseDir, packagesDir: path.join(baseDir, 'kgraphs') });
-    this.repoManager = new KGraphRepoManager({ workspaceDir: path.dirname(baseDir), rootDir: baseDir });
+    this.packageManager = new KGraphPackageManager({ baseDir, packagesDir: path.join(baseDir, 'kgraphs'), readOnly: !!this.workspace, strict: !!this.workspace });
+    this.repoManager = new KGraphRepoManager({ workspaceDir: path.dirname(baseDir), rootDir: baseDir, readOnly: !!this.workspace });
     this.devopsManager = new DevOpsIntegrationManager({ packageManager: this.packageManager });
     this.branchManager = new BranchManager({ baseGraphData: DEFAULT_GRAPH_DATA });
     this.parser = new OSLCGraphParser();
@@ -451,6 +458,16 @@ class SDLCKnowledgeGraphStore {
   }
 
   init() {
+    if (this.workspace) {
+      this.parser = new OSLCGraphParser(this.workspace.read());
+      this.branchManager = new BranchManager({ baseGraphData: this.parser.toJSONLD(), branchDeltas: {} });
+      const active = this.branchManager.branches.get('main');
+      active.commit = require('./graph-workspace').hash(this.parser.toJSONLD());
+      active.author = 'Workspace revision';
+      active.timestamp = null;
+      active.classification = { type: 'workspace', label: 'Source-backed Workspace', badge: 'LOCAL', badgeClass: 'badge-feature', goal: 'Accepted graph revision; deployment state is recorded per node' };
+      return;
+    }
     // 1. If packagesDir has package directories, load multi-file packages
     if (fs.existsSync(this.packageManager.packagesDir)) {
       try {
@@ -502,6 +519,14 @@ class SDLCKnowledgeGraphStore {
   }
 
   save() {
+    if (this.workspace) {
+      const proposal = this.workspace.propose({ mode: 'replace', document: this.parser.toJSONLD(), prompt: 'Graph editor change' });
+      try {
+        const result = this.workspace.apply(proposal);
+        this.packageManager.loadPackages();
+        return result;
+      } catch (error) { this.init(); this.packageManager.loadPackages(); throw error; }
+    }
     try {
       for (const node of this.parser.nodes) {
         this.packageManager.upsertNode(node);
@@ -523,6 +548,11 @@ class SDLCKnowledgeGraphStore {
   }
 
   validate() {
+    if (this.workspace) {
+      const { validateDocument } = require('./graph-workspace');
+      const report = validateDocument(this.parser.toJSONLD());
+      return { ...report, results: report.errors.map(resultMessage => ({ resultMessage })), resultsCount: report.errors.length };
+    }
     return this.validator.validateGraph(this.parser);
   }
 
@@ -616,6 +646,7 @@ class SDLCKnowledgeGraphStore {
   }
 
   generateCoPilotMutation(prompt) {
+    if (this.workspace) throw new Error('Use Import & Refine to propose evidence-backed changes in this workspace');
     return this.copilot.generateMutation(prompt, this.parser.toJSONLD());
   }
 
@@ -634,6 +665,7 @@ class SDLCKnowledgeGraphStore {
   }
 
   scanDirectory(dirPath) {
+    if (this.workspace) throw new Error("Use the source manifest import workflow for external workspaces");
     return this.repoScanner.scanDirectory(dirPath);
   }
 
@@ -2477,6 +2509,12 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
   }
 
   removeNode(nodeId, { cascade = false } = {}) {
+    if (this.workspace) {
+      const proposal = this.workspace.propose({ mode: 'refine', edits: [{ op: 'remove', id: nodeId }], prompt: 'Remove graph node' });
+      this.workspace.apply(proposal);
+      this.init(); this.packageManager.loadPackages();
+      return true;
+    }
     const existingNode = this.getNode(nodeId);
     if (!existingNode) return false;
 
@@ -2703,6 +2741,7 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
   }
 
   bulkImportRepositories(repositories = [], options = {}) {
+    if (this.workspace) throw new Error("Use the source manifest import workflow for external workspaces");
     const homeDir = process.env.HOME || os.homedir();
     const sessionDir = path.join(homeDir, '.config', 'robos', 'agent-sessions');
     const notifFile = path.join(homeDir, '.config', 'robos', 'notifications.json');
@@ -2826,6 +2865,7 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
   }
 
   async importResources(resources, options = {}) {
+    if (this.workspace) throw new Error('Use the manifest importer and review its proposal for this external graph');
     const importRes = await this.resourceImporter.importResources(resources, options);
     const addedNodes = [];
 

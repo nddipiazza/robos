@@ -58,7 +58,8 @@ class SchemaRegistry {
 
   _indexRobosMappings() {
     this.robosClassMap = {};
-    for (const [shapeId, shape] of Object.entries(BUILTIN_SHACL_SHAPES)) {
+    for (const [key, shape] of Object.entries(BUILTIN_SHACL_SHAPES)) {
+      const shapeId = shape.shapeId || key;
       const sType = shape.schemaOrgType || '';
       const rawClass = sType.replace('https://schema.org/', '');
       if (rawClass) {
@@ -218,7 +219,7 @@ class SchemaRegistry {
 
     if (!matchedClass) {
       for (const t of types) {
-        const shape = BUILTIN_SHACL_SHAPES[t] || BUILTIN_SHACL_SHAPES[t.replace('robos:', '')];
+        const shape = Array.isArray(BUILTIN_SHACL_SHAPES) ? BUILTIN_SHACL_SHAPES.find(s => s.targetClass === t || s.targetClass === `robos:${t}`) : (BUILTIN_SHACL_SHAPES[t] || BUILTIN_SHACL_SHAPES[t.replace('robos:', '')]);
         if (shape && shape.schemaOrgType) {
           const sName = shape.schemaOrgType.replace('https://schema.org/', '');
           matchedClass = this.data.classes[sName];

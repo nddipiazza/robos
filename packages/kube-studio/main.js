@@ -3,6 +3,10 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+
+// An explicitly configured workspace is a source-only, read-only consumer.
+const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
+const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
 const { execSync } = require('child_process');
 
 app.commandLine.appendSwitch('no-sandbox');
@@ -207,6 +211,28 @@ function calculateAge(timestamp) {
 
 let _kgraphStore = null;
 function getKGraphStore() {
+  if (EXTERNAL_GRAPH) {
+    if (!GRAPH_ROOT.trim()) throw new Error('ROBOS_GRAPH_ROOT must name an available graph workspace');
+    if (!_kgraphStore) {
+      // Load the shared store directly: package main.js is the Electron app entry.
+      let Store;
+      try { Store = require('../robos-graph/lib/graph-store').SDLCKnowledgeGraphStore; }
+      catch (error) {
+        if (error.code !== 'MODULE_NOT_FOUND') throw error;
+        Store = require('/usr/local/share/robos/robos-graph/lib/graph-store').SDLCKnowledgeGraphStore;
+      }
+      _kgraphStore = new Store({ graphRoot: GRAPH_ROOT });
+    } else {
+      // Re-read accepted state and fail if the workspace has become unavailable.
+      _kgraphStore.init();
+    }
+    const workspace = _kgraphStore.workspace;
+    const packages = path.join(workspace.root, 'kgraphs');
+    const hasPackages = fs.existsSync(packages) && fs.readdirSync(packages, { withFileTypes: true })
+      .some(entry => entry.isDirectory() && fs.existsSync(path.join(packages, entry.name, 'package.jsonld')));
+    if (!fs.existsSync(workspace.file) && !hasPackages) throw new Error('Configured graph workspace is unavailable');
+    return _kgraphStore;
+  }
   if (!_kgraphStore) {
     try {
       const { SDLCKnowledgeGraphStore } = require('../robos-graph');
@@ -238,6 +264,7 @@ function kgraphNodeToCluster(node) {
 }
 
 function syncClusterToKGraph(c) {
+  if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   const store = getKGraphStore();
   if (!store) return;
   const slug = (c.id || c.name || 'cluster').replace(/^cluster-/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
@@ -255,6 +282,7 @@ function syncClusterToKGraph(c) {
 }
 
 function getClusters() {
+  if (EXTERNAL_GRAPH) return getKGraphStore().getKubernetesClusters().map(sourceCluster);
   const store = getKGraphStore();
   if (store) {
     const kgClusters = store.getKubernetesClusters();
@@ -277,13 +305,67 @@ function getClusters() {
   return CLUSTERS;
 }
 
+
+const READ_ONLY_MESSAGE = 'External graph mode is source-only. Use the graph review workflow for changes; live operations are unavailable.';
+const hasType = (node, types) => [].concat(node['@type'] || []).some(type => types.includes(type));
+const references = (value, id) => [].concat(value || []).some(ref => (typeof ref === 'string' ? ref : ref?.['@id']) === id);
+function sourceItem(node) {
+  return { ...node, id: node['@id'], kgraphId: node['@id'], name: node['dcterms:title'] || node['@id'],
+    description: node['dcterms:description'] ?? '', type: [].concat(node['@type'] || []).join(', '),
+    repo: node['robos:sourceRepo'] ?? node['robos:repository'] ?? node['robos:inRepository'] ?? null,
+    sourceOnly: true, status: 'Unknown', age: null };
+}
+function sourceCluster(node) {
+  return { ...sourceItem(node), provider: node['robos:provider'] ?? null, region: node['robos:region'] ?? null,
+    version: node['robos:version'] ?? null, nodeCount: null, isReal: false };
+}
+function sourceNodes(types) {
+  return getKGraphStore().query({}).filter(node => hasType(node, types));
+}
+function externalRead(channel, options = {}) {
+  switch (channel) {
+    case 'kube-get-clusters': return { ok: true, sourceOnly: true, clusters: getClusters() };
+    case 'kube-get-kgraph-apps': return { ok: true, sourceOnly: true,
+      apps: sourceNodes(['robos:Microservice', 'robos:FrontEndApp', 'robos:Application', 'robos:DesktopApp', 'robos:GitOpsDeployment', 'robos:ArgoCDApplication']).map(sourceItem) };
+    case 'kube-get-namespaces': return { ok: true, sourceOnly: true,
+      namespaces: sourceNodes(['robos:KubernetesNamespace']).filter(n => !options.clusterId || references(n['robos:namespaceOfCluster'], options.clusterId)).map(sourceItem) };
+    case 'kube-get-resources': {
+      const kinds = { pods: 'robos:KubernetesPod', deployments: 'robos:KubernetesDeployment', services: 'robos:KubernetesService', ingresses: 'robos:KubernetesIngress' };
+      const kind = (options.kind || 'pods').toLowerCase();
+      const nodes = getKGraphStore().query({});
+      const namespaces = nodes.filter(n => hasType(n, ['robos:KubernetesNamespace']) &&
+        (!options.clusterId || references(n['robos:namespaceOfCluster'], options.clusterId)) &&
+        (!options.namespace || options.namespace === 'all' || [n['@id'], n['dcterms:title'], n['robos:namespaceName']].includes(options.namespace)));
+      // Unscoped inventory may contain real definitions whose namespace/cluster is unresolved.
+      const scoped = options.clusterId || (options.namespace && options.namespace !== 'all');
+      const items = nodes.filter(n => hasType(n, [kinds[kind]]) && (!scoped || namespaces.some(ns => references(n['robos:inNamespace'], ns['@id'])))).map(sourceItem);
+      return { ok: true, sourceOnly: true, kind, items };
+    }
+    case 'kube-get-helm-releases': return { ok: true, sourceOnly: true, definitionOnly: true,
+      releases: sourceNodes(['robos:SourceArtifact']).filter(n => n['robos:sourceKind'] === 'helm-chart').map(n => ({
+        ...sourceItem(n), name: n['robos:declaredName'] ?? n['dcterms:title'] ?? n['@id'],
+        chart: n['robos:declaredName'] ?? null, version: n['robos:version'] ?? null,
+        namespace: null, revision: null, updated: null, definitionOnly: true,
+      })) };
+    case 'kube-get-argocd-apps': return { ok: true, sourceOnly: true, definitionOnly: true,
+      apps: sourceNodes(['robos:ArgoCDApplication', 'robos:GitOpsDeployment'])
+        .filter(n => hasType(n, ['robos:ArgoCDApplication']) || String(n['robos:gitopsEngine'] || '').toLowerCase() === 'argocd')
+        .map(n => ({ ...sourceItem(n), namespace: n['robos:targetNamespace'] ?? null,
+          repoURL: n['robos:sourceRepo'] ?? null, syncStatus: 'Unknown', health: 'Unknown', definitionOnly: true })) };
+    default: throw new Error(READ_ONLY_MESSAGE);
+  }
+}
+function registerIPC(channel, handler) {
+  ipcMain.handle(channel, (event, ...args) => EXTERNAL_GRAPH ? externalRead(channel, args[0]) : handler(event, ...args));
+}
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
-ipcMain.handle('kube-get-clusters', () => {
+registerIPC('kube-get-clusters', () => {
   return { ok: true, clusters: getClusters() };
 });
 
-ipcMain.handle('kube-add-cluster', (_, { id, name, provider, region, kubecontext }) => {
+registerIPC('kube-add-cluster', (_, { id, name, provider, region, kubecontext }) => {
   const newCluster = {
     id: id || `cluster-${Date.now()}`,
     name: name || 'New Cluster',
@@ -299,7 +381,7 @@ ipcMain.handle('kube-add-cluster', (_, { id, name, provider, region, kubecontext
   return { ok: true, cluster: newCluster };
 });
 
-ipcMain.handle('kube-get-namespaces', (_, { clusterId } = {}) => {
+registerIPC('kube-get-namespaces', (_, { clusterId } = {}) => {
   const cluster = CLUSTERS.find(c => c.id === clusterId) || CLUSTERS[0];
   if (cluster && cluster.isReal) {
     const kRes = runKubectl('get namespaces -o json');
@@ -328,12 +410,12 @@ ipcMain.handle('kube-get-namespaces', (_, { clusterId } = {}) => {
   return { ok: true, namespaces: mockNamespaces };
 });
 
-ipcMain.handle('kube-create-namespace', (_, { namespace, clusterId }) => {
+registerIPC('kube-create-namespace', (_, { namespace, clusterId }) => {
   const res = runKubectl(`create namespace ${namespace}`);
   return { ok: true, message: `Namespace '${namespace}' created successfully.`, output: res.output || res.error };
 });
 
-ipcMain.handle('kube-get-resources', (_, { clusterId, namespace, kind } = {}) => {
+registerIPC('kube-get-resources', (_, { clusterId, namespace, kind } = {}) => {
   const k = (kind || 'pods').toLowerCase();
   const ns = namespace || 'default';
   const cluster = CLUSTERS.find(c => c.id === clusterId) || CLUSTERS[0];
@@ -418,11 +500,11 @@ ipcMain.handle('kube-get-resources', (_, { clusterId, namespace, kind } = {}) =>
 
 // ── Deploy & Undeploy from Knowledge Graph ──────────────────────────────────
 
-ipcMain.handle('kube-get-kgraph-apps', () => {
+registerIPC('kube-get-kgraph-apps', () => {
   return { ok: true, apps: KGRAPH_APPS };
 });
 
-ipcMain.handle('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
+registerIPC('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const targetBranch = (branch || 'main').trim();
   const app = KGRAPH_APPS.find(a => a.id === appId) || KGRAPH_APPS[0];
@@ -450,7 +532,7 @@ ipcMain.handle('kube-deploy-app', (_, { appId, branch, namespace } = {}) => {
   };
 });
 
-ipcMain.handle('kube-undeploy-app', (_, { appId, namespace } = {}) => {
+registerIPC('kube-undeploy-app', (_, { appId, namespace } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const app = KGRAPH_APPS.find(a => a.id === appId) || { id: appId, name: appId };
   let res;
@@ -469,7 +551,7 @@ ipcMain.handle('kube-undeploy-app', (_, { appId, namespace } = {}) => {
   };
 });
 
-ipcMain.handle('kube-trigger-kgraph-change', (_, { taskKey, branch, namespace } = {}) => {
+registerIPC('kube-trigger-kgraph-change', (_, { taskKey, branch, namespace } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const targetBranch = branch || 'main';
   const key = taskKey || 'PET-105';
@@ -490,7 +572,7 @@ ipcMain.handle('kube-trigger-kgraph-change', (_, { taskKey, branch, namespace } 
   };
 });
 
-ipcMain.handle('kube-deploy-task-manifests', (_, { namespace, taskId } = {}) => {
+registerIPC('kube-deploy-task-manifests', (_, { namespace, taskId } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   const manifestDir = path.join(__dirname, 'manifests', 'petshop-baseline');
 
@@ -513,7 +595,7 @@ ipcMain.handle('kube-deploy-task-manifests', (_, { namespace, taskId } = {}) => 
   };
 });
 
-ipcMain.handle('kube-get-pod-logs', (_, { podName, namespace } = {}) => {
+registerIPC('kube-get-pod-logs', (_, { podName, namespace } = {}) => {
   const targetNs = namespace || 'acme-petshop-local';
   if (podName) {
     const res = runKubectl(`logs ${podName} -n ${targetNs} --tail=100`);
@@ -532,7 +614,7 @@ ipcMain.handle('kube-get-pod-logs', (_, { podName, namespace } = {}) => {
   return { ok: true, pod: podName || "petstore-api", logs: logs.join("\n") };
 });
 
-ipcMain.handle('kube-get-resource-yaml', (_, { name, kind, namespace }) => {
+registerIPC('kube-get-resource-yaml', (_, { name, kind, namespace }) => {
   const k = (kind || 'pod').toLowerCase();
   const res = runKubectl(`get ${k} ${name || 'petstore-api'} -n ${namespace || 'acme-petshop-local'} -o yaml`);
   if (res.ok && res.output) {
@@ -565,27 +647,27 @@ spec:
   return { ok: true, yaml };
 });
 
-ipcMain.handle('kube-rollout-restart', (_, { deployment, namespace }) => {
+registerIPC('kube-rollout-restart', (_, { deployment, namespace }) => {
   const res = runKubectl(`rollout restart deployment/${deployment} -n ${namespace || 'acme-petshop-local'}`);
   return { ok: true, message: `✓ Deployment ${deployment} in namespace ${namespace} restarted successfully.` };
 });
 
-ipcMain.handle('kube-scale-deployment', (_, { deployment, namespace, replicas }) => {
+registerIPC('kube-scale-deployment', (_, { deployment, namespace, replicas }) => {
   const res = runKubectl(`scale deployment/${deployment} --replicas=${replicas || 1} -n ${namespace || 'acme-petshop-local'}`);
   return { ok: true, message: `✓ Deployment ${deployment} scaled to ${replicas} replicas in ${namespace}.` };
 });
 
-ipcMain.handle('kube-get-helm-releases', () => ({ ok: true, releases: HELM_RELEASES }));
+registerIPC('kube-get-helm-releases', () => ({ ok: true, releases: HELM_RELEASES }));
 
-ipcMain.handle('kube-get-argocd-apps', () => ({ ok: true, apps: ARGOCD_APPS }));
+registerIPC('kube-get-argocd-apps', () => ({ ok: true, apps: ARGOCD_APPS }));
 
-ipcMain.handle('kube-sync-argocd-app', (_, { appName }) => {
+registerIPC('kube-sync-argocd-app', (_, { appName }) => {
   return { ok: true, message: `✓ ArgoCD application ${appName} triggered sync. GitOps revision synced with origin/main.` };
 });
 
-ipcMain.handle('kube-get-vercel-deployments', () => ({ ok: true, projects: VERCEL_PROJECTS }));
+registerIPC('kube-get-vercel-deployments', () => ({ ok: true, projects: VERCEL_PROJECTS }));
 
-ipcMain.handle('kube-ask-ai', (_, { prompt, clusterId, namespace }) => {
+registerIPC('kube-ask-ai', (_, { prompt, clusterId, namespace }) => {
   const p = (prompt || "").toLowerCase();
   let reply = "";
 

@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { createMCPServer } = require('../robos-mcp-lib/index');
+const { createSDLCTools } = require('./sdlc-tools');
 let SchemaRegistry;
 try {
   SchemaRegistry = require('../schema-studio/lib/schema-registry').SchemaRegistry;
@@ -77,7 +78,8 @@ class EKGraphService {
   constructor(options = {}) {
     this.nodes = new Map();
     this.nodesFile = options.nodesFile || EKG_FILE;
-    this.init();
+    this.disabled = !!options.disableLegacyStore;
+    if (!options.disableLegacyStore) this.init();
   }
 
   init() {
@@ -123,6 +125,7 @@ class EKGraphService {
   }
 
   createNode(data = {}) {
+    if (this.disabled) throw new Error("Use robos_sdlc_propose/apply for the configured workspace");
     if (!data.path) throw new Error('Node path is required');
     const node = {
       path: data.path,
@@ -140,6 +143,7 @@ class EKGraphService {
   }
 
   updateNode(nodePath, data = {}) {
+    if (this.disabled) throw new Error("Use robos_sdlc_propose/apply for the configured workspace");
     const node = this.nodes.get(nodePath);
     if (!node) return null;
     Object.assign(node, data, { updatedAt: new Date().toISOString() });
@@ -162,7 +166,8 @@ class EKGraphService {
 }
 
 function createEKGraphMCPServer(options = {}) {
-  const service = new EKGraphService(options);
+  const graphRoot = options.graphRoot || process.env.ROBOS_GRAPH_ROOT;
+  const service = new EKGraphService({ ...options, disableLegacyStore: !!graphRoot });
 
   const server = createMCPServer({
     appId: 'ekgraph',
@@ -171,6 +176,7 @@ function createEKGraphMCPServer(options = {}) {
     description: 'RobOS Engineering Knowledge Graph Model Context Protocol Server',
     port: options.port || null,
     tools: [
+      ...createSDLCTools({ graphRoot }),
       {
         name: 'robos_ekgraph_search',
         description: 'Natural language search across all knowledge nodes, services, and architectures.',

@@ -58,6 +58,8 @@ const DEFAULT_PACKAGES = [
 
 class KGraphPackageManager {
   constructor(options = {}) {
+    this.readOnly = !!options.readOnly;
+    this.strict = !!options.strict;
     this.baseDir = options.baseDir || options.rootDir || path.join(process.cwd(), '.robos');
     this.packagesDir = options.packagesDir || path.join(this.baseDir, 'kgraphs');
     this.manifestPath = options.manifestPath || path.join(this.baseDir, 'kgraph.yaml');
@@ -70,6 +72,7 @@ class KGraphPackageManager {
   }
 
   ensureDirs() {
+    if (this.readOnly) return;
     fs.mkdirSync(this.baseDir, { recursive: true });
     fs.mkdirSync(this.packagesDir, { recursive: true });
     for (const p of DEFAULT_PACKAGES) {
@@ -83,6 +86,9 @@ class KGraphPackageManager {
 
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
     const typeStr = types.join(' ');
+    if (typeStr.includes('DataStore') || typeStr.includes('BrokerDefinition')) return 'core-platform';
+    if (typeStr.includes('EnvironmentProfile')) return 'devops';
+    if (typeStr.includes('AgentSkill')) return 'learning';
 
     if (typeStr.includes('Gherkin') || typeStr.includes('Scenario') || typeStr.includes('ScenarioStep') || typeStr.includes('ScenarioOutline') || typeStr.includes('ExamplesTable') || typeStr.includes('StepDefinition') || typeStr.includes('DataTable') || typeStr.includes('DocString') || typeStr.includes('TestPlan') || typeStr.includes('TestCase') || typeStr.includes('TestExecution') || typeStr.includes('TestExecutionRecord') || typeStr.includes('TestSuite') || typeStr.includes('TestingLibrary') || typeStr.includes('TestFramework') || typeStr.includes('BDDFeature')) {
       return 'testing';
@@ -151,6 +157,7 @@ class KGraphPackageManager {
               nodes,
             });
           } catch (e) {
+            if (this.strict) throw e;
             console.error(`Failed to load KGraph package ${pkgFile}:`, e.message);
           }
         }
@@ -160,7 +167,7 @@ class KGraphPackageManager {
     // Ensure all default packages are present in memory and on disk
     for (const def of DEFAULT_PACKAGES) {
       const pkgFile = path.join(this.packagesDir, def.id, 'package.jsonld');
-      if (!fs.existsSync(pkgFile)) {
+      if (!this.readOnly && !fs.existsSync(pkgFile)) {
         const pkgData = {
           '@context': OSLC_CONTEXT,
           '@id': `urn:robos:package:${def.id}`,
@@ -197,6 +204,7 @@ class KGraphPackageManager {
   }
 
   splitMonolithicGraph(monolithicData) {
+    if (this.readOnly) throw new Error('Package manager is read-only');
     this.ensureDirs();
     const nodes = Array.isArray(monolithicData['robos:nodes']) ? monolithicData['robos:nodes'] : [];
 
@@ -332,6 +340,7 @@ class KGraphPackageManager {
   }
 
   saveDirtyPackages(aggregatedFilePath) {
+    if (this.readOnly) throw new Error('Package manager is read-only; use the graph workspace revision API');
     this.ensureDirs();
     for (const pkgId of this.dirtyPackages) {
       const pkg = this.packages.get(pkgId);

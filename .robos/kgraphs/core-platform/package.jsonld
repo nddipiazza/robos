@@ -8,7 +8,72 @@
     "robos": "https://robos.dev/ns/sdlc#",
     "c4": "https://c4model.com/ns#",
     "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/"
+    "schema": "https://schema.org/",
+    "pact": "https://pact.io/ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
+    },
+    "robos:provenance": {
+      "@id": "robos:provenance",
+      "@type": "@json"
+    },
+    "robos:relationshipEvidence": {
+      "@id": "robos:relationshipEvidence",
+      "@container": "@set",
+      "@context": {
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
+        },
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        },
+        "evidence": {
+          "@id": "robos:evidence",
+          "@container": "@set",
+          "@context": {
+            "repository": "robos:sourceRepository",
+            "path": "robos:sourcePath",
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          }
+        },
+        "note": "dcterms:description",
+        "condition": "robos:condition",
+        "status": "robos:evidenceStatus"
+      }
+    },
+    "robos:evidence": {
+      "@id": "robos:evidence",
+      "@container": "@set",
+      "@context": {
+        "repository": "robos:sourceRepository",
+        "path": "robos:sourcePath",
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      }
+    },
+    "robos:technologyReference": {
+      "@id": "robos:technologyReference",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
+    }
   },
   "@id": "urn:robos:package:core-platform",
   "@type": [
@@ -427,10 +492,281 @@
       "dcterms:title": "DB Database (acme_db)",
       "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
       "robos:databaseName": "acme_db",
+      "robos:engine": "postgresql",
       "robos:host": "db.internal",
       "robos:port": 5432,
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "PostgreSQL",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "postgresql",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Redis",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "redis",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "NATS JetStream",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "nats-jetstream",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaMetrics",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victoriametrics",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaLogs",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victorialogs",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "buildbarn",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "React",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "react",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Protocol Buffers",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "protobuf",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Helm",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "helm",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Pulumi",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "pulumi",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Remote Execution API v2",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "reapi-v2",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel Build Event Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel-bep",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "completed-action-logger",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#mcp",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Model Context Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "mcp",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+    },
+    {
+      "@id": "urn:robos:source:graph-workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "External graph workspace and revision store",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/graph-workspace.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "line": 1
+        }
+      ]
     }
   ],
   "@graph": [
@@ -799,21 +1135,6 @@
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/BroadcastService",
       "robos:domainStandard": "https://kafka.apache.org/"
-    },
-    {
-      "@id": "urn:robos:db:db-9wv0p",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:Database",
-        "robos:RelationalDatabase"
-      ],
-      "dcterms:title": "DB Database (acme_db)",
-      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
-      "robos:databaseName": "acme_db",
-      "robos:host": "db.internal",
-      "robos:port": 5432,
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform"
     }
   ]
 }

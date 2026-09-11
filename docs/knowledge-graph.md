@@ -543,7 +543,7 @@ Modern monorepos and polyglot architectures rely on distributed compilation, rem
 
 ### Upstream Schema Provenance (`robos:refersFrom`)
 
-RobOS establishes complete semantic traceability and provenance for all 91 schema definitions. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
+RobOS establishes complete semantic traceability and provenance for all 98 schema definitions. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
 
 - **W3C & Schema.org**: `https://schema.org/SoftwareApplication`, `https://schema.org/WebApplication`, `https://schema.org/VideoGame`, `https://schema.org/Organization`, `https://schema.org/Person`, `https://schema.org/Dataset`, `https://schema.org/DataCatalog`.
 - **OASIS OSLC (Open Services for Lifecycle Collaboration)**:

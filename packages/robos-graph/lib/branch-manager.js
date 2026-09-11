@@ -128,6 +128,7 @@ const DEFAULT_BRANCH_DELTAS = {
 
 class BranchManager {
   constructor(options = {}) {
+    this.branchDeltas = options.branchDeltas || DEFAULT_BRANCH_DELTAS;
     this.baseGraphData = JSON.parse(JSON.stringify(options.baseGraphData || DEFAULT_GRAPH_DATA));
     this.branches = new Map();
     this.activeBranch = options.activeBranch || 'main';
@@ -147,7 +148,7 @@ class BranchManager {
     });
 
     // 2. Initialize pre-populated child branches
-    for (const [branchName, delta] of Object.entries(DEFAULT_BRANCH_DELTAS)) {
+    for (const [branchName, delta] of Object.entries(this.branchDeltas)) {
       const childDoc = JSON.parse(JSON.stringify(this.baseGraphData));
       childDoc['@id'] = `urn:robos:graph:buildbarn-platform:${branchName.replace(/\//g, '-')}`;
       childDoc['robos:nodes'].push(...JSON.parse(JSON.stringify(delta.addedNodes)));

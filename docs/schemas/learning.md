@@ -26,7 +26,7 @@ Interactive developer courses, tutorials, and architectural training modules.
 - **Package Store ID**: `learning`
 - **Ontology Namespace**: `robos.learning`
 - **GitOps Package File**: `.robos/kgraphs/learning/package.jsonld`
-- **Schemas Defined**: 6
+- **Schemas Defined**: 7
 
 ---
 
@@ -40,6 +40,7 @@ Interactive developer courses, tutorials, and architectural training modules.
 | [**Learning Lesson** (`robos:LearningLesson`)]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) | `urn:robos:shape:LearningLessonShape` | `dcterms:title`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) |
 | [**Hands On Lab** (`robos:HandsOnLab`)]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) | `urn:robos:shape:HandsOnLabShape` | `dcterms:title`, `robos:labFile`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) |
 | [**Quiz Assessment** (`robos:QuizAssessment`)]({{ '/schemas/learning/quiz-assessment.html' | relative_url }}) | `urn:robos:shape:QuizAssessmentShape` | `dcterms:title`, `robos:module` | [View Schema &rarr;]({{ '/schemas/learning/quiz-assessment.html' | relative_url }}) |
+| [**Agent Skill** (`robos:AgentSkill`)]({{ '/schemas/learning/agent-skill.html' | relative_url }}) | `robos:AgentSkillShape` | `dcterms:title`, `robos:skillName`, `robos:sourcePath`, `robos:inRepository`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/learning/agent-skill.html' | relative_url }}) |
 
 ---
 

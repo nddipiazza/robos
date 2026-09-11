@@ -33,6 +33,7 @@
         </div>
       </div>
       <div class="header-right">
+        <button class="btn btn-primary" id="btn-workspace-review">Import &amp; Refine</button>
         <button class="btn btn-secondary" id="btn-open-devops-modal">☁️ DevOps Integrations</button>
         <button class="btn btn-secondary" id="btn-open-packages-modal">📦 Packages & Repos</button>
         <button class="btn btn-secondary" id="btn-open-elearning-modal">🎓 Generate eLearning</button>
@@ -676,6 +677,25 @@
     </div>
   </div>
 
+  <dialog id="workspace-review" style="width:min(1120px,92vw);max-height:90vh;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:12px;padding:24px;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2>Import &amp; Refine</h2><button class="btn btn-secondary" id="workspace-close">Close</button></div>
+    <div style="display:flex;gap:12px;align-items:center"><button class="btn btn-secondary" id="workspace-open">Open graph workspace</button><span id="workspace-summary">Select a graph workspace to begin.</span></div>
+    <p id="workspace-revision" style="color:#8b949e;overflow-wrap:anywhere"></p>
+    <div id="workspace-packages" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <details id="workspace-coverage-details" hidden><summary>Source coverage and open questions</summary><pre id="workspace-coverage" style="max-height:220px;overflow:auto;white-space:pre-wrap"></pre></details>
+    <label for="workspace-prompt" style="display:block;margin-top:18px">What should we refine?</label>
+    <textarea id="workspace-prompt" rows="3" style="width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;padding:10px;border:1px solid #30363d;border-radius:6px" placeholder="Describe a correction, a missing relationship, or a detail to investigate."></textarea>
+    <label for="workspace-scope">Focus on a title or ID</label>
+    <input id="workspace-scope" class="input-text" placeholder="Optional search to narrow the agent brief" />
+    <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-context">Prepare agent brief</button><button class="btn btn-primary" id="workspace-agent">Ask configured agent</button></div>
+    <details id="workspace-context-details"><summary>Agent brief and source evidence</summary><pre id="workspace-context-output" style="white-space:pre-wrap;max-height:260px;overflow:auto"></pre></details>
+    <label for="workspace-edits" style="display:block;margin-top:16px">Proposed edits from your coding agent, or an imported graph</label>
+    <textarea id="workspace-edits" rows="5" style="width:100%;box-sizing:border-box;background:#161b22;color:#e6edf3;padding:10px;border:1px solid #30363d;border-radius:6px" placeholder='Paste {"edits": [...]} or a JSON-LD graph. Preview before saving.'></textarea>
+    <div style="display:flex;gap:8px;margin:12px 0"><button class="btn btn-secondary" id="workspace-propose">Preview changes</button><button class="btn btn-primary" id="workspace-apply" disabled>Save reviewed revision</button><button class="btn btn-secondary" id="workspace-discard">Discard proposal</button></div>
+    <p id="workspace-status" role="status" aria-live="polite"></p>
+    <pre id="workspace-diff" style="white-space:pre-wrap;background:#161b22;padding:12px;max-height:280px;overflow:auto"></pre>
+  </dialog>
   <script src="app.js"></script>
+  <script src="workspace-review.js"></script>
 </body>
 </html>

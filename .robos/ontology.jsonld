@@ -17,9 +17,9 @@
   "@id": "https://robos.dev/schemas/ontology.jsonld",
   "@type": "owl:Ontology",
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
-  "dcterms:description": "Formal linked data ontology mapping 100% of RobOS SDLC entities (91 classes across 8 packages) to Schema.org parent classes and international de facto standards (OASIS OSLC 3.0, W3C C4, Cucumber, OpenAPI 3.1, CNCF).",
+  "dcterms:description": "RobOS reusable SDLC classes and properties mapped to upstream vocabularies. Source-backed declarations are separate from deployment instances.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 91,
+  "robos:totalClasses": 98,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -1129,6 +1129,86 @@
       "owl:equivalentClass": {
         "@id": "http://open-services.net/ns/qm#TestExecutionRecord"
       }
+    },
+    {
+      "@id": "robos:CurriculumDefinition",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CurriculumDefinition",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Course"
+      },
+      "robos:shaclShape": "robos:CurriculumDefinitionShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:DataStore",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DataStore",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:shaclShape": "robos:DataStoreShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:BrokerDefinition",
+      "@type": "rdfs:Class",
+      "rdfs:label": "BrokerDefinition",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Service"
+      },
+      "robos:shaclShape": "robos:BrokerDefinitionShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:EnvironmentProfile",
+      "@type": "rdfs:Class",
+      "rdfs:label": "EnvironmentProfile",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DefinedTerm"
+      },
+      "robos:shaclShape": "robos:EnvironmentProfileShape",
+      "robos:package": "devops"
+    },
+    {
+      "@id": "robos:SourceArtifact",
+      "@type": "rdfs:Class",
+      "rdfs:label": "SourceArtifact",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:shaclShape": "robos:SourceArtifactShape",
+      "robos:package": "core-platform"
+    },
+    {
+      "@id": "robos:AgentSkill",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AgentSkill",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/HowTo"
+      },
+      "robos:shaclShape": "robos:AgentSkillShape",
+      "robos:package": "learning"
+    },
+    {
+      "@id": "robos:evidence",
+      "@type": "rdf:Property",
+      "rdfs:label": "Source evidence"
+    },
+    {
+      "@id": "robos:relationshipEvidence",
+      "@type": "rdf:Property",
+      "rdfs:label": "Relationship evidence"
+    },
+    {
+      "@id": "robos:technologyReference",
+      "@type": "rdf:Property",
+      "rdfs:label": "Reusable technology definition"
+    },
+    {
+      "@id": "robos:protocolReference",
+      "@type": "rdf:Property",
+      "rdfs:label": "Reusable protocol definition"
     }
   ]
 }

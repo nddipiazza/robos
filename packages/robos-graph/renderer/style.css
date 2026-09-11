@@ -30,6 +30,10 @@ body {
   user-select: none;
 }
 
+#workspace-review { margin: auto; }
+#workspace-review::backdrop { background: rgba(0, 0, 0, 0.6); }
+[hidden] { display: none !important; }
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -1734,5 +1738,4 @@ h1 {
   margin-bottom: 6px;
   font-size: 11px;
 }
-
 

@@ -116,12 +116,13 @@ function selectCluster(c) {
   renderSidebar();
 
   // Overview
+  const sourceOnly = c['robos:stateScope'] === 'source-only';
   clusterDetailTitleEl.textContent = c['dcterms:title'] || 'REAPI Cluster';
   clusterDetailDescEl.textContent = c['dcterms:description'] || 'Remote execution cluster';
-  endpointExecEl.textContent = c['robos:executionEndpoint'] || 'grpc://re-execution:8980';
-  endpointCasEl.textContent = c['robos:casEndpoint'] || 'grpc://re-cas:8980';
-  endpointAcEl.textContent = c['robos:actionCacheEndpoint'] || c['robos:casEndpoint'] || 'grpc://re-cas:8980';
-  endpointBrowserEl.textContent = c['robos:browserEndpoint'] || 'http://re-browser:7984';
+  endpointExecEl.textContent = c['robos:executionEndpoint'] || (sourceOnly ? 'Unknown' : 'grpc://re-execution:8980');
+  endpointCasEl.textContent = c['robos:casEndpoint'] || (sourceOnly ? 'Unknown' : 'grpc://re-cas:8980');
+  endpointAcEl.textContent = c['robos:actionCacheEndpoint'] || c['robos:casEndpoint'] || (sourceOnly ? 'Unknown' : 'grpc://re-cas:8980');
+  endpointBrowserEl.textContent = c['robos:browserEndpoint'] || (sourceOnly ? 'Unknown' : 'http://re-browser:7984');
 
   // Workers
   const pools = c['robos:workerPools'] || [];
@@ -141,9 +142,11 @@ function selectCluster(c) {
 
   // Cache stats
   const cache = c['robos:cacheSettings'] || {};
-  statCasHitEl.textContent = cache.casHitRatio || '89.4%';
-  statAcHitEl.textContent = cache.actionCacheHitRatio || '72.1%';
+  statCasHitEl.textContent = cache.casHitRatio || (sourceOnly ? 'Unknown' : '89.4%');
+  statAcHitEl.textContent = cache.actionCacheHitRatio || (sourceOnly ? 'Unknown' : '72.1%');
   statCapacityEl.textContent = `${cache.maxSizeBytes || '500GB'} (${cache.evictionPolicy ? cache.evictionPolicy.toUpperCase() : 'LRU'})`;
+  if (sourceOnly && !cache.maxSizeBytes) statCapacityEl.textContent = 'Unknown';
+  if (sourceOnly) clusterDetailDescEl.textContent += ' — Source declaration; live state is unverified.';
   statProviderEl.textContent = (c['robos:provider'] || 'buildbarn').toUpperCase();
 
   // Provider select sync

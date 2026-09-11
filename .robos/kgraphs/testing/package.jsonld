@@ -9,7 +9,71 @@
     "c4": "https://c4model.com/ns#",
     "pact": "https://pact.io/ns#",
     "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/"
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
+    },
+    "robos:provenance": {
+      "@id": "robos:provenance",
+      "@type": "@json"
+    },
+    "robos:relationshipEvidence": {
+      "@id": "robos:relationshipEvidence",
+      "@container": "@set",
+      "@context": {
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
+        },
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        },
+        "evidence": {
+          "@id": "robos:evidence",
+          "@container": "@set",
+          "@context": {
+            "repository": "robos:sourceRepository",
+            "path": "robos:sourcePath",
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          }
+        },
+        "note": "dcterms:description",
+        "condition": "robos:condition",
+        "status": "robos:evidenceStatus"
+      }
+    },
+    "robos:evidence": {
+      "@id": "robos:evidence",
+      "@container": "@set",
+      "@context": {
+        "repository": "robos:sourceRepository",
+        "path": "robos:sourcePath",
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      }
+    },
+    "robos:technologyReference": {
+      "@id": "robos:technologyReference",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
+    }
   },
   "@id": "urn:robos:package:testing",
   "@type": [
@@ -616,6 +680,30 @@
       "robos:refersFrom": "https://schema.org/SoftwareApplication",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      }
     }
   ],
   "@graph": [

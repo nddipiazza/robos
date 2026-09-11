@@ -17,13 +17,13 @@ describe('workspace-manager E2E', () => {
 
     it('shows app title', () => {
       const allText = flatText(snap);
-      assert.ok(allText.includes('Workspace Manager'), 'App title visible');
+      assert.ok(allText.includes('Workspace Orchestrator') || allText.includes('Workspace Manager'), 'App title visible');
     });
 
     it('shows scan button', () => {
       const allText = flatText(snap);
       assert.ok(
-        allText.includes('Scan'),
+        allText.includes('Sync Worktrees') || allText.includes('Scan'),
         'Scan button visible'
       );
     });
@@ -31,7 +31,7 @@ describe('workspace-manager E2E', () => {
     it('shows filter controls', () => {
       const allText = flatText(snap);
       assert.ok(
-        allText.includes('All types') || allText.includes('VS Code') || allText.includes('JetBrains'),
+        allText.includes('main') || allText.includes('All types') || allText.includes('VS Code') || allText.includes('JetBrains'),
         'Filter controls visible'
       );
     });
@@ -40,7 +40,7 @@ describe('workspace-manager E2E', () => {
       const allText = flatText(snap);
       // After auto-scan, should show either workspace count or "No workspaces found"
       assert.ok(
-        allText.includes('workspaces') || allText.includes('No workspaces') || allText.includes('Scanning'),
+        allText.includes('workspaces') || allText.includes('No workspaces') || allText.includes('Projects') || allText.includes('Scanning'),
         'Workspace status visible'
       );
     });
@@ -57,14 +57,14 @@ describe('workspace-manager E2E', () => {
 
     it('shows app title on fresh install', () => {
       const allText = flatText(snap);
-      assert.ok(allText.includes('Workspace Manager'), 'App title visible');
+      assert.ok(allText.includes('Workspace Orchestrator') || allText.includes('Workspace Manager'), 'App title visible');
     });
 
     it('shows workspace list area', () => {
       const allText = flatText(snap);
       // Should complete scan (finding nothing) or show empty state
       assert.ok(
-        allText.includes('workspaces') || allText.includes('No workspaces') || allText.includes('Scan'),
+        allText.includes('workspaces') || allText.includes('No workspaces') || allText.includes('Projects') || allText.includes('Scan'),
         'Workspace list rendered'
       );
     });

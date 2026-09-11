@@ -1,5 +1,12 @@
 'use strict';
 
+const SOURCE_EVIDENCE_CONTEXT = {
+  repository: 'robos:sourceRepository', path: 'robos:sourcePath',
+  line: { '@id': 'robos:sourceLine', '@type': 'xsd:integer' },
+  revision: 'robos:sourceRevision', sha256: 'robos:sourceHash',
+  workingTreeStatus: 'robos:workingTreeStatus',
+};
+
 const OSLC_CONTEXT = {
   oslc: 'http://open-services.net/ns/core#',
   oslc_am: 'http://open-services.net/ns/am#',
@@ -11,6 +18,24 @@ const OSLC_CONTEXT = {
   pact: 'https://pact.io/ns#',
   dcterms: 'http://purl.org/dc/terms/',
   schema: 'https://schema.org/',
+  xsd: 'http://www.w3.org/2001/XMLSchema#',
+  'robos:technologyReference': { '@id': 'robos:technologyReference', '@type': '@id' },
+  'robos:protocolReference': { '@id': 'robos:protocolReference', '@type': '@id' },
+  'robos:sourceSummary': { '@id': 'robos:sourceSummary', '@type': '@json' },
+  'robos:provenance': { '@id': 'robos:provenance', '@type': '@json' },
+  'robos:relationshipEvidence': {
+    '@id': 'robos:relationshipEvidence', '@container': '@set',
+    '@context': {
+      predicate: { '@id': 'robos:predicate', '@type': '@vocab' },
+      target: { '@id': 'robos:target', '@type': '@id' },
+      evidence: { '@id': 'robos:evidence', '@container': '@set', '@context': SOURCE_EVIDENCE_CONTEXT }, note: 'dcterms:description',
+      condition: 'robos:condition', status: 'robos:evidenceStatus',
+    },
+  },
+  'robos:evidence': {
+    '@id': 'robos:evidence', '@container': '@set',
+    '@context': SOURCE_EVIDENCE_CONTEXT,
+  },
 };
 
 class OSLCGraphParser {
@@ -189,11 +214,18 @@ class OSLCGraphParser {
         'oslc_qm:usesTestCase',
       ];
 
+      // Imported JSON-LD may introduce relation predicates beyond the built-in
+      // vocabulary. Index explicit @id references and URNs without losing them.
+      for (const k of Object.keys(node)) {
+        if (k === '@id' || k === '@type' || refKeys.includes(k)) continue;
+        if ([].concat(node[k]).some(v => typeof v === 'string' && v.startsWith('urn:') || v && typeof v === 'object' && typeof v['@id'] === 'string')) refKeys.push(k);
+      }
       for (const k of refKeys) {
         const val = node[k];
         if (!val) continue;
         const targets = Array.isArray(val) ? val : [val];
-        for (const t of targets) {
+        for (const value of targets) {
+          const t = value && typeof value === 'object' ? value['@id'] : value;
           if (typeof t === 'string') {
             this.outgoingRefs.get(node['@id']).add(t);
             if (!this.incomingRefs.has(t)) {

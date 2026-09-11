@@ -66,7 +66,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 | Property Path | Name | Multiplicity | Data Type | Constraint Rule / Validation Message |
 |---|---|---|---|---|
 | **`robos:repository`** | Git Repository | `1..1` | `xsd:string` | Microservice must define exactly one repository. |
-| **`robos:ownerTeam`** | Owner Team | `1..*` | `URI (robos:Team)` | Microservice must define an owner team. |
+| **`robos:ownerTeam`** | Owner Team | `0..*` | `URI (robos:Team)` | Record an owner team when known; unknown ownership must not be fabricated. |
 | **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Microservice must have a title. |
 
 ---

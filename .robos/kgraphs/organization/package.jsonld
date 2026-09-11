@@ -8,7 +8,72 @@
     "robos": "https://robos.dev/ns/sdlc#",
     "c4": "https://c4model.com/ns#",
     "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/"
+    "schema": "https://schema.org/",
+    "pact": "https://pact.io/ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
+    },
+    "robos:provenance": {
+      "@id": "robos:provenance",
+      "@type": "@json"
+    },
+    "robos:relationshipEvidence": {
+      "@id": "robos:relationshipEvidence",
+      "@container": "@set",
+      "@context": {
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
+        },
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        },
+        "evidence": {
+          "@id": "robos:evidence",
+          "@container": "@set",
+          "@context": {
+            "repository": "robos:sourceRepository",
+            "path": "robos:sourcePath",
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          }
+        },
+        "note": "dcterms:description",
+        "condition": "robos:condition",
+        "status": "robos:evidenceStatus"
+      }
+    },
+    "robos:evidence": {
+      "@id": "robos:evidence",
+      "@container": "@set",
+      "@context": {
+        "repository": "robos:sourceRepository",
+        "path": "robos:sourcePath",
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      }
+    },
+    "robos:technologyReference": {
+      "@id": "robos:technologyReference",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
+    }
   },
   "@id": "urn:robos:package:organization",
   "@type": [
@@ -469,6 +534,27 @@
       ],
       "robos:package": "organization",
       "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:package": "organization",
+      "robos:sourcePath": "AGENTS.md",
+      "robos:sourceKind": "git-repository",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "AGENTS.md",
+          "line": 1
+        }
+      ]
     }
   ],
   "@graph": [

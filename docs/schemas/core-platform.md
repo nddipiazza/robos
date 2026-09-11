@@ -26,7 +26,7 @@ Foundational architectural graph, system roots, and platform configuration.
 - **Package Store ID**: `core-platform`
 - **Ontology Namespace**: `robos.platform`
 - **GitOps Package File**: `.robos/kgraphs/core-platform/package.jsonld`
-- **Schemas Defined**: 17
+- **Schemas Defined**: 21
 
 ---
 
@@ -51,6 +51,10 @@ Foundational architectural graph, system roots, and platform configuration.
 | [**MCP Tool** (`robos:MCPTool`)]({{ '/schemas/core-platform/mcp-tool.html' | relative_url }}) | `urn:robos:shape:MCPToolShape` | `dcterms:title`, `robos:toolName`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcp-tool.html' | relative_url }}) |
 | [**MCP Resource** (`robos:MCPResource`)]({{ '/schemas/core-platform/mcp-resource.html' | relative_url }}) | `urn:robos:shape:MCPResourceShape` | `dcterms:title`, `robos:uriTemplate`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcp-resource.html' | relative_url }}) |
 | [**MCP Prompt** (`robos:MCPPrompt`)]({{ '/schemas/core-platform/mcp-prompt.html' | relative_url }}) | `urn:robos:shape:MCPPromptShape` | `dcterms:title`, `robos:promptName`, `robos:mcpServer` | [View Schema &rarr;]({{ '/schemas/core-platform/mcp-prompt.html' | relative_url }}) |
+| [**Curriculum Definition** (`robos:CurriculumDefinition`)]({{ '/schemas/core-platform/curriculum-definition.html' | relative_url }}) | `robos:CurriculumDefinitionShape` | `dcterms:title`, `robos:sourcePath`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/core-platform/curriculum-definition.html' | relative_url }}) |
+| [**Data Store** (`robos:DataStore`)]({{ '/schemas/core-platform/data-store.html' | relative_url }}) | `robos:DataStoreShape` | `dcterms:title`, `robos:engine`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/core-platform/data-store.html' | relative_url }}) |
+| [**Broker Definition** (`robos:BrokerDefinition`)]({{ '/schemas/core-platform/broker-definition.html' | relative_url }}) | `robos:BrokerDefinitionShape` | `dcterms:title`, `robos:brokerType`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/core-platform/broker-definition.html' | relative_url }}) |
+| [**Source Artifact** (`robos:SourceArtifact`)]({{ '/schemas/core-platform/source-artifact.html' | relative_url }}) | `robos:SourceArtifactShape` | `dcterms:title`, `robos:sourcePath`, `robos:sourceKind`, `robos:inRepository`, `robos:evidence` | [View Schema &rarr;]({{ '/schemas/core-platform/source-artifact.html' | relative_url }}) |
 
 ---
 

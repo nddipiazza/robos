@@ -2,6 +2,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('sdlcGraph', {
+  workspaceInfo: () => ipcRenderer.invoke('workspace-info'),
+  openWorkspace: () => ipcRenderer.invoke('workspace-open'),
+  workspaceContext: input => ipcRenderer.invoke('workspace-context', input),
+  proposeWorkspace: input => ipcRenderer.invoke('workspace-propose', input),
+  askWorkspaceAgent: input => ipcRenderer.invoke('workspace-ask-agent', input),
+  applyWorkspace: proposal => ipcRenderer.invoke('workspace-apply', proposal),
   getAllNodes: () => ipcRenderer.invoke('graph-get-all'),
   query: (filter) => ipcRenderer.invoke('graph-query', filter),
   getNode: (id) => ipcRenderer.invoke('graph-get-node', id),
@@ -62,4 +68,3 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   exportGraph: (format, packageId) => ipcRenderer.invoke('graph-export', { format, packageId }),
   searchNodes: (query, filter) => ipcRenderer.invoke('graph-search-nodes', { query, filter }),
 });
-

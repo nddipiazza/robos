@@ -75,6 +75,7 @@ function parseArgs(args) {
     packageId: 'services',
     importToRobos: false,
     dryRun: false,
+    demo: false,
     verbose: false,
   };
 
@@ -105,6 +106,8 @@ function parseArgs(args) {
       options.importToRobos = true;
     } else if (a === '--dry-run') {
       options.dryRun = true;
+    } else if (a === '--demo') {
+      options.demo = true;
     } else if (a === '--verbose' || a === '-v') {
       options.verbose = true;
     } else if (a === '--help' || a === '-h') {
@@ -124,48 +127,55 @@ function parseArgs(args) {
 
 function printHelp() {
   console.log(`
-RobOS Company Knowledge Graph Importer (import-company-kgraph)
-=============================================================
-Imports company repositories, services, and apps from HTTP, FileSystem, AWS S3,
-or Git forge catalogs, and generates OSLC JSON-LD Knowledge Graph file(s).
-Also features RobOS Agent Prompt intelligence to parse natural language requests
-and ingest heterogeneous infrastructure resources (Confluence, GitHub orgs, repos, GitLab, filesystem).
+Company Knowledge Graph Importer (import-company-kgraph)
+========================================================
+Extract tracked local Git sources into an evidence-backed review proposal.
+Production imports do not fetch remote catalogs, clone repos, or invent contracts.
 
-Usage:
-  node import-company-kgraph.js --prompt "<prompt text>" [options]
-  node import-company-kgraph.js --source <source> [options]
-  node import-company-kgraph.js --resources <res1,res2,...> [options]
+Production usage (long flags):
+  node import-company-kgraph.js --manifest sources.json --paths local.json \\
+    --graph-root /work/graph --output proposal.json
 
 Options:
-  -P, --prompt <text>         Natural language prompt describing infrastructure & resources to import
-  -s, --source <source>       Source input (HTTP URL, local file/folder, s3:// URI, or git URL)
-  -R, --resources <list>      Comma-separated list of URLs or paths to import
-  -t, --source-type <type>    Source type: auto (default), http, file, s3, git-list
-  -o, --output <file>         Destination file path (e.g. ./acme-kgraph.jsonld)
-  -n, --company-name <name>   Company display name (default: "Acme Global")
-      --company-slug <slug>   Company identifier slug (default: "acme")
-      --default-team <urn>    Default owner team URN (default: "urn:robos:team:core-platform")
-  -p, --package <id>          Target package store: services, applications, core-platform, devops, documentation
-      --import-to-robos       Merge generated nodes directly into local .robos/ workspace
-      --dry-run               Simulate import and print node counts without writing files
-  -v, --verbose               Display detailed discovery and ingestion logs
-  -h, --help                  Show this help screen
+  --manifest <file>       Portable namespace/title/sources manifest, parsed as JSON
+  --paths <file>          Separate source-ID-to-absolute-checkout JSON map
+  --graph-root <path>     Explicit workspace root (or its .robos directory)
+  --output <file>         Review proposal envelope, not standalone JSON-LD
+  --dry-run              Print coverage, validation and conflicts without saving
+  --prompt <text>         Optional review note in manifest mode, not discovery
+  --help, -h             Show help (invoke separately from a manifest import)
 
-Examples:
-  # Ingest from natural language AI agent prompt
-  node import-company-kgraph.js --prompt "Import our Confluence wiki at https://confluence.acme.corp/spaces/ARCH, our GitHub org https://github.com/acme-payments, and repo https://github.com/acme-retail/checkout-api"
+Input format:
+  sources.json: {"namespace":"sample","title":"Sample system",
+    "sources":[{"id":"api","exclude":["fixtures/large"]}],"exclude":["archive"]}
+  local.json: {"api":"/work/checkouts/api"}
+  sources.yaml is accepted only with JSON-subset contents; no YAML-only syntax.
+  Optional source URLs check actual origins; they do not clone or fetch.
+  Exclusions are relative path prefixes, not globs. Built-in exclusions also apply.
+  includeUnsupported defaults to false: unsupported files remain in inventory.
 
-  # Ingest from local repository list or git-projects.json
-  node import-company-kgraph.js --source ~/.config/robos/git-projects.json --output ./company-kgraph.jsonld
+Outputs and review:
+  proposal.json contains candidate, base hashes, delta, validation and conflicts.
+  proposal.json.sources.json contains portable provenance, coverage and inventory.
+  Inspect evidence, unknowns, dirty files, extraction gaps and retained stale nodes.
+  artifactFiles (extractedFiles alias) is representation, not semantic completeness.
+  Do not modify a saved proposal: its ID hashes its contents. Apply separately:
+    kgraph apply --graph-root /work/graph --file proposal.json
+    kgraph inspect --graph-root /work/graph --require-evidence
 
-  # Ingest from HTTP endpoint or Backstage catalog
-  node import-company-kgraph.js --source https://internal.company.com/api/catalog.json --company-name "Globex"
+Iterative refinement:
+  kgraph context --graph-root /work/graph --limit 40 --output context.json
+  Record unknowns as questions; prepare evidence-backed structured edits.json.
+  Recheck context revision before proposing. Review the draft before applying:
+  kgraph propose --graph-root /work/graph --mode refine --file edits.json \\
+    --require-evidence --output refinement.json
+  kgraph apply --graph-root /work/graph --file refinement.json
 
-  # Ingest from AWS S3 bucket
-  node import-company-kgraph.js --source s3://company-dev-bucket/inventories/repos.json --import-to-robos
-
-  # Ingest a directory of cloned repos
-  node import-company-kgraph.js --source /home/user/repos/ --import-to-robos
+Legacy demos only (not production architecture evidence):
+  --demo --source <input>
+  --demo --prompt <text>
+  --demo --resources <list>
+  Legacy direct-merge flags are not the canonical source-backed workflow.
 `);
 }
 
@@ -775,7 +785,37 @@ function mergeIntoRobosWorkspace(jsonLdDoc, repoEntries, options = {}) {
  * Main CLI Execution Entrypoint
  */
 async function main() {
+  // Evidence-backed imports use an explicit source manifest and external graph.
+  // This route never writes to the checkout containing this skill or global config.
+  if (process.argv.includes('--manifest')) {
+    const flags = {};
+    for (let i = 2; i < process.argv.length; i++) {
+      const key = process.argv[i];
+      if (!key.startsWith('--')) throw new Error(`Unexpected argument: ${key}`);
+      flags[key.slice(2)] = process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[++i] : true;
+    }
+    const { extractSources } = require('../../../../../packages/robos-graph/lib/source-extractor');
+    const { GraphWorkspace, serialize } = require('../../../../../packages/robos-graph/lib/graph-workspace');
+    if (typeof flags.paths !== 'string' || typeof flags['graph-root'] !== 'string') throw new Error('--manifest requires --paths <local.json> and --graph-root <workspace>');
+    const manifest = JSON.parse(fs.readFileSync(flags.manifest, 'utf8'));
+    const localPaths = JSON.parse(fs.readFileSync(flags.paths, 'utf8'));
+    const extracted = extractSources(manifest, localPaths);
+    const workspace = new GraphWorkspace(flags['graph-root']);
+    const proposal = workspace.propose({ document: extracted.document, prompt: flags.prompt || 'Import declared source manifest', requireEvidence: true });
+    if (flags['dry-run']) {
+      console.log(serialize({ coverage: extracted.coverage, warnings: extracted.warnings, delta: { added: proposal.delta.added.length, changed: proposal.delta.changed.length, removed: proposal.delta.removed.length }, validation: proposal.validation, conflicts: proposal.conflicts }));
+    } else {
+      if (typeof flags.output !== 'string') throw new Error('Provide --output <proposal.json>; applying is a separate review step');
+      fs.mkdirSync(path.dirname(path.resolve(flags.output)), { recursive: true });
+      fs.writeFileSync(flags.output, serialize(proposal));
+      fs.writeFileSync(flags.output + '.sources.json', serialize({ sources: extracted.sources, coverage: extracted.coverage, warnings: extracted.warnings, inventory: extracted.inventory || [] }));
+      console.log(serialize({ output: flags.output, nodes: proposal.candidate['robos:nodes'].length, conforms: proposal.validation.conforms, conflicts: proposal.conflicts.length }));
+    }
+    if (!proposal.validation.conforms || proposal.conflicts.length) process.exitCode = 1;
+    return;
+  }
   const options = parseArgs(process.argv.slice(2));
+  if (!options.demo) throw new Error('Use --manifest, --paths and --graph-root for evidence-backed imports. Legacy heuristic examples require explicit --demo and must not be used as architecture evidence.');
 
   // Case 1: Agent Natural Language Prompt Mode
   if (options.prompt) {
@@ -974,5 +1014,5 @@ module.exports = {
 
 // Run CLI when called directly
 if (require.main === module) {
-  main();
+  main().catch(error => { console.error(JSON.stringify({ error: error.message })); process.exitCode = 1; });
 }

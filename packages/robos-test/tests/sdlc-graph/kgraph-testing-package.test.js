@@ -222,8 +222,8 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
     assert.strictEqual(mavenBuilds.length, 1);
   });
 
-  it('6. refersFrom Canonical Provenance: all 91 SHACL constraint shapes define upstream schema links', () => {
-    assert.strictEqual(BUILTIN_SHACL_SHAPES.length, 91, 'Should have exactly 91 SHACL constraint shapes');
+  it('6. refersFrom Canonical Provenance: all 98 SHACL constraint shapes define upstream schema links', () => {
+    assert.strictEqual(BUILTIN_SHACL_SHAPES.length, 98, 'Should have exactly 98 SHACL constraint shapes');
 
     for (const shape of BUILTIN_SHACL_SHAPES) {
       assert.ok(shape.refersFrom, `Shape ${shape.shapeId} (${shape.targetClass}) must have refersFrom defined`);
@@ -255,8 +255,8 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
     assert.strictEqual(md.includes('When autonomous agents generate, expand, or validate instances of `robos:GherkinFeature`'), true);
   });
 
-  it('8. Universal Schema.org Coverage: 100% of all 91 shapes define canonical schemaOrgType and domainStandard', () => {
-    assert.strictEqual(BUILTIN_SHACL_SHAPES.length, 91, 'Should evaluate all 91 shapes');
+  it('8. Universal Schema.org Coverage: 100% of all 98 shapes define canonical schemaOrgType and domainStandard', () => {
+    assert.strictEqual(BUILTIN_SHACL_SHAPES.length, 98, 'Should evaluate all 98 shapes');
 
     for (const shape of BUILTIN_SHACL_SHAPES) {
       assert.ok(shape.schemaOrgType, `Shape ${shape.shapeId} (${shape.targetClass}) must define schemaOrgType`);
@@ -269,16 +269,17 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
     }
   });
 
-  it('9. Formal Ontology Bridge: .robos/ontology.jsonld maps all 91 classes via rdfs:subClassOf', () => {
+  it('9. Formal Ontology Bridge: .robos/ontology.jsonld maps all 98 classes via rdfs:subClassOf', () => {
     const ontologyPath = path.join(__dirname, '../../../../.robos/ontology.jsonld');
     assert.strictEqual(fs.existsSync(ontologyPath), true, '.robos/ontology.jsonld must exist');
 
     const ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
     assert.strictEqual(ontology['@type'], 'owl:Ontology');
     assert.ok(ontology['@graph']);
-    assert.strictEqual(ontology['@graph'].length, 91, 'Ontology graph must contain all 91 classes');
+    const classes = ontology['@graph'].filter(item => item['@type'] === 'rdfs:Class');
+    assert.strictEqual(classes.length, 98, 'Ontology graph must contain all 98 classes');
 
-    for (const item of ontology['@graph']) {
+    for (const item of classes) {
       assert.strictEqual(item['@type'], 'rdfs:Class');
       assert.ok(item['rdfs:subClassOf']['@id'].startsWith('https://schema.org/'));
       assert.ok(item['robos:shaclShape']);
