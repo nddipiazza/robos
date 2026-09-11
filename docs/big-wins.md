@@ -25,108 +25,117 @@ The core architectural breakthroughs and engineering advantages that separate Ro
 ## Executive Overview: Why RobOS?
 
 Traditional IDEs and AI coding tools give you autocompletions, chat sidebars, and code popups. While they generate isolated lines of code quickly, they create three severe bottlenecks:
-1. **Hallucinations & Review Fatigue**: Agents claim "Task complete!" without proving anything, forcing developers into exhausting manual verification loops.
-2. **Vendor Lock-In & Model Capture**: Workflows are trapped within proprietary LLM silos with incompatible prompt rules and rigid pricing.
-3. **Context Blindness & Machine Pollution**: Tools lack awareness of system-wide contracts, while autonomous agents litter developer workstations with leftover files and stray ports.
+1. **The AI PR Review Crisis & Review Fatigue**: Agents generate code 100× faster than humans can read it, creating massive unvetted pull requests, review backlogs, and dangerous rubber-stamping.
+2. **Context Blindness & Invisible Blast Radiuses**: Tools lack awareness of system-wide contracts, schemas, and cross-repo dependencies.
+3. **Workstation Clutter & Machine Pollution**: Autonomous agents litter developer workstations with leftover files, orphaned containers, and stray ports.
 
-RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **RobOS Main Wins** prioritized from immediate developer experience to foundational semantic compilation:
+RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **RobOS Main Wins** prioritized to solve the PR review crisis, provide real runtime proof, and accelerate the full SDLC:
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
 
-<!-- 1. Video Proof of Work -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
+<!-- 1. KGraph-Driven Development Lifecycle & App Suite -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #10b981; font-size: 1.1rem;">🎥 1. Video Proof-of-Work</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review without automated visual proof: 1080p narrated video walkthroughs and Piper TTS neural voiceovers verifying every UI and API assertion.</p>
+<h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 1. KGraph-Driven Development Lifecycle</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">The foundational blueprint: auto-generates full applications across 9 archetypes from schema-validated, modular package stores (<code>.robos/kgraphs/</code>) with multi-repo composition and Git-tag version pinning.</p>
 </div>
-<a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+<a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 2. Interactive Multi-Domain Planning Studio -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
+<!-- 2. PR Review Theater & AI Code Review Platform -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 2. Interactive Multi-Domain Planning Studio</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+<h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🎭 2. PR Review Theater & Code Review Platform</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Eliminate the AI PR review crisis. Interactive 6-stage review cockpit: anti-rubber-stamp knowledge checks, living architecture sequence flows, in-app file diffs, and instant IntelliJ IDEA & VS Code bridges with breakpoint debugging.</p>
 </div>
-<a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+<a href="{{ site.baseurl }}{% link pr-review-theater.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 3. Universal Web & API Clients -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🌐 3. Universal Web & API Clients</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">RobOS provides native web clients and management GUIs for REST (Git-backed <code>.bru</code> collections), Protobuf gRPC, GraphQL introspection, and real-time streaming protocols synchronized with architecture contracts.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 4. Unified Data Sources GUI -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🗄️ 4. Unified Data Sources GUI</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Native data source client and management GUI across Relational (PostgreSQL, MySQL, Oracle), NoSQL (MongoDB, Redis), Search, and Cloud Object Stores directly connected to the Knowledge Graph.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" style="color: #ec4899; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 5. Agent-Agnostic Open Framework -->
+<!-- 3. Interactive eLearning & Reviewer Knowledge Checks -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #38bdf8; font-size: 1.1rem;">🤖 5. Agent-Agnostic Open Framework</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Built on open global standards (OSLC, W3C JSON-LD, SHACL, MCP) implemented in the open. Zero algorithm lock-in: dynamically dispatches the right agent to the right task for optimal value and cost.</p>
+<h3 style="margin-top: 0; color: #38bdf8; font-size: 1.1rem;">🎓 3. Interactive eLearning & Knowledge Verification</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">On-demand PR masterclasses, hands-on coding labs in isolated ephemeral sandboxes, and immutable completion credentials (<code>robos:CompletionCertificate</code>) registered directly to the Knowledge Graph.</p>
 </div>
-<a href="{{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %}" style="color: #38bdf8; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+<a href="{{ site.baseurl }}{% link pr-review-theater.md %}#standalone-robos-elearning-player-hub" style="color: #38bdf8; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 6. Ephemeral In-Memory Sandboxes -->
+<!-- 4. 30+ Native Developer Application Suite -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🛠️ 4. 30+ Native Developer Application Suite</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Zero web-framework bloat. Fast Electron + vanilla JS desktop tools backing every phase of SDLC: Relational DB Manager, NoSQL Manager, Git-backed REST API Client (<code>.bru</code>), gRPC, GraphQL, Kube Studio, and Topology Canvas.</p>
+</div>
+<a href="{{ site.baseurl }}{% link apps.md %}" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 5. RobOS Agents Interact With All RobOS Apps -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f43f5e; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #f43f5e; font-size: 1.1rem;">🤖 5. RobOS Agents Interact With All RobOS Apps</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Autonomous AI agents aren't "blind typists". They programmatically see and drive all 30+ native applications via DOM inspection (<code>snapshot-cli.js</code>) and the Unified MCP Router, triggering live multi-app cascades across your desktop.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/agent-app-interaction.md %}" style="color: #f43f5e; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 6. Dual-State SDLC Knowledge Graph -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #a855f7; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #a855f7; font-size: 1.1rem;">🧠 6. Dual-State SDLC Knowledge Graph</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong> for pre-code blast radiuses. Provides <strong>multi-level agent context inheritance</strong> (Global, Enterprise, Org, Team, Repo) to eliminate duplicate prompt rules.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #a855f7; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 7. Ephemeral In-Memory Sandboxes -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #3b82f6; font-size: 1.1rem;">👤 6. Ephemeral In-Memory Sandboxes</h3>
+<h3 style="margin-top: 0; color: #3b82f6; font-size: 1.1rem;">👤 7. Ephemeral In-Memory Sandboxes</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) on private virtual displays. Zero leftover files, zero stray ports, and complete credential isolation.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %}" style="color: #3b82f6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 7. DevOps Integrations & GPG Password Store -->
+<!-- 8. Autonomous Test Reviews & Video Proof-of-Work -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #10b981; font-size: 1.1rem;">🎥 8. Autonomous Test Reviews & Video Proof</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">No code reaches human review on trust alone: automated test verification runs in headless virtual framebuffers with 1080p narrated video walkthroughs or live on DISPLAY=:0.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/video-proof-of-work.md %}" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 9. Interactive Multi-Domain Planning Studio -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #14b8a6; font-size: 1.1rem;">📋 9. Interactive Multi-Domain Planning Studio</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Interactive web form templates across Web APIs, Frontend SPAs, games, libraries, and cloud infra, with custom template builders and bidirectional GitHub Issues & Jira synchronization.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 10. Unified Agent Governance & Open Framework -->
+<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<h3 style="margin-top: 0; color: #ec4899; font-size: 1.1rem;">🤖 10. Unified Agent Governance & Open Framework</h3>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Conforms to Unified Harness Protocol (UHP 2026-08-11) and Model Context Protocol (MCP). Zero proprietary locks: dynamically routes tasks across Claude Code, Antigravity, Copilot, Codex, and Gemini.</p>
+</div>
+<a href="{{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %}" style="color: #ec4899; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
+</div>
+
+<!-- 11. DevOps Security & GPG Password Store -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 7. DevOps Security & Password Store</h3>
+<h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 11. DevOps Security & GPG Password Store</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in Git: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 8. Remote Execution Studio & REAPI v2 -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #6366f1; font-size: 1.1rem;">⚡ 8. Remote Execution Studio</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Most companies don't use remote build servers because they're too hard to set up and manage. RobOS provides zero-overhead Bazel, Buck2, and Buildbarn REAPI v2 distributed builds.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/remote-execution-studio.md %}" style="color: #6366f1; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 9. KGraph-First App Generation & Modular Architecture -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 9. KGraph-First App Generation</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Auto-generates full applications across 9 archetypes from schema-validated, modular namespaced package stores (<code>.robos/kgraphs/</code>) with multi-repo composition and Git-tag version pinning.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 10. Dual-State SDLC Knowledge Graph -->
-<div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
-<div>
-<h3 style="margin-top: 0; color: #8b5cf6; font-size: 1.1rem;">🧠 10. Dual-State SDLC Knowledge Graph</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Compares <strong>World 1 (Production <code>main</code>)</strong> against <strong>World 2 (Feature Branch)</strong> for pre-code blast radiuses. Provides <strong>multi-level agent context inheritance</strong> (Global, Company, Org, Team, Repo) to eliminate duplicate skills.</p>
-</div>
-<a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
-</div>
-
-<!-- 11. Declarative GitOps Storage -->
+<!-- 12. Declarative GitOps Storage -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 11. 100% Declarative GitOps Storage</h3>
+<h3 style="margin-top: 0; color: #f59e0b; font-size: 1.1rem;">⚡ 12. 100% Declarative GitOps Storage</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture automatically synthesizes ready-to-deploy Kubernetes manifests and Helm charts.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %}" style="color: #f59e0b; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
@@ -217,12 +226,39 @@ Engineers no longer need heavy, memory-hungry, disconnected third-party tools li
 
 ---
 
-## 5. 🤖 Universal Agent-Agnostic Framework & Algorithmic Independence
+## 5. 🤖 RobOS Agents Interact With All RobOS Apps (Full GUI & MCP Control)
+
+In traditional software development, AI coding assistants (Claude Code, GitHub Copilot, OpenAI Codex, Cursor) operate as **blind typists**. They can edit source code files on disk and run basic shell commands in a terminal, but they cannot see running applications, verify visual rendering, or interact with developer tools like database consoles, API clients, and Kubernetes dashboards.
+
+**RobOS introduces a fundamental breakthrough:**
+
+> **In RobOS, every autonomous AI agent can directly interact with all 30+ RobOS desktop applications.**
+
+RobOS bridges agents and applications through a **dual-surface control fabric**: every application in the suite provides a sleek GUI for human engineers and a programmatic control surface for AI agents.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/robos-mcp-router-frame_01.png' | relative_url }}" alt="RobOS Unified MCP Router and Agent App Interaction Fabric" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Unified Agent Control Fabric</strong>: Autonomous AI agents discover, multiplex, and drive tools across all 30+ native applications via Model Context Protocol and programmatic DOM inspection. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+### Key Capabilities
+- **Programmatic DOM Snapshot CLI (`snapshot-cli.js`)**: Dedicated debug ports (`19100–19183`) give agents sub-pixel DOM inspection, element clicking (`--click`), text entry (`--fill`), JavaScript execution (`--eval`), and session recording (`--record-start`, `--record-drain`).
+- **Unified MCP Router (`robos-mcp-router`)**: Multiplexes tools across all apps through standard Model Context Protocol: query and mutate Knowledge Graph entities (`robos_ekgraph_*`), inspect schemas and run SQL (`robos_db_*`), trigger Bruno API requests (`robos_rest_*`), deploy Kubernetes workloads (`robos_kube_*`), and manage issues (`robos_tasks_*`).
+- **Cross-App Live Cascade**: Prompting an agent in the **RobOS Agent Prompt Popup** (`robos-ai-prompt`) triggers simultaneous, observable mutations across active System Topology, Relational DB Manager, REST Client, and Kube Studio windows.
+- **Zero Hallucination Proof**: Agents verify their own changes using real app interfaces instead of guessing, catching visual glitches and missing fields before human review.
+
+👉 **[Read the Complete Guide: RobOS Agents Interact With All RobOS Apps →]({{ site.baseurl }}{% link big-wins/agent-app-interaction.md %})**
+
+---
+
+## 6. 🤖 Universal Agent-Agnostic Framework & Algorithmic Independence
 
 Proprietary coding assistants trap engineering teams in closed vendor ecosystems with incompatible prompt syntax and rigid model dependencies. **RobOS is completely model- and agent-agnostic**:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/pillar3-ai-orchestration.jpg' | relative_url }}" alt="Universal Agent-Agnostic Framework and Multi-Model Dispatcher" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/agent-agnostic-standards.jpg' | relative_url }}" alt="Universal Agent-Agnostic Framework and Multi-Model Dispatcher" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
     <strong>Agent-Agnostic Architecture & Dispatcher</strong>: Connecting open-standard SDLC context to any AI model (Claude, OpenAI, Gemini, DeepSeek, local Ollama) based on task value and cost. <em>(Click image to zoom full screen)</em>
   </div>
@@ -238,7 +274,7 @@ Proprietary coding assistants trap engineering teams in closed vendor ecosystems
 
 ---
 
-## 6. 👤 Ephemeral Linux Agent Sandboxes & Display Bridging (Zero Machine Clutter)
+## 7. 👤 Ephemeral Linux Agent Sandboxes & Display Bridging (Zero Machine Clutter)
 
 Letting autonomous AI agents execute terminal commands directly in your primary user account is dangerous and messy. RobOS dynamically provisions **hermetic, disposable in-memory agent sandboxes**:
 
@@ -259,7 +295,7 @@ Letting autonomous AI agents execute terminal commands directly in your primary 
 
 ---
 
-## 7. ☁️ DevOps Account Integrations & GPG Password Store (`pass`)
+## 8. ☁️ DevOps Account Integrations & GPG Password Store (`pass`)
 
 Managing credentials and cloud access across multi-cloud environments is notorious for credential leakage. RobOS provides **interactive onboarding wizards across 7 categories and 25+ providers with zero plaintext credentials**:
 
@@ -280,7 +316,7 @@ Managing credentials and cloud access across multi-cloud environments is notorio
 
 ---
 
-## 8. ⚡ Remote Execution Studio & REAPI v2 (Distributed Builds Without the Overhead)
+## 9. ⚡ Remote Execution Studio & REAPI v2 (Distributed Builds Without the Overhead)
 
 Rebuilding multi-gigabyte codebases from scratch is a massive productivity killer. Clean builds in C++, Rust, Go, or monorepo TypeScript easily take 20 to 60 minutes. Yet, **the overwhelming majority of engineering companies never use remote build servers** because traditional clusters (Buildbarn, NativeLink, Bazel remote caching) are notoriously hard to set up, understand, and manage:
 - **Too Hard to Set Up**: Deploying 5+ distributed microservices (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), configuring mTLS certificates, tuning raw NVMe block allocations, and writing Kubernetes StatefulSets.
@@ -308,7 +344,7 @@ Rebuilding multi-gigabyte codebases from scratch is a massive productivity kille
 
 ---
 
-## 9. 🧬 KGraph-First Application Generation & Modular Architecture
+## 10. 🧬 KGraph-First Application Generation & Modular Architecture
 
 In modern software engineering, developers rely on contracts to eliminate manual boilerplate:
 - An **OpenAPI 3.1 specification** generates typed REST client SDKs, server stubs, and API gateway routing.
@@ -336,7 +372,7 @@ In modern software engineering, developers rely on contracts to eliminate manual
 
 ---
 
-## 10. 🧠 Dual-State SDLC Knowledge Graph (Today vs. Tomorrow)
+## 11. 🧠 Dual-State SDLC Knowledge Graph (Today vs. Tomorrow)
 
 Traditional developer tools are myopic: they only understand isolated source files on disk. RobOS maintains an executable, connected architecture knowledge graph based on **OASIS OSLC Core 3.0**, **W3C JSON-LD 1.1**, and **W3C SHACL**:
 
@@ -359,7 +395,7 @@ Traditional developer tools are myopic: they only understand isolated source fil
 
 ---
 
-## 11. ⚡ 100% Declarative GitOps Storage & Zero-YAML Synthesis (`.robos/`)
+## 12. ⚡ 100% Declarative GitOps Storage & Zero-YAML Synthesis (`.robos/`)
 
 RobOS eliminates YAML sprawl and configuration fragility. All architecture, contracts, topologies, and data sources live in standard, human-readable Git files under `.robos/`:
 
@@ -395,6 +431,7 @@ RobOS eliminates YAML sprawl and configuration fragility. All architecture, cont
 | **9. Core Paradigm & Scale** | Code Autocompletions & Chat Prompts | **KGraph-First App Generation (9 Archetypes) & Modular Package Stores** |
 | **10. System Understanding** | Single file or repo folder | **Dual-State SDLC Knowledge Graph & Automated Blast Radius (OSLC 3.0)** |
 | **11. Infrastructure Deployment** | Manual YAML writing & copy-pasting | **100% Declarative Zero-YAML GitOps Synthesis** |
+| **12. Agent-App Interaction** | Blind typists; zero UI or tool interaction | **Full Programmatic GUI & MCP Control Across All 30+ Native Apps** |
 
 
 ---
