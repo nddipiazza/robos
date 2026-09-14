@@ -25,7 +25,7 @@
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
   "dcterms:description": "RobOS SDLC class and predicate ontology, with complete built-in shape coverage and RobOS-owned classification codes expressed using Schema.org CategoryCode and CategoryCodeSet.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 169,
+  "robos:totalClasses": 180,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -7023,6 +7023,284 @@
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:Comment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Comment",
+      "robos:shaclShape": "urn:robos:shape:CommentShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Comment"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:DiscussionThread",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DiscussionThread",
+      "robos:shaclShape": "urn:robos:shape:DiscussionThreadShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Conversation"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:ReviewComment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ReviewComment",
+      "robos:shaclShape": "urn:robos:shape:ReviewCommentShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Comment"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CommentAttachment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CommentAttachment",
+      "robos:shaclShape": "urn:robos:shape:CommentAttachmentShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/MediaObject"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "schema:Comment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Comment",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "schema:Conversation",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Conversation",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:WorkItemComment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "WorkItemComment",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:DiscussionComment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DiscussionComment",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:Conversation",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Conversation",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CodeReviewComment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CodeReviewComment",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:Attachment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Attachment",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:commentId",
+      "@type": "rdf:Property",
+      "rdfs:label": "commentId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:associatedWorkItem",
+      "@type": "rdf:Property",
+      "rdfs:label": "associatedWorkItem",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:threadType",
+      "@type": "rdf:Property",
+      "rdfs:label": "threadType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:commentCount",
+      "@type": "rdf:Property",
+      "rdfs:label": "commentCount",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:lastActivityAt",
+      "@type": "rdf:Property",
+      "rdfs:label": "lastActivityAt",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:createdAt",
+      "@type": "rdf:Property",
+      "rdfs:label": "createdAt",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:parentItem",
+      "@type": "rdf:Property",
+      "rdfs:label": "parentItem",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:sourceServer",
+      "@type": "rdf:Property",
+      "rdfs:label": "sourceServer",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:pullRequest",
+      "@type": "rdf:Property",
+      "rdfs:label": "pullRequest",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:filePath",
+      "@type": "rdf:Property",
+      "rdfs:label": "filePath",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:lineNumber",
+      "@type": "rdf:Property",
+      "rdfs:label": "lineNumber",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:diffHunk",
+      "@type": "rdf:Property",
+      "rdfs:label": "diffHunk",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        },
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/source"
+        }
+      ]
+    },
+    {
+      "@id": "robos:fileUrl",
+      "@type": "rdf:Property",
+      "rdfs:label": "fileUrl",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:fileSize",
+      "@type": "rdf:Property",
+      "rdfs:label": "fileSize",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/work"
         }
       ]
     }

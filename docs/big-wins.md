@@ -487,7 +487,7 @@ Modern developer machines are bogged down by dozens of heavyweight, disconnected
              oninput="filterWin8Apps()" />
     </div>
     <div id="win8-cat-bar" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
-      <button class="win8-cat-btn active" onclick="selectWin8Cat(this, 'all')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; font-family: 'Space Grotesk', sans-serif; background: #00e5ff; color: #070b13; border: 1px solid #00e5ff; transition: all 0.2s;">All (36)</button>
+      <button class="win8-cat-btn active" onclick="selectWin8Cat(this, 'all')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; font-family: 'Space Grotesk', sans-serif; background: #00e5ff; color: #070b13; border: 1px solid #00e5ff; transition: all 0.2s;">All (37)</button>
       <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'ai')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🤖 AI & Agents</button>
       <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'review')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">📊 Architecture & Review</button>
       <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'data')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🗄️ Databases & Streams</button>
@@ -496,7 +496,7 @@ Modern developer machines are bogged down by dozens of heavyweight, disconnected
       <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'core')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🖥️ Core Desktop</button>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #94a3b8; padding-bottom: 0.25rem;">
-      <span id="win8-app-count">Showing 36 of 36 applications</span>
+      <span id="win8-app-count">Showing 37 of 37 applications</span>
       <span>Click any card to explore its full guide</span>
     </div>
   </div>
@@ -514,6 +514,18 @@ Modern developer machines are bogged down by dozens of heavyweight, disconnected
           <div class="robos-app-name">Dev Central</div>
           <span class="robos-app-pkg">robos:dev-central</span>
           <p class="robos-app-desc">Daily developer command center: sprint burndown, PR health, blocker radar, and AI standup.</p>
+        </div>
+      </a>
+
+      <!-- Dev Discussions -->
+      <a href="{{ site.baseurl }}{% link big-wins/dev-discussions.md %}" class="robos-app-card win8-app-item" data-cat="review core" data-title="Dev Discussions" data-pkg="robos:dev-discussions" data-desc="Discord-like work-item and PR review chat interface projects features tasks smart caching kgraph">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/dev-discussions.svg' | relative_url }}" alt="Dev Discussions" width="38" height="38" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Dev Discussions</div>
+          <span class="robos-app-pkg">robos:dev-discussions</span>
+          <p class="robos-app-desc">Discord/Slack-like work-item and PR review discussion threads (Projects &rarr; Features &rarr; Tasks/PRs) with smart caching.</p>
         </div>
       </a>
 
@@ -1370,6 +1382,25 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Antigravity, GitHub Copilot
 
 ---
 
+### 22. 💬 Stop Using Team Chat in Your SDLC: Context-First Work-Item & PR Threads (Dev Discussions)
+{: #win-22 }
+
+Software engineering discussions in generic team chat (Slack, Microsoft Teams, Discord) create devastating knowledge fragmentation. Architectural compromises, edge-case solutions, and review feedback vanish into ephemeral scrollback—detached from the code, PRs, and work items they affect.
+
+**The RobOS Breakthrough:**
+> **"Stop using your team chat programs in your SDLC. Use work-item threads and PR comment threads to have discussions."**
+> RobOS surfaces all technical conversations in **Dev Discussions** (`packages/dev-discussions`): an ultra-fast desktop app organized like Discord and Slack, where every channel represents a **Project &rarr; Feature &rarr; Task or PR review**. With inline code diff hunks, sub-millisecond local caching, and zero API rate-limit exhaustion, it sky-rockets PR comment quality and anchors every decision to the living SDLC Knowledge Graph.
+
+#### Key Capabilities:
+- **Discord/Slack Channel Hierarchy**: Strictly structured as Workspace &rarr; Projects &rarr; Features &rarr; Tasks & PR channels with unread badges.
+- **Embedded PR Review Diffs**: Review code with unified diff hunks, line numbers, and inline conversation resolution toggles directly in the chat stream.
+- **Smart Cache Shield**: Sub-millisecond instant boot from `~/.config/robos/dev-discussions-cache.json` with rate-limit budget telemetry (saving >95% of GitHub/Jira API requests).
+- **Living Knowledge Graph Sync**: Automatically compiles threads, review notes, and attachments into W3C SHACL-validated `robos:DiscussionThread` and `robos:Comment` nodes in the `organization` package.
+
+👉 **[Read the Complete Guide: Dev Discussions & Work-Item Chat Threads →]({{ site.baseurl }}{% link big-wins/dev-discussions.md %})**
+
+---
+
 ## Executive Summary: Traditional Tools vs. RobOS Autonomous Platform
 
 | # | Capability | Traditional AI Tools (Cursor, Copilot, Chatbots) | RobOS Autonomous SDLC Platform |
@@ -1395,6 +1426,7 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Antigravity, GitHub Copilot
 | **19** | **Planning & Scaffolding** | Free-form chat prompts with hallucinated requirements | **66+ Domain Web Form Templates, Phased DAGs & Greenfield/Brownfield Wizards** |
 | **20** | **Contract Governance** | Silent breakages caught in staging or production | **Formal Pact Consumer-Driven Contracts & Ephemeral Stoplight Prism Mocks** |
 | **21** | **Agent & IDE Co-Debugging** | Agents guess & loop in the dark when tests fail | **Live IDE Breakpoint Halts, Thread Stack Unwinding, In-Memory Secrets & Ephemeral Multi-Project Workspaces** |
+| **22** | **Technical Discussions** | Ephemeral Slack/Teams scrollback; detached from code & tickets | **Dev Discussions: Discord-style Projects &rarr; Features &rarr; Tasks & PR channels with smart caching & KGraph integration** |
 
 ---
 

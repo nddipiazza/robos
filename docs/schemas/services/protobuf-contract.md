@@ -100,7 +100,61 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:package": "services",
   "robos:namespace": "robos.services",
   "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-  "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+  "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+  "robos:rpcDetails": {
+    "CreateOrder": {
+      "description": "Submit cart for payment processing and fulfillment",
+      "request": {
+        "customerId": "cust_88190",
+        "items": [
+          {
+            "sku": "SKU-PRO-42",
+            "quantity": 1,
+            "unitPrice": 89
+          }
+        ],
+        "shippingAddress": "123 Market St, San Francisco CA"
+      },
+      "response": {
+        "orderId": "ord_99014",
+        "status": "ORDER_PLACED",
+        "total": 89
+      }
+    },
+    "GetOrderStatus": {
+      "description": "Query order status and tracking number",
+      "request": {
+        "orderId": "ord_99014"
+      },
+      "response": {
+        "orderId": "ord_99014",
+        "status": "PROCESSING",
+        "estimatedDelivery": "2026-09-15"
+      }
+    },
+    "CancelOrder": {
+      "description": "Abort pending order prior to carrier dispatch",
+      "request": {
+        "orderId": "ord_99014",
+        "reason": "Customer requested cancellation"
+      },
+      "response": {
+        "orderId": "ord_99014",
+        "status": "CANCELLED"
+      }
+    },
+    "StreamOrderEvents": {
+      "description": "Server-side stream of live fulfillment and tracking telemetry",
+      "request": {
+        "orderId": "ord_99014"
+      },
+      "response": {
+        "eventId": "evt_7701",
+        "state": "CARRIER_PICKED_UP",
+        "carrier": "FedEx Express"
+      }
+    }
+  }
 }
 ```
 
@@ -138,7 +192,61 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "services",
         "robos:namespace": "robos.services",
         "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-        "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+        "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+        "robos:rpcDetails": {
+            "CreateOrder": {
+                "description": "Submit cart for payment processing and fulfillment",
+                "request": {
+                    "customerId": "cust_88190",
+                    "items": [
+                        {
+                            "sku": "SKU-PRO-42",
+                            "quantity": 1,
+                            "unitPrice": 89
+                        }
+                    ],
+                    "shippingAddress": "123 Market St, San Francisco CA"
+                },
+                "response": {
+                    "orderId": "ord_99014",
+                    "status": "ORDER_PLACED",
+                    "total": 89
+                }
+            },
+            "GetOrderStatus": {
+                "description": "Query order status and tracking number",
+                "request": {
+                    "orderId": "ord_99014"
+                },
+                "response": {
+                    "orderId": "ord_99014",
+                    "status": "PROCESSING",
+                    "estimatedDelivery": "2026-09-15"
+                }
+            },
+            "CancelOrder": {
+                "description": "Abort pending order prior to carrier dispatch",
+                "request": {
+                    "orderId": "ord_99014",
+                    "reason": "Customer requested cancellation"
+                },
+                "response": {
+                    "orderId": "ord_99014",
+                    "status": "CANCELLED"
+                }
+            },
+            "StreamOrderEvents": {
+                "description": "Server-side stream of live fulfillment and tracking telemetry",
+                "request": {
+                    "orderId": "ord_99014"
+                },
+                "response": {
+                    "eventId": "evt_7701",
+                    "state": "CARRIER_PICKED_UP",
+                    "carrier": "FedEx Express"
+                }
+            }
+        }
     }
   ],
 }));

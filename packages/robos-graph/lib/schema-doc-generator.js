@@ -669,6 +669,81 @@ const PROPERTY_METADATA = {
     type: 'URI (robos:Microservice)',
     description: 'Microservice or backend API verified by this test plan or feature.',
   },
+  'robos:commentId': {
+    name: 'Comment Identifier',
+    type: 'xsd:string',
+    description: 'Unique identifier for the comment or discussion note.',
+  },
+  'robos:associatedWorkItem': {
+    name: 'Associated Work Item',
+    type: 'URI (robos:Project | robos:Feature | robos:Task | robos:PullRequest)',
+    description: 'Target project, feature, task, or pull request associated with the discussion thread.',
+  },
+  'robos:threadType': {
+    name: 'Discussion Thread Type',
+    type: 'xsd:string',
+    description: 'Category of discussion (work-item, pr-review, architecture, inline-code).',
+  },
+  'robos:commentCount': {
+    name: 'Comment Count',
+    type: 'xsd:integer',
+    description: 'Total number of comments within the discussion thread.',
+  },
+  'robos:lastActivityAt': {
+    name: 'Last Activity Timestamp',
+    type: 'xsd:dateTime',
+    description: 'ISO-8601 timestamp of most recent activity in the thread.',
+  },
+  'robos:createdAt': {
+    name: 'Created At Timestamp',
+    type: 'xsd:dateTime',
+    description: 'ISO-8601 timestamp when comment was authored.',
+  },
+  'robos:parentItem': {
+    name: 'Parent Item / Thread',
+    type: 'URI (robos:DiscussionThread | robos:Task | robos:PullRequest | robos:Comment)',
+    description: 'Parent entity hosting this comment.',
+  },
+  'robos:sourceServer': {
+    name: 'Source Server',
+    type: 'URI (robos:TaskServer) | xsd:string',
+    description: 'Source forge or task server (GitHub, Jira, GitLab).',
+  },
+  'robos:sourceType': {
+    name: 'Source Type',
+    type: 'xsd:string',
+    description: 'Originating entity type (github-issue, github-pr, jira-comment).',
+  },
+  'robos:pullRequest': {
+    name: 'Pull Request',
+    type: 'URI (robos:PullRequest)',
+    description: 'Parent pull request hosting the code review comment.',
+  },
+  'robos:filePath': {
+    name: 'File Path',
+    type: 'xsd:string',
+    description: 'Source file path subject to code review comment.',
+  },
+  'robos:lineNumber': {
+    name: 'Line Number',
+    type: 'xsd:integer',
+    description: 'Source code line number commented on.',
+  },
+  'robos:diffHunk': {
+    name: 'Diff Hunk Context',
+    type: 'xsd:string',
+    description: 'Unified diff snippet surrounding the code review comment.',
+  },
+  'robos:fileUrl': {
+    name: 'File URL / Path',
+    type: 'xsd:anyURI',
+    description: 'URI or relative filesystem path to media attachment, screenshot, or log.',
+  },
+  'robos:fileSize': {
+    name: 'File Size',
+    type: 'xsd:integer',
+    description: 'Attachment file size in bytes.',
+  },
 };
 
 // Classification annotations come from the shared catalog.

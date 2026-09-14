@@ -35,7 +35,7 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="global-search" placeholder="Search tasks, PRs, blockers (e.g. #201, forms-api)..." autocomplete="off" spellcheck="false">
+          <input type="text" id="global-search" placeholder="Search tasks, PRs, notifications, blockers (e.g. #201, forms-api)..." autocomplete="off" spellcheck="false">
           <span class="search-shortcut">⌘K</span>
         </div>
       </div>
@@ -46,6 +46,13 @@
           <span class="status-dot-pulse"></span>
           <span id="server-badge" class="badge">Acme GitHub</span>
         </div>
+        <button id="btn-header-notifs" class="header-notif-btn" title="Open Notifications" onclick="window.switchTab('notifications')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span id="header-notif-badge" class="header-badge">0</span>
+        </button>
         <div class="clock-wrap">
           <span id="clock"></span>
         </div>
@@ -54,6 +61,22 @@
 
     <!-- Executive KPI Stat Ribbon -->
     <section class="kpi-ribbon" id="kpi-ribbon">
+      <div class="kpi-card" id="kpi-card-feature" onclick="window.switchTab('feature')" style="cursor:pointer;">
+        <div class="kpi-icon-wrap kpi-blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-feature-val">FEAT-201</span>
+            <span class="kpi-delta positive" id="kpi-feature-status">IN PROGRESS</span>
+          </div>
+          <span class="kpi-label">Active Feature</span>
+        </div>
+      </div>
+
       <div class="kpi-card" id="kpi-card-tasks">
         <div class="kpi-icon-wrap kpi-blue">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -103,6 +126,22 @@
         </div>
       </div>
 
+      <div class="kpi-card" id="kpi-card-notifs" onclick="window.switchTab('notifications')" style="cursor:pointer;">
+        <div class="kpi-icon-wrap kpi-cyan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-notifs-val">0</span>
+            <span class="kpi-delta neutral" id="kpi-notifs-delta">0 unread</span>
+          </div>
+          <span class="kpi-label">Notifications Hub</span>
+        </div>
+      </div>
+
       <div class="kpi-card" id="kpi-card-blockers">
         <div class="kpi-icon-wrap kpi-red">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -143,8 +182,13 @@
         <span class="tab-icon">📊</span>
         <span>Mission Control</span>
       </button>
-      <button class="tab-btn" data-tab="tasks" id="tab-btn-tasks">
+      <button class="tab-btn" data-tab="feature" id="tab-btn-feature">
         <span class="tab-icon">🎯</span>
+        <span>Active Feature</span>
+        <span class="tab-badge" id="tab-feature-badge">IN_PROGRESS</span>
+      </button>
+      <button class="tab-btn" data-tab="tasks" id="tab-btn-tasks">
+        <span class="tab-icon">📋</span>
         <span>My Tasks & Sprint</span>
         <span class="tab-badge" id="tab-tasks-badge">0</span>
       </button>
@@ -152,6 +196,11 @@
         <span class="tab-icon">🌿</span>
         <span>Pull Requests & CI</span>
         <span class="tab-badge" id="tab-prs-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="notifications" id="tab-btn-notifications">
+        <span class="tab-icon">🔔</span>
+        <span>Notifications</span>
+        <span class="tab-badge" id="tab-notifs-badge">0</span>
       </button>
       <button class="tab-btn" data-tab="blockers" id="tab-btn-blockers">
         <span class="tab-icon">🚨</span>
@@ -170,11 +219,162 @@
 
     <!-- Main Mission Control Grid -->
     <main id="dashboard">
+
+      <!-- Active Feature In-Progress Section -->
+      <section class="card wide" id="feature-card" data-section="feature">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🎯</span>
+            <span class="card-title">RobOS Feature In Progress</span>
+            <span class="badge-status-pill in-progress" id="feature-status-badge">IN PROGRESS</span>
+          </div>
+          <div class="card-actions feature-controls">
+            <label for="feature-selector" class="ctrl-label">Current Feature:</label>
+            <select id="feature-selector" class="select-feature">
+              <!-- Rendered dynamically -->
+            </select>
+            <button class="btn btn-secondary-sm" id="btn-set-feature-progress">Set In Progress</button>
+          </div>
+        </div>
+
+        <div class="card-body" id="feature-body">
+          <div class="feature-banner" id="feature-banner">
+            <div class="feature-header-info">
+              <div class="feature-title-row">
+                <span class="feature-code" id="feature-code">FEAT-201</span>
+                <h2 class="feature-name" id="feature-name">Loading feature...</h2>
+              </div>
+              <p class="feature-desc" id="feature-desc">Feature specification and delivery plan...</p>
+              <div class="feature-meta-bar">
+                <span class="meta-tag" id="feature-repo-tag">Repository: acme-corp/buildbarn-forms</span>
+                <span class="meta-tag" id="feature-service-tag">Service: forms-api</span>
+                <span class="meta-tag" id="feature-progress-tag">Progress: 3 / 4 tasks</span>
+              </div>
+            </div>
+            <div class="feature-progress-container">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="feature-progress-fill" style="width: 75%;"></div>
+              </div>
+              <span class="progress-pct" id="feature-progress-pct">75% Complete</span>
+            </div>
+          </div>
+
+          <div class="feature-tasks-heading">
+            <span class="section-subheading">Linked Tasks & Lifetime Delivery</span>
+            <span class="badge-subtle" id="feature-tasks-count">4 Tasks</span>
+          </div>
+
+          <div class="feature-tasks-container" id="feature-tasks-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Absorbed Notifications Hub Section -->
+      <section class="card wide" id="notifications-card" data-section="notifications">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🔔</span>
+            <span class="card-title">RobOS Notifications Hub</span>
+            <span class="card-count" id="notif-unread-count-badge">0 Unread</span>
+          </div>
+          <div class="card-actions notif-header-tabs">
+            <button class="btn btn-secondary-sm active" id="notif-tab-btn-list" onclick="window.switchNotifView('list')">Notifications</button>
+            <button class="btn btn-secondary-sm" id="notif-tab-btn-prefs" onclick="window.switchNotifView('prefs')">Preferences</button>
+          </div>
+        </div>
+
+        <div class="card-body" id="notifications-body">
+          <!-- Notification List Subview -->
+          <div id="notif-view-list" class="notif-subview">
+            <!-- Filter Bar -->
+            <div class="notif-filter-toolbar">
+              <div class="notif-cat-chips" id="notif-category-filters">
+                <label class="filter-check-chip"><input type="checkbox" data-cat="pr_review" checked id="filter-pr_review"> PR Review <span class="badge" id="badge-pr_review">0</span></label>
+                <label class="filter-check-chip"><input type="checkbox" data-cat="ci_cd" checked id="filter-ci_cd"> CI/CD <span class="badge" id="badge-ci_cd">0</span></label>
+                <label class="filter-check-chip"><input type="checkbox" data-cat="task" checked id="filter-task"> Task <span class="badge" id="badge-task">0</span></label>
+                <label class="filter-check-chip"><input type="checkbox" data-cat="agent" checked id="filter-agent"> Agent <span class="badge" id="badge-agent">0</span></label>
+                <label class="filter-check-chip"><input type="checkbox" data-cat="system" checked id="filter-system"> System <span class="badge" id="badge-system">0</span></label>
+              </div>
+
+              <div class="notif-tier-chips" id="notif-tier-filters">
+                <label class="filter-check-chip"><input type="checkbox" data-tier="critical" checked id="filter-tier-critical"> Critical</label>
+                <label class="filter-check-chip"><input type="checkbox" data-tier="warning" checked id="filter-tier-warning"> Warning</label>
+                <label class="filter-check-chip"><input type="checkbox" data-tier="info" checked id="filter-tier-info"> Info</label>
+              </div>
+
+              <div class="notif-filter-inputs">
+                <select id="filter-date" class="filter-sel">
+                  <option value="">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                </select>
+                <input id="notif-search-input" class="search-input-sm" placeholder="Filter notifications..." />
+              </div>
+
+              <div class="notif-bulk-btns">
+                <button id="btn-mark-all-read" class="btn btn-secondary-sm" title="Mark all as read">Mark All Read</button>
+                <button id="btn-clear-read" class="btn btn-secondary-sm" title="Clear read notifications">Clear Read</button>
+                <button id="btn-clear-all" class="btn btn-danger-sm" title="Delete all">Clear All</button>
+              </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="notif-stats-bar">
+              <span id="stat-unread">0 unread</span>
+              <span class="stat-sep">&middot;</span>
+              <span id="stat-total">0 total</span>
+            </div>
+
+            <!-- Notifications Card List -->
+            <div id="notif-list" class="notif-cards-list">
+              <div class="placeholder">Loading notifications...</div>
+            </div>
+            <div id="notif-empty-state" class="hidden">
+              <div class="empty-msg">No notifications</div>
+              <div class="empty-sub">Assigned task and PR traffic will appear here automatically.</div>
+            </div>
+          </div>
+
+          <!-- Notification Preferences Subview -->
+          <div id="notif-view-prefs" class="notif-subview hidden">
+            <div class="prefs-panel-box">
+              <h3>Notification Preferences</h3>
+              <div class="prefs-group">
+                <h4>Quiet Hours</h4>
+                <label class="pref-toggle">
+                  <input type="checkbox" id="pref-quiet-enabled" />
+                  <span>Enable quiet hours</span>
+                </label>
+                <div class="time-range-row">
+                  <label>Start: <input type="time" id="pref-quiet-start" value="22:00" class="time-input" /></label>
+                  <label>End: <input type="time" id="pref-quiet-end" value="07:00" class="time-input" /></label>
+                </div>
+              </div>
+
+              <div class="prefs-group">
+                <h4>Do Not Disturb (DND)</h4>
+                <label class="pref-toggle">
+                  <input type="checkbox" id="pref-dnd" />
+                  <span>Enable DND mode (suppress toasts; queue critical alerts)</span>
+                </label>
+              </div>
+
+              <div class="prefs-action-row">
+                <button id="btn-save-prefs" class="btn btn-primary">Save Preferences</button>
+                <span id="pref-status-msg" class="pref-status-msg" style="display:none;">✓ Preferences saved successfully.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Active Tasks Card -->
       <section class="card" id="tasks-card" data-section="tasks">
         <div class="card-header">
           <div class="card-title-group">
-            <span class="card-icon">🎯</span>
+            <span class="card-icon">📋</span>
             <span class="card-title">My Tasks</span>
             <span class="card-count" id="tasks-count">0</span>
           </div>

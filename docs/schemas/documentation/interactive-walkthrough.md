@@ -93,7 +93,8 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
   "robos:schemaOrgType": "https://schema.org/Guide",
-  "robos:domainStandard": "https://schema.org/Guide"
+  "robos:domainStandard": "https://schema.org/Guide",
+  "robos:tooltip": "Interactive Guided Tour for Remote Execution Studio"
 }
 ```
 
@@ -126,7 +127,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "documentation",
         "robos:namespace": "robos.docs",
         "robos:schemaOrgType": "https://schema.org/Guide",
-        "robos:domainStandard": "https://schema.org/Guide"
+        "robos:domainStandard": "https://schema.org/Guide",
+        "robos:tooltip": "Interactive Guided Tour for Remote Execution Studio"
     }
   ],
 }));

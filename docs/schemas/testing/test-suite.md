@@ -89,7 +89,9 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:namespace": "robos.testing",
   "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
   "robos:schemaOrgType": "https://schema.org/ItemList",
-  "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
+  "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+  "robos:testsService": "urn:robos:service:billing-api",
+  "robos:testingType": "BDD Acceptance"
 }
 ```
 
@@ -120,7 +122,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:namespace": "robos.testing",
         "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
         "robos:schemaOrgType": "https://schema.org/ItemList",
-        "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
+        "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+        "robos:testsService": "urn:robos:service:billing-api",
+        "robos:testingType": "BDD Acceptance"
     }
   ],
 }));

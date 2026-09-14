@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Dev Discussions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Leftmost Server / Organization Rail -->
+    <nav class="guild-rail" aria-label="Workspaces">
+      <div class="guild-icon active" data-workspace="acme-sdlc" title="Acme Enterprise SDLC">
+        <span class="guild-badge-dot"></span>
+        <span class="guild-emoji">🐾</span>
+      </div>
+      <div class="guild-icon" data-workspace="robos-core" title="RobOS Platform Core">
+        <span class="guild-emoji">⚡</span>
+      </div>
+      <div class="guild-divider"></div>
+      <div class="guild-icon action-btn" id="btn-refresh-all" title="Refresh All Threads & Caches">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      </div>
+      <div class="guild-icon action-btn" id="btn-export-kgraph" title="Export All to Knowledge Graph">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+    </nav>
+
+    <!-- Channels & Work-Item Hierarchy Sidebar -->
+    <aside class="channels-sidebar">
+      <header class="workspace-header">
+        <div class="ws-title-wrap">
+          <h2 id="ws-name">Acme Enterprise SDLC</h2>
+          <span class="ws-status"><span class="status-dot"></span> Online &bull; Cache Synchronized</span>
+        </div>
+      </header>
+
+      <!-- Filter / Search Box -->
+      <div class="sidebar-search">
+        <div class="search-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="channel-search" placeholder="Filter projects, tasks, #PRs..." autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Quick Filter Pills -->
+      <div class="quick-filter-bar">
+        <button class="filter-pill active" data-filter="all">All</button>
+        <button class="filter-pill" data-filter="task">📋 Tasks</button>
+        <button class="filter-pill" data-filter="pull-request">🔀 Pull Requests</button>
+      </div>
+
+      <!-- Hierarchical Channel Tree -->
+      <div class="channels-tree-container" id="channels-tree">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- User Profile Footer -->
+      <footer class="user-profile-bar">
+        <div class="user-avatar-wrap">
+          <span class="user-avatar">👑</span>
+          <span class="user-online-dot"></span>
+        </div>
+        <div class="user-info">
+          <span class="user-name">Lead Architect</span>
+          <span class="user-handle">@lead-architect</span>
+        </div>
+        <div class="user-tools">
+          <button class="icon-tool-btn" id="btn-cache-info" title="Cache & Rate Limit Diagnostics">⚡</button>
+        </div>
+      </footer>
+    </aside>
+
+    <!-- Main Chat & Discussion Thread Area -->
+    <main class="chat-pane">
+      <!-- Channel Header -->
+      <header class="chat-header">
+        <div class="chat-header-info">
+          <div class="header-icon-wrap" id="thread-header-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="header-titles">
+            <div class="breadcrumbs" id="thread-breadcrumbs">Acme Petshop / Rabies Verification / PET-101</div>
+            <h1 class="thread-title" id="thread-title">PET-101: Add Rabies Certificate Upload Form</h1>
+          </div>
+          <div class="header-badges">
+            <span class="status-pill open" id="thread-status">IN REVIEW</span>
+            <span class="source-tag" id="thread-source">GitHub Issue</span>
+          </div>
+        </div>
+
+        <div class="chat-header-actions">
+          <button class="action-outline-btn" id="btn-sync-thread" title="Pull latest comments from remote forge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Sync Remote
+          </button>
+          <button class="action-outline-btn" id="btn-open-remote" title="Open issue or PR in web browser">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+            Forge URL
+          </button>
+          <button class="action-primary-btn" id="btn-export-thread-kgraph" title="Save this discussion thread to Knowledge Graph">
+            KGraph Sync
+          </button>
+        </div>
+      </header>
+
+      <!-- Smart Cache Status Bar -->
+      <div class="cache-status-banner">
+        <div class="cache-status-left">
+          <span class="cache-badge">⚡ FAST CACHE ACTIVE</span>
+          <span class="cache-metrics" id="cache-metrics-text">Instant render &bull; Latency 0.4ms &bull; Zero GitHub lookups</span>
+        </div>
+        <div class="cache-status-right">
+          <span class="rate-limit-pill" id="rate-limit-pill" title="GitHub REST API Rate Limit Budget">GitHub Budget: 4,892 / 5,000</span>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="messages-container" id="messages-container">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Message Composer -->
+      <section class="composer-container">
+        <div class="composer-toolbar">
+          <button class="tool-btn" data-action="bold" title="Bold (**text**)"><strong>B</strong></button>
+          <button class="tool-btn" data-action="italic" title="Italic (*text*)"><em>I</em></button>
+          <button class="tool-btn" data-action="code" title="Inline code (`code`)">&lt;/&gt;</button>
+          <button class="tool-btn" data-action="codeblock" title="Code block (```)">{ }</button>
+          <button class="tool-btn" data-action="diff" title="Diff Hunk Snippet">+/-</button>
+          <button class="tool-btn" data-action="quote" title="Quote block (&gt;)">”</button>
+          <div class="toolbar-sep"></div>
+          <label class="attach-label" title="Attach file or screenshot">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.5-8.5a4 4 0 0 1 5.66 5.66l-8.5 8.5a2 2 0 0 1-2.83-2.83l7.78-7.78"/></svg>
+            <input type="file" id="file-uploader" style="display: none;">
+            <span>Attach</span>
+          </label>
+        </div>
+
+        <div class="composer-input-row">
+          <textarea id="composer-textarea" rows="2" placeholder="Write a message, architecture decision, or PR review comment... (Shift+Enter for newline)"></textarea>
+          <button class="send-btn" id="btn-send" title="Send message (Enter)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+
+        <div class="composer-footer">
+          <div class="composer-mode-selector">
+            <label><input type="radio" name="post-target" value="local" checked> Local & KGraph Cache</label>
+            <label><input type="radio" name="post-target" value="upstream"> Sync Upstream to GitHub</label>
+          </div>
+          <div class="composer-hints">
+            <span>Markdown supported &bull; Thread synced with Work-Item</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

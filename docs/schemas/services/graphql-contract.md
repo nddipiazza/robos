@@ -92,7 +92,23 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:package": "services",
   "robos:namespace": "robos.services",
   "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-  "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+  "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+  "robos:sdlSchema": "type Query {\n  product(id: ID!): Product\n  products(category: String, limit: Int = 20): [Product!]!\n  searchCatalog(term: String!): [Product!]!\n}\n\ntype Mutation {\n  createProduct(input: ProductInput!): Product!\n  updatePrice(id: ID!, newPrice: Float!): Product!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n  inStock: Boolean!\n}\n\ninput ProductInput {\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n}",
+  "robos:graphqlOperations": [
+    {
+      "name": "ListCatalogProducts",
+      "type": "query",
+      "query": "query ListCatalogProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    inStock\n  }\n}"
+    },
+    {
+      "name": "GetProductById",
+      "type": "query",
+      "query": "query GetProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    sku\n    price\n    inStock\n  }\n}",
+      "variables": {
+        "id": "prod_101"
+      }
+    }
+  ]
 }
 ```
 
@@ -124,7 +140,23 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "services",
         "robos:namespace": "robos.services",
         "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-        "robos:domainStandard": "http://open-services.net/ns/am#Resource"
+        "robos:domainStandard": "http://open-services.net/ns/am#Resource",
+        "robos:sdlSchema": "type Query {\n  product(id: ID!): Product\n  products(category: String, limit: Int = 20): [Product!]!\n  searchCatalog(term: String!): [Product!]!\n}\n\ntype Mutation {\n  createProduct(input: ProductInput!): Product!\n  updatePrice(id: ID!, newPrice: Float!): Product!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n  inStock: Boolean!\n}\n\ninput ProductInput {\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n}",
+        "robos:graphqlOperations": [
+            {
+                "name": "ListCatalogProducts",
+                "type": "query",
+                "query": "query ListCatalogProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    inStock\n  }\n}"
+            },
+            {
+                "name": "GetProductById",
+                "type": "query",
+                "query": "query GetProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    sku\n    price\n    inStock\n  }\n}",
+                "variables": {
+                    "id": "prod_101"
+                }
+            }
+        ]
     }
   ],
 }));

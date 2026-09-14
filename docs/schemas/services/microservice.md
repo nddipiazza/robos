@@ -97,7 +97,86 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "urn:robos:contract:orders-grpc"
   ],
   "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-  "robos:domainStandard": "https://w3id.org/c4/Container"
+  "robos:domainStandard": "https://w3id.org/c4/Container",
+  "robos:ports": [
+    8080
+  ],
+  "robos:healthCheckUrl": "/healthz",
+  "robos:endpoints": [
+    {
+      "path": "/api/v1/billing/invoices",
+      "method": "GET",
+      "description": "List customer billing invoices with payment status filtering",
+      "parameters": [
+        {
+          "name": "status",
+          "in": "query",
+          "type": "string",
+          "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "integer",
+          "default": 20,
+          "description": "Maximum number of records to return"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Successful invoice query result"
+        }
+      }
+    },
+    {
+      "path": "/api/v1/billing/invoices",
+      "method": "POST",
+      "description": "Create new billing invoice",
+      "requestBody": {
+        "customerId": "cust_98234",
+        "amount": 149.5,
+        "currency": "USD",
+        "description": "Enterprise Subscription - Sep 2026"
+      },
+      "responses": {
+        "201": {
+          "description": "Invoice issued successfully"
+        }
+      }
+    },
+    {
+      "path": "/api/v1/billing/invoices/{id}",
+      "method": "GET",
+      "description": "Get invoice details by identifier",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Unique invoice identifier"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Invoice found"
+        },
+        "404": {
+          "description": "Invoice not found"
+        }
+      }
+    },
+    {
+      "path": "/healthz",
+      "method": "GET",
+      "description": "Liveness and readiness probe",
+      "responses": {
+        "200": {
+          "description": "Service healthy"
+        }
+      }
+    }
+  ]
 }
 ```
 
@@ -134,7 +213,86 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "urn:robos:contract:orders-grpc"
         ],
         "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://w3id.org/c4/Container"
+        "robos:domainStandard": "https://w3id.org/c4/Container",
+        "robos:ports": [
+            8080
+        ],
+        "robos:healthCheckUrl": "/healthz",
+        "robos:endpoints": [
+            {
+                "path": "/api/v1/billing/invoices",
+                "method": "GET",
+                "description": "List customer billing invoices with payment status filtering",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of records to return"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful invoice query result"
+                    }
+                }
+            },
+            {
+                "path": "/api/v1/billing/invoices",
+                "method": "POST",
+                "description": "Create new billing invoice",
+                "requestBody": {
+                    "customerId": "cust_98234",
+                    "amount": 149.5,
+                    "currency": "USD",
+                    "description": "Enterprise Subscription - Sep 2026"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invoice issued successfully"
+                    }
+                }
+            },
+            {
+                "path": "/api/v1/billing/invoices/{id}",
+                "method": "GET",
+                "description": "Get invoice details by identifier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Unique invoice identifier"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice found"
+                    },
+                    "404": {
+                        "description": "Invoice not found"
+                    }
+                }
+            },
+            {
+                "path": "/healthz",
+                "method": "GET",
+                "description": "Liveness and readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "Service healthy"
+                    }
+                }
+            }
+        ]
     }
   ],
 }));

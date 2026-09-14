@@ -1,21 +1,28 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
 const cp   = require('child_process');
+const net  = require('net');
 
-const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
+const HOME_DIR      = process.env.HOME || os.homedir();
+const CONFIG_DIR    = path.join(HOME_DIR, '.config', 'robos');
+const SETTINGS_FILE = path.join(CONFIG_DIR, 'settings.json');
+const NOTIF_FILE    = path.join(CONFIG_DIR, 'notifications.json');
+const PREFS_FILE    = path.join(CONFIG_DIR, 'notification-prefs.json');
+const FEATURE_FILE  = path.join(CONFIG_DIR, 'dev-central-feature.json');
 
-app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'dev-central'));
+app.setPath('userData', path.join(CONFIG_DIR, 'electron', 'dev-central'));
 
 const isTestMode = !!(process.env.ROBOS_TEST || process.env.ROBOS_DEMO_SHOW);
 if (!isTestMode) {
   const lock = app.requestSingleInstanceLock();
-  if (!lock) { app.quit(); }
+  if (!lock) { app.quit(); process.exit(0); }
 }
 
 app.setName('dev-central');
+app.isQuitting = false;
 
 // Debug server (optional)
 var _debugServer = null;
@@ -48,34 +55,294 @@ function ghSync(args, timeoutMs = 15000) {
   return { ok: false, error: (r.stderr || 'gh failed').trim() };
 }
 
-let win = null;
+// ── Absorbed Notifications Storage & Preferences ────────────────────────────
 
-function createWindow() {
-  win = new BrowserWindow({
-    width: 1200, height: 820,
-    minWidth: 900, minHeight: 600,
-    backgroundColor: '#0d1117',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-    title: 'Dev Central',
-    autoHideMenuBar: true,
-  });
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  win.on('closed', () => { win = null; });
-  if (_debugServer) _debugServer.startDebugServer(win, 19133);
+function loadNotifications() {
+  try {
+    if (fs.existsSync(NOTIF_FILE)) return JSON.parse(fs.readFileSync(NOTIF_FILE, 'utf8'));
+  } catch {}
+  return [];
 }
 
-app.whenReady().then(createWindow);
-app.on('window-all-closed', () => app.quit());
+function saveNotifications(data) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(NOTIF_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
 
-// ── IPC handlers ─────────────────────────────────────────────────────────────
+function loadPrefs() {
+  try {
+    if (fs.existsSync(PREFS_FILE)) return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+  } catch {}
+  return {
+    categoryOverrides: {},
+    quietHours: { enabled: false, start: '22:00', end: '07:00' },
+    dnd: false,
+  };
+}
 
-ipcMain.handle('dc-read-settings', () => readSettings());
+function savePrefs(prefs) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2), 'utf8');
+}
 
-// Sample data generator for rich offline/test display
+function getUnreadCount() {
+  const data = loadNotifications();
+  return data.filter(n => !n.read).length;
+}
+
+function getUnreadByCategory() {
+  const data = loadNotifications();
+  const counts = { pr_review: 0, ci_cd: 0, task: 0, agent: 0, system: 0 };
+  data.forEach(n => {
+    if (!n.read) {
+      const cat = n.category || 'system';
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+  });
+  return counts;
+}
+
+function sendDesktopToast(title, body, category = 'task', tier = 'info') {
+  // Check DND / Quiet Hours
+  const prefs = loadPrefs();
+  if (prefs.dnd && tier !== 'critical') return;
+
+  // 1. Notify-send
+  try {
+    const iconName = tier === 'critical' ? 'dialog-error' : tier === 'warning' ? 'dialog-warning' : 'dialog-information';
+    cp.spawn('notify-send', ['-a', 'Dev Central', '-t', '6000', '-i', iconName, title, body], { stdio: 'ignore' }).unref();
+  } catch {}
+
+  // 2. Desktop Manager socket
+  try {
+    const sockPath = process.env.ROBOS_DM_SOCKET || (process.env.XDG_RUNTIME_DIR ? path.join(process.env.XDG_RUNTIME_DIR, 'robos-dm.sock') : `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`);
+    if (fs.existsSync(sockPath)) {
+      const client = net.connect(sockPath, () => {
+        client.write(JSON.stringify({ notify: { title, body, category, tier } }));
+        client.end();
+      });
+      client.on('error', () => {});
+    }
+  } catch {}
+}
+
+// ── Active RobOS Feature Management & Lifetime Ticket State History ─────────
+
+function getSeedFeatures() {
+  return [
+    {
+      id: 'FEAT-201',
+      code: 'FEAT-201',
+      name: 'Multi-Step Dynamic Form Submission with TypeSpec Validation',
+      status: 'IN_PROGRESS',
+      targetService: 'forms-api',
+      repository: 'acme-corp/buildbarn-forms',
+      description: 'Enables declarative schema generation, AST validation, and multi-step form progress saving with 1080p video proof-of-work in ephemeral sandboxes.',
+      createdAt: '2026-09-10T09:00:00Z',
+      active: true,
+      tasks: [
+        {
+          id: 'TASK-201',
+          number: 201,
+          title: 'Multi-Step Dynamic Form Submission with TypeSpec Validation',
+          status: 'IN_PROGRESS',
+          priority: 'P0',
+          assignee: 'Dev User',
+          description: 'Implement client-side TypeSpec schema validation, multi-page step wizard state machine, and JSON-LD contract emission for forms-api.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/201',
+          pr: {
+            number: 84,
+            title: 'feat(forms-api): Multi-step dynamic form validation & AST generation',
+            url: 'https://github.com/acme-corp/buildbarn-forms/pull/84',
+            branch: 'feature/TASK-201-multi-step',
+            ci: 'pass',
+            review: 'approved',
+          },
+          lifetimeHistory: [
+            { timestamp: '2026-09-10T09:00:00Z', state: 'CREATED', actor: 'sarah-lead', note: 'Issue created in backlog with TypeSpec requirement specifications' },
+            { timestamp: '2026-09-11T10:15:00Z', state: 'TRIAGED', actor: 'alex-architect', note: 'Triaged for Sprint 42, assigned priority P0' },
+            { timestamp: '2026-09-12T14:30:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Branch checked out: feature/TASK-201-multi-step in ephemeral sandbox' },
+            { timestamp: '2026-09-13T16:45:00Z', state: 'PR_OPENED', actor: 'antigravity-agent', note: 'PR #84 opened targeting main with automated diffs' },
+            { timestamp: '2026-09-14T08:20:00Z', state: 'CI_PASSED', actor: 'github-actions', note: 'Automated test suite, Pact contracts, and SHACL shape validator 100% green' },
+            { timestamp: '2026-09-14T11:00:00Z', state: 'REVIEW_APPROVED', actor: 'sarah-lead', note: 'Approved with proof-of-work 1080p video review walkthrough' },
+          ],
+        },
+        {
+          id: 'TASK-198',
+          number: 198,
+          title: 'Kafka Event Stream Deduplication Filter & Idempotent Publisher',
+          status: 'REVIEW',
+          priority: 'P1',
+          assignee: 'Dev User',
+          description: 'Add in-memory SHA-256 deduplication cache and idempotent partition publishing to prevent duplicate events during rebalances.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/198',
+          pr: {
+            number: 82,
+            title: 'feat(event-stream): Kafka idempotent producer & dedup cache',
+            url: 'https://github.com/acme-corp/buildbarn-forms/pull/82',
+            branch: 'feature/TASK-198-kafka-dedup',
+            ci: 'pass',
+            review: 'changes',
+          },
+          lifetimeHistory: [
+            { timestamp: '2026-09-08T11:00:00Z', state: 'CREATED', actor: 'dave-k', note: 'Ticket created for Kafka duplicate message mitigation' },
+            { timestamp: '2026-09-09T13:00:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Implemented dedup filter with LRU cache' },
+            { timestamp: '2026-09-11T15:00:00Z', state: 'PR_OPENED', actor: 'dev-user', note: 'PR #82 opened targeting main' },
+            { timestamp: '2026-09-14T12:00:00Z', state: 'CHANGES_REQUESTED', actor: 'dave-k', note: 'Requested 3-year rabies booster exemption check' },
+          ],
+        },
+        {
+          id: 'TASK-204',
+          number: 204,
+          title: 'Fix Session Memory Leak in Ephemeral Agent Sandboxes',
+          status: 'TODO',
+          priority: 'P0',
+          assignee: 'Dev User',
+          description: 'Tmpfs mounts in virtual framebuffers are leaking memory across agent sessions.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/204',
+          pr: {
+            number: 85,
+            title: 'fix(sandbox): Session memory leak in tmpfs mount cleanup',
+            url: 'https://github.com/acme-corp/buildbarn-forms/pull/85',
+            branch: 'fix/TASK-204-sandbox-cleanup',
+            ci: 'fail',
+            review: 'pending',
+          },
+          lifetimeHistory: [
+            { timestamp: '2026-09-10T14:00:00Z', state: 'CREATED', actor: 'system-monitor', note: 'Bug reported: OOM kill on worker sandbox 4' },
+            { timestamp: '2026-09-12T09:00:00Z', state: 'TODO', actor: 'alex-architect', note: 'Flagged as P0 active blocker on sprint board' },
+            { timestamp: '2026-09-14T10:00:00Z', state: 'CI_FAILED', actor: 'github-actions', note: 'PR #85 CI failed on cleanup daemon test' },
+          ],
+        },
+        {
+          id: 'TASK-184',
+          number: 184,
+          title: 'OpenAPI 3.1 Contract Linting with Spectral Rulesets',
+          status: 'DONE',
+          priority: 'P2',
+          assignee: 'Dev User',
+          description: 'Automated Spectral ruleset check for all REST contracts.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/184',
+          pr: {
+            number: 80,
+            title: 'refactor(schema): Spectral OAS 3.1 ruleset enforcement & verification',
+            url: 'https://github.com/acme-corp/buildbarn-forms/pull/80',
+            branch: 'refactor/TASK-184-spectral',
+            ci: 'pass',
+            review: 'approved',
+            merged: true,
+          },
+          lifetimeHistory: [
+            { timestamp: '2026-09-05T08:00:00Z', state: 'CREATED', actor: 'sarah-lead', note: 'OAS 3.1 ruleset task logged' },
+            { timestamp: '2026-09-06T10:00:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Spectral rules configured' },
+            { timestamp: '2026-09-07T14:00:00Z', state: 'DONE', actor: 'dev-user', note: 'Merged into main (Production Reality)' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'FEAT-101',
+      code: 'FEAT-101',
+      name: 'Unified Notification Hub & Dev Central Cockpit',
+      status: 'PLANNING',
+      targetService: 'dev-central',
+      repository: 'ndipiazza/robos',
+      description: 'Absorbs notifications into Dev Central, adds BitTorrent-style persistent tray running, and live task lifetime tracking.',
+      createdAt: '2026-09-14T08:00:00Z',
+      active: false,
+      tasks: [
+        {
+          id: 'TASK-101',
+          number: 101,
+          title: 'Absorb Notifications in Dev Central & Background Tray',
+          status: 'IN_PROGRESS',
+          priority: 'P0',
+          assignee: 'Antigravity',
+          description: 'Implement persistent tray and background sync for assigned tasks.',
+          taskServerUrl: 'https://github.com/ndipiazza/robos/issues/101',
+          pr: {
+            number: 99,
+            title: 'feat(dev-central): Absorb notifications and active feature tracker',
+            url: 'https://github.com/ndipiazza/robos/pull/99',
+            branch: 'feature/absorb-notifications',
+            ci: 'pass',
+            review: 'pending',
+          },
+          lifetimeHistory: [
+            { timestamp: '2026-09-14T08:00:00Z', state: 'CREATED', actor: 'lead-architect', note: 'Architecture spec approved' },
+            { timestamp: '2026-09-14T09:30:00Z', state: 'IN_PROGRESS', actor: 'antigravity-agent', note: 'Branch checked out' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'PET-FEAT-01',
+      code: 'PET-FEAT-01',
+      name: 'Rabies Verification System & Veterinary OCR',
+      status: 'PLANNING',
+      targetService: 'petshop-api',
+      repository: 'acme/petshop-api',
+      description: 'Veterinary certificate upload, OCR extraction, and 3-year booster exemption logic.',
+      createdAt: '2026-09-01T12:00:00Z',
+      active: false,
+      tasks: [],
+    },
+  ];
+}
+
+function loadFeatures() {
+  try {
+    if (fs.existsSync(FEATURE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(FEATURE_FILE, 'utf8'));
+      if (Array.isArray(data) && data.length) return data;
+    }
+  } catch {}
+  return getSeedFeatures();
+}
+
+function saveFeatures(features) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(FEATURE_FILE, JSON.stringify(features, null, 2), 'utf8');
+}
+
+function getActiveFeature() {
+  const feats = loadFeatures();
+  return feats.find(f => f.active) || feats.find(f => f.status === 'IN_PROGRESS') || feats[0];
+}
+
+function setActiveFeatureId(featureId) {
+  const feats = loadFeatures();
+  feats.forEach(f => {
+    f.active = (f.id === featureId);
+    if (f.active) f.status = 'IN_PROGRESS';
+  });
+  saveFeatures(feats);
+  return feats;
+}
+
+function updateFeatureStatus(featureId, status) {
+  const feats = loadFeatures();
+  const f = feats.find(x => x.id === featureId);
+  if (f) {
+    f.status = status;
+    saveFeatures(feats);
+  }
+  return feats;
+}
+
+function getTaskLifetimeHistory(taskId) {
+  const feats = loadFeatures();
+  for (const f of feats) {
+    const task = (f.tasks || []).find(t => t.id === taskId || String(t.number) === String(taskId));
+    if (task) {
+      return { ok: true, task, history: task.lifetimeHistory || [] };
+    }
+  }
+  return { ok: false, error: 'Task not found', history: [] };
+}
+
+// ── Sample Data Generators ───────────────────────────────────────────────────
+
 function getSampleIssues() {
   const now = Date.now();
   return [
@@ -100,7 +367,7 @@ function getSampleIssues() {
       title: 'Fix Session Memory Leak in Ephemeral Agent Sandboxes',
       state: 'OPEN',
       labels: [{ name: 'state:open' }, { name: 'priority:P0' }, { name: 'bug' }, { name: 'sprint:42' }],
-      updatedAt: new Date(now - 4 * 86400000).toISOString(), // >3 days = stuck blocker
+      updatedAt: new Date(now - 4 * 86400000).toISOString(),
       url: 'https://github.com/acme-corp/buildbarn-forms/issues/204',
     },
     {
@@ -200,7 +467,7 @@ function getSampleReviewRequests() {
       title: 'feat(pr-review): IntelliJ IDEA IPC review bridge on port 63343',
       state: 'OPEN',
       author: { login: 'alex-architect' },
-      updatedAt: new Date(now - 26 * 3600000).toISOString(), // >24h stale review
+      updatedAt: new Date(now - 26 * 3600000).toISOString(),
       url: 'https://github.com/acme-corp/buildbarn-forms/pull/87',
     },
   ];
@@ -217,6 +484,372 @@ function getSampleActivity() {
     { timestamp: now - 720 * 60000, title: 'Branch promoted to main (Production Reality)', type: 'git-merge' },
   ];
 }
+
+// ── Tray & Window Management ────────────────────────────────────────────────
+
+let win  = null;
+let tray = null;
+
+function showWindow(targetTab = null) {
+  if (!win) {
+    createWindow();
+  } else {
+    if (!win.isVisible()) win.show();
+    if (win.isMinimized()) win.restore();
+    win.focus();
+  }
+  if (targetTab && win && win.webContents) {
+    win.webContents.send('dc-switch-tab', targetTab);
+  }
+}
+
+function updateTrayAndIcon() {
+  const unread = getUnreadCount();
+  const hasUnread = unread > 0;
+  const normalTray = path.join(__dirname, 'tray-icon.png');
+  const notifTray  = path.join(__dirname, 'tray-icon-notification.png');
+  const normalApp  = path.join(__dirname, 'icon.png');
+  const notifApp   = path.join(__dirname, 'icon-notification.png');
+
+  if (tray) {
+    try {
+      const trayPath = (hasUnread && fs.existsSync(notifTray)) ? notifTray : normalTray;
+      if (fs.existsSync(trayPath)) {
+        tray.setImage(nativeImage.createFromPath(trayPath));
+      }
+      tray.setToolTip(hasUnread
+        ? `RobOS Dev Central — ${unread} unread notification${unread === 1 ? '' : 's'}`
+        : 'RobOS Dev Central');
+
+      const activeFeature = getActiveFeature();
+      const featureTitle = activeFeature ? `${activeFeature.code}: ${activeFeature.name}` : 'None';
+
+      const menu = Menu.buildFromTemplate([
+        { label: 'Open Dev Central', click: () => showWindow() },
+        { label: `Notifications (${unread} unread)`, click: () => showWindow('notifications') },
+        { label: `Active Feature: ${featureTitle}`, click: () => showWindow('feature') },
+        { type: 'separator' },
+        { label: 'Sync Dashboard Now', click: () => triggerSync() },
+        { type: 'separator' },
+        { label: 'Quit Dev Central', click: () => { app.isQuitting = true; app.quit(); } },
+      ]);
+      tray.setContextMenu(menu);
+    } catch (e) {
+      console.error('[dev-central] tray update failed:', e.message);
+    }
+  }
+
+  if (win) {
+    try {
+      const appIcon = (hasUnread && fs.existsSync(notifApp)) ? notifApp : normalApp;
+      if (fs.existsSync(appIcon)) {
+        win.setIcon(nativeImage.createFromPath(appIcon));
+      }
+    } catch {}
+  }
+}
+
+function createTray() {
+  if (tray) return;
+  const normalTray = path.join(__dirname, 'tray-icon.png');
+  if (fs.existsSync(normalTray)) {
+    try {
+      tray = new Tray(nativeImage.createFromPath(normalTray));
+      tray.on('click', () => {
+        if (win && win.isVisible()) win.hide();
+        else showWindow();
+      });
+      tray.on('double-click', () => showWindow());
+      updateTrayAndIcon();
+    } catch (e) {
+      console.error('[dev-central] tray create error:', e.message);
+    }
+  }
+}
+
+function createWindow() {
+  const initialIcon = path.join(__dirname, getUnreadCount() > 0 ? 'icon-notification.png' : 'icon.png');
+
+  win = new BrowserWindow({
+    width: 1200, height: 820,
+    minWidth: 900, minHeight: 600,
+    backgroundColor: '#0d1117',
+    icon: fs.existsSync(initialIcon) ? initialIcon : undefined,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+    title: 'Dev Central',
+    autoHideMenuBar: true,
+  });
+
+  // BitTorrent behavior: close button hides window into tray and stays running
+  win.on('close', (event) => {
+    if (!app.isQuitting && process.env.ROBOS_TEST_QUIT !== '1') {
+      event.preventDefault();
+      win.hide();
+    }
+  });
+
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  win.on('closed', () => { win = null; });
+
+  win.webContents.once('did-finish-load', () => {
+    // Check CLI switches for initial tab
+    const argv = process.argv;
+    if (argv.includes('--notifications') || argv.includes('--tab=notifications')) {
+      win.webContents.send('dc-switch-tab', 'notifications');
+    } else if (argv.includes('--feature') || argv.includes('--tab=feature')) {
+      win.webContents.send('dc-switch-tab', 'feature');
+    }
+    updateTrayAndIcon();
+  });
+
+  if (_debugServer) _debugServer.startDebugServer(win, 19133);
+}
+
+app.on('second-instance', (_, commandLine) => {
+  showWindow();
+  if (commandLine.includes('--notifications') || commandLine.includes('--tab=notifications')) {
+    if (win && win.webContents) win.webContents.send('dc-switch-tab', 'notifications');
+  } else if (commandLine.includes('--feature') || commandLine.includes('--tab=feature')) {
+    if (win && win.webContents) win.webContents.send('dc-switch-tab', 'feature');
+  }
+});
+
+app.on('before-quit', () => {
+  app.isQuitting = true;
+});
+
+app.whenReady().then(() => {
+  createTray();
+  createWindow();
+  startBackgroundMonitor();
+});
+
+app.on('window-all-closed', () => {
+  // If quitting or in test quit mode, quit
+  if (app.isQuitting || process.env.ROBOS_TEST_QUIT === '1') {
+    app.quit();
+  }
+});
+
+// ── Background Polling & Traffic Detection Engine ───────────────────────────
+
+let previousPRSnapshot   = new Map();
+let previousTaskSnapshot = new Map();
+let backgroundSyncTimer  = null;
+
+async function fetchLatestData() {
+  const settings = readSettings();
+  const ts = activeTS(settings);
+
+  let issues = getSampleIssues();
+  let prs = getSamplePRs();
+  let reviews = getSampleReviewRequests();
+  let activity = getSampleActivity();
+
+  if (ts.repos && ts.repos.length) {
+    const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
+    try {
+      const r = cp.spawnSync('gh', [
+        'issue', 'list', '--repo', repo, '--assignee', '@me',
+        '--json', 'number,title,labels,state,updatedAt,url',
+        '--limit', '50',
+      ], { encoding: 'utf8', timeout: 15000 });
+      if (r.status === 0) {
+        const parsed = JSON.parse(r.stdout);
+        if (parsed && parsed.length) issues = parsed;
+      }
+    } catch {}
+
+    try {
+      const r = cp.spawnSync('gh', [
+        'pr', 'list', '--repo', repo, '--author', '@me',
+        '--json', 'number,title,state,url,headRefName,statusCheckRollup,reviewDecision,updatedAt,additions,deletions',
+        '--limit', '30',
+      ], { encoding: 'utf8', timeout: 15000 });
+      if (r.status === 0) {
+        const parsed = JSON.parse(r.stdout);
+        if (parsed && parsed.length) prs = parsed;
+      }
+    } catch {}
+
+    try {
+      const r = cp.spawnSync('gh', [
+        'pr', 'list', '--repo', repo, '--search', 'review-requested:@me',
+        '--json', 'number,title,state,url,author,updatedAt',
+        '--limit', '30',
+      ], { encoding: 'utf8', timeout: 15000 });
+      if (r.status === 0) {
+        const parsed = JSON.parse(r.stdout);
+        if (parsed && parsed.length) reviews = parsed;
+      }
+    } catch {}
+  }
+
+  const eventsFile = path.join(CONFIG_DIR, 'journal-events.json');
+  try {
+    const events = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
+    if (events && events.length) activity = events.slice(0, 20);
+  } catch {}
+
+  return { issues, prs, reviews, activity, features: loadFeatures() };
+}
+
+function checkTrafficAndNotify(prs, issues) {
+  let trafficDetected = false;
+
+  // 1. Check PR changes
+  for (const pr of prs) {
+    const prev = previousPRSnapshot.get(pr.number);
+    if (prev) {
+      // Check CI Failure transition
+      const curCI = (pr.statusCheckRollup || [])[0]?.conclusion;
+      const prevCI = (prev.statusCheckRollup || [])[0]?.conclusion;
+      if (curCI === 'FAILURE' && prevCI !== 'FAILURE') {
+        dispatchTrafficNotification({
+          title: `PR #${pr.number} CI Failed`,
+          body: `Continuous integration checks failed on "${pr.title}". Check workflow logs.`,
+          category: 'ci_cd',
+          tier: 'critical',
+          action: { type: 'open-url', url: pr.url },
+        });
+        trafficDetected = true;
+      }
+
+      // Check PR Approved transition
+      if (pr.reviewDecision === 'APPROVED' && prev.reviewDecision !== 'APPROVED') {
+        dispatchTrafficNotification({
+          title: `PR #${pr.number} Approved!`,
+          body: `Your pull request "${pr.title}" was approved and is ready to merge into main.`,
+          category: 'pr_review',
+          tier: 'info',
+          action: { type: 'open-url', url: pr.url },
+        });
+        trafficDetected = true;
+      }
+
+      // Check PR Changes Requested transition
+      if (pr.reviewDecision === 'CHANGES_REQUESTED' && prev.reviewDecision !== 'CHANGES_REQUESTED') {
+        dispatchTrafficNotification({
+          title: `Changes Requested on PR #${pr.number}`,
+          body: `Reviewer requested code changes on "${pr.title}". Review inline comments.`,
+          category: 'pr_review',
+          tier: 'warning',
+          action: { type: 'open-url', url: pr.url },
+        });
+        trafficDetected = true;
+      }
+
+      // Check Comment traffic (updatedAt changed while state open)
+      if (pr.updatedAt && prev.updatedAt && pr.updatedAt !== prev.updatedAt && pr.state === 'OPEN') {
+        dispatchTrafficNotification({
+          title: `New Comment on PR #${pr.number}`,
+          body: `New discussion traffic or comment posted on "${pr.title}".`,
+          category: 'pr_review',
+          tier: 'info',
+          action: { type: 'open-url', url: pr.url },
+        });
+        trafficDetected = true;
+      }
+    }
+    previousPRSnapshot.set(pr.number, pr);
+  }
+
+  // 2. Check Issue / Task changes
+  for (const issue of issues) {
+    const prev = previousTaskSnapshot.get(issue.number);
+    if (prev) {
+      if (issue.updatedAt && prev.updatedAt && issue.updatedAt !== prev.updatedAt) {
+        dispatchTrafficNotification({
+          title: `Task #${issue.number} Updated`,
+          body: `Updates recorded on assigned task "${issue.title}".`,
+          category: 'task',
+          tier: 'info',
+          action: { type: 'open-url', url: issue.url },
+        });
+        trafficDetected = true;
+      }
+    }
+    previousTaskSnapshot.set(issue.number, issue);
+  }
+
+  return trafficDetected;
+}
+
+function dispatchTrafficNotification({ title, body, category = 'system', tier = 'info', action = null }) {
+  const notifs = loadNotifications();
+  const entry = {
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title,
+    body,
+    icon: category === 'ci_cd' ? 'alert-triangle' : category === 'pr_review' ? 'git-pull-request' : 'bell',
+    source: 'dev-central-monitor',
+    category,
+    tier,
+    ts: new Date().toISOString(),
+    read: false,
+    action,
+  };
+
+  notifs.unshift(entry);
+  saveNotifications(notifs.slice(0, 500));
+
+  // Push desktop toast
+  sendDesktopToast(title, body, category, tier);
+
+  // Switch Dev Central tray and window icon to notification icon!
+  updateTrayAndIcon();
+
+  // Notify renderer
+  if (win && win.webContents) {
+    win.webContents.send('dc-traffic-notification', entry);
+  }
+}
+
+async function triggerSync() {
+  const data = await fetchLatestData();
+  checkTrafficAndNotify(data.prs, data.issues);
+
+  if (win && win.webContents) {
+    win.webContents.send('dc-data-updated', {
+      ...data,
+      unreadCount: getUnreadCount(),
+      activeFeature: getActiveFeature(),
+    });
+  }
+  updateTrayAndIcon();
+  return { ok: true, unreadCount: getUnreadCount() };
+}
+
+function startBackgroundMonitor() {
+  // Prime snapshot
+  fetchLatestData().then(data => {
+    data.prs.forEach(pr => previousPRSnapshot.set(pr.number, pr));
+    data.issues.forEach(i => previousTaskSnapshot.set(i.number, i));
+  });
+
+  // Watch notifications file for changes made externally (e.g. by robos-notify CLI)
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  if (!fs.existsSync(NOTIF_FILE)) fs.writeFileSync(NOTIF_FILE, '[]');
+  try {
+    fs.watch(NOTIF_FILE, () => {
+      updateTrayAndIcon();
+      if (win && win.webContents) {
+        win.webContents.send('dc-data-updated', { unreadCount: getUnreadCount() });
+      }
+    });
+  } catch {}
+
+  // Periodic polling every 30s
+  backgroundSyncTimer = setInterval(triggerSync, 30000);
+}
+
+// ── IPC Handlers ─────────────────────────────────────────────────────────────
+
+ipcMain.handle('dc-read-settings', () => readSettings());
 
 ipcMain.handle('dc-get-my-issues', async () => {
   const settings = readSettings();
@@ -239,7 +872,6 @@ ipcMain.handle('dc-get-my-issues', async () => {
       if (parsed && parsed.length) return { ok: true, data: parsed };
     }
   } catch (e) {}
-  // Fall back to sample rich issues for tests/demo
   return { ok: true, data: getSampleIssues() };
 });
 
@@ -264,7 +896,6 @@ ipcMain.handle('dc-get-my-prs', async () => {
       if (parsed && parsed.length) return { ok: true, data: parsed };
     }
   } catch (e) {}
-  // Fall back to sample rich PRs for tests/demo
   return { ok: true, data: getSamplePRs() };
 });
 
@@ -289,12 +920,11 @@ ipcMain.handle('dc-get-review-requests', async () => {
       if (parsed && parsed.length) return { ok: true, data: parsed };
     }
   } catch (e) {}
-  // Fall back to sample review requests
   return { ok: true, data: getSampleReviewRequests() };
 });
 
 ipcMain.handle('dc-get-recent-activity', async () => {
-  const eventsFile = path.join(os.homedir(), '.config', 'robos', 'journal-events.json');
+  const eventsFile = path.join(CONFIG_DIR, 'journal-events.json');
   try {
     const events = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
     if (events && events.length) return { ok: true, data: events.slice(0, 20) };
@@ -350,3 +980,160 @@ ipcMain.handle('dc-review-signoff-merge', async (_, taskId = 'TASK-201') => {
     message: 'Successfully merged into main! Branch state promoted to Production Reality.',
   };
 });
+
+// ── Feature In-Progress & Lifetime History Handlers ──────────────────────────
+
+ipcMain.handle('dc-get-features', () => {
+  return { ok: true, data: loadFeatures(), activeFeature: getActiveFeature() };
+});
+
+ipcMain.handle('dc-set-active-feature', (_, featureId) => {
+  const features = setActiveFeatureId(featureId);
+  const active = getActiveFeature();
+  updateTrayAndIcon();
+  if (win && win.webContents) {
+    win.webContents.send('dc-data-updated', { features, activeFeature: active });
+  }
+  return { ok: true, features, activeFeature: active };
+});
+
+ipcMain.handle('dc-update-feature-status', (_, { featureId, status }) => {
+  const features = updateFeatureStatus(featureId, status);
+  const active = getActiveFeature();
+  if (win && win.webContents) {
+    win.webContents.send('dc-data-updated', { features, activeFeature: active });
+  }
+  return { ok: true, features, activeFeature: active };
+});
+
+ipcMain.handle('dc-get-task-lifetime-history', (_, taskId) => {
+  return getTaskLifetimeHistory(taskId);
+});
+
+// ── Absorbed Notifications IPC Handlers ──────────────────────────────────────
+
+ipcMain.handle('get-notifications', () => loadNotifications());
+
+ipcMain.handle('mark-read', (_, id) => {
+  const data = loadNotifications();
+  data.forEach(n => { if (!id || n.id === id) n.read = true; });
+  saveNotifications(data);
+  updateTrayAndIcon();
+  return true;
+});
+
+ipcMain.handle('mark-read-by-category', (_, category) => {
+  const data = loadNotifications();
+  data.forEach(n => { if (n.category === category) n.read = true; });
+  saveNotifications(data);
+  updateTrayAndIcon();
+  return true;
+});
+
+ipcMain.handle('delete-notification', (_, id) => {
+  const data = loadNotifications().filter(n => n.id !== id);
+  saveNotifications(data);
+  updateTrayAndIcon();
+  return true;
+});
+
+ipcMain.handle('clear-read', () => {
+  const data = loadNotifications().filter(n => !n.read);
+  saveNotifications(data);
+  updateTrayAndIcon();
+  return true;
+});
+
+ipcMain.handle('clear-all', () => {
+  saveNotifications([]);
+  updateTrayAndIcon();
+  return true;
+});
+
+ipcMain.handle('get-unread-count', () => getUnreadCount());
+ipcMain.handle('get-unread-by-category', () => getUnreadByCategory());
+ipcMain.handle('get-prefs', () => loadPrefs());
+ipcMain.handle('save-prefs', (_, prefs) => {
+  savePrefs(prefs);
+  return { ok: true };
+});
+
+ipcMain.handle('open-app-context', (_, action) => {
+  if (action && action.url) {
+    shell.openExternal(action.url);
+  } else if (action && action.app) {
+    const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
+    try {
+      const client = net.connect(sockPath, () => {
+        client.write(JSON.stringify({ launch: action.app }));
+        client.end();
+      });
+    } catch {}
+  }
+  return { ok: true };
+});
+
+// ── Background Sync & Traffic Simulator IPC Handlers ────────────────────────
+
+ipcMain.handle('dc-sync-now', async () => triggerSync());
+
+ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
+  const { type = 'pr_comment', prNumber = 84, commentText = 'Review feedback submitted on AST verification.', status = 'fail' } = payload;
+
+  if (type === 'ci_failed') {
+    dispatchTrafficNotification({
+      title: `PR #${prNumber} CI Failed`,
+      body: `Workflow run failed on step: typecheck and Pact contracts for forms-api.`,
+      category: 'ci_cd',
+      tier: 'critical',
+      action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
+    });
+  } else if (type === 'pr_approved') {
+    dispatchTrafficNotification({
+      title: `PR #${prNumber} Approved`,
+      body: `Sarah Chen approved your pull request with automated 1080p video sign-off.`,
+      category: 'pr_review',
+      tier: 'info',
+      action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
+    });
+  } else if (type === 'pr_changes_requested') {
+    dispatchTrafficNotification({
+      title: `Changes Requested on PR #${prNumber}`,
+      body: `Dave K. requested changes: "Ensure 3-year rabies booster exemption rule is covered."`,
+      category: 'pr_review',
+      tier: 'warning',
+      action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
+    });
+  } else if (type === 'task_updated') {
+    dispatchTrafficNotification({
+      title: `Task #201 Status Moved to In Review`,
+      body: `Alex Rivera promoted task #201 lifecycle state to In Review.`,
+      category: 'task',
+      tier: 'info',
+      action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/issues/201` },
+    });
+  } else {
+    dispatchTrafficNotification({
+      title: `New Comment on PR #${prNumber}`,
+      body: commentText,
+      category: 'pr_review',
+      tier: 'info',
+      action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
+    });
+  }
+
+  return { ok: true, unreadCount: getUnreadCount() };
+});
+
+module.exports = {
+  loadNotifications,
+  saveNotifications,
+  loadPrefs,
+  savePrefs,
+  getUnreadCount,
+  loadFeatures,
+  saveFeatures,
+  getActiveFeature,
+  setActiveFeatureId,
+  triggerSync,
+};

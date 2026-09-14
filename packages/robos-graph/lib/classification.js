@@ -25,7 +25,7 @@
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
     ['infrastructure', 'Infrastructure & delivery', 'RemoteExecutionCluster KubernetesCluster Environment GitOpsDeployment CICDPipeline KubernetesNamespace KubernetesDeployment KubernetesService KubernetesIngress PipelineStage PipelineJob PipelineStep EnvironmentProfile DevOpsIntegration PassCredential'],
     ['organization', 'Organization & people', 'Team Company GitProjectOrganization'],
-    ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement'],
+    ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread ReviewComment CommentAttachment'],
     ['source', 'Source control & artifacts', 'GitRepository GitBranch PullRequest GitCommit GitTag SourceArtifact'],
     ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
     ['documentation', 'Documentation & decisions', 'FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
@@ -37,7 +37,7 @@
   const classCodes = Object.create(null);
   for (const [code, , classes] of DEFINITIONS) for (const name of classes.split(' ')) classCodes[name.includes(':') ? name : 'robos:' + name] = [code];
   // Exact upstream aliases are useful for graphs authored directly in standard vocabularies.
-  Object.assign(classCodes, { 'schema:SoftwareApplication': ['applications'], 'schema:WebApplication': ['applications'], 'schema:MobileApplication': ['applications'], 'schema:VideoGame': ['applications'], 'schema:SoftwareSourceCode': ['source'], 'schema:Organization': ['organization'], 'schema:Person': ['organization'], 'schema:Course': ['learning'], 'c4:Container': ['services'], 'c4:Component': ['contracts'] });
+  Object.assign(classCodes, { 'schema:SoftwareApplication': ['applications'], 'schema:WebApplication': ['applications'], 'schema:MobileApplication': ['applications'], 'schema:VideoGame': ['applications'], 'schema:SoftwareSourceCode': ['source'], 'schema:Organization': ['organization'], 'schema:Person': ['organization'], 'schema:Course': ['learning'], 'c4:Container': ['services'], 'c4:Component': ['contracts'], 'schema:Comment': ['work'], 'schema:Conversation': ['work'] });
   // Explicit broad upstream type: CreativeWork includes software and other
   // authored artifacts (https://schema.org/CreativeWork). More specific known
   // types take precedence; this is not a fallback for unknown namespaces.
@@ -45,6 +45,21 @@
   Object.assign(classCodes, GENERIC_CLASS_CODES);
   // Alternate target classes explicitly declared by the built-in SHACL registry.
   Object.assign(classCodes, {
+  "robos:WorkItemComment": [
+    "work"
+  ],
+  "robos:DiscussionComment": [
+    "work"
+  ],
+  "robos:Conversation": [
+    "work"
+  ],
+  "robos:CodeReviewComment": [
+    "work"
+  ],
+  "robos:Attachment": [
+    "work"
+  ],
   "robos:GitOrganization": [
     "organization"
   ],
@@ -170,6 +185,21 @@
   ]
 });
   const PREDICATE_CODES = {
+  "robos:commentId": ["work"],
+  "robos:associatedWorkItem": ["work"],
+  "robos:threadType": ["work"],
+  "robos:commentCount": ["work"],
+  "robos:lastActivityAt": ["work"],
+  "robos:createdAt": ["work"],
+  "robos:parentItem": ["work"],
+  "robos:sourceServer": ["work"],
+  "robos:sourceType": ["work"],
+  "robos:pullRequest": ["source", "work"],
+  "robos:filePath": ["source", "work"],
+  "robos:lineNumber": ["source", "work"],
+  "robos:diffHunk": ["source", "work"],
+  "robos:fileUrl": ["work"],
+  "robos:fileSize": ["work"],
   "robos:uri": ["agents"],
   "robos:toolAnnotations": ["agents"],
   "robos:resourcesProvided": ["agents"],

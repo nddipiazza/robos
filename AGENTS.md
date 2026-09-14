@@ -78,6 +78,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Git Projects** | Repo manager with AI dev-setup generation, Monaco editor, terminal/IDE runners |
 | **Agents Manager** | Manage Copilot CLI / Gemini / Claude / AI agent sessions |
 | **Agent Chat** | VS Code-like conversational agent chat, code refactoring, and multi-app orchestration |
+| **Dev Discussions** | Discord/Slack-like work-item & PR review discussion threads (Projects -> Features -> Tasks/PRs) with smart caching |
 
 ### Supporting Apps
 | App | Purpose |

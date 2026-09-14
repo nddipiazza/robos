@@ -11,9 +11,23 @@ const appState = {
   allBlockers: [],
   allEvents: [],
   taskServer: null,
+
+  // Feature In-Progress State
+  allFeatures: [],
+  activeFeature: null,
+  taskLifetimeActive: {}, // { [taskId]: boolean }
+
+  // Notifications State
+  allNotifications: [],
+  notifSubView: 'list', // 'list' | 'prefs'
+  notifSearchQuery: '',
+  notifCategoryFilters: { pr_review: true, ci_cd: true, task: true, agent: true, system: true },
+  notifTierFilters: { critical: true, warning: true, info: true },
+  notifDateFilter: '',
+  notifPrefs: { quietHours: { enabled: false, start: '22:00', end: '07:00' }, dnd: false },
 };
 
-// ── Utility functions ────────────────────────────────────────────────────────
+// ── Utility Functions ────────────────────────────────────────────────────────
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -105,20 +119,16 @@ function generateStandup(issues, prs, blockers) {
   const today = [];
   const blockerList = [];
 
-  // Recently closed/merged PRs = yesterday's work
   for (const pr of prs) {
     if (pr.state === 'MERGED') {
       yesterday.push(`Merged PR #${pr.number}: ${pr.title}`);
     }
   }
-
-  // Open issues = today's plan
   for (const issue of issues) {
     if (issue.state === 'OPEN') {
       today.push(`#${issue.number}: ${issue.title}`);
     }
   }
-
   for (const b of (blockers || [])) {
     blockerList.push(`${b.label}: ${b.text}`);
   }
@@ -151,13 +161,16 @@ function updateKPIRibbon() {
   const reviewsEl = document.getElementById('kpi-reviews-val');
   const blockersEl = document.getElementById('kpi-blockers-val');
   const healthEl = document.getElementById('kpi-ci-health');
+  const featValEl = document.getElementById('kpi-feature-val');
+  const featStEl = document.getElementById('kpi-feature-status');
+  const notifsValEl = document.getElementById('kpi-notifs-val');
+  const notifsDeltaEl = document.getElementById('kpi-notifs-delta');
 
   if (tasksEl) tasksEl.textContent = appState.allIssues.length;
   if (prsEl) prsEl.textContent = appState.allPRs.length;
   if (reviewsEl) reviewsEl.textContent = appState.allReviews.length;
   if (blockersEl) blockersEl.textContent = appState.allBlockers.length;
 
-  // Calculate CI health percentage
   if (healthEl) {
     if (!appState.allPRs.length) {
       healthEl.textContent = '100%';
@@ -168,13 +181,36 @@ function updateKPIRibbon() {
     }
   }
 
+  // Active feature KPI
+  if (appState.activeFeature) {
+    if (featValEl) featValEl.textContent = appState.activeFeature.code;
+    if (featStEl) featStEl.textContent = appState.activeFeature.status.replace('_', ' ');
+  }
+
+  // Notifications KPI & unread count
+  const unread = appState.allNotifications.filter(n => !n.read).length;
+  if (notifsValEl) notifsValEl.textContent = appState.allNotifications.length;
+  if (notifsDeltaEl) notifsDeltaEl.textContent = `${unread} unread`;
+
   // Tab badges
   const tabTasksBadge = document.getElementById('tab-tasks-badge');
   const tabPrsBadge = document.getElementById('tab-prs-badge');
   const tabBlockersBadge = document.getElementById('tab-blockers-badge');
+  const tabFeatureBadge = document.getElementById('tab-feature-badge');
+  const tabNotifsBadge = document.getElementById('tab-notifs-badge');
+  const headerNotifBadge = document.getElementById('header-notif-badge');
+  const headerNotifBtn = document.getElementById('btn-header-notifs');
+
   if (tabTasksBadge) tabTasksBadge.textContent = appState.allIssues.length;
   if (tabPrsBadge) tabPrsBadge.textContent = appState.allPRs.length;
   if (tabBlockersBadge) tabBlockersBadge.textContent = appState.allBlockers.length;
+  if (tabFeatureBadge && appState.activeFeature) tabFeatureBadge.textContent = appState.activeFeature.status;
+  if (tabNotifsBadge) tabNotifsBadge.textContent = unread;
+  if (headerNotifBadge) headerNotifBadge.textContent = unread;
+
+  if (headerNotifBtn) {
+    headerNotifBtn.classList.toggle('has-unread', unread > 0);
+  }
 }
 
 // ── Tab Navigation ───────────────────────────────────────────────────────────
@@ -185,16 +221,27 @@ function applyViewTab(tab) {
   });
 
   const cards = {
-    tasks: document.getElementById('tasks-card'),
-    prs: document.getElementById('prs-card'),
-    reviews: document.getElementById('reviews-card'),
-    blockers: document.getElementById('blockers-card'),
-    standup: document.getElementById('standup-card'),
-    activity: document.getElementById('activity-card'),
+    feature:   document.getElementById('feature-card'),
+    notifications: document.getElementById('notifications-card'),
+    tasks:     document.getElementById('tasks-card'),
+    prs:       document.getElementById('prs-card'),
+    reviews:   document.getElementById('reviews-card'),
+    blockers:  document.getElementById('blockers-card'),
+    standup:   document.getElementById('standup-card'),
+    activity:  document.getElementById('activity-card'),
   };
 
   if (tab === 'all') {
     Object.values(cards).forEach(c => { if (c) c.style.display = ''; });
+    // In overview Mission Control, show top cards
+    if (cards.notifications) cards.notifications.style.display = '';
+    if (cards.feature) cards.feature.style.display = '';
+  } else if (tab === 'feature') {
+    Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
+    if (cards.feature) cards.feature.style.display = '';
+  } else if (tab === 'notifications') {
+    Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
+    if (cards.notifications) cards.notifications.style.display = '';
   } else if (tab === 'tasks') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.tasks) cards.tasks.style.display = '';
@@ -215,11 +262,323 @@ function applyViewTab(tab) {
   }
 }
 
-// ── Render functions ─────────────────────────────────────────────────────────
+window.switchTab = function(tab) {
+  applyViewTab(tab);
+};
+
+// ── Active Feature Rendering & Lifetime Timeline ────────────────────────────
+
+function renderFeatures(features, activeFeature) {
+  appState.allFeatures = features;
+  appState.activeFeature = activeFeature || features[0];
+
+  const selector = document.getElementById('feature-selector');
+  if (selector) {
+    selector.innerHTML = features.map(f =>
+      `<option value="${f.id}" ${f.id === appState.activeFeature?.id ? 'selected' : ''}>${f.code}: ${f.name}</option>`
+    ).join('');
+  }
+
+  const f = appState.activeFeature;
+  if (!f) return;
+
+  const codeEl = document.getElementById('feature-code');
+  const nameEl = document.getElementById('feature-name');
+  const descEl = document.getElementById('feature-desc');
+  const stBadge = document.getElementById('feature-status-badge');
+  const repoTag = document.getElementById('feature-repo-tag');
+  const serviceTag = document.getElementById('feature-service-tag');
+  const progressTag = document.getElementById('feature-progress-tag');
+  const progressFill = document.getElementById('feature-progress-fill');
+  const progressPct = document.getElementById('feature-progress-pct');
+  const tasksCount = document.getElementById('feature-tasks-count');
+  const tasksList = document.getElementById('feature-tasks-list');
+
+  if (codeEl) codeEl.textContent = f.code;
+  if (nameEl) nameEl.textContent = f.name;
+  if (descEl) descEl.textContent = f.description || '';
+  if (stBadge) {
+    stBadge.textContent = f.status.replace('_', ' ');
+    stBadge.className = `badge-status-pill ${f.status.toLowerCase().replace('_', '-')}`;
+  }
+  if (repoTag) repoTag.textContent = `Repository: ${f.repository || 'repo'}`;
+  if (serviceTag) serviceTag.textContent = `Service: ${f.targetService || 'general'}`;
+
+  const tasks = f.tasks || [];
+  const completed = tasks.filter(t => t.status === 'DONE').length;
+  const total = tasks.length || 1;
+  const pct = Math.round((completed / total) * 100);
+
+  if (progressTag) progressTag.textContent = `Progress: ${completed} / ${tasks.length} tasks`;
+  if (progressFill) progressFill.style.width = `${pct}%`;
+  if (progressPct) progressPct.textContent = `${pct}% Complete`;
+  if (tasksCount) tasksCount.textContent = `${tasks.length} Tasks`;
+
+  if (!tasksList) return;
+  if (!tasks.length) {
+    tasksList.innerHTML = '<div class="placeholder">No linked tasks for this feature.</div>';
+    return;
+  }
+
+  tasksList.innerHTML = tasks.map(t => {
+    const isLifetimeOpen = !!appState.taskLifetimeActive[t.id];
+    const statusClass = (t.status || 'todo').toLowerCase().replace('_', '-');
+    const prCiClass = t.pr?.ci === 'pass' ? 'ci-pass' : t.pr?.ci === 'fail' ? 'ci-fail' : 'ci-pending';
+    const prCiLabel = t.pr?.ci === 'pass' ? 'CI Pass' : t.pr?.ci === 'fail' ? 'CI Fail' : 'CI Pending';
+    const prRevLabel = t.pr?.review === 'approved' ? 'Approved' : t.pr?.review === 'changes' ? 'Changes Req' : 'Review Pending';
+
+    return `
+      <div class="feature-task-card" id="card-${t.id}">
+        <div class="feature-task-top">
+          <div class="task-title-group">
+            <span class="task-chip ${statusClass}">${t.status}</span>
+            <span class="priority-tag priority-${(t.priority || 'p2').toLowerCase()}">${t.priority || 'P2'}</span>
+            <span class="task-heading">#${t.number || t.id}: ${t.title}</span>
+          </div>
+          <span class="meta-tag">👤 ${t.assignee || 'Unassigned'}</span>
+        </div>
+
+        <div class="task-desc">${t.description || ''}</div>
+
+        <div class="feature-task-links">
+          ${t.taskServerUrl ? `
+            <a href="#" class="link-pill link-task-server" onclick="event.preventDefault(); window.robos.openUrl('${t.taskServerUrl}')" title="Open task server issue">
+              🔗 Task Server Issue #${t.number} ↗
+            </a>
+          ` : ''}
+          ${t.pr?.url ? `
+            <a href="#" class="link-pill link-pr" onclick="event.preventDefault(); window.robos.openUrl('${t.pr.url}')" title="Open Pull Request">
+              🌿 PR #${t.pr.number}: ${t.pr.branch} ↗
+            </a>
+            <span class="ci-badge ${prCiClass}">${prCiLabel}</span>
+            <span class="badge-subtle">${prRevLabel}</span>
+          ` : ''}
+        </div>
+
+        <!-- Task Drawer: Lifetime Ticket State Tab -->
+        <div class="task-drawer">
+          <div class="task-tabs-nav">
+            <button class="btn-task-tab ${!isLifetimeOpen ? 'active' : ''}" onclick="window.setTaskDrawerTab('${t.id}', 'overview')">Overview</button>
+            <button class="btn-task-tab btn-lifetime-tab ${isLifetimeOpen ? 'active' : ''}" id="btn-lifetime-${t.id}" onclick="window.setTaskDrawerTab('${t.id}', 'lifetime')">
+              ⏱️ Ticket State Over Lifetime (${(t.lifetimeHistory || []).length} events)
+            </button>
+          </div>
+
+          ${isLifetimeOpen ? `
+            <div class="lifetime-timeline" id="lifetime-timeline-${t.id}">
+              ${(t.lifetimeHistory || []).map(event => {
+                const stCls = (event.state || '').toLowerCase();
+                return `
+                  <div class="timeline-item ${stCls}">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-header">
+                      <span class="timeline-state-pill">${event.state}</span>
+                      <span class="timeline-time">${new Date(event.timestamp).toLocaleString()}</span>
+                      <span class="timeline-actor">👤 ${event.actor}</span>
+                    </div>
+                    <div class="timeline-note">${event.note}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.setTaskDrawerTab = function(taskId, tabName) {
+  appState.taskLifetimeActive[taskId] = (tabName === 'lifetime');
+  renderFeatures(appState.allFeatures, appState.activeFeature);
+};
+
+// ── Absorbed Notifications Rendering & Operations ────────────────────────────
+
+function filterNotifications(notifs) {
+  return notifs.filter(n => {
+    // Category filter
+    const cat = n.category || 'system';
+    if (!appState.notifCategoryFilters[cat]) return false;
+
+    // Tier filter
+    const tier = n.tier || 'info';
+    if (!appState.notifTierFilters[tier]) return false;
+
+    // Search query
+    if (appState.notifSearchQuery) {
+      const q = appState.notifSearchQuery.toLowerCase();
+      const matchTitle = (n.title || '').toLowerCase().includes(q);
+      const matchBody  = (n.body || '').toLowerCase().includes(q);
+      const matchCat   = (n.category || '').toLowerCase().includes(q);
+      if (!matchTitle && !matchBody && !matchCat) return false;
+    }
+
+    // Date filter
+    if (appState.notifDateFilter && n.ts) {
+      const notifTime = new Date(n.ts).getTime();
+      const now = Date.now();
+      if (appState.notifDateFilter === 'today' && now - notifTime > 86400000) return false;
+      if (appState.notifDateFilter === '7d' && now - notifTime > 7 * 86400000) return false;
+      if (appState.notifDateFilter === '30d' && now - notifTime > 30 * 86400000) return false;
+    }
+
+    return true;
+  });
+}
+
+function renderNotifications(notifs) {
+  appState.allNotifications = notifs;
+
+  // Unread badge counts per category
+  const catCounts = { pr_review: 0, ci_cd: 0, task: 0, agent: 0, system: 0 };
+  notifs.forEach(n => {
+    if (!n.read) {
+      const c = n.category || 'system';
+      if (catCounts[c] !== undefined) catCounts[c]++;
+    }
+  });
+
+  Object.entries(catCounts).forEach(([cat, count]) => {
+    const el = document.getElementById(`badge-${cat}`);
+    if (el) el.textContent = count;
+  });
+
+  const unreadTotal = notifs.filter(n => !n.read).length;
+  const unreadBadge = document.getElementById('notif-unread-count-badge');
+  if (unreadBadge) unreadBadge.textContent = `${unreadTotal} Unread`;
+
+  const statUnread = document.getElementById('stat-unread');
+  const statTotal  = document.getElementById('stat-total');
+  if (statUnread) statUnread.textContent = `${unreadTotal} unread`;
+  if (statTotal)  statTotal.textContent  = `${notifs.length} total`;
+
+  const filtered = filterNotifications(notifs);
+  const listEl   = document.getElementById('notif-list');
+  const emptyEl  = document.getElementById('notif-empty-state');
+
+  if (!listEl) return;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  listEl.innerHTML = filtered.map(n => {
+    const isUnread = !n.read;
+    const cat = n.category || 'system';
+    const tier = n.tier || 'info';
+
+    return `
+      <div class="notif-card ${isUnread ? 'unread' : ''} tier-${tier}" id="notif-card-${n.id}">
+        <div class="notif-icon-wrap">
+          ${cat === 'ci_cd' ? '⚙️' : cat === 'pr_review' ? '🌿' : cat === 'task' ? '📋' : cat === 'agent' ? '🤖' : '🔔'}
+        </div>
+        <div class="notif-content">
+          <div class="notif-top">
+            <span class="notif-pill ${cat}">${cat.replace('_', ' ')}</span>
+            <span class="notif-title">${n.title || 'Notification'}</span>
+            <span class="notif-time">${timeAgo(n.ts)}</span>
+          </div>
+          <div class="notif-body">${n.body || ''}</div>
+          <div class="notif-actions">
+            ${n.action?.url ? `
+              <button class="btn-notif-action" onclick="window.robos.openUrl('${n.action.url}')">View Details ↗</button>
+            ` : ''}
+            ${isUnread ? `
+              <button class="btn-notif-read" onclick="window.markNotifRead('${n.id}')">✓ Mark Read</button>
+            ` : ''}
+            <button class="btn-notif-del" onclick="window.deleteNotif('${n.id}')" title="Delete notification">✕</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.switchNotifView = function(view) {
+  appState.notifSubView = view;
+  const listBtn = document.getElementById('notif-tab-btn-list');
+  const prefsBtn = document.getElementById('notif-tab-btn-prefs');
+  const listView = document.getElementById('notif-view-list');
+  const prefsView = document.getElementById('notif-view-prefs');
+
+  if (view === 'list') {
+    listBtn?.classList.add('active');
+    prefsBtn?.classList.remove('active');
+    listView?.classList.remove('hidden');
+    prefsView?.classList.add('hidden');
+  } else {
+    listBtn?.classList.remove('active');
+    prefsBtn?.classList.add('active');
+    listView?.classList.add('hidden');
+    prefsView?.classList.remove('hidden');
+    loadPrefsToUI();
+  }
+};
+
+async function loadPrefsToUI() {
+  const prefs = await window.robos.notifications.getPrefs();
+  appState.notifPrefs = prefs;
+  const qEnabled = document.getElementById('pref-quiet-enabled');
+  const qStart = document.getElementById('pref-quiet-start');
+  const qEnd = document.getElementById('pref-quiet-end');
+  const dndToggle = document.getElementById('pref-dnd');
+
+  if (qEnabled) qEnabled.checked = !!prefs.quietHours?.enabled;
+  if (qStart && prefs.quietHours?.start) qStart.value = prefs.quietHours.start;
+  if (qEnd && prefs.quietHours?.end) qEnd.value = prefs.quietHours.end;
+  if (dndToggle) dndToggle.checked = !!prefs.dnd;
+}
+
+window.saveNotifPrefsFromUI = async function() {
+  const qEnabled = document.getElementById('pref-quiet-enabled')?.checked || false;
+  const qStart = document.getElementById('pref-quiet-start')?.value || '22:00';
+  const qEnd = document.getElementById('pref-quiet-end')?.value || '07:00';
+  const dndToggle = document.getElementById('pref-dnd')?.checked || false;
+
+  const newPrefs = {
+    ...appState.notifPrefs,
+    quietHours: { enabled: qEnabled, start: qStart, end: qEnd },
+    dnd: dndToggle,
+  };
+
+  await window.robos.notifications.savePrefs(newPrefs);
+  const statusMsg = document.getElementById('pref-status-msg');
+  if (statusMsg) {
+    statusMsg.style.display = 'inline';
+    setTimeout(() => { statusMsg.style.display = 'none'; }, 2500);
+  }
+};
+
+window.markNotifRead = async function(id) {
+  await window.robos.notifications.markRead(id);
+  const notifs = await window.robos.notifications.getNotifications();
+  renderNotifications(notifs);
+  updateKPIRibbon();
+};
+
+window.deleteNotif = async function(id) {
+  await window.robos.notifications.deleteNotification(id);
+  const notifs = await window.robos.notifications.getNotifications();
+  renderNotifications(notifs);
+  updateKPIRibbon();
+};
+
+window.setSearch = function(q) {
+  const notifSearch = document.getElementById('notif-search-input');
+  if (notifSearch) notifSearch.value = q;
+  appState.notifSearchQuery = q;
+  renderNotifications(appState.allNotifications);
+};
+
+// ── Render Other Cards (Tasks, PRs, Reviews, Blockers, Standup, Activity) ────
 
 function filterIssues(issues, filter, query) {
   return issues.filter(issue => {
-    // 1. Status Chip filter
     if (filter !== 'all') {
       const labels = (issue.labels || []).map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
       const stateLabel = labels.find(l => l.startsWith('state:'));
@@ -239,7 +598,6 @@ function filterIssues(issues, filter, query) {
       }
     }
 
-    // 2. Query filter
     if (query) {
       const q = query.toLowerCase();
       const matchNumber = String(issue.number).includes(q) || `#${issue.number}`.includes(q);
@@ -257,18 +615,19 @@ function renderTasks(issues) {
   const countEl = document.getElementById('tasks-count');
 
   const filtered = filterIssues(issues, appState.taskFilter, appState.searchQuery);
-  countEl.textContent = filtered.length;
+  if (countEl) countEl.textContent = filtered.length;
 
   if (!appState.taskServer || !appState.taskServer.repos || !appState.taskServer.repos.length) {
-    el.innerHTML = '<div class="placeholder">No task server configured. Open Task Servers app to set up.</div>';
+    if (el) el.innerHTML = '<div class="placeholder">No task server configured. Open Task Servers app to set up.</div>';
     return;
   }
 
   if (!filtered.length) {
-    el.innerHTML = '<div class="placeholder">No assigned tasks matching filter</div>';
+    if (el) el.innerHTML = '<div class="placeholder">No assigned tasks matching filter</div>';
     return;
   }
 
+  if (!el) return;
   el.innerHTML = filtered.map(i => {
     const rawLabels = i.labels || [];
     const labels = rawLabels.map(l => typeof l === 'string' ? l : l.name);
@@ -318,8 +677,9 @@ function renderPRs(prs) {
       (pr.headRefName || '').toLowerCase().includes(q)
     );
   }
-  countEl.textContent = filtered.length;
+  if (countEl) countEl.textContent = filtered.length;
 
+  if (!el) return;
   if (!filtered.length) {
     el.innerHTML = '<div class="placeholder">No open pull requests</div>';
     return;
@@ -353,8 +713,9 @@ function renderPRs(prs) {
 function renderReviews(reviews) {
   const el = document.getElementById('reviews-list');
   const countEl = document.getElementById('reviews-count');
-  countEl.textContent = reviews.length;
+  if (countEl) countEl.textContent = reviews.length;
 
+  if (!el) return;
   if (!reviews.length) {
     el.innerHTML = '<div class="placeholder">No pending review requests</div>';
     return;
@@ -387,6 +748,7 @@ function renderBlockers(blockers) {
   }
   if (countEl) countEl.textContent = `${filtered.length} Alert${filtered.length === 1 ? '' : 's'}`;
 
+  if (!el) return;
   if (!filtered.length) {
     el.innerHTML = '<div class="placeholder">No blockers detected across pipelines & tasks</div>';
     return;
@@ -461,6 +823,7 @@ function renderStandup(standup) {
 
 function renderActivity(events) {
   const el = document.getElementById('activity-list');
+  if (!el) return;
   if (!events.length) {
     el.innerHTML = '<div class="placeholder">No recent activity</div>';
     return;
@@ -512,6 +875,31 @@ function wireInteractivity() {
     });
   });
 
+  // Feature selector dropdown
+  const featSelect = document.getElementById('feature-selector');
+  if (featSelect) {
+    featSelect.addEventListener('change', async (e) => {
+      const res = await window.robos.setActiveFeature(e.target.value);
+      if (res.ok) {
+        renderFeatures(res.features, res.activeFeature);
+        updateKPIRibbon();
+      }
+    });
+  }
+
+  // Feature status button ("Set In Progress")
+  const btnSetProgress = document.getElementById('btn-set-feature-progress');
+  if (btnSetProgress) {
+    btnSetProgress.addEventListener('click', async () => {
+      if (!appState.activeFeature) return;
+      const res = await window.robos.updateFeatureStatus(appState.activeFeature.id, 'IN_PROGRESS');
+      if (res.ok) {
+        renderFeatures(res.features, res.activeFeature);
+        updateKPIRibbon();
+      }
+    });
+  }
+
   // Task Filter Chips
   document.querySelectorAll('#task-filter-chips .filter-chip').forEach(chip => {
     chip.addEventListener('click', () => {
@@ -541,6 +929,100 @@ function wireInteractivity() {
       }
     });
   }
+
+  // Notifications Category Filters
+  document.querySelectorAll('#notif-category-filters input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const cat = e.target.dataset.cat;
+      appState.notifCategoryFilters[cat] = e.target.checked;
+      renderNotifications(appState.allNotifications);
+    });
+  });
+
+  // Notifications Tier Filters
+  document.querySelectorAll('#notif-tier-filters input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const tier = e.target.dataset.tier;
+      appState.notifTierFilters[tier] = e.target.checked;
+      renderNotifications(appState.allNotifications);
+    });
+  });
+
+  // Notifications Date Filter
+  const notifDate = document.getElementById('filter-date');
+  if (notifDate) {
+    notifDate.addEventListener('change', (e) => {
+      appState.notifDateFilter = e.target.value;
+      renderNotifications(appState.allNotifications);
+    });
+  }
+
+  // Notifications Text Filter
+  const notifSearch = document.getElementById('notif-search-input');
+  if (notifSearch) {
+    notifSearch.addEventListener('input', (e) => {
+      appState.notifSearchQuery = e.target.value.trim();
+      renderNotifications(appState.allNotifications);
+    });
+  }
+
+  // Bulk Notification Actions
+  document.getElementById('btn-mark-all-read')?.addEventListener('click', async () => {
+    await window.robos.notifications.markAllRead();
+    const notifs = await window.robos.notifications.getNotifications();
+    renderNotifications(notifs);
+    updateKPIRibbon();
+  });
+
+  document.getElementById('btn-clear-read')?.addEventListener('click', async () => {
+    await window.robos.notifications.clearRead();
+    const notifs = await window.robos.notifications.getNotifications();
+    renderNotifications(notifs);
+    updateKPIRibbon();
+  });
+
+  document.getElementById('btn-clear-all')?.addEventListener('click', async () => {
+    await window.robos.notifications.clearAll();
+    renderNotifications([]);
+    updateKPIRibbon();
+  });
+
+  document.getElementById('btn-save-prefs')?.addEventListener('click', () => {
+    window.saveNotifPrefsFromUI();
+  });
+
+  // IPC Event Listeners from Main
+  window.robos.onSwitchTab((tab) => applyViewTab(tab));
+
+  window.robos.onDataUpdated(async (data) => {
+    if (data.issues) appState.allIssues = data.issues;
+    if (data.prs) appState.allPRs = data.prs;
+    if (data.reviews) appState.allReviews = data.reviews;
+    if (data.activity) appState.allEvents = data.activity;
+    if (data.features) appState.allFeatures = data.features;
+    if (data.activeFeature) appState.activeFeature = data.activeFeature;
+
+    appState.allBlockers = detectBlockers(appState.allIssues, appState.allPRs);
+
+    const notifs = await window.robos.notifications.getNotifications();
+    renderNotifications(notifs);
+    renderFeatures(appState.allFeatures, appState.activeFeature);
+    renderTasks(appState.allIssues);
+    renderPRs(appState.allPRs);
+    renderReviews(appState.allReviews);
+    renderBlockers(appState.allBlockers);
+    renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
+    renderActivity(appState.allEvents);
+    updateKPIRibbon();
+  });
+
+  window.robos.onTrafficNotification((notif) => {
+    // Traffic notification received: reload and pulse header bell
+    window.robos.notifications.getNotifications().then(notifs => {
+      renderNotifications(notifs);
+      updateKPIRibbon();
+    });
+  });
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
@@ -559,12 +1041,14 @@ async function init() {
     badge.textContent = 'No task server';
   }
 
-  // Fetch data
-  const [issuesRes, prsRes, reviewsRes, activityRes] = await Promise.all([
+  // Fetch data concurrently
+  const [issuesRes, prsRes, reviewsRes, activityRes, featuresRes, notifsRes] = await Promise.all([
     window.robos.getMyIssues(),
     window.robos.getMyPRs(),
     window.robos.getReviewRequests(),
     window.robos.getRecentActivity(),
+    window.robos.getFeatures(),
+    window.robos.notifications.getNotifications(),
   ]);
 
   appState.allIssues  = issuesRes.ok  ? issuesRes.data  : [];
@@ -573,14 +1057,21 @@ async function init() {
   appState.allEvents  = activityRes.ok ? activityRes.data : [];
   appState.allBlockers = detectBlockers(appState.allIssues, appState.allPRs);
 
-  updateKPIRibbon();
+  if (featuresRes.ok) {
+    appState.allFeatures = featuresRes.data;
+    appState.activeFeature = featuresRes.activeFeature;
+  }
 
+  renderNotifications(notifsRes || []);
+  renderFeatures(appState.allFeatures, appState.activeFeature);
   renderTasks(appState.allIssues);
   renderPRs(appState.allPRs);
   renderReviews(appState.allReviews);
   renderBlockers(appState.allBlockers);
   renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
   renderActivity(appState.allEvents);
+
+  updateKPIRibbon();
 
   // Show error if no task server
   if (!ts && !issuesRes.ok) {
@@ -593,5 +1084,5 @@ async function init() {
 
 init();
 
-// Auto-refresh every 2 minutes
+// Periodic UI refresh every 2 minutes as fallback
 setInterval(init, 120000);

@@ -51,6 +51,17 @@ The complete suite of 51 native developer desktop applications covering the enti
           <span class="robos-app-link-badge">Explore Guide ↗</span>
         </div>
       </a>
+      <a href="#dev-discussions-work-item--pr-review-chat" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/dev-discussions.svg' | relative_url }}" width="38" height="38" alt="Dev Discussions icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Dev Discussions</div>
+          <span class="robos-app-pkg">robos:dev-discussions</span>
+          <p class="robos-app-desc">Discord/Slack-like work-item and PR review chat interface across Projects &rarr; Features &rarr; Tasks/PRs with smart caching.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
       <div class="robos-app-card">
         <div class="robos-app-icon-wrap">
           <img src="{{ '/assets/images/icons/robos-desktop.svg' | relative_url }}" width="38" height="38" alt="Desktop Shell icon" loading="lazy">
@@ -693,6 +704,15 @@ Design and validate how your services talk to each other before writing code. Su
 ### Git Projects Multi-Repo Hub
 Connect all your company's Git repositories in one place. RobOS securely injects environment passwords from your encrypted vault and writes one-click setup scripts (`dev-setup.sh`) to get code building in seconds.
 ![Git Projects]({{ '/assets/images/screenshots/acme-petshop-step4-projects_open_frame.png' | relative_url }})
+
+### Dev Discussions (Work-Item & PR Review Chat)
+Stop using generic team chat programs in your SDLC! **Dev Discussions** (`packages/dev-discussions`) brings the fluid, keyboard-driven ergonomics of Slack and Discord directly to your work items and pull requests:
+
+- **Strict Domain Channel Tree**: Conversations are organized as **Projects &rarr; Features &rarr; Tasks & PRs**, eliminating fragmented channels and lost context.
+- **Embedded PR Review Diffs**: Review code with syntax-highlighted diff hunks, file line anchors, and inline conversation resolution toggles.
+- **Smart Caching Layer (<0.5ms reads)**: Loads full discussion trees from local cache instantly while protecting your team from GitHub and Jira REST API rate-limit exhaustion.
+- **Knowledge Graph Synchronization**: Compiles all discussion threads, comments, review notes, and attachments into W3C SHACL-validated `robos:DiscussionThread` and `robos:Comment` nodes in the `organization` package.
+- 👉 Read the complete guide: **[Stop Using Team Chat in Your SDLC: Context-First Work-Item & PR Discussions]({{ site.baseurl }}{% link big-wins/dev-discussions.md %})**.
 
 ### Dev Central (Developer Command Center)
 Your daily engineering cockpit and mission control hub for the entire Software Delivery Lifecycle (SDLC). Dev Central aggregates in-flight tasks, sprint commitments, pull request health, reviewer queues, blocker early warnings, and automated daily standup synthesis into a single high-density desktop cockpit:

@@ -1,0 +1,12 @@
+{
+  "name": "robos-dev-discussions",
+  "version": "0.1.0",
+  "description": "Discord/Slack-like work-item and PR review chat interface with smart caching and KGraph integration",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

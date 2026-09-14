@@ -211,7 +211,8 @@ RobOS includes a complete suite of lightweight, high-performance developer tools
 
 | Category | Application | Purpose |
 |:---|:---|:---|
-| **Core Dev** | **Dev Central** | Daily engineering dashboard: sprint board, PR health, blocker radar, AI standup. |
+| **Core Dev** | **Dev Discussions** | Discord/Slack-like work-item & PR review discussion threads (Projects -> Features -> Tasks/PRs) with smart caching. |
+| | **Dev Central** | Daily engineering dashboard: sprint board, PR health, blocker radar, AI standup. |
 | | **Issue Manager** | GitHub Issues client with Kanban views and AI issue breakdown. |
 | | **Git Projects** | Repository manager with Monaco editor, terminal runners, and AI dev-setup generation. |
 | | **Agents Manager** | Multi-agent orchestrator for Claude Code, Antigravity, Copilot, and Gemini CLI sessions. |

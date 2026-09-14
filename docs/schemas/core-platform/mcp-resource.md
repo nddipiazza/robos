@@ -29,7 +29,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPR
 - **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
 - **Namespace**: `robos.platform`
 - **Schema.org Classification**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
-- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema)
+- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification/2025-11-25/schema](https://modelcontextprotocol.io/specification/2025-11-25/schema)
 - **Upstream Schema Basis (Refers From)**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
 
 ---
@@ -38,7 +38,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPR
 
 This RobOS schema is modeled after and directly aligns with two levels of global standards:
 - **Universal Schema.org Class**: [https://schema.org/MediaObject](https://schema.org/MediaObject) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
+- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification/2025-11-25/schema](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/MediaObject](https://schema.org/MediaObject)
 - **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPResource`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
@@ -56,6 +56,9 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:uriTemplate</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:mcpServer</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:uri</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:mimeType</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:annotations</code></span>
   </div>
 </div>
 
@@ -65,14 +68,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ## Property Constraints & SHACL Rules
 
-| Property Path | Multiplicity | Meaning |
-|---|---|---|
-| `dcterms:title` | `1..*` | MCP Resource must have a title. |
-| `robos:uriTemplate` | `0..*` | Recorded URI template when applicable; concrete resources use uri instead. |
-| `robos:mcpServer` | `1..*` | MCP Resource must link to parent MCP server. |
-| `robos:uri` | `0..*` | Recorded concrete resource URI; distinct from a URI template. |
-| `robos:mimeType` | `0..*` | Recorded resource MIME type, when known. |
-| `robos:annotations` | `0..*` | Recorded MCP resource audience, priority or lastModified annotations. |
+| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
+|---|---|---|---|---|---|
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | MCP Resource must have a title. |
+| **`robos:uriTemplate`** | URI Template | `0..*` | `xsd:string` | Agents & MCP | Recorded URI template when applicable; concrete resources use uri instead. |
+| **`robos:mcpServer`** | Parent MCP Server | `1..*` | `URI (robos:MCPServer)` | Agents & MCP | MCP Resource must link to parent MCP server. |
+| **`robos:uri`** | uri | `0..*` | `xsd:string` | Agents & MCP | Recorded concrete resource URI; distinct from a URI template. |
+| **`robos:mimeType`** | mimeType | `0..*` | `xsd:string` | Agents & MCP | Recorded resource MIME type, when known. |
+| **`robos:annotations`** | annotations | `0..*` | `xsd:string` | Agents & MCP | Recorded MCP resource audience, priority or lastModified annotations. |
 
 ---
 
@@ -93,7 +96,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:uriTemplate": "sample://resources/{id}",
   "robos:mcpServer": "urn:robos:mcp:context-engine",
   "robos:schemaOrgType": "https://schema.org/MediaObject",
-  "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+  "robos:domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema",
   "robos:refersFrom": "https://schema.org/MediaObject"
 }
 ```
@@ -124,7 +127,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:uriTemplate": "sample://resources/{id}",
         "robos:mcpServer": "urn:robos:mcp:context-engine",
         "robos:schemaOrgType": "https://schema.org/MediaObject",
-        "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+        "robos:domainStandard": "https://modelcontextprotocol.io/specification/2025-11-25/schema",
         "robos:refersFrom": "https://schema.org/MediaObject"
     }
   ],
@@ -132,11 +135,3 @@ const result = validator.validateGraph(new OSLCGraphParser({
 
 console.log("Conforms:", result.conforms); // Expected: true
 ```
-
-## MCP declaration semantics
-
-uri identifies a concrete resource; uriTemplate describes a template. Neither is fabricated for incomplete declarations. mimeType and resource annotations are optional. Resource annotations differ from ToolAnnotations. The graph cardinality validator does not enforce a URI/template alternative or validate nested content.
-
-Based on the [MCP 2025-11-25 schema](https://modelcontextprotocol.io/specification/2025-11-25/schema). These are recorded definitions; validation does not execute or discover an MCP server.
-
-Structured fields inputSchema, outputSchema, annotations, arguments, parameters and toolAnnotations use JSON-LD @json literals where present, preserving nested unprefixed keys and array order. This protects serialization; it does not validate the nested contract.

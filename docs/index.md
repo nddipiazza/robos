@@ -481,6 +481,7 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 ### 🎭 PR Review, Interactive Learning & Governance
 - **Agent Code Review Platform & PR Review Theater**: Autonomous AI pull request auditor, 6-stage Review Theater, semantic blast-radius diffs, anti-rubber-stamp knowledge checks, and IDE review bridge (IntelliJ IDEA & VS Code plugins).
 - **RobOS eLearning Hub**: Enterprise standalone developer learning player, interactive coding labs against ephemeral sandboxes, and immutable `robos:CompletionCertificate` credential issuance.
+- **Dev Discussions**: Discord/Slack-like chat interface for Projects &rarr; Features &rarr; Tasks & PRs, bringing real-time conversational ergonomics directly to work-item and review comment threads with sub-millisecond smart caching.
 - **Dev Central**: Your daily developer dashboard with sprint tracking, PR health, calendar, AI standup notes, and blocker radar.
 - **Workflow Studio & Task Planner**: Multi-domain interactive web form templates, visual custom template builder, and bidirectional sync with GitHub Issues and Jira.
 

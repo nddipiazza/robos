@@ -77,22 +77,40 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ```json
 {
-  "@id": "urn:robos:services:api-endpoint-sample",
+  "@id": "urn:robos:endpoint:billing-invoices-list",
   "@type": [
     "robos:APIEndpoint",
     "robos:APIOperation",
-    "schema:EntryPoint",
-    "oslc:Resource"
+    "c4:Component"
   ],
-  "dcterms:title": "Sample API Endpoint",
-  "dcterms:description": "Canonical reference instance for robos:APIEndpoint.",
+  "dcterms:title": "List Billing Invoices",
+  "dcterms:description": "Retrieve paginated customer invoices with payment status filtering.",
+  "robos:pathPattern": "/api/v1/billing/invoices",
+  "robos:httpMethod": "GET",
+  "robos:service": {
+    "@id": "urn:robos:service:billing-api"
+  },
+  "robos:endpointOf": {
+    "@id": "urn:robos:service:billing-api"
+  },
+  "robos:parameters": [
+    {
+      "name": "status",
+      "in": "query",
+      "type": "string",
+      "description": "Filter by status: PAID, PENDING, OVERDUE"
+    },
+    {
+      "name": "limit",
+      "in": "query",
+      "type": "integer",
+      "default": 20
+    }
+  ],
   "robos:package": "services",
   "robos:namespace": "robos.services",
-  "robos:pathPattern": "/api/v1/samples",
-  "robos:httpMethod": "GET",
   "robos:schemaOrgType": "https://schema.org/EntryPoint",
-  "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0",
-  "robos:refersFrom": "https://schema.org/EntryPoint"
+  "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
 }
 ```
 
@@ -109,22 +127,40 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:services:api-endpoint-sample",
+        "@id": "urn:robos:endpoint:billing-invoices-list",
         "@type": [
             "robos:APIEndpoint",
             "robos:APIOperation",
-            "schema:EntryPoint",
-            "oslc:Resource"
+            "c4:Component"
         ],
-        "dcterms:title": "Sample API Endpoint",
-        "dcterms:description": "Canonical reference instance for robos:APIEndpoint.",
+        "dcterms:title": "List Billing Invoices",
+        "dcterms:description": "Retrieve paginated customer invoices with payment status filtering.",
+        "robos:pathPattern": "/api/v1/billing/invoices",
+        "robos:httpMethod": "GET",
+        "robos:service": {
+            "@id": "urn:robos:service:billing-api"
+        },
+        "robos:endpointOf": {
+            "@id": "urn:robos:service:billing-api"
+        },
+        "robos:parameters": [
+            {
+                "name": "status",
+                "in": "query",
+                "type": "string",
+                "description": "Filter by status: PAID, PENDING, OVERDUE"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "integer",
+                "default": 20
+            }
+        ],
         "robos:package": "services",
         "robos:namespace": "robos.services",
-        "robos:pathPattern": "/api/v1/samples",
-        "robos:httpMethod": "GET",
         "robos:schemaOrgType": "https://schema.org/EntryPoint",
-        "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0",
-        "robos:refersFrom": "https://schema.org/EntryPoint"
+        "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
     }
   ],
 }));

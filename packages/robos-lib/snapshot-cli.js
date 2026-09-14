@@ -105,6 +105,7 @@ const PORT_REGISTRY = {
   'remote-execution-studio': 19184,
   'robos-elearning':   19185,
   'agent-chat':        19186,
+  'dev-discussions':   19187,
 };
 
 

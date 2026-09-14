@@ -133,7 +133,9 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:package": "applications",
   "robos:namespace": "robos.applications",
   "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-  "robos:domainStandard": "https://schema.org/SoftwareApplication"
+  "robos:domainStandard": "https://schema.org/SoftwareApplication",
+  "robos:command": "rest-client",
+  "robos:commandName": "inspect"
 }
 ```
 
@@ -204,7 +206,9 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:package": "applications",
         "robos:namespace": "robos.applications",
         "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://schema.org/SoftwareApplication"
+        "robos:domainStandard": "https://schema.org/SoftwareApplication",
+        "robos:command": "rest-client",
+        "robos:commandName": "inspect"
     }
   ],
 }));

@@ -2433,6 +2433,119 @@ const BUILTIN_SHACL_SHAPES = [
     ],
     "schemaOrgType": "https://schema.org/AssessAction",
     "domainStandard": "http://open-services.net/ns/qm#TestExecutionRecord"
+  },
+  {
+    "shapeId": "urn:robos:shape:CommentShape",
+    "targetClass": "robos:Comment",
+    "targetClasses": [
+      "robos:Comment",
+      "robos:WorkItemComment",
+      "robos:DiscussionComment"
+    ],
+    "properties": [
+      {
+        "path": "robos:content",
+        "minCount": 1,
+        "message": "Comment must have content."
+      },
+      {
+        "path": "robos:author",
+        "minCount": 1,
+        "message": "Comment must specify an author."
+      },
+      {
+        "path": "robos:createdAt",
+        "minCount": 1,
+        "message": "Comment must specify creation timestamp."
+      },
+      {
+        "path": "robos:parentItem",
+        "minCount": 1,
+        "message": "Comment must link to parent work item, pull request, or thread."
+      }
+    ],
+    "refersFrom": "https://schema.org/Comment",
+    "schemaOrgType": "https://schema.org/Comment",
+    "domainStandard": "http://open-services.net/ns/core#Comment"
+  },
+  {
+    "shapeId": "urn:robos:shape:DiscussionThreadShape",
+    "targetClass": "robos:DiscussionThread",
+    "targetClasses": [
+      "robos:DiscussionThread",
+      "robos:Conversation"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Discussion thread must have a title or topic."
+      },
+      {
+        "path": "robos:associatedWorkItem",
+        "minCount": 1,
+        "message": "Discussion thread must associate with a work item or pull request."
+      },
+      {
+        "path": "robos:threadType",
+        "minCount": 1,
+        "message": "Discussion thread must declare thread type."
+      }
+    ],
+    "refersFrom": "https://schema.org/Conversation",
+    "schemaOrgType": "https://schema.org/Conversation",
+    "domainStandard": "http://open-services.net/ns/core#Discussion"
+  },
+  {
+    "shapeId": "urn:robos:shape:ReviewCommentShape",
+    "targetClass": "robos:ReviewComment",
+    "targetClasses": [
+      "robos:ReviewComment",
+      "robos:CodeReviewComment"
+    ],
+    "properties": [
+      {
+        "path": "robos:content",
+        "minCount": 1,
+        "message": "Review comment must have content."
+      },
+      {
+        "path": "robos:pullRequest",
+        "minCount": 1,
+        "message": "Review comment must link to parent pull request."
+      },
+      {
+        "path": "robos:filePath",
+        "minCount": 1,
+        "message": "Review comment must specify code file path."
+      }
+    ],
+    "refersFrom": "https://schema.org/Comment",
+    "schemaOrgType": "https://schema.org/Comment",
+    "domainStandard": "http://open-services.net/ns/core#Comment"
+  },
+  {
+    "shapeId": "urn:robos:shape:CommentAttachmentShape",
+    "targetClass": "robos:CommentAttachment",
+    "targetClasses": [
+      "robos:CommentAttachment",
+      "robos:Attachment"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Comment attachment must have a title or filename."
+      },
+      {
+        "path": "robos:fileUrl",
+        "minCount": 1,
+        "message": "Comment attachment must specify file URL or path."
+      }
+    ],
+    "refersFrom": "https://schema.org/MediaObject",
+    "schemaOrgType": "https://schema.org/MediaObject",
+    "domainStandard": "http://open-services.net/ns/core#Attachment"
   }
 ];
 

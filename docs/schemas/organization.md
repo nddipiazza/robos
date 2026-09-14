@@ -26,7 +26,7 @@ People, developer profiles, team topologies, and cross-team communication channe
 - **Package Store ID**: `organization`
 - **Ontology Namespace**: `robos.org`
 - **GitOps Package File**: `.robos/kgraphs/organization/package.jsonld`
-- **Schemas Defined**: 17
+- **Schemas Defined**: 21
 
 ---
 
@@ -51,6 +51,10 @@ People, developer profiles, team topologies, and cross-team communication channe
 | [**Pull Request** (`robos:PullRequest`)]({{ '/schemas/organization/pull-request.html' | relative_url }}) | `urn:robos:shape:PullRequestShape` | `dcterms:title`, `robos:prNumber`, `robos:sourceBranch`, `robos:targetBranch`, `robos:status` | [View Schema &rarr;]({{ '/schemas/organization/pull-request.html' | relative_url }}) |
 | [**Git Commit** (`robos:GitCommit`)]({{ '/schemas/organization/git-commit.html' | relative_url }}) | `urn:robos:shape:GitCommitShape` | `dcterms:title`, `robos:commitSha`, `robos:repository` | [View Schema &rarr;]({{ '/schemas/organization/git-commit.html' | relative_url }}) |
 | [**Git Tag** (`robos:GitTag`)]({{ '/schemas/organization/git-tag.html' | relative_url }}) | `urn:robos:shape:GitTagShape` | `dcterms:title`, `robos:tagName`, `robos:commitSha` | [View Schema &rarr;]({{ '/schemas/organization/git-tag.html' | relative_url }}) |
+| [**Comment** (`robos:Comment`)]({{ '/schemas/organization/comment.html' | relative_url }}) | `urn:robos:shape:CommentShape` | `robos:content`, `robos:author`, `robos:createdAt`, `robos:parentItem` | [View Schema &rarr;]({{ '/schemas/organization/comment.html' | relative_url }}) |
+| [**Discussion Thread** (`robos:DiscussionThread`)]({{ '/schemas/organization/discussion-thread.html' | relative_url }}) | `urn:robos:shape:DiscussionThreadShape` | `dcterms:title`, `robos:associatedWorkItem`, `robos:threadType` | [View Schema &rarr;]({{ '/schemas/organization/discussion-thread.html' | relative_url }}) |
+| [**Review Comment** (`robos:ReviewComment`)]({{ '/schemas/organization/review-comment.html' | relative_url }}) | `urn:robos:shape:ReviewCommentShape` | `robos:content`, `robos:pullRequest`, `robos:filePath` | [View Schema &rarr;]({{ '/schemas/organization/review-comment.html' | relative_url }}) |
+| [**Comment Attachment** (`robos:CommentAttachment`)]({{ '/schemas/organization/comment-attachment.html' | relative_url }}) | `urn:robos:shape:CommentAttachmentShape` | `dcterms:title`, `robos:fileUrl` | [View Schema &rarr;]({{ '/schemas/organization/comment-attachment.html' | relative_url }}) |
 
 ---
 
