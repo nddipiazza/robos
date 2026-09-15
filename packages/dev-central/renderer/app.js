@@ -437,11 +437,12 @@ function renderNotifications(notifs) {
         <div class="notif-content">
           <div class="notif-top">
             <span class="notif-pill ${cat}">${cat.replace('_', ' ')}</span>
-            <span class="notif-title">${n.title || 'Notification'}</span>
+            <span class="notif-title">${escapeHTML(n.title || 'Notification')}</span>
             <span class="notif-time">${window.robosList.time(n.ts,'Received')}</span>
           </div>
-          <div class="notif-body">${n.body || ''}</div>
+          <div class="notif-body">${escapeHTML(n.body || '')}</div>
           <div class="notif-actions">
+            ${n.action?.app === 'team-chat-servers' ? `<button class="btn-notif-action" data-chat-reconnect="${escapeHTML(n.action.serverId || '')}">Reconnect Slack</button>` : ''}
             ${n.action?.url ? `
               <button class="btn-notif-action" onclick="window.robos.openUrl('${n.action.url}')">View Details ↗</button>
             ` : ''}
@@ -454,6 +455,7 @@ function renderNotifications(notifs) {
       </div>
     `;
   }).join('');
+  listEl.querySelectorAll('[data-chat-reconnect]').forEach(b=>b.onclick=()=>window.robos.openAppContext({app:'team-chat-servers',serverId:b.dataset.chatReconnect}));
 }
 
 window.switchNotifView = function(view) {

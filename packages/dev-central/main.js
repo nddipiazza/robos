@@ -1024,6 +1024,7 @@ ipcMain.handle('save-prefs', (_, prefs) => {
 });
 
 ipcMain.handle('open-app-context', (_, action) => {
+  if(action?.app==='team-chat-servers'){require('../team-chat-servers/lib/open-app').open(action.serverId||'');return {ok:true};}
   if (action && action.url) {
     shell.openExternal(action.url);
   } else if (action && action.app) {

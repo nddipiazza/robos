@@ -1,0 +1,1721 @@
+{
+  "base": "f05c8437599b5ce7539a249fc46ad695a5fbc9a55619dac3b89d4afe7fd6b66b",
+  "baseline": {
+    "current": {
+      "@context": {
+        "c4": "https://c4model.com/ns#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "oslc": "http://open-services.net/ns/core#",
+        "oslc_am": "http://open-services.net/ns/am#",
+        "oslc_cm": "http://open-services.net/ns/cm#",
+        "oslc_qm": "http://open-services.net/ns/qm#",
+        "oslc_rm": "http://open-services.net/ns/rm#",
+        "pact": "https://pact.io/ns#",
+        "robos": "https://robos.dev/ns/sdlc#",
+        "robos:annotations": {
+          "@id": "robos:annotations",
+          "@type": "@json"
+        },
+        "robos:arguments": {
+          "@id": "robos:arguments",
+          "@type": "@json"
+        },
+        "robos:chatServer": {
+          "@id": "robos:chatServer",
+          "@type": "@id"
+        },
+        "robos:classification": {
+          "@container": "@set",
+          "@id": "robos:classification",
+          "@type": "@id"
+        },
+        "robos:evidence": {
+          "@container": "@set",
+          "@context": {
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          },
+          "@id": "robos:evidence"
+        },
+        "robos:inputSchema": {
+          "@id": "robos:inputSchema",
+          "@type": "@json"
+        },
+        "robos:issueType": {
+          "@id": "robos:issueType",
+          "@type": "@id"
+        },
+        "robos:issueTypes": {
+          "@id": "robos:issueTypes",
+          "@type": "@json"
+        },
+        "robos:mcpServer": {
+          "@id": "robos:mcpServer",
+          "@type": "@id"
+        },
+        "robos:outputSchema": {
+          "@id": "robos:outputSchema",
+          "@type": "@json"
+        },
+        "robos:parameters": {
+          "@id": "robos:parameters",
+          "@type": "@json"
+        },
+        "robos:promptsProvided": {
+          "@container": "@set",
+          "@id": "robos:promptsProvided",
+          "@type": "@id"
+        },
+        "robos:protocolReference": {
+          "@id": "robos:protocolReference",
+          "@type": "@id"
+        },
+        "robos:provenance": {
+          "@id": "robos:provenance",
+          "@type": "@json"
+        },
+        "robos:relationshipEvidence": {
+          "@container": "@set",
+          "@context": {
+            "condition": "robos:condition",
+            "evidence": {
+              "@container": "@set",
+              "@context": {
+                "line": {
+                  "@id": "robos:sourceLine",
+                  "@type": "xsd:integer"
+                },
+                "path": "robos:sourcePath",
+                "repository": "robos:sourceRepository",
+                "revision": "robos:sourceRevision",
+                "sha256": "robos:sourceHash",
+                "workingTreeStatus": "robos:workingTreeStatus"
+              },
+              "@id": "robos:evidence"
+            },
+            "note": "dcterms:description",
+            "predicate": {
+              "@id": "robos:predicate",
+              "@type": "@vocab"
+            },
+            "status": "robos:evidenceStatus",
+            "target": {
+              "@id": "robos:target",
+              "@type": "@id"
+            }
+          },
+          "@id": "robos:relationshipEvidence"
+        },
+        "robos:resourcesProvided": {
+          "@container": "@set",
+          "@id": "robos:resourcesProvided",
+          "@type": "@id"
+        },
+        "robos:sourceSummary": {
+          "@id": "robos:sourceSummary",
+          "@type": "@json"
+        },
+        "robos:states": {
+          "@id": "robos:states",
+          "@type": "@json"
+        },
+        "robos:taskServer": {
+          "@id": "robos:taskServer",
+          "@type": "@id"
+        },
+        "robos:technologyReference": {
+          "@id": "robos:technologyReference",
+          "@type": "@id"
+        },
+        "robos:toolAnnotations": {
+          "@id": "robos:toolAnnotations",
+          "@type": "@json"
+        },
+        "robos:transitions": {
+          "@id": "robos:transitions",
+          "@type": "@json"
+        },
+        "robos:workflow": {
+          "@id": "robos:workflow",
+          "@type": "@id"
+        },
+        "robos:workflows": {
+          "@id": "robos:workflows",
+          "@type": "@json"
+        },
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:graph:workspace",
+      "@type": [
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Workspace Knowledge Graph",
+      "robos:nodes": [
+        {
+          "@id": "urn:robos:app:team-chat-servers",
+          "@type": [
+            "robos:DesktopApp"
+          ],
+          "dcterms:description": "Manage team chat workspaces and channels in a KGraph.",
+          "dcterms:title": "RobOS Team Chat Servers",
+          "robos:appId": "team-chat-servers",
+          "robos:desktopFramework": "Electron",
+          "robos:evidence": [
+            {
+              "line": 1,
+              "path": "packages/team-chat-servers/README.md",
+              "repository": "nddipiazza/robos"
+            }
+          ],
+          "robos:package": "applications",
+          "robos:repository": "https://github.com/nddipiazza/robos",
+          "robos:sourcePath": "packages/team-chat-servers",
+          "robos:status": "implemented",
+          "robos:technology": "Electron / JavaScript"
+        }
+      ]
+    },
+    "state": {
+      "extracted": [],
+      "retired": [],
+      "revision": "f05c8437599b5ce7539a249fc46ad695a5fbc9a55619dac3b89d4afe7fd6b66b"
+    }
+  },
+  "candidate": {
+    "@context": {
+      "c4": "https://c4model.com/ns#",
+      "dcterms": "http://purl.org/dc/terms/",
+      "oslc": "http://open-services.net/ns/core#",
+      "oslc_am": "http://open-services.net/ns/am#",
+      "oslc_cm": "http://open-services.net/ns/cm#",
+      "oslc_qm": "http://open-services.net/ns/qm#",
+      "oslc_rm": "http://open-services.net/ns/rm#",
+      "pact": "https://pact.io/ns#",
+      "robos": "https://robos.dev/ns/sdlc#",
+      "robos:annotations": {
+        "@id": "robos:annotations",
+        "@type": "@json"
+      },
+      "robos:arguments": {
+        "@id": "robos:arguments",
+        "@type": "@json"
+      },
+      "robos:chatServer": {
+        "@id": "robos:chatServer",
+        "@type": "@id"
+      },
+      "robos:classification": {
+        "@container": "@set",
+        "@id": "robos:classification",
+        "@type": "@id"
+      },
+      "robos:evidence": {
+        "@container": "@set",
+        "@context": {
+          "line": {
+            "@id": "robos:sourceLine",
+            "@type": "xsd:integer"
+          },
+          "path": "robos:sourcePath",
+          "repository": "robos:sourceRepository",
+          "revision": "robos:sourceRevision",
+          "sha256": "robos:sourceHash",
+          "workingTreeStatus": "robos:workingTreeStatus"
+        },
+        "@id": "robos:evidence"
+      },
+      "robos:inputSchema": {
+        "@id": "robos:inputSchema",
+        "@type": "@json"
+      },
+      "robos:issueType": {
+        "@id": "robos:issueType",
+        "@type": "@id"
+      },
+      "robos:issueTypes": {
+        "@id": "robos:issueTypes",
+        "@type": "@json"
+      },
+      "robos:mcpServer": {
+        "@id": "robos:mcpServer",
+        "@type": "@id"
+      },
+      "robos:outputSchema": {
+        "@id": "robos:outputSchema",
+        "@type": "@json"
+      },
+      "robos:parameters": {
+        "@id": "robos:parameters",
+        "@type": "@json"
+      },
+      "robos:promptsProvided": {
+        "@container": "@set",
+        "@id": "robos:promptsProvided",
+        "@type": "@id"
+      },
+      "robos:protocolReference": {
+        "@id": "robos:protocolReference",
+        "@type": "@id"
+      },
+      "robos:provenance": {
+        "@id": "robos:provenance",
+        "@type": "@json"
+      },
+      "robos:relationshipEvidence": {
+        "@container": "@set",
+        "@context": {
+          "condition": "robos:condition",
+          "evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "note": "dcterms:description",
+          "predicate": {
+            "@id": "robos:predicate",
+            "@type": "@vocab"
+          },
+          "status": "robos:evidenceStatus",
+          "target": {
+            "@id": "robos:target",
+            "@type": "@id"
+          }
+        },
+        "@id": "robos:relationshipEvidence"
+      },
+      "robos:resourcesProvided": {
+        "@container": "@set",
+        "@id": "robos:resourcesProvided",
+        "@type": "@id"
+      },
+      "robos:sourceSummary": {
+        "@id": "robos:sourceSummary",
+        "@type": "@json"
+      },
+      "robos:states": {
+        "@id": "robos:states",
+        "@type": "@json"
+      },
+      "robos:taskServer": {
+        "@id": "robos:taskServer",
+        "@type": "@id"
+      },
+      "robos:technologyReference": {
+        "@id": "robos:technologyReference",
+        "@type": "@id"
+      },
+      "robos:toolAnnotations": {
+        "@id": "robos:toolAnnotations",
+        "@type": "@json"
+      },
+      "robos:transitions": {
+        "@id": "robos:transitions",
+        "@type": "@json"
+      },
+      "robos:workflow": {
+        "@id": "robos:workflow",
+        "@type": "@id"
+      },
+      "robos:workflows": {
+        "@id": "robos:workflows",
+        "@type": "@json"
+      },
+      "schema": "https://schema.org/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@id": "urn:robos:graph:workspace",
+    "@type": [
+      "robos:SystemGraph"
+    ],
+    "dcterms:title": "Workspace Knowledge Graph",
+    "robos:nodes": [
+      {
+        "@id": "urn:robos:app:team-chat-servers",
+        "@type": [
+          "robos:DesktopApp"
+        ],
+        "dcterms:description": "Manage team chat connections, provide Slack tools to RobOS agents, and reconnect expired credentials.",
+        "dcterms:title": "RobOS Team Chat Servers",
+        "robos:appId": "team-chat-servers",
+        "robos:desktopFramework": "Electron",
+        "robos:evidence": [
+          {
+            "line": 1,
+            "path": "packages/team-chat-servers/README.md",
+            "repository": "nddipiazza/robos"
+          }
+        ],
+        "robos:package": "applications",
+        "robos:repository": "https://github.com/nddipiazza/robos",
+        "robos:sourcePath": "packages/team-chat-servers",
+        "robos:status": "implemented",
+        "robos:technology": "Electron / JavaScript"
+      }
+    ]
+  },
+  "conflicts": [],
+  "delta": {
+    "added": [],
+    "changed": [
+      {
+        "id": "urn:robos:app:team-chat-servers",
+        "properties": [
+          {
+            "after": "Manage team chat connections, provide Slack tools to RobOS agents, and reconnect expired credentials.",
+            "before": "Manage team chat workspaces and channels in a KGraph.",
+            "property": "dcterms:description"
+          }
+        ]
+      }
+    ],
+    "removed": []
+  },
+  "extracted": [],
+  "id": "6ded99f77cca3f903163046531fe4b81f36ee0262ffe447be512d42738a8c85c",
+  "metadata": {
+    "manifest": "{\n  \"dependencies\": [],\n  \"packages\": [\n    {\n      \"id\": \"applications\",\n      \"namespace\": \"robos.apps\",\n      \"path\": \"kgraphs/applications/package.jsonld\",\n      \"title\": \"Client Applications, Web Frontends & Games\"\n    },\n    {\n      \"id\": \"core-platform\",\n      \"namespace\": \"robos.platform\",\n      \"path\": \"kgraphs/core-platform/package.jsonld\",\n      \"title\": \"RobOS Platform Core & Base SDLC Architecture\"\n    },\n    {\n      \"id\": \"devops\",\n      \"namespace\": \"robos.devops\",\n      \"path\": \"kgraphs/devops/package.jsonld\",\n      \"title\": \"DevOps Accounts, Cloud Infrastructure & Pass Credentials\"\n    },\n    {\n      \"id\": \"documentation\",\n      \"namespace\": \"robos.docs\",\n      \"path\": \"kgraphs/documentation/package.jsonld\",\n      \"title\": \"Living Documentation, Visual Architecture & Flow Diagrams\"\n    },\n    {\n      \"id\": \"learning\",\n      \"namespace\": \"robos.learning\",\n      \"path\": \"kgraphs/learning/package.jsonld\",\n      \"title\": \"Interactive eLearning Curriculums & Knowledge Modules\"\n    },\n    {\n      \"id\": \"organization\",\n      \"namespace\": \"robos.org\",\n      \"path\": \"kgraphs/organization/package.jsonld\",\n      \"title\": \"Enterprise Organization, Teams & Personas\"\n    },\n    {\n      \"id\": \"services\",\n      \"namespace\": \"robos.services\",\n      \"path\": \"kgraphs/services/package.jsonld\",\n      \"title\": \"Microservices, Web APIs & Interface Contracts\"\n    },\n    {\n      \"id\": \"testing\",\n      \"namespace\": \"robos.testing\",\n      \"path\": \"kgraphs/testing/package.jsonld\",\n      \"title\": \"Testing, Quality & Behavior-Driven Development (BDD)\"\n    }\n  ],\n  \"repositories\": [\n    {\n      \"default\": true,\n      \"id\": \"local\",\n      \"packagesPath\": \"kgraphs\",\n      \"path\": \".robos\"\n    }\n  ],\n  \"title\": \"Workspace Knowledge Graph\",\n  \"version\": \"1.0.0\"\n}\n",
+    "packages": {
+      "applications": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:applications",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Client Applications, Web Frontends & Games",
+        "robos:namespace": "robos.apps",
+        "robos:package": "applications"
+      },
+      "core-platform": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:core-platform",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "RobOS Platform Core & Base SDLC Architecture",
+        "robos:namespace": "robos.platform",
+        "robos:package": "core-platform"
+      },
+      "devops": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:devops",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "DevOps Accounts, Cloud Infrastructure & Pass Credentials",
+        "robos:namespace": "robos.devops",
+        "robos:package": "devops"
+      },
+      "documentation": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:documentation",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Living Documentation, Visual Architecture & Flow Diagrams",
+        "robos:namespace": "robos.docs",
+        "robos:package": "documentation"
+      },
+      "learning": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:learning",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Interactive eLearning Curriculums & Knowledge Modules",
+        "robos:namespace": "robos.learning",
+        "robos:package": "learning"
+      },
+      "organization": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:organization",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Enterprise Organization, Teams & Personas",
+        "robos:namespace": "robos.org",
+        "robos:package": "organization"
+      },
+      "services": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:services",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Microservices, Web APIs & Interface Contracts",
+        "robos:namespace": "robos.services",
+        "robos:package": "services"
+      },
+      "testing": {
+        "@context": {
+          "c4": "https://c4model.com/ns#",
+          "dcterms": "http://purl.org/dc/terms/",
+          "oslc": "http://open-services.net/ns/core#",
+          "oslc_am": "http://open-services.net/ns/am#",
+          "oslc_cm": "http://open-services.net/ns/cm#",
+          "oslc_qm": "http://open-services.net/ns/qm#",
+          "oslc_rm": "http://open-services.net/ns/rm#",
+          "pact": "https://pact.io/ns#",
+          "robos": "https://robos.dev/ns/sdlc#",
+          "robos:annotations": {
+            "@id": "robos:annotations",
+            "@type": "@json"
+          },
+          "robos:arguments": {
+            "@id": "robos:arguments",
+            "@type": "@json"
+          },
+          "robos:chatServer": {
+            "@id": "robos:chatServer",
+            "@type": "@id"
+          },
+          "robos:classification": {
+            "@container": "@set",
+            "@id": "robos:classification",
+            "@type": "@id"
+          },
+          "robos:evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "robos:inputSchema": {
+            "@id": "robos:inputSchema",
+            "@type": "@json"
+          },
+          "robos:issueType": {
+            "@id": "robos:issueType",
+            "@type": "@id"
+          },
+          "robos:issueTypes": {
+            "@id": "robos:issueTypes",
+            "@type": "@json"
+          },
+          "robos:mcpServer": {
+            "@id": "robos:mcpServer",
+            "@type": "@id"
+          },
+          "robos:outputSchema": {
+            "@id": "robos:outputSchema",
+            "@type": "@json"
+          },
+          "robos:parameters": {
+            "@id": "robos:parameters",
+            "@type": "@json"
+          },
+          "robos:promptsProvided": {
+            "@container": "@set",
+            "@id": "robos:promptsProvided",
+            "@type": "@id"
+          },
+          "robos:protocolReference": {
+            "@id": "robos:protocolReference",
+            "@type": "@id"
+          },
+          "robos:provenance": {
+            "@id": "robos:provenance",
+            "@type": "@json"
+          },
+          "robos:relationshipEvidence": {
+            "@container": "@set",
+            "@context": {
+              "condition": "robos:condition",
+              "evidence": {
+                "@container": "@set",
+                "@context": {
+                  "line": {
+                    "@id": "robos:sourceLine",
+                    "@type": "xsd:integer"
+                  },
+                  "path": "robos:sourcePath",
+                  "repository": "robos:sourceRepository",
+                  "revision": "robos:sourceRevision",
+                  "sha256": "robos:sourceHash",
+                  "workingTreeStatus": "robos:workingTreeStatus"
+                },
+                "@id": "robos:evidence"
+              },
+              "note": "dcterms:description",
+              "predicate": {
+                "@id": "robos:predicate",
+                "@type": "@vocab"
+              },
+              "status": "robos:evidenceStatus",
+              "target": {
+                "@id": "robos:target",
+                "@type": "@id"
+              }
+            },
+            "@id": "robos:relationshipEvidence"
+          },
+          "robos:resourcesProvided": {
+            "@container": "@set",
+            "@id": "robos:resourcesProvided",
+            "@type": "@id"
+          },
+          "robos:sourceSummary": {
+            "@id": "robos:sourceSummary",
+            "@type": "@json"
+          },
+          "robos:states": {
+            "@id": "robos:states",
+            "@type": "@json"
+          },
+          "robos:taskServer": {
+            "@id": "robos:taskServer",
+            "@type": "@id"
+          },
+          "robos:technologyReference": {
+            "@id": "robos:technologyReference",
+            "@type": "@id"
+          },
+          "robos:toolAnnotations": {
+            "@id": "robos:toolAnnotations",
+            "@type": "@json"
+          },
+          "robos:transitions": {
+            "@id": "robos:transitions",
+            "@type": "@json"
+          },
+          "robos:workflow": {
+            "@id": "robos:workflow",
+            "@type": "@id"
+          },
+          "robos:workflows": {
+            "@id": "robos:workflows",
+            "@type": "@json"
+          },
+          "schema": "https://schema.org/",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@id": "urn:robos:package:testing",
+        "@type": [
+          "robos:KGraphPackage"
+        ],
+        "dcterms:title": "Testing, Quality & Behavior-Driven Development (BDD)",
+        "robos:namespace": "robos.testing",
+        "robos:package": "testing"
+      }
+    }
+  },
+  "metadataBase": "ec762070b6d1db1fd7f2d1f64d0285e663a2bcf8da38ad680118e04e982d68a3",
+  "mode": "refine",
+  "prompt": "Update app documentation for agent Slack tools and credential recovery.",
+  "request": {
+    "edits": [
+      {
+        "id": "urn:robos:app:team-chat-servers",
+        "op": "update",
+        "set": {
+          "dcterms:description": "Manage team chat connections, provide Slack tools to RobOS agents, and reconnect expired credentials.",
+          "robos:evidence": [
+            {
+              "line": 1,
+              "path": "packages/team-chat-servers/README.md",
+              "repository": "nddipiazza/robos"
+            }
+          ]
+        }
+      }
+    ],
+    "mode": "refine",
+    "prompt": "Update app documentation for agent Slack tools and credential recovery.",
+    "requireEvidence": false
+  },
+  "requireEvidence": false,
+  "retired": [],
+  "stale": [],
+  "stateBase": "7a6680a20eb338dbd35446b83eae7b66bd46a36ee4bee110ffc9666dcb1aaf4f",
+  "validation": {
+    "conforms": true,
+    "constraints": [
+      "structure",
+      "unique IDs",
+      "internal references",
+      "package names",
+      "source locations",
+      "built-in shape cardinality"
+    ],
+    "errors": [],
+    "nodesEvaluated": 1,
+    "warnings": []
+  },
+  "version": 1
+}

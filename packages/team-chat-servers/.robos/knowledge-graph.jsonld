@@ -161,7 +161,7 @@
       "@type": [
         "robos:DesktopApp"
       ],
-      "dcterms:description": "Manage team chat workspaces and channels in a KGraph.",
+      "dcterms:description": "Manage team chat connections, provide Slack tools to RobOS agents, and reconnect expired credentials.",
       "dcterms:title": "RobOS Team Chat Servers",
       "robos:appId": "team-chat-servers",
       "robos:desktopFramework": "Electron",

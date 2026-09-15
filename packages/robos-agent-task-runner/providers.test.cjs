@@ -10,6 +10,14 @@ test('AGY uses its own model and supported headless arguments',()=>{
 });
 test('sandbox permissions include the repository root and keep planning file writes unapproved',()=>{
  assert.ok(agySettings('plan').permissions.allow.includes('read_file(/home/agent)'));
+ assert.ok(agySettings('plan').permissions.allow.includes('mcp(robos_chat/*)'));
+ assert.ok(!agySettings('plan').permissions.allow.includes('mcp(*)'));
  assert.ok(!agySettings('plan').permissions.allow.some(rule=>rule.startsWith('write_file')));
  assert.ok(agySettings('implement').permissions.allow.includes('write_file(/home/agent/repos)'));
+});
+test('Codex planning exposes chat through MCP while retaining read-only shell sandbox',()=>{
+ const options=args('codex','plan','');
+ assert.equal(options[options.indexOf('--sandbox')+1],'read-only');
+ assert.ok(options.includes('mcp_servers.robos_chat.command="node"'));
+ assert.ok(options.includes('mcp_servers.robos_chat.args=["/home/agent/robos-chat.js","--mcp"]'));
 });

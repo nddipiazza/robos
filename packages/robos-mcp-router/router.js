@@ -4,6 +4,8 @@ const fs = require('fs');
 const os = require('os');
 const http = require('http');
 const cp = require('child_process');
+const teamChat=require('../team-chat-servers/lib/agent-chat');
+const callTeamChat=teamChat.createService();
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const MCP_DIR = path.join(HOME_DIR, '.config', 'robos', 'mcp');
@@ -281,7 +283,7 @@ class MCPRouter {
       }
 
       if (method === 'tools/list') {
-        const mergedTools = [];
+        const mergedTools = [...teamChat.TOOLS];
         for (const [appId, s] of Object.entries(servers)) {
           const tools = s.tools || [];
           for (const t of tools) {
@@ -299,6 +301,8 @@ class MCPRouter {
         if (!name) {
           return { jsonrpc: '2.0', id, error: { code: -32602, message: 'Missing tool name' } };
         }
+
+        if(teamChat.TOOLS.some(t=>t.name===name)){try{const result=await callTeamChat(name.slice('robos_chat_'.length),args);return {jsonrpc:'2.0',id,result:{content:[{type:'text',text:JSON.stringify(result)}]}};}catch(e){return {jsonrpc:'2.0',id,result:{isError:true,content:[{type:'text',text:e.message}]}};}}
 
         // Identify target server from tool name
         let targetAppId = null;
