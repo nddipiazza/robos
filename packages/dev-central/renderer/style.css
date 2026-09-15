@@ -1867,3 +1867,7 @@ html, body {
 .notif-auth-resolved { color:#7bcea0;font-size:12px; }
 .notif-auth-status { display:block;flex-basis:100%;color:#a9bdcd;font-size:12px; }
 .btn-notif-action:disabled { opacity:.6;cursor:wait; }
+
+/* Keep description copy controls beside the start of the text. */
+.robos-copy-line:has(> robos-copy[label="Copy full description"]) { gap: 6px; align-items: flex-start; }
+.robos-copy-line > robos-copy[label="Copy full description"] { order: -1; flex: 0 0 auto; }
