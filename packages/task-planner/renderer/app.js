@@ -1139,7 +1139,19 @@ function buildCard(i, indent) {
 
   const preview = card.querySelector('.task-body-preview');
   const textarea = card.querySelector('.task-body-input');
-  preview.addEventListener('click', () => { preview.style.display = 'none'; textarea.style.display = ''; textarea.focus(); });
+  const openDescriptionLink = event => {
+    const link = event.target.closest('a[href]');
+    if (!link || !preview.contains(link)) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    window.robos.openUrl(link.href).catch(error => showGenerateStatus(error.message));
+    return true;
+  };
+  preview.addEventListener('click', event => {
+    if (openDescriptionLink(event)) return;
+    preview.style.display = 'none'; textarea.style.display = ''; textarea.focus();
+  });
+  preview.addEventListener('auxclick', event => { if (event.button === 1) openDescriptionLink(event); });
   textarea.addEventListener('input', e => { tasks[i].body = e.target.value; });
   textarea.addEventListener('blur', () => { preview.innerHTML = renderMd(tasks[i].body); textarea.style.display = 'none'; preview.style.display = ''; });
 
