@@ -58,7 +58,7 @@ function proposePlan(root, input, fetchIssue = readIssue) {
     { ...base, '@id': projectId, '@type': ['robos:Project'], 'dcterms:title': plan.name, 'dcterms:description': plan.summary, 'robos:status': plan.status, 'robos:taskServer': { '@id': serverId }, 'robos:planJson': JSON.stringify(plan), 'robos:documentation': plan.design }
   ];
   for (const item of plan.items) {
-    nodes.push({ ...base, '@id': issueId(item.url), '@type': [`robos:${item.type}`], 'dcterms:title': `#${item.issue.number} ${item.issue.title}`, 'dcterms:description': item.issue.body, 'robos:status': item.issue.state, 'robos:url': item.url, 'robos:inProject': { '@id': projectId }, ...(item.type==='Bug'?{'robos:severity':'unknown'}:{}), ...(item.parent ? { 'robos:inFeature': { '@id': issueId(item.parent) } } : {}), ...(item.dependsOn?.length ? { 'robos:dependsOn': item.dependsOn.map(url => ({ '@id': issueId(url) })), 'robos:relationshipEvidence':item.dependsOn.map(url=>({predicate:'robos:dependsOn',target:issueId(url),evidence,note:'Ordered delivery dependency recorded in the project plan.'})) } : {}) });
+    nodes.push({ ...base, '@id': issueId(item.url), '@type': [`robos:${item.type==='Feature'?'Epic':item.type}`], 'robos:hierarchyVersion':2, 'dcterms:title': `#${item.issue.number} ${item.issue.title}`, 'dcterms:description': item.issue.body, 'robos:status': item.issue.state, 'robos:url': item.url, 'robos:inProject': { '@id': projectId }, ...(item.type==='Bug'?{'robos:severity':'unknown'}:{}), ...(item.parent ? { 'robos:inEpic': { '@id': issueId(item.parent) } } : {}), ...(item.dependsOn?.length ? { 'robos:dependsOn': item.dependsOn.map(url => ({ '@id': issueId(url) })), 'robos:relationshipEvidence':item.dependsOn.map(url=>({predicate:'robos:dependsOn',target:issueId(url),evidence,note:'Ordered delivery dependency recorded in the project plan.'})) } : {}) });
   }
   const current = new Map(doc['robos:nodes'].map(n => [n['@id'], n]));
   const edits = nodes.map(node => {
@@ -68,7 +68,7 @@ function proposePlan(root, input, fetchIssue = readIssue) {
     // One issue may be shared across plans; do not steal its project membership.
     if (node['robos:inProject'] && existing['robos:inProject']) node['robos:inProject'] = [...new Map([existing['robos:inProject'], node['robos:inProject']].flat().map(ref => [ref['@id'], ref])).values()];
     const { '@id': id, ...set } = node;
-    return { op: 'update', id, set, ...(node['robos:inProject']?{unset:['robos:inFeature','robos:dependsOn','robos:relationshipEvidence'].filter(key=>!(key in set))}:{}) };
+    return { op: 'update', id, set, ...(node['robos:inProject']?{unset:['robos:inFeature','robos:inEpic','robos:dependsOn','robos:relationshipEvidence'].filter(key=>!(key in set))}:{}) };
   });
   return ws.propose({ mode: 'refine', edits, prompt: `Create/update reviewed project plan: ${plan.name}`, requireEvidence: true });
 }

@@ -13,7 +13,7 @@ function buildBoard(issues, login, state = () => ({}), server = {}) {
     const blockedBy = dependencies.filter(url => map.get(url)?.state !== 'CLOSED');
     return { id:i.url, issueUrl:i.url, code:`#${i.number}`, number:i.number, name:i.title, title:i.title, description:i.body || '',updatedAt:i.updatedAt||i.updated_at,createdAt:i.createdAt||i.created_at,
       assigned:i.assignees.some(a => a.login.toLowerCase() === login.toLowerCase()), assignees:i.assignees.map(a => a.login),
-      parents:references(i.body, 'Parent Feature', repo), dependencies, blockedBy,
+      parents:references(i.body, 'Parent (?:Feature|Epic)', repo), dependencies, blockedBy,
       status:i.state === 'CLOSED' ? 'Done' : session.phase && session.phase !== 'new' ? session.phase.replaceAll('-', ' ') : blockedBy.length ? 'Blocked' : 'Ready',
       workable:i.state !== 'CLOSED' && !blockedBy.length, closed:i.state === 'CLOSED', labels:i.labels || [], issueType:i.type?.name || i.issueType, progress:progress(session), workflow:ticketWorkflow({...i,session,issueType:i.type?.name||i.issueType},server), session };
   });

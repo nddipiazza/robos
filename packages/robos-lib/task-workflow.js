@@ -12,6 +12,6 @@ function ticketWorkflow(item, server = {}) {
   const runtime=states.filter(s=>(s.agent_phases||[]).includes(phase));
   const closed=String(item.state).toLowerCase()==='closed';
   const current=closed?states.find(s=>s.is_final)?.id:runtime.length===1?runtime[0].id:selected.length===1?selected[0].id:selected.length===0?states.find(s=>s.is_initial)?.id:null;
-  return {name:w.name,typeId:w.type_id,states:states.map(s=>({id:s.id,label:s.label || s.id,current:s.id===current})),ambiguous:selected.length>1};
+  return {name:w.type_id==='feature'?w.name.replace(/\bFeature\b/g,'Epic').replace(/\bfeature\b/g,'epic'):w.name,typeId:w.type_id,states:states.map(s=>({id:s.id,label:s.label || s.id,current:s.id===current})),ambiguous:selected.length>1};
 }
 module.exports={ticketWorkflow};

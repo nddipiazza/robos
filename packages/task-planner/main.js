@@ -34,6 +34,7 @@ function projectFile(id) {
 
 function listProjectFiles() {
   ensureProjectsDir();
+  require('./lib/work-hierarchy').migrate(PROJECTS_DIR);
   return fs.readdirSync(PROJECTS_DIR)
     .filter(f => f.endsWith('.json'))
     .map(f => {
@@ -580,37 +581,7 @@ ipcMain.handle('open-task-servers', () => {
 });
 
 function syncProjectToKGraph(project) {
-  try {
-    const kgraphPath = path.join(os.homedir(), '.robos', 'knowledge-graph.jsonld');
-    let graphData = null;
-    if (fs.existsSync(kgraphPath)) {
-      try { graphData = JSON.parse(fs.readFileSync(kgraphPath, 'utf8')); } catch {}
-    }
-    if (!graphData) return;
-    const nodeId = `urn:robos:project:${project.id}`;
-    const node = {
-      '@id': nodeId,
-      '@type': ['oslc:Project', 'robos:Project'],
-      'dcterms:title': project.name,
-      'dcterms:description': project.description || '',
-      'robos:status': 'active',
-      'robos:techStack': project.techStack || '',
-      'robos:hasRepository': project.repos || [],
-      'robos:tracksEpic': (project.tasks || []).filter(t => t.isEpic).map(t => t.ticketKey || `urn:robos:epic:${t.epicName || t.title}`),
-      'robos:features': project.features || [],
-      'robos:updatedAt': new Date().toISOString(),
-    };
-    if (!Array.isArray(graphData['robos:nodes'])) graphData['robos:nodes'] = [];
-    const idx = graphData['robos:nodes'].findIndex(n => n['@id'] === nodeId);
-    if (idx >= 0) {
-      graphData['robos:nodes'][idx] = { ...graphData['robos:nodes'][idx], ...node };
-    } else {
-      graphData['robos:nodes'].push(node);
-    }
-    fs.writeFileSync(kgraphPath, JSON.stringify(graphData, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Error syncing project to KGraph:', err.message);
-  }
+ return require('./lib/hierarchy-graph').sync(PROJECTS_DIR);
 }
 
 // ── Projects CRUD ─────────────────────────────────────────────────────────────
@@ -622,11 +593,12 @@ ipcMain.handle('list-projects', () => {
 
 ipcMain.handle('load-project', async (_, id) => {
   try {
+    require('./lib/work-hierarchy').migrate(PROJECTS_DIR);
     const data = JSON.parse(fs.readFileSync(projectFile(id), 'utf8'));
     let metadataError=null;
     if(data.workTaskUrl){try{
       data.issueMetadata=await require('./lib/issue-metadata').metadata(data.workTaskUrl);
-      const type=data.issueMetadata.type?.toLowerCase();if(type)data.kind=['feature','epic'].includes(type)?'feature':'task';
+      const type=data.issueMetadata.type?.toLowerCase();if(type&&!data.kind)data.kind=['feature','epic'].includes(type)?'epic':'task';
       if(!Object.hasOwn(data,'repos'))data.repos=data.issueMetadata.repositories;
       fs.writeFileSync(projectFile(id),JSON.stringify(data,null,2));
     }catch(e){metadataError=e.message;}}
@@ -635,7 +607,7 @@ ipcMain.handle('load-project', async (_, id) => {
 });
 ipcMain.handle('save-task-repositories', (_, {id,repos}) => {
  try{if(!/^[a-zA-Z0-9_-]+$/.test(id)||!Array.isArray(repos))throw Error('Invalid repository update');
- const data=JSON.parse(fs.readFileSync(projectFile(id),'utf8'));data.repos=[...new Set(repos.map(require('./lib/issue-metadata').repositoryUrl))];data.updatedAt=Date.now();fs.writeFileSync(projectFile(id),JSON.stringify(data,null,2));return {ok:true,repos:data.repos};
+ const data=JSON.parse(fs.readFileSync(projectFile(id),'utf8'));data.repos=[...new Set(repos.map(require('./lib/issue-metadata').repositoryUrl))];data.updatedAt=Date.now();fs.writeFileSync(projectFile(id),JSON.stringify(data,null,2));syncProjectToKGraph(data);return {ok:true,repos:data.repos};
  }catch(e){return {ok:false,error:e.message};}
 });
 
@@ -651,11 +623,11 @@ ipcMain.handle('search-import-tasks', async (_, input) => {
   try{return {ok:true,...await require('./lib/task-import').search(getActiveServer(readSettings()),input,listProjectFiles())};}catch(e){return {ok:false,error:e.message};}
 });
 ipcMain.handle('import-tasks', async (_, input) => {
-  try{return {ok:true,...await require('./lib/task-import').importIssues(getActiveServer(readSettings()),input,listProjectFiles(),PROJECTS_DIR)};}catch(e){return {ok:false,error:e.message};}
+  try{const result=await require('./lib/task-import').importIssues(getActiveServer(readSettings()),input,listProjectFiles(),PROJECTS_DIR);syncProjectToKGraph();return {ok:true,...result};}catch(e){return {ok:false,error:e.message};}
 });
 
 ipcMain.handle('set-project-product', (_, input) => {
- try{return require('./lib/project-store').associateProject(PROJECTS_DIR,input);}catch(e){return {ok:false,error:e.message};}
+ try{const result=require('./lib/project-store').associateProject(PROJECTS_DIR,input);syncProjectToKGraph();return result;}catch(e){return {ok:false,error:e.message};}
 });
 
 ipcMain.handle('delete-project', (_, id) => {try{return require('./lib/work-item-management').remove(PROJECTS_DIR,id);}catch(e){return {ok:false,error:e.message};}});

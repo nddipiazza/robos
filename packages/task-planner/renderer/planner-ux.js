@@ -22,8 +22,8 @@ function renderPlannerReading() {
   const view=document.getElementById('plan-reading-view');if(!view)return;
   const text=getPromptValue();
   const record=selectedPlannerRecord();
-  if(record?.kind==='project'&&record.description&&!text){view.innerHTML=plannerMarkdown(record.description);return;}
-  if(selectedPlannerRecord()?.kind==='project'&&!text){view.innerHTML='<h2>Project overview</h2><p>Keep related features and tasks in this project.</p><p>Use <strong>Import from task server</strong> to bring in existing tickets, <strong>Add feature</strong> for a larger outcome, or <strong>Add task</strong> for a specific piece of work. You can also edit this overview to describe the project.</p>';return;}
+  if(['project','feature'].includes(record?.kind)&&record.description&&!text){view.innerHTML=plannerMarkdown(record.description);return;}
+  if(selectedPlannerRecord()?.kind==='project'&&!text){view.innerHTML='<h2>Project overview</h2><p>Keep related features, epics, and tasks in this project.</p><p>Use <strong>Import from task server</strong> to bring in existing tickets, <strong>Add feature</strong> for a part of this project, or <strong>Add task</strong> for a specific piece of work. You can also edit this overview to describe the project.</p>';return;}
   view.innerHTML=text?plannerMarkdown(text):'<p class="planner-empty">Describe what you want to build, or choose a template to get started.</p>';
 }
 window.refreshPlannerUX=function(session) {
@@ -40,6 +40,7 @@ window.refreshPlannerUX=function(session) {
   if(plannerSession?.workerPid)primary.textContent='Agent is working…';
   const record=selectedPlannerRecord();
   if(!plannerSession && record?.kind==='project')primary.textContent='Add feature';
+  if(record?.kind==='feature')primary.textContent='Add epic';
   if(!plannerSession && record?.kind==='task')primary.textContent='Save task';
   document.getElementById('planner-add-task').hidden=!!plannerSession||!record;
   document.getElementById('planner-import').hidden=record?.kind!=='project';
@@ -93,6 +94,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('planner-add-task').onclick=()=>createPlannerWork('task');
   document.getElementById('planner-primary').onclick=async()=>{
     try {
+      if(selectedPlannerRecord()?.kind==='feature'){await createPlannerWork('epic');return;}
       if(!plannerSession && selectedPlannerRecord()?.kind==='project'){await createPlannerWork('feature');return;}
       if(!plannerSession && selectedPlannerRecord()?.kind==='task'){await saveToProject();setPlannerEditing(false);return;}
       if(!plannerSession){await handleGenerate();setPlannerView('tasks');return;}

@@ -7,6 +7,9 @@
 'use strict';
 
 const WORK_ITEM_TYPES = {
+  project:{id:'project',label:'Project',allowedChildren:['feature','epic','task'],defaultWorkflow:['active','archived']},
+  feature:{id:'feature',label:'Feature',allowedParents:['project'],allowedChildren:['epic','task'],defaultWorkflow:['active','retired']},
+  task:{id:'task',label:'Task',allowedParents:['project','feature','epic'],allowedChildren:[],defaultWorkflow:['open','planning','implementing','review','done']},
   release: {
     id: 'release',
     label: 'Release',
@@ -18,8 +21,8 @@ const WORK_ITEM_TYPES = {
     id: 'epic',
     label: 'Epic',
     icon: '⚡',
-    allowedChildren: ['story', 'bug'],
-    allowedParents: ['release'],
+    allowedChildren: ['epic', 'task', 'story', 'bug'],
+    allowedParents: ['project', 'feature', 'epic', 'release'],
     defaultWorkflow: ['draft', 'ready', 'in_progress', 'done'],
   },
   story: {
@@ -106,7 +109,10 @@ function detectWorkItemType(issueType, labels = []) {
   const type = (issueType || '').toLowerCase();
   if (type === 'epic' || labels.some(l => l.toLowerCase() === 'epic')) return 'epic';
   if (type === 'bug' || labels.some(l => l.toLowerCase() === 'bug')) return 'bug';
-  if (type === 'story' || type === 'user story' || type === 'task') return 'story';
+  if (type === 'task') return 'task';
+  if (type === 'feature') return 'feature';
+  if (type === 'project') return 'project';
+  if (type === 'story' || type === 'user story') return 'story';
   if (type.includes('release') || type.includes('version')) return 'release';
   return 'story'; // default
 }

@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),{view}=require('./workflow-view');
 const url='https://github.com/example/issues/issues/3';
 const server={name:'Example',type:'github',repos:[{org:'example',repo:'issues'}],issue_types:[{id:'feature',label:'Feature'}],workflows:[{type_id:'feature',name:'Feature delivery',states:[{id:'open',label:'Triage',is_initial:true},{id:'plan',label:'Design review',agent_phases:['plan-review']},{id:'work',label:'Deliver child tasks',agent_phases:['implementing']},{id:'done',label:'Delivered',is_final:true}],transitions:[{from:'plan',to:'work'}]}]};
-test('uses issue type workflow names and configured phase mappings',()=>{const r=view({url,phase:'plan-review'},{type:{name:'Feature'},state:'open',labels:[]},{task_servers:[server]});assert.equal(r.issueType,'Feature');assert.equal(r.workflow.name,'Feature delivery');assert.equal(r.currentStage,'Design review');assert.deepEqual(r.nextStages,['Deliver child tasks']);});
+test('uses issue type workflow names and configured phase mappings',()=>{const r=view({url,phase:'plan-review'},{type:{name:'Feature'},state:'open',labels:[]},{task_servers:[server]});assert.equal(r.issueType,'Epic');assert.equal(r.workflow.name,'Epic delivery');assert.equal(r.currentStage,'Design review');assert.deepEqual(r.nextStages,['Deliver child tasks']);});
 test('preparing an approved implementation stays in its implementation stage',()=>{const r=view({url,phase:'provisioning',approvedPlanHash:'approved'},{type:{name:'Feature'},state:'open'},{task_servers:[server]});assert.equal(r.currentStage,'Deliver child tasks');});
 test('unknown issue types do not get a made-up task workflow',()=>{const r=view({url,phase:'plan-review'},{type:{name:'Bug'},state:'open'},{task_servers:[server]});assert.equal(r.issueType,'Bug');assert.equal(r.workflow,null);});
 test('closed tickets use the configured final stage',()=>{const r=view({url,phase:'merged'},{type:{name:'Feature'},state:'closed'},{task_servers:[server]});assert.equal(r.currentStage,'Delivered');});
@@ -22,7 +22,7 @@ test('legacy failed sessions and tasks without a workflow still expose their err
 });
 test('GitHub CLI native issueType objects resolve the configured workflow',()=>{
  const result=view({url,phase:'planning'},{issueType:{name:'Feature'},state:'open'},{task_servers:[server]});
- assert.equal(result.issueType,'Feature');assert.equal(result.workflow.name,'Feature delivery');
+ assert.equal(result.issueType,'Epic');assert.equal(result.workflow.name,'Epic delivery');
 });
 
 test('implementation without mandatory approval uses the implementation workflow stage',()=>{const r=view({url,phase:'provisioning',executionMode:'implement',plan:'Saved plan'},{type:{name:'Feature'},state:'open'},{task_servers:[server]});assert.equal(r.currentStage,'Deliver child tasks');});

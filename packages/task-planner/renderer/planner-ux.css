@@ -174,3 +174,13 @@ body[data-planner-view=learning] #feature-toolbar, body[data-planner-view=learni
 #learning-empty-state { padding: 34px 0; }
 #learning-empty-state p { color: #9fb2c1; margin-bottom: 18px; font-size: 16px; }
 .learning-controls[hidden], #learning-empty-state[hidden] { display: none !important; }
+
+.work-hierarchy-settings { padding:16px 0; border-top:1px solid #30363d; }
+.hierarchy-form { display:grid; gap:14px; max-width:780px; }
+.hierarchy-form>label { display:grid; gap:6px; color:#aab8c5; }
+.hierarchy-form input:not([type=checkbox]),.hierarchy-form textarea,.hierarchy-form select { width:100%; box-sizing:border-box; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:5px; padding:9px 11px; font:inherit; }
+.hierarchy-form textarea { resize:vertical; }
+.hierarchy-form .btn { justify-self:start; }
+.hierarchy-relations { max-height:220px; overflow:auto; display:grid; gap:8px; }
+.hierarchy-relations label { display:flex; gap:8px; align-items:center; }
+.planner-project-folder .planner-project-folder { margin-left:16px; border-left:1px solid #30363d; }

@@ -3,9 +3,9 @@ const core=require('./core');
 const {references}=require('../../dev-central/task-board');
 async function links(taskUrl,query=core.gh) {
   const id=core.identity(taskUrl);
-  const task=await query(['issue','view',taskUrl,'--json','number,title,body,state,url']);
-  const parents=references(task.body,'Parent Feature',id.repo).filter(url=>url!==taskUrl);
-  const features=await Promise.all(parents.map(url=>query(['issue','view',url,'--json','number,title,body,state,url'])));
+  const task=await query(['issue','view',taskUrl,'--json','number,title,body,state,url,issueType']);
+  const parents=references(task.body,'Parent (?:Feature|Epic)',id.repo).filter(url=>url!==taskUrl);
+  const features=await Promise.all(parents.map(url=>query(['issue','view',url,'--json','number,title,body,state,url,issueType'])));
   return {task,features};
 }
 async function open(taskUrl,targetUrl,electron) {

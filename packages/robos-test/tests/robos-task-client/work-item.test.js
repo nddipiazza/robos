@@ -131,8 +131,8 @@ describe('Work Item Hierarchy', () => {
       assert.strictEqual(detectWorkItemType('Bug'), 'bug');
     });
 
-    it('detects story from task type', () => {
-      assert.strictEqual(detectWorkItemType('Task'), 'story');
+    it('detects tasks as first-class tasks', () => {
+      assert.strictEqual(detectWorkItemType('Task'), 'task');
     });
 
     it('detects epic from labels', () => {

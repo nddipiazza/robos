@@ -195,7 +195,7 @@ function updateKPIRibbon() {
 
   else {
     if (featValEl) featValEl.textContent = '—';
-    if (featStEl) featStEl.textContent = 'No active feature';
+    if (featStEl) featStEl.textContent = 'No active epic';
   }
 
   // Notifications KPI & unread count
@@ -312,7 +312,7 @@ function renderFeatures(features, activeFeature) {
   appState.activeFeature = activeFeature || null;
 
   const mine=features.filter(f=>f.assigned || f.tasks.some(t=>t.assigned));
-  document.getElementById('feature-status-badge').textContent=`${features.filter(f=>f.assigned).length} features assigned`;
+  document.getElementById('feature-status-badge').textContent=`${features.filter(f=>f.assigned).length} epics assigned`;
   const list=document.getElementById('feature-tasks-list');
   const collapsed=new Set([...list.querySelectorAll('details:not([open])')].map(d=>d.dataset.feature));
   list.innerHTML=mine.length ? mine.map(f=>`<details class="feature-task-card" data-feature="${escapeHTML(f.id)}" data-list-title="${escapeHTML(f.name)}" data-list-updated="${escapeHTML(f.updatedAt||'')}" ${collapsed.has(f.id)?'':'open'}><summary>
@@ -324,7 +324,7 @@ function renderFeatures(features, activeFeature) {
     <span title="${escapeHTML(t.blockedBy.join(', '))}">${t.blockedBy.length?'Waiting for '+t.blockedBy.map(u=>'#'+u.split('/').pop()).join(', '):t.closed?'':'Dependencies satisfied'}</span>
     <button class="btn btn-secondary-sm" data-assign="${escapeHTML(t.id)}" ${t.assigned||pendingTaskAssignments.has(t.id)?'disabled':''} aria-busy="${pendingTaskAssignments.has(t.id)}">${pendingTaskAssignments.has(t.id)?'Assigning to you…':t.assigned?'Assigned to you':'Assign to me'}</button>
     <button class="btn btn-secondary-sm" data-work="${escapeHTML(t.id)}" ${t.workable&&!pendingWorkLaunches.has(t.id)?'':'disabled'} aria-busy="${pendingWorkLaunches.has(t.id)}" title="${t.workable?'Review sandbox settings and launch RobOS Agent Task Runner':'Waiting for dependencies'}">${pendingWorkLaunches.has(t.id)?'Launching…':t.progress?.started?'Continue work':'Work ticket'}</button>
-    </div>${workProgressRow(t)}`).join('')}</details>`).join('') : '<p class="feature-empty">No features assigned to you. Choose a feature to see its next workable tasks.</p>';
+    </div>${workProgressRow(t)}`).join('')}</details>`).join('') : '<p class="feature-empty">No epics assigned to you. Choose an epic to see its next workable tasks.</p>';
   const report=async action=>{try {const result=await action();if(!result.ok)throw Error(result.error);}catch(e){document.getElementById('feature-action-status').textContent=e.message;}};
   list.querySelectorAll('[data-runner]').forEach(b=>b.onclick=()=>report(()=>window.robos.openWorkItem(b.dataset.runner,'runner')));
   list.querySelectorAll('[data-workflow]').forEach(b=>b.onclick=()=>report(()=>window.robos.openTool('workflow-studio')));

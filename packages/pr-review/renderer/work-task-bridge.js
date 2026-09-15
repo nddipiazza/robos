@@ -79,7 +79,7 @@ window.showReviewPlanLinks=async function() {
   links.replaceChildren();
   const result=await window.workTask['plan-links']();
   if(!result.ok){links.title=result.error;return;}
-  for(const [label,issue] of [['Task plan',result.data.task],...result.data.features.map(issue=>['Feature plan',issue])]) {
+  for(const [label,issue] of [['Task plan',result.data.task],...result.data.features.map(issue=>['Epic plan',issue])]) {
     const button=document.createElement('button');button.className='btn-plan-link';button.dataset.planUrl=issue.url;
     button.textContent=`${label} #${issue.number}`;button.title=`Open ${issue.title} in Task Planner`;
     button.onclick=async()=>{button.disabled=true;try{const opened=await window.workTask['open-related-plan']({targetUrl:issue.url});if(!opened.ok)showError(opened.error);}catch(e){showError(e.message);}finally{button.disabled=false;}};

@@ -5,7 +5,7 @@ function plannerProjectTree(projects) {
   function parent(p) {
     if(p.parentPlanId)return projects.find(x=>x.id===p.parentPlanId);
     const body=[p.prompt,...(p.tasks||[]).map(t=>t.body)].join('\n');
-    const url=body.match(/Parent Feature:\s*(https:\/\/github\.com\/[^\s)]+\/issues\/\d+)/i)?.[1];
+    const url=body.match(/Parent (?:Feature|Epic):\s*(https:\/\/github\.com\/[^\s)]+\/issues\/\d+)/i)?.[1];
     const owner=byUrl.get(url);
     if(owner?.product&&p.product&&owner.product.name.toLowerCase()!==p.product.name.toLowerCase())return undefined;
     return owner;
@@ -68,37 +68,36 @@ function renderPlannerTree(projects) {
     el.addEventListener('toggle',()=>{if(!query){if(el.open)plannerClosedFolders.delete(key);else plannerClosedFolders.add(key);}});
     const summary=document.createElement('summary');summary.className='planner-tree-row';summary.title=label;columns(summary,label,status,modified);el.append(summary);return el;
   }
-  const header=document.createElement('div');header.className='planner-tree-row planner-tree-heading';columns(header,'Project / feature / task','Status',null);header.lastChild.textContent=order==='title'?'Updated':order==='updated-asc'?'Updated ↑':'Updated ↓';list.append(header);
+  const header=document.createElement('div');header.className='planner-tree-row planner-tree-heading';columns(header,'Project / feature / epic / task','Status',null);header.lastChild.textContent=order==='title'?'Updated':order==='updated-asc'?'Updated ↑':'Updated ↓';list.append(header);
   for(const product of products){
     const productMatch=product.name.toLowerCase().includes(query);
     const root=folder('product:'+product.id,product.name,'',product.modifiedAt,'planner-product-folder');root.dataset.product=product.name;
     for(const family of product.families){
-      const p=family.project,entries=[];
-      for(const child of family.children)entries.push({p:child,index:null,label:`${child.tasks?.[0]?.ticketKey||'Task'} ${child.name}`});
-      for(const [index,t] of (p.tasks||[]).entries()){
-        if(t.ticketUrl===p.workTaskUrl || family.children.some(c=>c.workTaskUrl===t.ticketUrl))continue;
-        entries.push({p,index,label:`${t.ticketKey||'Task'} ${t.title}`});
+      const records=[family.project,...family.children],byId=new Map(records.map(p=>[p.id,p]));
+      const label=p=>{const ticket=p.workTaskUrl&&(p.tasks||[]).find(t=>t.ticketUrl===p.workTaskUrl)?.ticketKey;return `${p.kind[0].toUpperCase()+p.kind.slice(1)}${ticket?' '+ticket:''} · ${p.name}`;};
+      function branch(p,seen=new Set()){
+        if(seen.has(p.id))return null;seen=new Set([...seen,p.id]);
+        const descendants=records.filter(c=>c.parentPlanId===p.id||(!c.parentPlanId&&c!==p&&p===family.project));
+        const nested=descendants.map(c=>branch(c,seen)).filter(Boolean);
+        const inline=(p.tasks||[]).map((t,index)=>({t,index})).filter(({t})=>t.ticketUrl!==p.workTaskUrl&&!records.some(c=>c.workTaskUrl&&c.workTaskUrl===t.ticketUrl));
+        const ownMatch=productMatch||p.name.toLowerCase().includes(query);
+        const tasks=inline.filter(({t})=>ownMatch||(t.title||'').toLowerCase().includes(query));
+        if(query&&!ownMatch&&!nested.length&&!tasks.length)return null;
+        if(!nested.length&&!tasks.length)return row(label(p),p,null,p.kind);
+        const container=folder(p.id,label(p),p.workflowStatus,p.modifiedAt,'planner-project-folder');container.dataset.projectId=p.id;
+        const name=container.querySelector('.planner-row-name');name.setAttribute('role','button');name.tabIndex=0;name.title='Open '+p.kind;
+        const open=async e=>{e.preventDefault();e.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerView(p.kind==='feature'?'details':'plan');};name.onclick=open;name.onkeydown=e=>{if(e.key==='Enter')open(e);};
+        for(const child of nested)container.append(child);
+        for(const {t,index} of tasks)container.append(row(`${t.isEpic?'Epic':'Task'} ${t.ticketKey||''} · ${t.title}`,p,index,'task'));
+        return container;
       }
-      entries.sort((a,b)=>compare({...a.p,title:a.label},{...b.p,title:b.label}));
-      const wholeMatch=productMatch||p.name.toLowerCase().includes(query);
-      const matches=entries.filter(e=>wholeMatch||e.label.toLowerCase().includes(query));
-      if(query&&!wholeMatch&&!matches.length)continue;
-      if(p.kind==='project'){
-        root.dataset.projectRecord=p.id;
-        const summary=root.querySelector('summary');
-        const name=summary.querySelector('.planner-row-name');name.setAttribute('role','button');name.tabIndex=0;name.title='Open project details';
-        const open=async event=>{event.preventDefault();event.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerEditing(false);setPlannerView('details');};
-        name.addEventListener('click',open);name.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')open(event);});
-        for(const e of matches)root.append(row(e.label,e.p,e.index,'task'));continue;
-      }
-      if(!entries.length){root.append(row(`${p.tasks?.[0]?.ticketKey|| (p.kind==='task'?'Task':'Feature')} ${p.name}`,p,null,'plan'));continue;}
-      const feature=folder(p.id,`${p.tasks?.[0]?.ticketKey||'Feature'} ${p.name}`,p.workflowStatus,p.modifiedAt,'planner-project-folder');feature.dataset.projectId=p.id;
-      const featureName=feature.querySelector('.planner-row-name');featureName.setAttribute('role','button');featureName.tabIndex=0;featureName.title='Open feature plan';
-      const openFeature=async event=>{event.preventDefault();event.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerEditing(false);setPlannerView('plan');};
-      featureName.addEventListener('click',openFeature);featureName.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')openFeature(event);});
-      for(const e of matches)feature.append(row(e.label,e.p,e.index,'task'));
-      root.append(feature);
+      if(family.project.kind==='project'){
+        const p=family.project;root.dataset.projectRecord=p.id;const name=root.querySelector('.planner-row-name');name.setAttribute('role','button');name.tabIndex=0;name.title='Open project details';
+        name.onclick=async e=>{e.preventDefault();e.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerView('details');};
+        for(const child of records.filter(c=>c.parentPlanId===p.id||(!c.parentPlanId&&c!==p))){const entry=branch(child);if(entry)root.append(entry);}
+      }else {const entry=branch(family.project);if(entry)root.append(entry);}
     }
+
     if(root.children.length>1||root.dataset.projectRecord)list.append(root);
   }
   if(list.children.length===1){const empty=document.createElement('p');empty.className='project-empty';empty.textContent=query?'No matching projects or tasks.':'No plans yet. Click + to start one.';list.append(empty);}
@@ -113,11 +112,11 @@ function renderPlannerTree(projects) {
       if(selected?.kind!=='project'){
         const projectLink=document.createElement('button');projectLink.textContent=product.name;
         projectLink.title='Manage this project';projectLink.onclick=()=>openProjectManager();breadcrumb.append(projectLink);
-        if(family.project.id!==currentProjectId){
-          breadcrumb.append(document.createTextNode(' / '));
-          const parentLink=document.createElement('button');parentLink.textContent=family.project.name;
-          parentLink.title='Open parent feature';parentLink.onclick=async()=>{plannerSelectedTask=null;await openProject(family.project.id);setPlannerView('plan');};breadcrumb.append(parentLink);
-        }
+        const ancestors=[],seen=new Set([selected?.id]);let cursor=selected;
+        while(cursor?.parentPlanId){const parent=projects.find(p=>p.id===cursor.parentPlanId);if(!parent||seen.has(parent.id))break;seen.add(parent.id);ancestors.unshift(parent);cursor=parent;}
+        if(!ancestors.length&&family.project.id!==currentProjectId)ancestors.push(family.project);
+        for(const ancestor of ancestors){if(ancestor.kind==='project')continue;breadcrumb.append(document.createTextNode(' / '));const link=document.createElement('button');link.textContent=ancestor.name;link.title='Open '+ancestor.kind;link.onclick=async()=>{plannerSelectedTask=null;await openProject(ancestor.id);setPlannerView('plan');};breadcrumb.append(link);}
+
       }
     }
     breadcrumb.hidden=!breadcrumb.childNodes.length;

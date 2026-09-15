@@ -82,6 +82,8 @@ const BUILTIN_SHACL_SHAPES = [
     "shapeId": "urn:robos:shape:ProjectShape",
     "targetClass": "robos:Project",
     "properties": [
+      {"path": "robos:webResources", "message": "Web resources that make up this service or application."},
+      {"path": "robos:hasRepository", "message": "Subset of Git repositories composing this project."},
       {
         "path": "dcterms:title",
         "minCount": 1,
@@ -101,6 +103,10 @@ const BUILTIN_SHACL_SHAPES = [
     "shapeId": "urn:robos:shape:EpicShape",
     "targetClass": "robos:Epic",
     "properties": [
+      {"path": "robos:inFeature", "message": "Feature containing this delivery goal."},
+      {"path": "robos:inEpic", "message": "Parent epic for a nested delivery goal."},
+      {"path": "robos:parentWorkItem", "message": "Parent feature or epic."},
+      {"path": "robos:teamChatLinks", "message": "Discussion links for this epic."},
       {
         "path": "dcterms:title",
         "minCount": 1,
@@ -1099,6 +1105,9 @@ const BUILTIN_SHACL_SHAPES = [
       "robos:ProductFeature"
     ],
     "properties": [
+      {"path": "robos:inProject", "message": "Project containing this lasting service or application capability."},
+      {"path": "robos:relatedFeature", "message": "Related peer features. Features are not nested."},
+      {"path": "robos:hasRepository", "message": "Git repositories relevant to this feature."},
       {"path":"robos:teamChatLinks","message":"Optional TeamChatLink references for this work item."},
       {
         "path": "dcterms:title",

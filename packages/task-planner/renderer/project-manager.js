@@ -6,10 +6,10 @@ async function openProjectManager(associate=false){
  document.body.append(dialog);let editing=null;
  const el=id=>dialog.querySelector('#'+id);
  dialog.querySelector('h2').textContent=associate?'Choose project':'Manage projects';
- el('pm-help').textContent=associate?'Move this feature and its tasks into a project. This does not change developer assignments.':'Edit project names and descriptions, or open a project to manage its features and tasks.';
+ el('pm-help').textContent=associate?'Move this work item and its children into a project. This does not change developer assignments.':'Edit project names and descriptions, or open a project to manage its features and tasks.';
  el('pm-close').onclick=()=>dialog.close();dialog.addEventListener('close',()=>dialog.remove());
  const edit=p=>{editing=p;el('pm-form-title').textContent=p?'Edit project':'New project';el('pm-name').value=p?.name||'';el('pm-description').value=p?.description||'';el('pm-name').focus();};
- const choose=async p=>{try{const family=plannerProjectTree(projectsList).find(f=>f.project.id===currentProjectId||f.children.some(c=>c.id===currentProjectId));const result=await window.robos.setProjectProduct({id:family?.project.id||currentProjectId,projectId:p?.id||null});if(!result.ok)throw Error(result.error);await loadProjectsList();window.refreshPlannerUX();dialog.close();showGenerateStatus(p?'Moved to '+p.name: 'Moved to (No Project).');}catch(e){el('pm-status').textContent=e.message;}};
+ const choose=async p=>{try{const family=plannerProjectTree(projectsList).find(f=>f.project.id===currentProjectId||f.children.some(c=>c.id===currentProjectId));const result=await window.robos.setProjectProduct({id:currentProjectId,projectId:p?.id||null});if(!result.ok)throw Error(result.error);await loadProjectsList();window.refreshPlannerUX();dialog.close();showGenerateStatus(p?'Moved to '+p.name: 'Moved to (No Project).');}catch(e){el('pm-status').textContent=e.message;}};
  const render=()=>{el('pm-list').replaceChildren();const query=el('pm-search').value.toLowerCase();const records=projectsList.filter(p=>p.kind==='project'&&(p.name+' '+(p.description||'')).toLowerCase().includes(query));
  const button=(label,fn)=>{const b=document.createElement('button');b.className='btn btn-outline';b.textContent=label;b.onclick=fn;return b;};
  if(associate)el('pm-list').append(button('(No Project)',()=>choose(null)));

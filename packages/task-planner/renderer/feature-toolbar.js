@@ -21,16 +21,16 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('btn-new-project').hidden=true;
  document.querySelector('.sidebar-header').append(document.getElementById('btn-workspace-plans'));
  document.getElementById('btn-workspace-plans').className='btn btn-outline';
- document.getElementById('planner-project-search').placeholder='Filter projects, features and tasks';
+ document.getElementById('planner-project-search').placeholder='Filter projects, features, epics and tasks';
  const original=window.refreshPlannerUX;
  window.refreshPlannerUX=function(...args){original(...args);const record=selectedPlannerRecord(),isProject=record?.kind==='project';
   document.getElementById('project-metadata-card').hidden=!isProject;document.getElementById('epic-parent-section').hidden=true;
   const group=plannerProducts(projectsList).find(p=>p.families.some(f=>f.project.id===currentProjectId||f.children.some(c=>c.id===currentProjectId)));
-  membership.replaceChildren();const title=document.createElement('h3');title.textContent=group?.name||'(No Project)';const description=document.createElement('p');const project=projectsList.find(p=>p.kind==='project'&&(p.id===group?.id||p.name===group?.name));description.textContent=project?.description||(group?.id==='unassigned'?'This feature is not in a project. Choose a project to organize it with related work.':'Group this feature and its tasks by the product they belong to.');membership.append(title,description);
+  membership.replaceChildren();const title=document.createElement('h3');title.textContent=group?.name||'(No Project)';const description=document.createElement('p');const project=projectsList.find(p=>p.kind==='project'&&(p.id===group?.id||p.name===group?.name));description.textContent=project?.description||(group?.id==='unassigned'?'This work item is not in a project. Choose a project to organize it with related work.':'Organize features, epics, and tasks within this project.');membership.append(title,description);
   for(const id of ['btn-generate','work-task-approve','work-task-implement','work-task-source']){const b=document.getElementById(id);if(b)b.hidden=true;}
   const primary=document.getElementById('planner-primary');
   if(plannerSession&&!plannerSession.plan&&!plannerSession.workerPid)primary.textContent='Draft implementation plan';
-  if(!plannerSession&&!isProject&&record?.kind!=='task')primary.textContent='Draft tasks from requirements';
+  if(!plannerSession&&!isProject&&record?.kind==='epic')primary.textContent='Draft tasks from requirements';
   help.textContent=plannerSession&&!plannerSession.plan?'Choose agent and sandbox settings, then draft implementation steps in isolated repository clones. Save the implementation plan before starting coding. Signoff is needed only when explicitly required.':plannerSession?.planReady?'Run the saved implementation plan in Task Implementer.':plannerSession?.plan?'Review the implementation steps, revise if needed, then obtain the required signoff.':isProject?'Open a feature or add work to this project.':'Draft a list of tasks from these requirements, then review them before creating tickets.';
   ai.hidden=isProject||!record;primary.hidden=!record;
   document.querySelector('[data-planner-tab=details]').textContent=isProject?'Project settings':'Project';

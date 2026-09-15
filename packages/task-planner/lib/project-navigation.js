@@ -2,6 +2,7 @@
 const path=require('path');
 const core=require('../../robos-agent-client/work-task/core');
 function navigation(project) {
+  project=require('./work-hierarchy').normalize(project);
   let state={};
   if(project.workTaskUrl){try{state=core.read(project.workTaskUrl);}catch{}}
   const workspace=state.sourceWorkspace||state.workspace||project.workspace;

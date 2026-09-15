@@ -532,7 +532,7 @@ function updateTrayAndIcon() {
       const menu = Menu.buildFromTemplate([
         { label: 'Open Dev Central', click: () => showWindow() },
         { label: `Notifications (${unread} unread)`, click: () => showWindow('notifications') },
-        { label: `Active Feature: ${featureTitle}`, click: () => showWindow('feature') },
+        { label: `Active Epic: ${featureTitle}`, click: () => showWindow('feature') },
         { type: 'separator' },
         { label: 'Sync Dashboard Now', click: () => triggerSync() },
         { type: 'separator' },

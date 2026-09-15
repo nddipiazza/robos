@@ -16,7 +16,7 @@
       const detail=el('details'); detail.append(el('summary','Current task scope and acceptance criteria'),el('pre',liveIssue.body,'plan-prose')); live.append(detail); container.append(live);
     }
     for(const [key,title] of [['design','Design and sequence'],['verification','Verification'],['risks','Risks and decisions']]) if(plan[key]) { const section=el('section',undefined,'plan-card'); section.append(el('h2',title),el('p',plan[key],'plan-prose')); container.append(section); }
-    const roadmap=el('section',undefined,'plan-roadmap');roadmap.append(el('h2','Features and tasks'));
+    const roadmap=el('section',undefined,'plan-roadmap');roadmap.append(el('h2','Epics and tasks'));
     for(const item of plan.items) {
       const card=el('article',undefined,'plan-card'+(item.parent?' plan-child':'')+(item.url===selected?' plan-selected':''));card.dataset.issueUrl=item.url;
       card.append(el('p',`${item.type} · ${item.issue?.state||'unknown'}${item.issue?.updatedAt?' · snapshot '+item.issue.updatedAt:''}`,'plan-eyebrow'),el('h3'));
