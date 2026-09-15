@@ -26,7 +26,9 @@ function scan(graphRoot,file=settingsFile){
  }));
  const mcpServers=nodes.filter(n=>types(n).some(t=>['robos:MCPServer','robos:MCPGateway','robos:MCPConnection'].includes(t))).map(n=>mcp.fromNode(n)).filter(Boolean).map(s=>({...s,selected:true}));
  const pipelineServers=nodes.filter(n=>types(n).includes('robos:CIPipelineServer')).map(n=>({id:n['@id'],kgraphId:n['@id'],name:n['dcterms:title']||n['@id'],provider:n['robos:provider'],url:n['robos:url']||'',credentialRef:n['robos:credentialRef']||'',graphRoot:workspace.root,evidence:n['robos:evidence']||[],pipelines:nodes.filter(p=>ref(p['robos:ciServer'])===n['@id']).map(p=>({id:p['@id'],name:p['dcterms:title'],file:p['robos:workflowFile']||p['robos:sourcePath']})),selected:true}));
- return {graphRoot:workspace.root,graphRevision:hash(document),settingsRevision:hash(settings),people:[],groupPrompt:"",taskServers,pipelineServers,mcpServers};
+ const model={graphRoot:workspace.root,graphRevision:hash(document),settingsRevision:hash(settings),people:[],groupPrompt:"",taskServers,pipelineServers,mcpServers};
+ model.stageProgress=require('./app-import-progress').progress(model,nodes,settings,identities.existing(path.join(path.dirname(file),'people')),identities.existing(path.join(path.dirname(file),'groups')));
+ return model;
 }
 const gh=args=>new Promise((resolve,reject)=>execFile('gh',args,{encoding:'utf8',timeout:30000,maxBuffer:8*1024*1024},(e,out)=>e?reject(Error('GitHub discovery failed. Check gh authentication and repository access.')):resolve(JSON.parse(out))));
 async function discover(server,run=gh){
