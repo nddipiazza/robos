@@ -1080,6 +1080,8 @@ function renderTasks() {
 
 function buildCard(i, indent) {
   const task = tasks[i];
+  const githubNumber = task.ticketUrl?.match(/\/issues\/(\d+)(?:[?#].*)?$/)?.[1];
+  const ticketLabel = githubNumber ? '#'+githubNumber : /^\d+$/.test(task.ticketKey || '') ? '#'+task.ticketKey : task.ticketKey;
   const isJira = serverInfo && serverInfo.type === 'jira';
 
   const card = document.createElement('div');
@@ -1101,8 +1103,7 @@ function buildCard(i, indent) {
   let syncHtml = '';
   if (serverInfo) {
     if (task.ticketKey) {
-      syncHtml = `<span class="ticket-badge" title="${escHtml(task.ticketUrl || '')}">${escHtml(task.ticketKey)}</span>
-                  <button class="sync-btn sync-update-btn" data-idx="${i}" title="Re-sync to server">↺</button>`;
+      syncHtml = `<button class="sync-btn sync-update-btn" data-idx="${i}" title="Re-sync to server">↺</button>`;
     } else {
       syncHtml = `<button class="sync-btn sync-create-btn" data-idx="${i}" title="Create on server">🔗 Sync</button>`;
     }
@@ -1112,7 +1113,7 @@ function buildCard(i, indent) {
     <div class="task-card-header">
       ${indent ? '<span class="tree-indent">└</span>' : ''}
       ${epicTypeBadge}
-      <span class="task-num">#${i + 1}</span>
+      <span class="task-num" title="${escHtml(task.ticketUrl || 'Not yet linked to a task-server issue')}">${escHtml(ticketLabel || 'Draft ' + (i + 1))}</span>
       <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…"/>
       <div class="task-actions-area">
         <div class="task-sync-area">${syncHtml}</div>
