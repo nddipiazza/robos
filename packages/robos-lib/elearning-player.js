@@ -1,7 +1,17 @@
 'use strict';
 // Shared renderer for plan-derived and legacy RobOS courses. No graph writes here.
 class RobOSElearningPlayer extends HTMLElement {
- constructor(){super();this.attachShadow({mode:'open'});this.index=0;this.state={};}
+ constructor(){super();this.attachShadow({mode:'open'});this.index=0;this.state={};this.shadowRoot.addEventListener('click',e=>this.openLink(e));this.shadowRoot.addEventListener('auxclick',e=>{if(e.button===1)this.openLink(e);});}
+ async openLink(event){
+  if(event.defaultPrevented)return;
+  const link=event.composedPath().find(el=>el?.tagName==='A'&&el.hasAttribute('href'));
+  if(!link)return;
+  event.preventDefault();
+  const href=link.getAttribute('href');
+  if(href.startsWith('#')){this.shadowRoot.getElementById(href.slice(1))?.scrollIntoView({block:'start'});return;}
+  try{if(!window.robosCourseEditor?.openLink)throw Error('Reopen this app to enable Chrome links.');await window.robosCourseEditor.openLink(href);}
+  catch(error){this.shadowRoot.querySelector('[role=status]').textContent=error.message;}
+ }
  set course(value){this._course=value;this.index=0;this.state={};try{this.state=JSON.parse(localStorage.getItem(this.storageKey)||'{}');}catch{}this.render();}
  get course(){return this._course;}
  get storageKey(){return 'robos:elearning:'+this._course?.['@id']+':'+JSON.stringify(this._course?.['robos:modules']);}

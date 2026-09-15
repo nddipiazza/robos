@@ -63,4 +63,4 @@ contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invo
 
 contextBridge.exposeInMainWorld('robosKGraphs',{list:()=>ipcRenderer.invoke('robos-kgraphs-list'),add:()=>ipcRenderer.invoke('robos-kgraphs-add')});
 
-contextBridge.exposeInMainWorld('robosCourseEditor',{preview:input=>ipcRenderer.invoke('robos-course-preview',input),apply:id=>ipcRenderer.invoke('robos-course-apply',id)});
+contextBridge.exposeInMainWorld('robosCourseEditor',{openLink:url=>ipcRenderer.invoke('robos-course-open-link',url),preview:input=>ipcRenderer.invoke('robos-course-preview',input),apply:id=>ipcRenderer.invoke('robos-course-apply',id)});
