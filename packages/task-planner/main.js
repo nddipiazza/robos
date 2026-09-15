@@ -661,6 +661,7 @@ ipcMain.handle('set-project-product', (_, input) => {
 ipcMain.handle('delete-project', (_, id) => {try{return require('./lib/work-item-management').remove(PROJECTS_DIR,id);}catch(e){return {ok:false,error:e.message};}});
 const plannerPeople=()=>require('../robos-graph/lib/identity-import').existing(path.join(os.homedir(),'.config/robos/people'));
 ipcMain.handle('planner-people',()=>plannerPeople());
+ipcMain.handle('planner-search-people',(_,input)=>require('./lib/people-search').searchPeople(plannerPeople(),input));
 ipcMain.handle('planner-signoff',async(_,input)=>{try{await require('../robos-agent-client/work-task/core').gh(['api','users/'+input.githubLogin]);return require('./lib/work-item-management').saveSignoff(PROJECTS_DIR,input,plannerPeople());}catch(e){return {ok:false,error:e.message};}});
 
 

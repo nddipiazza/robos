@@ -1,0 +1,4 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{searchPeople}=require('./people-search');
+const people=Array.from({length:5000},(_,i)=>({uid:'person-'+i,displayName:'Developer '+i,email:'dev'+i+'@example.com'}));
+test('large directories return bounded results without defaulting to every person',()=>{assert.equal(searchPeople(people,{}).people.length,0);const r=searchPeople(people,{query:'developer'});assert.equal(r.total,5000);assert.equal(r.people.length,20);});
+test('search matches multiple name/email words and restores a selection independently',()=>{const r=searchPeople(people,{query:'Developer 4321',selectedUid:'person-4999'});assert.equal(r.people.length,1);assert.equal(r.people[0].email,'dev4321@example.com');assert.equal(r.selected.uid,'person-4999');assert.equal(searchPeople(people,{query:'not-present'}).total,0);});

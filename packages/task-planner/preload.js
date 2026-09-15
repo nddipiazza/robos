@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('robos', {
   learningRoots: () => ipcRenderer.invoke('planner-learning-roots'),
   existingLearning: id => ipcRenderer.invoke('planner-existing-learning',id),
   createLearning: input => ipcRenderer.invoke('planner-learning',input),
+  searchPeople: input => ipcRenderer.invoke('planner-search-people',input),
   people: () => ipcRenderer.invoke('planner-people'),
   saveSignoff: input => ipcRenderer.invoke('planner-signoff',input),
   listPlans: () => ipcRenderer.invoke('project-plan-list'),
