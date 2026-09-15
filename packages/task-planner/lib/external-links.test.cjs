@@ -13,3 +13,8 @@ test('reports launch failures without allowing embedded navigation',async()=>{
  routeExternalLinks(wc,{open:async()=>{throw Error('Chrome missing');},onError:e=>error=e.message});
  wc.emit('will-navigate',{preventDefault(){}},'https://example.com');await new Promise(setImmediate);assert.equal(error,'Chrome missing');
 });
+test('allows reloading the Planner document without treating it as an external link',()=>{
+ const wc=new EventEmitter();wc.setWindowOpenHandler=()=>{};wc.getURL=()=> 'file:///planner/index.html';
+ routeExternalLinks(wc,{open:()=>assert.fail('must not open Chrome for Planner reload')});
+ wc.emit('will-navigate',{preventDefault:()=>assert.fail('must allow reload')},'file:///planner/index.html');
+});
