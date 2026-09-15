@@ -89,7 +89,7 @@ async function startWorkerUnlocked(url,mode,{workspace,plan,refinement,backend='
   launchConfig=require('../../robos-agent-task-runner/sandbox').validate(launchConfig);
   backend=launchConfig.provider;
 
-  const state=save(url,{autoStart:false,plan:plan??old.plan,backend,launchConfig,origin,...(mode==='plan'?{approvedPlanHash:null,planApproval:null}:{}),refinement:refinement||'',phase:'provisioning',error:null,executionError:null,output:''});
+  const state=save(url,{autoStart:false,plan:plan??old.plan,backend,launchConfig,origin,executionMode:mode,...(mode==='plan'?{approvedPlanHash:null,planApproval:null}:{}),refinement:refinement||'',phase:'provisioning',error:null,executionError:null,output:''});
   const log=fs.openSync(path.join(folder(url),'agent.log'),'a',0o600);
   try {
     const child=spawn(electron,[path.join(__dirname,'runner.js'),mode,url,electron],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},detached:true,stdio:['ignore',log,log]});
@@ -118,13 +118,13 @@ async function runWorker(url,mode,electron){
   const state=read(url),dir=folder(url);require('./plan-approval').assertStart(state,mode,state.plan,state.origin);const outputFile=path.join(dir,`${mode}-output.txt`);
   const instruction=mode==='plan'
     ? 'Read the task and workspace instructions. Produce or refine a concrete implementation plan in Markdown. Inspect existing work and linked issues. Do not modify source code, create issues or PRs, or merge anything. Stop for human plan review.'
-    : 'Implement only this ticket and the human-approved plan. The parent feature and successor tickets are context, not additional implementation scope. If this ticket is a design or documentation task, produce that document only; do not implement the future work it describes. Follow workspace instructions and tests. The repositories are isolated clones inside the RobOS ephemeral sandbox; use those clones, create a draft PR with a closing link to the task, and report the PR URL and evidence. Never approve or merge a PR. Do not send Slack, email, or other messages, or post issue comments. Only the implementation and draft PR creation are authorized. Stop for human review in PR Review Theater. If blocked, report the blocker; do not claim completion.';
+    : 'Implement only this ticket and the saved implementation plan. The parent feature and successor tickets are context, not additional implementation scope. If this ticket is a design or documentation task, produce that document only; do not implement the future work it describes. Follow workspace instructions and tests. The repositories are isolated clones inside the RobOS ephemeral sandbox; use those clones, create a draft PR with a closing link to the task, and report the PR URL and evidence. Never approve or merge a PR. Do not send Slack, email, or other messages, or post issue comments. Only the implementation and draft PR creation are authorized. Stop for human review in PR Review Theater. If blocked, report the blocker; do not claim completion.';
   const prompt=`You are the RobOS Agent executing /work-task ${url}.\n${instruction}\nTask: ${state.issue.title}\n${state.issue.body}\nApproved/current plan:\n${state.plan||'(No plan yet)'}\nHuman refinement:\n${state.refinement||'(none)'}`;
   if(state.launchConfig){
     const eventsFile=path.join(dir,'events.jsonl');
     fs.writeFileSync(eventsFile,'',{mode:0o600});
     const event=(role,text,name)=>{const at=new Date().toISOString();fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at})+'\n');if(role==='error'&&!/WARN |Reading additional input/.test(text)){save(url,{executionError:{text,at,phase:read(url).phase}});require('../../robos-lib/auth-notifications').reportAgent(state.backend,text);require('../../robos-lib/human-requests').reportError(url,text);}};
-    event('user',`${mode==='plan'?'Draft implementation plan':'Implement approved plan'} for ${url}`);
+    event('user',`${mode==='plan'?'Draft implementation plan':'Implement saved plan'} for ${url}`);
     try{
       const output=await require('../../robos-agent-task-runner/sandbox').run(url,mode,prompt,event);
       require('../../robos-lib/auth-notifications').resolve('agent',state.backend);

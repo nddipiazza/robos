@@ -1,5 +1,11 @@
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict');const {approved,assertStart,hash}=require('./plan-approval');
-const plan='Reviewed implementation plan';const state={plan,approvedPlanHash:hash(plan),planApproval:{source:'task-planner',hash:hash(plan)}};
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {approved,assertStart,hash,readiness}=require('./plan-approval');
+const plan='Saved implementation plan';
+const requirement={scope:'plan',name:'Tim',githubLogin:'tim'};
+const signed={plan,approvedPlanHash:hash(plan),planApproval:{source:'task-planner',hash:hash(plan),githubLogin:'tim'}};
 test('only Task Planner can initiate planning',()=>{assert.throws(()=>assertStart({},'plan','', 'task-implementer'),/Task Planner/);assert.doesNotThrow(()=>assertStart({},'plan','', 'task-planner'));});
-test('implementation requires exact Task Planner approval',()=>{assert(approved(state));assert.doesNotThrow(()=>assertStart(state,'implement',plan,'task-implementer'));for(const invalid of [{...state,plan:plan+' edited'},{...state,planApproval:null},{...state,approvedPlanHash:null}])assert.throws(()=>assertStart(invalid,'implement',invalid.plan,'task-implementer'),/approve/);assert.throws(()=>assertStart(state,'implement',plan+' edited','task-implementer'),/approve/);});
+test('saved plans can run without approval by default',()=>{assert.doesNotThrow(()=>assertStart({plan},'implement',plan,'task-implementer'));assert.equal(readiness({plan},null).planReady,true);assert.equal(approved({plan}),false);});
+test('requirements and unsaved edits cannot run as an implementation plan',()=>{assert.throws(()=>assertStart({},'implement','', 'task-implementer'),/Create and save/);assert.throws(()=>assertStart({plan},'implement',plan+' edited','task-implementer'),/Save the updated/);});
+test('explicit plan signoff requires the named reviewer and exact current plan',()=>{assert.equal(readiness(signed,requirement).planReady,true);for(const state of [{plan},{...signed,plan:plan+' edited'},{...signed,planApproval:{...signed.planApproval,githubLogin:'other'}},{...signed,approvedPlanHash:null}])assert.equal(readiness(state,requirement).planReady,false);});
+test('PR-only signoff does not require plan approval',()=>{const result=readiness({plan},{...requirement,scope:'pr'});assert.equal(result.planReady,true);assert.equal(result.planApprovalRequired,false);assert.equal(readiness({plan},{...requirement,scope:'both'}).planReady,false);});

@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
  button.onclick=async()=>{
   if(button.disabled)return;button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Opening Task Implementer…';
-  try{const url=await chooseTask();if(!url)return;await taskCall('select',{issueUrl:url});await taskCall('open-implementer');showCreateStatus('Task Implementer opened. Review the approved plan and launch settings there.');}
+  try{const url=await chooseTask();if(!url)return;await taskCall('select',{issueUrl:url});await taskCall('open-implementer');showCreateStatus('Task Implementer opened. Review the saved plan and launch settings there.');}
   catch(e){showCreateStatus(e.message,true);}
   finally{button.disabled=false;button.removeAttribute('aria-busy');button.textContent='Implement Task';}
  };

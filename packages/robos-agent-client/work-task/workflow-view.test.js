@@ -24,3 +24,5 @@ test('GitHub CLI native issueType objects resolve the configured workflow',()=>{
  const result=view({url,phase:'planning'},{issueType:{name:'Feature'},state:'open'},{task_servers:[server]});
  assert.equal(result.issueType,'Feature');assert.equal(result.workflow.name,'Feature delivery');
 });
+
+test('implementation without mandatory approval uses the implementation workflow stage',()=>{const r=view({url,phase:'provisioning',executionMode:'implement',plan:'Saved plan'},{type:{name:'Feature'},state:'open'},{task_servers:[server]});assert.equal(r.currentStage,'Deliver child tasks');});

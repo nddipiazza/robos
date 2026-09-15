@@ -27,8 +27,8 @@ session's temporary home. They are not short-lived credentials and are accessibl
 to the agent in that session. They are excluded from artifact export. No claim of
 credential brokerage or token narrowing is made by this implementation.
 
-Codex and AGY JSON events stream into the existing agent conversation UI. Plans stop for
-human review; implementation requires the exact approved plan. The agent may
+Codex and AGY JSON events stream into the existing agent conversation UI. Implementation requires a saved plan from Task Planner. Human plan approval is
+needed only when the task explicitly requires plan signoff. The agent may
 create a draft PR, but cannot approve/merge it through this workflow. PR Review
 Theater remains the human review handoff.
 

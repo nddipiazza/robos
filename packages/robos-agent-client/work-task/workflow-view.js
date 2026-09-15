@@ -14,7 +14,7 @@ function view(state,issue,settings){
  const nativeType=issue.type?.name||issue.issueType?.name||issue.issueType;
  let phase=state.phase;
  if(phase==='failed'&&state.executionError?.phase)phase=state.executionError.phase;
- if(['provisioning','failed','stopped','implementation-needs-attention'].includes(phase))phase=state.approvedPlanHash?'implementing':state.plan?'plan-review':'planning';
+ if(['provisioning','failed','stopped','implementation-needs-attention'].includes(phase))phase=(state.executionMode?state.executionMode==='implement':state.approvedPlanHash)?'implementing':state.plan?'plan-review':'planning';
  const workflow=server?ticketWorkflow({...issue,issueType:nativeType,session:{...state,phase}},server):null;
  const definition=workflow&&server.workflows.find(w=>w.type_id===workflow.typeId);
  const type=server?.issue_types?.find(t=>t.id===workflow?.typeId);

@@ -2,7 +2,7 @@
 function taskMenu(task,{action,copy}) {
  const title=`${task.key} ${task.title}`.trim();
  return [
-  {label:'Run Task…',enabled:!!task.activity?.planApproved&&!task.activity?.running,click:()=>action('run')},
+  {label:'Run Task…',enabled:!!task.activity?.planReady&&!task.activity?.running,click:()=>action('run')},
   ...(task.activity?.running?[{label:'Stop running task',click:()=>action('stop')}]:[]),
   {label:'View task session',click:()=>action('session')},
   {label:'Open in Task Planner',click:()=>action('plan')},

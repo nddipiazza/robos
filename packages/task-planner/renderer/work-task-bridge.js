@@ -16,7 +16,7 @@ window.resumeWorkTask = async function () {
   for (const [id, text, fn] of [
     ['work-task-source', 'Source workspace', async () => { const dir = await taskCall('folder'); if (dir) { routedTask.workspace = dir; await taskCall('save', { plan: routedTask.plan || '', workspace: dir }); showGenerateStatus(`Workspace: ${dir}`); } }],
     ['work-task-approve', 'Approve plan', async () => { const plan = getPromptValue(); await taskCall('approve-plan', { plan, workspace: routedTask.workspace }); showGenerateStatus('Plan approved. Ready for background implementation.'); }],
-    ['work-task-implement', 'Implement in background', async () => { await openTaskRunnerLaunch({mode:'implement',plan:getPromptValue(),call:taskCall,afterLaunch:async()=>{await taskCall('open-runner');showGenerateStatus('RobOS Agent is implementing the approved plan in Task Runner.');}}); }],
+    ['work-task-implement', 'Implement in background', async () => { await openTaskRunnerLaunch({mode:'implement',plan:getPromptValue(),call:taskCall,afterLaunch:async()=>{await taskCall('open-runner');showGenerateStatus('RobOS Agent is implementing the saved plan in Task Runner.');}}); }],
   ]) {
     if (document.getElementById(id)) continue;
     const button = document.createElement('button'); button.id = id; button.className = 'btn btn-outline'; button.textContent = text;

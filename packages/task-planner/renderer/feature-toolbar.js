@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const primary=document.getElementById('planner-primary');
   if(plannerSession&&!plannerSession.plan&&!plannerSession.workerPid)primary.textContent='Draft implementation plan';
   if(!plannerSession&&!isProject&&record?.kind!=='task')primary.textContent='Draft tasks from requirements';
-  help.textContent=plannerSession&&!plannerSession.plan?'Choose agent and sandbox settings, then draft implementation steps in isolated repository clones. Coding starts only after plan approval.':plannerSession?.phase==='plan-approved'?'Run the approved implementation plan in Task Implementer.':plannerSession?.plan?'Review the implementation steps, revise if needed, then approve the plan.':isProject?'Open a feature or add work to this project.':'Draft a list of tasks from these requirements, then review them before creating tickets.';
+  help.textContent=plannerSession&&!plannerSession.plan?'Choose agent and sandbox settings, then draft implementation steps in isolated repository clones. Save the implementation plan before starting coding. Signoff is needed only when explicitly required.':plannerSession?.planReady?'Run the saved implementation plan in Task Implementer.':plannerSession?.plan?'Review the implementation steps, revise if needed, then obtain the required signoff.':isProject?'Open a feature or add work to this project.':'Draft a list of tasks from these requirements, then review them before creating tickets.';
   ai.hidden=isProject||!record;primary.hidden=!record;
   document.querySelector('[data-planner-tab=details]').textContent=isProject?'Project settings':'Project';
  };
