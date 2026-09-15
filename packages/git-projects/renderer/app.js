@@ -1562,6 +1562,7 @@ function bindOrgPicker() {
   let allRepos = [];
 
   document.getElementById('btn-add-org').addEventListener('click', () => {
+    replaceCatalog.checked=false;cloneChk.disabled=false;
     orgInput.value = '';
     repoSection.classList.add('hidden');
     loadStatus.classList.add('hidden');
@@ -1605,7 +1606,7 @@ function bindOrgPicker() {
 
   function updateSelCount() {
     const checked = repoList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').length;
-    selCount.textContent = `${checked} selected`;
+    selCount.textContent = replaceCatalog.checked ? `${allRepos.length} organization repositories · replaces saved catalog` : `${checked} selected`;
     btnConfirm.disabled = replaceCatalog.checked ? !allRepos.length : checked === 0;
   }
 

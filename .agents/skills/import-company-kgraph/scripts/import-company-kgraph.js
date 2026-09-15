@@ -137,6 +137,9 @@ Production usage (long flags):
     --graph-root /work/graph --output proposal.json
 
 Options:
+  --github-org <org/url>  Discover the repository catalog through paginated gh api
+  --namespace <name>     Stable graph namespace for organization repository IDs
+  --remove-others        Remove unmatched repository entries in that namespace
   --manifest <file>       Portable namespace/title/sources manifest, parsed as JSON
   --paths <file>          Separate source-ID-to-absolute-checkout JSON map
   --graph-root <path>     Explicit workspace root (or its .robos directory)
@@ -828,7 +831,7 @@ async function main() {
     return;
   }
   const options = parseArgs(process.argv.slice(2));
-  if (!options.demo) throw new Error('Use --manifest, --paths and --graph-root for evidence-backed imports. Legacy heuristic examples require explicit --demo and must not be used as architecture evidence.');
+  if (!options.demo) throw new Error('Use --github-org with --graph-root for organization catalogs, or --manifest, --paths and --graph-root for source extraction. Legacy heuristic examples require explicit --demo and must not be used as architecture evidence.');
 
   // Case 1: Agent Natural Language Prompt Mode
   if (options.prompt) {
