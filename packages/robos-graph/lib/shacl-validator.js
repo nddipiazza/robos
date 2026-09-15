@@ -1099,6 +1099,7 @@ const BUILTIN_SHACL_SHAPES = [
       "robos:ProductFeature"
     ],
     "properties": [
+      {"path":"robos:teamChatLinks","message":"Optional TeamChatLink references for this work item."},
       {
         "path": "dcterms:title",
         "minCount": 1,
@@ -1141,6 +1142,7 @@ const BUILTIN_SHACL_SHAPES = [
       "robos:WorkItem"
     ],
     "properties": [
+      {"path":"robos:teamChatLinks","message":"Optional TeamChatLink references for this work item."},
       {
         "path": "dcterms:title",
         "minCount": 1,

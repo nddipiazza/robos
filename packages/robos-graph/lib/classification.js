@@ -25,7 +25,7 @@
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
     ['infrastructure', 'Infrastructure & delivery', 'RemoteExecutionCluster KubernetesCluster Environment GitOpsDeployment CICDPipeline KubernetesNamespace KubernetesDeployment KubernetesService KubernetesIngress PipelineStage PipelineJob PipelineStep EnvironmentProfile DevOpsIntegration PassCredential'],
     ['organization', 'Organization & people', 'Team Company GitProjectOrganization TeamChatServer TeamChatChannel'],
-    ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread ReviewComment CommentAttachment'],
+    ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread TeamChatLink ReviewComment CommentAttachment'],
     ['source', 'Source control & artifacts', 'GitRepository GitBranch PullRequest GitCommit GitTag SourceArtifact'],
     ['agents', 'Agents & MCP', 'MCPServer MCPConnection MCPGateway AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
     ['documentation', 'Documentation & decisions', 'FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
@@ -1321,6 +1321,7 @@
     'robos:workspaceId': ['organization'],
     'robos:channelId': ['organization'],
     'robos:chatServer': ['organization'],
+    'robos:teamChatLinks': ['work'],
     'robos:credentialRef': ['infrastructure'],
     'robos:updatedAt': ['schema'],
     "robos:acceptanceCriteria": [
