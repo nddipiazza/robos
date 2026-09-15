@@ -27,6 +27,7 @@ const OSLC_CONTEXT = {
   'robos:arguments': { '@id': 'robos:arguments', '@type': '@json' },
   'robos:issueType': { '@id': 'robos:issueType', '@type': '@id' },
   'robos:workflow': { '@id': 'robos:workflow', '@type': '@id' },
+  'robos:chatServer': { '@id': 'robos:chatServer', '@type': '@id' },
   'robos:taskServer': { '@id': 'robos:taskServer', '@type': '@id' },
   'robos:states': { '@id': 'robos:states', '@type': '@json' },
   'robos:transitions': { '@id': 'robos:transitions', '@type': '@json' },

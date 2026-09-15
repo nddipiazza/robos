@@ -86,6 +86,7 @@ class KGraphPackageManager {
 
     const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
     const typeStr = types.join(' ');
+    if (typeStr.includes('TeamChatServer') || typeStr.includes('TeamChatChannel')) return 'organization';
     if (typeStr.includes('DataStore') || typeStr.includes('BrokerDefinition')) return 'core-platform';
     if (typeStr.includes('EnvironmentProfile')) return 'devops';
     if (typeStr.includes('AgentSkill')) return 'learning';

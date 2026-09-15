@@ -5,6 +5,18 @@
 const required = (path, message) => ({ path, minCount: 1, message });
 const SOURCE_SHAPES = [
   {
+    shapeId: 'robos:TeamChatServerShape', targetClass: 'robos:TeamChatServer',
+    refersFrom: 'https://schema.org/Service', domainStandard: 'https://schema.org/Service',
+    properties: [required('dcterms:title', 'Chat server needs a name.'), required('robos:provider', 'Chat server needs a provider.'), required('robos:url', 'Chat server needs its workspace URL.'),
+      {path:'dcterms:description', maxCount:1}, {path:'robos:workspaceId', maxCount:1}, {path:'robos:credentialRef', maxCount:1}, {path:'robos:updatedAt', maxCount:1}],
+  },
+  {
+    shapeId: 'robos:TeamChatChannelShape', targetClass: 'robos:TeamChatChannel',
+    refersFrom: 'https://schema.org/ServiceChannel', domainStandard: 'https://schema.org/ServiceChannel',
+    properties: [required('dcterms:title', 'Chat channel needs a name.'), required('robos:chatServer', 'Chat channel needs its server reference.'), required('robos:channelId', 'Chat channel needs a provider channel, stream or room ID.'),
+      {path:'dcterms:description', maxCount:1}, {path:'robos:url', maxCount:1}, {path:'robos:updatedAt', maxCount:1}],
+  },
+  {
     shapeId: 'robos:CurriculumDefinitionShape', targetClass: 'robos:CurriculumDefinition',
     refersFrom: 'https://schema.org/Course', domainStandard: 'https://schema.org/Course',
     properties: [required('dcterms:title', 'Curriculum needs a title.'), required('robos:sourcePath', 'Curriculum needs its source document.'), required('robos:evidence', 'Curriculum needs source evidence.')],

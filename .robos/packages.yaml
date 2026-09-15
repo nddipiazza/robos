@@ -260,3 +260,9 @@ packages:
     type: "robos:Database"
     repository: "github.com/sdlc-resources-for-acme-global/component"
     technology: "Polyglot"
+
+  - id: "urn:robos:app:team-chat-servers"
+    title: "RobOS Team Chat Servers"
+    type: "robos:DesktopApp"
+    repository: "https://github.com/nddipiazza/robos"
+    technology: "Electron"

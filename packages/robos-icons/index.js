@@ -18,6 +18,7 @@
  */
 
 const BUILTIN_APPS = [
+{"appId": "team-chat-servers", "label": "Team Chat Servers", "category": "RobOS People", "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 8h27a4 4 0 0 1 4 4v15a4 4 0 0 1-4 4H17L7 39V8Z\"/><path d=\"M16 16h13M16 23h8M37 36h4v6l-8-6h-9\"/></svg>"},
   {
     appId: 'agent-chat',
     label: 'Agent Chat',

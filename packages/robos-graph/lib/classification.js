@@ -24,7 +24,7 @@
     ['data', 'Data stores & messaging', 'Database NoSQLDatabase MessageBroker DatabaseSchema DatabaseTable DatabaseColumn DatabaseIndex NoSQLCollection MessageTopic ConsumerGroup DataStore BrokerDefinition'],
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
     ['infrastructure', 'Infrastructure & delivery', 'RemoteExecutionCluster KubernetesCluster Environment GitOpsDeployment CICDPipeline KubernetesNamespace KubernetesDeployment KubernetesService KubernetesIngress PipelineStage PipelineJob PipelineStep EnvironmentProfile DevOpsIntegration PassCredential'],
-    ['organization', 'Organization & people', 'Team Company GitProjectOrganization'],
+    ['organization', 'Organization & people', 'Team Company GitProjectOrganization TeamChatServer TeamChatChannel'],
     ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread ReviewComment CommentAttachment'],
     ['source', 'Source control & artifacts', 'GitRepository GitBranch PullRequest GitCommit GitTag SourceArtifact'],
     ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
@@ -1318,6 +1318,11 @@
   // Explicit optional inspector fields and inverse relationships. Categories
   // describe predicate semantics; group visibility is handled by the catalog.
   Object.assign(PREDICATE_CODES, {
+    'robos:workspaceId': ['organization'],
+    'robos:channelId': ['organization'],
+    'robos:chatServer': ['organization'],
+    'robos:credentialRef': ['infrastructure'],
+    'robos:updatedAt': ['schema'],
     "robos:acceptanceCriteria": [
       "work"
     ],

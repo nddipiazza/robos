@@ -32,6 +32,7 @@ const https = require('https');
 
 // Debug port registry: each app gets a unique port
 const PORT_REGISTRY = {
+  'team-chat-servers': 19191,
   'app-launcher':      19100,
   'dev-central':       19101,
   'git-projects':      19138,

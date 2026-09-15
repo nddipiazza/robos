@@ -9,6 +9,10 @@ const { resolveSchemaElement, CATALOG } = require('./classification');
 
 // Canonical property metadata dictionary
 const PROPERTY_METADATA = {
+  'robos:chatServer': {name:'Team Chat Server',type:'URI (robos:TeamChatServer)',description:'Workspace/server that owns this channel, stream or room.'},
+  'robos:channelId': {name:'Channel / Stream / Room ID',type:'xsd:string',description:'Provider-native channel identifier. Zulip streams and Matrix rooms use the same field.'},
+  'robos:workspaceId': {name:'Workspace / Tenant ID',type:'xsd:string',description:'Optional provider-native workspace or tenant identifier.'},
+  'robos:credentialRef': {name:'Credential Reference',type:'xsd:string',description:'Password-store reference such as pass:team-chat/slack/token. Never an inline token.'},
   'dcterms:title': {
     name: 'Title / Display Name',
     type: 'xsd:string',

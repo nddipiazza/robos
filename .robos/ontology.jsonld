@@ -25,7 +25,7 @@
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
   "dcterms:description": "RobOS SDLC class and predicate ontology, with complete built-in shape coverage and RobOS-owned classification codes expressed using Schema.org CategoryCode and CategoryCodeSet.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 180,
+  "robos:totalClasses": 182,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -7301,6 +7301,84 @@
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/work"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TeamChatServer",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TeamChatServer",
+      "robos:shaclShape": "robos:TeamChatServerShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Service"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TeamChatChannel",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TeamChatChannel",
+      "robos:shaclShape": "robos:TeamChatChannelShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ServiceChannel"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:workspaceId",
+      "@type": "rdf:Property",
+      "rdfs:label": "workspaceId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:channelId",
+      "@type": "rdf:Property",
+      "rdfs:label": "channelId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:chatServer",
+      "@type": "rdf:Property",
+      "rdfs:label": "chatServer",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/organization"
+        }
+      ]
+    },
+    {
+      "@id": "robos:credentialRef",
+      "@type": "rdf:Property",
+      "rdfs:label": "credentialRef",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:updatedAt",
+      "@type": "rdf:Property",
+      "rdfs:label": "updatedAt",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/schema"
         }
       ]
     }

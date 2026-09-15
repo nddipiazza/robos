@@ -1,0 +1,439 @@
+{
+  "base": "092f606ae546aad955980ca00fcffca34dad45ee59bda2c04d76daee95ceb39c",
+  "baseline": {
+    "current": {
+      "@context": {
+        "c4": "https://c4model.com/ns#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "oslc": "http://open-services.net/ns/core#",
+        "oslc_am": "http://open-services.net/ns/am#",
+        "oslc_cm": "http://open-services.net/ns/cm#",
+        "oslc_qm": "http://open-services.net/ns/qm#",
+        "oslc_rm": "http://open-services.net/ns/rm#",
+        "pact": "https://pact.io/ns#",
+        "robos": "https://robos.dev/ns/sdlc#",
+        "robos:annotations": {
+          "@id": "robos:annotations",
+          "@type": "@json"
+        },
+        "robos:arguments": {
+          "@id": "robos:arguments",
+          "@type": "@json"
+        },
+        "robos:chatServer": {
+          "@id": "robos:chatServer",
+          "@type": "@id"
+        },
+        "robos:classification": {
+          "@container": "@set",
+          "@id": "robos:classification",
+          "@type": "@id"
+        },
+        "robos:evidence": {
+          "@container": "@set",
+          "@context": {
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          },
+          "@id": "robos:evidence"
+        },
+        "robos:inputSchema": {
+          "@id": "robos:inputSchema",
+          "@type": "@json"
+        },
+        "robos:issueType": {
+          "@id": "robos:issueType",
+          "@type": "@id"
+        },
+        "robos:issueTypes": {
+          "@id": "robos:issueTypes",
+          "@type": "@json"
+        },
+        "robos:mcpServer": {
+          "@id": "robos:mcpServer",
+          "@type": "@id"
+        },
+        "robos:outputSchema": {
+          "@id": "robos:outputSchema",
+          "@type": "@json"
+        },
+        "robos:parameters": {
+          "@id": "robos:parameters",
+          "@type": "@json"
+        },
+        "robos:promptsProvided": {
+          "@container": "@set",
+          "@id": "robos:promptsProvided",
+          "@type": "@id"
+        },
+        "robos:protocolReference": {
+          "@id": "robos:protocolReference",
+          "@type": "@id"
+        },
+        "robos:provenance": {
+          "@id": "robos:provenance",
+          "@type": "@json"
+        },
+        "robos:relationshipEvidence": {
+          "@container": "@set",
+          "@context": {
+            "condition": "robos:condition",
+            "evidence": {
+              "@container": "@set",
+              "@context": {
+                "line": {
+                  "@id": "robos:sourceLine",
+                  "@type": "xsd:integer"
+                },
+                "path": "robos:sourcePath",
+                "repository": "robos:sourceRepository",
+                "revision": "robos:sourceRevision",
+                "sha256": "robos:sourceHash",
+                "workingTreeStatus": "robos:workingTreeStatus"
+              },
+              "@id": "robos:evidence"
+            },
+            "note": "dcterms:description",
+            "predicate": {
+              "@id": "robos:predicate",
+              "@type": "@vocab"
+            },
+            "status": "robos:evidenceStatus",
+            "target": {
+              "@id": "robos:target",
+              "@type": "@id"
+            }
+          },
+          "@id": "robos:relationshipEvidence"
+        },
+        "robos:resourcesProvided": {
+          "@container": "@set",
+          "@id": "robos:resourcesProvided",
+          "@type": "@id"
+        },
+        "robos:sourceSummary": {
+          "@id": "robos:sourceSummary",
+          "@type": "@json"
+        },
+        "robos:states": {
+          "@id": "robos:states",
+          "@type": "@json"
+        },
+        "robos:taskServer": {
+          "@id": "robos:taskServer",
+          "@type": "@id"
+        },
+        "robos:technologyReference": {
+          "@id": "robos:technologyReference",
+          "@type": "@id"
+        },
+        "robos:toolAnnotations": {
+          "@id": "robos:toolAnnotations",
+          "@type": "@json"
+        },
+        "robos:transitions": {
+          "@id": "robos:transitions",
+          "@type": "@json"
+        },
+        "robos:workflow": {
+          "@id": "robos:workflow",
+          "@type": "@id"
+        },
+        "robos:workflows": {
+          "@id": "robos:workflows",
+          "@type": "@json"
+        },
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:graph:workspace",
+      "@type": [
+        "robos:SystemGraph"
+      ],
+      "dcterms:title": "Workspace Knowledge Graph",
+      "robos:nodes": []
+    },
+    "state": {
+      "extracted": [],
+      "revision": null
+    }
+  },
+  "candidate": {
+    "@context": {
+      "c4": "https://c4model.com/ns#",
+      "dcterms": "http://purl.org/dc/terms/",
+      "oslc": "http://open-services.net/ns/core#",
+      "oslc_am": "http://open-services.net/ns/am#",
+      "oslc_cm": "http://open-services.net/ns/cm#",
+      "oslc_qm": "http://open-services.net/ns/qm#",
+      "oslc_rm": "http://open-services.net/ns/rm#",
+      "pact": "https://pact.io/ns#",
+      "robos": "https://robos.dev/ns/sdlc#",
+      "robos:annotations": {
+        "@id": "robos:annotations",
+        "@type": "@json"
+      },
+      "robos:arguments": {
+        "@id": "robos:arguments",
+        "@type": "@json"
+      },
+      "robos:chatServer": {
+        "@id": "robos:chatServer",
+        "@type": "@id"
+      },
+      "robos:classification": {
+        "@container": "@set",
+        "@id": "robos:classification",
+        "@type": "@id"
+      },
+      "robos:evidence": {
+        "@container": "@set",
+        "@context": {
+          "line": {
+            "@id": "robos:sourceLine",
+            "@type": "xsd:integer"
+          },
+          "path": "robos:sourcePath",
+          "repository": "robos:sourceRepository",
+          "revision": "robos:sourceRevision",
+          "sha256": "robos:sourceHash",
+          "workingTreeStatus": "robos:workingTreeStatus"
+        },
+        "@id": "robos:evidence"
+      },
+      "robos:inputSchema": {
+        "@id": "robos:inputSchema",
+        "@type": "@json"
+      },
+      "robos:issueType": {
+        "@id": "robos:issueType",
+        "@type": "@id"
+      },
+      "robos:issueTypes": {
+        "@id": "robos:issueTypes",
+        "@type": "@json"
+      },
+      "robos:mcpServer": {
+        "@id": "robos:mcpServer",
+        "@type": "@id"
+      },
+      "robos:outputSchema": {
+        "@id": "robos:outputSchema",
+        "@type": "@json"
+      },
+      "robos:parameters": {
+        "@id": "robos:parameters",
+        "@type": "@json"
+      },
+      "robos:promptsProvided": {
+        "@container": "@set",
+        "@id": "robos:promptsProvided",
+        "@type": "@id"
+      },
+      "robos:protocolReference": {
+        "@id": "robos:protocolReference",
+        "@type": "@id"
+      },
+      "robos:provenance": {
+        "@id": "robos:provenance",
+        "@type": "@json"
+      },
+      "robos:relationshipEvidence": {
+        "@container": "@set",
+        "@context": {
+          "condition": "robos:condition",
+          "evidence": {
+            "@container": "@set",
+            "@context": {
+              "line": {
+                "@id": "robos:sourceLine",
+                "@type": "xsd:integer"
+              },
+              "path": "robos:sourcePath",
+              "repository": "robos:sourceRepository",
+              "revision": "robos:sourceRevision",
+              "sha256": "robos:sourceHash",
+              "workingTreeStatus": "robos:workingTreeStatus"
+            },
+            "@id": "robos:evidence"
+          },
+          "note": "dcterms:description",
+          "predicate": {
+            "@id": "robos:predicate",
+            "@type": "@vocab"
+          },
+          "status": "robos:evidenceStatus",
+          "target": {
+            "@id": "robos:target",
+            "@type": "@id"
+          }
+        },
+        "@id": "robos:relationshipEvidence"
+      },
+      "robos:resourcesProvided": {
+        "@container": "@set",
+        "@id": "robos:resourcesProvided",
+        "@type": "@id"
+      },
+      "robos:sourceSummary": {
+        "@id": "robos:sourceSummary",
+        "@type": "@json"
+      },
+      "robos:states": {
+        "@id": "robos:states",
+        "@type": "@json"
+      },
+      "robos:taskServer": {
+        "@id": "robos:taskServer",
+        "@type": "@id"
+      },
+      "robos:technologyReference": {
+        "@id": "robos:technologyReference",
+        "@type": "@id"
+      },
+      "robos:toolAnnotations": {
+        "@id": "robos:toolAnnotations",
+        "@type": "@json"
+      },
+      "robos:transitions": {
+        "@id": "robos:transitions",
+        "@type": "@json"
+      },
+      "robos:workflow": {
+        "@id": "robos:workflow",
+        "@type": "@id"
+      },
+      "robos:workflows": {
+        "@id": "robos:workflows",
+        "@type": "@json"
+      },
+      "schema": "https://schema.org/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@id": "urn:robos:graph:workspace",
+    "@type": [
+      "robos:SystemGraph"
+    ],
+    "dcterms:title": "Workspace Knowledge Graph",
+    "robos:nodes": [
+      {
+        "@id": "urn:robos:app:team-chat-servers",
+        "@type": [
+          "robos:DesktopApp"
+        ],
+        "dcterms:description": "Manage team chat workspaces and channels in a KGraph.",
+        "dcterms:title": "RobOS Team Chat Servers",
+        "robos:appId": "team-chat-servers",
+        "robos:desktopFramework": "Electron",
+        "robos:evidence": [
+          {
+            "line": 1,
+            "path": "packages/team-chat-servers/README.md",
+            "repository": "nddipiazza/robos"
+          }
+        ],
+        "robos:package": "applications",
+        "robos:repository": "https://github.com/nddipiazza/robos",
+        "robos:sourcePath": "packages/team-chat-servers",
+        "robos:status": "implemented",
+        "robos:technology": "Electron / JavaScript"
+      }
+    ]
+  },
+  "conflicts": [],
+  "delta": {
+    "added": [
+      {
+        "@id": "urn:robos:app:team-chat-servers",
+        "@type": [
+          "robos:DesktopApp"
+        ],
+        "dcterms:description": "Manage team chat workspaces and channels in a KGraph.",
+        "dcterms:title": "RobOS Team Chat Servers",
+        "robos:appId": "team-chat-servers",
+        "robos:desktopFramework": "Electron",
+        "robos:evidence": [
+          {
+            "line": 1,
+            "path": "packages/team-chat-servers/README.md",
+            "repository": "nddipiazza/robos"
+          }
+        ],
+        "robos:package": "applications",
+        "robos:repository": "https://github.com/nddipiazza/robos",
+        "robos:sourcePath": "packages/team-chat-servers",
+        "robos:status": "implemented",
+        "robos:technology": "Electron / JavaScript"
+      }
+    ],
+    "changed": [],
+    "removed": []
+  },
+  "extracted": [],
+  "id": "2a5b963a6997b86220f8823fd4f54da54960c861c06873748d713bcde40eaf4f",
+  "metadata": {
+    "manifest": null,
+    "packages": {}
+  },
+  "metadataBase": "223fe2a6e333d2e1e71970e8200e9ee92918111b2238978fb13cb864f49c7e05",
+  "mode": "refine",
+  "prompt": "Register the Team Chat Servers desktop application in its portable app graph.",
+  "request": {
+    "edits": [
+      {
+        "node": {
+          "@id": "urn:robos:app:team-chat-servers",
+          "@type": [
+            "robos:DesktopApp"
+          ],
+          "dcterms:description": "Manage team chat workspaces and channels in a KGraph.",
+          "dcterms:title": "RobOS Team Chat Servers",
+          "robos:appId": "team-chat-servers",
+          "robos:desktopFramework": "Electron",
+          "robos:evidence": [
+            {
+              "line": 1,
+              "path": "packages/team-chat-servers/README.md",
+              "repository": "nddipiazza/robos"
+            }
+          ],
+          "robos:package": "applications",
+          "robos:repository": "https://github.com/nddipiazza/robos",
+          "robos:sourcePath": "packages/team-chat-servers",
+          "robos:status": "implemented",
+          "robos:technology": "Electron / JavaScript"
+        },
+        "op": "add"
+      }
+    ],
+    "mode": "refine",
+    "prompt": "Register the Team Chat Servers desktop application in its portable app graph.",
+    "requireEvidence": false
+  },
+  "requireEvidence": false,
+  "retired": [],
+  "stale": [],
+  "stateBase": "bfdadddd56325f97130a5379f17f90710aad10beb35363a6540669436e928c0b",
+  "validation": {
+    "conforms": true,
+    "constraints": [
+      "structure",
+      "unique IDs",
+      "internal references",
+      "package names",
+      "source locations",
+      "built-in shape cardinality"
+    ],
+    "errors": [],
+    "nodesEvaluated": 1,
+    "warnings": []
+  },
+  "version": 1
+}

@@ -1,0 +1,63 @@
+{
+  "dependencies": [],
+  "packages": [
+    {
+      "id": "applications",
+      "namespace": "robos.apps",
+      "path": "kgraphs/applications/package.jsonld",
+      "title": "Client Applications, Web Frontends & Games"
+    },
+    {
+      "id": "core-platform",
+      "namespace": "robos.platform",
+      "path": "kgraphs/core-platform/package.jsonld",
+      "title": "RobOS Platform Core & Base SDLC Architecture"
+    },
+    {
+      "id": "devops",
+      "namespace": "robos.devops",
+      "path": "kgraphs/devops/package.jsonld",
+      "title": "DevOps Accounts, Cloud Infrastructure & Pass Credentials"
+    },
+    {
+      "id": "documentation",
+      "namespace": "robos.docs",
+      "path": "kgraphs/documentation/package.jsonld",
+      "title": "Living Documentation, Visual Architecture & Flow Diagrams"
+    },
+    {
+      "id": "learning",
+      "namespace": "robos.learning",
+      "path": "kgraphs/learning/package.jsonld",
+      "title": "Interactive eLearning Curriculums & Knowledge Modules"
+    },
+    {
+      "id": "organization",
+      "namespace": "robos.org",
+      "path": "kgraphs/organization/package.jsonld",
+      "title": "Enterprise Organization, Teams & Personas"
+    },
+    {
+      "id": "services",
+      "namespace": "robos.services",
+      "path": "kgraphs/services/package.jsonld",
+      "title": "Microservices, Web APIs & Interface Contracts"
+    },
+    {
+      "id": "testing",
+      "namespace": "robos.testing",
+      "path": "kgraphs/testing/package.jsonld",
+      "title": "Testing, Quality & Behavior-Driven Development (BDD)"
+    }
+  ],
+  "repositories": [
+    {
+      "default": true,
+      "id": "local",
+      "packagesPath": "kgraphs",
+      "path": ".robos"
+    }
+  ],
+  "title": "Workspace Knowledge Graph",
+  "version": "1.0.0"
+}
