@@ -21,3 +21,12 @@ Feature #50 was planned through RobOS's Codex sandbox, explicitly saved in Task 
 ## Updating courses with an AI prompt
 
 The shared player exposes **Update course with AI** using the standard `robos-ai-textarea`, an initially disabled Preview update button, and Ctrl+Enter submission. Both Task Planner and the standalone e-learning app expose the same `robosCourseEditor` preload API backed by `course-editor-main.js`. Codex generates a structured course revision in a read-only session. RobOS validates sections and quiz answers, checks the graph revision, and presents the result in a read-only instance of the same player. Save applies the pinned GraphWorkspace proposal; discard leaves the course unchanged. Editing course content never changes the feature plan or its signoff. Progress is scoped to course content, so revised courses begin with fresh progress.
+
+Sandbox GitHub access is checked with the exact CLI credential supplied to the
+agent before it starts. The task and paginated comments are saved in the ephemeral
+home as `task-context.json`. Agents are directed to use this authenticated CLI for
+additional GitHub references; provider-hosted connectors have independent access
+and their 404 responses do not establish that a private issue was removed.
+Access failures stop launch with an actionable Task Server connection error.
+The e-learning source remains the saved plan: correcting source findings requires
+saving the plan and generating a new course revision in Task Planner.
