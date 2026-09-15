@@ -6,3 +6,17 @@ test('uses issue type workflow names and configured phase mappings',()=>{const r
 test('preparing an approved implementation stays in its implementation stage',()=>{const r=view({url,phase:'provisioning',approvedPlanHash:'approved'},{type:{name:'Feature'},state:'open'},{task_servers:[server]});assert.equal(r.currentStage,'Deliver child tasks');});
 test('unknown issue types do not get a made-up task workflow',()=>{const r=view({url,phase:'plan-review'},{type:{name:'Bug'},state:'open'},{task_servers:[server]});assert.equal(r.issueType,'Bug');assert.equal(r.workflow,null);});
 test('closed tickets use the configured final stage',()=>{const r=view({url,phase:'merged'},{type:{name:'Feature'},state:'closed'},{task_servers:[server]});assert.equal(r.currentStage,'Delivered');});
+test('live and failed runs retain the error on the stage where it occurred',()=>{
+ const issue={type:{name:'Feature'},state:'open'},settings={task_servers:[server]};
+ const state={url,phase:'plan-review',executionError:{text:'Slack login required',phase:'plan-review'}};
+ assert.equal(view(state,issue,settings).error,'Slack login required');
+ const failed=view({...state,phase:'failed',approvedPlanHash:'approved'},issue,settings);
+ assert.equal(failed.currentStage,'Design review');assert.equal(failed.error,'Slack login required');
+ const retry=view({...state,phase:'provisioning',executionError:null,error:null,approvedPlanHash:'approved'},issue,settings);
+ assert.equal(retry.error,null);assert.equal(retry.currentStage,'Deliver child tasks');
+ assert.equal(view({url,phase:'review',error:null,executionError:null},issue,settings).error,null);
+});
+test('legacy failed sessions and tasks without a workflow still expose their error',()=>{
+ assert.equal(view({url,phase:'failed',error:'Agent exited 1'},{},{task_servers:[]}).error,'Agent exited 1');
+ assert.ok(view({url,phase:'implementation-needs-attention'},{},{task_servers:[]}).error);
+});

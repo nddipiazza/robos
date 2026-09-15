@@ -120,3 +120,7 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 
 /* Compact task actions remain keyboard accessible; stop appears only for a live worker. */
 .task-row-actions{display:inline-flex;gap:4px}.task-icon-button{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;padding:0;border:1px solid transparent;border-radius:4px;background:transparent;color:#96bacd;cursor:pointer;font-size:12px}.task-icon-button:hover{background:#253746;border-color:#3c5668}.task-icon-button:focus-visible{outline:2px solid #00bcd4}.task-icon-button:disabled{opacity:.35;cursor:default}.task-stop-button{color:#f08888}.task-icon-button[hidden]{display:none}#task-sort{margin:0 12px 8px}.task-item>robos-list-time{display:block;margin:4px 0}.task-item .robos-copy-line{margin:3px 0}.task-item-title{flex:1;min-width:0}
+
+#session-workflow.has-error .session-workflow-current, .workflow-error {color:#ff7b72;}
+#session-workflow.has-error [aria-current=step] {color:#ffb4ad;background:#3b1d25;border-color:#f85149;}
+.workflow-error {font-size:12px;margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;}

@@ -56,7 +56,8 @@ async function resumeSession() {
   agentRunning=!!state.workerPid;setAgentBusy(agentRunning);
   const launched=!!(state.sandbox?.id || state.workerPid || state.events?.some(e=>e.role==='assistant'));
   const provider=launched?(state.launchConfig?.provider||state.backend):null;
-  setAgentStatus(state.error || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),state.error?'done-err':agentRunning?'running':'');
+  const executionError=state.workflowView?.error||state.error||state.executionError?.text;
+  setAgentStatus(executionError || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),executionError?'done-err':agentRunning?'running':'');
   document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':state.planApproved?'Run Task':'Review plan in Task Planner';
   document.getElementById('btn-start-agent').title=state.planApproved?'Review launch settings and implement the approved plan':'This task needs an approved plan from Task Planner';
   if(!document.getElementById('session-planner')) {
@@ -117,15 +118,18 @@ function renderSessionWorkflow(state) {
   if(!panel){panel=document.createElement('section');panel.id='session-workflow';panel.setAttribute('aria-label','Issue type and workflow');document.querySelector('.agent-output-header').before(panel);}
   panel.replaceChildren();
   const view=state.workflowView;
+  const error=view?.error||state.error||state.executionError?.text||(['failed','implementation-needs-attention'].includes(state.phase)?'Agent execution needs attention.':null);
+  panel.classList.toggle('has-error',!!error);
   const heading=document.createElement('div');heading.className='session-workflow-heading';
   const type=document.createElement('strong');type.className='session-issue-type';type.textContent=view?.issueType||'Issue type unavailable';heading.append(type);
   const name=document.createElement('span');name.textContent=view?.workflow?.name||'No workflow configured for this issue type';heading.append(name);panel.append(heading);
   if(view?.workflow){
-    const current=document.createElement('p');current.className='session-workflow-current';current.textContent='Current stage: '+(view.currentStage||'Unresolved');panel.append(current);
+    const current=document.createElement('p');current.className='session-workflow-current';current.textContent='Current stage: '+(view.currentStage||'Unresolved')+(error?' — Error':'');panel.append(current);
     const stages=document.createElement('ol');stages.className='session-workflow-stages';
-    for(const stage of view.workflow.states){const li=document.createElement('li');li.textContent=stage.label;li.title=stage.current?'Current workflow stage':stage.label;if(stage.current)li.setAttribute('aria-current','step');stages.append(li);}panel.append(stages);
+    for(const stage of view.workflow.states){const li=document.createElement('li');li.textContent=stage.label;li.title=stage.current?(error?'Error: '+error:'Current workflow stage'):stage.label;if(stage.current&&error)li.textContent+=' · Error';if(stage.current)li.setAttribute('aria-current','step');stages.append(li);}panel.append(stages);
     const next=document.createElement('small');next.textContent=view.nextStages.length?'Allowed next stages: '+view.nextStages.join(' · '):'No next transition configured';panel.append(next);
   }
   if(view?.warning){const warning=document.createElement('p');warning.className='workflow-warning';warning.textContent=view.warning;panel.append(warning);}
-  if(['failed','stopped','implementation-needs-attention'].includes(state.phase)){const status=document.createElement('p');status.className='workflow-warning';status.textContent='Agent: '+state.phase.replaceAll('-',' ');panel.append(status);}
+  if(error){const detail=document.createElement('p');detail.className='workflow-error';detail.setAttribute('role','status');detail.textContent=error;panel.append(detail);}
+  if(state.phase==='stopped'&&!error){const status=document.createElement('p');status.className='workflow-warning';status.textContent='Agent: '+state.phase.replaceAll('-',' ');panel.append(status);}
 }

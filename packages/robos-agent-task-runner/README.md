@@ -56,3 +56,8 @@ home. Host plugins, MCP configuration, conversations, and permission settings ar
 not imported. The sandbox has its own repository read/write and terminal rules.
 AGY permission denials and native error results fail the run even if its process
 exits zero. No empty response is accepted as a completed plan.
+
+Agent errors appear immediately in red on the current workflow stage, with the
+error message beneath it. The failed stage is retained if execution stops. A new
+launch or successful completion clears the active error; session history retains
+the original error messages.

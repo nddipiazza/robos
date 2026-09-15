@@ -16,3 +16,10 @@ test('AGY denied permissions fail even when the CLI reports success',()=>{
  assert.match(decode({event:'result',result:{status:'SUCCESS',response:'',denied_actions:[{action:'read_file'}]}}).error,/read_file/);
  assert.equal(decode({event:'result',result:{status:'ERROR',error:'Login expired'}}).error,'Login expired');
 });
+test('recoverable tool errors emit live error events without prematurely terminating the agent',()=>{
+ const agy=decode({event:'step_update',step_update:{step_type:'tool',state:'ERROR',tool_name:'run_command',tool_info:{error:{message:'Permission required'}}}});
+ assert.equal(agy.events[0].role,'error');assert.equal(agy.events[0].text,'Permission required');assert.equal(agy.error,null);
+ const codex=decode({type:'item.completed',item:{type:'mcp_tool_call',result:{isError:true,content:[{type:'text',text:'Slack login required'}]}}});
+ assert.equal(codex.events[0].role,'error');assert.match(codex.events[0].text,/Slack login required/);assert.equal(codex.error,null);
+ assert.equal(decode({type:'item.completed',item:{type:'command_execution',status:'failed',aggregated_output:'Build failed'}}).events[0].role,'error');
+});

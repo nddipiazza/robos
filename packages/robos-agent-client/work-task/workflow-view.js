@@ -13,11 +13,13 @@ function view(state,issue,settings){
  const server=(settings.task_servers||[]).find(s=>s.type==='github'&&(s.repos||[]).some(r=>(typeof r==='string'?r:`${r.org}/${r.repo}`).toLowerCase()===repo));
  const nativeType=issue.type?.name||issue.issueType;
  let phase=state.phase;
+ if(phase==='failed'&&state.executionError?.phase)phase=state.executionError.phase;
  if(['provisioning','failed','stopped','implementation-needs-attention'].includes(phase))phase=state.approvedPlanHash?'implementing':state.plan?'plan-review':'planning';
  const workflow=server?ticketWorkflow({...issue,issueType:nativeType,session:{...state,phase}},server):null;
  const definition=workflow&&server.workflows.find(w=>w.type_id===workflow.typeId);
  const type=server?.issue_types?.find(t=>t.id===workflow?.typeId);
- return {issueType:nativeType||type?.label||'Issue type not set',serverName:server?.name||'Task server not configured',workflow,currentStage:workflow?.states.find(s=>s.current)?.label||null,nextStages:(definition?.transitions||[]).filter(t=>t.from===workflow?.states.find(s=>s.current)?.id).map(t=>workflow.states.find(s=>s.id===t.to)?.label).filter(Boolean),executionPhase:state.phase};
+ const error=state.error||state.executionError?.text||(['failed','implementation-needs-attention'].includes(state.phase)?'Agent execution needs attention.':null);
+ return {error,issueType:nativeType||type?.label||'Issue type not set',serverName:server?.name||'Task server not configured',workflow,currentStage:workflow?.states.find(s=>s.current)?.label||null,nextStages:(definition?.transitions||[]).filter(t=>t.from===workflow?.states.find(s=>s.current)?.id).map(t=>workflow.states.find(s=>s.id===t.to)?.label).filter(Boolean),executionPhase:state.phase};
 }
 async function load(state){
  let settings={};try{settings=JSON.parse(fs.readFileSync(path.join(os.homedir(),'.config/robos/settings.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}

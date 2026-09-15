@@ -84,7 +84,7 @@ async function startWorkerUnlocked(url,mode,{workspace,plan,refinement,backend='
   launchConfig=require('../../robos-agent-task-runner/sandbox').validate(launchConfig);
   backend=launchConfig.provider;
 
-  const state=save(url,{autoStart:false,plan:plan??old.plan,backend,launchConfig,origin,...(mode==='plan'?{approvedPlanHash:null,planApproval:null}:{}),refinement:refinement||'',phase:'provisioning',error:null,output:''});
+  const state=save(url,{autoStart:false,plan:plan??old.plan,backend,launchConfig,origin,...(mode==='plan'?{approvedPlanHash:null,planApproval:null}:{}),refinement:refinement||'',phase:'provisioning',error:null,executionError:null,output:''});
   const log=fs.openSync(path.join(folder(url),'agent.log'),'a',0o600);
   try {
     const child=spawn(electron,[path.join(__dirname,'runner.js'),mode,url,electron],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},detached:true,stdio:['ignore',log,log]});
@@ -118,13 +118,13 @@ async function runWorker(url,mode,electron){
   if(state.launchConfig){
     const eventsFile=path.join(dir,'events.jsonl');
     fs.writeFileSync(eventsFile,'',{mode:0o600});
-    const event=(role,text,name)=>fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at:new Date().toISOString()})+'\n');
+    const event=(role,text,name)=>{const at=new Date().toISOString();fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at})+'\n');if(role==='error'&&!/WARN |Reading additional input/.test(text))save(url,{executionError:{text,at,phase:read(url).phase}});};
     event('user',`${mode==='plan'?'Draft implementation plan':'Implement approved plan'} for ${url}`);
     try{
       const output=await require('../../robos-agent-task-runner/sandbox').run(url,mode,prompt,event);
       fs.writeFileSync(outputFile,output,{mode:0o600});
-      if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,planApproval:null,phase:'plan-review',workerPid:null,error:null});
-      else{const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',workerPid:null,error:live.prs.length?null:'Agent finished without a linked PR. Review the preserved output.'});if(live.prs.length)await launchApp('pr-review',url,electron);}
+      if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,planApproval:null,phase:'plan-review',workerPid:null,error:null,executionError:null});
+      else{const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',workerPid:null,...(live.prs.length?{executionError:null}:{}),error:live.prs.length?null:'Agent finished without a linked PR. Review the preserved output.'});if(live.prs.length)await launchApp('pr-review',url,electron);}
     }catch(e){event('error',e.message);save(url,{phase:read(url).phase==='stopped'?'stopped':'failed',workerPid:null,error:e.message});throw e;}
     return;
   }
