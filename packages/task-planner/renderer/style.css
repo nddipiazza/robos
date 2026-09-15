@@ -1106,3 +1106,11 @@ robos-ai-textarea {
 .create-bar { flex-wrap:wrap; }
 .create-bar > button { flex:0 0 auto;white-space:nowrap; }
 .create-bar > .status-text { flex-basis:100%; }
+#task-plan-composer { margin-bottom:14px; }
+#task-plan-composer[hidden] { display:none; }
+#task-plan-composer h3 { font-size:15px;margin:12px 0; }
+#task-plan-composer p { color:#9eb1c2;font-size:13px;line-height:1.5;margin:8px 0 14px; }
+.task-composer-actions { display:flex;gap:10px;margin:12px 0; }
+#task-plan-composer [data-status]:empty { display:none; }
+.task-plan-composing .prompt-header-row { display:none; }
+.task-plan-composing #task-plan-composer > h3:first-child { margin-top:0; }

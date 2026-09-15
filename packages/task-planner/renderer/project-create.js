@@ -9,6 +9,7 @@ async function createPlannerWork(kind){
   const result=await window.robos.saveProject({name:name.trim(),kind,product:{id:group.id,name:group.name},parentPlanId:kind==='task'&&record?.kind==='feature'?record.id:null,prompt:'',tasks:[]});
   if(!result.ok)throw Error(result.error);plannerSelectedTask=null;
   await loadProjectsList();await openProject(result.project.id);setPlannerView('plan');setPlannerEditing(true);
+  if(kind==='task')document.querySelector('#task-plan-composer robos-ai-textarea')?.focus();
   showGenerateStatus(`${kind==='feature'?'Feature':'Task'} created in ${group.name}. Describe its scope and acceptance criteria.`);
  }catch(e){showGenerateStatus(e.message,true);}
 }

@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('robos', {
   saveChatLinks: (input) => ipcRenderer.invoke('planner-save-chat-links',input),
   saveTaskRepositories: (input) => ipcRenderer.invoke('save-task-repositories',input),
   featureTasks: (url) => ipcRenderer.invoke('feature-tasks',url),
+  submitTaskPlan: input => ipcRenderer.invoke('submit-task-plan',input),
   reviseMarkdown: (input) => ipcRenderer.invoke('revise-markdown',input),
   generateTasks:   (p)       => ipcRenderer.invoke('generate-tasks', p),
   createTasks:     (p)       => ipcRenderer.invoke('create-tasks', p),

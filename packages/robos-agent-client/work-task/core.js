@@ -39,6 +39,7 @@ function plannerProject(url, issue) {
   const id = 'work-task-' + path.basename(folder(url));
   const dir = path.join(os.homedir(), '.config/robos/task-planner/projects');
   fs.mkdirSync(dir, { recursive: true });
+  for(const name of fs.readdirSync(dir).filter(n=>n.endsWith('.json'))){try{const existing=JSON.parse(fs.readFileSync(path.join(dir,name)));if(existing.workTaskUrl===url&&existing.kind==='task')return existing.id;}catch{}}
   const file = path.join(dir, id + '.json');
   if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify({
     id, kind:issue.issueType?.name==='Feature'?'feature':'task', name: issue.title, prompt: `${issue.url}\n\n${issue.body || ''}`,
