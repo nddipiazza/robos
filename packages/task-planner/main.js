@@ -1,6 +1,6 @@
 require('../robos-agent-client/work-task/electron').register(require('electron'), 'task-planner');
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path  = require('path');
 const fs    = require('fs');
 const os    = require('os');
@@ -133,6 +133,7 @@ function createWindow() {
     title: 'RobOS Task Planner',
     autoHideMenuBar: true,
   });
+  require('./lib/external-links').routeExternalLinks(mainWindow.webContents,{onError:error=>dialog.showErrorBox('Could not open link',error.message)});
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   if (_debugServer) {
     _debugServer.registerSnapshotIPC && _debugServer.registerSnapshotIPC(mainWindow);
@@ -568,10 +569,7 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
   return { ok: false, error: `Unknown server type: ${serverInfo.type}` };
 });
 
-ipcMain.handle('open-url', (_, url) => {
-  if (url) shell.openExternal(url);
-  return { ok: true };
-});
+ipcMain.handle('open-url', (_, url) => require('../robos-lib/open-chrome').openChrome(url));
 
 ipcMain.handle('open-task-servers', () => {
   cp.spawn('/usr/bin/electron', [
