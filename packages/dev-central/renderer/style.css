@@ -1666,6 +1666,7 @@ html, body {
 }
 .notif-content {
   flex: 1;
+  min-width: 0;
 }
 .notif-top {
   display: flex;
@@ -1704,9 +1705,29 @@ html, body {
 }
 .notif-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 12px;
 }
+.notif-actions > button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.notif-actions > .btn-notif-del { min-width: 30px; }
+#notifications-card .card-header { padding: 12px 24px; gap: 12px; flex-wrap: wrap; }
+#notifications-card .notif-card { padding: 16px; }
+#notifications-body robos-list-sort { display: block; margin-bottom: 12px; }
+.notif-top { flex-wrap: wrap; }
+.notif-body { overflow-wrap: anywhere; }
+.notif-cat-chips, .notif-tier-chips, .notif-filter-inputs, .notif-bulk-btns { flex-wrap: wrap; }
+.notif-auth-status:empty { display: none; }
+.notif-auth-status { order: 1; overflow-wrap: anywhere; }
+
 .btn-notif-action {
   font-size: 10px;
   background: rgba(0, 188, 212, 0.15);
