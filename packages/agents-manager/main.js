@@ -226,6 +226,7 @@ ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs, cwd) => {
   const parts = ['/usr/bin/copilot'];
   if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   if (sessionId) parts.push('--resume', sessionId);
+  parts.push('--additional-mcp-config',JSON.stringify({mcpServers:{robos_remote:{command:'node',args:[path.join(__dirname,'../robos-mcp-router/lib/remote-cli.js'),'github-copilot']}}}));
   const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
   const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
@@ -351,6 +352,7 @@ ipcMain.handle('codex-launch-terminal', (_, sessionId, extraArgs) => {
     parts = ['codex'];
     if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
+  parts.push('-c','mcp_servers.robos_remote.command="node"','-c','mcp_servers.robos_remote.args='+JSON.stringify([path.join(__dirname,'../robos-mcp-router/lib/remote-cli.js'),'codex']));
   const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
   const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${shellCmd}; read -p "Press Enter to close..." x'`], {
@@ -472,6 +474,7 @@ ipcMain.handle('claude-launch-terminal', (_, sessionId, extraArgs, cwd) => {
     parts = ['claude'];
     if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
   }
+  parts.push('--mcp-config',JSON.stringify({mcpServers:{robos_remote:{command:'node',args:[path.join(__dirname,'../robos-mcp-router/lib/remote-cli.js'),'claude-code']}}}));
   const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
   const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
   const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
@@ -686,6 +689,7 @@ ipcMain.handle('antigravity-fetch-models', async () => {
 
 ipcMain.handle('antigravity-launch-terminal', async (_, id, extraArgs, cwd) => {
   const binary=require('../robos-agent-task-runner/providers').binary('agy');
+  await new Promise((resolve,reject)=>cp.execFile(binary,['mcp','add','robos_remote','node',path.join(__dirname,'../robos-mcp-router/lib/remote-cli.js'),'antigravity'],e=>e?reject(Error('Could not configure RobOS remote MCP for AGY.')):resolve()));
   const launch=require('./agy-terminal').invocation(binary,id,extraArgs,cwd);
   await new Promise((resolve,reject)=>{
     const child=cp.spawn('x-terminal-emulator', ['-e','bash','-lc',launch.script,'robos-agy',...launch.args], {
@@ -970,10 +974,11 @@ function saveAgentMcpServers(data) {
 
 ipcMain.handle('mcp-get-provider-servers', async (_, providerId) => {
   const all = loadAgentMcpServers();
-  return all[providerId] || DEFAULT_MCP_SERVERS[providerId] || [];
+  return [...(all[providerId] || DEFAULT_MCP_SERVERS[providerId] || []),...await require('../robos-mcp-router/lib/remote-service').request('list',{provider:providerId})];
 });
 
 ipcMain.handle('mcp-save-provider-server', async (_, { providerId, server }) => {
+  if(server.imported){require('../robos-mcp-router/lib/connections').select(providerId,server.id,server.enabled===true);return require('../robos-mcp-router/lib/remote-service').request('list',{provider:providerId});}
   const all = loadAgentMcpServers();
   if (!all[providerId]) all[providerId] = [];
   const idx = all[providerId].findIndex(s => s.id === server.id);
@@ -996,6 +1001,7 @@ ipcMain.handle('mcp-delete-provider-server', async (_, { providerId, serverId })
 });
 
 ipcMain.handle('mcp-auth-provider-server', async (_, { providerId, serverId, credentials }) => {
+  if(require('../robos-mcp-router/lib/connections').list().some(s=>s.id===serverId))return require('../robos-mcp-router/lib/remote-service').request('login',{serverId});
   const all = loadAgentMcpServers();
   if (all[providerId]) {
     const server = all[providerId].find(s => s.id === serverId);

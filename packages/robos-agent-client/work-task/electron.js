@@ -12,6 +12,8 @@ function register({app,ipcMain,dialog},screen){
     return core.save(url,{...live,plannerProjectId:core.plannerProject(url,live.issue),autoStart:false});
   }));
   ipcMain.handle('work-task-launch-options',wrap(({mode,plan})=>{const state=current();if(mode)require('./plan-approval').assertStart(state,mode,plan,screen);return require('../../robos-agent-task-runner/sandbox').options(url);}));
+  ipcMain.handle('work-task-mcp-status',wrap(({provider})=>require('../../robos-mcp-router/lib/remote-service').request('list',{provider})));
+  ipcMain.handle('work-task-mcp-login',wrap(({serverId})=>require('../../robos-mcp-router/lib/remote-service').request('login',{serverId})));
   ipcMain.handle('work-task-open-runner',wrap(async()=>{current();await core.launchApp('robos-agent-task-runner',url,process.execPath);}));
   ipcMain.handle('work-task-state',wrap(async()=>{if(!url)return null;const s=current();const dir=core.folder(url);let output='';for(const mode of ['plan','implement']){const file=path.join(dir,`${mode}-output.txt`);if(fs.existsSync(file))output+=fs.readFileSync(file,'utf8').slice(-40000);}let events=[];const eventsFile=path.join(dir,'events.jsonl');if(fs.existsSync(eventsFile))events=fs.readFileSync(eventsFile,'utf8').split('\n').filter(Boolean).flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});return{...s,screen,planApproved:require('./plan-approval').approved(s),output,events,workflowView:await require('./workflow-view').load(s)};}));
   ipcMain.handle('work-task-plan-links',wrap(async()=>{current();return require('./plan-links').links(url);}));

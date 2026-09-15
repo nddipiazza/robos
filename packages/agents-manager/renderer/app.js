@@ -1922,7 +1922,9 @@ let currentEditingProviderId = null;
 let currentEditingServerId = null;
 let currentAuthServer = null;
 
+let mcpStatusTimer;
 async function renderMcpServersList(providerId) {
+  clearTimeout(mcpStatusTimer);
   const container = document.getElementById('mcp-servers-list');
   if (!container) return;
 
@@ -1938,9 +1940,11 @@ async function renderMcpServersList(providerId) {
     return;
   }
 
+  if(servers.some(s=>s.imported&&s.loginPending))mcpStatusTimer=setTimeout(()=>{if(selectedProviderId===providerId)renderMcpServersList(providerId);},2500);
   container.innerHTML = '';
   for (const s of servers) {
     const card = document.createElement('div');
+    if(s.imported){card.className='mcp-server-card';const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.checked=s.enabled;box.setAttribute('aria-label','Enable '+s.name+' for '+providerId);label.append(box,document.createTextNode(' '+s.name+' · '+(s.environment||s.kind)));const detail=document.createElement('small');detail.textContent=s.endpoint;label.append(document.createElement('br'),detail);const status=document.createElement('span');status.textContent=s.loginPending?'Login open in Chrome':s.authenticated?'Connected':s.error||'Not connected';const login=document.createElement('button');login.className='btn btn-sm';login.textContent=s.authenticated?'Connected':s.loginPending?'Waiting for login…':'Sign in with Chrome';login.disabled=s.loginPending||s.authenticated;login.hidden=s.authenticated;box.onchange=async()=>{box.disabled=true;try{await window.agents.saveMcpServer(providerId,{id:s.id,imported:true,enabled:box.checked});}catch(e){box.checked=!box.checked;status.textContent=e.message;}finally{box.disabled=false;}};login.onclick=async()=>{login.disabled=true;status.textContent='Opening login…';try{await window.agents.authMcpServer(providerId,s.id);await renderMcpServersList(providerId);}catch(e){status.textContent=e.message;login.disabled=false;}};card.append(label,status,login);container.append(card);continue;}
     card.className = 'mcp-server-card';
     card.id = `mcp-server-${s.id}`;
 

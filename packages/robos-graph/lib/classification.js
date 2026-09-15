@@ -27,7 +27,7 @@
     ['organization', 'Organization & people', 'Team Company GitProjectOrganization TeamChatServer TeamChatChannel'],
     ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread ReviewComment CommentAttachment'],
     ['source', 'Source control & artifacts', 'GitRepository GitBranch PullRequest GitCommit GitTag SourceArtifact'],
-    ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
+    ['agents', 'Agents & MCP', 'MCPServer MCPConnection MCPGateway AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
     ['documentation', 'Documentation & decisions', 'FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
     ['learning', 'Learning & assessment', 'ELearning CertificateOfCompletion LearningModule LearningLesson HandsOnLab QuizAssessment CurriculumDefinition'],
     ['testing', 'Testing & behavior', 'Scenario ScenarioStep GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],

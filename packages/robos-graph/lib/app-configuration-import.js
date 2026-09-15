@@ -4,6 +4,7 @@ const {execFile}=require('node:child_process');
 const {GraphWorkspace,hash}=require('./graph-workspace');
 const {PROVIDERS}=require('../../ci-pipeline-servers/lib/servers');
 const identities=require('./identity-import');
+const mcp=require('../../robos-mcp-router/lib/connections');
 const settingsFile=path.join(os.homedir(),'.config/robos/settings.json');
 const read=file=>{try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch(e){if(e.code==='ENOENT')return {};throw e;}};
 const types=n=>[].concat(n['@type']||[]);
@@ -23,8 +24,9 @@ function scan(graphRoot,file=settingsFile){
   workflows:n['robos:workflows']||nodes.filter(w=>types(w).includes('robos:Workflow')&&ref(w['robos:taskServer'])===n['@id']).map(w=>({id:w['@id'],name:w['dcterms:title'],type_id:w['robos:typeId'],states:w['robos:states']||[],transitions:w['robos:transitions']||[]})),
   evidence:n['robos:evidence']||[],selected:true,
  }));
+ const mcpServers=nodes.filter(n=>types(n).some(t=>['robos:MCPServer','robos:MCPGateway','robos:MCPConnection'].includes(t))).map(n=>mcp.fromNode(n)).filter(Boolean).map(s=>({...s,selected:true}));
  const pipelineServers=nodes.filter(n=>types(n).includes('robos:CIPipelineServer')).map(n=>({id:n['@id'],kgraphId:n['@id'],name:n['dcterms:title']||n['@id'],provider:n['robos:provider'],url:n['robos:url']||'',credentialRef:n['robos:credentialRef']||'',graphRoot:workspace.root,evidence:n['robos:evidence']||[],pipelines:nodes.filter(p=>ref(p['robos:ciServer'])===n['@id']).map(p=>({id:p['@id'],name:p['dcterms:title'],file:p['robos:workflowFile']||p['robos:sourcePath']})),selected:true}));
- return {graphRoot:workspace.root,graphRevision:hash(document),settingsRevision:hash(settings),people:[],groupPrompt:"",taskServers,pipelineServers};
+ return {graphRoot:workspace.root,graphRevision:hash(document),settingsRevision:hash(settings),people:[],groupPrompt:"",taskServers,pipelineServers,mcpServers};
 }
 const gh=args=>new Promise((resolve,reject)=>execFile('gh',args,{encoding:'utf8',timeout:30000,maxBuffer:8*1024*1024},(e,out)=>e?reject(Error('GitHub discovery failed. Check gh authentication and repository access.')):resolve(JSON.parse(out))));
 async function discover(server,run=gh){
@@ -75,13 +77,14 @@ function plan(input,file=settingsFile){
   return row;
  });
  const pipelines=input.pipelineServers.filter(s=>s.selected).map(s=>{const source=current.pipelineServers.find(n=>n.kgraphId===s.kgraphId);if(!source||!PROVIDERS[s.provider])throw Error('Unknown pipeline server or provider');endpoint(s.url);const existing=(settings.ci_pipeline_servers||[]).find(t=>t.kgraphId===s.kgraphId||t.provider===s.provider&&endpoint(t.url)===endpoint(s.url));return {...existing,id:existing?.id||s.id,kgraphId:s.kgraphId,name:existing?.name||s.name,provider:s.provider,url:s.url,credentialRef:existing?.credentialRef||s.credentialRef,graphRoot:input.graphRoot};});
- const next={...settings,task_servers:merge(settings.task_servers,taskServers,s=>s.id),ci_pipeline_servers:merge(settings.ci_pipeline_servers,pipelines,s=>s.id)};
+ const mcpServers=(input.mcpServers||[]).filter(s=>s.selected).map(s=>{const original=current.mcpServers.find(n=>n.id===s.id);if(!original)throw Error('MCP server is no longer in the graph.');if(!['oauth','none'].includes(original.authType))throw Error('Remote MCP authentication must be oauth or none.');return original;});
+ const next={...settings,mcp_servers:merge(settings.mcp_servers,mcpServers,s=>s.id),task_servers:merge(settings.task_servers,taskServers,s=>s.id),ci_pipeline_servers:merge(settings.ci_pipeline_servers,pipelines,s=>s.id)};
  if(!next.active_task_server&&taskServers.length)next.active_task_server=taskServers[0].id;
  const workspace=new GraphWorkspace(input.graphRoot);
  const identityPlan=identities.prepare(input,workspace.read()["robos:nodes"],path.dirname(file));edits.push(...identityPlan.edits);
  const proposal=edits.length?workspace.propose({mode:'refine',edits,prompt:'User-reviewed issue types and workflows for imported task servers',requireEvidence:true}):null;
  if(proposal&&!proposal.validation.conforms)throw Error('The graph rejected these workflow definitions. Review the schema and source evidence.');
- return {id:crypto.randomUUID(),input,settingsRevision:current.settingsRevision,next,proposal,identityWrites:identityPlan.writes,warnings,summary:{...identityPlan.summary,taskServers:taskServers.map(s=>({name:s.name,issueTypes:s.issue_types.length,workflows:s.workflows.length,workflowDefinitions:s.workflows,repositories:s.repos.length})),pipelineServers:pipelines.map(s=>({name:s.name,provider:s.provider})),apps:['Task Servers','Workflow Studio','Dev Central','Task Planner','Task Runner','PR Review Theater','CI Pipeline Servers','CI Monitor']}};
+ return {id:crypto.randomUUID(),input,settingsRevision:current.settingsRevision,next,proposal,identityWrites:identityPlan.writes,warnings,summary:{...identityPlan.summary,mcpServers,taskServers:taskServers.map(s=>({name:s.name,issueTypes:s.issue_types.length,workflows:s.workflows.length,workflowDefinitions:s.workflows,repositories:s.repos.length})),pipelineServers:pipelines.map(s=>({name:s.name,provider:s.provider})),apps:['Task Servers','Workflow Studio','Dev Central','Task Planner','Task Runner','PR Review Theater','CI Pipeline Servers','CI Monitor']}};
 }
 function apply(prepared,file=settingsFile){
  if(hash(read(file))!==prepared.settingsRevision)throw Error('App settings changed after preview. Preview again.');

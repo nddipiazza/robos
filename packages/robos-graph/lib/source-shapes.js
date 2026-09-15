@@ -4,6 +4,8 @@
 // are known. These shapes never require invented running-system metadata.
 const required = (path, message) => ({ path, minCount: 1, message });
 const SOURCE_SHAPES = [
+  {shapeId:'robos:MCPConnectionShape',targetClass:'robos:MCPConnection',refersFrom:'https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization',domainStandard:'https://schema.org/Service',properties:[required('dcterms:title','MCP connection needs a name.'),required('robos:endpoint','MCP connection needs its remote URL.'),required('robos:authType','MCP connection needs its authentication mode.'),{path:'robos:environment',maxCount:1},{path:'robos:authorizationServer',maxCount:1}]},
+  {shapeId:'robos:MCPGatewayShape',targetClass:'robos:MCPGateway',refersFrom:'https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization',domainStandard:'https://schema.org/Service',properties:[required('dcterms:title','MCP gateway needs a name.'),required('robos:endpoint','MCP gateway needs its remote URL.'),required('robos:authType','MCP gateway needs its authentication mode.')]},
   {
     shapeId: 'robos:TeamChatServerShape', targetClass: 'robos:TeamChatServer',
     refersFrom: 'https://schema.org/Service', domainStandard: 'https://schema.org/Service',

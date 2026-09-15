@@ -144,3 +144,25 @@ Coverage counts tracked, excluded, missing, unreadable, and inspected files. `ar
 ## Legacy demo mode
 
 Legacy `--source`, standalone `--prompt`, and `--resources` heuristic examples require explicit `--demo`. They are not the production source-extraction workflow and their generated metadata is not architecture evidence. Do not use legacy direct-merge flags for a canonical source-backed graph. The local-source workflow does not perform remote discovery or automatic cloning. Use --github-org for repository catalog discovery; neither mode invents API contracts.
+
+## MCP servers, gateways, and authentication
+
+Import deployed connections separately from implementation-only MCP definitions.
+Verify each environment's URL from source documentation or explicit user input
+and its live `/.well-known/oauth-protected-resource` metadata. Do not assume a
+Helm/test deployment is production. Preserve existing implementation IDs.
+
+For a deployed server add `robos:MCPConnection` alongside `robos:MCPServer`; use
+`robos:MCPGateway` for a gateway. Record `dcterms:title`, `robos:endpoint` (HTTPS),
+`robos:authType` (`oauth` or `none`), `robos:environment`, and source evidence.
+`robos:authorizationServer` may record discovered issuer metadata. Never record
+access tokens, refresh tokens, authorization codes, or client secrets in a graph.
+Create and review the normal GraphWorkspace proposal before applying it.
+
+Dogfood **Populate RobOS apps → MCP servers & gateways** to import the catalog.
+Importing makes connections available to all agents but does not enable them.
+Keep dev and production unchecked by default. RobOS Agents and Task Runner share
+this catalog and the host OAuth service. Use **Sign in with Chrome** for an explicit
+login; do not launch separate provider login flows or repeated browser windows.
+Confirm pending status changes to Connected, error, or timeout. Verify cached
+login reuse with a read-only discovery/health check and retain user's opt-ins.

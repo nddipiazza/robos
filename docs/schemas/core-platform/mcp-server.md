@@ -277,3 +277,16 @@ const result = validator.validateGraph(new OSLCGraphParser({
 
 console.log("Conforms:", result.conforms); // Expected: true
 ```
+## Deployed connections and gateways
+
+An implementation definition can also have `robos:MCPConnection` when a verified
+remote endpoint is available. A gateway uses `robos:MCPGateway`. Both connection
+shapes require a title, `robos:endpoint`, and `robos:authType` (`oauth` or `none`).
+`robos:environment` distinguishes dev/prod; `robos:authorizationServer` can record
+the discovered issuer. Secrets never belong in these fields.
+
+Import these through Graph Explorer's **MCP servers & gateways** wizard step.
+Connections become optional entries in every agent's configuration and remain
+unchecked by default. [Remote MCP authentication and agent integration](../../../packages/robos-mcp-router/REMOTE-MCP.md)
+describes shared browser login, encrypted storage, refresh, and notification
+suppression.

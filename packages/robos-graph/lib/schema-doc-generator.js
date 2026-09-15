@@ -780,6 +780,8 @@ const ENTITY_OVERRIDES = {
   'NoSQLDatabase': { slug: 'nosql-database', title: 'NoSQL Database' },
   'NoSQLCollection': { slug: 'nosql-collection', title: 'NoSQL Collection' },
   'MCPServer': { slug: 'mcp-server', title: 'MCP Server' },
+  'MCPConnection': {slug:'mcp-connection',title:'MCP Connection'},
+  'MCPGateway': {slug:'mcp-gateway',title:'MCP Gateway'},
   'MCPTool': { slug: 'mcp-tool', title: 'MCP Tool' },
   'MCPResource': { slug: 'mcp-resource', title: 'MCP Resource' },
   'MCPPrompt': { slug: 'mcp-prompt', title: 'MCP Prompt' },

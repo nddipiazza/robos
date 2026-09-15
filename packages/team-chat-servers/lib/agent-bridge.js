@@ -26,10 +26,11 @@ function sandboxClient(tools){
    let msg;try{msg=JSON.parse(line);}catch{return reply(null,null,{code:-32700,message:'Invalid JSON'});}
    if(msg.id===undefined)return;
    try{
-    if(msg.method==='initialize')return reply(msg.id,{protocolVersion:msg.params.protocolVersion,capabilities:{tools:{}},serverInfo:{name:'robos-chat',version:'1.0.0'}});
+    if(msg.method==='initialize')return reply(msg.id,{protocolVersion:msg.params.protocolVersion,capabilities:{tools:{listChanged:true}},serverInfo:{name:'robos-chat',version:'1.0.0'}});
     if(msg.method==='ping')return reply(msg.id,{});
-    if(msg.method==='tools/list')return reply(msg.id,{tools});
+    if(msg.method==='tools/list'){const remote=cfg.remoteMcp?await call({operation:'remote_tools'}):null;return reply(msg.id,{tools:[...tools,...(remote?.result?.tools||[])]});}
     if(msg.method==='tools/call'){
+     if(cfg.remoteMcp&&msg.params.name.startsWith('remote_')){const remote=await call({operation:'remote_call',arguments:msg.params});reply(msg.id,remote.ok?remote.result:{content:[{type:'text',text:remote.error}],isError:true});if(msg.params.name.endsWith('_connection_status')&&remote.ok&&!remote.result.isError)process.stdout.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/tools/list_changed'})+'\n');return;}
      if(!tools.some(t=>t.name===msg.params.name))throw Error('Unknown RobOS chat tool');
      const result=await call({operation:msg.params.name.slice('robos_chat_'.length),arguments:msg.params.arguments||{}});
      return reply(msg.id,{content:[{type:'text',text:JSON.stringify(result)}],isError:!result.ok});
