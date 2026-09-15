@@ -2097,3 +2097,8 @@ header h1 { font-size: 15px; font-weight: 600; }
 .btn-plan-link {padding:8px 12px;border:1px solid #238ba3;border-radius:6px;background:#102c38;color:#86e2f5;font-weight:600;cursor:pointer;white-space:nowrap;}
 .btn-plan-link:hover {background:#174356;border-color:#69d3e9;}
 .btn-plan-link:disabled {opacity:.55;cursor:wait;}
+
+.review-policy-settings { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--border, #30363d); border-radius: 6px; }
+.review-policy-settings summary { cursor: pointer; }
+.review-policy-settings label { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+.review-policy-settings p { color: #8b949e; font-size: 12px; }

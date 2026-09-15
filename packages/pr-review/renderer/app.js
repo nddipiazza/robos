@@ -381,10 +381,8 @@ function renderChecks(checks) {
 async function submitReview(action) {
   if (!selectedPR) return;
   if (action === 'approve') {
-    if (!theaterContext || !theaterContext.validationGates || !theaterContext.validationGates.elearningPassed) {
-      showAIActionOutput('🛡️ Anti-Rubber-Stamp Gate Active: You must complete the PR Review Theater masterclass and pass the Knowledge Check (Score ≥ 80%) before approving code! Click "🎭 PR Review Theater" to begin.');
-      return;
-    }
+    await window.openPRReviewTheater(selectedPR);
+    return;
   }
 
   const body = document.getElementById("review-body").value.trim();
@@ -640,6 +638,9 @@ window.exitTheater = function() {
 };
 
 window.setTheaterStage = function(stageNum) {
+  if(theaterContext?.real && stageNum===7 && !(theaterContext.validationGates.docsReviewed && theaterContext.validationGates.diffsInspected && theaterContext.validationGates.evidenceReviewed)) {
+    showError('Review the documentation, diff, and evidence before taking the knowledge check.');return;
+  }
   currentTheaterStage = stageNum;
 
   // Update Stepper
@@ -659,7 +660,7 @@ window.setTheaterStage = function(stageNum) {
   // Anti-Rubber-Stamp Lock for Stage 3 (Diffs)
   const diffLock = document.getElementById('diff-anti-rubber-stamp-lock');
   if (diffLock) {
-    if (stageNum === 3 && theaterContext && !theaterContext.validationGates.elearningPassed) {
+    if (stageNum === 3 && theaterContext && !theaterContext.real && !theaterContext.validationGates.elearningPassed) {
       diffLock.classList.remove('hidden');
     } else {
       diffLock.classList.add('hidden');
@@ -669,7 +670,7 @@ window.setTheaterStage = function(stageNum) {
   // Anti-Rubber-Stamp Lock for Stage 6 (Sign-Off)
   const signoffLock = document.getElementById('theater-signoff-lock-banner');
   if (signoffLock) {
-    if (stageNum === 6 && theaterContext && !theaterContext.validationGates.elearningPassed) {
+    if (stageNum === 6 && theaterContext && (!theaterContext.real || theaterContext.reviewPolicy?.requireCompletionCertificate) && !theaterContext.validationGates.elearningPassed) {
       signoffLock.classList.remove('hidden');
     } else {
       signoffLock.classList.add('hidden');
@@ -683,7 +684,7 @@ window.setTheaterStage = function(stageNum) {
   // Mark gates based on progression
   if (theaterContext && theaterContext.validationGates) {
     if (stageNum === 2) theaterContext.validationGates.docsReviewed = true;
-    if (stageNum === 3 && theaterContext.validationGates.elearningPassed) {
+    if (stageNum === 3 && (theaterContext.real || theaterContext.validationGates.elearningPassed)) {
       theaterContext.validationGates.diffsInspected = true;
     }
     renderTheaterSignOff();
@@ -695,6 +696,7 @@ window.openAppCourseInHub = async function() {
   const courseId = theaterContext.appElearning?.courseId || `urn:robos:elearning:course:petstore-api`;
   const appSlug = theaterContext.targetApp?.slug || 'petstore-api';
   await window.api.openAppELearning({ courseId, appSlug });
+  if(!res.ok){showError(res.error || 'Could not check answers.');return;}
   const feedbackPill = document.getElementById('quiz-feedback-pill');
   if (feedbackPill) {
     feedbackPill.classList.remove('hidden');
@@ -780,11 +782,13 @@ window.submitTheaterQuiz = async function() {
 
   const res = await window.api.verifyPRTheaterQuiz({
     courseId: theaterContext.elearning.course['@id'],
+    gates: theaterContext.validationGates,
     answers,
     reviewerId: 'robos',
     appId: theaterContext.targetApp?.id
   });
 
+  if(!res.ok){showError(res.error || 'Could not check answers.');return;}
   const feedbackPill = document.getElementById('quiz-feedback-pill');
   if (feedbackPill) {
     feedbackPill.classList.remove('hidden');
@@ -817,9 +821,9 @@ window.submitTheaterQuiz = async function() {
     }
 
     // Update Stepper icon
-    const stepStatus1 = document.getElementById('step-status-1');
+    const stepStatus1 = document.getElementById(theaterContext.real?'step-status-7':'step-status-1');
     if (stepStatus1) stepStatus1.textContent = '✓';
-    const stepBtn1 = document.getElementById('step-btn-1');
+    const stepBtn1 = document.getElementById(theaterContext.real?'step-btn-7':'step-btn-1');
     if (stepBtn1) stepBtn1.classList.add('step-done');
 
     // Show Certificate
@@ -1313,10 +1317,10 @@ window.submitTheaterReviewAction = async function() {
   const notes = (document.getElementById('theater-review-notes')?.value || '').trim();
 
   // Enforce Anti-Rubber-Stamp Gate
-  if (action === 'approve' && !theaterContext.validationGates.elearningPassed) {
+  if (action === 'approve' && (!theaterContext.real || theaterContext.reviewPolicy?.requireCompletionCertificate) && !theaterContext.validationGates.elearningPassed) {
     if (feedbackEl) {
       feedbackEl.className = 'quiz-feedback fail';
-      feedbackEl.innerHTML = '🛡️ <strong>Anti-Rubber-Stamp Gate Active:</strong> You must pass the Stage 1 Knowledge Check before approving or merging this PR!';
+      feedbackEl.innerHTML = '🛡️ <strong>Anti-Rubber-Stamp Gate Active:</strong> Your organization requires a passed knowledge check before merging this PR.';
     }
     return;
   }

@@ -6,6 +6,7 @@ const fs   = require('fs');
 const os   = require('os');
 const { execSync } = require('child_process');
 
+ipcMain.handle('set-pr-review-policy',async (_, {repo,required})=>{try{return {ok:true,policy:require('../robos-agent-client/work-task/review-policy').set(repo,required)};}catch(e){return {ok:false,error:e.message};}});
 const realTheater=require('./real-theater').createTheater();
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
@@ -696,9 +697,9 @@ ipcMain.handle('fetch-pr-diff-content', async (_, { repo, number, changedFiles }
   }
 });
 
-ipcMain.handle('verify-pr-theater-quiz', async (_, { courseId, answers, reviewerId, appId } = {}) => {
+ipcMain.handle('verify-pr-theater-quiz', async (_, { courseId, answers, reviewerId, appId, gates } = {}) => {
   try {
-    if(process.env.ROBOS_DEMO_DATA!=='1')return realTheater.quiz({courseId,answers});
+    if(process.env.ROBOS_DEMO_DATA!=='1')return realTheater.quiz({courseId,answers,gates});
     const store = getGraphStore();
     if (store && typeof store.verifyPRELearningQuiz === 'function') {
       return store.verifyPRELearningQuiz({ courseId, answers, reviewerId, appId });

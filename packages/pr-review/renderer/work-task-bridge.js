@@ -3,10 +3,11 @@
 window.prepareRealTheater=function() {
   const ctx=theaterContext;
   window.showReviewPlanLinks?.();
-  document.querySelector('.quiz-instruction').textContent='Review the PR scope and commit details, then answer each question.';
+  document.querySelector('.quiz-instruction').textContent='After reviewing the changes and evidence, check your understanding of this PR.';
+  prepareReviewSequence();
   document.querySelector('#stage-1 .stage-title-wrap p').textContent='Understand the proposed change before reviewing its diff and evidence.';
   document.querySelector('#step-btn-5 .step-label').textContent='Validation & Evidence';
-  document.querySelector('#stage-5 .stage-title-wrap h3').textContent='Stage 5: Validation and evidence';
+  document.querySelector('#stage-5 .stage-title-wrap h3').textContent='Validation and evidence';
   document.querySelector('#stage-5 .stage-title-wrap p').textContent='Inspect the reported checks and evidence links; distinguish completed validation from limitations.';
   document.getElementById('theater-rest-card').hidden=true;
   document.getElementById('theater-debugger-card').hidden=true;
@@ -16,7 +17,7 @@ window.prepareRealTheater=function() {
   document.getElementById('gate-pill-ide').textContent='Optional IDE review';
   document.getElementById('gate-pill-docs').textContent='PR documentation';
   document.querySelector('#stage-2 .stage-title-wrap p').textContent='Review the PR description, scope, and linked documentation.';
-  document.querySelector('#stage-6 .stage-title-wrap h3').textContent='Stage 6: Review and merge';
+  document.querySelector('#stage-6 .stage-title-wrap h3').textContent='Review and merge';
   document.querySelector('#stage-6 .stage-title-wrap p').textContent='Approval merges this exact reviewed commit, subject to GitHub branch rules.';
   document.querySelectorAll('#stage-5 .canvas-mode-bar,#canvas-desktop-view,#canvas-video-view').forEach(e=>e.hidden=true);
   const badge=document.getElementById('proof-canvas-badge');badge.textContent='Evidence requires review';badge.className='gate-pill';
@@ -40,11 +41,14 @@ window.renderRealSignOff=function() {
   for(const [id,pass,label] of [['elearning',g.elearningPassed,g.elearningPassed?`Passed (${ctx.quizScore}%)`:'Pending'],['docs',g.docsReviewed,g.docsReviewed?'Reviewed':'Pending'],['diffs',g.diffsInspected,g.diffsInspected?'Inspected':'Pending'],['ci',g.ciPassed,ctx.checks.length?(g.ciPassed?'Passing':'Pending / failed'):'No checks reported'],['ide',g.ideDiffLaunched,g.ideDiffLaunched?'Opened':'Optional']]){
     const e=document.getElementById('gate-badge-'+id);e.textContent=label;e.className='gate-status-badge '+(pass?'gate-pass':'gate-pending');
   }
-  document.getElementById('theater-signoff-lock-banner').classList.toggle('hidden',!!g.elearningPassed);
+  const required=ctx.reviewPolicy?.requireCompletionCertificate===true;
+  document.getElementById('theater-signoff-lock-banner').classList.toggle('hidden',!required||!!g.elearningPassed);
+  if(!required&&!g.elearningPassed)document.getElementById('gate-badge-elearning').textContent='Optional';
+  document.getElementById('gate-desc-elearning').textContent=required?'Certificate required by organization policy':'Optional — does not block merge';
   const button=document.getElementById('btn-theater-submit-review');
   const approving=document.querySelector('input[name="theater-decision"]:checked')?.value==='approve';
-  button.disabled=approving && !(g.elearningPassed&&g.docsReviewed&&g.diffsInspected&&g.evidenceReviewed&&g.ciPassed);
-  button.title=button.disabled?'Review the knowledge check, documentation, diffs, and evidence before merging.':'Submit this review to GitHub';
+  button.disabled=approving && !((!required||g.elearningPassed)&&g.docsReviewed&&g.diffsInspected&&g.evidenceReviewed&&g.ciPassed);
+  button.title=button.disabled?'Review the documentation, diffs, and evidence, and complete any required knowledge check before merging.':'Submit this review to GitHub';
 };
 document.querySelectorAll('input[name="theater-decision"]').forEach(e=>e.addEventListener('change',()=>{if(theaterContext?.real)renderTheaterSignOff();}));
 async function resumeReview() {
@@ -62,7 +66,6 @@ setTimeout(()=>resumeReview().catch(e=>showError(e.message)),400);
 const originalLaunchTheaterIDE=window.launchTheaterIDE;
 window.launchTheaterIDE=async function(ide){
   if(!theaterContext?.real)return originalLaunchTheaterIDE(ide);
-  if(!theaterContext.validationGates.elearningPassed){showError('Complete the knowledge check first.');return;}
   const p=theaterContext.pr;
   const fn=ide==='vscode'?window.api.openInVSCode:window.api.openInIntelliJ;
   const result=await fn({repo:p.repo,number:p.number,headBranch:p.headBranch,changedFiles:p.files.map(f=>f.path)});
@@ -83,3 +86,44 @@ window.showReviewPlanLinks=async function() {
     links.append(button);
   }
 };
+
+// Keep the overview first; assess comprehension only after the review.
+function prepareReviewSequence() {
+  const ctx=theaterContext;
+  let quizStage=document.getElementById('stage-7');
+  if(!quizStage){
+    quizStage=document.createElement('section');quizStage.id='stage-7';quizStage.className='theater-stage';
+    quizStage.innerHTML='<div class="stage-header"><div class="stage-title-wrap"><h3>Knowledge check</h3><p>Check your understanding after reviewing the PR.</p></div></div><div class="stage-nav-footer"></div>';
+    document.getElementById('stage-6').before(quizStage);
+    quizStage.querySelector('.stage-nav-footer').before(document.getElementById('theater-quiz-card'));
+    const step=document.createElement('button');step.id='step-btn-7';step.className='step-btn';step.dataset.stage='7';step.onclick=()=>window.setTheaterStage(7);
+    step.innerHTML='<span class="step-num">6</span> <span class="step-label">Knowledge check</span>';
+    document.getElementById('step-btn-6').before(step);
+  }
+  const labels={1:'Overview',2:'Documentation',3:'File diffs',4:'IDE review',5:'Validation & evidence',7:'Knowledge check',6:'Review & merge'};
+  const order=[1,2,3,4,5,7,6];
+  order.forEach((id,i)=>{
+    const step=document.getElementById('step-btn-'+id);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
+    document.querySelector('#stage-'+id+' .stage-title-wrap h3').textContent=labels[id];
+    const footer=document.querySelector('#stage-'+id+' .stage-nav-footer');if(!footer)return;footer.replaceChildren();
+    for(const [target,text] of [[order[i-1],'← Back'],[order[i+1],'Next: '+labels[order[i+1]]+' →']]){if(!target)continue;const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=text;b.onclick=()=>window.setTheaterStage(target);footer.append(b);}
+    if(id===5){const b=document.createElement('button');b.className='btn-stage-nav';b.id='skip-knowledge-check';b.textContent='Skip optional quiz → Review & merge';b.onclick=()=>window.setTheaterStage(6);footer.append(b);}
+  });
+  document.querySelector('#stage-1 .anti-rubber-stamp-banner').hidden=true;
+  const oldGrid=document.querySelector('#stage-1 .stage-grid-2col');
+  oldGrid.before(document.getElementById('theater-elearning-modules-card'));oldGrid.style.display='none';
+  const lock=document.getElementById('theater-signoff-lock-banner');
+  lock.querySelector('strong').textContent='Completion certificate required';
+  lock.querySelector('.banner-body span').textContent='This organization requires a passed knowledge check (80%) before merging.';
+  lock.querySelector('button').textContent='Open knowledge check';lock.querySelector('button').onclick=()=>window.setTheaterStage(7);
+  document.getElementById('theater-review-notes').placeholder='Review findings and approval notes';
+  document.getElementById('review-policy-settings')?.remove();
+  const settings=document.createElement('details');settings.id='review-policy-settings';settings.className='review-policy-settings';
+  const summary=document.createElement('summary');summary.textContent='Organization review policy · '+ctx.reviewPolicy.organization;settings.append(summary);
+  const label=document.createElement('label'),toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=ctx.reviewPolicy.requireCompletionCertificate;
+  label.append(toggle,' Require a completion certificate before merge');settings.append(label);
+  const note=document.createElement('p');note.textContent='Applies to this organization’s repositories on this RobOS installation. GitHub branch rules and required reviewers still apply.';settings.append(note);
+  const refresh=()=>{document.getElementById('skip-knowledge-check').hidden=ctx.reviewPolicy.requireCompletionCertificate;document.getElementById('gate-pill-elearning').textContent=ctx.reviewPolicy.requireCompletionCertificate?'Knowledge check required':'Knowledge check optional';renderTheaterSignOff();};
+  toggle.onchange=async()=>{toggle.disabled=true;try{const result=await window.api.setPRReviewPolicy({repo:ctx.pr.repo,required:toggle.checked});if(!result.ok)throw Error(result.error);ctx.reviewPolicy=result.policy;refresh();}catch(e){toggle.checked=ctx.reviewPolicy.requireCompletionCertificate;showError(e.message);}finally{toggle.disabled=false;}};
+  document.querySelector('#stage-6 .stage-header').after(settings);refresh();
+}

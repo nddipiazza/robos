@@ -19,19 +19,20 @@ function parseDiff(diff,files=[]) {
   }
   return result;
 }
-function createTheater({context=review.context,merge=review.approveAndMerge,command=core.command}={}) {
+function createTheater({context=review.context,merge=review.approveAndMerge,command=core.command,policy=require('../robos-agent-client/work-task/review-policy').get}={}) {
   const sessions=new Map();
   async function load({repo,number}) {
     const url=`https://github.com/${repo}/pull/${number}`;review.prIdentity(url);
     const ctx=await context(url),pr=ctx.pr;
     const id=`${url}@${pr.headRefOid}`;sessions.set(id,{...ctx,passed:false});
-    return {ok:true,real:true,reviewId:id,pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
+    return {ok:true,real:true,reviewId:id,reviewPolicy:policy(repo),pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
       elearning:{course:{'@id':id,'dcterms:title':pr.title,'dcterms:description':`${pr.body || 'No PR description provided.'}\n\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nCommit: ${pr.headRefOid}\nFiles: ${(pr.files||[]).map(f=>f.path).join(', ')}`,'robos:estimatedDuration':'Review at your own pace','robos:topic':'Proposed change','robos:modules':[]},quiz:ctx.questions.map((q,i)=>({id:'q'+i,question:q.label,options:q.options,explanation:''}))},
       documentation:{markdown:pr.body||'No documentation or evidence supplied in this PR description.',mermaidText:'No verified diagram supplied.',dualReality:{blastRadius:[]}},
-      fileDiffs:[],validationGates:{elearningPassed:false,docsReviewed:false,diffsInspected:false,ciPassed:review.checksReady(pr.statusCheckRollup)},checks:pr.statusCheckRollup||[]};
+      fileDiffs:parseDiff(ctx.diff,pr.files),validationGates:{elearningPassed:false,docsReviewed:false,diffsInspected:false,ciPassed:review.checksReady(pr.statusCheckRollup)},checks:pr.statusCheckRollup||[]};
   }
-  function quiz({courseId,answers}) {
+  function quiz({courseId,answers,gates}) {
     const ctx=sessions.get(courseId);if(!ctx)throw Error('Reload the PR before taking its knowledge check.');
+    if(!gates?.docsReviewed || !gates?.diffsInspected || !gates?.evidenceReviewed)throw Error('Review the documentation, diff, and evidence before taking the knowledge check.');
     const correct=ctx.questions.filter((q,i)=>q.options[answers?.['q'+i]]===q.answer).length;
     const score=100*correct/ctx.questions.length;ctx.passed=score>=80;
     return {ok:true,passed:ctx.passed,score,fileDiffs:ctx.passed?parseDiff(ctx.diff,ctx.pr.files):[],certificate:ctx.passed?{'robos:verificationHash':crypto.createHash('sha256').update(courseId+JSON.stringify(answers)).digest('hex')}:null};
@@ -41,7 +42,8 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     const ctx=sessions.get(reviewId);
     if(!ctx || ctx.pr.url!==url)throw Error('Load this PR before submitting its review.');
     if(action==='approve') {
-      if(!ctx.passed || !gates?.docsReviewed || !gates?.diffsInspected || !gates?.evidenceReviewed)throw Error('Complete the knowledge check and review the documentation, diff, and evidence before approving.');
+      if(!gates?.docsReviewed || !gates?.diffsInspected || !gates?.evidenceReviewed)throw Error('Review the documentation, diff, and evidence before approving.');
+      if(policy(repo).requireCompletionCertificate && !ctx.passed)throw Error('This organization requires a passed knowledge check before merging.');
       const merged=await merge(url,ctx.pr.headRefOid,body);
       core.recordMergedPR(url,merged);
       return {ok:true,merged:true,...merged,message:`Merged reviewed commit ${ctx.pr.headRefOid} into ${ctx.pr.baseRefName}.`};
