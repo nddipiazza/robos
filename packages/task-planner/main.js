@@ -443,7 +443,7 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
   if (serverInfo.type === 'github') {
     for (const task of tasks) {
       try {
-        const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', task.body || ''];
+        const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', task.body || '',...require('./lib/github-issue-type').typeArgs(task,serverInfo,{creating:true})];
         if (task.labels && task.labels.length) {
           for (const lbl of task.labels) {
             cp.spawnSync('gh', ['label', 'create', lbl, '--repo', serverInfo.repo, '--color', '5319e7', '--force'],
@@ -724,13 +724,13 @@ ipcMain.handle('sync-task', async (_, { task, taskIndex, serverInfo, parentEpicK
       if (task.ticketKey) {
         // Update existing issue — close and reopen isn't easy; update body/title via API
         const args = ['issue', 'edit', task.ticketKey, '--repo', serverInfo.repo,
-          '--title', task.title, '--body', task.body || ''];
+          '--title', task.title, '--body', task.body || '',...require('./lib/github-issue-type').typeArgs(task,serverInfo)];
         const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 20000 });
         if (r.status !== 0) return { ok: false, error: r.stderr || 'gh issue edit failed' };
         return { ok: true, key: task.ticketKey, url: task.ticketUrl };
       } else {
         const args = ['issue', 'create', '--repo', serverInfo.repo,
-          '--title', task.title, '--body', task.body || ''];
+          '--title', task.title, '--body', task.body || '',...require('./lib/github-issue-type').typeArgs(task,serverInfo,{creating:true})];
         if (task.labels && task.labels.length) {
           for (const lbl of task.labels) {
             cp.spawnSync('gh', ['label', 'create', lbl, '--repo', serverInfo.repo,

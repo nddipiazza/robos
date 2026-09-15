@@ -8,3 +8,7 @@ test('menu routes the clicked task and copies useful issue formats',()=>{
  menu.find(m=>m.label==='Copy Markdown link').click();assert.equal(copies[1],'[#51 Verify \\[editor\\]]('+task.url+')');
  assert.equal(menu.filter(m=>m.label?.startsWith('Copy')).length,4);
 });
+test('Run requires a Planner-approved plan and an idle task',()=>{
+ const menu=activity=>taskMenu({key:'#62',title:'Task',activity},{action(){},copy(){}}).find(m=>m.label==='Run Task…');
+ assert.equal(menu({}).enabled,false);assert.equal(menu({planApproved:true}).enabled,true);assert.equal(menu({planApproved:true,running:true}).enabled,false);
+});

@@ -11,7 +11,7 @@ async function issueMetadata(url){
 function view(state,issue,settings){
  const repo=core.identity(state.url).repo.toLowerCase();
  const server=(settings.task_servers||[]).find(s=>s.type==='github'&&(s.repos||[]).some(r=>(typeof r==='string'?r:`${r.org}/${r.repo}`).toLowerCase()===repo));
- const nativeType=issue.type?.name||issue.issueType;
+ const nativeType=issue.type?.name||issue.issueType?.name||issue.issueType;
  let phase=state.phase;
  if(phase==='failed'&&state.executionError?.phase)phase=state.executionError.phase;
  if(['provisioning','failed','stopped','implementation-needs-attention'].includes(phase))phase=state.approvedPlanHash?'implementing':state.plan?'plan-review':'planning';

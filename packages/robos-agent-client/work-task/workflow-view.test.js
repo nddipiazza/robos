@@ -20,3 +20,7 @@ test('legacy failed sessions and tasks without a workflow still expose their err
  assert.equal(view({url,phase:'failed',error:'Agent exited 1'},{},{task_servers:[]}).error,'Agent exited 1');
  assert.ok(view({url,phase:'implementation-needs-attention'},{},{task_servers:[]}).error);
 });
+test('GitHub CLI native issueType objects resolve the configured workflow',()=>{
+ const result=view({url,phase:'planning'},{issueType:{name:'Feature'},state:'open'},{task_servers:[server]});
+ assert.equal(result.issueType,'Feature');assert.equal(result.workflow.name,'Feature delivery');
+});

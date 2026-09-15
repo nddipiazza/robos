@@ -91,7 +91,7 @@ function renderTaskList() {
 
   list.innerHTML = filtered.map(t => `
     <div tabindex="0" aria-label="${escHtml(t.key+' '+t.title)}" class="task-item ${selectedTask && selectedTask.key === t.key ? 'active' : ''}" data-key="${escHtml(t.key)}">
-      <div class="task-item-heading"><div class="task-item-key">${escHtml(t.key)}</div><span class="task-row-actions"><button class="task-run-button task-icon-button" aria-label="Run task ${escHtml(t.key)}" title="Run task — open launch settings" ${t.activity?.running?'disabled':''}>▶</button><button class="task-stop-button task-icon-button" aria-label="Stop task ${escHtml(t.key)}" title="Stop running task and preserve its work" ${t.activity?.running?'':'hidden'}>■</button></span></div>
+      <div class="task-item-heading"><div class="task-item-key">${escHtml(t.key)}</div><span class="task-row-actions"><button class="task-run-button task-icon-button" aria-label="Run task ${escHtml(t.key)}" title="${t.activity?.planApproved?'Run task — open launch settings':'Create and approve this task’s plan before running'}" ${(!t.activity?.planApproved||t.activity?.running)?'disabled':''}>▶</button><button class="task-stop-button task-icon-button" aria-label="Stop task ${escHtml(t.key)}" title="Stop running task and preserve its work" ${t.activity?.running?'':'hidden'}>■</button></span></div>
       <div class="task-item-title">${escHtml(t.title)}</div>
       ${window.robosList.time(t.updated)}
       <div class="task-item-meta">

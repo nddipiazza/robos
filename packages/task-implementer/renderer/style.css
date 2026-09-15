@@ -126,3 +126,4 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .workflow-error {font-size:12px;margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;}
 
 .session-message-meta { display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle; }
+#session-plan-blocker { margin:12px 0;padding:10px 14px;border-left:2px solid #c3a45d;color:#c6d1db;font-size:13px;line-height:1.5; }

@@ -60,13 +60,17 @@ async function resumeSession() {
   const provider=launched?(state.launchConfig?.provider||state.backend):null;
   const executionError=state.workflowView?.error||state.error||state.executionError?.text;
   setAgentStatus(executionError || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),executionError?'done-err':agentRunning?'running':'');
-  document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':state.planApproved?'Run Task':'Review plan in Task Planner';
+  document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':'Run Task';
+  document.getElementById('btn-start-agent').disabled=agentRunning||(!state.prs?.length&&!state.planApproved);
   document.getElementById('btn-start-agent').title=state.planApproved?'Review launch settings and implement the approved plan':'This task needs an approved plan from Task Planner';
   if(!document.getElementById('session-planner')) {
     const btn=document.createElement('button');btn.id='session-planner';btn.className='btn';btn.textContent='Review plan in Task Planner';btn.onclick=()=>sessionCall('open-planner');document.getElementById('btn-start-agent').parentElement.append(btn);
     const review=document.createElement('button');review.id='session-review';review.className='btn';review.textContent='Open PR Review Theater';review.onclick=()=>sessionCall('route');btn.parentElement.append(review);
   }
-  document.getElementById('session-review').hidden=!state.prs?.length;
+  document.getElementById('session-review').hidden=true;
+  document.getElementById('session-planner').textContent=state.plan?'Review plan in Task Planner':'Create plan in Task Planner';
+  let blocker=document.getElementById('session-plan-blocker');if(!blocker){blocker=document.createElement('p');blocker.id='session-plan-blocker';blocker.setAttribute('role','status');document.getElementById('btn-start-agent').parentElement.after(blocker);}
+  blocker.hidden=!!state.planApproved||!!state.prs?.length;blocker.textContent=state.plan?'This task’s plan needs approval before it can run.':'This ticket has requirements, but no implementation plan. Create and approve its plan in Task Planner before running it.';
   if(state.autoStart && !autoStarted && !state.workerPid && !state.prs?.length){autoStarted=true;await handleStartAgent();}
 }
 handleStartAgent=async function() {
@@ -74,7 +78,7 @@ handleStartAgent=async function() {
   try {
     if(workSession.workerPid){await resumeSession();return;}
     if(workSession.prs?.length){await sessionCall('route');return;}
-    if(!workSession.planApproved){await sessionCall('open-planner');setAgentStatus('Approve the plan in Task Planner before running this task.','');return;}
+    if(!workSession.planApproved){setAgentStatus('This task cannot run yet. Use the plan button to create and approve its implementation plan.','done-err');return;}
     await openTaskRunnerLaunch({mode:'implement',plan:workSession.plan||'',refinement:document.getElementById('extra-context').value||'',call:sessionCall,afterLaunch:resumeSession});
     await resumeSession();
   }catch(e){setAgentStatus(e.message,'done-err');}

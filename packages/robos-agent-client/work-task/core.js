@@ -21,7 +21,7 @@ function command(bin,args,options={}) { return new Promise((resolve,reject)=>exe
 const gh = async args => {try{const result=JSON.parse(await command('gh',args));require('../../robos-lib/auth-notifications').resolve('github','github.com');return result;}catch(error){const auth=require('../../robos-lib/auth-notifications');if(auth.isLoginError(error.message))auth.report({kind:'github',id:'github.com',name:'GitHub'});throw error;}};
 async function inspect(url, query=gh) {
   const id=identity(url);
-  const issue=await query(['issue','view',String(id.number),'--repo',id.repo,'--json','number,title,body,state,assignees,url']);
+  const issue=await query(['issue','view',String(id.number),'--repo',id.repo,'--json','number,title,body,state,assignees,url,issueType,labels']);
   // GitHub cross references reveal linked PRs across repositories, including drafts.
   const queryText=`query($owner:String!,$name:String!,$number:Int!,$after:String){repository(owner:$owner,name:$name){issue(number:$number){timelineItems(first:100,after:$after,itemTypes:[CROSS_REFERENCED_EVENT]){pageInfo{hasNextPage endCursor} nodes{... on CrossReferencedEvent{source{... on PullRequest{url state isDraft title number headRefOid repository{nameWithOwner}}}}}}}}}`;
   let after, prs=[];
@@ -41,10 +41,14 @@ function plannerProject(url, issue) {
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, id + '.json');
   if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify({
-    id, name: issue.title, prompt: `${issue.url}\n\n${issue.body || ''}`,
-    tasks: [{ title: issue.title, body: issue.body || '', labels: [], ticketKey: `#${issue.number}`, ticketUrl: issue.url, ticketStatus: issue.state }],
+    id, kind:issue.issueType?.name==='Feature'?'feature':'task', name: issue.title, prompt: `${issue.url}\n\n${issue.body || ''}`,
+    tasks: [{ title: issue.title, body: issue.body || '', labels: (issue.labels||[]).map(l=>typeof l==='string'?l:l.name),issueType:issue.issueType?.name||null, ticketKey: `#${issue.number}`, ticketUrl: issue.url, ticketStatus: issue.state }],
     features: [], techStack: '', createdAt: Date.now(), updatedAt: Date.now(), workTaskUrl: url,
   }, null, 2), { mode: 0o600, flag: 'wx' });
+  const record=JSON.parse(fs.readFileSync(file,'utf8')),before=JSON.stringify(record);
+  record.kind=record.kind||(issue.issueType?.name==='Feature'?'feature':'task');
+  if(issue.issueType?.name){record.issueMetadata={...record.issueMetadata,type:issue.issueType.name};for(const task of record.tasks||[])if(task.ticketUrl===url)task.issueType=issue.issueType.name;}
+  if(JSON.stringify(record)!==before)fs.writeFileSync(file,JSON.stringify(record,null,2));
   return id;
 }
 function electronEnv(){const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;return env;}
