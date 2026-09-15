@@ -56,6 +56,9 @@ describe('Application-Attached eLearning, Living Documentation & Completion Cert
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'preload.js')), 'preload.js must be scaffolded');
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'renderer', 'index.html')), 'renderer/index.html must be scaffolded');
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'renderer', 'app.js')), 'renderer/app.js must be scaffolded');
+    assert.strictEqual(fs.readFileSync(path.join(scaffoldDir,'renderer/elearning-player.js'),'utf8'),fs.readFileSync(path.resolve(__dirname,'../../../robos-lib/elearning-player.js'),'utf8'));
+    require('child_process').execFileSync(process.execPath,['--check',path.join(scaffoldDir,'main.js')]);
+    require('child_process').execFileSync(process.execPath,['--check',path.join(scaffoldDir,'renderer/app.js')]);
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'renderer', 'style.css')), 'renderer/style.css must be scaffolded');
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'icon.svg')), 'icon.svg must be scaffolded');
     assert.ok(fs.existsSync(path.join(scaffoldDir, 'forms-api-elearning.desktop')), '.desktop must be scaffolded');

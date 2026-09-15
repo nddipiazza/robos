@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  openPipelineServers: () => ipcRenderer.invoke('open-pipeline-servers'),
   getConfig:          ()     => ipcRenderer.invoke('get-config'),
   fetchRuns:          (opts) => ipcRenderer.invoke('fetch-runs', opts),
   fetchRunDetail:     (opts) => ipcRenderer.invoke('fetch-run-detail', opts),

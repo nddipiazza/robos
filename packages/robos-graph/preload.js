@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
     ipcRenderer.on('graph-navigate', listener);
     return () => ipcRenderer.removeListener('graph-navigate', listener);
   },
+  confirmImportPerson: input => ipcRenderer.invoke('app-import-confirm-person',input),
+  discoverImportPeople: input => ipcRenderer.invoke('app-import-people',input),
+  scanAppImport: () => ipcRenderer.invoke('app-import-scan'),
+  discoverAppImport: id => ipcRenderer.invoke('app-import-discover',id),
+  previewAppImport: input => ipcRenderer.invoke('app-import-preview',input),
+  applyAppImport: id => ipcRenderer.invoke('app-import-apply',id),
   workspaceInfo: () => ipcRenderer.invoke('workspace-info'),
   openWorkspace: () => ipcRenderer.invoke('workspace-open'),
   workspaceContext: input => ipcRenderer.invoke('workspace-context', input),

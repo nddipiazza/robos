@@ -224,40 +224,20 @@ function saveCodexFlagState() {
 // ── Antigravity / Gemini CLI flag definitions ──────────────────────────────
 
 const AGY_FLAGS = [
-  // ── Most Common ──
-  { id: 'model', flag: '--model', type: 'select', label: 'Model',
-    desc: 'Gemini model powering Antigravity reasoning',
-    options: ['gemini-2.5-pro', 'gemini-2.5-flash', 'antigravity-2.0'],
-    common: true },
-  { id: 'effort', flag: '--effort', type: 'select', label: 'Reasoning Effort',
-    desc: 'Set the reasoning effort / thinking budget',
-    options: ['low', 'medium', 'high', 'xhigh', 'max'],
-    common: true },
-  { id: 'mcp', flag: '--mcp', type: 'select', label: 'MCP Router Connection',
-    desc: 'Model Context Protocol router to attach (mcpServers.robos)',
-    options: ['robos', 'all', 'none'],
-    common: true },
-  { id: 'task', flag: '--task', type: 'text', label: 'Active Task Context',
-    desc: 'Task context in RobOS Task Management (e.g. PET-106)',
-    common: true },
-  { id: 'cwd', flag: 'cwd', type: 'dir', label: 'Working Directory',
-    desc: 'Start Antigravity in this directory (cd before launching)',
-    common: true },
-  // ── All ──
-  { id: 'full-auto', flag: '--full-auto', type: 'bool', label: 'Full Auto Mode',
-    desc: 'Execute tool commands autonomously without interactive prompt confirmations',
-    common: false },
-  { id: 'workflow', flag: '--workflow', type: 'select', label: 'Autonomous Workflow',
-    desc: 'Target SDLC workflow pipeline mode',
-    options: ['task-to-deploy', 'plan-and-review', 'e2e-verification'],
-    common: false },
-  { id: 'allow-all-tools', flag: '--allow-all-tools', type: 'bool', label: 'Allow All MCP Tools',
-    desc: 'Allow all MCP tools to execute automatically',
-    common: false },
+  { id: 'model', flag: '--model', type: 'text', label: 'Model', desc: 'Optional model ID from agy models; leave blank for the AGY default', common: true },
+  { id: 'effort', flag: '--effort', type: 'select', label: 'Reasoning Effort', desc: 'Reasoning effort for this session', options: ['low', 'medium', 'high'], common: true },
+  { id: 'mode', flag: '--mode', type: 'select', label: 'Session Mode', desc: 'Plan first, or allow file edits', options: ['plan', 'accept-edits'], common: true },
+  { id: 'cwd', flag: 'cwd', type: 'dir', label: 'Working Directory', desc: 'Directory to open in the terminal', common: true },
+  { id: 'sandbox', flag: '--sandbox', type: 'bool', label: 'Terminal Sandbox', desc: 'Enable AGY terminal restrictions', common: false },
 ];
-
 let agyFlagMode = localStorage.getItem('agyFlagMode') || 'common';
-let agyFlagValues = (() => { try { return JSON.parse(localStorage.getItem('agyFlagValues') || '{"model":"gemini-2.5-pro","mcp":"robos","task":"PET-106"}'); } catch { return { model: 'gemini-2.5-pro', mcp: 'robos', task: 'PET-106' }; } })();
+let agyFlagValues = (() => {
+  let saved; try { saved=JSON.parse(localStorage.getItem('agyFlagValues') || '{}'); } catch { saved={}; }
+  const values=Object.fromEntries(Object.entries(saved).filter(([key])=>AGY_FLAGS.some(f=>f.id===key)));
+  if(['gemini-2.5-pro','gemini-2.5-flash','antigravity-2.0'].includes(values.model))delete values.model;
+  if(values.effort&&!['low','medium','high'].includes(values.effort))delete values.effort;
+  return values;
+})();
 
 function saveAgyFlagState() {
   localStorage.setItem('agyFlagMode', agyFlagMode);
@@ -1680,7 +1660,7 @@ async function renderAntigravityDetail(provider) {
           <span class="detail-icon">${PROVIDER_ICONS['antigravity']}</span>
           <h2>Antigravity / Gemini CLI</h2>
           ${isActive ? '<span class="active-badge">ACTIVE PROVIDER</span>' : `<button class="btn btn-primary btn-sm" id="btn-set-active">Set as Active</button>`}
-          <span class="active-badge" style="background:#0d2137;border-color:#00bcd4;color:#00bcd4;">mcpServers.robos CONNECTED</span>
+
         </div>
         <p class="detail-sub">Google Antigravity deep reasoning AI pair programmer & automated SDLC agent</p>
       </div>
@@ -1690,13 +1670,11 @@ async function renderAntigravityDetail(provider) {
         <h3 class="section-title">Status</h3>
         <div class="info-grid">
           <span class="info-label">AI Runtime</span>
-          <span class="info-value mono">${esc(provider.version || 'Antigravity 2.0 (Gemini 2.5 Pro)')}</span>
-          <span class="info-label">Logged in as</span>
-          <span class="info-value">${esc(provider.user || 'developer@robos.internal')}</span>
-          <span class="info-label">MCP Router</span>
-          <span class="info-value" style="color:#00bcd4;font-weight:600;">Connected (11 tools: tasks, ekgraph, kube, rest)</span>
+          <span class="info-value mono">${esc(provider.version || 'AGY CLI')}</span>
+          <span class="info-label">Login</span>
+          <span class="info-value">${provider.authenticated ? 'Saved in your desktop keyring' : 'Open AGY Terminal to sign in'}</span>
           <span class="info-label">Status</span>
-          <span class="info-value" style="color:#3fb950">Connected & Ready</span>
+          <span class="info-value">${esc(provider.status || 'Not checked')}</span>
         </div>
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-agy-refresh">Refresh</button>
@@ -1757,13 +1735,9 @@ async function renderAntigravityDetail(provider) {
     await renderAntigravityDetail(updated);
   };
 
-  document.getElementById('btn-agy-new-session').onclick = () => {
-    window.agents.antigravityLaunchTerminal('new', buildAgyArgs(), agyFlagValues['cwd'] || null);
-  };
+  document.getElementById('btn-agy-new-session').onclick = () => launchAgyTerminal('new');
 
-  document.getElementById('btn-agy-terminal').onclick = () => {
-    window.agents.antigravityLaunchTerminal(null, buildAgyArgs(), agyFlagValues['cwd'] || null);
-  };
+  document.getElementById('btn-agy-terminal').onclick = () => launchAgyTerminal(null);
 
   // Flags dropdown toggle
   const flagsToggle = document.getElementById('btn-agy-flags-toggle');
@@ -1883,6 +1857,11 @@ function renderAgyFlagsDropdown() {
     }
     listEl.appendChild(row);
   }
+}
+
+async function launchAgyTerminal(id) {
+  try { await window.agents.antigravityLaunchTerminal(id, buildAgyArgs(), agyFlagValues.cwd || null); }
+  catch(error) { alert('Could not open AGY Terminal: '+error.message); }
 }
 
 function buildAgyArgs() {

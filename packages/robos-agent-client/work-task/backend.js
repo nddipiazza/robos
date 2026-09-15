@@ -15,6 +15,18 @@ function invocation(backend,mode,prompt) {
 }
 function decode(obj) {
   const events=[];let text='',error=null;
+  if(obj.event==='result'){
+    text=obj.result?.response||'';
+    if(text)events.push({role:'assistant',text});
+    if(obj.result?.status==='ERROR'||obj.result?.error)error=obj.result.error||'AGY session failed.';
+    if(obj.result?.denied_actions?.length)error='AGY could not complete the task: permission required for '+obj.result.denied_actions.map(a=>a.display_name||a.action).join(', ')+'.';
+  }
+  if(obj.event==='init')events.push({role:'system',text:'AGY session connected'+(obj.init?.model?' · '+obj.init.model:'')+'.'});
+  if(obj.event==='step_update'){
+    const step=obj.step_update||{},tool=step.tool_info||{};
+    if(step.step_type==='tool'){const value=tool.result??tool.output??(step.state==='DONE'?'Completed':tool.parameters??{status:step.state});events.push({role:'tool',name:step.tool_name||tool.name||'tool',text:tool.error?.message||(typeof value==='string'?value:JSON.stringify(value,null,2))});}
+    else if(step.step_type==='agent_response'&&step.state==='DONE')events.push({role:'agent',text:step.text||step.response||'Reasoning complete; continuing the task.'});
+  }
   if(obj.type==='assistant')for(const b of obj.message?.content||[]){if(b.type==='text'){text+=b.text+'\n';events.push({role:'assistant',text:b.text});}if(b.type==='tool_use')events.push({role:'tool',text:JSON.stringify(b.input,null,2),name:b.name});}
   if(obj.type==='user')for(const b of obj.message?.content||[])if(b.type==='tool_result')events.push({role:'tool',text:typeof b.content==='string'?b.content:JSON.stringify(b.content),name:'result'});
   if(obj.type==='item.completed') {

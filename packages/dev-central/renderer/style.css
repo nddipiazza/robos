@@ -1795,3 +1795,50 @@ html, body {
 #feature-tasks-list button:disabled { opacity:.38;cursor:not-allowed; }
 #feature-tasks-list .feature-task-top {gap:12px;}
 #feature-tasks-list .feature-task-top > .link-pill {flex:1;max-width:48%;white-space:normal;text-align:left;}
+/* Dev Central: one tab workspace, without the dashboard scorecards. */
+#header {padding:10px 18px;min-height:52px;flex-wrap:wrap;}
+#header .version-tag,#header .subtitle,#header .clock-wrap {display:none;}
+#header .brand-badge {padding:0;background:none;border:0;box-shadow:none;}
+#header .header-center {max-width:420px;}
+#server-badge,#btn-ci-servers {color:#b8c6d2;background:transparent;border:1px solid #394653;border-radius:4px;padding:7px 10px;cursor:pointer;box-shadow:none;animation:none;}
+#tab-bar {padding:0 18px;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+#dashboard {display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding:0;gap:0;}
+#dashboard > .card {display:flex;flex-direction:column;flex:1;min-height:0;width:100%;margin:0;}
+#dashboard > .card > .card-header,#feature-action-status {flex-shrink:0;}
+#dashboard > .card > .card-body {flex:1;min-height:0;max-height:none;overflow-y:auto;padding:16px 24px;}
+#dashboard > .card > .card-body > * {flex-shrink:0;}
+#dashboard > .card {width:100%;border:0;border-radius:0;background:transparent;box-shadow:none;margin:0;}
+#activity-card {display:none!important;}
+#feature-card .card-header {padding:12px 24px;}
+#feature-body {padding:0;}
+#feature-tasks-list {display:flex;flex-direction:column;gap:16px;}
+.feature-task-card {border:1px solid #303e4a!important;background:#151e27;border-radius:6px;padding:14px;}
+.feature-task-card summary {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.feature-task-card summary .link-pill {font-size:15px;font-weight:600;flex:1;text-align:left;}
+.unassign-feature {background:none;border:0;color:#9eaebc;cursor:pointer;font-size:12px;}
+.unassign-feature:hover {color:#ffaaaa;}
+.assign-another {display:block;margin:20px 0;padding:12px 18px;color:#72d5e5;background:transparent;border:1px dashed #3b6370;border-radius:4px;cursor:pointer;}
+.feature-empty {color:#a0b1bf;padding:20px 0;}
+#feature-picker {position:fixed;inset:0;margin:auto;width:min(800px,90vw);max-height:85vh;padding:24px;background:#121b24;color:#d6e1ea;border:1px solid #3e5262;border-radius:6px;}
+#feature-picker::backdrop {background:#0009;}
+#feature-picker h2 {font-size:20px;margin-bottom:10px;}
+#feature-picker p {color:#a4b6c5;font-size:13px;margin:10px 0;}
+#feature-search {width:100%;padding:10px;background:#0c1219;color:#d6e1ea;border:1px solid #3e5262;margin:12px 0;}
+#feature-options {max-height:48vh;overflow:auto;}
+#feature-options label {display:grid;grid-template-columns:20px 1fr;gap:4px 10px;padding:12px;border-bottom:1px solid #2b3945;font-size:13px;cursor:pointer;}
+#feature-options small {grid-column:2;color:#91a5b5;}
+#feature-picker footer {display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+#feature-picker button {background:#1c303e;border:1px solid #3e6378;border-radius:4px;padding:9px 14px;color:#d6e1ea;cursor:pointer;}
+#feature-picker button:disabled {opacity:.5;cursor:default;}
+.feature-task-card .link-pill {font-size:13px;line-height:1.5;white-space:normal;}
+
+[data-work][aria-busy="true"]::before {content:"";display:inline-block;width:10px;height:10px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-right:7px;animation:work-launch-spin .7s linear infinite;}
+@keyframes work-launch-spin {to {transform:rotate(360deg);}}
+
+.work-progress { margin:0 0 12px 16px;padding:8px 12px;border-left:2px solid #465564;font-size:12px;line-height:1.8; }
+.workflow-steps { color:#9da7b3; }
+.workflow-steps .current { color:#83d9ff;font-weight:600;text-decoration:underline;text-underline-offset:4px; }
+.work-progress time,.workflow-unconfigured { color:#9da7b3;font-size:11px; }
+.work-error { color:#ff9d9d; }
+
+#feature-tasks-list{overflow-anchor:none}.feature-task-top .robos-copy-line{min-width:0}.card>robos-list-sort{margin:4px 24px}

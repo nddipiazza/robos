@@ -239,3 +239,5 @@ function analyzeFailure(log, jobName) {
                      'Review the full log output for error details.',
   };
 }
+
+ipcMain.handle('open-pipeline-servers',()=>{const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;const child=require('child_process').spawn(process.execPath,[path.join(__dirname,'../ci-pipeline-servers')],{env,detached:true,stdio:'ignore'});child.on('error',e=>console.error(e.message));child.unref();return {ok:true};});

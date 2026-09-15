@@ -95,6 +95,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Workflow Studio** | Workflow and issue lifecycle management |
 | **Agent Scheduler** | Background cron-based AI agent jobs |
 | **Task Servers** | Jira / GitHub task server configuration |
+| **RobOS Agent Task Runner** | Launch Codex or AGY tasks in ephemeral container sandboxes with live conversation output and artifact export |
 | **Task Planner** | AI task plan generator and issue creator with interactive template web forms and custom template builder |
 | **Kube Studio** | Multi-cluster Kubernetes, Helm, ArgoCD GitOps, and Vercel infrastructure navigator |
 | **REST API Client** | Git-backed REST API client, collection runner, and microservice verifier |
@@ -352,3 +353,5 @@ When adding, renaming, or removing an app, update ALL of these locations. Use th
 This repo consolidates work from:
 - [`robos-gnome`](https://github.com/nddipiazza/robos-gnome) — VM infrastructure, desktop shell, cloud-init provisioning
 - [`roboto-os`](https://github.com/nddipiazza/roboto-os) — Electron desktop applications, shared libraries
+
+- **import-users**: Import people and groups through Graph Explorer with Git/Google Cloud discovery, explicit email-domain filters, source evidence, and reviewed memberships. See `plugins/robos/skills/import-users/SKILL.md`.

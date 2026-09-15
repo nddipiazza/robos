@@ -107,7 +107,7 @@ function createWindow() {
     title: issueNum ? `Issue #${issueNum} — RobOS Workflow Studio` : 'RobOS Workflow Studio',
     autoHideMenuBar: true,
   });
-  win.loadFile('renderer/index.html', { query: { view: startView, issue: issueNum || '' } });
+  win.loadFile(path.join(__dirname,'renderer/index.html'), { query: { view: startView, issue: issueNum || '' } });
   if (_debugServer) _debugServer.startDebugServer(win, 19120);
 
   win.on('close', async (e) => {
@@ -210,7 +210,16 @@ ipcMain.handle('fetch-issue', async (_, { repo, num }) => {
       'issue', 'view', String(num), '--repo', repo,
       '--json', 'number,title,body,labels,state,url,assignees,createdAt,updatedAt,comments',
     ], { encoding: 'utf8', timeout: 15000 });
-    if (r.status === 0) return { ok: true, data: JSON.parse(r.stdout) };
+    if (r.status === 0) {
+      const data=JSON.parse(r.stdout);
+      const native=cp.spawnSync('gh',['api',`repos/${repo}/issues/${num}`],{encoding:'utf8',timeout:15000});
+      if(native.status===0)data.issueType=JSON.parse(native.stdout).type?.name || null;
+      const settings=readSettings(),server=(settings.task_servers||[]).find(s=>s.id===settings.active_task_server)||(settings.task_servers||[])[0];
+      const session=require('../robos-agent-client/work-task/core').read(data.url);
+      const workflow=require('../robos-lib/task-workflow').ticketWorkflow({...data,session},server);
+      data.workflowState=workflow?.states.find(s=>s.current)?.id || null;
+      return {ok:true,data};
+    }
     return { ok: false, error: r.stderr || 'gh failed' };
   } catch (e) { return { ok: false, error: e.message }; }
 });

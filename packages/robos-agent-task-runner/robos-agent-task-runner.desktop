@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=RobOS Agent Task Runner
+Comment=Launch isolated agent tasks and follow their sessions
+Exec=/usr/bin/electron /usr/local/share/robos/robos-agent-task-runner/main.js
+Icon=/usr/local/share/robos/robos-agent-task-runner/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-App=true
+X-RobOS-Category=AI
+StartupWMClass=robos-task-implementer

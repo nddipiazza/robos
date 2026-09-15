@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RobOS Task Implementer</title>
   <link rel="stylesheet" href="style.css"/>
+<script src="../../task-planner/node_modules/marked/lib/marked.umd.js"></script>
+<script src="../../task-planner/node_modules/dompurify/dist/purify.min.js"></script>
+<script src="../../robos-lib/list-controls.js" data-app="task-implementer"></script>
 </head>
 <body>
   <div id="app">
@@ -42,6 +45,7 @@
           </select>
           <input type="text" id="filter-search" class="input-sm" placeholder="Search…"/>
         </div>
+        <robos-list-sort id="task-sort" label="tasks"></robos-list-sort>
         <div id="task-list" class="task-list">
           <div class="loading-row">Loading tasks…</div>
         </div>
@@ -95,5 +99,8 @@
   <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 <script src="work-task-bridge.js"></script>
+<script src="../../robos-lib/agent-selector.js"></script>
+<script src="../../robos-agent-task-runner/launch-dialog.js"></script>
+<script src="../../robos-lib/column-splitter.js" data-app="task-implementer"></script>
 </body>
 </html>

@@ -132,6 +132,8 @@ async function openProject(id) {
     return;
   }
   const proj = result.project;
+  const existingIndex=projectsList.findIndex(p=>p.id===proj.id);if(existingIndex>=0)projectsList[existingIndex]={...projectsList[existingIndex],...proj};
+  window.plannerIssueRecord=proj;window.plannerMetadataError=result.metadataError;
   currentProjectId = proj.id;
   currentProjectName = proj.name;
   projectFeatures=proj.features||[];projectRepos=proj.repos||[];
@@ -337,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const button=document.getElementById('btn-project-confirm');if(button.disabled)return;button.disabled=true;
     const error=document.getElementById('project-create-error');error.textContent='';
     try {
-      const saved=await window.robos.saveProject({name,kind:'project',prompt:'',tasks:[]});
+      const saved=await window.robos.saveProject({name,description:document.getElementById('project-description-input').value.trim(),kind:'project',prompt:'',tasks:[]});
       if(!saved.ok)throw Error(saved.error);
       hideNewProjectForm();plannerSelectedTask=null;
       await loadProjectsList();await openProject(saved.project.id);

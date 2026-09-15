@@ -52,7 +52,7 @@ let graphStore = null;
 function getGraphStore() {
   if (!graphStore && SDLCKnowledgeGraphStore) {
     try {
-      graphStore = new SDLCKnowledgeGraphStore();
+      graphStore = new SDLCKnowledgeGraphStore(process.env.ROBOS_GRAPH_ROOT?{graphRoot:process.env.ROBOS_GRAPH_ROOT}:{});
     } catch (err) {
       console.warn('[robos-elearning] Could not instantiate SDLCKnowledgeGraphStore:', err.message);
     }
@@ -118,6 +118,7 @@ ipcMain.handle('elearning:list-courses', async () => {
 ipcMain.handle('elearning:get-course', async (_, courseIdOrAppId) => {
   const store = getGraphStore();
   if (!store) return { error: 'Graph store not available' };
+  store.init();
 
   let course = null;
   let appNode = null;
@@ -160,3 +161,4 @@ ipcMain.handle('elearning:list-certificates', async (_, opts = {}) => {
   }
   return [];
 });
+require('../robos-lib/course-editor-main').register({ipcMain},process.env.ROBOS_GRAPH_ROOT);

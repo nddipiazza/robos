@@ -90,3 +90,87 @@
 #task-import-dialog small {display:block;color:#8299aa;margin-top:4px;}
 #task-import-dialog footer {display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
 #task-import-dialog {position:fixed;inset:0;margin:auto;}
+#project-manager {color:#e6edf3;background:#101820;border:1px solid #405264;border-radius:8px;width:min(760px,90vw);max-height:88vh;padding:24px;overflow:auto;}
+#project-manager::backdrop {background:#0009;}
+#project-manager header,#project-manager footer,.pm-row {display:flex;align-items:center;gap:12px;justify-content:space-between;}
+#project-manager h2 {margin:0;font-size:20px;}
+#project-manager input,#project-manager textarea,#project-description-input {box-sizing:border-box;width:100%;background:#0d1117;color:#e6edf3;border:1px solid #405264;border-radius:4px;padding:9px;font:inherit;}
+#project-manager label {display:block;margin:12px 0 5px;}
+#pm-list {margin:12px 0;max-height:32vh;overflow:auto;}
+.pm-row {padding:12px 0;border-bottom:1px solid #2a3948;}
+.pm-row>div {flex:1;min-width:0;}.pm-row p {margin:5px 0;white-space:pre-wrap;color:#b6c4d0;}.pm-row small,#pm-help {color:#9bafbf;}
+#pm-form {border-top:1px solid #405264;padding-top:8px;}#pm-form footer {margin-top:12px;}#pm-status {color:#a7d9ee;}
+.planner-product-field {font-size:12px;}.planner-product-field label {display:block;margin-bottom:4px;}
+#project-manager {margin:auto;}
+#project-manager .btn {background:#18232d;color:#d5e5f2;border:1px solid #405264;border-radius:5px;padding:8px 12px;cursor:pointer;}
+#project-manager .btn-accent {background:#073844;color:#7ee6f2;border-color:#08738a;}
+#project-manager h3 {margin:12px 0;}
+#project-manager #pm-help {margin:12px 0;line-height:1.5;}
+#feature-toolbar {display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #29333d;padding:0 0 12px;}
+#feature-toolbar #planner-primary {margin-left:auto;}
+#planner-action-help {font-size:12px;line-height:1.5;color:#97aabd;margin:-10px 0 0;max-width:800px;}
+#feature-toolbar #planner-more-actions {left:0;right:auto;top:100%;}
+#feature-toolbar #planner-templates {margin:0;}
+#planner-membership h3 {font-size:18px;margin:0 0 12px;}#planner-membership p {color:#afbdc9;line-height:1.6;margin-bottom:18px;white-space:pre-wrap;}
+.planner-focused #projects-sidebar {width:360px;min-width:300px;max-width:36vw;}
+.planner-focused .sidebar-header {gap:12px;padding:16px 12px;}
+#projects-sidebar #btn-workspace-plans {font-size:11px;padding:6px 8px;}
+#planner-context {display:block;}#planner-title {font-size:20px;}#planner-breadcrumb {margin-bottom:6px;}
+planner-markdown-editor {display:block;width:100%;min-width:0;border:1px solid #354553;}
+.planner-focused .prompt-row {min-width:0;}#planner-panel-plan {min-width:0;}
+.planner-ai-dialog {position:fixed;inset:0;margin:auto;width:min(850px,90vw);max-height:88vh;overflow:auto;background:#111922;color:#d0dce6;border:1px solid #425361;border-radius:8px;padding:24px;}
+.planner-ai-dialog::backdrop {background:#0009;}.planner-ai-dialog h2 {font-size:20px;margin-bottom:12px;}.planner-ai-dialog p {margin:12px 0;line-height:1.5;}.planner-ai-dialog footer {display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+#linked-feature-tasks header {display:flex;align-items:center;justify-content:space-between;gap:12px;}#linked-feature-tasks h2 {font-size:17px;}#linked-feature-tasks [role=status] {color:#9eafbd;font-size:12px;margin:16px 0;}
+#linked-feature-tasks table {width:100%;border-collapse:collapse;font-size:12px;}#linked-feature-tasks th,#linked-feature-tasks td {text-align:left;padding:12px 8px;border-bottom:1px solid #29333d;vertical-align:top;}#linked-feature-tasks th {color:#9eafbd;font-weight:500;}#linked-feature-tasks td:first-child {width:65%;}.feature-task-link {border:0;padding:0;background:none;color:#75d6e8;cursor:pointer;text-align:left;font:inherit;line-height:1.6;}
+#planner-kind {display:inline-block;font-size:12px;letter-spacing:.06em;color:#74d6e7;border-left:3px solid #00bcd4;padding:4px 9px;margin-bottom:10px;}#planner-kind[data-kind=task] {color:#dfbbff;border-color:#b67cea;}
+#planner-issue-details h2 {font-size:17px;margin:18px 0 12px;}#planner-issue-details dl {display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:13px;}#planner-issue-details dt {color:#96a9b8;}#planner-issue-details dd {margin:0;overflow-wrap:anywhere;}#planner-issue-details p {font-size:12px;line-height:1.5;color:#9eafbd;margin:12px 0;}#planner-issue-details .btn {margin:4px;}.issue-repository-row {display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid #29333d;}.issue-repository-row span {flex:1;overflow-wrap:anywhere;font-size:12px;}#planner-issue-details form {margin-top:16px;}#planner-issue-details form>div {display:flex;}#issue-repository-url {flex:1;min-width:0;padding:8px;background:#111922;color:#d5e5f2;border:1px solid #405264;}
+/* Keep the view suffix beside a truncated breadcrumb instead of orphaning it. */
+#planner-breadcrumb {display:flex;align-items:baseline;white-space:nowrap;min-width:0;overflow:hidden;}
+#planner-breadcrumb button {flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#planner-kind {border:0;padding:0;letter-spacing:0;font-size:12px;font-weight:500;margin:0 0 8px;line-height:1.5;}
+
+#planner-work-dialog { margin: auto; font: 14px/1.6 system-ui; box-sizing: border-box; }
+#planner-work-dialog::backdrop { background: #000a; }
+#planner-work-dialog h2 { font-size: 21px; margin: 0 0 16px; }
+#planner-work-dialog p { margin: 12px 0; }
+#planner-work-dialog input:not([type=checkbox]), #planner-work-dialog select { background: #16212c; color: #e6edf3; border: 1px solid #465766; border-radius: 4px; padding: 9px; font: inherit; }
+#planner-work-dialog button { background: #1b3141; color: #e6edf3; border: 1px solid #48677c; padding: 9px 14px; border-radius: 4px; font: inherit; cursor: pointer; }
+#planner-work-dialog button:disabled { opacity: .5; cursor: wait; }
+#planner-work-dialog details { border-top: 1px solid #344453; padding: 14px 0; }
+#planner-work-dialog summary { font-weight: 600; cursor: pointer; }
+#planner-work-dialog ul, #planner-work-dialog ol { padding-left: 25px; }
+#planner-work-dialog pre { white-space: pre-wrap; background: #080e14; padding: 12px; }
+#planner-work-dialog #work-action-status { overflow-wrap: anywhere; color: #a9c5d7; font-size: 12px; }
+
+#planner-panel-learning { padding: 24px 28px; flex: 1; overflow: auto; }
+#planner-panel-learning[hidden] { display: none; }
+.learning-header h2 { font-size: 22px; margin: 0 0 8px; }
+.learning-header p, .learning-note { color: #a9bdcd; margin: 0 0 22px; }
+.learning-controls { display: flex; gap: 16px; align-items: flex-end; max-width: 900px; }
+.learning-controls robos-kgraph-selector { flex: 1; max-width: 600px; }
+#planner-panel-learning button, #planner-work-dialog button.btn { background: #193343 !important; color: #e3f3fa !important; border: 1px solid #3e6177 !important; padding: 10px 15px; border-radius: 5px; font: 14px/1.4 system-ui; }
+#learning-status { color: #8fc6d9; margin: 18px 0; min-height: 20px; }
+#learning-course { max-width: 1050px; font: 15px/1.7 system-ui; }
+#learning-course details { border-top: 1px solid #2d4353; padding: 18px 0; }
+#learning-course summary { font-size: 17px; font-weight: 600; cursor: pointer; }
+.learning-lesson { padding: 16px 22px; }
+.learning-lesson p { margin: 12px 0; }
+.learning-lesson ul, .learning-lesson ol { padding-left: 24px; }
+.learning-lesson pre { padding: 16px; background: #080e14; overflow: auto; }
+.learning-reflection { border-left: 2px solid #43758b; padding: 10px 16px; color: #b4d4e3; }
+#planner-work-dialog label { display: grid; gap: 7px; color: #bed0dd; }
+#planner-work-dialog { width: min(600px,90vw) !important; padding: 28px !important; }
+#planner-work-dialog h2 { margin-bottom: 12px; }
+#planner-work-dialog form { display: grid; gap: 6px; }
+#planner-work-dialog input, #planner-work-dialog select { width: 100%; box-sizing: border-box; }
+#planner-work-dialog #work-action-close { margin-top: 12px; }
+body[data-planner-view=learning] #feature-toolbar, body[data-planner-view=learning] #planner-action-help { display: none !important; }
+#planner-navigation { overflow-x: auto; gap: 22px; flex-shrink: 0; }
+#planner-navigation [role=tab] { white-space: nowrap; }
+#planner-panel-learning { padding: 8px 0 24px; min-width: 0; }
+.learning-controls { flex-wrap: wrap; align-items: flex-end; }
+.learning-controls robos-kgraph-selector { min-width: min(260px,100%); max-width: 100%; }
+#planner-panel-learning button { flex-shrink: 0; white-space: nowrap; }
+#learning-empty-state { padding: 34px 0; }
+#learning-empty-state p { color: #9fb2c1; margin-bottom: 18px; font-size: 16px; }
+.learning-controls[hidden], #learning-empty-state[hidden] { display: none !important; }

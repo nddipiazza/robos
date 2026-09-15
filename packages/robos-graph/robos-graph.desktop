@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Graph Explorer
+Comment=Explore, edit, and import RobOS knowledge graphs
+Exec=/usr/bin/electron /usr/local/share/robos/robos-graph/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-graph/icon.svg
+Terminal=false
+Categories=Development;
+X-RobOS-Category=Dev
+StartupWMClass=robos-graph

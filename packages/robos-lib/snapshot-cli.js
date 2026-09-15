@@ -68,6 +68,7 @@ const PORT_REGISTRY = {
   'people-directory':  19133,
   'task-planner':      19134,
   'task-implementer':  19135,
+  'robos-agent-task-runner': 19135, // Same conversation app, new launch entry point
   'robos-logs':        19136,
   'skills-manager':    19139,
   'ai-prompt':         19140,

@@ -78,6 +78,7 @@ function listDesktops() {
 // ── APP_REGISTRY ────────────────────────────────────────────────────────────
 
 const APPS = [
+  { id:'robos-agent-task-runner', label:'RobOS Agent Task Runner', icon:'🤖', desc:'Isolated agent task sessions', category:'RobOS AI' },
   // System
   { id: 'notifications',           label: 'Notifications',          icon: '🔔', desc: 'System notifications',            category: 'RobOS System' },
   { id: 'robos-preferences',       label: 'RobOS Preferences',      icon: '⚙️', desc: 'System-wide settings',            category: 'RobOS System' },
@@ -94,6 +95,7 @@ const APPS = [
   { id: 'work-journal',            label: 'Work Journal',           icon: '📓', desc: 'Developer journal',               category: 'RobOS Dev' },
   { id: 'workspace-manager',       label: 'Workspace Manager',      icon: '🗂️', desc: 'Browse IDE workspaces',           category: 'RobOS Dev' },
   { id: 'lang-manager',            label: 'Language Manager',       icon: '🌐', desc: 'Dev language & runtime manager',  category: 'RobOS Dev' },
+  { id: 'robos-graph', label: 'Graph Explorer', icon: '🌐', desc: 'Explore and edit knowledge graphs', category: 'RobOS Dev' },
   { id: 'workflow-studio',         label: 'Workflow Studio',        icon: '🎯', desc: 'Workflow & issue tracker',        category: 'RobOS Dev' },
   { id: 'task-servers',            label: 'Task Servers',           icon: '🔗', desc: 'Jira/GitHub connections',         category: 'RobOS Dev' },
   { id: 'tech-workbench',          label: 'TPS Workbench',          icon: '🛠️', desc: 'Technical problem solver',        category: 'RobOS Dev' },
@@ -129,6 +131,7 @@ function mkBin(id, opts = {}) {
 // ── APP_BINS ──────────────────────────────────────────────────────────────────
 
 const APP_BINS = {
+  'robos-agent-task-runner': mkBin('robos-agent-task-runner'),
   // System / always-present
   'notifications':           mkBin('notifications', { keepAlive: true }),
   'robos-toast':             mkBin('robos-toast', { keepAlive: true }),
@@ -150,6 +153,7 @@ const APP_BINS = {
   'work-journal':            mkBin('work-journal'),
   'workspace-manager':       mkBin('workspace-manager'),
   'lang-manager':            mkBin('lang-manager'),
+  'robos-graph':             mkBin('robos-graph'),
   'workflow-studio':         mkBin('workflow-studio'),
   'task-servers':            mkBin('task-servers'),
   'tech-workbench':          mkBin('tech-workbench'),

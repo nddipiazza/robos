@@ -2,6 +2,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robos', {
+  taskActivity: urls => ipcRenderer.invoke('ti-task-activity',urls),
+  stopTask: url => ipcRenderer.invoke('ti-stop-task',url),
+  showTaskMenu: task => ipcRenderer.invoke('task-context-menu',task),
+  onTaskMenuAction: cb => ipcRenderer.on('task-menu-action',(_,data)=>cb(data)),
   readSettings:    ()    => ipcRenderer.invoke('read-settings'),
   getServerInfo:   ()    => ipcRenderer.invoke('get-server-info'),
   listTasks:       (f)   => ipcRenderer.invoke('list-tasks', f),
@@ -21,5 +25,7 @@ contextBridge.exposeInMainWorld('robos', {
 
 (()=>{'use strict';
 const{contextBridge,ipcRenderer}=require('electron');
-contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['select','open-implementer','open-planner','stop','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
+contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['launch-options','open-runner','select','open-implementer','open-planner','stop','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
 })();
+
+contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invoke('robos-provider-catalog',options)});

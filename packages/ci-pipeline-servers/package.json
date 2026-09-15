@@ -1,0 +1,12 @@
+{
+  "name": "robos-ci-pipeline-servers",
+  "version": "0.1.0",
+  "description": "Configure CI providers and import source-backed pipeline definitions into the knowledge graph",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

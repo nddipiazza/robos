@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
   <title>RobOS Agent-Generated Code Review Platform</title>
   <link rel="stylesheet" href="style.css">
+<script src="../../robos-lib/list-controls.js" data-app="pr-review"></script>
 </head>
 <body>
 <div id="app">
@@ -39,7 +40,7 @@
   <div id="main-content">
     <!-- PR List Panel -->
     <div id="pr-list-panel">
-      <div id="pr-list"></div>
+      <robos-list-sort for="pr-list" label="pr-review"></robos-list-sort><div id="pr-list"></div>
     </div>
 
     <!-- Empty state -->
@@ -734,5 +735,6 @@
   <script src="markdown.js"></script>
   <script src="app.js"></script>
 <script src="work-task-bridge.js"></script>
+<script src="../../robos-lib/column-splitter.js" data-app="pr-review"></script>
 </body>
 </html>

@@ -1,19 +1,27 @@
 (() => {
 'use strict';
 const{contextBridge,ipcRenderer}=require('electron');
-contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['select','open-implementer','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
+contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['launch-options','open-runner','select','open-implementer','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
 
 })();
 'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robos', {
+  learningRoots: () => ipcRenderer.invoke('planner-learning-roots'),
+  existingLearning: id => ipcRenderer.invoke('planner-existing-learning',id),
+  createLearning: input => ipcRenderer.invoke('planner-learning',input),
+  people: () => ipcRenderer.invoke('planner-people'),
+  saveSignoff: input => ipcRenderer.invoke('planner-signoff',input),
   listPlans: () => ipcRenderer.invoke('project-plan-list'),
   viewPlan: input => ipcRenderer.invoke('project-plan-view', input),
   proposePlan: input => ipcRenderer.invoke('project-plan-propose', input),
   applyPlan: id => ipcRenderer.invoke('project-plan-apply', id),
   readSettings:    ()        => ipcRenderer.invoke('read-settings'),
   getServerInfo:   ()        => ipcRenderer.invoke('get-server-info'),
+  saveTaskRepositories: (input) => ipcRenderer.invoke('save-task-repositories',input),
+  featureTasks: (url) => ipcRenderer.invoke('feature-tasks',url),
+  reviseMarkdown: (input) => ipcRenderer.invoke('revise-markdown',input),
   generateTasks:   (p)       => ipcRenderer.invoke('generate-tasks', p),
   createTasks:     (p)       => ipcRenderer.invoke('create-tasks', p),
   syncTask:        (p)       => ipcRenderer.invoke('sync-task', p),
@@ -48,3 +56,9 @@ contextBridge.exposeInMainWorld('robos', {
   switchBranch:     (b)      => ipcRenderer.invoke('dag-switch-branch', b),
   minimize:         ()       => ipcRenderer.invoke('minimize-window'),
 });
+
+contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invoke('robos-provider-catalog',options)});
+
+contextBridge.exposeInMainWorld('robosKGraphs',{list:()=>ipcRenderer.invoke('robos-kgraphs-list'),add:()=>ipcRenderer.invoke('robos-kgraphs-add')});
+
+contextBridge.exposeInMainWorld('robosCourseEditor',{preview:input=>ipcRenderer.invoke('robos-course-preview',input),apply:id=>ipcRenderer.invoke('robos-course-apply',id)});

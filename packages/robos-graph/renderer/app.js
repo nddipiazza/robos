@@ -181,6 +181,7 @@ function renderNodeItemHtml(n, badge, isSelected) {
     <div class="node-header"><span class="node-title">${escHtml(nodeText(n['dcterms:title'], n['@id']))}</span>
     <span class="type-badge type-team">${escHtml([].concat(n['@type'] || []).map(classification.compact).sort().join(', ') || 'Untyped')}</span></div>
     <div class="node-meta">${escHtml(n['@id'])} · ${escHtml(n['robos:package'] || 'Unpackaged')}</div>
+    ${n['dcterms:modified']||n['schema:dateModified']?window.robosList.time(nodeText(n['dcterms:modified']||n['schema:dateModified'],'')):''}
     <div class="node-classification" data-status="${result.status}">${escHtml(categoryLabels)}</div>
     ${warning ? `<div class="classification-warning" role="note">⚠ ${escHtml(warning)}</div>` : ''}
   </div>`;

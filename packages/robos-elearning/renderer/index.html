@@ -12,12 +12,7 @@
         <span class="app-icon">🎓</span>
         <div>
           <h1 id="course-title">RobOS Interactive eLearning Hub</h1>
-          <div class="course-meta">
-            <span class="badge badge-tech" id="course-tech">KGraph-First</span>
-            <span class="badge badge-difficulty" id="course-difficulty">Intermediate</span>
-            <span class="badge badge-duration" id="course-duration">⏱️ 45 mins</span>
-            <span class="badge badge-scorm">SCORM 2004 Verified</span>
-          </div>
+
         </div>
       </div>
       <div class="header-right">
@@ -31,23 +26,7 @@
       </div>
     </header>
 
-    <div class="app-body">
-      <aside class="sidebar">
-        <h3>Curriculum Modules</h3>
-        <ul class="module-list" id="module-nav-list"></ul>
-        <div class="cert-status-box" id="cert-status-box">
-          <h4>🏆 Completion Certificate</h4>
-          <p id="cert-status-text">Complete all modules and score >= 80% to earn your Knowledge Graph Certificate of Completion.</p>
-          <button class="btn btn-cert" id="btn-view-certificate" style="display:none;" onclick="window.showCertificateModal()">View Verified Certificate</button>
-        </div>
-      </aside>
-
-      <main class="content-panel" id="content-panel">
-        <div id="module-content">
-          <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
-        </div>
-      </main>
-    </div>
+    <main style="flex:1;overflow:auto;padding:24px 32px"><p id="player-status" role="status"></p><robos-elearning-player id="course-player"></robos-elearning-player><button id="btn-view-certificate" hidden onclick="showCertificateModal()">View certificate</button></main>
 
     <!-- Certificate Modal -->
     <div class="modal-overlay" id="cert-modal" style="display:none;">
@@ -76,6 +55,10 @@
       </div>
     </div>
   </div>
-  <script src="app.js"></script>
+  <script src="../../robos-lib/node_modules/marked/lib/marked.umd.js"></script>
+<script src="../../robos-lib/node_modules/dompurify/dist/purify.min.js"></script>
+<script src="../../robos-ui/robos-ui.js"></script>
+<script src="../../robos-lib/elearning-player.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

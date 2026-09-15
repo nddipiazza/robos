@@ -202,3 +202,5 @@ This automatically scaffolds `plugins/robos/skills/<skill-name>/SKILL.md`, creat
 links and reviewed graph persistence. See
 [`PROJECT-PLANS.md`](../packages/task-planner/PROJECT-PLANS.md) for the input format,
 Task Planner workflow, KGraph Project Plan tab, and read-only task lookup.
+
+- **import-users**: Import people and groups through Graph Explorer with Git/Google Cloud discovery, explicit email-domain filters, source evidence, and reviewed memberships. See `plugins/robos/skills/import-users/SKILL.md`.

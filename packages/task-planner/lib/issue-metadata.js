@@ -1,0 +1,10 @@
+'use strict';
+const core=require('../../robos-agent-client/work-task/core');
+function repositoryUrl(value){
+ const text=String(value||'').trim();const u=new URL(/^[\w.-]+\/[\w.-]+$/.test(text)?'https://github.com/'+text:text);
+ if(!['https:','http:'].includes(u.protocol)||u.username||u.password)throw Error('Enter an HTTP(S) repository URL without credentials.');
+ u.hash='';u.search='';u.pathname=u.pathname.replace(/\.git\/?$/,'').replace(/\/$/,'');return u.href.replace(/\/$/,'');
+}
+function repositories(body){const found=new Set();for(const match of (body||'').matchAll(/https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\/[^\s<>)\]]*)?/g)){const u=new URL(match[0]);const parts=u.pathname.split('/').filter(Boolean);if(parts.length===2||['tree','blob'].includes(parts[2]))found.add('https://github.com/'+parts.slice(0,2).join('/').replace(/\.git$/,''));}return [...found];}
+async function metadata(url,gh=core.gh){const {repo,number}=core.identity(url);const i=await gh(['api',`repos/${repo}/issues/${number}`]);const discovered=repositories(i.body);const state=core.read(url);const workspace=state.sourceWorkspace||state.workspace;if(workspace){try{let remote=require('node:child_process').execFileSync('git',['-C',workspace,'remote','get-url','origin'],{encoding:'utf8',timeout:5000,stdio:['ignore','pipe','ignore']}).trim();remote=remote.replace(/^git@([^:]+):/,'https://$1/');const normalized=repositoryUrl(remote);if(!discovered.includes(normalized))discovered.push(normalized);}catch{}}return {url:i.html_url,number:i.number,title:i.title,type:i.type?.name||null,state:i.state,labels:(i.labels||[]).map(l=>l.name),assignees:(i.assignees||[]).map(a=>a.login),milestone:i.milestone?{title:i.milestone.title,dueOn:i.milestone.due_on}:null,author:i.user?.login,createdAt:i.created_at,updatedAt:i.updated_at,closedAt:i.closed_at,body:i.body||'',repositories:discovered,parentUrl:(i.body||'').match(/Parent Feature:\s*(https:\/\/github\.com\/[^\s)]+\/issues\/\d+)/i)?.[1]||null,dependencies:[...(i.body||'').matchAll(/Depends on:\s*(https:\/\/github\.com\/[^\s)]+\/issues\/\d+)/gi)].map(m=>m[1])};}
+module.exports={metadata,repositoryUrl,repositories};

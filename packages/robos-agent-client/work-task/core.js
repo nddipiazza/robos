@@ -50,7 +50,7 @@ function plannerProject(url, issue) {
 function electronEnv(){const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;return env;}
 async function launchApp(app,url,electron){
   const dir=path.resolve(__dirname,'../..',app);
-  await new Promise((resolve,reject)=>{const child=spawn(electron,[dir,`--work-task=${url}`],{cwd:dir,detached:true,stdio:'ignore',env:electronEnv()});child.once('error',reject);child.once('spawn',()=>{child.unref();resolve();});});
+  await new Promise((resolve,reject)=>{const child=spawn(electron,[dir,`--work-task=${url}`,'--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],{cwd:dir,detached:true,stdio:'ignore',env:electronEnv()});child.once('error',reject);child.once('spawn',()=>{child.unref();resolve();});});
 }
 function alive(pid){try{process.kill(pid,0);return true;}catch{return false;}}
 async function route(url,electron){
@@ -75,24 +75,16 @@ async function dispatch(url,electron){
   }catch(error){fs.renameSync(lock,lock+'.failed');throw error;}finally{fs.closeSync(log);}
 }
 function planHash(plan){return crypto.createHash('sha256').update(plan).digest('hex');}
-async function startWorkerUnlocked(url,mode,{workspace,plan,refinement,backend='codex'}={},electron){
+async function startWorkerUnlocked(url,mode,{workspace,plan,refinement,backend='codex',launchConfig,origin}={},electron){
   const old=read(url);
   backend=require('./backend').configuredBackend(backend);
   if(old.workerPid&&alive(old.workerPid))throw Error('A RobOS Agent session is already running for this task.');
-  if(!['plan','implement'].includes(mode))throw Error('Invalid work stage');
-  if(!path.isAbsolute(workspace||'')||!fs.statSync(workspace).isDirectory())throw Error('Choose the local source workspace first.');
-  if(!['claude','codex'].includes(backend))throw Error('Unsupported configured backend');
-  if(mode==='implement'&&(!plan?.trim()||old.approvedPlanHash!==planHash(plan)))throw Error('Review and approve this exact plan before implementation.');
-  let implementationWorkspace=old.implementationWorkspace;
-  if(mode==='implement' && !implementationWorkspace) {
-    const source=workspace;
-    const branch=`codex/robos-task-${identity(url).number}-${Date.now()}`;
-    implementationWorkspace=path.join(folder(url),'implementation');
-    await command('git',['-C',source,'worktree','add','-b',branch,implementationWorkspace,'HEAD']);
-    save(url,{sourceWorkspace:source,implementationWorkspace,implementationBranch:branch});
-  }
-  if(mode==='implement')workspace=implementationWorkspace;
-  const state=save(url,{workspace,autoStart:false,plan:plan??old.plan,backend,refinement:refinement||'',phase:mode==='plan'?'planning-agent':'implementing',error:null,output:''});
+  require('./plan-approval').assertStart(old,mode,plan,origin);
+  if(!launchConfig)throw Error('Review the Task Runner launch settings before starting.');
+  launchConfig=require('../../robos-agent-task-runner/sandbox').validate(launchConfig);
+  backend=launchConfig.provider;
+
+  const state=save(url,{autoStart:false,plan:plan??old.plan,backend,launchConfig,origin,...(mode==='plan'?{approvedPlanHash:null,planApproval:null}:{}),refinement:refinement||'',phase:'provisioning',error:null,output:''});
   const log=fs.openSync(path.join(folder(url),'agent.log'),'a',0o600);
   try {
     const child=spawn(electron,[path.join(__dirname,'runner.js'),mode,url,electron],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},detached:true,stdio:['ignore',log,log]});
@@ -118,41 +110,25 @@ function recordMergedPR(prUrl,merged) {
   }
 }
 async function runWorker(url,mode,electron){
-  const state=read(url),dir=folder(url);const outputFile=path.join(dir,`${mode}-output.txt`);
+  const state=read(url),dir=folder(url);require('./plan-approval').assertStart(state,mode,state.plan,state.origin);const outputFile=path.join(dir,`${mode}-output.txt`);
   const instruction=mode==='plan'
     ? 'Read the task and workspace instructions. Produce or refine a concrete implementation plan in Markdown. Inspect existing work and linked issues. Do not modify source code, create issues or PRs, or merge anything. Stop for human plan review.'
-    : 'Implement only this ticket and the human-approved plan. The parent feature and successor tickets are context, not additional implementation scope. If this ticket is a design or documentation task, produce that document only; do not implement the future work it describes. Follow workspace instructions and tests. The current workspace is the isolated worktree provisioned by RobOS; use it directly and preserve other worktrees, create a draft PR with a closing link to the task, and report the PR URL and evidence. Never approve or merge a PR. Do not send Slack, email, or other messages, or post issue comments. Only the implementation and draft PR creation are authorized. Stop for human review in PR Review Theater. If blocked, report the blocker; do not claim completion.';
+    : 'Implement only this ticket and the human-approved plan. The parent feature and successor tickets are context, not additional implementation scope. If this ticket is a design or documentation task, produce that document only; do not implement the future work it describes. Follow workspace instructions and tests. The repositories are isolated clones inside the RobOS ephemeral sandbox; use those clones, create a draft PR with a closing link to the task, and report the PR URL and evidence. Never approve or merge a PR. Do not send Slack, email, or other messages, or post issue comments. Only the implementation and draft PR creation are authorized. Stop for human review in PR Review Theater. If blocked, report the blocker; do not claim completion.';
   const prompt=`You are the RobOS Agent executing /work-task ${url}.\n${instruction}\nTask: ${state.issue.title}\n${state.issue.body}\nApproved/current plan:\n${state.plan||'(No plan yet)'}\nHuman refinement:\n${state.refinement||'(none)'}`;
-  // Keep the user's CLI model and permission settings; never bypass permissions.
-  const backend=require('./backend');
-  const invocation=backend.invocation(state.backend||'codex',mode,prompt);
-  const file=fs.openSync(outputFile,'w',0o600);
-  const child=spawn(invocation.bin,invocation.args,{cwd:state.workspace,stdio:['ignore','pipe','pipe'],env:electronEnv()});
-  const eventsFile=path.join(dir,'events.jsonl');
-  if(!fs.existsSync(eventsFile))fs.writeFileSync(eventsFile,'',{mode:0o600,flag:'wx'});
-  const event=(role,text,name)=>fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at:new Date().toISOString()})+'\n');
-  event('user', `${mode === 'plan' ? 'Prepare a plan for' : 'Implement the approved plan for'} ${url}`);
-  let output='', pending='', agentError=null, stopped=false;
-  child.stdout.on('data',b=>{
-    fs.writeSync(file,b);pending+=b;const lines=pending.split('\n');pending=lines.pop();
-    for(const line of lines){try{const obj=JSON.parse(line);
-      const decoded=backend.decode(obj);
-      for(const item of decoded.events)event(item.role,item.text,item.name);
-      if(decoded.text)output=state.backend==='codex'?decoded.text:output+decoded.text;
-      if(decoded.error)agentError=decoded.error;
-    }catch{event('agent',line);}}
-  });
-  child.stderr.on('data',b=>{fs.writeSync(file,b);event('error',b.toString());});
-  process.once('SIGTERM',()=>{stopped=true;child.kill('SIGTERM');});
-
-  try{
-    const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',resolve);});
-    if(stopped){save(url,{phase:'stopped',workerPid:null,error:'Stopped by user'});return;}
-    if(agentError)throw Error(agentError);
-    if(code!==0)throw Error(`RobOS Agent exited ${code}. See session output.`);
-    if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,phase:'plan-review',workerPid:null,error:null});
-    else {save(url,{phase:'checking-pr',workerPid:null});const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',error:live.prs.length?null:'The agent finished without a linked open PR. Inspect its output before continuing.'});if(live.prs.length)await launchApp('pr-review',url,electron);}
-  }catch(e){save(url,{phase:'failed',workerPid:null,error:e.message});throw e;}
-  finally{fs.closeSync(file);}
+  if(state.launchConfig){
+    const eventsFile=path.join(dir,'events.jsonl');
+    fs.writeFileSync(eventsFile,'',{mode:0o600});
+    const event=(role,text,name)=>fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at:new Date().toISOString()})+'\n');
+    event('user',`${mode==='plan'?'Draft implementation plan':'Implement approved plan'} for ${url}`);
+    try{
+      const output=await require('../../robos-agent-task-runner/sandbox').run(url,mode,prompt,event);
+      fs.writeFileSync(outputFile,output,{mode:0o600});
+      if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,planApproval:null,phase:'plan-review',workerPid:null,error:null});
+      else{const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',workerPid:null,error:live.prs.length?null:'Agent finished without a linked PR. Review the preserved output.'});if(live.prs.length)await launchApp('pr-review',url,electron);}
+    }catch(e){event('error',e.message);save(url,{phase:read(url).phase==='stopped'?'stopped':'failed',workerPid:null,error:e.message});throw e;}
+    return;
+  }
+  throw Error('This task has no sandbox launch configuration. Open RobOS Agent Task Runner to launch it.');
 }
+
 module.exports={recordMergedPR,launchApp,plannerProject,identity,folder,read,save,gh,command,inspect,dispatch,route,startWorker,runWorker,planHash};

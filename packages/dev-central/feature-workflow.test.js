@@ -48,3 +48,12 @@ test('failed assignment leaves caller state unchanged', async () => {
 test('refuses issues outside the configured repositories', async () => {
   await assert.rejects(assignFeature('https://github.com/other/repo/issues/53', server, [], async () => { throw Error('Must not call GitHub'); }), /configured/);
 });
+test('unassign removes only the signed-in user and only the selected saved feature',async()=>{
+ const {unassignFeature}=require('./feature-workflow');let removed=false;const calls=[];
+ const run=async args=>{calls.push(args);if(args[0]==='api')return 'me';if(args[1]==='edit'){assert(args.includes('--remove-assignee'));assert.equal(args.at(-1),'me');removed=true;return '';}return JSON.stringify({assignees:[{login:'teammate'},...(!removed?[{login:'me'}]:[])]});};
+ const result=await unassignFeature(url,server,[{id:url},{id:'another-feature'}],run);assert.deepEqual(result.features,[{id:'another-feature'}]);assert.equal(calls.filter(a=>a[1]==='view').length,2);
+});
+test('unassign refuses to hide a feature when GitHub still reports the assignment',async()=>{
+ const {unassignFeature}=require('./feature-workflow');const saved=[{id:url}];
+ await assert.rejects(unassignFeature(url,server,saved,async args=>args[0]==='api'?'me':args[1]==='edit'?'':JSON.stringify({assignees:[{login:'me'}]})),/did not confirm/);assert.equal(saved.length,1);
+});

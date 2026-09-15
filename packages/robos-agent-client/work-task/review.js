@@ -18,7 +18,7 @@ async function context(url){
   return{pr,diff,questions};
 }
 function checksReady(checks=[]){return checks.every(c=>['SUCCESS','NEUTRAL','SKIPPED'].includes(c.conclusion||c.state));}
-async function approveAndMerge(url,head,notes,run=command,query=gh){
+async function approveAndMerge(url,head,notes,run=command,query=gh,requiredSignoff=null){
   prIdentity(url);
   const pr=await query(['pr','view',url,'--json','headRefOid,state,isDraft,statusCheckRollup,author']);
   if(pr.state!=='OPEN')throw Error('PR is no longer open. Refresh the review.');
@@ -27,6 +27,7 @@ async function approveAndMerge(url,head,notes,run=command,query=gh){
   const login=(await run('gh',['api','user','--jq','.login'])).trim();
   // GitHub forbids authors approving their own PR; local theater approval never bypasses branch rules.
   if(login!==pr.author.login)await run('gh',['pr','review',url,'--approve','--body',notes||'Reviewed and approved in RobOS PR Review Theater.']);
+  if(requiredSignoff){const fresh=await query(['pr','view',url,'--json','headRefOid,reviews']);if(fresh.headRefOid!==head)throw Error('PR changed during approval. Reload the review.');require('./required-signoff').assertPR(requiredSignoff,fresh.reviews||[],head);}
   if(pr.isDraft)await run('gh',['pr','ready',url]);
   await run('gh',['pr','merge',url,'--squash','--match-head-commit',head]);
   const merged=await query(['pr','view',url,'--json','state,mergeCommit,url']);

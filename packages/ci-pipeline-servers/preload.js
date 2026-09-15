@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('ci',Object.fromEntries(['list','save','folder','preview','apply','open'].map(name=>[name,input=>ipcRenderer.invoke('ci-'+name,input)])));

@@ -33,6 +33,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+document.getElementById('btn-pipeline-servers').onclick=()=>window.api.openPipelineServers();
+
 // ── Init ──────────────────────────────────────────────────────────────────
 
 async function init() {
@@ -119,7 +121,7 @@ function renderRunList() {
     const statusClass = getStatusClass(run.status, run.conclusion);
     const duration = getDuration(run.created, run.updated);
 
-    return `<div class="run-card ${statusClass}" data-id="${run.id}" data-repo="${esc(run.repo)}">
+    return `<div class="run-card ${statusClass}" data-id="${run.id}" data-list-title="${esc(run.name)}" data-list-updated="${esc(run.updated||'')}" data-repo="${esc(run.repo)}">
       <div class="run-card-header">
         <span class="run-status-icon">${statusIcon}</span>
         <span class="run-name">${esc(run.name)}</span>
@@ -129,7 +131,7 @@ function renderRunList() {
         <span class="run-branch">${esc(run.branch)}</span>
         <span class="run-event">${esc(run.event)}</span>
         <span class="run-duration">${duration}</span>
-        <span class="run-time">${timeAgo(run.updated)}</span>
+        <span class="run-time">${window.robosList.time(run.updated)}</span>
       </div>
     </div>`;
   }).join('');
@@ -186,7 +188,7 @@ async function showDetail(run) {
     <span>Workflow: <strong>${esc(run.workflowName)}</strong></span>
     <span>Branch: <strong>${esc(run.branch)}</strong></span>
     <span>Event: ${esc(run.event)}</span>
-    <span>${timeAgo(run.updated)}</span>
+    <span>${window.robosList.time(run.updated)}</span>
   `;
 
   // Reset tabs

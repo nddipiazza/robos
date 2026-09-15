@@ -1,6 +1,7 @@
 'use strict';
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
+app.setName('robos-graph');
 const { SDLCKnowledgeGraphStore, SAMPLE_GHERKIN_FEATURE } = require('./lib/graph-store');
 
 let _debugServer = null;
@@ -56,12 +57,14 @@ if (!isTestMode) {
 }
 
 let win;
+app.on('second-instance',()=>{if(win){if(win.isMinimized())win.restore();win.show();win.focus();}});
 
 app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 1440,
     height: 960,
     title: 'RobOS Knowledge Graph Explorer',
+    icon: path.join(__dirname, 'icon.png'),
     backgroundColor: '#0d1117',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -107,6 +110,14 @@ ipcMain.handle('graph-info', () => ({
   schemaCount: store.validator.shapes.length,
   branch: store.getActiveBranch()?.name || 'main',
 }));
+const appConfigurationImport=require('./lib/app-configuration-import');
+let pendingAppImport=null;
+ipcMain.handle('app-import-confirm-person',(_,input)=>require('./lib/identity-import').confirmedPerson(input));
+ipcMain.handle('app-import-people',(_,input)=>require('./lib/identity-import').discover(input));
+ipcMain.handle('app-import-scan',()=>{pendingAppImport=null;return appConfigurationImport.scan(requireReview().workspace.root);});
+ipcMain.handle('app-import-discover',(_,id)=>{const source=appConfigurationImport.scan(requireReview().workspace.root).taskServers.find(s=>s.kgraphId===id);if(!source)throw Error('Choose a task server in this workspace.');return appConfigurationImport.discover(source);});
+ipcMain.handle('app-import-preview',(_,input)=>{if(input.graphRoot!==requireReview().workspace.root)throw Error('Workspace changed. Start again.');pendingAppImport=appConfigurationImport.plan(input);return {id:pendingAppImport.id,summary:pendingAppImport.summary,warnings:pendingAppImport.warnings,delta:pendingAppImport.proposal?.delta};});
+ipcMain.handle('app-import-apply',(_,id)=>{if(!pendingAppImport||pendingAppImport.id!==id)throw Error('Preview this import before applying.');const result=appConfigurationImport.apply(pendingAppImport);pendingAppImport=null;store.init();return result;});
 ipcMain.handle('workspace-info', () => workspaceReview ? workspaceReview.info() : null);
 ipcMain.handle('workspace-open', async () => {
   const selected = await dialog.showOpenDialog(win, { properties: ['openDirectory'], title: 'Open graph workspace (contains .robos)' });

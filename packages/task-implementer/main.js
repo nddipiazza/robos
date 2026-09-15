@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, clipboard } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -71,7 +71,7 @@ app.setName('robos-task-implementer');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'task-implementer'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.on('second-instance', () => {
-  if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
+  if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
 });
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
@@ -370,3 +370,17 @@ ipcMain.handle('ti-list-path', (_, prefix) => {
     return { ok: true, items: [...taskServers, ...items] };
   } catch { return { ok: true, items: [] }; }
 });
+
+ipcMain.handle('task-context-menu',(event,task)=>{
+  if(!task || typeof task.url!=='string' || typeof task.title!=='string')throw Error('Choose a task.');
+  const url=new URL(task.url);if(!['https:','http:'].includes(url.protocol))throw Error('Invalid task URL.');
+  const menu=Menu.buildFromTemplate(require('./task-menu').taskMenu(task,{
+    action:action=>{if(!event.sender.isDestroyed())event.sender.send('task-menu-action',{action,task});},
+    copy:text=>clipboard.writeText(String(text||'')),
+  }));
+  menu.popup({window:BrowserWindow.fromWebContents(event.sender)});
+});
+
+// Actions target the clicked issue without changing the selected task.
+ipcMain.handle('ti-task-activity',(_,urls)=>{try{return {ok:true,activity:require('./task-activity').activity(urls)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('ti-stop-task',(_,url)=>{try{require('./task-activity').stop(url);return {ok:true};}catch(e){return {ok:false,error:e.message};}});

@@ -102,3 +102,21 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .session-message a { color:#6ed3f5;text-decoration:underline; }
 .session-message.assistant { border-left:3px solid #4cbb95; }
 .session-message.tool { margin-top:6px;margin-bottom:6px;padding:10px 16px; }
+.session-message-header time { display:inline-block;margin-left:10px;color:#9da7b3;font:12px/1.5 system-ui;white-space:nowrap;font-weight:normal;cursor:help; }
+.session-markdown {font:13px/1.65 system-ui,sans-serif;color:#cbd5df;overflow-wrap:anywhere;}.session-markdown h1,.session-markdown h2,.session-markdown h3 {font-size:16px;margin:18px 0 8px;}.session-markdown p {margin:8px 0;}.session-markdown ul,.session-markdown ol {padding-left:22px;}.session-markdown table {border-collapse:collapse;width:100%;}.session-markdown td,.session-markdown th {border:1px solid #354553;padding:7px;}.session-markdown code {font-family:monospace;}.session-markdown a {color:#70d7e8;}
+.task-item-heading {display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;}
+.task-run-button {font-size:11px;padding:3px 7px;flex-shrink:0;}
+.task-item:focus-visible {outline:2px solid #58a6ff;outline-offset:-2px;}
+#session-workflow {flex-shrink:0;padding:12px 16px;background:#111a23;border-bottom:1px solid #30363d;max-height:35vh;overflow:auto;}
+.session-workflow-heading {display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;}
+.session-issue-type {padding:3px 8px;color:#8cdef2;border:1px solid #396076;border-radius:4px;}
+.session-workflow-current {font-size:13px;margin:8px 0;color:#d5e6f3;}
+.session-workflow-stages {display:flex;gap:8px;flex-wrap:wrap;list-style:none;padding:0;margin:8px 0;align-items:center;}
+.session-workflow-stages li {color:#9caebe;font-size:12px;padding:4px 8px;border:1px solid transparent;}
+.session-workflow-stages li+li::before {content:'→';margin-right:12px;color:#697e90;}
+.session-workflow-stages [aria-current=step] {color:#9ae5f6;background:#173649;border-color:#33718f;border-radius:4px;font-weight:600;}
+#session-workflow small {color:#92a6b8;font-size:11px;}
+.workflow-warning {color:#e2b879;font-size:12px;margin-top:8px;}
+
+/* Compact task actions remain keyboard accessible; stop appears only for a live worker. */
+.task-row-actions{display:inline-flex;gap:4px}.task-icon-button{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;padding:0;border:1px solid transparent;border-radius:4px;background:transparent;color:#96bacd;cursor:pointer;font-size:12px}.task-icon-button:hover{background:#253746;border-color:#3c5668}.task-icon-button:focus-visible{outline:2px solid #00bcd4}.task-icon-button:disabled{opacity:.35;cursor:default}.task-stop-button{color:#f08888}.task-icon-button[hidden]{display:none}#task-sort{margin:0 12px 8px}.task-item>robos-list-time{display:block;margin:4px 0}.task-item .robos-copy-line{margin:3px 0}.task-item-title{flex:1;min-width:0}

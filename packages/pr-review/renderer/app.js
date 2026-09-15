@@ -141,7 +141,7 @@ function renderPRList() {
     const draftTag = pr.isDraft ? '<span class="draft-tag">Draft</span>' : "";
     const labelsHtml = (pr.labels || []).slice(0, 3).map(l => `<span class="label-tag">${esc(l)}</span>`).join("");
 
-    return `<div class="pr-card" data-number="${pr.number}" data-repo="${esc(pr.repo)}">
+    return `<div class="pr-card" data-number="${pr.number}" data-list-title="${esc(pr.title)}" data-list-updated="${esc(pr.updated||'')}" data-repo="${esc(pr.repo)}">
       <div class="pr-card-header">
         <span class="ci-dot ${ciDot}" title="CI: ${pr.ciStatus}"></span>
         <span class="pr-title">${esc(pr.title)}</span>
@@ -157,7 +157,7 @@ function renderPRList() {
         <span class="stat-add">+${pr.additions}</span>
         <span class="stat-del">-${pr.deletions}</span>
         <span class="stat-comments">${pr.commentCount} comments</span>
-        <span class="stat-time">${timeAgo(pr.updated)}</span>
+        <span class="stat-time">${window.robosList.time(pr.updated)}</span>
         ${labelsHtml}
       </div>
     </div>`;
@@ -194,7 +194,7 @@ async function showDetail(pr) {
     <span>${esc(pr.headBranch)} &rarr; ${esc(pr.baseBranch)}</span>
     <span class="stat-add">+${pr.additions}</span>
     <span class="stat-del">-${pr.deletions}</span>
-    <span>${timeAgo(pr.updated)}</span>
+    <span>${window.robosList.time(pr.updated)}</span>
   `;
 
   // Show overview

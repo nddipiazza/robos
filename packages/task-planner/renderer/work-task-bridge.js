@@ -16,7 +16,7 @@ window.resumeWorkTask = async function () {
   for (const [id, text, fn] of [
     ['work-task-source', 'Source workspace', async () => { const dir = await taskCall('folder'); if (dir) { routedTask.workspace = dir; await taskCall('save', { plan: routedTask.plan || '', workspace: dir }); showGenerateStatus(`Workspace: ${dir}`); } }],
     ['work-task-approve', 'Approve plan', async () => { const plan = getPromptValue(); await taskCall('approve-plan', { plan, workspace: routedTask.workspace }); showGenerateStatus('Plan approved. Ready for background implementation.'); }],
-    ['work-task-implement', 'Implement in background', async () => { await taskCall('agent', { backend:routedTask.backend || 'codex', mode: 'implement', plan: getPromptValue(), workspace: routedTask.workspace }); await taskCall('open-implementer'); showGenerateStatus('RobOS Agent is implementing the approved plan in Task Implementer.'); }],
+    ['work-task-implement', 'Implement in background', async () => { await openTaskRunnerLaunch({mode:'implement',plan:getPromptValue(),call:taskCall,afterLaunch:async()=>{await taskCall('open-runner');showGenerateStatus('RobOS Agent is implementing the approved plan in Task Runner.');}}); }],
   ]) {
     if (document.getElementById(id)) continue;
     const button = document.createElement('button'); button.id = id; button.className = 'btn btn-outline'; button.textContent = text;
@@ -30,12 +30,7 @@ window.resumeWorkTask = async function () {
 window.generateWorkTaskPlan = async function () {
   if (!routedTask) return false;
   try {
-    let workspace = routedTask.workspace;
-    if (!workspace) workspace = await taskCall('folder');
-    if (!workspace) return true;
-    routedTask.workspace = workspace;
-    await taskCall('agent', { backend:routedTask.backend || 'codex', mode: 'plan', workspace, plan: routedTask.plan || '', refinement: getPromptValue() });
-    showGenerateStatus('RobOS Agent is preparing the plan in the background…');
+    await openTaskRunnerLaunch({mode:'plan',plan:routedTask.plan||'',refinement:getPromptValue(),call:taskCall,afterLaunch:()=>showGenerateStatus('Planning agent is running. The plan will appear here for review.')});
   } catch (e) { showGenerateStatus(e.message, true); }
   return true;
 };
@@ -47,7 +42,7 @@ setInterval(async () => {
     if (latest.plan && latest.plan !== lastWorkTaskPlan && latest.phase === 'plan-review') {
       // Do not overwrite text the user edited while the agent was running.
       const editor = document.getElementById('prompt-input');
-      if (!document.activeElement?.closest('#prompt-input')) editor.value = latest.plan;
+      if (!editor.dirty && !plannerEditing) editor.value = latest.plan;
       showGenerateStatus('Agent plan ready for review. Refine it in the existing planner editor.');
       lastWorkTaskPlan = latest.plan;
     }

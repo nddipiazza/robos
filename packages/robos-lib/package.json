@@ -4,6 +4,8 @@
   "description": "RobOS shared utilities — categories, .desktop file parsing, app registry",
   "main": "index.js",
   "dependencies": {
-    "jsonrepair": "^3.14.0"
+    "dompurify": "3.4.15",
+    "jsonrepair": "^3.14.0",
+    "marked": "18.0.3"
   }
 }

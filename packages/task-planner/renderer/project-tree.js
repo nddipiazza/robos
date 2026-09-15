@@ -25,7 +25,7 @@ function plannerModified(value) {return typeof value==='number'?value:Date.parse
 function plannerProducts(projects) {
   const products=new Map();
   for(const family of plannerProjectTree(projects)){
-    const product=family.project.product||family.children.find(p=>p.product)?.product||{id:'unassigned',name:'Unassigned'};
+    const product=family.project.product||family.children.find(p=>p.product)?.product||{id:'unassigned',name:'(No Project)'};
     const key=product.name.toLowerCase();
     if(!products.has(key))products.set(key,{...product,families:[],modifiedAt:null});
     const group=products.get(key);group.families.push(family);
@@ -44,6 +44,8 @@ let plannerSelectedTask=null;
 const plannerClosedFolders=new Set();
 function renderPlannerTree(projects) {
   const list=document.getElementById('project-list');const products=plannerProducts(projects);
+  let sort=document.getElementById('planner-tree-sort');if(!sort){sort=document.createElement('robos-list-sort');sort.id='planner-tree-sort';sort.setAttribute('label','projects and tasks');list.before(sort);sort.addEventListener('sort-change',()=>renderPlannerTree(window.plannerSortProjects));}window.plannerSortProjects=projects;const order=sort.value;
+  const compare=(a,b)=>window.robosList.compare(a,b,order);products.sort(compare);for(const p of products)p.families.sort((a,b)=>compare({...a.project,modifiedAt:Math.max(...[a.project,...a.children].map(p=>plannerModified(p.modifiedAt)))},{...b.project,modifiedAt:Math.max(...[b.project,...b.children].map(p=>plannerModified(p.modifiedAt)))}));
   const query=(document.getElementById('planner-project-search')?.value||'').toLowerCase();
   list.innerHTML='';
   function columns(element,label,status,modified){
@@ -53,7 +55,7 @@ function renderPlannerTree(projects) {
     element.append(title,state,time);
   }
   function row(label,project,index,kind){
-    const b=document.createElement('button');b.className='project-item planner-tree-item planner-tree-row';b.type='button';b.dataset.id=project.id;
+    const b=document.createElement('div');b.setAttribute('role','button');b.tabIndex=0;b.onkeydown=e=>{if(e.target===b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();b.click();}};b.className='project-item planner-tree-item planner-tree-row';b.type='button';b.dataset.id=project.id;
     if(index!==null)b.dataset.taskIndex=index;
     const selected=project.id===currentProjectId && (index===null?plannerSelectedTask===null:plannerSelectedTask===index);
     b.classList.toggle('active',selected);if(selected)b.setAttribute('aria-current','page');
@@ -66,7 +68,7 @@ function renderPlannerTree(projects) {
     el.addEventListener('toggle',()=>{if(!query){if(el.open)plannerClosedFolders.delete(key);else plannerClosedFolders.add(key);}});
     const summary=document.createElement('summary');summary.className='planner-tree-row';summary.title=label;columns(summary,label,status,modified);el.append(summary);return el;
   }
-  const header=document.createElement('div');header.className='planner-tree-row planner-tree-heading';columns(header,'Project / feature / task','Status',null);header.lastChild.textContent='Updated ↓';list.append(header);
+  const header=document.createElement('div');header.className='planner-tree-row planner-tree-heading';columns(header,'Project / feature / task','Status',null);header.lastChild.textContent=order==='title'?'Updated':order==='updated-asc'?'Updated ↑':'Updated ↓';list.append(header);
   for(const product of products){
     const productMatch=product.name.toLowerCase().includes(query);
     const root=folder('product:'+product.id,product.name,'',product.modifiedAt,'planner-product-folder');root.dataset.product=product.name;
@@ -77,25 +79,50 @@ function renderPlannerTree(projects) {
         if(t.ticketUrl===p.workTaskUrl || family.children.some(c=>c.workTaskUrl===t.ticketUrl))continue;
         entries.push({p,index,label:`${t.ticketKey||'Task'} ${t.title}`});
       }
-      entries.sort((a,b)=>plannerModified(b.p.modifiedAt)-plannerModified(a.p.modifiedAt));
+      entries.sort((a,b)=>compare({...a.p,title:a.label},{...b.p,title:b.label}));
       const wholeMatch=productMatch||p.name.toLowerCase().includes(query);
       const matches=entries.filter(e=>wholeMatch||e.label.toLowerCase().includes(query));
       if(query&&!wholeMatch&&!matches.length)continue;
-      if(p.kind==='project'){root.append(row('Overview',p,null,'plan'));for(const e of matches)root.append(row(e.label,e.p,e.index,'task'));continue;}
+      if(p.kind==='project'){
+        root.dataset.projectRecord=p.id;
+        const summary=root.querySelector('summary');
+        const name=summary.querySelector('.planner-row-name');name.setAttribute('role','button');name.tabIndex=0;name.title='Open project details';
+        const open=async event=>{event.preventDefault();event.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerEditing(false);setPlannerView('details');};
+        name.addEventListener('click',open);name.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')open(event);});
+        for(const e of matches)root.append(row(e.label,e.p,e.index,'task'));continue;
+      }
       if(!entries.length){root.append(row(`${p.tasks?.[0]?.ticketKey|| (p.kind==='task'?'Task':'Feature')} ${p.name}`,p,null,'plan'));continue;}
       const feature=folder(p.id,`${p.tasks?.[0]?.ticketKey||'Feature'} ${p.name}`,p.workflowStatus,p.modifiedAt,'planner-project-folder');feature.dataset.projectId=p.id;
-      feature.append(row(p.workTaskUrl?'Feature plan':'Plan',p,null,'plan'));
+      const featureName=feature.querySelector('.planner-row-name');featureName.setAttribute('role','button');featureName.tabIndex=0;featureName.title='Open feature plan';
+      const openFeature=async event=>{event.preventDefault();event.stopPropagation();plannerSelectedTask=null;await openProject(p.id);setPlannerEditing(false);setPlannerView('plan');};
+      featureName.addEventListener('click',openFeature);featureName.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' ')openFeature(event);});
       for(const e of matches)feature.append(row(e.label,e.p,e.index,'task'));
       root.append(feature);
     }
-    if(root.children.length>1)list.append(root);
+    if(root.children.length>1||root.dataset.projectRecord)list.append(root);
   }
   if(list.children.length===1){const empty=document.createElement('p');empty.className='project-empty';empty.textContent=query?'No matching projects or tasks.':'No plans yet. Click + to start one.';list.append(empty);}
   const product=products.find(g=>g.families.some(f=>f.project.id===currentProjectId||f.children.some(p=>p.id===currentProjectId)));
   const family=product?.families.find(f=>f.project.id===currentProjectId||f.children.some(p=>p.id===currentProjectId));
   const breadcrumb=document.getElementById('planner-breadcrumb');
-  if(breadcrumb){breadcrumb.replaceChildren();if(family){const p=family.project;const b=document.createElement('button');b.textContent=p.kind==='project'?product.name:product.name+' / '+p.name;b.onclick=async()=>{plannerSelectedTask=null;await openProject(p.id);setPlannerView('plan');};breadcrumb.append(b,document.createTextNode(' / '+(plannerSelectedTask!==null?(projects.find(p=>p.id===currentProjectId)?.tasks?.[plannerSelectedTask]?.title||'Task'):p.id===currentProjectId?(p.kind==='project'?'Overview':'Plan'):currentProjectName)));}}
-  const assignment=document.getElementById('planner-product-name');if(assignment&&document.activeElement!==assignment)assignment.value=product?.name==='Unassigned'?'':product?.name||'';
-  const options=document.getElementById('planner-product-options');if(options){options.replaceChildren();for(const p of products.filter(p=>p.name!=='Unassigned')){const o=document.createElement('option');o.value=p.name;options.append(o);}}
+  if(breadcrumb){
+    breadcrumb.replaceChildren();
+    if(family){
+      const selected=projects.find(item=>item.id===currentProjectId);
+      // The current item already has a heading; breadcrumbs contain ancestors only.
+      if(selected?.kind!=='project'){
+        const projectLink=document.createElement('button');projectLink.textContent=product.name;
+        projectLink.title='Manage this project';projectLink.onclick=()=>openProjectManager();breadcrumb.append(projectLink);
+        if(family.project.id!==currentProjectId){
+          breadcrumb.append(document.createTextNode(' / '));
+          const parentLink=document.createElement('button');parentLink.textContent=family.project.name;
+          parentLink.title='Open parent feature';parentLink.onclick=async()=>{plannerSelectedTask=null;await openProject(family.project.id);setPlannerView('plan');};breadcrumb.append(parentLink);
+        }
+      }
+    }
+    breadcrumb.hidden=!breadcrumb.childNodes.length;
+  }
+  const assignment=document.getElementById('planner-product-name');if(assignment&&document.activeElement!==assignment)assignment.value=product?.name==='(No Project)'?'':product?.name||'';
+  const options=document.getElementById('planner-product-options');if(options){options.replaceChildren();for(const p of products.filter(p=>p.name!=='(No Project)')){const o=document.createElement('option');o.value=p.name;options.append(o);}}
   if(typeof renderProjectContents==='function')renderProjectContents();
 }

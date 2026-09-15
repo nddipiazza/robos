@@ -20,6 +20,22 @@ How RobOS isolates autonomous AI coding agents inside disposable Linux accounts 
 
 ---
 
+## Task Runner implementation
+
+**RobOS Agent Task Runner** now launches from Work ticket or Task Planner. Review
+provider, model, RAM, CPU limits, and repository selection before launch. The
+implementation supports Codex or AGY (Antigravity), with GitHub repositories on Linux Docker.
+It uses a non-root container user, tmpfs home, private process/network namespaces,
+and Xvfb. Live agent events appear in the conversation view. Repository changes
+are exported before container removal; failed exports retain the named session
+for recovery. Plans require human approval before implementation.
+
+This implementation copies the selected provider’s login and GitHub authentication into the
+session's temporary home. It does not yet issue short-lived credentials or
+provide live screen mirroring. The architecture sections below describe the
+broader target; they are not claims that every integration is implemented.
+See [Task Runner setup and limitations](https://github.com/nddipiazza/robos/tree/main/packages/robos-agent-task-runner).
+
 ## The Strategic Advantage: Solving the Machine Pollution Problem
 
 When traditional AI coding assistants execute terminal commands or run autonomous loops directly within a developer's primary user account, severe machine contamination occurs:

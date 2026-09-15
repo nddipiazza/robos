@@ -5,6 +5,7 @@
   <title>RobOS Task Servers</title>
   <link rel="stylesheet" href="style.css">
   <script src="/usr/local/share/robos/robos-icons/builtin-apps-browser.js"></script>
+<script src="../../robos-lib/list-controls.js" data-app="task-servers"></script>
 </head>
 <body>
 <div id="app">
@@ -48,7 +49,7 @@
         </div>
       </div>
     </div>
-    <ul id="server-list"></ul>
+    <robos-list-sort for="server-list" label="task-servers"></robos-list-sort><ul id="server-list"></ul>
   </aside>
 
   <!-- Main panel -->
@@ -61,5 +62,6 @@
   </main>
 </div>
 <script src="app.js"></script>
+<script src="../../robos-lib/column-splitter.js" data-app="task-servers"></script>
 </body>
 </html>

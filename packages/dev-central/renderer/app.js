@@ -2,7 +2,7 @@
 
 // ── State Store ─────────────────────────────────────────────────────────────
 const appState = {
-  activeTab: 'all',
+  activeTab: 'feature',
   taskFilter: 'all',
   searchQuery: '',
   allIssues: [],
@@ -94,7 +94,7 @@ function detectBlockers(issues, prs) {
         blockers.push({
           type: 'review',
           label: 'Stale Review',
-          text: `PR #${pr.number}: awaiting review ${timeAgo(pr.updatedAt)}`,
+          text: `PR #${pr.number}: awaiting review ${window.robosList.time(pr.updatedAt)}`,
           url: pr.url,
           severity: 'medium',
         });
@@ -141,7 +141,7 @@ function generateStandup(issues, prs, blockers) {
 
   if (!yesterday.length) yesterday.push('No merged pull requests in the loaded data');
   if (!today.length) today.push('No open assigned tasks');
-  if (!blockerList.length) blockerList.push('No active blockers across pipelines or sprints');
+  if (!blockerList.length) blockerList.push('No active blockers across pipelines');
 
   return { yesterday, today, blockers: blockerList };
 }
@@ -215,7 +215,7 @@ function updateKPIRibbon() {
   if (tabTasksBadge) tabTasksBadge.textContent = appState.allIssues.length;
   if (tabPrsBadge) tabPrsBadge.textContent = appState.allPRs.length;
   if (tabBlockersBadge) tabBlockersBadge.textContent = appState.allBlockers.length;
-  if (tabFeatureBadge) tabFeatureBadge.textContent = String(appState.allFeatures.filter(f=>f.assigned||f.tasks?.some(t=>t.assigned)).length);
+  if (tabFeatureBadge) tabFeatureBadge.textContent = String(appState.allFeatures.filter(f=>f.assigned).length);
   if (tabNotifsBadge) tabNotifsBadge.textContent = unread;
   if (headerNotifBadge) headerNotifBadge.textContent = unread;
 
@@ -226,6 +226,7 @@ function updateKPIRibbon() {
 
 // ── Tab Navigation ───────────────────────────────────────────────────────────
 function applyViewTab(tab) {
+  if(['all','activity'].includes(tab))tab='feature';
   appState.activeTab = tab;
   document.querySelectorAll('.view-tabs .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -256,7 +257,6 @@ function applyViewTab(tab) {
   } else if (tab === 'tasks') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.tasks) cards.tasks.style.display = '';
-    if (cards.standup) cards.standup.style.display = '';
   } else if (tab === 'prs') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.prs) cards.prs.style.display = '';
@@ -279,39 +279,66 @@ window.switchTab = function(tab) {
 
 // ── Active Feature Rendering & Lifetime Timeline ────────────────────────────
 
+const pendingTaskAssignments=new Set();
+const pendingWorkLaunches=new Set();
+function workProgressRow(t) {
+  const p=t.progress;
+  if(!p?.started)return '';
+  const steps=states=>states.map(s=>`<span ${s.current?'class="current" aria-current="step"':''}>${escapeHTML(s.label)}</span>`).join('<span aria-hidden="true"> → </span>');
+  return `<div class="work-progress" data-progress="${escapeHTML(t.id)}">
+    <div><strong>${escapeHTML(p.label)}</strong> · <button class="link-pill" data-runner="${escapeHTML(t.id)}">${p.running?'● Agent running · Open Task Runner':'Open Task Runner session'}</button>${p.updatedAt?` <time title="${escapeHTML(new Date(p.updatedAt).toLocaleString())}">Updated ${escapeHTML(new Date(p.updatedAt).toLocaleTimeString())}</time>`:''}</div>
+    <div class="workflow-steps" aria-label="Agent workflow">${steps(p.stages)}</div>
+    ${t.workflow?`<div class="workflow-steps" aria-label="Ticket workflow">${escapeHTML(t.workflow.name)}: ${steps(t.workflow.states)}${t.workflow.ambiguous?' · Conflicting state labels':''}</div>`:'<div class="workflow-unconfigured">No ticket-type workflow configured.</div>'}
+    <button class="link-pill" data-workflow>Configure in Workflow Studio</button>
+    ${p.error?`<div class="work-error">${escapeHTML(p.error)}</div>`:''}
+  </div>`;
+}
+let progressRefreshing=false;
+async function refreshWorkProgress() {
+  if(progressRefreshing || !appState.allFeatures?.length)return;
+  progressRefreshing=true;
+  try {
+    const items=appState.allFeatures.flatMap(f=>[f,...f.tasks]);
+    const updates=await window.robos.getWorkProgress([...new Set(items.map(t=>t.id))]);
+    let changed=false;
+    items.forEach(t=>{if(updates[t.id]&&JSON.stringify(t.progress)!==JSON.stringify(updates[t.id])){t.progress=updates[t.id];changed=true;}});
+    if(changed)renderFeatures(appState.allFeatures,appState.activeFeature);
+  } catch(error) { console.warn('Task progress refresh failed:',error.message); }
+  finally {progressRefreshing=false;}
+}
+setInterval(refreshWorkProgress,2000);
 function renderFeatures(features, activeFeature) {
   appState.allFeatures = features;
   appState.activeFeature = activeFeature || null;
 
-  const selector = document.getElementById('feature-selector');
-  if (selector) {
-    const selected = selector.value || appState.activeFeature?.id;
-    selector.replaceChildren(new Option('Select an issue…', ''));
-    for (const feature of features) selector.add(new Option(`${feature.code}: ${feature.name}`, feature.id, false, feature.id === selected));
-
-  }
-
-  document.getElementById('feature-banner').style.display = 'none';
-  document.getElementById('btn-set-feature-progress').disabled = !selector?.value;
-  const mine=features.filter(f=>f.assigned || f.tasks?.some(t=>t.assigned));
-  document.getElementById('feature-status-badge').textContent = `${mine.length} assigned features`;
-  document.getElementById('feature-tasks-count').textContent = `${mine.reduce((n,f)=>n+f.tasks.length,0)} tasks`;
+  const mine=features.filter(f=>f.assigned || f.tasks.some(t=>t.assigned));
+  document.getElementById('feature-status-badge').textContent=`${features.filter(f=>f.assigned).length} features assigned`;
   const list=document.getElementById('feature-tasks-list');
   const collapsed=new Set([...list.querySelectorAll('details:not([open])')].map(d=>d.dataset.feature));
-  list.innerHTML=mine.length ? mine.map(f=>`<details class="feature-task-card" data-feature="${escapeHTML(f.id)}" ${collapsed.has(f.id)?'':'open'}><summary>
+  list.innerHTML=mine.length ? mine.map(f=>`<details class="feature-task-card" data-feature="${escapeHTML(f.id)}" data-list-title="${escapeHTML(f.name)}" data-list-updated="${escapeHTML(f.updatedAt||'')}" ${collapsed.has(f.id)?'':'open'}><summary>
     <button class="link-pill" data-open="${escapeHTML(f.id)}" title="${escapeHTML(f.description.replace(/^#+ /gm,'').slice(0,400))}">${escapeHTML(f.code+': '+f.name)}</button>
-    <span class="task-chip">${escapeHTML(f.status)}</span> ${f.assigned?'Assigned to you':''} · ${f.tasks.filter(t=>t.workable && !t.closed).length} workable
-    </summary>${(f.tasks.length?f.tasks:[f]).map(t=>`<div class="feature-task-top" style="padding:12px 0">
+    ${window.robosList.time(f.updatedAt)} <span class="task-chip">${escapeHTML(f.status)}</span> ${f.assigned?`<button class="unassign-feature" data-unassign="${escapeHTML(f.id)}">Unassign myself</button>`:'<span>Contains tasks assigned to you</span>'} · ${f.tasks.filter(t=>t.workable && !t.closed).length} workable
+    </summary>${f.tasks.length?workProgressRow(f):''}${(f.tasks.length?f.tasks:[f]).map(t=>`<div class="feature-task-top" style="padding:12px 0">
     <button class="link-pill" data-open="${escapeHTML(t.id)}" title="${escapeHTML(t.description.replace(/^#+ /gm,'').slice(0,400))}">${escapeHTML(t.code+': '+t.title)}</button>
-    <span class="task-chip">${escapeHTML(t.status)}</span>
+    ${window.robosList.time(t.updatedAt)} <span class="task-chip">${escapeHTML(t.progress?.started?t.progress.label:t.status)}</span>
     <span title="${escapeHTML(t.blockedBy.join(', '))}">${t.blockedBy.length?'Waiting for '+t.blockedBy.map(u=>'#'+u.split('/').pop()).join(', '):t.closed?'':'Dependencies satisfied'}</span>
-    <button class="btn btn-secondary-sm" data-assign="${escapeHTML(t.id)}" ${t.assigned?'disabled':''}>${t.assigned?'Assigned to you':'Assign to me'}</button>
-    <button class="btn btn-secondary-sm" data-work="${escapeHTML(t.id)}" ${t.workable?'':'disabled'} title="${t.workable?'Open Task Implementer':'Waiting for dependencies'}">Work ticket</button>
-    </div>`).join('')}</details>`).join('') : 'Assign a feature above to see its next workable tasks.';
+    <button class="btn btn-secondary-sm" data-assign="${escapeHTML(t.id)}" ${t.assigned||pendingTaskAssignments.has(t.id)?'disabled':''} aria-busy="${pendingTaskAssignments.has(t.id)}">${pendingTaskAssignments.has(t.id)?'Assigning to you…':t.assigned?'Assigned to you':'Assign to me'}</button>
+    <button class="btn btn-secondary-sm" data-work="${escapeHTML(t.id)}" ${t.workable&&!pendingWorkLaunches.has(t.id)?'':'disabled'} aria-busy="${pendingWorkLaunches.has(t.id)}" title="${t.workable?'Review sandbox settings and launch RobOS Agent Task Runner':'Waiting for dependencies'}">${pendingWorkLaunches.has(t.id)?'Launching…':t.progress?.started?'Continue work':'Work ticket'}</button>
+    </div>${workProgressRow(t)}`).join('')}</details>`).join('') : '<p class="feature-empty">No features assigned to you. Choose a feature to see its next workable tasks.</p>';
   const report=async action=>{try {const result=await action();if(!result.ok)throw Error(result.error);}catch(e){document.getElementById('feature-action-status').textContent=e.message;}};
+  list.querySelectorAll('[data-runner]').forEach(b=>b.onclick=()=>report(()=>window.robos.openWorkItem(b.dataset.runner,'runner')));
+  list.querySelectorAll('[data-workflow]').forEach(b=>b.onclick=()=>report(()=>window.robos.openTool('workflow-studio')));
+  list.querySelectorAll('[data-unassign]').forEach(b=>b.onclick=e=>{e.preventDefault();b.disabled=true;report(async()=>{const r=await window.robos.unassignFeature(b.dataset.unassign);if(r.ok)renderFeatures(r.features,r.activeFeature);else b.disabled=false;return r;});});
   list.querySelectorAll('[data-open]').forEach(b=>b.onclick=e=>{e.preventDefault();report(()=>window.robos.openWorkItem(b.dataset.open,'plan'));});
-  list.querySelectorAll('[data-work]').forEach(b=>b.onclick=()=>report(()=>window.robos.openWorkItem(b.dataset.work,'work')));
-  list.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>report(async()=>{const r=await window.robos.setActiveFeature(b.dataset.assign);if(r.ok)renderFeatures(r.features,r.activeFeature);return r;}));
+  list.querySelectorAll('[data-work]').forEach(b=>b.onclick=async()=>{const id=b.dataset.work;if(b.disabled||pendingWorkLaunches.has(id))return;pendingWorkLaunches.add(id);b.disabled=true;b.textContent='Launching…';b.setAttribute('aria-busy','true');try{await report(()=>window.robos.openWorkItem(id,'work'));}finally{pendingWorkLaunches.delete(id);await refreshWorkProgress();renderFeatures(appState.allFeatures,appState.activeFeature);}});
+  list.querySelectorAll('[data-assign]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.assign;if(pendingTaskAssignments.has(id)||b.disabled)return;
+    pendingTaskAssignments.add(id);b.disabled=true;b.textContent='Assigning to you…';b.setAttribute('aria-busy','true');
+    const status=document.getElementById('feature-action-status');status.setAttribute('role','status');status.textContent='Assigning to you…';
+    try{const r=await window.robos.setActiveFeature(id);if(!r.ok)throw Error(r.error||'Assignment failed. Try again.');pendingTaskAssignments.delete(id);renderFeatures(r.features,r.activeFeature);status.textContent='Assigned to you.';}
+    catch(e){status.textContent='Could not assign this ticket: '+e.message;}
+    finally{pendingTaskAssignments.delete(id);renderFeatures(appState.allFeatures,appState.activeFeature);}
+  });
 }
 
 window.setTaskDrawerTab = function(taskId, tabName) {
@@ -411,7 +438,7 @@ function renderNotifications(notifs) {
           <div class="notif-top">
             <span class="notif-pill ${cat}">${cat.replace('_', ' ')}</span>
             <span class="notif-title">${n.title || 'Notification'}</span>
-            <span class="notif-time">${timeAgo(n.ts)}</span>
+            <span class="notif-time">${window.robosList.time(n.ts,'Received')}</span>
           </div>
           <div class="notif-body">${n.body || ''}</div>
           <div class="notif-actions">
@@ -581,7 +608,7 @@ function renderTasks(issues) {
       ${priority ? `<span class="priority-tag ${pClass}">${priority}</span>` : ''}
       <span class="item-title">${i.title}</span>
       ${service ? `<span class="service-tag">${service}</span>` : ''}
-      <span class="item-meta">${timeAgo(i.updatedAt)}</span>
+      <span class="item-meta">${window.robosList.time(i.updatedAt)}</span>
       ${isReview ? `<button class="btn-review-sm">⚡ Review</button>` : ''}
     </div>`;
   }).join('');
@@ -628,7 +655,7 @@ function renderPRs(prs) {
       ${pr.headRefName ? `<span class="branch-tag">${pr.headRefName}</span>` : ''}
       <span class="ci-badge ${ciClass}">${ciLabel}</span>
       <span class="dot ${revDot}"></span>
-      <span class="item-meta">${timeAgo(pr.updatedAt)}</span>
+      <span class="item-meta">${window.robosList.time(pr.updatedAt)}</span>
     </div>`;
   }).join('');
 
@@ -655,7 +682,7 @@ function renderReviews(reviews) {
     <div class="item" data-url="${pr.url || ''}">
       <span class="item-key">#${pr.number}</span>
       <span class="item-title">${pr.title}</span>
-      <span class="item-meta">by ${(pr.author && pr.author.login) || '?'} ${timeAgo(pr.updatedAt)}</span>
+      <span class="item-meta">by ${(pr.author && pr.author.login) || '?'} ${window.robosList.time(pr.updatedAt)}</span>
       <button class="btn-review-sm" ${idx === 0 ? 'id="btn-open-review-hub"' : ''}>Review</button>
     </div>
   `).join('');
@@ -722,7 +749,7 @@ function renderStandup(standup) {
       <div class="standup-column">
         <div class="standup-col-header today">
           <span>🎯</span>
-          <span>Today (Planned Sprints & Reviews)</span>
+          <span>Today (Planned Work & Reviews)</span>
         </div>
         <div class="standup-bullets">
           ${standup.today.map(t => `
@@ -803,7 +830,7 @@ function wireInteractivity() {
   interactionsWired = true;
   document.getElementById('issue-scope').addEventListener('change', async e => {
     appState.issueScope = e.target.value;
-    document.getElementById('task-scope-label').textContent = appState.issueScope === 'assigned' ? 'Assigned Tasks' : 'Repository Tasks';
+    if(document.getElementById('task-scope-label'))document.getElementById('task-scope-label').textContent = appState.issueScope === 'assigned' ? 'Assigned Tasks' : 'Repository Tasks';
     await init();
   });
   // Tabs
@@ -813,27 +840,9 @@ function wireInteractivity() {
     });
   });
 
-  const featSelect = document.getElementById('feature-selector');
-  const btnSetProgress = document.getElementById('btn-set-feature-progress');
-  const featureStatus = document.getElementById('feature-action-status');
-  featSelect.addEventListener('change', () => {
-    btnSetProgress.disabled = !featSelect.value;
-    featureStatus.textContent = '';
-  });
-  btnSetProgress.addEventListener('click', async () => {
-    if (!featSelect.value) return;
-    btnSetProgress.disabled = true;
-    featureStatus.textContent = 'Assigning on GitHub…';
-    try {
-      const res = await window.robos.setActiveFeature(featSelect.value);
-      if (!res.ok) { featureStatus.textContent = res.error; return; }
-      renderFeatures(res.features, res.activeFeature);
-      featureStatus.textContent = `Assigned to ${res.assignee || 'you'}. ${res.dispatch?.message || ''}`;
-      updateKPIRibbon();
-      await window.robos.syncNow();
-    } catch (error) { featureStatus.textContent = error.message; }
-    finally { btnSetProgress.disabled = !featSelect.value; }
-  });
+  document.getElementById('btn-assign-feature').onclick=()=>openFeaturePicker();
+  document.getElementById('server-badge').onclick=()=>window.robos.openTool('task-servers');
+  document.getElementById('btn-ci-servers').onclick=()=>window.robos.openTool('ci-pipeline-servers');
 
   // Task Filter Chips
   document.querySelectorAll('#task-filter-chips .filter-chip').forEach(chip => {
@@ -1019,6 +1028,7 @@ async function init() {
 
   updateKPIRibbon();
 
+  applyViewTab(appState.activeTab);
   showDataErrors(Object.fromEntries(Object.entries({ issues: issuesRes, prs: prsRes, reviews: reviewsRes, activity: activityRes }).filter(([, r]) => !r.ok).map(([key, r]) => [key, r.error])));
 
   // Show error if no task server

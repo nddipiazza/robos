@@ -1,0 +1,8 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
+const {GraphWorkspace}=require('../robos-graph/lib/graph-workspace');
+const base=path.join(os.homedir(),'.config/robos'),file=path.join(base,'graph-workspaces.json');
+const read=f=>{try{return JSON.parse(fs.readFileSync(f));}catch(e){if(e.code==='ENOENT')return {};throw e;}};
+function list(){const settings=read(path.join(base,'settings.json')),saved=read(file).workspaces||[];const roots=[...new Set([...saved.map(g=>g.root),process.env.ROBOS_GRAPH_ROOT,...(settings.ci_pipeline_servers||[]).map(s=>s.graphRoot)].filter(Boolean))];return roots.flatMap(root=>{try{const workspace=new GraphWorkspace(root),doc=workspace.read();return [{id:workspace.root,name:doc['dcterms:title']||path.basename(path.dirname(workspace.root)),nodeCount:doc['robos:nodes'].length}];}catch{return [];}}).filter((g,i,a)=>a.findIndex(n=>n.id===g.id)===i);}
+function register({ipcMain,dialog}){ipcMain.handle('robos-kgraphs-list',()=>list());ipcMain.handle('robos-kgraphs-add',async()=>{const selected=await dialog.showOpenDialog({title:'Select a KGraph workspace',properties:['openDirectory']});if(selected.canceled)return null;const workspace=new GraphWorkspace(selected.filePaths[0]);if(!fs.existsSync(path.join(workspace.root,'knowledge-graph.jsonld')))throw Error('Choose an existing KGraph workspace.');const doc=workspace.read(),saved=read(file),entries=saved.workspaces||[];if(!entries.some(g=>g.root===workspace.root))entries.push({root:workspace.root});fs.mkdirSync(base,{recursive:true});fs.writeFileSync(file,JSON.stringify({...saved,workspaces:entries},null,2));return {id:workspace.root,name:doc['dcterms:title'],nodeCount:doc['robos:nodes'].length};});}
+module.exports={list,register};

@@ -5,7 +5,7 @@ function plannerMarkdown(text) {
   return DOMPurify.sanitize(marked.parse(text || '',{gfm:true}),{USE_PROFILES:{html:true},FORBID_TAGS:['style','form','button','iframe'],FORBID_ATTR:['style']});
 }
 function setPlannerView(view) {
-  plannerView=view;
+  plannerView=view;document.body.dataset.plannerView=view;
   document.querySelectorAll('[data-planner-panel]').forEach(e=>e.hidden=e.dataset.plannerPanel!==view);
   document.querySelectorAll('[data-planner-tab]').forEach(e=>{const active=e.dataset.plannerTab===view;e.setAttribute('aria-selected',String(active));e.classList.toggle('selected',active);});
 }
@@ -21,6 +21,8 @@ function setPlannerEditing(editing) {
 function renderPlannerReading() {
   const view=document.getElementById('plan-reading-view');if(!view)return;
   const text=getPromptValue();
+  const record=selectedPlannerRecord();
+  if(record?.kind==='project'&&record.description&&!text){view.innerHTML=plannerMarkdown(record.description);return;}
   if(selectedPlannerRecord()?.kind==='project'&&!text){view.innerHTML='<h2>Project overview</h2><p>Keep related features and tasks in this project.</p><p>Use <strong>Import from task server</strong> to bring in existing tickets, <strong>Add feature</strong> for a larger outcome, or <strong>Add task</strong> for a specific piece of work. You can also edit this overview to describe the project.</p>';return;}
   view.innerHTML=text?plannerMarkdown(text):'<p class="planner-empty">Describe what you want to build, or choose a template to get started.</p>';
 }
@@ -43,6 +45,8 @@ window.refreshPlannerUX=function(session) {
   document.getElementById('planner-import').hidden=record?.kind!=='project';
   const isProject=record?.kind==='project';
   document.querySelector('.planner-product-field').hidden=isProject;
+  const group=plannerProducts(projectsList).find(p=>p.families.some(f=>f.project.id===currentProjectId||f.children.some(c=>c.id===currentProjectId)));
+  document.getElementById('planner-choose-project').textContent=(group?.name||'(No Project)')+' · Change…';
   if(isProject)document.getElementById('planner-context-line').textContent='Project overview';
   document.getElementById('planner-templates').hidden=isProject;
   document.querySelector('[data-planner-tab=plan]').textContent=record?.kind==='project'?'Overview':'Plan';
@@ -66,9 +70,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     for(const selector of selectors)panel.append(document.querySelector(selector));main.append(panel);
   }
   const productField=document.createElement('div');productField.className='planner-product-field';
-  productField.innerHTML='<label for="planner-product-name">Project for this feature and its tasks (product or repository)</label><div><input id="planner-product-name" list="planner-product-options" placeholder="e.g. Buildbarn Config Editor"><datalist id="planner-product-options"></datalist><button id="planner-product-save" class="btn btn-outline">Set project</button></div>';
-  document.getElementById('planner-panel-details').prepend(productField);
-  document.getElementById('planner-product-save').onclick=async()=>{try{const result=await window.robos.setProjectProduct({id:plannerProjectTree(projectsList).find(f=>f.project.id===currentProjectId||f.children.some(p=>p.id===currentProjectId))?.project.id||currentProjectId,name:document.getElementById('planner-product-name').value});if(!result.ok)throw Error(result.error);await loadProjectsList();showGenerateStatus('Project updated.');}catch(e){showGenerateStatus(e.message,true);}};
+  productField.innerHTML='<label>Project</label><button id="planner-choose-project" class="btn btn-outline">Choose or change project…</button>';
+  document.getElementById('planner-context').prepend(productField);
+  document.getElementById('planner-choose-project').onclick=()=>openProjectManager(true);
   const catalog=document.getElementById('templates-banner');catalog.hidden=true;
   const prompt=document.querySelector('.prompt-section');
   const toolbar=document.createElement('div');toolbar.className='planner-plan-tools';
@@ -83,7 +87,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('generate-status').setAttribute('role','status');
   document.getElementById('planner-edit').onclick=()=>setPlannerEditing(!plannerEditing);
   document.getElementById('planner-save').onclick=async()=>{
-    try {if(plannerSession){const saved=await taskCall('save',{plan:getPromptValue(),workspace:plannerSession.workspace});routedTask=saved;window.refreshPlannerUX(saved);showGenerateStatus('Plan saved.');}else await saveToProject();setPlannerEditing(false);}catch(e){showGenerateStatus(e.message,true);}
+    try {if(plannerSession?.plan){const saved=await taskCall('save',{plan:getPromptValue(),workspace:plannerSession.workspace});routedTask=saved;window.refreshPlannerUX(saved);showGenerateStatus('Plan saved.');}else {await saveToProject();showGenerateStatus('Requirements saved.');}document.getElementById('prompt-input').dirty=false;setPlannerEditing(false);}catch(e){showGenerateStatus(e.message,true);}
   };
   document.getElementById('planner-import').onclick=()=>openTaskImport();
   document.getElementById('planner-add-task').onclick=()=>createPlannerWork('task');
@@ -108,7 +112,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const search=document.createElement('input');search.id='planner-project-search';search.placeholder='Find a project or task…';search.setAttribute('aria-label','Find a project or task');document.getElementById('project-list').before(search);
   search.oninput=()=>renderProjectsSidebar();
   document.querySelector('.sidebar-title').textContent='Projects';
-  document.getElementById('btn-workspace-plans').textContent='Linked project plans';
+  document.getElementById('btn-workspace-plans').textContent='Manage projects';
   document.getElementById('project-status-badge').hidden=true;
   document.getElementById('btn-new-project').textContent='+ New project';
   document.getElementById('project-features-tabs').hidden=true;

@@ -161,16 +161,14 @@ ipcMain.handle('detect-providers', async () => {
     copilotRes,
     claudeRes,
     codexRes,
-    {
-      id: 'antigravity',
-      name: 'Antigravity / Gemini CLI',
-      installed: true,
-      authenticated: true,
-      version: 'Antigravity 2.0 (Gemini 2.5 Pro)',
-      user: 'developer@robos.internal',
-      mcpConnected: true,
-      mcpServer: 'mcpServers.robos (robos-mcp-router)',
-    },
+    (() => {
+      const result={id:'antigravity',name:'Antigravity / Gemini CLI',installed:false,authenticated:false,version:'AGY CLI',status:'Not installed'};
+      try {
+        const provider=require('../robos-agent-task-runner/providers');provider.binary('agy');result.installed=true;
+        provider.authentication('agy');result.authenticated=true;result.status='Login saved — open the terminal to verify or sign in again';
+      } catch(error) {result.status=error.message;}
+      return result;
+    })(),
   ];
 });
 
@@ -682,27 +680,20 @@ ipcMain.handle('robos-agent-sessions', () => {
 });
 
 ipcMain.handle('antigravity-fetch-models', async () => {
-  return {
-    models: [
-      { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Deep Reasoning & Autonomous Coding)' },
-      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Ultra-Low Latency Iteration)' },
-      { id: 'antigravity-2.0', label: 'Antigravity 2.0 Native Agent Suite' },
-    ],
-  };
+  const providers=await require('../robos-agent-task-runner/providers').options();
+  return {models:providers.find(p=>p.id==='agy')?.models||[]};
 });
 
-ipcMain.handle('antigravity-launch-terminal', (_, id, extraArgs, cwd) => {
-  const parts = ['agy'];
-  if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
-  if (id && id !== 'new') parts.push('--resume', id);
-  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
-  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
-  const targetCwd = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : '/home/ndipiazza/source/robos';
-  const cwdPrefix = `cd "${dqEscape(targetCwd)}" && `;
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}echo "[Antigravity] Starting AGY paired with RobOS Unified MCP Router..." && ${shellCmd}; read -p "Press Enter to close..." x'`], {
-    env: { ...process.env, DISPLAY: ':0', ROBOS_MCP_AUTO: 'true' },
-    detached: true,
+ipcMain.handle('antigravity-launch-terminal', async (_, id, extraArgs, cwd) => {
+  const binary=require('../robos-agent-task-runner/providers').binary('agy');
+  const launch=require('./agy-terminal').invocation(binary,id,extraArgs,cwd);
+  await new Promise((resolve,reject)=>{
+    const child=cp.spawn('x-terminal-emulator', ['-e','bash','-lc',launch.script,'robos-agy',...launch.args], {
+      cwd:launch.cwd, env:{...process.env}, detached:true, stdio:'ignore',
+    });
+    child.once('error',reject);child.once('spawn',()=>{child.unref();resolve();});
   });
+  return {ok:true};
 });
 
 ipcMain.handle('antigravity-run-mcp-workflow', async (_, params) => {

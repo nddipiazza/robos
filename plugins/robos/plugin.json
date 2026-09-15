@@ -40,7 +40,8 @@
     "test-container",
     "update-app-icon",
     "vm-ssh",
-    "vm-status"
+    "vm-status",
+    "import-users"
   ],
   "commands": [
     "view-task-plan",
@@ -73,7 +74,8 @@
     "test-container",
     "update-app-icon",
     "vm-ssh",
-    "vm-status"
+    "vm-status",
+    "import-users"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

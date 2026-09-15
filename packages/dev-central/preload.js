@@ -27,9 +27,12 @@ contextBridge.exposeInMainWorld('robos', {
   signOffAndMerge:        (id)     => ipcRenderer.invoke('dc-review-signoff-merge', id),
 
   openWorkItem: (url, action) => ipcRenderer.invoke('dc-open-work-item', {url, action}),
+  getWorkProgress: urls => ipcRenderer.invoke('dc-work-progress', urls),
   getWorkTaskState: () => ipcRenderer.invoke('dc-work-task-state'),
   // Feature In-Progress API
   getFeatures:            ()       => ipcRenderer.invoke('dc-get-features'),
+  unassignFeature: (url) => ipcRenderer.invoke('dc-unassign-feature',url),
+  openTool: (name) => ipcRenderer.invoke('dc-open-tool',name),
   setActiveFeature:       (id)     => ipcRenderer.invoke('dc-set-active-feature', id),
   updateFeatureStatus:    (id, st) => ipcRenderer.invoke('dc-update-feature-status', { featureId: id, status: st }),
   getTaskLifetimeHistory: (tid)    => ipcRenderer.invoke('dc-get-task-lifetime-history', tid),

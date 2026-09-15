@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="planner-ux.css"/>
   <script src="project-plan-view.js"></script>
   <script src="workspace-plans.js" defer></script>
+<script src="../../robos-lib/list-controls.js" data-app="task-planner"></script>
 </head>
 <body>
   <div id="app">
@@ -48,6 +49,7 @@
         <div id="project-new-form" class="project-new-form" style="display:none">
           <label for="project-name-input">New project</label><p class="project-create-hint">A product or repository, such as Buildbarn Config Editor. Add features and tasks inside it.</p>
           <textarea id="project-name-input" class="project-name-input" placeholder="e.g. Buildbarn Config Editor" rows="1" maxlength="160"></textarea>
+          <label for="project-description-input">Description</label><textarea id="project-description-input" placeholder="What is this project for?" rows="3"></textarea>
           <div class="project-new-actions">
             <button id="btn-project-confirm" class="btn-icon btn-icon-ok" title="Create project">Create project</button>
             <button id="btn-project-cancel" class="btn-icon" title="Cancel">Cancel</button>
@@ -132,8 +134,7 @@
               <h2>Describe the tasks and architecture you want to plan</h2>
             </div>
             <div class="prompt-row">
-              <robos-ai-textarea id="prompt-input" show-submit="false" show-commands="false"
-                placeholder="e.g. Create Acme Petshop polyglot platform with Java 21 Spring Boot REST API, React 18 web adoption portal, and TypeSpec shared library. Ask me questions to refine the design." min-height="120"></robos-ai-textarea>
+              <planner-markdown-editor id="prompt-input"></planner-markdown-editor>
               <div class="prompt-actions">
                 <button class="btn btn-accent" id="btn-generate" disabled>
                   <span id="btn-generate-text">✦ Generate with AI</span>
@@ -295,11 +296,24 @@
   <script src="../../robos-ui/robos-ui.js"></script>
   <script src="../node_modules/marked/lib/marked.umd.js"></script>
   <script src="../node_modules/dompurify/dist/purify.min.js"></script>
+  <script src="markdown-editor.js"></script>
   <script src="project-tree.js"></script>
   <script src="task-import.js"></script>
   <script src="project-create.js"></script>
+  <script src="project-manager.js"></script>
   <script src="app.js"></script>
 <script src="work-task-bridge.js"></script>
 <script src="planner-ux.js"></script>
+<script src="feature-toolbar.js"></script>
+<script src="feature-tasks.js"></script>
+<script src="tooltips.js"></script>
+<script src="issue-details.js"></script>
+<script src="work-item-actions.js"></script>
+<script src="../../robos-lib/kgraph-selector.js"></script>
+<script src="../../robos-lib/elearning-player.js"></script>
+<script src="feature-learning.js"></script>
+<script src="../../robos-lib/agent-selector.js"></script>
+<script src="../../robos-agent-task-runner/launch-dialog.js"></script>
+<script src="../../robos-lib/column-splitter.js" data-app="task-planner"></script>
 </body>
 </html>

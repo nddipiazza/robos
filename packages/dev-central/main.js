@@ -905,6 +905,10 @@ ipcMain.handle('dc-review-signoff-merge', async (_, taskId = 'TASK-201') => {
 // ── Feature In-Progress & Lifetime History Handlers ──────────────────────────
 
 ipcMain.handle('dc-get-features', () => featureChoices());
+ipcMain.handle('dc-work-progress', (_,urls) => {
+  if(!Array.isArray(urls)||urls.length>1000)throw Error('Invalid tickets');
+  return Object.fromEntries(urls.map(url=>[url,require('./work-progress').progress(workTask.read(url))]));
+});
 ipcMain.handle('dc-work-task-state', () => { const f = getActiveFeature(); return f?.issueUrl ? workTask.read(f.issueUrl) : null; });
 
 ipcMain.handle('dc-open-work-item', async (_, {url, action}) => {
@@ -912,13 +916,14 @@ ipcMain.handle('dc-open-work-item', async (_, {url, action}) => {
     const board = await require('./task-board').fetchBoard(activeTS(readSettings()));
     const item = board.flatMap(f=>[f,...f.tasks]).find(t=>t.id===url);
     if(!item) throw Error('Ticket is not in the configured task server.');
+    if(action==='runner'){await workTask.launchApp('robos-agent-task-runner',url,process.execPath);return {ok:true};}
     if(action==='work' && !item.workable) throw Error('Resolve dependencies before working this ticket.');
     const live=await workTask.inspect(url);
     const plannerProjectId=workTask.plannerProject(url,live.issue);
     const parent=board.find(f=>f.tasks.some(t=>t.id===url));
     const previous=workTask.read(url);
-    workTask.save(url,{...live,plannerProjectId,workspace:previous.workspace || (parent && workTask.read(parent.id).workspace),autoStart:action==='work' && !previous.workerPid && !live.prs.length && (!previous.plan || !!previous.approvedPlanHash)});
-    await workTask.launchApp(action==='work'?'task-implementer':'task-planner',url,process.execPath);
+    workTask.save(url,{...live,...(action==='work'?{workOpenedAt:previous.workOpenedAt || new Date().toISOString()}:{}),plannerProjectId,workspace:previous.workspace || (parent && workTask.read(parent.id).workspace),autoStart:action==='work' && !previous.workerPid && !live.prs.length && (!previous.plan || !!previous.approvedPlanHash)});
+    await workTask.launchApp(action==='work'?(live.prs.length?'pr-review':'robos-agent-task-runner'):'task-planner',url,process.execPath);
     return {ok:true};
   } catch(error) { return {ok:false,error:error.message}; }
 });
@@ -944,6 +949,17 @@ ipcMain.handle('dc-set-active-feature', async (_, featureId) => {
     return { ok: true, ...data };
   } catch (error) { return { ok: false, error: error.message }; }
   finally { assigningFeature = false; }
+});
+
+ipcMain.handle('dc-unassign-feature',async(_,url)=>{
+  if(assigningFeature)return {ok:false,error:'An assignment is already in progress.'};
+  assigningFeature=true;
+  try{const result=await require('./feature-workflow').unassignFeature(url,activeTS(readSettings()),loadFeatures());saveFeatures(result.features);const choices=await featureChoices();return {ok:true,features:choices.data,activeFeature:choices.activeFeature};}
+  catch(e){return {ok:false,error:e.message};}finally{assigningFeature=false;}
+});
+ipcMain.handle('dc-open-tool',async(_,name)=>{
+  if(!['task-servers','ci-monitor','ci-pipeline-servers','workflow-studio'].includes(name))return {ok:false,error:'Unknown tool'};
+  try{const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;const child=cp.spawn(process.execPath,[path.join(__dirname,'..',name),'--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],{detached:true,stdio:'ignore',env});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();return {ok:true};}catch(e){return {ok:false,error:e.message};}
 });
 
 ipcMain.handle('dc-update-feature-status', (_, { featureId, status }) => {

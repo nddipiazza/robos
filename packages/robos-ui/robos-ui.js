@@ -680,13 +680,19 @@ robos-question-wizard {
 .robos-wizard-btn-submit:hover { background: #2ea043; }
 `;
 
-  let stylesInjected = false;
-  function injectStyles() {
-    if (stylesInjected) return;
-    stylesInjected = true;
-    const style = document.createElement('style');
-    style.textContent = STYLES;
-    document.head.appendChild(style);
+  function injectStyles(root = document) {
+    // Components render in light DOM, which may itself live inside a host shadow
+    // root. Style that root as well as document-level popups. Check the DOM rather
+    // than a global flag: hosts can replace their shadow contents on rerender.
+    const containers = [document.head];
+    if (root instanceof ShadowRoot) containers.push(root);
+    for (const container of containers) {
+      if ([...container.children].some(el => el.matches('style[data-robos-ui-styles]'))) continue;
+      const style = document.createElement('style');
+      style.dataset.robosUiStyles = '';
+      style.textContent = STYLES;
+      container.appendChild(style);
+    }
   }
 
   // ── Agent auth cache ──────────────────────────────────────────────────────────
@@ -803,7 +809,7 @@ robos-question-wizard {
     get placeholder() { return this.getAttribute('placeholder') || (this._showCommands ? 'Type your message… (/ for commands, @ for files)' : 'Type your message… (@ for files)'); }
 
     connectedCallback() {
-      injectStyles();
+      injectStyles(this.getRootNode());
       // Read attributes here — not in constructor, per custom elements spec
       this._maxChars     = parseInt(this.getAttribute('max-chars') || '0');
       this._showSubmit   = this.getAttribute('show-submit') !== 'false';

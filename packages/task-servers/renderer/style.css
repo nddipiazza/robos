@@ -396,3 +396,5 @@ body {
   margin-right: 8px;
   flex-shrink: 0;
 }
+
+.server-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:3px}.server-item>.server-item-name{grid-column:2;grid-row:1}.server-item>robos-list-time{grid-column:2/4;grid-row:2;white-space:normal}.server-item>.server-item-del{grid-column:3;grid-row:1}#sidebar>robos-list-sort{margin:6px 12px}

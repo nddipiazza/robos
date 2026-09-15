@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>RobOS Workflow Studio</title>
   <link rel="stylesheet" href="style.css"/>
+<script src="../../robos-lib/list-controls.js" data-app="workflow-studio"></script>
 </head>
 <body>
   <div id="app">
@@ -120,7 +121,7 @@
       </div>
 
       <!-- Issue types list -->
-      <div id="config-types-list" class="config-types-list"></div>
+      <robos-list-sort for="config-types-list" original="Configured order" label="issue types"></robos-list-sort><div id="config-types-list" class="config-types-list"></div>
 
       <div class="config-footer">
         <button id="btn-add-type" class="btn btn-sm">+ Add Issue Type</button>

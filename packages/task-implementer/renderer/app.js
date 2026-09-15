@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-refresh').addEventListener('click', loadTasks);
   document.getElementById('filter-state').addEventListener('change', loadTasks);
   document.getElementById('filter-search').addEventListener('input', renderTaskList);
+  document.getElementById('task-sort').addEventListener('sort-change',renderTaskList);
   document.getElementById('btn-start-agent').addEventListener('click', handleStartAgent);
   document.getElementById('btn-stop-agent').addEventListener('click', handleStopAgent);
   document.getElementById('btn-clear-output').addEventListener('click', () => {
@@ -71,15 +72,17 @@ async function loadTasks() {
     return;
   }
   allTasks = result.tasks;
+  await refreshTaskActivity();
   renderTaskList();
 }
 
 function renderTaskList() {
   const search = document.getElementById('filter-search').value.toLowerCase();
-  const filtered = search
+  const matching = search
     ? allTasks.filter(t => t.title.toLowerCase().includes(search) || t.key.toLowerCase().includes(search))
     : allTasks;
 
+  const filtered=[...matching].sort((a,b)=>window.robosList.compare(a,b,document.getElementById('task-sort').value));
   const list = document.getElementById('task-list');
   if (!filtered.length) {
     list.innerHTML = '<div class="loading-row">No tasks found.</div>';
@@ -87,9 +90,10 @@ function renderTaskList() {
   }
 
   list.innerHTML = filtered.map(t => `
-    <div class="task-item ${selectedTask && selectedTask.key === t.key ? 'active' : ''}" data-key="${escHtml(t.key)}">
-      <div class="task-item-key">${escHtml(t.key)}</div>
+    <div tabindex="0" aria-label="${escHtml(t.key+' '+t.title)}" class="task-item ${selectedTask && selectedTask.key === t.key ? 'active' : ''}" data-key="${escHtml(t.key)}">
+      <div class="task-item-heading"><div class="task-item-key">${escHtml(t.key)}</div><span class="task-row-actions"><button class="task-run-button task-icon-button" aria-label="Run task ${escHtml(t.key)}" title="Run task — open launch settings" ${t.activity?.running?'disabled':''}>▶</button><button class="task-stop-button task-icon-button" aria-label="Stop task ${escHtml(t.key)}" title="Stop running task and preserve its work" ${t.activity?.running?'':'hidden'}>■</button></span></div>
       <div class="task-item-title">${escHtml(t.title)}</div>
+      ${window.robosList.time(t.updated)}
       <div class="task-item-meta">
         ${t.labels.slice(0, 3).map(l => `<span class="task-label">${escHtml(l)}</span>`).join('')}
         ${t.assignee ? `<span style="color:var(--text-muted)">@${escHtml(t.assignee)}</span>` : ''}
@@ -98,6 +102,12 @@ function renderTaskList() {
   `).join('');
 
   list.querySelectorAll('.task-item').forEach(el => {
+    const rowTask=allTasks.find(t=>t.key===el.dataset.key);
+    el.querySelector('.task-run-button').onclick=e=>{e.stopPropagation();window.taskListAction('run',rowTask);};
+    el.querySelector('.task-stop-button').onclick=e=>{e.stopPropagation();window.taskListAction('stop',rowTask);};
+    el.oncontextmenu=e=>{e.preventDefault();window.robos.showTaskMenu(rowTask).catch(error=>setAgentStatus(error.message,'done-err'));};
+    el.onkeydown=e=>{if(e.target!==el)return;if(e.key==='Enter'){e.preventDefault();el.click();}else if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'){e.preventDefault();window.robos.showTaskMenu(rowTask).catch(error=>setAgentStatus(error.message,'done-err'));}};
+
     el.addEventListener('click', () => {
       const key = el.dataset.key;
       const task = allTasks.find(t => t.key === key);
@@ -248,3 +258,10 @@ window._demoSetAgentBusy = function(busy) {
 window._demoSetAgentStatus = function(msg, cls) {
   setAgentStatus(msg, cls);
 };
+
+let activityLoading=false;
+async function refreshTaskActivity(){
+ if(activityLoading||!allTasks.length)return;activityLoading=true;
+ try{const result=await window.robos.taskActivity(allTasks.map(t=>t.url));if(!result.ok)return;let changed=false;for(const t of allTasks){const next=result.activity[t.url];if(JSON.stringify(t.activity)!==JSON.stringify(next)){t.activity=next;changed=true;}}if(changed)renderTaskList();}finally{activityLoading=false;}
+}
+setInterval(()=>refreshTaskActivity().catch(()=>{}),2500);

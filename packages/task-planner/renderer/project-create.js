@@ -2,7 +2,7 @@
 function selectedPlannerRecord(){return projectsList.find(p=>p.id===currentProjectId);}
 async function createPlannerWork(kind){
  const record=selectedPlannerRecord();const group=plannerProducts(projectsList).find(p=>p.families.some(f=>f.project.id===currentProjectId||f.children.some(c=>c.id===currentProjectId)));
- if(!group||group.name==='Unassigned'){showGenerateStatus('Choose a project in Project details first.',true);setPlannerView('details');return;}
+ if(!group||group.name==='(No Project)'){showGenerateStatus('Choose a project in Project details first.',true);setPlannerView('details');return;}
  const name=await showInputModal(`Add ${kind} to ${group.name}`,kind==='feature'?'Feature name, e.g. Configuration validation':'Task name, e.g. Validate storage settings','');
  if(!name?.trim())return;
  try{

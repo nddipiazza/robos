@@ -1,6 +1,26 @@
 'use strict';
 let workSession;
 let autoStarted=false;
+function messageTimestamp(at) {
+  const time=document.createElement('time');
+  const date=at?new Date(at):null;
+  if(!date || !Number.isFinite(date.getTime())) {
+    time.textContent='Time unavailable';
+    time.title='This message has no recorded timestamp';
+    return time;
+  }
+  time.dateTime=date.toISOString();
+  time.title=date.toLocaleString(undefined,{dateStyle:'full',timeStyle:'long'});
+  time.setAttribute('aria-label',time.title);
+  const seconds=Math.round((date.getTime()-Date.now())/1000);
+  const age=Math.abs(seconds);
+  if(age<60)time.textContent='just now';
+  else {
+    const [unit,size]=age<3600?['minute',60]:age<86400?['hour',3600]:age<2592000?['day',86400]:age<31536000?['month',2592000]:['year',31536000];
+    time.textContent=new Intl.RelativeTimeFormat(undefined,{numeric:'always'}).format(Math.trunc(seconds/size),unit);
+  }
+  return time;
+}
 async function sessionCall(name,input) {const r=await window.workTask[name](input);if(!r.ok)throw Error(r.error);return r.data;}
 async function resumeSession() {
   const state=await sessionCall('state');if(!state)return;
@@ -10,31 +30,35 @@ async function resumeSession() {
     document.getElementById('task-description').style.display='none';
     document.getElementById('desc-toggle').textContent='▸ Task Description';
   }
+  document.title='RobOS Agent Task Runner';document.querySelector('h1').textContent='RobOS Agent Task Runner';
   const out=document.getElementById('agent-output');
   const pinned=out.scrollHeight-out.scrollTop-out.clientHeight<80;
   const scroll=out.scrollTop;
   out.style.whiteSpace='normal';
   const expanded=new Set([...out.querySelectorAll('details[open]')].map(e=>e.dataset.event));
   out.replaceChildren();
-  const stages=[['Task loaded',true],['Plan prepared',!!state.plan],['Plan reviewed',!!state.approvedPlanHash],[state.phase==='implementing'?'Implementation running':'Implementation complete',['checking-pr','review','merged'].includes(state.phase)],['Ready for PR review',['review','merged'].includes(state.phase)],['Merged',state.phase==='merged']];
-  const milestones=document.createElement('div');milestones.className='session-milestones';
-  milestones.textContent=stages.map(([label,done])=>(done?'✓ ':'○ ')+label).join('   →   ');out.append(milestones);
+  renderSessionWorkflow(state);
   for(const event of state.events || []) {
     if(event.role==='error' && /WARN |Reading additional input/.test(event.text)) continue;
     const isTool=event.role==='tool';
     const card=document.createElement(isTool?'details':'article');card.className='session-message '+event.role;
     card.dataset.event=event.at;if(isTool)card.open=expanded.has(event.at);
-    const label=document.createElement(isTool?'summary':'strong');
-    label.textContent=isTool?(event.name+' · '+event.text.split('\n')[0].slice(0,100)):event.role==='assistant'?`RobOS Agent · ${state.backend || 'codex'}`:event.role==='user'?'Task instructions':event.role;
-    const body=document.createElement('pre');
-    if(event.role==='assistant')appendLinkedText(body,event.text);else body.textContent=event.text;
-    card.append(label,body);out.append(card);
+    const header=document.createElement(isTool?'summary':'div');header.className='session-message-header';
+    const label=document.createElement('strong');
+    label.textContent=isTool?(event.name+' · '+event.text.split('\n')[0].slice(0,100)):event.role==='assistant'?`RobOS Agent${state.backend?' · '+state.backend:''}`:event.role==='user'?'Task instructions':event.role;
+    const body=document.createElement(event.role==='assistant'?'div':'pre');
+    if(event.role==='assistant'&&window.marked&&window.DOMPurify){body.className='session-markdown';body.innerHTML=DOMPurify.sanitize(marked.parse(event.text||''),{USE_PROFILES:{html:true}});body.querySelectorAll('a').forEach(a=>a.onclick=e=>{e.preventDefault();if(/^https?:/.test(a.href))window.robos.openUrl(a.href);});}else if(event.role==='assistant')appendLinkedText(body,event.text);else body.textContent=event.text;
+    header.append(label,messageTimestamp(event.at));
+    card.append(header,body);out.append(card);
   }
   out.scrollTop=pinned?out.scrollHeight:scroll;
   if(!(state.events||[]).length && state.output){const body=document.createElement('pre');body.textContent=state.output;out.append(body);}
   agentRunning=!!state.workerPid;setAgentBusy(agentRunning);
-  setAgentStatus(state.error || `${state.backend || 'codex'} · Workflow: ${state.phase || 'ready'}`,state.error?'done-err':agentRunning?'running':'');
-  document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':state.approvedPlanHash?'Implement approved plan':state.plan?'Refine plan':'Prepare plan';
+  const launched=!!(state.sandbox?.id || state.workerPid || state.events?.some(e=>e.role==='assistant'));
+  const provider=launched?(state.launchConfig?.provider||state.backend):null;
+  setAgentStatus(state.error || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),state.error?'done-err':agentRunning?'running':'');
+  document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':state.planApproved?'Run Task':'Review plan in Task Planner';
+  document.getElementById('btn-start-agent').title=state.planApproved?'Review launch settings and implement the approved plan':'This task needs an approved plan from Task Planner';
   if(!document.getElementById('session-planner')) {
     const btn=document.createElement('button');btn.id='session-planner';btn.className='btn';btn.textContent='Review plan in Task Planner';btn.onclick=()=>sessionCall('open-planner');document.getElementById('btn-start-agent').parentElement.append(btn);
     const review=document.createElement('button');review.id='session-review';review.className='btn';review.textContent='Open PR Review Theater';review.onclick=()=>sessionCall('route');btn.parentElement.append(review);
@@ -45,9 +69,10 @@ async function resumeSession() {
 handleStartAgent=async function() {
   if(!workSession) {setAgentStatus('Open a ticket using Work ticket in Dev Central.','done-err');return;}
   try {
+    if(workSession.workerPid){await resumeSession();return;}
     if(workSession.prs?.length){await sessionCall('route');return;}
-    const workspace=workSession.workspace || await sessionCall('folder');if(!workspace)return;
-    await sessionCall('agent',{backend:workSession.backend || 'codex',mode:workSession.approvedPlanHash?'implement':'plan',workspace,plan:workSession.plan||'',refinement:document.getElementById('extra-context').value||''});
+    if(!workSession.planApproved){await sessionCall('open-planner');setAgentStatus('Approve the plan in Task Planner before running this task.','');return;}
+    await openTaskRunnerLaunch({mode:'implement',plan:workSession.plan||'',refinement:document.getElementById('extra-context').value||'',call:sessionCall,afterLaunch:resumeSession});
     await resumeSession();
   }catch(e){setAgentStatus(e.message,'done-err');}
 };
@@ -64,4 +89,43 @@ function appendLinkedText(element,text) {
   const links=/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g;let last=0,match;
   while((match=links.exec(text))){element.append(document.createTextNode(text.slice(last,match.index)));const a=document.createElement('a');a.textContent=match[1];a.href=match[2];a.onclick=e=>{e.preventDefault();window.robos.openUrl(a.href);};element.append(a);last=links.lastIndex;}
   element.append(document.createTextNode(text.slice(last)));
+}
+
+let taskListActionPending=false;
+const stoppingTasks=new Set();
+window.taskListAction=async function(action,task){
+  if(taskListActionPending||!task)return;
+  if(action==='issue'){await window.robos.openUrl(task.url);return;}
+  if(action==='refresh'){await loadTasks();return;}
+  if(action==='stop'){if(stoppingTasks.has(task.url))return;stoppingTasks.add(task.url);const stopButton=[...document.querySelectorAll('.task-stop-button')].find(b=>b.closest('.task-item').dataset.key===task.key);if(stopButton){stopButton.disabled=true;stopButton.title='Stopping agent and preserving work…';}try{const result=await window.robos.stopTask(task.url);if(!result.ok)throw Error(result.error);await refreshTaskActivity();if(workSession?.url===task.url)await resumeSession();}catch(error){setAgentStatus(error.message,'done-err');}finally{stoppingTasks.delete(task.url);renderTaskList();}return;}
+  taskListActionPending=true;
+  document.querySelectorAll('.task-run-button').forEach(b=>{b.disabled=true;if(b.closest('.task-item').dataset.key===task.key){b.textContent='◌';b.title='Opening task…';b.setAttribute('aria-busy','true');}});
+  try {
+    // Resolve the clicked row before routing; never act on the previously selected task.
+    autoStarted=true;
+    await sessionCall('select',{issueUrl:task.url});
+    await resumeSession();
+    if(action==='plan')await sessionCall('open-planner');
+    else if(action==='run')await handleStartAgent();
+  }catch(error){setAgentStatus(error.message,'done-err');}
+  finally{taskListActionPending=false;renderTaskList();}
+};
+window.robos.onTaskMenuAction(({action,task})=>window.taskListAction(action,task));
+
+function renderSessionWorkflow(state) {
+  let panel=document.getElementById('session-workflow');
+  if(!panel){panel=document.createElement('section');panel.id='session-workflow';panel.setAttribute('aria-label','Issue type and workflow');document.querySelector('.agent-output-header').before(panel);}
+  panel.replaceChildren();
+  const view=state.workflowView;
+  const heading=document.createElement('div');heading.className='session-workflow-heading';
+  const type=document.createElement('strong');type.className='session-issue-type';type.textContent=view?.issueType||'Issue type unavailable';heading.append(type);
+  const name=document.createElement('span');name.textContent=view?.workflow?.name||'No workflow configured for this issue type';heading.append(name);panel.append(heading);
+  if(view?.workflow){
+    const current=document.createElement('p');current.className='session-workflow-current';current.textContent='Current stage: '+(view.currentStage||'Unresolved');panel.append(current);
+    const stages=document.createElement('ol');stages.className='session-workflow-stages';
+    for(const stage of view.workflow.states){const li=document.createElement('li');li.textContent=stage.label;li.title=stage.current?'Current workflow stage':stage.label;if(stage.current)li.setAttribute('aria-current','step');stages.append(li);}panel.append(stages);
+    const next=document.createElement('small');next.textContent=view.nextStages.length?'Allowed next stages: '+view.nextStages.join(' · '):'No next transition configured';panel.append(next);
+  }
+  if(view?.warning){const warning=document.createElement('p');warning.className='workflow-warning';warning.textContent=view.warning;panel.append(warning);}
+  if(['failed','stopped','implementation-needs-attention'].includes(state.phase)){const status=document.createElement('p');status.className='workflow-warning';status.textContent='Agent: '+state.phase.replaceAll('-',' ');panel.append(status);}
 }

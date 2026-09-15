@@ -48,11 +48,11 @@ let _kgraphStore = null;
 function getKGraphStore() {
   if (!_kgraphStore) {
     try {
-      const { SDLCKnowledgeGraphStore } = require('../robos-graph');
+      const { SDLCKnowledgeGraphStore } = require('../robos-graph/index.js');
       _kgraphStore = new SDLCKnowledgeGraphStore();
     } catch {
       try {
-        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
+        const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph/index.js');
         _kgraphStore = new SDLCKnowledgeGraphStore();
       } catch {}
     }
@@ -136,6 +136,12 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 // ── Window ──────────────────────────────────────────────────────────────────
 let win;
+app.on('second-instance', () => {
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+});
 app.setName('task-servers');
 app.whenReady().then(() => {
   win = new BrowserWindow({

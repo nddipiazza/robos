@@ -1,0 +1,10 @@
+'use strict';
+// Requires window.robosKGraphs.{list,add}; share the companion main-process registry.
+class RobOSKGraphSelector extends HTMLElement {
+ constructor(){super();this.attachShadow({mode:'open'});this.shadowRoot.innerHTML=`<style>:host{display:block;min-width:260px;color:#dce8f1;font:14px/1.5 system-ui}label{display:grid;gap:6px}select{width:100%;background:#15222e;color:inherit;border:1px solid #40586a;border-radius:5px;padding:10px 32px 10px 12px;font:inherit}select:focus-visible{outline:2px solid #52bcd4;outline-offset:2px}small{display:block;color:#a9bdcd;margin-top:5px}</style><label>KGraph<select aria-label="KGraph"><option value="">Loading KGraphs…</option></select></label><small role="status"></small>`;this.select=this.shadowRoot.querySelector('select');this.select.onchange=async()=>{if(this.select.value==='__add__'){try{const added=await window.robosKGraphs.add();await this.load(added?.id||this.previous);}catch(e){this.shadowRoot.querySelector('small').textContent=e.message;this.select.value=this.previous||'';}}else{this.previous=this.select.value;this.dispatchEvent(new Event('change',{bubbles:true}));}};}
+ connectedCallback(){this.load().catch(e=>{this.shadowRoot.querySelector('small').textContent=e.message;});}
+ get value(){return this.select.value==='__add__'?'':this.select.value;}
+ get selectedName(){return this.select.selectedOptions[0]?.textContent||'';}
+ async load(selected){const graphs=await window.robosKGraphs.list();this.select.replaceChildren();const append=(value,label)=>{const o=document.createElement('option');o.value=value;o.textContent=label;this.select.append(o);};append('','Select a KGraph');graphs.forEach((g,i)=>append(g.id,g.name+(graphs.filter(n=>n.name===g.name).length>1?' ('+(i+1)+')':'')));append('__add__','Add KGraph…');this.select.value=selected||graphs[0]?.id||'';this.previous=this.select.value;this.shadowRoot.querySelector('small').textContent=graphs.length?'':'Add a KGraph to save reusable learning.';this.dispatchEvent(new Event('change',{bubbles:true}));}
+}
+customElements.define('robos-kgraph-selector',RobOSKGraphSelector);

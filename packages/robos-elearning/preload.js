@@ -8,3 +8,4 @@ contextBridge.exposeInMainWorld('robosELearning', {
   issueCertificate: (payload) => ipcRenderer.invoke('elearning:issue-certificate', payload),
   listCertificates: (opts) => ipcRenderer.invoke('elearning:list-certificates', opts),
 });
+contextBridge.exposeInMainWorld('robosCourseEditor',{preview:input=>ipcRenderer.invoke('robos-course-preview',input),apply:id=>ipcRenderer.invoke('robos-course-apply',id)});

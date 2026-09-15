@@ -1,0 +1,13 @@
+'use strict';
+const {app,BrowserWindow,ipcMain,dialog,shell}=require('electron'),path=require('path'),os=require('os');
+const service=require('./lib/servers');const settings=path.join(os.homedir(),'.config/robos/settings.json');let win,pending;
+app.setPath('userData',path.join(os.homedir(),'.config/robos/electron/ci-pipeline-servers'));
+if(!app.requestSingleInstanceLock()){app.quit();process.exit(0);}app.on('second-instance',()=>{win?.show();win?.focus();});
+app.whenReady().then(()=>{win=new BrowserWindow({width:1100,height:800,title:'RobOS CI Pipeline Servers',webPreferences:{contextIsolation:true,nodeIntegration:false,preload:path.join(__dirname,'preload.js')}});win.setMenuBarVisibility(false);win.loadFile(path.join(__dirname,'renderer/index.html'));require('../robos-lib/dom-snapshot').startDebugServer(win,19139);});app.on('window-all-closed',()=>app.quit());
+const wrap=fn=>async(_,input)=>{try{return {ok:true,data:await fn(input)};}catch(e){return {ok:false,error:e.message};}};
+ipcMain.handle('ci-list',wrap(()=>({servers:service.list(settings),providers:service.PROVIDERS,graphRoot:process.env.ROBOS_GRAPH_ROOT||''})));
+ipcMain.handle('ci-save',wrap(input=>service.save(settings,input)));
+ipcMain.handle('ci-folder',wrap(async()=>{const r=await dialog.showOpenDialog(win,{properties:['openDirectory']});return r.canceled?null:r.filePaths[0];}));
+ipcMain.handle('ci-preview',wrap(({id,repositoryRoot})=>{const server=service.list(settings).find(s=>s.id===id);if(!server)throw Error('Choose a saved server.');pending=service.preview(server,repositoryRoot);return {files:pending.files,repository:pending.repository,validation:pending.proposal?.validation||{conforms:true},changes:pending.proposal?.delta||{},unchanged:!pending.proposal};}));
+ipcMain.handle('ci-apply',wrap(()=>{if(!pending)throw Error('Preview the repository import first.');const result=service.apply(pending);pending=null;return result;}));
+ipcMain.handle('ci-open',wrap(async id=>{const server=service.list(settings).find(s=>s.id===id);if(server)await shell.openExternal(server.url);}));

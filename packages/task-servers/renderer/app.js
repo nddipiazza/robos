@@ -23,8 +23,13 @@ function typeLabel(type) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  servers = await window.api.loadTaskServers();
-  renderList();
+  try {
+    servers = await window.api.loadTaskServers();
+    renderList();
+    if (servers.length === 1) selectServer(servers[0].id);
+  } catch (error) {
+    document.querySelector('#empty-state p').textContent = `Could not load task servers: ${error.message}`;
+  }
 
   // Add button / dropdown
   document.getElementById('btn-add').addEventListener('click', e => {
@@ -32,6 +37,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('add-menu').classList.toggle('hidden');
   });
   document.addEventListener('click', () => document.getElementById('add-menu').classList.add('hidden'));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('add-menu').classList.add('hidden');
+      document.getElementById('pass-modal').classList.add('hidden');
+    }
+  });
 
   document.querySelectorAll('.add-item').forEach(el => {
     el.addEventListener('click', () => addServer(el.dataset.type));
@@ -49,6 +60,7 @@ function renderList() {
     <li class="server-item${s.id === activeId ? ' active' : ''}" data-id="${esc(s.id)}">
       ${typeLabel(s.type)}
       <span class="server-item-name">${esc(s.name || 'Unnamed')}</span>
+      ${window.robosList.time(s.updatedAt)}
       <button class="server-item-del" data-id="${esc(s.id)}" title="Delete">✕</button>
     </li>
   `).join('');
@@ -328,6 +340,7 @@ function wireForm(s) {
     collectFormIntoServer(s);
     const btn = document.getElementById('btn-test');
     btn.textContent = 'Testing…'; btn.disabled = true;
+    try {
     let res;
     if (s.type === 'jira') {
       let token = '';
@@ -350,15 +363,22 @@ function wireForm(s) {
       if (res.ok) showStatus('ok', `Connected as @${res.login}`);
       else showStatus('err', res.error);
     }
-    btn.textContent = 'Test Connection'; btn.disabled = false;
+    } catch (error) { showStatus('err', error.message); }
+    finally { btn.textContent = 'Test Connection'; btn.disabled = false; }
   });
 
   // Save
-  document.getElementById('btn-save').addEventListener('click', () => {
+  document.getElementById('btn-save').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
     collectFormIntoServer(s);
-    save();
+    s.updatedAt=new Date().toISOString();
+    await save();
     showStatus('ok', 'Saved');
     renderList();
+    } catch (error) { showStatus('err', `Could not save: ${error.message}`); }
+    finally { btn.disabled = false; btn.textContent = 'Save'; }
   });
 
   // Delete
@@ -523,7 +543,8 @@ document.getElementById('pass-modal').addEventListener('click', e => {
 
 
 async function save() {
-  await window.api.saveTaskServers(servers);
+  const result = await window.api.saveTaskServers(servers);
+  if (!result?.ok) throw new Error(result?.error || 'Task server settings were not saved');
 }
 
 

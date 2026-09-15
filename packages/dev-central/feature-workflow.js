@@ -46,3 +46,19 @@ async function assignFeature(url, server, saved, run = gh) {
   return { features, activeFeature: feature, assignee: login };
 }
 module.exports = { issueFeature, combineFeatures, assignFeature };
+
+async function unassignFeature(url,server,saved,run=gh){
+ const match=/^https:\/\/github\.com\/([^/]+\/[^/]+)\/issues\/(\d+)$/.exec(url||'');
+ const allowed=(server.repos||[]).map(r=>typeof r==='string'?r:`${r.org}/${r.repo}`);
+ if(server.type!=='github'||!match||!allowed.some(r=>r.toLowerCase()===match[1].toLowerCase()))throw Error('Select an issue from the configured GitHub task server.');
+ const login=await run(['api','user','--jq','.login']);if(!/^[a-z\d](?:[a-z\d-]*[a-z\d])?$/i.test(login))throw Error('Could not identify the signed-in GitHub user.');
+ const args=['issue','view',match[2],'--repo',match[1],'--json','assignees'];
+ let issue=JSON.parse(await run(args));
+ if(issue.assignees.some(a=>a.login.toLowerCase()===login.toLowerCase())){
+  await run(['issue','edit',match[2],'--repo',match[1],'--remove-assignee',login]);
+  issue=JSON.parse(await run(args));
+  if(issue.assignees.some(a=>a.login.toLowerCase()===login.toLowerCase()))throw Error('GitHub did not confirm removal.');
+ }
+ return {features:saved.filter(f=>f.id!==url),assignee:login};
+}
+module.exports.unassignFeature=unassignFeature;

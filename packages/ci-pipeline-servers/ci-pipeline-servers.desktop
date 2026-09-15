@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=RobOS CI Pipeline Servers
+Comment=Configure CI providers and import pipeline definitions
+Exec=electron /usr/local/share/robos/ci-pipeline-servers --no-sandbox
+Type=Application
+Terminal=false
+Categories=Development;
+Icon=utilities-terminal

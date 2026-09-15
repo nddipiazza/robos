@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const panel=document.getElementById('workspace-plan-panel'), status=document.getElementById('workspace-plan-review'), save=document.getElementById('workspace-plan-save'), input=document.getElementById('workspace-plan-input');
   let proposalId, generation=0;
   const render=()=>window.RobosProjectPlan.mount(document.getElementById('workspace-plan-view'),{list:window.robos.listPlans,view:window.robos.viewPlan});
-  document.getElementById('btn-workspace-plans').onclick=()=>{panel.hidden=false;render();};
+  document.getElementById('btn-workspace-plans').onclick=()=>{openProjectManager();};
   document.getElementById('workspace-plan-close').onclick=()=>{panel.hidden=true;};
   input.oninput=()=>{generation++;proposalId=null;save.disabled=true;};
   document.getElementById('workspace-plan-preview').onclick=async()=>{

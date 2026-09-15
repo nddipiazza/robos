@@ -16,6 +16,7 @@
     }
   </script>
   <style>.inspector-tabs .tab-btn[hidden] { display: none !important; }</style>
+<script src="../../robos-lib/list-controls.js" data-app="robos-graph"></script>
 </head>
 <body>
   <div class="app-container">
@@ -26,7 +27,7 @@
           <button type="button" id="btn-nav-back" class="btn btn-secondary" title="Back (Alt+Left)" aria-label="Back" disabled>←</button>
           <button type="button" id="btn-nav-forward" class="btn btn-secondary" title="Forward (Alt+Right)" aria-label="Forward" disabled>→</button>
         </nav>
-        <div class="logo-icon">🌐</div>
+        <img class="logo-icon" src="../icon.svg" width="32" height="32" alt="RobOS Graph Explorer">
         <div>
           <h1>Knowledge Graph Explorer</h1>
           <div class="subtitle">OSLC Core 3.0 &middot; Gherkin BDD Features &middot; Git-backed Architecture</div>
@@ -632,6 +633,7 @@
   <dialog id="workspace-review" style="width:min(1120px,92vw);max-height:90vh;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:12px;padding:24px;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center"><h2>Import &amp; Refine</h2><button class="btn btn-secondary" id="workspace-close">Close</button></div>
     <div style="display:flex;gap:12px;align-items:center"><button class="btn btn-secondary" id="workspace-open">Open graph workspace</button><span id="workspace-summary">Select a graph workspace to begin.</span></div>
+    <button class="btn btn-primary" id="app-import-start" style="margin-top:14px">Populate RobOS apps…</button>
     <p id="workspace-revision" style="color:#8b949e;overflow-wrap:anywhere"></p>
     <div id="workspace-packages" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     <details id="workspace-coverage-details" hidden><summary>Source coverage and open questions</summary><div id="workspace-coverage"></div></details>
@@ -664,5 +666,6 @@
   <link rel="stylesheet" href="workspace-review.css">
   <script src="workspace-presentation.js"></script>
   <script src="workspace-review.js"></script>
+<script src="app-configuration-import.js"></script>
 </body>
 </html>

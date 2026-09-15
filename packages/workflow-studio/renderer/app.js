@@ -115,7 +115,9 @@ function getWorkflow(settings, typeId) {
   return (ts.workflows || []).find(w => w.type_id === typeId) || null;
 }
 
-function getIssueType(labels) {
+function getIssueType(labels, nativeType, settings) {
+  const configured=getTS(settings).issue_types || [];
+  if(nativeType){const type=configured.find(t=>t.label?.toLowerCase()===nativeType.toLowerCase()||t.id===nativeType.toLowerCase());if(type)return type.id;}
   const names = new Set(getLabels(labels));
   const ts_types = ['bug','feature-request','feature','task','chore','security','performance','question'];
   for (const t of ts_types) {
@@ -149,8 +151,10 @@ function buildTransitionMap(transitions) {
 async function initIssue() {
   const settings = await robos.readSettings();
   const ts       = getTS(settings);
-  const org      = ts.gh_org  || '';
-  const repoName = ts.gh_repo || '';
+  const entry=(ts.repos||[])[0];
+  const org=ts.gh_org || (typeof entry==='string'?entry.split('/')[0]:entry?.org) || '';
+  const repoName=ts.gh_repo || (typeof entry==='string'?entry.split('/')[1]:entry?.repo) || '';
+  ts.gh_org=org;ts.gh_repo=repoName;
   const repo     = org && repoName ? `${org}/${repoName}` : '';
 
   document.getElementById('btn-to-config').onclick = () => switchToConfig();
@@ -167,12 +171,13 @@ async function initIssue() {
 
   const issue  = result.data;
   const labels = getLabels(issue.labels);
-  const typeId = getIssueType(issue.labels);
+  const typeId = getIssueType(issue.labels, issue.issueType, settings);
   const wf     = getWorkflow(settings, typeId);
 
   // Header
   document.getElementById('issue-num').textContent   = `#${issue.number}`;
   document.getElementById('issue-title').textContent = issue.title;
+  let stamp=document.getElementById('workflow-issue-updated');if(!stamp){stamp=document.createElement('robos-list-time');stamp.id='workflow-issue-updated';document.getElementById('issue-title').after(stamp);}stamp.setAttribute('value',issue.updatedAt||'');
   if (issue.assignees && issue.assignees.length) {
     document.getElementById('issue-assignees').textContent =
       'Assigned to: ' + issue.assignees.map(a => a.login || a).join(', ');
@@ -209,7 +214,7 @@ async function initIssue() {
   // Workflow
   if (wf && wf.states && wf.states.length) {
     const transMap  = buildTransitionMap(wf.transitions);
-    const currentId = getCurrentStateId(labels, wf.states);
+    const currentId = issue.workflowState || getCurrentStateId(labels, wf.states);
     renderStatePipeline(wf.states, currentId);
     renderTransitions(wf.states, transMap, currentId, async (targetState) => {
       await doTransition(issue, repo, settings, currentId, targetState, wf);
@@ -567,12 +572,12 @@ function renderConfigTypes(ts) {
     const wf     = (ts.workflows || []).find(w => w.type_id === t.id) || {};
     const states = wf.states || [];
     const card   = document.createElement('div');
-    card.className = 'issue-type-card';
+    card.className = 'issue-type-card';card.dataset.listTitle=t.label;card.dataset.listUpdated=t.updatedAt||wf.updatedAt||ts.updatedAt||'';
     card.innerHTML = `
       <div class="type-card-header" data-idx="${idx}">
         <div class="type-color-dot" style="background:${t.color || '#8b949e'}"></div>
         <span class="type-card-label">${escHtml(t.label)}</span>
-        <span class="type-card-meta">${states.length} states</span>
+        <span class="type-card-meta">${states.length} states</span>${window.robosList.time(t.updatedAt||wf.updatedAt||ts.updatedAt,'Configuration updated')}
         <span class="type-card-chevron">▶</span>
       </div>
       <div class="type-card-body">
@@ -684,6 +689,7 @@ window.deleteState = function(typeId, si) {
 
 function collectConfig(ts, settings) {
   // ts is mutated in-place by field inputs, so just persist it back
+  ts.updatedAt=new Date().toISOString();
   const newSettings = { ...settings };
   if (!newSettings.task_servers || !newSettings.task_servers.length) {
     newSettings.task_servers = [{ ...ts }];
