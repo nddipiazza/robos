@@ -18,7 +18,7 @@ function save(url, patch) {
   const temp=path.join(dir,`state.${process.pid}.tmp`);fs.writeFileSync(temp,JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(temp,path.join(dir,'state.json'));return state;
 }
 function command(bin,args,options={}) { return new Promise((resolve,reject)=>execFile(bin,args,{encoding:'utf8',timeout:30000,maxBuffer:16*1024*1024,...options},(e,out,err)=> e?reject(Error((err||e.message).trim())):resolve(out))); }
-const gh = async args => JSON.parse(await command('gh',args));
+const gh = async args => {try{const result=JSON.parse(await command('gh',args));require('../../robos-lib/auth-notifications').resolve('github','github.com');return result;}catch(error){const auth=require('../../robos-lib/auth-notifications');if(auth.isLoginError(error.message))auth.report({kind:'github',id:'github.com',name:'GitHub'});throw error;}};
 async function inspect(url, query=gh) {
   const id=identity(url);
   const issue=await query(['issue','view',String(id.number),'--repo',id.repo,'--json','number,title,body,state,assignees,url']);
@@ -118,10 +118,12 @@ async function runWorker(url,mode,electron){
   if(state.launchConfig){
     const eventsFile=path.join(dir,'events.jsonl');
     fs.writeFileSync(eventsFile,'',{mode:0o600});
-    const event=(role,text,name)=>{const at=new Date().toISOString();fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at})+'\n');if(role==='error'&&!/WARN |Reading additional input/.test(text))save(url,{executionError:{text,at,phase:read(url).phase}});};
+    const event=(role,text,name)=>{const at=new Date().toISOString();fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at})+'\n');if(role==='error'&&!/WARN |Reading additional input/.test(text)){save(url,{executionError:{text,at,phase:read(url).phase}});require('../../robos-lib/auth-notifications').reportAgent(state.backend,text);require('../../robos-lib/human-requests').reportError(url,text);}};
     event('user',`${mode==='plan'?'Draft implementation plan':'Implement approved plan'} for ${url}`);
     try{
       const output=await require('../../robos-agent-task-runner/sandbox').run(url,mode,prompt,event);
+      require('../../robos-lib/auth-notifications').resolve('agent',state.backend);
+      require('../../robos-lib/human-requests').resolveTask(url);
       fs.writeFileSync(outputFile,output,{mode:0o600});
       if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,planApproval:null,phase:'plan-review',workerPid:null,error:null,executionError:null});
       else{const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',workerPid:null,...(live.prs.length?{executionError:null}:{}),error:live.prs.length?null:'Agent finished without a linked PR. Review the preserved output.'});if(live.prs.length)await launchApp('pr-review',url,electron);}

@@ -3,8 +3,8 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const catalog=require('./connections'),{createManager}=require('./oauth'),{claimNotification}=require('../../robos-lib/notification-gate');
 const port=19196,file=path.join(catalog.config,'mcp-remote-service-key');
 function capability(){fs.mkdirSync(catalog.config,{recursive:true});try{fs.writeFileSync(file,crypto.randomBytes(32).toString('hex'),{flag:'wx',mode:0o600});}catch(e){if(e.code!=='EEXIST')throw e;}return fs.readFileSync(file,'utf8');}
-function notify(server,fingerprint){const entry={id:crypto.randomUUID(),title:'MCP login required',body:server.name+': open RobOS Agents to sign in. Repeated agent requests will not open more login windows.',category:'agent',tier:'warning',source:'robos-mcp',eventKey:fingerprint,action:{app:'agents-manager'},ts:new Date().toISOString(),read:false};if(!claimNotification(path.join(catalog.config,'mcp-login-ledger.json'),entry,{cooldownMs:300000}))return;const f=path.join(catalog.config,'notifications.json'),history=catalog.read(f,[]);fs.writeFileSync(f,JSON.stringify([entry,...history].slice(0,500),null,2),{mode:0o600});const p=cp.spawn('notify-send',['-a','RobOS',entry.title,entry.body],{stdio:'ignore'});p.on('error',()=>{});p.unref();}
-async function serve(){const token=capability(),manager=createManager({notify}),server=http.createServer(async(req,res)=>{
+function notify(server){return require('../../robos-lib/auth-notifications').report({kind:'mcp',id:server.id,name:server.name});}
+async function serve(){const token=capability(),manager=createManager({notify,onConnected:server=>require('../../robos-lib/auth-notifications').resolve('mcp',server.id)}),server=http.createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');
  const url=new URL(req.url,'http://127.0.0.1:'+port);
  if(req.method==='GET'&&/^\/oauth\/callback\/[a-f0-9]{24}$/.test(url.pathname)){

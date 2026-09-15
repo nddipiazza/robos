@@ -18,13 +18,14 @@ function binary(provider){
  const candidates=[process.env.ROBOS_AGY_PATH,path.join(os.homedir(),'.local/bin/agy'),...(process.env.PATH||'').split(path.delimiter).map(p=>path.join(p,'agy'))];
  const found=candidates.find(p=>p&&fs.existsSync(p));if(!found)throw Error('AGY is not installed. Install AGY or set ROBOS_AGY_PATH.');return fs.realpathSync(found);
 }
-function authentication(provider){
+function readAuthentication(provider){
  if(provider==='codex'){const file=path.join(os.homedir(),'.codex/auth.json');if(!fs.existsSync(file))throw Error('Sign in to Codex before launching.');return JSON.parse(fs.readFileSync(file,'utf8'));}
  try{
  const raw=process.platform==='darwin'?execFileSync('security',['find-generic-password','-s','gemini','-a','antigravity','-w'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:10000}):execFileSync('/usr/bin/python3',['-c',agySecretScript],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:10000});
  const auth=JSON.parse(raw);if(!auth.token?.access_token)throw Error('Missing token');return auth;
  }catch{throw Error('AGY login unavailable. Sign in to AGY and unlock your desktop keyring. Linux also requires python3-dbus.');}
 }
+function authentication(provider){try{return readAuthentication(provider);}catch(error){require('../robos-lib/auth-notifications').reportAgent(provider,error.message);throw error;}}
 const modelCache=require('./model-cache').createCache({file:path.join(os.homedir(),'.config/robos/provider-model-cache.json')});
 async function models(id,{refresh=false}={}){
  const bin=binary(id),stat=fs.statSync(bin),key=[id,bin,stat.mtimeMs].join(':');
@@ -43,7 +44,7 @@ async function options({refresh=false}={}){
   try{const bin=binary(id);if(!path.isAbsolute(bin)||!fs.existsSync(bin))throw Error('Provider executable is missing.');authentication(id);
    if(id==='codex'){try{item.model=fs.readFileSync(path.join(os.homedir(),'.codex/config.toml'),'utf8').match(/^model\s*=\s*"([^"]+)"/m)?.[1]||'';}catch{}}
    const catalog=await models(id,{refresh});Object.assign(item,{models:catalog.models,modelsUpdatedAt:catalog.updatedAt,modelsStale:!!catalog.stale,modelsWarning:catalog.warning});
-  }catch(error){item.available=false;item.error=error.message;}return item;
+  }catch(error){require('../robos-lib/auth-notifications').reportAgent(id,error.message);item.available=false;item.error=error.message;}return item;
  }));
 }
 module.exports={binary,authentication,models,options};

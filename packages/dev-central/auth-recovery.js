@@ -1,0 +1,16 @@
+'use strict';
+const path=require('node:path'),fs=require('node:fs'),cp=require('node:child_process');
+const auth=require('../robos-lib/auth-notifications');
+const providerIds={codex:'codex',agy:'antigravity',claude:'claude-code',copilot:'github-copilot'};
+async function openAgents(provider){if(!Object.values(providerIds).includes(provider))throw Error('Unknown agent provider.');let bundled;try{bundled=require('../robos-graph/node_modules/electron');}catch{}const bin=[process.versions.electron&&process.execPath,bundled,'/usr/bin/electron'].find(p=>typeof p==='string'&&fs.existsSync(p));if(!bin)throw Error('Open RobOS Agents from the app launcher.');const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;await new Promise((resolve,reject)=>{const p=cp.spawn(bin,[path.join(__dirname,'../agents-manager'),'--provider='+provider,'--no-sandbox','--disable-gpu'],{detached:true,stdio:'ignore',env});p.on('error',reject);p.on('spawn',()=>{p.unref();resolve();});});}
+function create({remote=(op,args)=>require('../robos-mcp-router/lib/remote-service').request(op,args),slack=(id)=>require('../team-chat-servers/lib/agent-chat').createService()('status',{serverId:id}),openSlack=id=>require('../team-chat-servers/lib/open-app').open(id),agents=openAgents,github=()=>require('../robos-agent-client/work-task/core').gh(['api','user']),resolve=auth.resolve,now=Date.now}={}){
+ const pending=new Map(),opened=new Map();
+ async function run(action,check){const {kind,serverId:id}=action;if(!['mcp','slack','github','agent'].includes(kind)||typeof id!=='string')throw Error('Unknown login notification.');
+ if(kind==='mcp'){const result=check?(await remote('list',{})).find(s=>s.id===id):await remote('login',{serverId:id});if(!result)throw Error('This MCP connection is no longer configured.');if(result.authenticated){resolve(kind,id);return {resolved:true,message:'Connected. You can retry your task.'};}return {pending:!!result.loginPending,message:result.error||(result.loginPending?'Complete login in Chrome.':'Sign in to reconnect this MCP server.')};}
+ if(check){if(kind==='slack'){await slack(id);resolve(kind,id);return {resolved:true,message:'Slack connection verified. You can retry your task.'};}if(kind==='github'){await github();resolve(kind,id);return {resolved:true,message:'GitHub connection verified. You can retry your task.'};}return {message:'Sign in through RobOS Agents, then retry your task. The alert clears after a successful agent request.'};}
+ const key=kind+':'+id;if(opened.has(key)&&now()-opened.get(key)<30000)return {message:'The login app is already open. Complete sign-in there.'};
+ if(kind==='slack')await openSlack(id);else await agents(kind==='github'?'github-copilot':providerIds[id]);opened.set(key,now());return {message:kind==='slack'?'Reconnect in Team Chat Servers, then click Check connection.':'RobOS Agents is open to the correct provider. Use its login button, then retry your task.'};
+ }
+ return function recover(action,check=false){const key=action.kind+':'+action.serverId+':'+check;if(pending.has(key))return pending.get(key);const promise=run(action,check).finally(()=>pending.delete(key));pending.set(key,promise);return promise;};
+}
+module.exports={create,openAgents};

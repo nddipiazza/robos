@@ -255,7 +255,8 @@ async function init() {
 
   // Auto-select first installed provider
   const firstInstalled = providers.find(p => p.installed);
-  if (firstInstalled) selectProvider(firstInstalled.id);
+  const requestedLoginProvider=await window.agents.requestedLoginProvider();
+  if(requestedLoginProvider)selectProvider(requestedLoginProvider);else if (firstInstalled) selectProvider(firstInstalled.id);
 
   // Handle --check-provider mode
   window.agents.onOpenProvider((id) => selectProvider(id));

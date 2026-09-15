@@ -49,9 +49,9 @@ function createWindow() {
 app.setName('agents-manager');
 app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'agents-manager'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
-app.on('second-instance', () => {
+app.on('second-instance', (_,argv) => {
   const w = require('electron').BrowserWindow.getAllWindows()[0];
-  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+  if (w) { if (w.isMinimized()) w.restore(); w.focus();const provider=argv.find(a=>a.startsWith('--provider='))?.slice(11);if(['codex','antigravity','claude-code','github-copilot'].includes(provider))w.webContents.send('open-provider',provider); }
 });
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -63,9 +63,10 @@ const checkProviderMode = process.argv.includes('--check-provider');
 
 app.whenReady().then(async () => {
   const win = createWindow();
-  if (checkProviderMode) {
+  const requestedProvider=process.argv.find(a=>a.startsWith('--provider='))?.slice(11)||(checkProviderMode?'github-copilot':null);
+  if (['codex','antigravity','claude-code','github-copilot'].includes(requestedProvider)) {
     win.webContents.on('did-finish-load', () => {
-      win.webContents.send('open-provider', 'github-copilot');
+      win.webContents.send('open-provider', requestedProvider);
     });
   }
 });
@@ -1177,3 +1178,5 @@ ipcMain.handle('harness-router-toggle-docker', async (_, action) => {
 
 
 
+
+ipcMain.handle('requested-login-provider',()=>{const provider=process.argv.find(a=>a.startsWith('--provider='))?.slice(11);return ['codex','antigravity','claude-code','github-copilot'].includes(provider)?provider:null;});

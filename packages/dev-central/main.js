@@ -827,7 +827,8 @@ function startBackgroundMonitor() {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
   if (!fs.existsSync(NOTIF_FILE)) fs.writeFileSync(NOTIF_FILE, '[]');
   try {
-    fs.watch(NOTIF_FILE, () => {
+    fs.watch(CONFIG_DIR, (_,filename) => {
+      if(String(filename)!==path.basename(NOTIF_FILE))return;
       updateTrayAndIcon();
       if (win && win.webContents) {
         win.webContents.send('dc-data-updated', { unreadCount: getUnreadCount() });
@@ -1023,7 +1024,8 @@ ipcMain.handle('save-prefs', (_, prefs) => {
   return { ok: true };
 });
 
-ipcMain.handle('open-app-context', (_, action) => {
+ipcMain.handle('open-app-context', async (_, action) => {
+  if(action?.app==='agents-manager'){await require('./auth-recovery').openAgents('codex');return {ok:true};}
   if(action?.app==='team-chat-servers'){require('../team-chat-servers/lib/open-app').open(action.serverId||'');return {ok:true};}
   if (action && action.url) {
     shell.openExternal(action.url);
@@ -1104,3 +1106,14 @@ module.exports = {
   setActiveFeatureId,
   triggerSync,
 };
+
+const reconcileAuth=require('./auth-recovery').create();
+ipcMain.handle('reconcile-auth-notification',async(_, {id,check=false})=>{try{const notification=loadNotifications().find(n=>n.id===id);if(!notification||notification.action?.type!=='auth-reconcile')throw Error('Login notification not found. Refresh Dev Central.');return {ok:true,...await reconcileAuth(notification.action,check)};}catch(e){return {ok:false,error:e.message};}});
+
+// Resolve routes from stored requests, not renderer-supplied commands.
+ipcMain.handle('review-human-request',async(_,{id})=>{
+ const n=loadNotifications().find(n=>n.id===id);
+ if(n?.action?.type!=='human-request'||!['task-implementer','task-planner','pr-review','robos-agent-task-runner'].includes(n.action.app))throw Error('This permission request is unavailable.');
+ await require('../robos-agent-client/work-task/core').launchApp(n.action.app,n.action.taskUrl,process.execPath);
+ return {ok:true};
+});

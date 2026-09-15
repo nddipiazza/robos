@@ -442,10 +442,8 @@ function renderNotifications(notifs) {
           </div>
           <div class="notif-body">${escapeHTML(n.body || '')}</div>
           <div class="notif-actions">
-            ${n.action?.app === 'team-chat-servers' ? `<button class="btn-notif-action" data-chat-reconnect="${escapeHTML(n.action.serverId || '')}">Reconnect Slack</button>` : ''}
-            ${n.action?.url ? `
-              <button class="btn-notif-action" onclick="window.robos.openUrl('${n.action.url}')">View Details ↗</button>
-            ` : ''}
+            ${n.requestStatus==='resolved'?'<span class="notif-auth-resolved">✓ Request resolved</span>':n.authStatus==='resolved'?'<span class="notif-auth-resolved">✓ Connection restored</span>':n.action?.type==='auth-reconcile'?`<button class="btn-notif-action" data-auth-reconcile="${escapeHTML(n.id)}">${escapeHTML(n.action.label||'Reconnect')}</button>${['mcp','slack','github'].includes(n.action.kind)?`<button class="btn-notif-action" data-auth-check="${escapeHTML(n.id)}">Check connection</button>`:''}`:(n.action?.app||n.action?.url)?`<button class="btn-notif-action" data-notif-open="${escapeHTML(n.id)}">${escapeHTML(n.action.label||(n.action.app==='agents-manager'?'Open RobOS Agents':n.action.app==='team-chat-servers'?'Reconnect Slack':'View details'))}</button>`:''}
+            <span class="notif-auth-status" role="status" aria-live="polite"></span>
             ${isUnread ? `
               <button class="btn-notif-read" onclick="window.markNotifRead('${n.id}')">✓ Mark Read</button>
             ` : ''}
@@ -455,7 +453,8 @@ function renderNotifications(notifs) {
       </div>
     `;
   }).join('');
-  listEl.querySelectorAll('[data-chat-reconnect]').forEach(b=>b.onclick=()=>window.robos.openAppContext({app:'team-chat-servers',serverId:b.dataset.chatReconnect}));
+  listEl.querySelectorAll('[data-notif-open]').forEach(b=>b.onclick=async()=>{const n=filtered.find(n=>n.id===b.dataset.notifOpen);try{b.disabled=true;await (n.action.type==='human-request'?window.robos.notifications.reviewHumanRequest({id:n.id}):window.robos.notifications.openAppContext(n.action));}catch(e){b.parentElement.querySelector('[role=status]').textContent=e.message;}finally{b.disabled=false;}});
+  listEl.querySelectorAll('[data-auth-reconcile],[data-auth-check]').forEach(b=>b.onclick=async()=>{const id=b.dataset.authReconcile||b.dataset.authCheck,parent=b.parentElement,status=parent.querySelector('[role=status]');parent.querySelectorAll('[data-auth-reconcile],[data-auth-check]').forEach(x=>x.disabled=true);status.textContent='Connecting…';try{let result=await window.robos.notifications.reconcileAuth({id,check:!!b.dataset.authCheck});if(!result.ok)throw Error(result.error);status.textContent=result.message;const until=Date.now()+5*60*1000;while(result.pending&&Date.now()<until&&b.isConnected){await new Promise(r=>setTimeout(r,2500));if(!b.isConnected)return;result=await window.robos.notifications.reconcileAuth({id,check:true});if(!result.ok)throw Error(result.error);status.textContent=result.message;}if(result.resolved)renderNotifications(await window.robos.notifications.getNotifications());}catch(e){status.textContent=e.message;}finally{parent.querySelectorAll('[data-auth-reconcile],[data-auth-check]').forEach(x=>x.disabled=false);}});
 }
 
 window.switchNotifView = function(view) {

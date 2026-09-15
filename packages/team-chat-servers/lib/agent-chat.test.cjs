@@ -8,12 +8,12 @@ test('read operations retain Slack and human-readable timestamps without exposin
  const service=createService({catalog,readSecret:async()=> 'secret-test-token',request:async(url,options)=>{assert.equal(options.headers.Authorization,'Bearer secret-test-token');assert.equal(options.redirect,'error');return response(url.endsWith('auth.test')?identity:{ok:true,messages:[{ts:'1000.123456',user:'U1',text:'hello'}]});}});
  const result=await service('history',{serverId:server['@id'],channel:'C1'});assert.equal(result.messages[0].timestamp,'1970-01-01T00:16:40.123Z');assert.ok(!JSON.stringify(result).includes('secret-test-token'));
 });
-test('expired credentials create only one actionable notification per failed credential',async()=>{
+test('expired credentials create only one actionable notification until login is recovered',async()=>{
  const config=dir();let credential='first';const service=createService({catalog,readSecret:async()=>credential,request:async()=>response({ok:false,error:'token_revoked'}),alert:(...args)=>notify(...args,config,false)});
  for(let i=0;i<3;i++)await assert.rejects(service('status',{serverId:server['@id']}),/login required/);
  notify(server,'invalid_auth',require('node:crypto').createHash('sha256').update(credential).digest('hex'),config,false);
- let rows=JSON.parse(fs.readFileSync(path.join(config,'notifications.json')));assert.equal(rows.length,1);assert.equal(rows[0].action.app,'team-chat-servers');assert.equal(rows[0].action.serverId,server['@id']);
- credential='replacement';await assert.rejects(service('status',{serverId:server['@id']}));rows=JSON.parse(fs.readFileSync(path.join(config,'notifications.json')));assert.equal(rows.length,2);
+ let rows=JSON.parse(fs.readFileSync(path.join(config,'notifications.json')));assert.equal(rows.length,1);assert.equal(rows[0].action.kind,'slack');assert.equal(rows[0].action.serverId,server['@id']);
+ credential='replacement';await assert.rejects(service('status',{serverId:server['@id']}));rows=JSON.parse(fs.readFileSync(path.join(config,'notifications.json')));assert.equal(rows.length,1);
 });
 test('missing scopes are not described as expired login and network failures do not alert',async()=>{
  const alerts=[];const service=createService({catalog,readSecret:async()=> 'test',request:async()=>response({ok:false,error:'missing_scope'}),alert:(s,code)=>alerts.push(code)});await assert.rejects(service('channels',{serverId:server['@id']}),/permissions/);assert.deepEqual(alerts,['missing_scope']);

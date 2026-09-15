@@ -5,12 +5,13 @@ const servers=require('./servers');const {claimNotification}=require('../../robo
 const AUTH_ERRORS=new Set(['invalid_auth','token_expired','token_revoked','not_authed','account_inactive','org_login_required']);
 function configured(){const roots=require('../../robos-lib/kgraph-selector-main').list();return roots.flatMap(g=>servers.list(g.id).servers.map(server=>({root:g.id,server}))).filter((v,i,a)=>a.findIndex(n=>n.server['@id']===v.server['@id'])===i);}
 function notify(server,code,fingerprint,config=path.join(os.homedir(),'.config/robos'),popup=true){
+ if(AUTH_ERRORS.has(code)||code==='credential_unavailable')return require('../../robos-lib/auth-notifications').report({kind:'slack',id:server['@id'],name:server['dcterms:title']},config);
  const login=AUTH_ERRORS.has(code),title=login?'Slack login required':'Slack access needs attention';
  const body=login?`${server['dcterms:title']}: reauthorize Slack, update its password-store credential, then test the connection in Team Chat Servers.`:`${server['dcterms:title']}: ${code==='missing_scope'?'the Slack app needs additional permissions.':code==='workspace_mismatch'?'the saved credential belongs to another Slack workspace.':'unlock or check the saved Slack credential.'} Open Team Chat Servers to reconnect.`;
  const entry={id:randomUUID(),title,body,category:'agent',tier:'warning',source:'robos-team-chat',eventKey:server['@id']+':'+fingerprint+':'+(login?'login':code),action:{type:'open-app',app:'team-chat-servers',serverId:server['@id'],label:'Reconnect Slack'},ts:new Date().toISOString(),read:false};
  if(!claimNotification(path.join(config,'team-chat-notification-ledger.json'),entry,{cooldownMs:0}))return false;
  const file=path.join(config,'notifications.json');let history=[];try{history=JSON.parse(fs.readFileSync(file));}catch{}history.unshift(entry);fs.writeFileSync(file,JSON.stringify(history.slice(0,500),null,2),{mode:0o600});
- if(popup){const p=cp.spawn('notify-send',['-a','RobOS','--action=reconnect=Reconnect Slack','--wait','-t','15000',title,body],{stdio:['ignore','pipe','ignore']});let selected='';p.stdout.on('data',b=>selected+=b);p.on('error',()=>{try{require('./open-app').open(server['@id']);}catch{}});p.on('close',()=>{if(selected.trim()==='reconnect')try{require('./open-app').open(server['@id']);}catch{}});p.stdout.unref?.();p.unref();}
+ if(popup){const p=cp.spawn('notify-send',['-a','RobOS','--action=reconnect=Reconnect Slack','--wait','-t','15000',title,body],{stdio:['ignore','pipe','ignore']});let selected='';p.stdout.on('data',b=>selected+=b);p.on('error',()=>{});p.on('close',()=>{if(selected.trim()==='reconnect')try{require('./open-app').open(server['@id']);}catch{}});p.stdout.unref?.();p.unref();}
 
  return true;
 }
@@ -26,6 +27,7 @@ function createService({catalog=configured,readSecret=async ref=>(await promisif
   async function api(method,params={}){
    let response;try{response=await request('https://slack.com/api/'+method,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify(params),redirect:'error',signal:AbortSignal.timeout(20000)});}catch{throw Error('Slack network request failed. Sending is not automatically retried because delivery may be uncertain.');}
    if(response.status===429)throw Error('Slack rate limit reached. Retry after '+(response.headers.get('retry-after')||'the suggested delay')+' seconds.');
+   if(response.status===401){alert(s,'invalid_auth',fingerprint);throw Error('Slack login required. Reconnect in Team Chat Servers.');}
    if(!response.ok)throw Error('Slack API is unavailable. Message delivery may be uncertain; do not resend automatically.');
    let data;try{data=await response.json();}catch{throw Error('Slack returned an invalid response.');}
    if(!data.ok){const code=typeof data.error==='string'?data.error:'unknown_error';if(AUTH_ERRORS.has(code)||code==='missing_scope')alert(s,code,fingerprint);const e=Error(AUTH_ERRORS.has(code)?'Slack login required. Reauthorize and update the saved credential in Team Chat Servers.':code==='missing_scope'?'Slack permissions are missing. Reauthorize the Slack app with the required scopes.':'Slack request failed: '+code);e.code=code;throw e;}
@@ -33,6 +35,7 @@ function createService({catalog=configured,readSecret=async ref=>(await promisif
   }
   try{
    const identity=await api('auth.test');if(new URL(identity.url).hostname!==new URL(s['robos:url']).hostname){alert(s,'workspace_mismatch',fingerprint);throw Error('Saved credential belongs to a different Slack workspace.');}
+   require('../../robos-lib/auth-notifications').resolve('slack',s['@id']);
    if(operation==='status')return {connected:true,workspace:identity.team,workspaceId:identity.team_id,user:identity.user};
    if(operation==='channels'){const r=await api('conversations.list',{limit:100,exclude_archived:true,types:'public_channel,private_channel',...(args.cursor?{cursor:args.cursor}:{})});return {channels:r.channels.map(c=>({id:c.id,name:c.name,isPrivate:c.is_private})),nextCursor:r.response_metadata?.next_cursor||''};}
    if(!/^[CGD][A-Z0-9]+$/.test(args.channel||''))throw Error('Use a Slack channel ID from channels; do not guess a channel name.');

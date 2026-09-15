@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('agents', {
+  requestedLoginProvider: () => ipcRenderer.invoke('requested-login-provider'),
   // Provider detection
   detectProviders:      ()     => ipcRenderer.invoke('detect-providers'),
   getActiveProvider:    ()     => ipcRenderer.invoke('get-active-provider'),

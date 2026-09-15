@@ -2,6 +2,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const notificationApi = {
+  reviewHumanRequest: input => ipcRenderer.invoke('review-human-request',input),
+  reconcileAuth: (input) => ipcRenderer.invoke('reconcile-auth-notification',input),
   getNotifications:    ()    => ipcRenderer.invoke('get-notifications'),
   markRead:            (id)  => ipcRenderer.invoke('mark-read', id),
   markAllRead:         ()    => ipcRenderer.invoke('mark-read', null),

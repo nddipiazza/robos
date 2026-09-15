@@ -1842,3 +1842,7 @@ html, body {
 .work-error { color:#ff9d9d; }
 
 #feature-tasks-list{overflow-anchor:none}.feature-task-top .robos-copy-line{min-width:0}.card>robos-list-sort{margin:4px 24px}
+
+.notif-auth-resolved { color:#7bcea0;font-size:12px; }
+.notif-auth-status { display:block;flex-basis:100%;color:#a9bdcd;font-size:12px; }
+.btn-notif-action:disabled { opacity:.6;cursor:wait; }
