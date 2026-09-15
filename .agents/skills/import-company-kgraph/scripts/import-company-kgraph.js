@@ -785,6 +785,19 @@ function mergeIntoRobosWorkspace(jsonLdDoc, repoEntries, options = {}) {
  * Main CLI Execution Entrypoint
  */
 async function main() {
+  if (process.argv.includes('--github-org')) {
+    const flags = {};
+    for (let i=2;i<process.argv.length;i++) { const key=process.argv[i]; if(!key.startsWith('--'))throw Error('Unexpected argument'); flags[key.slice(2)]=process.argv[i+1]&&!process.argv[i+1].startsWith('--')?process.argv[++i]:true; }
+    if(typeof flags['graph-root']!=='string'||typeof flags.output!=='string')throw Error('--github-org requires --graph-root and --output');
+    const importer=require('../../../../../packages/robos-graph/lib/github-org-import');
+    const catalog=await importer.discover(flags['github-org']);
+    const result=importer.propose(flags['graph-root'],catalog,{namespace:flags.namespace||importer.organization(flags['github-org']).toLowerCase(),removeOthers:!!flags['remove-others']});
+    fs.writeFileSync(flags.output,JSON.stringify(result.proposal,null,2));
+    fs.writeFileSync(flags.output+'.catalog.json',JSON.stringify(catalog,null,2));
+    console.log(JSON.stringify({repositories:result.repositories,removed:result.removed,validation:result.proposal.validation,delta:{added:result.proposal.delta.added.length,changed:result.proposal.delta.changed.length,removed:result.proposal.delta.removed.length}}));
+    if(!result.proposal.validation.conforms)process.exitCode=1;
+    return;
+  }
   // Evidence-backed imports use an explicit source manifest and external graph.
   // This route never writes to the checkout containing this skill or global config.
   if (process.argv.includes('--manifest')) {

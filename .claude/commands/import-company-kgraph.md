@@ -33,3 +33,5 @@ kgraph propose --graph-root /work/graph --mode refine --file edits.json \
 Review and separately apply `refinement.json`. Preserve IDs, provenance, and evidence; never edit a hashed proposal or invent facts to pass validation. Unsupported files default to inventory-only; `includeUnsupported: true` adds artifacts, not full semantic models.
 
 Legacy `--source`, standalone `--prompt`, and `--resources` require explicit `--demo` and are not production architecture evidence. In manifest mode, `--prompt` is only a proposal note. Remote URLs do not trigger cloning or discovery.
+
+For an organization repository catalog, use `--github-org https://github.com/Example --namespace example --graph-root /work/graph --output proposal.json`; add `--remove-others` only for a user-authorized replacement. Discovery uses paginated `gh api`, not local directories. Review and apply the proposal separately.

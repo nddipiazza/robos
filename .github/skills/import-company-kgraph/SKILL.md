@@ -1,11 +1,41 @@
 ---
 name: import-company-kgraph
-description: Extract an evidence-backed SDLC graph from explicit local Git checkouts, review an import proposal, and refine the canonical workspace with structured edits.
+description: Import GitHub organization repository catalogs through gh api, or extract source architecture from explicitly selected checkouts, then review and apply a validated graph proposal.
 ---
 
 # Import Company Knowledge Graph
 
-Use this skill to build or refresh a cross-repository graph from tracked local source files. The production importer requires a portable source manifest, a separate local checkout map, and an explicit graph workspace. It creates a proposal for review; applying is a separate operation.
+For repository discovery, use the organization API. Do not enumerate local folders as the company repository catalog.
+
+## GitHub organization catalog
+
+```bash
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --github-org https://github.com/Example --namespace example \
+  --graph-root /work/graph --remove-others --output org-proposal.json
+```
+
+This invokes authenticated `gh api orgs/<org>/repos` with pagination. It records
+remote URLs, GitHub IDs, default branches, visibility, archive/fork state and API
+provenance. It does not scan, clone or infer architecture from local directories.
+The result includes repositories visible to the authenticated account; private
+repositories require organization access. Empty/error results never clear a catalog.
+
+Review `org-proposal.json` and its `.catalog.json` snapshot. `--remove-others`
+is only for an explicitly authorized replacement: it enumerates unmatched
+repository nodes within the selected namespace for removal. Matching URLs retain
+existing IDs and relationships; local checkout/working-branch metadata is cleared.
+Unresolved references block removal instead of cascading into other graph objects.
+Then apply using `kgraph apply --graph-root /work/graph --file org-proposal.json`.
+
+In Git Projects, use Add Organization, load the organization, and select
+“Replace this organization's saved catalog with the full GitHub list” to sync
+that app's catalog. It clears checkout associations without deleting folders.
+This app catalog operation is separate from the reviewed KGraph apply above.
+
+## Optional source architecture extraction
+
+Use explicit tracked checkouts only when source-level architecture extraction is requested. This is separate from organization repository discovery. The production importer requires a portable source manifest, a separate local checkout map, and an explicit graph workspace. It creates a proposal for review; applying is a separate operation.
 
 ## Prepare the source inputs
 
@@ -113,4 +143,4 @@ Coverage counts tracked, excluded, missing, unreadable, and inspected files. `ar
 
 ## Legacy demo mode
 
-Legacy `--source`, standalone `--prompt`, and `--resources` heuristic examples require explicit `--demo`. They are not the production source-extraction workflow and their generated metadata is not architecture evidence. Do not use legacy direct-merge flags for a canonical source-backed graph. The production workflow does not promise remote catalog ingestion, automatic cloning, or generated API contracts.
+Legacy `--source`, standalone `--prompt`, and `--resources` heuristic examples require explicit `--demo`. They are not the production source-extraction workflow and their generated metadata is not architecture evidence. Do not use legacy direct-merge flags for a canonical source-backed graph. The local-source workflow does not perform remote discovery or automatic cloning. Use --github-org for repository catalog discovery; neither mode invents API contracts.

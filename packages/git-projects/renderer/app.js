@@ -1557,6 +1557,8 @@ function bindOrgPicker() {
   const btnConfirm   = document.getElementById('btn-org-confirm');
   const btnCancel    = document.getElementById('btn-org-cancel');
 
+  const replaceCatalog=document.getElementById('org-replace-catalog');
+  replaceCatalog.onchange=()=>{cloneChk.disabled=replaceCatalog.checked;if(replaceCatalog.checked)cloneChk.checked=false;updateSelCount();};
   let allRepos = [];
 
   document.getElementById('btn-add-org').addEventListener('click', () => {
@@ -1604,7 +1606,7 @@ function bindOrgPicker() {
   function updateSelCount() {
     const checked = repoList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').length;
     selCount.textContent = `${checked} selected`;
-    btnConfirm.disabled = checked === 0;
+    btnConfirm.disabled = replaceCatalog.checked ? !allRepos.length : checked === 0;
   }
 
   repoList.addEventListener('change', updateSelCount);
@@ -1652,6 +1654,7 @@ function bindOrgPicker() {
   btnCancel.addEventListener('click', () => modal.classList.add('hidden'));
 
   btnConfirm.addEventListener('click', async () => {
+    if(replaceCatalog.checked){btnConfirm.disabled=true;btnConfirm.textContent='Importing from GitHub…';try{data=await gp.syncOrgCatalog(orgInput.value.trim());await refreshCloneStatus();renderTree();modal.classList.add('hidden');}catch(e){errEl.textContent=e.message;errEl.classList.remove('hidden');}finally{btnConfirm.disabled=false;btnConfirm.textContent='Add Selected';}return;}
     const checked = Array.from(repoList.querySelectorAll('input[type=checkbox]:checked:not(:disabled)'));
     if (!checked.length) return;
     const repos = checked.map(c => ({ nameWithOwner: c.dataset.nwo, url: c.dataset.url }));
@@ -1665,8 +1668,8 @@ function bindOrgPicker() {
       const parts = repo.nameWithOwner.split('/');
       const org   = parts[0] || '';
       const name  = parts[1] || repo.nameWithOwner;
-      const lp    = `~/source/${repo.nameWithOwner}`;
-      data.projects.push({ name, url: repo.url, localPath: lp, group: org });
+      const parsed=await gp.parseUrl(repo.url);
+      data.projects.push({...parsed,id:'github-'+Date.now()+'-'+added,name,url:repo.url,localPath:shouldClone?parsed.localPath:'',group:org,source:'github-org-api'});
       added++;
     }
     await gp.writeProjects(data);

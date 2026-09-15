@@ -40,11 +40,11 @@ function readProjects() {
   catch { return { projects: [] }; }
 }
 
-function writeProjects(data) {
+function writeProjects(data, syncGraph = true) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
   buildGitReposIndex(); // keep search index in sync
-  syncToKnowledgeGraph(data.projects); // keep RobOS Knowledge Graph in sync
+  if (syncGraph) syncToKnowledgeGraph(data.projects); // keep RobOS Knowledge Graph in sync
 }
 
 function syncToKnowledgeGraph(projects) {
@@ -146,10 +146,12 @@ ipcMain.handle('write-projects', (_, data) => {
 ipcMain.handle('parse-url', (_, url) => parseGitUrl(url));
 
 ipcMain.handle('check-cloned', (_, localPath) => {
+  if(!localPath || !path.isAbsolute(localPath))return false;
   return fs.existsSync(path.join(localPath, '.git'));
 });
 
 ipcMain.handle('clone', async (event, { url, localPath }) => {
+  if(!localPath || !path.isAbsolute(localPath))return {ok:false,error:'Choose an absolute local checkout path before cloning.'};
   if (fs.existsSync(path.join(localPath, '.git'))) {
     return { ok: true, message: 'Already cloned' };
   }
@@ -524,20 +526,18 @@ ipcMain.handle('search-gh-repos', (_, { query }) => {
   }
 });
 
-ipcMain.handle('list-org-repos', (_, org) => {
-  if (!org || !org.trim()) return { ok: false, error: 'Org name required' };
-  const r = cp.spawnSync('gh', [
-    'repo', 'list', org.trim(),
-    '--limit', '1000',
-    '--json', 'nameWithOwner,url,description,isPrivate,isFork',
-  ], { encoding: 'utf8', timeout: 30000, env: { ...process.env } });
-  if (r.status !== 0) return { ok: false, error: (r.stderr || 'gh repo list failed').trim() };
-  try {
-    const repos = JSON.parse(r.stdout || '[]');
-    return { ok: true, repos };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
+const orgImporter=require('../robos-graph/lib/github-org-import');
+const orgCatalogs=new Map();
+ipcMain.handle('list-org-repos', async (_, org) => {
+  try {const catalog=await orgImporter.discover(org);orgCatalogs.set(orgImporter.organization(org).toLowerCase(),catalog);return {ok:true,repos:catalog.repos.map(r=>({...r,nameWithOwner:r.fullName,isPrivate:r.private,isFork:r.fork}))};}
+  catch(e){return {ok:false,error:e.message};}
+});
+ipcMain.handle('sync-org-catalog', (_, org) => {
+  const catalog=orgCatalogs.get(orgImporter.organization(org).toLowerCase());
+  if(!catalog)throw Error('Load the organization from GitHub first.');
+  const previous=readProjects(),next=orgImporter.projectCatalog(previous,catalog);
+  const backup=DATA_FILE+'.before-org-sync-'+Date.now()+'.json';fs.writeFileSync(backup,JSON.stringify(previous,null,2),{mode:0o600});
+  writeProjects(next,false);return next;
 });
 
 ipcMain.handle('run-dev-setup', (_, { localPath, script }) => {

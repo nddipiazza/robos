@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('gp', {
   aiDetectSecrets: (lp, url)     => ipcRenderer.invoke('ai-detect-secrets', { localPath: lp, repoUrl: url }),
   listPath:        (prefix)      => ipcRenderer.invoke('list-path', prefix),
   listGroups:      ()            => ipcRenderer.invoke('list-groups'),
+  syncOrgCatalog: (org) => ipcRenderer.invoke('sync-org-catalog', org),
   listOrgRepos:    (org)         => ipcRenderer.invoke('list-org-repos', org),
   listAIProviders: ()            => ipcRenderer.invoke('gp-list-ai-providers'),
   aiCreateRepos:   (prompt, pid) => ipcRenderer.invoke('gp-ai-create-repos', { prompt, providerId: pid || null }),

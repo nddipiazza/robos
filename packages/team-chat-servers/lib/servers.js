@@ -23,6 +23,7 @@ function save(root,input){
   if(!input.channelId?.trim())throw Error('Enter the channel, stream or room ID.');
   Object.assign(node,{'robos:chatServer':{'@id':input.serverId},'robos:channelId':input.channelId.trim(),'robos:url':input.url?.trim()?endpoint(input.url):''});
  }
+ node['robos:evidence']=[{repository:'robos-team-chat-servers:user-declaration',path:'entries/'+node['@id'].split(':').pop()+'.json',line:1,revision:node['robos:updatedAt']}];
  const {'@id':id,...set}=node;
  const proposal=ws.propose({mode:'refine',edits:[previous?{op:'update',id,set}:{op:'add',node}],prompt:'Save the user-selected team chat configuration. No chat messages are read or sent.'});
  ws.apply(proposal,{expectedProposalId:proposal.id});return node;
