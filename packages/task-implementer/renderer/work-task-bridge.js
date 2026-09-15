@@ -48,7 +48,9 @@ async function resumeSession() {
     label.textContent=isTool?(event.name+' · '+event.text.split('\n')[0].slice(0,100)):event.role==='assistant'?`RobOS Agent${state.backend?' · '+state.backend:''}`:event.role==='user'?'Task instructions':event.role;
     const body=document.createElement(event.role==='assistant'?'div':'pre');
     if(event.role==='assistant'&&window.marked&&window.DOMPurify){body.className='session-markdown';body.innerHTML=DOMPurify.sanitize(marked.parse(event.text||''),{USE_PROFILES:{html:true}});body.querySelectorAll('a').forEach(a=>a.onclick=e=>{e.preventDefault();if(/^https?:/.test(a.href))window.robos.openUrl(a.href);});}else if(event.role==='assistant')appendLinkedText(body,event.text);else body.textContent=event.text;
-    header.append(label,messageTimestamp(event.at));
+    const meta=document.createElement('span');meta.className='session-message-meta';
+    const copy=document.createElement('robos-copy');copy.setAttribute('text',event.text||'');copy.setAttribute('label','Copy message');
+    meta.append(messageTimestamp(event.at),copy);header.append(label,meta);
     card.append(header,body);out.append(card);
   }
   out.scrollTop=pinned?out.scrollHeight:scroll;

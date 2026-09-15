@@ -102,7 +102,7 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .session-message a { color:#6ed3f5;text-decoration:underline; }
 .session-message.assistant { border-left:3px solid #4cbb95; }
 .session-message.tool { margin-top:6px;margin-bottom:6px;padding:10px 16px; }
-.session-message-header time { display:inline-block;margin-left:10px;color:#9da7b3;font:12px/1.5 system-ui;white-space:nowrap;font-weight:normal;cursor:help; }
+.session-message-header time { display:inline-block;margin-left:10px;color:#9da7b3;font:12px/1.5 system-ui;white-space:nowrap;font-weight:normal;cursor:pointer; }
 .session-markdown {font:13px/1.65 system-ui,sans-serif;color:#cbd5df;overflow-wrap:anywhere;}.session-markdown h1,.session-markdown h2,.session-markdown h3 {font-size:16px;margin:18px 0 8px;}.session-markdown p {margin:8px 0;}.session-markdown ul,.session-markdown ol {padding-left:22px;}.session-markdown table {border-collapse:collapse;width:100%;}.session-markdown td,.session-markdown th {border:1px solid #354553;padding:7px;}.session-markdown code {font-family:monospace;}.session-markdown a {color:#70d7e8;}
 .task-item-heading {display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;}
 .task-run-button {font-size:11px;padding:3px 7px;flex-shrink:0;}
@@ -124,3 +124,5 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 #session-workflow.has-error .session-workflow-current, .workflow-error {color:#ff7b72;}
 #session-workflow.has-error [aria-current=step] {color:#ffb4ad;background:#3b1d25;border-color:#f85149;}
 .workflow-error {font-size:12px;margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;}
+
+.session-message-meta { display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle; }
