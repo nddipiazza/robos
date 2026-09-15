@@ -186,16 +186,18 @@ function createToast(notif) {
   // DND mode — queue critical/sticky, suppress non-critical
   if (prefs.dnd) {
     if (tier === 'critical' || notif.sticky) {
-      queuedToasts.push(notif);
+      if(!queuedToasts.some(n=>n.title===notif.title&&n.body===notif.body&&n.tier===notif.tier))queuedToasts.push(notif);
     }
     return null;
   }
 
   // Max visible limit — queue excess
   if (activeToasts.length >= MAX_VISIBLE_TOASTS) {
-    queuedToasts.push(notif);
+    if(!queuedToasts.some(n=>n.title===notif.title&&n.body===notif.body&&n.tier===notif.tier))queuedToasts.push(notif);
     return null;
   }
+
+  if(!require('../robos-lib/notification-gate').claimNotification(path.join(CONFIG_DIR,'notification-toast-ledger.json'),{...notif,category,tier}))return null;
 
   let width = 1920;
   try {

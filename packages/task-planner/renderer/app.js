@@ -71,6 +71,7 @@ async function init() {
 
   await loadProjectsList();
   await loadTaskTemplates();
+  if (window.resumeWorkTask) await window.resumeWorkTask();
 }
 
 async function loadExistingEpics() {
@@ -121,46 +122,7 @@ function renderProjectsSidebar() {
     displayList.unshift({ id: currentProjectId || 'current-new-proj', name: currentProjectName });
   }
 
-  if (!displayList.length) {
-    list.innerHTML = '<div class="project-empty">No projects yet.<br>Click + to start one.</div>';
-    return;
-  }
-
-  list.innerHTML = displayList.map(p => `
-    <div class="project-item ${(p.id === currentProjectId || (!currentProjectId && p.name === currentProjectName)) ? 'active' : ''}" data-id="${escHtml(p.id)}">
-      <span class="project-item-name">${escHtml(p.name)}</span>
-      <button class="project-delete-btn" data-id="${escHtml(p.id)}" title="Delete project">×</button>
-    </div>
-  `).join('');
-
-  list.querySelectorAll('.project-item').forEach(el => {
-    el.addEventListener('click', e => {
-      if (e.target.classList.contains('project-delete-btn')) return;
-      openProject(el.dataset.id);
-    });
-  });
-
-  list.querySelectorAll('.project-delete-btn').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const proj = projectsList.find(p => p.id === id);
-      if (!proj) return;
-      const ok = await nativeConfirm(`Delete project "${proj.name}"?`);
-      if (!ok) return;
-      const result = await window.robos.deleteProject(id);
-      if (result.ok) {
-        if (currentProjectId === id) {
-          currentProjectId = null;
-          currentProjectName = null;
-          updateProjectBadge();
-        }
-        await loadProjectsList();
-      } else {
-        showCreateStatus('Failed to delete: ' + (result.error || 'unknown error'), true);
-      }
-    });
-  });
+  renderPlannerTree(displayList);
 }
 
 async function openProject(id) {
@@ -172,6 +134,8 @@ async function openProject(id) {
   const proj = result.project;
   currentProjectId = proj.id;
   currentProjectName = proj.name;
+  projectFeatures=proj.features||[];projectRepos=proj.repos||[];
+  document.getElementById('project-tech-stack').value=proj.techStack||'';
 
   tasks = (proj.tasks || []).map(t => ({
     title:         t.title || '',
@@ -187,7 +151,7 @@ async function openProject(id) {
     ticketStatus:  t.ticketStatus || null,
   }));
 
-  if (proj.prompt) document.getElementById('prompt-input').value = proj.prompt;
+  document.getElementById('prompt-input').value = proj.prompt || '';
   if (proj.parentEpicKey) {
     parentEpicKey = proj.parentEpicKey;
     const sel = document.getElementById('parent-epic-select');
@@ -199,19 +163,14 @@ async function openProject(id) {
   updateProjectBadge();
   renderProjectsSidebar();
 
-  if (tasks.length) {
-    document.getElementById('preview-section').style.display = 'block';
-    document.getElementById('results-section').style.display = 'none';
-  }
+  document.getElementById('preview-section').style.display = 'block';
+  document.getElementById('results-section').style.display = 'none';
+  if(window.projectOpenedForWorkflow)await window.projectOpenedForWorkflow(proj);
+  window.refreshPlannerUX?.();
 }
 
 async function saveToProject() {
-  if (!tasks.length) {
-    showCreateStatus('Nothing to save. Generate some tasks first.', true);
-    return;
-  }
-
-  const name = currentProjectName || (document.getElementById('current-project-badge') ? document.getElementById('current-project-badge').textContent.replace(/^📁\s*/, '') : '') || 'Acme Petshop Platform';
+  const name = currentProjectName || (document.getElementById('current-project-badge') ? document.getElementById('current-project-badge').textContent.replace(/^📁\s*/, '') : '') || 'Untitled Project';
 
   const promptText = getPromptValue();
   const result = await window.robos.saveProject({
@@ -228,7 +187,7 @@ async function saveToProject() {
     return;
   }
 
-  currentProjectId = result.id;
+  currentProjectId = result.project?.id || result.id;
   currentProjectName = name;
   updateProjectBadge();
   await loadProjectsList();
@@ -310,17 +269,7 @@ function switchFeature(featId) {
   renderFeatureTabs();
 }
 
-function addNewFeature() {
-  const featNum = projectFeatures.length + 1;
-  const newFeat = {
-    id: `feat-${featNum}`,
-    name: `Feature ${featNum}: New Capability`,
-    tasks: []
-  };
-  projectFeatures.push(newFeat);
-  switchFeature(newFeat.id);
-  showGenerateStatus(`Switched to ${newFeat.name}. Describe requirements below.`);
-}
+function addNewFeature() {return createPlannerWork('feature');}
 
 function updateProjectBadge() {
   const badge = document.getElementById('current-project-badge');
@@ -373,54 +322,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('project-name-input');
     form.style.display = 'flex';
     input.value = '';
+    document.getElementById('project-create-error').textContent='';
     input.focus();
   }
 
   function hideNewProjectForm() {
+    document.getElementById('project-create-error').textContent='';
     document.getElementById('project-new-form').style.display = 'none';
   }
 
   async function applyNewProject(name) {
     name = (name || '').trim();
-    if (!name) return;
-    hideNewProjectForm();
-    currentProjectName = name;
-    tasks = [];
-    parentEpicKey = null;
-    projectFeatures = [];
-    activeFeatureId = null;
-    projectRepos = [];
-    const techStackInput = document.getElementById('project-tech-stack');
-    if (techStackInput) techStackInput.value = '';
-
+    if (!name) {document.getElementById('project-create-error').textContent='Enter a project name.';return;}
+    const button=document.getElementById('btn-project-confirm');if(button.disabled)return;button.disabled=true;
+    const error=document.getElementById('project-create-error');error.textContent='';
     try {
-      const saveRes = await window.robos.saveProject({
-        name,
-        prompt: '',
-        serverId: serverInfo ? serverInfo.id : null,
-        tasks: []
-      });
-      if (saveRes && saveRes.ok) {
-        currentProjectId = saveRes.id;
-      }
-    } catch (_) {}
-
-    await loadProjectsList();
-    renderTasks();
-    updateCount();
-    updateProjectBadge();
-    renderProjectMetadataCard(currentProjectName);
-    renderFeatureTabs();
-    document.getElementById('preview-section').style.display = 'block';
-    document.getElementById('results-section').style.display = 'none';
-    document.getElementById('prompt-input').value = '';
-    showGenerateStatus(`Project "${currentProjectName}" created — describe tasks in prompt above or add manually below.`);
-    document.getElementById('main-content').style.display = 'flex';
-    document.getElementById('no-server').style.display = 'none';
-    setTimeout(() => {
-      const p = document.getElementById('prompt-input');
-      if (p && p.focus) p.focus();
-    }, 100);
+      const saved=await window.robos.saveProject({name,kind:'project',prompt:'',tasks:[]});
+      if(!saved.ok)throw Error(saved.error);
+      hideNewProjectForm();plannerSelectedTask=null;
+      await loadProjectsList();await openProject(saved.project.id);
+      setPlannerView('plan');setPlannerEditing(false);
+      document.getElementById('main-content').style.display='flex';document.getElementById('no-server').style.display='none';
+      showGenerateStatus(`Project "${name}" created. Add a feature or task to get started.`);
+    }catch(e){error.textContent=e.message;}finally{button.disabled=false;}
   }
 
   document.getElementById('btn-project-confirm').addEventListener('click', () => {
@@ -563,6 +487,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function getPromptValue() {
   const el = document.getElementById('prompt-input');
   if (!el) return '';
+  // contenteditable.innerText loses <br> line breaks when the editor is hidden.
+  if(el._inner && !el._inner.getClientRects().length){
+    const copy=el._inner.cloneNode(true);
+    copy.querySelectorAll('br').forEach(br=>br.replaceWith(document.createTextNode('\n')));
+    copy.querySelectorAll('div,p').forEach(block=>{if(block.previousSibling)block.prepend(document.createTextNode('\n'));block.append(document.createTextNode('\n'));});
+    return copy.textContent.trim();
+  }
   if (typeof el.value === 'string' && el.value.trim()) return el.value.trim();
   const inner = el.querySelector('textarea, input');
   if (inner && inner.value && inner.value.trim()) return inner.value.trim();
@@ -668,6 +599,7 @@ function handlePrevQuestion() {
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 async function handleGenerate() {
+  if (window.generateWorkTaskPlan && await window.generateWorkTaskPlan()) return;
   const prompt = getPromptValue();
   if (!prompt) { showGenerateStatus('Please enter a description.', true); return; }
   if (!serverInfo) { showGenerateStatus('No task server connected.', true); return; }
@@ -1089,24 +1021,6 @@ async function handleSubmitAnswers() {
     ticketStatus:   null,
   }));
 
-  if (projectFeatures.length === 0) {
-    projectFeatures.push({
-      id: 'feat-core',
-      name: 'Feature 1: Platform Core & APIs',
-      tasks: [...tasks]
-    });
-    activeFeatureId = 'feat-core';
-    renderFeatureTabs();
-  }
-  const techStackInput = document.getElementById('project-tech-stack');
-  if (techStackInput && !techStackInput.value) {
-    techStackInput.value = 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL';
-  }
-  if (projectRepos.length === 0) {
-    projectRepos = ['petstore-api (Java)', 'petstore-web (React)', 'petstore-common (TypeSpec)'];
-    renderRepoTags();
-  }
-
   renderTasks();
   updateCount();
   document.getElementById('preview-section').style.display = 'block';
@@ -1136,7 +1050,7 @@ function renderTasks() {
     list.innerHTML = `
       <div class="empty-plan-placeholder">
         <div style="font-weight:600; margin-bottom:4px; font-size:13px; color:var(--text);">No tasks in this plan yet</div>
-        <div>Use the AI prompt above to generate a plan, or click <strong>⬡ + Add Epic</strong> / <strong>📄 + Add Task</strong> to construct manually.</div>
+        <div>Generate tasks from the Plan tab, or click <strong>⬡ + Add Epic</strong> / <strong>📄 + Add Task</strong> to construct manually.</div>
       </div>
     `;
     return;
@@ -1203,6 +1117,7 @@ function buildCard(i, indent) {
         <button class="task-remove-btn" title="Remove task">×</button>
       </div>
     </div>
+    <details class="planner-task-details"><summary>Description and labels</summary>
     ${epicNameRow}
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
     <textarea class="task-body-input" rows="5" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
@@ -1215,6 +1130,7 @@ function buildCard(i, indent) {
       <button class="label-input-ok">✓</button>
       <button class="label-input-cancel">✕</button>
     </div>
+    </details>
   `;
 
   card.querySelector('.task-title-input').addEventListener('input', e => { tasks[i].title = e.target.value; });
@@ -1274,6 +1190,7 @@ function buildCard(i, indent) {
 }
 
 function updateCount() {
+  window.refreshPlannerUX?.();
   document.getElementById('task-count').textContent = tasks.length;
   const epicCount = tasks.filter(t => t.isEpic).length;
   const epicBadge = document.getElementById('epic-count');
@@ -1399,7 +1316,7 @@ function renderMd(src) {
   if (!src) return '<span class="md-empty">No description. Click to add…</span>';
   try {
     if (typeof marked !== 'undefined' && marked && marked.parse) {
-      return marked.parse(src, { breaks: true, gfm: true });
+      return DOMPurify.sanitize(marked.parse(src, { breaks: true, gfm: true }));
     }
   } catch (_) {}
   return escHtml(src || '').replace(/\n/g, '<br>');

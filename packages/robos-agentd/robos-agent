@@ -53,6 +53,12 @@ CMD="$1"
 shift
 
 case "$CMD" in
+  /work-task|work-task)
+    if [ $# -ne 1 ]; then echo "Usage: robos-agent /work-task https://github.com/OWNER/REPO/issues/NUMBER" >&2; exit 1; fi
+    ROBOS_AGENT_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    ROBOS_AGENT_ELECTRON="$(node -e 'process.stdout.write(require(process.argv[1]))' "$ROBOS_AGENT_PACKAGE_ROOT/robos-graph/node_modules/electron")"
+    exec node "$ROBOS_AGENT_PACKAGE_ROOT/robos-agent-client/work-task/runner.js" /work-task "$1" "$ROBOS_AGENT_ELECTRON"
+    ;;
   spawn)
     if [ $# -lt 1 ]; then
       echo "Error: task-id required. Usage: robos-agent spawn <task-id>" >&2

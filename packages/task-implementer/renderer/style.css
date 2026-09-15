@@ -89,3 +89,16 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #3b82f633; border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-muted); text-align: center; }
+
+.session-milestones {padding:18px;position:sticky;top:0;background:#161b22;color:#7dd3fc;line-height:2}
+.session-message {margin:16px;padding:18px;background:#161b22;border:1px solid #30363d;border-radius:12px}
+.session-message.tool {border-left:3px solid #00bcd4}
+.session-message pre {white-space:pre-wrap;font:13px/1.6 system-ui;margin:10px 0 0}
+#session-review[hidden] { display:none !important; }
+.session-message pre { overflow-wrap:anywhere; word-break:break-word; }
+#agent-output { overflow-x:hidden; }
+#workspace-active .btn { background:#182432;color:#8bd5ef;border:1px solid #32475c;border-radius:6px;padding:7px 10px; }
+.session-message summary { cursor:pointer;color:#8bd5ef;overflow-wrap:anywhere; }
+.session-message a { color:#6ed3f5;text-decoration:underline; }
+.session-message.assistant { border-left:3px solid #4cbb95; }
+.session-message.tool { margin-top:6px;margin-bottom:6px;padding:10px 16px; }

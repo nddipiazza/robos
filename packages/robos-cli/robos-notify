@@ -23,6 +23,7 @@ TIER="info"
 ACTION=""
 SILENT=false
 JSON_MODE=false
+EVENT_KEY=""
 
 show_help() {
   cat <<'EOF'
@@ -35,6 +36,7 @@ Options:
   --category CAT     One of: pr_review, ci_cd, task, agent, system (default: system)
   --tier TIER        One of: critical, warning, info (default: info)
   --action CMD       Command to execute on click
+  --event-key TEXT   Stable event ID (e.g. build ID); retries reuse the same ID
   --silent           Write to history only, skip toast display
   --json             Read notification from stdin as JSON
   --help             Show this help
@@ -55,6 +57,7 @@ while [[ $# -gt 0 ]]; do
     --category) CATEGORY="$2"; shift 2 ;;
     --tier)     TIER="$2"; shift 2 ;;
     --action)   ACTION="$2"; shift 2 ;;
+    --event-key) EVENT_KEY="$2"; shift 2 ;;
     --silent)   SILENT=true; shift ;;
     --json)     JSON_MODE=true; shift ;;
     -*)         echo "Unknown option: $1" >&2; exit 1 ;;
@@ -90,56 +93,6 @@ if [ -z "$MSG" ]; then
   exit 1
 fi
 
-# Desktop toast via notify-send (fallback)
-if ! $SILENT && command -v notify-send &>/dev/null; then
-  case "$TIER" in
-    critical) NOTIFY_ICON="dialog-error" ;;
-    warning)  NOTIFY_ICON="dialog-warning" ;;
-    *)        NOTIFY_ICON="dialog-information" ;;
-  esac
-  notify-send -a "RobOS" -t 6000 -i "$NOTIFY_ICON" "$TITLE" "$MSG" 2>/dev/null || true
-fi
-
-# Persist to notifications store
-mkdir -p "$(dirname "$NOTIF_FILE")"
-python3 - <<PYEOF
-import json, os, uuid
-from datetime import datetime, timezone
-f = '$NOTIF_FILE'
-try:
-    data = json.load(open(f)) if os.path.exists(f) else []
-except:
-    data = []
-entry = {
-    'id': str(uuid.uuid4()),
-    'title': '''$TITLE''',
-    'body': '''$MSG''',
-    'icon': 'info',
-    'source': 'robos-notify',
-    'category': '$CATEGORY',
-    'tier': '$TIER',
-    'ts': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-    'read': False
-}
-data.insert(0, entry)
-data = data[:500]
-with open(f, 'w') as out:
-    json.dump(data, out, indent=2)
-PYEOF
-
-# Try IPC to desktop manager socket for toast
-if ! $SILENT && [ -S "$SOCKET_PATH" ]; then
-  python3 -c "
-import socket, json
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-try:
-    sock.connect('$SOCKET_PATH')
-    sock.sendall(json.dumps({'notify': {'title': '''$TITLE''', 'body': '''$MSG''', 'category': '$CATEGORY', 'tier': '$TIER'}}).encode())
-    sock.shutdown(socket.SHUT_WR)
-    sock.recv(4096)
-except: pass
-finally: sock.close()
-" 2>/dev/null || true
-fi
-
-echo "Notification sent: [$CATEGORY/$TIER] $TITLE — $MSG"
+# Persist the event before delivery; retries must not create another popup or row.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+exec node "$SCRIPT_DIR/notify-delivery.js" "$TITLE" "$MSG" "$CATEGORY" "$TIER" "$ACTION" "$SILENT" "$EVENT_KEY"

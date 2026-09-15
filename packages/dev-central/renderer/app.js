@@ -15,6 +15,7 @@ const appState = {
   // Feature In-Progress State
   allFeatures: [],
   activeFeature: null,
+  issueScope: 'all',
   taskLifetimeActive: {}, // { [taskId]: boolean }
 
   // Notifications State
@@ -28,6 +29,10 @@ const appState = {
 };
 
 // ── Utility Functions ────────────────────────────────────────────────────────
+
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -96,9 +101,10 @@ function detectBlockers(issues, prs) {
       }
     }
   }
-  // Issues not updated in 3+ days
+  // Flag inactivity only when a workflow label actually says work is in progress.
   for (const issue of issues) {
-    if (issue.updatedAt) {
+    const inProgress = (issue.labels || []).some(l => /^state:in[-_]progress$/i.test(typeof l === 'string' ? l : l.name));
+    if (inProgress && issue.updatedAt) {
       const age = Date.now() - new Date(issue.updatedAt).getTime();
       if (age > 3 * 24 * 3600 * 1000) {
         blockers.push({
@@ -133,7 +139,7 @@ function generateStandup(issues, prs, blockers) {
     blockerList.push(`${b.label}: ${b.text}`);
   }
 
-  if (!yesterday.length) yesterday.push('Shipped architectural contracts and automated PR audits');
+  if (!yesterday.length) yesterday.push('No merged pull requests in the loaded data');
   if (!today.length) today.push('No open assigned tasks');
   if (!blockerList.length) blockerList.push('No active blockers across pipelines or sprints');
 
@@ -173,10 +179,10 @@ function updateKPIRibbon() {
 
   if (healthEl) {
     if (!appState.allPRs.length) {
-      healthEl.textContent = '100%';
+      healthEl.textContent = '—';
     } else {
-      const failed = appState.allPRs.filter(pr => ciStatus(pr) === 'fail').length;
-      const pct = Math.round(((appState.allPRs.length - failed) / appState.allPRs.length) * 100);
+      const passed = appState.allPRs.filter(pr => ciStatus(pr) === 'pass').length;
+      const pct = Math.round((passed / appState.allPRs.length) * 100);
       healthEl.textContent = `${pct}%`;
     }
   }
@@ -185,6 +191,11 @@ function updateKPIRibbon() {
   if (appState.activeFeature) {
     if (featValEl) featValEl.textContent = appState.activeFeature.code;
     if (featStEl) featStEl.textContent = appState.activeFeature.status.replace('_', ' ');
+  }
+
+  else {
+    if (featValEl) featValEl.textContent = '—';
+    if (featStEl) featStEl.textContent = 'No active feature';
   }
 
   // Notifications KPI & unread count
@@ -204,7 +215,7 @@ function updateKPIRibbon() {
   if (tabTasksBadge) tabTasksBadge.textContent = appState.allIssues.length;
   if (tabPrsBadge) tabPrsBadge.textContent = appState.allPRs.length;
   if (tabBlockersBadge) tabBlockersBadge.textContent = appState.allBlockers.length;
-  if (tabFeatureBadge && appState.activeFeature) tabFeatureBadge.textContent = appState.activeFeature.status;
+  if (tabFeatureBadge) tabFeatureBadge.textContent = String(appState.allFeatures.filter(f=>f.assigned||f.tasks?.some(t=>t.assigned)).length);
   if (tabNotifsBadge) tabNotifsBadge.textContent = unread;
   if (headerNotifBadge) headerNotifBadge.textContent = unread;
 
@@ -270,122 +281,37 @@ window.switchTab = function(tab) {
 
 function renderFeatures(features, activeFeature) {
   appState.allFeatures = features;
-  appState.activeFeature = activeFeature || features[0];
+  appState.activeFeature = activeFeature || null;
 
   const selector = document.getElementById('feature-selector');
   if (selector) {
-    selector.innerHTML = features.map(f =>
-      `<option value="${f.id}" ${f.id === appState.activeFeature?.id ? 'selected' : ''}>${f.code}: ${f.name}</option>`
-    ).join('');
+    const selected = selector.value || appState.activeFeature?.id;
+    selector.replaceChildren(new Option('Select an issue…', ''));
+    for (const feature of features) selector.add(new Option(`${feature.code}: ${feature.name}`, feature.id, false, feature.id === selected));
+
   }
 
-  const f = appState.activeFeature;
-  if (!f) return;
-
-  const codeEl = document.getElementById('feature-code');
-  const nameEl = document.getElementById('feature-name');
-  const descEl = document.getElementById('feature-desc');
-  const stBadge = document.getElementById('feature-status-badge');
-  const repoTag = document.getElementById('feature-repo-tag');
-  const serviceTag = document.getElementById('feature-service-tag');
-  const progressTag = document.getElementById('feature-progress-tag');
-  const progressFill = document.getElementById('feature-progress-fill');
-  const progressPct = document.getElementById('feature-progress-pct');
-  const tasksCount = document.getElementById('feature-tasks-count');
-  const tasksList = document.getElementById('feature-tasks-list');
-
-  if (codeEl) codeEl.textContent = f.code;
-  if (nameEl) nameEl.textContent = f.name;
-  if (descEl) descEl.textContent = f.description || '';
-  if (stBadge) {
-    stBadge.textContent = f.status.replace('_', ' ');
-    stBadge.className = `badge-status-pill ${f.status.toLowerCase().replace('_', '-')}`;
-  }
-  if (repoTag) repoTag.textContent = `Repository: ${f.repository || 'repo'}`;
-  if (serviceTag) serviceTag.textContent = `Service: ${f.targetService || 'general'}`;
-
-  const tasks = f.tasks || [];
-  const completed = tasks.filter(t => t.status === 'DONE').length;
-  const total = tasks.length || 1;
-  const pct = Math.round((completed / total) * 100);
-
-  if (progressTag) progressTag.textContent = `Progress: ${completed} / ${tasks.length} tasks`;
-  if (progressFill) progressFill.style.width = `${pct}%`;
-  if (progressPct) progressPct.textContent = `${pct}% Complete`;
-  if (tasksCount) tasksCount.textContent = `${tasks.length} Tasks`;
-
-  if (!tasksList) return;
-  if (!tasks.length) {
-    tasksList.innerHTML = '<div class="placeholder">No linked tasks for this feature.</div>';
-    return;
-  }
-
-  tasksList.innerHTML = tasks.map(t => {
-    const isLifetimeOpen = !!appState.taskLifetimeActive[t.id];
-    const statusClass = (t.status || 'todo').toLowerCase().replace('_', '-');
-    const prCiClass = t.pr?.ci === 'pass' ? 'ci-pass' : t.pr?.ci === 'fail' ? 'ci-fail' : 'ci-pending';
-    const prCiLabel = t.pr?.ci === 'pass' ? 'CI Pass' : t.pr?.ci === 'fail' ? 'CI Fail' : 'CI Pending';
-    const prRevLabel = t.pr?.review === 'approved' ? 'Approved' : t.pr?.review === 'changes' ? 'Changes Req' : 'Review Pending';
-
-    return `
-      <div class="feature-task-card" id="card-${t.id}">
-        <div class="feature-task-top">
-          <div class="task-title-group">
-            <span class="task-chip ${statusClass}">${t.status}</span>
-            <span class="priority-tag priority-${(t.priority || 'p2').toLowerCase()}">${t.priority || 'P2'}</span>
-            <span class="task-heading">#${t.number || t.id}: ${t.title}</span>
-          </div>
-          <span class="meta-tag">👤 ${t.assignee || 'Unassigned'}</span>
-        </div>
-
-        <div class="task-desc">${t.description || ''}</div>
-
-        <div class="feature-task-links">
-          ${t.taskServerUrl ? `
-            <a href="#" class="link-pill link-task-server" onclick="event.preventDefault(); window.robos.openUrl('${t.taskServerUrl}')" title="Open task server issue">
-              🔗 Task Server Issue #${t.number} ↗
-            </a>
-          ` : ''}
-          ${t.pr?.url ? `
-            <a href="#" class="link-pill link-pr" onclick="event.preventDefault(); window.robos.openUrl('${t.pr.url}')" title="Open Pull Request">
-              🌿 PR #${t.pr.number}: ${t.pr.branch} ↗
-            </a>
-            <span class="ci-badge ${prCiClass}">${prCiLabel}</span>
-            <span class="badge-subtle">${prRevLabel}</span>
-          ` : ''}
-        </div>
-
-        <!-- Task Drawer: Lifetime Ticket State Tab -->
-        <div class="task-drawer">
-          <div class="task-tabs-nav">
-            <button class="btn-task-tab ${!isLifetimeOpen ? 'active' : ''}" onclick="window.setTaskDrawerTab('${t.id}', 'overview')">Overview</button>
-            <button class="btn-task-tab btn-lifetime-tab ${isLifetimeOpen ? 'active' : ''}" id="btn-lifetime-${t.id}" onclick="window.setTaskDrawerTab('${t.id}', 'lifetime')">
-              ⏱️ Ticket State Over Lifetime (${(t.lifetimeHistory || []).length} events)
-            </button>
-          </div>
-
-          ${isLifetimeOpen ? `
-            <div class="lifetime-timeline" id="lifetime-timeline-${t.id}">
-              ${(t.lifetimeHistory || []).map(event => {
-                const stCls = (event.state || '').toLowerCase();
-                return `
-                  <div class="timeline-item ${stCls}">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-header">
-                      <span class="timeline-state-pill">${event.state}</span>
-                      <span class="timeline-time">${new Date(event.timestamp).toLocaleString()}</span>
-                      <span class="timeline-actor">👤 ${event.actor}</span>
-                    </div>
-                    <div class="timeline-note">${event.note}</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
+  document.getElementById('feature-banner').style.display = 'none';
+  document.getElementById('btn-set-feature-progress').disabled = !selector?.value;
+  const mine=features.filter(f=>f.assigned || f.tasks?.some(t=>t.assigned));
+  document.getElementById('feature-status-badge').textContent = `${mine.length} assigned features`;
+  document.getElementById('feature-tasks-count').textContent = `${mine.reduce((n,f)=>n+f.tasks.length,0)} tasks`;
+  const list=document.getElementById('feature-tasks-list');
+  const collapsed=new Set([...list.querySelectorAll('details:not([open])')].map(d=>d.dataset.feature));
+  list.innerHTML=mine.length ? mine.map(f=>`<details class="feature-task-card" data-feature="${escapeHTML(f.id)}" ${collapsed.has(f.id)?'':'open'}><summary>
+    <button class="link-pill" data-open="${escapeHTML(f.id)}" title="${escapeHTML(f.description.replace(/^#+ /gm,'').slice(0,400))}">${escapeHTML(f.code+': '+f.name)}</button>
+    <span class="task-chip">${escapeHTML(f.status)}</span> ${f.assigned?'Assigned to you':''} · ${f.tasks.filter(t=>t.workable && !t.closed).length} workable
+    </summary>${(f.tasks.length?f.tasks:[f]).map(t=>`<div class="feature-task-top" style="padding:12px 0">
+    <button class="link-pill" data-open="${escapeHTML(t.id)}" title="${escapeHTML(t.description.replace(/^#+ /gm,'').slice(0,400))}">${escapeHTML(t.code+': '+t.title)}</button>
+    <span class="task-chip">${escapeHTML(t.status)}</span>
+    <span title="${escapeHTML(t.blockedBy.join(', '))}">${t.blockedBy.length?'Waiting for '+t.blockedBy.map(u=>'#'+u.split('/').pop()).join(', '):t.closed?'':'Dependencies satisfied'}</span>
+    <button class="btn btn-secondary-sm" data-assign="${escapeHTML(t.id)}" ${t.assigned?'disabled':''}>${t.assigned?'Assigned to you':'Assign to me'}</button>
+    <button class="btn btn-secondary-sm" data-work="${escapeHTML(t.id)}" ${t.workable?'':'disabled'} title="${t.workable?'Open Task Implementer':'Waiting for dependencies'}">Work ticket</button>
+    </div>`).join('')}</details>`).join('') : 'Assign a feature above to see its next workable tasks.';
+  const report=async action=>{try {const result=await action();if(!result.ok)throw Error(result.error);}catch(e){document.getElementById('feature-action-status').textContent=e.message;}};
+  list.querySelectorAll('[data-open]').forEach(b=>b.onclick=e=>{e.preventDefault();report(()=>window.robos.openWorkItem(b.dataset.open,'plan'));});
+  list.querySelectorAll('[data-work]').forEach(b=>b.onclick=()=>report(()=>window.robos.openWorkItem(b.dataset.work,'work')));
+  list.querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>report(async()=>{const r=await window.robos.setActiveFeature(b.dataset.assign);if(r.ok)renderFeatures(r.features,r.activeFeature);return r;}));
 }
 
 window.setTaskDrawerTab = function(taskId, tabName) {
@@ -461,7 +387,11 @@ function renderNotifications(notifs) {
 
   if (!filtered.length) {
     listEl.innerHTML = '';
-    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (emptyEl) {
+      emptyEl.querySelector('.empty-msg').textContent=notifs.length?'No matching notifications':'No notifications';
+      emptyEl.querySelector('.empty-sub').textContent=notifs.length?'Change the category, priority, date, or search filters to see your notifications.':'Assigned task and PR traffic will appear here automatically.';
+      emptyEl.classList.remove('hidden');
+    }
     return;
   }
 
@@ -623,7 +553,7 @@ function renderTasks(issues) {
   }
 
   if (!filtered.length) {
-    if (el) el.innerHTML = '<div class="placeholder">No assigned tasks matching filter</div>';
+    if (el) el.innerHTML = '<div class="placeholder">No issues matching this scope and filter</div>';
     return;
   }
 
@@ -636,10 +566,10 @@ function renderTasks(issues) {
     const dotClass = (stage.includes('progress') || stage === 'open' || stage === 'triage') ? 'dot-blue' : stage.includes('review') ? 'dot-yellow' : stage.includes('done') ? 'dot-green' : 'dot-yellow';
 
     const pLabel = labels.find(l => l.startsWith('priority:'));
-    let priority = pLabel ? pLabel.replace('priority:', '').toUpperCase() : 'P2';
-    if (priority === 'HIGH') priority = 'P0';
-    if (priority === 'MEDIUM') priority = 'P1';
-    if (priority === 'LOW') priority = 'P2';
+    let priority = pLabel ? pLabel.replace('priority:', '').toUpperCase() : '';
+    if (priority === 'HIGH') priority = 'P1';
+    if (priority === 'MEDIUM') priority = 'P2';
+    if (priority === 'LOW') priority = 'P3';
     const pClass = priority === 'P0' ? 'priority-p0' : priority === 'P1' ? 'priority-p1' : 'priority-p2';
 
     const sLabel = labels.find(l => l.startsWith('service:') || l.startsWith('repo:'));
@@ -648,11 +578,11 @@ function renderTasks(issues) {
 
     return `<div class="item" data-url="${i.url || ''}">
       <span class="item-key"><span class="dot ${dotClass}"></span>#${i.number}</span>
-      <span class="priority-tag ${pClass}">${priority}</span>
+      ${priority ? `<span class="priority-tag ${pClass}">${priority}</span>` : ''}
       <span class="item-title">${i.title}</span>
       ${service ? `<span class="service-tag">${service}</span>` : ''}
       <span class="item-meta">${timeAgo(i.updatedAt)}</span>
-      ${isReview ? `<button class="btn-review-sm" onclick="event.stopPropagation(); window.openReviewModal('TASK-${i.number}')">⚡ Review</button>` : ''}
+      ${isReview ? `<button class="btn-review-sm">⚡ Review</button>` : ''}
     </div>`;
   }).join('');
 
@@ -726,13 +656,13 @@ function renderReviews(reviews) {
       <span class="item-key">#${pr.number}</span>
       <span class="item-title">${pr.title}</span>
       <span class="item-meta">by ${(pr.author && pr.author.login) || '?'} ${timeAgo(pr.updatedAt)}</span>
-      <button class="btn-review-sm" ${idx === 0 ? 'id="btn-open-review-hub"' : ''} onclick="event.stopPropagation(); window.openReviewModal('TASK-201')">Review</button>
+      <button class="btn-review-sm" ${idx === 0 ? 'id="btn-open-review-hub"' : ''}>Review</button>
     </div>
   `).join('');
 
   el.querySelectorAll('.item').forEach(row => {
     row.addEventListener('click', () => {
-      window.openReviewModal('TASK-201');
+      if (row.dataset.url) window.robos.openUrl(row.dataset.url);
     });
   });
 }
@@ -778,7 +708,7 @@ function renderStandup(standup) {
       <div class="standup-column">
         <div class="standup-col-header yesterday">
           <span>✅</span>
-          <span>Yesterday (Shipped & Merged)</span>
+          <span>Merged PRs in loaded data</span>
         </div>
         <div class="standup-bullets">
           ${standup.yesterday.map(t => `
@@ -867,7 +797,15 @@ window.regenerateStandup = function() {
 };
 
 // ── Wire Navigation & Filter Events ──────────────────────────────────────────
+let interactionsWired = false;
 function wireInteractivity() {
+  if (interactionsWired) return;
+  interactionsWired = true;
+  document.getElementById('issue-scope').addEventListener('change', async e => {
+    appState.issueScope = e.target.value;
+    document.getElementById('task-scope-label').textContent = appState.issueScope === 'assigned' ? 'Assigned Tasks' : 'Repository Tasks';
+    await init();
+  });
   // Tabs
   document.querySelectorAll('.view-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -875,30 +813,27 @@ function wireInteractivity() {
     });
   });
 
-  // Feature selector dropdown
   const featSelect = document.getElementById('feature-selector');
-  if (featSelect) {
-    featSelect.addEventListener('change', async (e) => {
-      const res = await window.robos.setActiveFeature(e.target.value);
-      if (res.ok) {
-        renderFeatures(res.features, res.activeFeature);
-        updateKPIRibbon();
-      }
-    });
-  }
-
-  // Feature status button ("Set In Progress")
   const btnSetProgress = document.getElementById('btn-set-feature-progress');
-  if (btnSetProgress) {
-    btnSetProgress.addEventListener('click', async () => {
-      if (!appState.activeFeature) return;
-      const res = await window.robos.updateFeatureStatus(appState.activeFeature.id, 'IN_PROGRESS');
-      if (res.ok) {
-        renderFeatures(res.features, res.activeFeature);
-        updateKPIRibbon();
-      }
-    });
-  }
+  const featureStatus = document.getElementById('feature-action-status');
+  featSelect.addEventListener('change', () => {
+    btnSetProgress.disabled = !featSelect.value;
+    featureStatus.textContent = '';
+  });
+  btnSetProgress.addEventListener('click', async () => {
+    if (!featSelect.value) return;
+    btnSetProgress.disabled = true;
+    featureStatus.textContent = 'Assigning on GitHub…';
+    try {
+      const res = await window.robos.setActiveFeature(featSelect.value);
+      if (!res.ok) { featureStatus.textContent = res.error; return; }
+      renderFeatures(res.features, res.activeFeature);
+      featureStatus.textContent = `Assigned to ${res.assignee || 'you'}. ${res.dispatch?.message || ''}`;
+      updateKPIRibbon();
+      await window.robos.syncNow();
+    } catch (error) { featureStatus.textContent = error.message; }
+    finally { btnSetProgress.disabled = !featSelect.value; }
+  });
 
   // Task Filter Chips
   document.querySelectorAll('#task-filter-chips .filter-chip').forEach(chip => {
@@ -1000,7 +935,7 @@ function wireInteractivity() {
     if (data.reviews) appState.allReviews = data.reviews;
     if (data.activity) appState.allEvents = data.activity;
     if (data.features) appState.allFeatures = data.features;
-    if (data.activeFeature) appState.activeFeature = data.activeFeature;
+    if ('activeFeature' in data) appState.activeFeature = data.activeFeature;
 
     appState.allBlockers = detectBlockers(appState.allIssues, appState.allPRs);
 
@@ -1013,6 +948,7 @@ function wireInteractivity() {
     renderBlockers(appState.allBlockers);
     renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
     renderActivity(appState.allEvents);
+    showDataErrors(data.errors);
     updateKPIRibbon();
   });
 
@@ -1027,12 +963,21 @@ function wireInteractivity() {
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
+function showDataErrors(errors = {}) {
+  for (const [key, id] of Object.entries({ issues: 'tasks-list', prs: 'prs-list', reviews: 'reviews-list', activity: 'activity-list' })) {
+    if (errors[key]) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `Unable to load: ${errors[key]}`;
+    }
+  }
+}
+
 async function init() {
   wireInteractivity();
 
   // Load settings and show server badge
   const settings = await window.robos.readSettings();
-  const ts = (settings.task_servers || [])[0];
+  const ts = (settings.task_servers || []).find(s => s.id === settings.active_task_server) || (settings.task_servers || [])[0];
   appState.taskServer = ts;
   const badge = document.getElementById('server-badge');
   if (ts) {
@@ -1043,7 +988,7 @@ async function init() {
 
   // Fetch data concurrently
   const [issuesRes, prsRes, reviewsRes, activityRes, featuresRes, notifsRes] = await Promise.all([
-    window.robos.getMyIssues(),
+    window.robos.getMyIssues(appState.issueScope),
     window.robos.getMyPRs(),
     window.robos.getReviewRequests(),
     window.robos.getRecentActivity(),
@@ -1057,13 +1002,14 @@ async function init() {
   appState.allEvents  = activityRes.ok ? activityRes.data : [];
   appState.allBlockers = detectBlockers(appState.allIssues, appState.allPRs);
 
-  if (featuresRes.ok) {
+  if (featuresRes.data) {
     appState.allFeatures = featuresRes.data;
     appState.activeFeature = featuresRes.activeFeature;
   }
 
   renderNotifications(notifsRes || []);
   renderFeatures(appState.allFeatures, appState.activeFeature);
+  if (!featuresRes.ok) document.getElementById('feature-action-status').textContent = featuresRes.error;
   renderTasks(appState.allIssues);
   renderPRs(appState.allPRs);
   renderReviews(appState.allReviews);
@@ -1072,6 +1018,8 @@ async function init() {
   renderActivity(appState.allEvents);
 
   updateKPIRibbon();
+
+  showDataErrors(Object.fromEntries(Object.entries({ issues: issuesRes, prs: prsRes, reviews: reviewsRes, activity: activityRes }).filter(([, r]) => !r.ok).map(([key, r]) => [key, r.error])));
 
   // Show error if no task server
   if (!ts && !issuesRes.ok) {
@@ -1086,3 +1034,5 @@ init();
 
 // Periodic UI refresh every 2 minutes as fallback
 setInterval(init, 120000);
+
+setInterval(async()=>{const r=await window.robos.getFeatures();if(r.ok)renderFeatures(r.data,r.activeFeature);},15000);

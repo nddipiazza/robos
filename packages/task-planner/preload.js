@@ -1,3 +1,9 @@
+(() => {
+'use strict';
+const{contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['select','open-implementer','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
+
+})();
 'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -18,6 +24,9 @@ contextBridge.exposeInMainWorld('robos', {
   logsListApps:    ()        => ipcRenderer.invoke('logs-list-apps'),
   searchIndex:     (prefix)  => ipcRenderer.invoke('tp-list-path', prefix),
   // Projects
+  searchImportTasks: (p) => ipcRenderer.invoke('search-import-tasks',p),
+  importTasks: (p) => ipcRenderer.invoke('import-tasks',p),
+  setProjectProduct: (p) => ipcRenderer.invoke('set-project-product',p),
   listProjects:    ()        => ipcRenderer.invoke('list-projects'),
   loadProject:     (id)      => ipcRenderer.invoke('load-project', id),
   saveProject:     (p)       => ipcRenderer.invoke('save-project', p),

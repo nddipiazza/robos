@@ -1,3 +1,4 @@
+require('../robos-agent-client/work-task/electron').register(require('electron'), 'pr-review');
 'use strict';
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
@@ -5,6 +6,7 @@ const fs   = require('fs');
 const os   = require('os');
 const { execSync } = require('child_process');
 
+const realTheater=require('./real-theater').createTheater();
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
 // Debug server (optional)
@@ -182,18 +184,7 @@ ipcMain.handle('submit-review', async (_, { repo, number, action, body, kgraphBr
     if (body) cmd += ` --body "${body.replace(/"/g, '\\"')}"`;
     execSync(cmd, { encoding: 'utf8', timeout: 15000 });
 
-    const kgBranch = kgraphBranch || 'kgraph/PET-105-rabies-verification';
-    const isMerged = action === 'approve';
-
-    return {
-      ok: true,
-      merged: isMerged,
-      gitBranch: 'feature/PET-105-rabies-verification',
-      kgraphBranch: kgBranch,
-      message: isMerged
-        ? `✓ PR #${number} approved and merged to main! Synced Knowledge Graph branch ${kgBranch} into master graph topology.`
-        : `Review submitted: ${action}`,
-    };
+    return { ok: true, merged: false, message: `Review submitted: ${action}. This action does not merge the PR.` };
   } catch (e) {
     return { ok: false, error: e.message };
   }
@@ -464,6 +455,7 @@ ipcMain.handle('get-ide-status', async () => {
 
 ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
   try {
+    if(process.env.ROBOS_DEMO_DATA!=='1')return await realTheater.load(opts);
     const store = getGraphStore();
     let diffPatch = opts.diffPatch || null;
     if (!diffPatch && opts.repo && opts.number) {
@@ -706,6 +698,7 @@ ipcMain.handle('fetch-pr-diff-content', async (_, { repo, number, changedFiles }
 
 ipcMain.handle('verify-pr-theater-quiz', async (_, { courseId, answers, reviewerId, appId } = {}) => {
   try {
+    if(process.env.ROBOS_DEMO_DATA!=='1')return realTheater.quiz({courseId,answers});
     const store = getGraphStore();
     if (store && typeof store.verifyPRELearningQuiz === 'function') {
       return store.verifyPRELearningQuiz({ courseId, answers, reviewerId, appId });
@@ -792,8 +785,9 @@ ipcMain.handle('launch-ide-branch-diff', async (_, { ide, repo, number, baseBran
   }
 });
 
-ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, body, kgraphBranch, gates } = {}) => {
+ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, body, kgraphBranch, gates, reviewId } = {}) => {
   try {
+    if(process.env.ROBOS_DEMO_DATA!=='1')return await realTheater.submit({repo,number,action,body,gates,reviewId});
     if (action === 'approve' && gates && (!gates.elearningPassed || !gates.ciPassed)) {
       return {
         ok: false,
@@ -809,18 +803,7 @@ ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, bod
       execSync(cmd, { encoding: 'utf8', timeout: 15000 });
     } catch {}
 
-    const kgBranch = kgraphBranch || 'kgraph/PET-105-rabies-verification';
-    const isMerged = action === 'approve';
-
-    return {
-      ok: true,
-      merged: isMerged,
-      gitBranch: 'feature/PET-105-rabies-verification',
-      kgraphBranch: kgBranch,
-      message: isMerged
-        ? `✓ PR #${number} approved! Merged code branch into main and synchronized Knowledge Graph branch ${kgBranch} with verified completion certificate.`
-        : `Review submitted: ${action}`,
-    };
+    return { ok: true, merged: false, message: `Review submitted: ${action}. Open this task with /work-task to review and merge the exact commit.` };
   } catch (e) {
     return { ok: false, error: e.message };
   }

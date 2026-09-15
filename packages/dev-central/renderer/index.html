@@ -35,13 +35,13 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="global-search" placeholder="Search tasks, PRs, notifications, blockers (e.g. #201, forms-api)..." autocomplete="off" spellcheck="false">
+          <input type="text" id="global-search" placeholder="Search tasks, PRs, notifications, blockers..." autocomplete="off" spellcheck="false">
           <span class="search-shortcut">⌘K</span>
         </div>
       </div>
 
       <div class="header-right" id="status-bar">
-        <span id="sprint-pill" class="sprint-pill">🏃 Sprint 42 • 4d left</span>
+        <span id="sprint-pill" class="sprint-pill">No sprint connected</span>
         <div class="server-badge-wrap">
           <span class="status-dot-pulse"></span>
           <span id="server-badge" class="badge">Acme GitHub</span>
@@ -61,22 +61,6 @@
 
     <!-- Executive KPI Stat Ribbon -->
     <section class="kpi-ribbon" id="kpi-ribbon">
-      <div class="kpi-card" id="kpi-card-feature" onclick="window.switchTab('feature')" style="cursor:pointer;">
-        <div class="kpi-icon-wrap kpi-blue">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-top">
-            <span class="kpi-value" id="kpi-feature-val">FEAT-201</span>
-            <span class="kpi-delta positive" id="kpi-feature-status">IN PROGRESS</span>
-          </div>
-          <span class="kpi-label">Active Feature</span>
-        </div>
-      </div>
-
       <div class="kpi-card" id="kpi-card-tasks">
         <div class="kpi-icon-wrap kpi-blue">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -87,9 +71,9 @@
         <div class="kpi-info">
           <div class="kpi-top">
             <span class="kpi-value" id="kpi-tasks-val">0</span>
-            <span class="kpi-delta positive">2 in-flight</span>
+            <span class="kpi-delta positive"></span>
           </div>
-          <span class="kpi-label">Assigned Tasks</span>
+          <span class="kpi-label" id="task-scope-label">Repository Tasks</span>
         </div>
       </div>
 
@@ -105,7 +89,7 @@
         <div class="kpi-info">
           <div class="kpi-top">
             <span class="kpi-value" id="kpi-prs-val">0</span>
-            <span class="kpi-delta neutral">1 ready to merge</span>
+            <span class="kpi-delta neutral"></span>
           </div>
           <span class="kpi-label">Open Pull Requests</span>
         </div>
@@ -169,7 +153,7 @@
         <div class="kpi-info">
           <div class="kpi-top">
             <span class="kpi-value" id="kpi-ci-health">92%</span>
-            <span class="kpi-delta positive">All Healthy</span>
+            <span class="kpi-delta positive"></span>
           </div>
           <span class="kpi-label">Pipeline Health</span>
         </div>
@@ -184,8 +168,8 @@
       </button>
       <button class="tab-btn" data-tab="feature" id="tab-btn-feature">
         <span class="tab-icon">🎯</span>
-        <span>Active Feature</span>
-        <span class="tab-badge" id="tab-feature-badge">IN_PROGRESS</span>
+        <span>My Work</span>
+        <span class="tab-badge" id="tab-feature-badge"></span>
       </button>
       <button class="tab-btn" data-tab="tasks" id="tab-btn-tasks">
         <span class="tab-icon">📋</span>
@@ -220,48 +204,49 @@
     <!-- Main Mission Control Grid -->
     <main id="dashboard">
 
-      <!-- Active Feature In-Progress Section -->
+      <!-- My Work In-Progress Section -->
       <section class="card wide" id="feature-card" data-section="feature">
         <div class="card-header">
           <div class="card-title-group">
             <span class="card-icon">🎯</span>
-            <span class="card-title">RobOS Feature In Progress</span>
-            <span class="badge-status-pill in-progress" id="feature-status-badge">IN PROGRESS</span>
+            <span class="card-title">My features and tasks</span>
+            <span class="badge-status-pill in-progress" id="feature-status-badge">No active feature</span>
           </div>
           <div class="card-actions feature-controls">
-            <label for="feature-selector" class="ctrl-label">Current Feature:</label>
+            <label for="feature-selector" class="ctrl-label">Assign feature:</label>
             <select id="feature-selector" class="select-feature">
               <!-- Rendered dynamically -->
             </select>
-            <button class="btn btn-secondary-sm" id="btn-set-feature-progress">Set In Progress</button>
+            <button class="btn btn-secondary-sm" id="btn-set-feature-progress">Assign to me</button>
           </div>
         </div>
 
+        <div id="feature-action-status" role="status" style="padding: 8px 14px;"></div>
         <div class="card-body" id="feature-body">
           <div class="feature-banner" id="feature-banner">
             <div class="feature-header-info">
               <div class="feature-title-row">
-                <span class="feature-code" id="feature-code">FEAT-201</span>
+                <span class="feature-code" id="feature-code">—</span>
                 <h2 class="feature-name" id="feature-name">Loading feature...</h2>
               </div>
               <p class="feature-desc" id="feature-desc">Feature specification and delivery plan...</p>
               <div class="feature-meta-bar">
-                <span class="meta-tag" id="feature-repo-tag">Repository: acme-corp/buildbarn-forms</span>
-                <span class="meta-tag" id="feature-service-tag">Service: forms-api</span>
-                <span class="meta-tag" id="feature-progress-tag">Progress: 3 / 4 tasks</span>
+                <span class="meta-tag" id="feature-repo-tag">Repository: —</span>
+                <span class="meta-tag" id="feature-service-tag">Service: —</span>
+                <span class="meta-tag" id="feature-progress-tag">Progress: —</span>
               </div>
             </div>
             <div class="feature-progress-container">
               <div class="progress-bar-wrap">
-                <div class="progress-bar-fill" id="feature-progress-fill" style="width: 75%;"></div>
+                <div class="progress-bar-fill" id="feature-progress-fill" style="width: 0%;"></div>
               </div>
-              <span class="progress-pct" id="feature-progress-pct">75% Complete</span>
+              <span class="progress-pct" id="feature-progress-pct">—</span>
             </div>
           </div>
 
           <div class="feature-tasks-heading">
-            <span class="section-subheading">Linked Tasks & Lifetime Delivery</span>
-            <span class="badge-subtle" id="feature-tasks-count">4 Tasks</span>
+            <span class="section-subheading">Tasks in dependency order</span>
+            <span class="badge-subtle" id="feature-tasks-count">0 Tasks</span>
           </div>
 
           <div class="feature-tasks-container" id="feature-tasks-list">
@@ -375,10 +360,11 @@
         <div class="card-header">
           <div class="card-title-group">
             <span class="card-icon">📋</span>
-            <span class="card-title">My Tasks</span>
+            <span class="card-title">Repository Tasks</span>
             <span class="card-count" id="tasks-count">0</span>
           </div>
           <div class="card-filters" id="task-filter-chips">
+            <select id="issue-scope" aria-label="Issue scope"><option value="all">All repository issues</option><option value="assigned">Assigned to me</option></select>
             <button class="filter-chip active" data-filter="all">All</button>
             <button class="filter-chip" data-filter="in_progress">In Progress</button>
             <button class="filter-chip" data-filter="review">Review</button>
@@ -447,7 +433,7 @@
           <div class="card-title-group">
             <span class="card-icon">🤖</span>
             <span class="card-title">AI Standup Summary</span>
-            <span class="badge-ai">Auto-Synthesized</span>
+            <span class="badge-ai">From loaded tasks and PRs</span>
           </div>
           <div class="card-actions">
             <button class="btn btn-secondary-sm" id="btn-copy-standup" onclick="window.copyStandupToClipboard()">

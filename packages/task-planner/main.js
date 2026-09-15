@@ -1,3 +1,4 @@
+require('../robos-agent-client/work-task/electron').register(require('electron'), 'task-planner');
 'use strict';
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path  = require('path');
@@ -7,9 +8,11 @@ const cp    = require('child_process');
 const https = require('https');
 const { execSync } = require('child_process');
 
+if (!process.argv.some(arg => arg.startsWith('--work-task='))) {
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
+}
 
 const SETTINGS_FILE   = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 const PROJECTS_DIR    = path.join(os.homedir(), '.config', 'robos', 'task-planner', 'projects');
@@ -34,7 +37,7 @@ function listProjectFiles() {
   return fs.readdirSync(PROJECTS_DIR)
     .filter(f => f.endsWith('.json'))
     .map(f => {
-      try { return JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf8')); }
+      try { const project=JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf8'));return require('./lib/project-navigation').navigation({...project,id:project.id||path.basename(f,'.json')}); }
       catch { return null; }
     })
     .filter(Boolean)
@@ -246,7 +249,7 @@ ipcMain.handle('get-server-info', () => {
       type: server.type,
       name: server.name,
       issueTypes: server.issue_types || [],
-      repo: server.type === 'github' ? `${server.gh_org || ''}/${server.gh_repo || ''}` : null,
+      repo: server.type === 'github' ? `${server.gh_org || server.repos?.[0]?.org || ''}/${server.gh_repo || server.repos?.[0]?.repo || ''}` : null,
       jiraUrl: server.type === 'jira' ? server.url : null,
       jiraProject: server.type === 'jira' ? jiraProject : null,
       jiraUsername: server.type === 'jira' ? (server.username || '') : null,
@@ -593,21 +596,10 @@ function syncProjectToKGraph(project) {
       'dcterms:title': project.name,
       'dcterms:description': project.description || '',
       'robos:status': 'active',
-      'robos:techStack': project.techStack || 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL',
-      'robos:hasRepository': project.repos || [
-        'urn:robos:repo:petstore-api',
-        'urn:robos:repo:petstore-web',
-        'urn:robos:repo:petstore-common',
-      ],
+      'robos:techStack': project.techStack || '',
+      'robos:hasRepository': project.repos || [],
       'robos:tracksEpic': (project.tasks || []).filter(t => t.isEpic).map(t => t.ticketKey || `urn:robos:epic:${t.epicName || t.title}`),
-      'robos:features': project.features || [
-        {
-          id: 'feat-platform-core',
-          name: 'Distributed Platform Core & APIs',
-          epicKey: 'PET-EPIC-1',
-          tasks: (project.tasks || []).map(t => t.ticketKey || t.title),
-        },
-      ],
+      'robos:features': project.features || [],
       'robos:updatedAt': new Date().toISOString(),
     };
     if (!Array.isArray(graphData['robos:nodes'])) graphData['robos:nodes'] = [];
@@ -633,42 +625,33 @@ ipcMain.handle('list-projects', () => {
 ipcMain.handle('load-project', (_, id) => {
   try {
     const data = JSON.parse(fs.readFileSync(projectFile(id), 'utf8'));
-    return { ok: true, project: data };
+    return { ok: true, project: {...data,id:data.id||id} };
   } catch (e) { return { ok: false, error: e.message }; }
 });
 
 ipcMain.handle('save-project', (_, project) => {
   try {
-    ensureProjectsDir();
-    const now = Date.now();
-    const existing = (() => {
-      try { return JSON.parse(fs.readFileSync(projectFile(project.id), 'utf8')); } catch { return null; }
-    })();
-    const saved = {
-      id: project.id,
-      name: project.name || 'Untitled Project',
-      description: project.description || '',
-      techStack: project.techStack || 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL',
-      kgraphUri: `urn:robos:project:${project.id}`,
-      serverId: project.serverId || null,
-      features: project.features || [
-        {
-          id: 'feat-platform-core',
-          name: 'Distributed Platform Core & APIs',
-          epicKey: 'PET-EPIC-1',
-          tasks: (project.tasks || []).map(t => t.ticketKey || t.title),
-        }
-      ],
-      tasks: project.tasks || [],
-      prompt: project.prompt || '',
-      parentEpicKey: project.parentEpicKey || null,
-      createdAt: existing ? existing.createdAt : now,
-      updatedAt: now,
-    };
-    fs.writeFileSync(projectFile(project.id), JSON.stringify(saved, null, 2), 'utf8');
+    const saved=require('./lib/project-store').saveProject(PROJECTS_DIR,project);
     syncProjectToKGraph(saved);
     return { ok: true, project: saved };
   } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('search-import-tasks', async (_, input) => {
+  try{return {ok:true,...await require('./lib/task-import').search(getActiveServer(readSettings()),input,listProjectFiles())};}catch(e){return {ok:false,error:e.message};}
+});
+ipcMain.handle('import-tasks', async (_, input) => {
+  try{return {ok:true,...await require('./lib/task-import').importIssues(getActiveServer(readSettings()),input,listProjectFiles(),PROJECTS_DIR)};}catch(e){return {ok:false,error:e.message};}
+});
+
+ipcMain.handle('set-project-product', (_, {id,name}) => {
+  try {
+    const project=JSON.parse(fs.readFileSync(projectFile(id),'utf8'));
+    project.product=name.trim()?{id:'product:'+name.trim().toLowerCase(),name:name.trim()}:null;
+    project.updatedAt=Date.now();
+    fs.writeFileSync(projectFile(id),JSON.stringify(project,null,2),'utf8');
+    return {ok:true};
+  } catch(e){return {ok:false,error:e.message};}
 });
 
 ipcMain.handle('delete-project', (_, id) => {

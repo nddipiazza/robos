@@ -3,8 +3,12 @@
 let currentProof = null;
 let selectedChapterIdx = 0;
 
-async function openReviewModal(taskId = 'TASK-201') {
+async function openReviewModal(taskId) {
   currentProof = await window.robos.getTaskProof(taskId);
+  if (!currentProof || currentProof.ok === false) {
+    window.alert(currentProof?.error || 'No proof available for this task.');
+    return;
+  }
   selectedChapterIdx = 0;
 
   const modalEl = document.getElementById('review-modal');

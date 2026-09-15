@@ -7,6 +7,8 @@
     "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ."
   },
   "dependencies": {
-    "electron": "^30.0.0"
+    "dompurify": "^3.4.15",
+    "electron": "^30.0.0",
+    "marked": "^18.0.3"
   }
 }

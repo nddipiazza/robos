@@ -6,6 +6,7 @@
   <title>RobOS Task Planner</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="project-plan.css"/>
+  <link rel="stylesheet" href="planner-ux.css"/>
   <script src="project-plan-view.js"></script>
   <script src="workspace-plans.js" defer></script>
 </head>
@@ -45,12 +46,14 @@
           </button>
         </div>
         <div id="project-new-form" class="project-new-form" style="display:none">
-          <textarea id="project-name-input" class="project-name-input" placeholder="Project name & title…" rows="2" maxlength="160"></textarea>
+          <label for="project-name-input">New project</label><p class="project-create-hint">A product or repository, such as Buildbarn Config Editor. Add features and tasks inside it.</p>
+          <textarea id="project-name-input" class="project-name-input" placeholder="e.g. Buildbarn Config Editor" rows="1" maxlength="160"></textarea>
           <div class="project-new-actions">
-            <button id="btn-project-confirm" class="btn-icon btn-icon-ok" title="Create">✓</button>
-            <button id="btn-project-cancel" class="btn-icon" title="Cancel">✕</button>
+            <button id="btn-project-confirm" class="btn-icon btn-icon-ok" title="Create project">Create project</button>
+            <button id="btn-project-cancel" class="btn-icon" title="Cancel">Cancel</button>
           </div>
         </div>
+        <p id="project-create-error" role="alert"></p>
         <div id="project-list" class="project-list"></div>
       </aside>
 
@@ -290,6 +293,13 @@
   </div>
 
   <script src="../../robos-ui/robos-ui.js"></script>
+  <script src="../node_modules/marked/lib/marked.umd.js"></script>
+  <script src="../node_modules/dompurify/dist/purify.min.js"></script>
+  <script src="project-tree.js"></script>
+  <script src="task-import.js"></script>
+  <script src="project-create.js"></script>
   <script src="app.js"></script>
+<script src="work-task-bridge.js"></script>
+<script src="planner-ux.js"></script>
 </body>
 </html>

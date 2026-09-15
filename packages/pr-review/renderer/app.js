@@ -401,7 +401,7 @@ async function submitReview(action) {
   if (result.ok) {
     showAIActionOutput(result.message || `Review submitted: ${action}`);
     if (result.merged) {
-      document.getElementById("detail-meta").insertAdjacentHTML("beforeend", '<span class="review-badge review-approved">✓ MERGED &amp; KGRAPH SYNCED</span>');
+      document.getElementById("detail-meta").insertAdjacentHTML("beforeend", '<span class="review-badge review-approved">✓ MERGED</span>');
     }
   } else {
     showAIActionOutput(`Error: ${result.error}`);
@@ -627,6 +627,7 @@ window.openPRReviewTheater = async function(pr) {
   renderTheaterIDEBridge();
   renderTheaterVideo();
   renderTheaterSignOff();
+  if(res.real)window.prepareRealTheater?.();
 
   // Reset to stage 1 and video mode
   window.setProofCanvasMode('video');
@@ -716,7 +717,7 @@ function renderTheaterELearning() {
         <strong>${esc(course['dcterms:title'])}</strong>
         <span style="color:var(--accent);">${esc(course['robos:estimatedDuration'] || '15 mins')}</span>
       </div>
-      <div>${esc(course['dcterms:description'])}</div>
+      <div class="review-markdown">${renderReviewMarkdown(course['dcterms:description'])}</div>
       <div style="margin-top:6px; font-size:11px; color:var(--muted);">
         Domain Topic: <strong>${esc(course['robos:topic'] || 'Architecture & Security')}</strong> &middot; Difficulty: <strong>${esc(course['robos:difficulty'] || 'Intermediate')}</strong>
       </div>
@@ -730,13 +731,13 @@ function renderTheaterELearning() {
     modulesListEl.innerHTML = modules.map(m => `
       <div class="module-item">
         <div class="module-title">${esc(m['dcterms:title'])}</div>
-        <div class="module-desc">${esc(m['dcterms:description'])}</div>
+        <div class="module-desc review-markdown">${renderReviewMarkdown(m['dcterms:description'])}</div>
         ${(m['robos:lessons'] && m['robos:lessons'].length) ? `
           <div class="lesson-list">
             ${m['robos:lessons'].map(l => `
               <div class="lesson-item">
                 <strong>${esc(l['dcterms:title'])}</strong>
-                <span>${esc(l['robos:content'])}</span>
+                <div class="review-markdown">${renderReviewMarkdown(l['robos:content'])}</div>
               </div>
             `).join('')}
           </div>
@@ -754,7 +755,7 @@ function renderTheaterELearning() {
         <div class="quiz-options">
           ${q.options.map((opt, optIdx) => `
             <label class="quiz-option-label">
-              <input type="radio" name="q-${q.id}" value="${optIdx}" ${optIdx === 0 ? 'checked' : ''}>
+              <input type="radio" name="q-${q.id}" value="${optIdx}" ${!theaterContext.real && optIdx === 0 ? 'checked' : ''}>
               <span>${esc(opt)}</span>
             </label>
           `).join('')}
@@ -800,6 +801,8 @@ window.submitTheaterQuiz = async function() {
   }
 
   if (res.passed) {
+    if(res.fileDiffs){theaterContext.fileDiffs=res.fileDiffs;renderTheaterDiffViewer();}
+    theaterContext.quizScore=res.score;
     theaterContext.validationGates.elearningPassed = true;
 
     // Remove anti-rubber-stamp locks
@@ -842,7 +845,8 @@ function renderTheaterDocs() {
   // Markdown Doc
   const docMdEl = document.getElementById('theater-doc-markdown');
   if (docMdEl) {
-    docMdEl.innerHTML = escMultiline(markdown);
+    docMdEl.classList.add('review-markdown');
+    docMdEl.innerHTML = renderReviewMarkdown(markdown);
   }
 
   // Mermaid Code
@@ -1248,6 +1252,7 @@ window.runLiveDesktopSession = async function() {
 
 function renderTheaterSignOff() {
   if (!theaterContext || !theaterContext.validationGates) return;
+  if(theaterContext.real && window.renderRealSignOff)return window.renderRealSignOff();
   const gates = theaterContext.validationGates;
 
   // Anti-Rubber-Stamp Lock Banner toggle in Stage 6
@@ -1321,6 +1326,7 @@ window.submitTheaterReviewAction = async function() {
     number: selectedPR.number,
     action,
     body: notes,
+    reviewId:theaterContext.reviewId,
     kgraphBranch: kgraphDetail ? kgraphDetail.branch : 'kgraph/PET-105-rabies-verification',
     gates: theaterContext.validationGates
   });
@@ -1330,7 +1336,7 @@ window.submitTheaterReviewAction = async function() {
       feedbackEl.className = 'quiz-feedback pass';
       feedbackEl.innerHTML = `<strong>${esc(res.message)}</strong>`;
       if (res.merged) {
-        document.getElementById('detail-meta')?.insertAdjacentHTML('beforeend', '<span class="review-badge review-approved">✓ MERGED &amp; KGRAPH SYNCED</span>');
+        document.getElementById('detail-meta')?.insertAdjacentHTML('beforeend', '<span class="review-badge review-approved">✓ MERGED</span>');
       }
     } else {
       feedbackEl.className = 'quiz-feedback fail';

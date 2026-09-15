@@ -5,9 +5,12 @@ const fs   = require('fs');
 const os   = require('os');
 const cp   = require('child_process');
 
+require('../robos-agent-client/work-task/electron').register(require('electron'), 'task-implementer');
+if (process.env.ROBOS_VM === '1') {
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
+}
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
@@ -38,6 +41,8 @@ function getActiveServer(settings) {
   return servers.find(ts => ts.id === activeId) || servers[0];
 }
 
+function serverRepo(server) { const r=server.repos?.[0]; return typeof r==='string'?r:r?`${r.org}/${r.repo}`:`${server.gh_org}/${server.gh_repo}`; }
+
 // ── Active agent processes ────────────────────────────────────────────────────
 const activeAgents = new Map(); // taskKey → child process
 
@@ -55,7 +60,7 @@ function createWindow() {
     title: 'RobOS Task Implementer',
     autoHideMenuBar: true,
   });
-  mainWindow.loadFile('renderer/index.html');
+  mainWindow.loadFile(path.join(__dirname,'renderer/index.html'));
   if (_debugServer) {
     _debugServer.registerSnapshotIPC && _debugServer.registerSnapshotIPC(mainWindow);
     _debugServer.startDebugServer(mainWindow, 19135, 'task-implementer');
@@ -90,7 +95,7 @@ ipcMain.handle('get-server-info', () => {
       id: server.id,
       type: server.type,
       name: server.name,
-      repo: server.type === 'github' ? `${server.gh_org || ''}/${server.gh_repo || ''}` : null,
+      repo: server.type === 'github' ? serverRepo(server) : null,
       jiraUrl: server.type === 'jira' ? server.url : null,
       jiraProject: server.type === 'jira' ? server.jira_project : null,
     },
@@ -103,7 +108,7 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
 
   if (server.type === 'github') {
     try {
-      const repo = `${server.gh_org}/${server.gh_repo}`;
+      const repo = serverRepo(server);
       let args = ['issue', 'list', '--repo', repo,
         '--limit', '50', '--state', filter?.state || 'open',
         '--json', 'number,title,state,labels,assignees,createdAt,updatedAt,body'];
@@ -208,65 +213,7 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
 });
 
 ipcMain.handle('start-agent', (event, { taskKey, task, extraContext }) => {
-  if (activeAgents.has(taskKey)) {
-    return { ok: false, error: 'Agent already running for this task' };
-  }
-
-  const prompt = buildAgentPrompt(task, extraContext);
-
-  // Claude Code CLI: stream-json outputs one JSON object per line.
-  // Each line may be { type:'text', text:'...' } or { type:'result', ... }
-  const child = cp.spawn('claude', [
-    '-p', prompt,
-    '--output-format', 'stream-json',
-    '--dangerously-skip-permissions',
-  ], { encoding: 'utf8', env: { ...process.env, DISPLAY: ':0' } });
-
-  activeAgents.set(taskKey, child);
-
-  let stdoutBuf = '';
-  child.stdout.on('data', d => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    stdoutBuf += d.toString();
-    const lines = stdoutBuf.split('\n');
-    stdoutBuf = lines.pop(); // keep partial last line
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      let text = line;
-      try {
-        const obj = JSON.parse(line);
-        // stream-json: content delta events have type 'assistant' with content array
-        if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
-          text = obj.message.content
-            .filter(b => b.type === 'text')
-            .map(b => b.text)
-            .join('');
-        } else if (obj.type === 'text') {
-          text = obj.text;
-        } else if (obj.type === 'result') {
-          text = obj.result || '';
-        } else {
-          continue; // skip tool_use, tool_result, etc.
-        }
-      } catch {}
-      if (text) {
-        mainWindow.webContents.send('agent-stream', { taskKey, text, stream: 'stdout' });
-      }
-    }
-  });
-  child.stderr.on('data', d => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('agent-stream', { taskKey, text: d.toString(), stream: 'stderr' });
-    }
-  });
-  child.on('close', code => {
-    activeAgents.delete(taskKey);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('agent-done', { taskKey, code });
-    }
-  });
-
-  return { ok: true };
+  return {ok:false,error:'Use Work ticket in Dev Central to launch a persistent RobOS Agent session.'};
 });
 
 ipcMain.handle('stop-agent', (_, { taskKey }) => {

@@ -101,7 +101,7 @@ function renderTaskList() {
     el.addEventListener('click', () => {
       const key = el.dataset.key;
       const task = allTasks.find(t => t.key === key);
-      if (task) selectTask(task);
+      if (task) { if(window.selectWorkTask)window.selectWorkTask(task);else selectTask(task); }
     });
   });
 }
@@ -233,7 +233,7 @@ window._demoInjectTasks = function(tasks) {
 
 window._demoSelectTask = function(key) {
   const task = allTasks.find(t => t.key === key);
-  if (task) selectTask(task);
+  if (task) { if(window.selectWorkTask)window.selectWorkTask(task);else selectTask(task); }
 };
 
 window._demoAppendOutput = function(text, isStderr) {

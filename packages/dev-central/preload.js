@@ -18,7 +18,7 @@ const notificationApi = {
 
 contextBridge.exposeInMainWorld('robos', {
   readSettings:           ()       => ipcRenderer.invoke('dc-read-settings'),
-  getMyIssues:            ()       => ipcRenderer.invoke('dc-get-my-issues'),
+  getMyIssues:            (scope)  => ipcRenderer.invoke('dc-get-my-issues', scope),
   getMyPRs:               ()       => ipcRenderer.invoke('dc-get-my-prs'),
   getReviewRequests:      ()       => ipcRenderer.invoke('dc-get-review-requests'),
   getRecentActivity:      ()       => ipcRenderer.invoke('dc-get-recent-activity'),
@@ -26,10 +26,12 @@ contextBridge.exposeInMainWorld('robos', {
   getTaskProof:           (id)     => ipcRenderer.invoke('dc-review-get-task-proof', id),
   signOffAndMerge:        (id)     => ipcRenderer.invoke('dc-review-signoff-merge', id),
 
+  openWorkItem: (url, action) => ipcRenderer.invoke('dc-open-work-item', {url, action}),
+  getWorkTaskState: () => ipcRenderer.invoke('dc-work-task-state'),
   // Feature In-Progress API
   getFeatures:            ()       => ipcRenderer.invoke('dc-get-features'),
   setActiveFeature:       (id)     => ipcRenderer.invoke('dc-set-active-feature', id),
-  updateFeatureStatus:    (id, st) => ipcRenderer.invoke('dc-update-feature-status', id, st),
+  updateFeatureStatus:    (id, st) => ipcRenderer.invoke('dc-update-feature-status', { featureId: id, status: st }),
   getTaskLifetimeHistory: (tid)    => ipcRenderer.invoke('dc-get-task-lifetime-history', tid),
 
   // Background Sync & Traffic Simulator

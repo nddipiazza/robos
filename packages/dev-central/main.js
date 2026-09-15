@@ -15,6 +15,10 @@ const FEATURE_FILE  = path.join(CONFIG_DIR, 'dev-central-feature.json');
 
 app.setPath('userData', path.join(CONFIG_DIR, 'electron', 'dev-central'));
 
+const { fetchList } = require('./live-data');
+const { combineFeatures, assignFeature } = require('./feature-workflow');
+const workTask = require('../robos-agent-client/work-task/core');
+const isDemoMode = process.env.ROBOS_DEMO_DATA === '1';
 const isTestMode = !!(process.env.ROBOS_TEST || process.env.ROBOS_DEMO_SHOW);
 if (!isTestMode) {
   const lock = app.requestSingleInstanceLock();
@@ -107,8 +111,9 @@ function sendDesktopToast(title, body, category = 'task', tier = 'info') {
   const prefs = loadPrefs();
   if (prefs.dnd && tier !== 'critical') return;
 
-  // 1. Notify-send
-  try {
+  const sockPath = process.env.ROBOS_DM_SOCKET || (process.env.XDG_RUNTIME_DIR ? path.join(process.env.XDG_RUNTIME_DIR, 'robos-dm.sock') : `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`);
+  // Use one desktop transport.
+  if(!fs.existsSync(sockPath))try {
     const iconName = tier === 'critical' ? 'dialog-error' : tier === 'warning' ? 'dialog-warning' : 'dialog-information';
     cp.spawn('notify-send', ['-a', 'Dev Central', '-t', '6000', '-i', iconName, title, body], { stdio: 'ignore' }).unref();
   } catch {}
@@ -294,10 +299,10 @@ function loadFeatures() {
   try {
     if (fs.existsSync(FEATURE_FILE)) {
       const data = JSON.parse(fs.readFileSync(FEATURE_FILE, 'utf8'));
-      if (Array.isArray(data) && data.length) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch {}
-  return getSeedFeatures();
+  return isDemoMode ? getSeedFeatures() : [];
 }
 
 function saveFeatures(features) {
@@ -641,61 +646,39 @@ let previousPRSnapshot   = new Map();
 let previousTaskSnapshot = new Map();
 let backgroundSyncTimer  = null;
 
-async function fetchLatestData() {
-  const settings = readSettings();
-  const ts = activeTS(settings);
+let issueScope = 'all';
+async function readList(kind) {
+  if (isDemoMode) return { ok: true, data: ({ issues: getSampleIssues, prs: getSamplePRs, reviews: getSampleReviewRequests })[kind]() };
+  return fetchList(activeTS(readSettings()), kind, undefined, issueScope);
+}
 
-  let issues = getSampleIssues();
-  let prs = getSamplePRs();
-  let reviews = getSampleReviewRequests();
-  let activity = getSampleActivity();
-
-  if (ts.repos && ts.repos.length) {
-    const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
-    try {
-      const r = cp.spawnSync('gh', [
-        'issue', 'list', '--repo', repo, '--assignee', '@me',
-        '--json', 'number,title,labels,state,updatedAt,url',
-        '--limit', '50',
-      ], { encoding: 'utf8', timeout: 15000 });
-      if (r.status === 0) {
-        const parsed = JSON.parse(r.stdout);
-        if (parsed && parsed.length) issues = parsed;
-      }
-    } catch {}
-
-    try {
-      const r = cp.spawnSync('gh', [
-        'pr', 'list', '--repo', repo, '--author', '@me',
-        '--json', 'number,title,state,url,headRefName,statusCheckRollup,reviewDecision,updatedAt,additions,deletions',
-        '--limit', '30',
-      ], { encoding: 'utf8', timeout: 15000 });
-      if (r.status === 0) {
-        const parsed = JSON.parse(r.stdout);
-        if (parsed && parsed.length) prs = parsed;
-      }
-    } catch {}
-
-    try {
-      const r = cp.spawnSync('gh', [
-        'pr', 'list', '--repo', repo, '--search', 'review-requested:@me',
-        '--json', 'number,title,state,url,author,updatedAt',
-        '--limit', '30',
-      ], { encoding: 'utf8', timeout: 15000 });
-      if (r.status === 0) {
-        const parsed = JSON.parse(r.stdout);
-        if (parsed && parsed.length) reviews = parsed;
-      }
-    } catch {}
-  }
-
+function readActivity() {
   const eventsFile = path.join(CONFIG_DIR, 'journal-events.json');
   try {
     const events = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
-    if (events && events.length) activity = events.slice(0, 20);
-  } catch {}
+    if (Array.isArray(events)) return { ok: true, data: events.slice(0, 20) };
+    return { ok: false, data: [], error: 'Invalid activity log' };
+  } catch (e) {
+    if (e.code !== 'ENOENT') return { ok: false, data: [], error: 'Could not read activity log' };
+  }
+  return { ok: true, data: isDemoMode ? getSampleActivity() : [] };
+}
 
-  return { issues, prs, reviews, activity, features: loadFeatures() };
+async function featureChoices() {
+  const saved = loadFeatures();
+  if (isDemoMode) return { ok: true, data: saved, activeFeature: getActiveFeature() };
+  try {
+    const data = await require('./task-board').fetchBoard(activeTS(readSettings()));
+    return { ok:true, data, activeFeature:data.find(f=>f.assigned) || null };
+  } catch(error) { return {ok:false, error:error.message, data:[], activeFeature:null}; }
+}
+
+async function fetchLatestData() {
+  const [issues, prs, reviews] = await Promise.all(['issues', 'prs', 'reviews'].map(readList));
+  const activity = readActivity();
+  return { issues: issues.data, prs: prs.data, reviews: reviews.data, activity: activity.data,
+    errors: Object.fromEntries(Object.entries({ issues, prs, reviews, activity }).filter(([, r]) => !r.ok).map(([key, r]) => [key, r.error])),
+    features: (await featureChoices()).data };
 }
 
 function checkTrafficAndNotify(prs, issues) {
@@ -703,7 +686,7 @@ function checkTrafficAndNotify(prs, issues) {
 
   // 1. Check PR changes
   for (const pr of prs) {
-    const prev = previousPRSnapshot.get(pr.number);
+    const prev = previousPRSnapshot.get(pr.url || pr.number);
     if (prev) {
       // Check CI Failure transition
       const curCI = (pr.statusCheckRollup || [])[0]?.conclusion;
@@ -715,6 +698,7 @@ function checkTrafficAndNotify(prs, issues) {
           category: 'ci_cd',
           tier: 'critical',
           action: { type: 'open-url', url: pr.url },
+          revision: pr.updatedAt || JSON.stringify([pr.reviewDecision,pr.statusCheckRollup]),
         });
         trafficDetected = true;
       }
@@ -727,6 +711,7 @@ function checkTrafficAndNotify(prs, issues) {
           category: 'pr_review',
           tier: 'info',
           action: { type: 'open-url', url: pr.url },
+          revision: pr.updatedAt || JSON.stringify([pr.reviewDecision,pr.statusCheckRollup]),
         });
         trafficDetected = true;
       }
@@ -739,47 +724,52 @@ function checkTrafficAndNotify(prs, issues) {
           category: 'pr_review',
           tier: 'warning',
           action: { type: 'open-url', url: pr.url },
+          revision: pr.updatedAt || JSON.stringify([pr.reviewDecision,pr.statusCheckRollup]),
         });
         trafficDetected = true;
       }
 
       // Check Comment traffic (updatedAt changed while state open)
-      if (pr.updatedAt && prev.updatedAt && pr.updatedAt !== prev.updatedAt && pr.state === 'OPEN') {
+      if (pr.updatedAt && prev.updatedAt && Date.parse(pr.updatedAt) > Date.parse(prev.updatedAt) && pr.state === 'OPEN') {
         dispatchTrafficNotification({
-          title: `New Comment on PR #${pr.number}`,
-          body: `New discussion traffic or comment posted on "${pr.title}".`,
+          title: `PR Updated #${pr.number}`,
+          body: `Changes recorded on "${pr.title}".`,
           category: 'pr_review',
           tier: 'info',
           action: { type: 'open-url', url: pr.url },
+          revision: pr.updatedAt || JSON.stringify([pr.reviewDecision,pr.statusCheckRollup]),
         });
         trafficDetected = true;
       }
     }
-    previousPRSnapshot.set(pr.number, pr);
+    previousPRSnapshot.set(pr.url || pr.number, pr);
   }
 
   // 2. Check Issue / Task changes
   for (const issue of issues) {
-    const prev = previousTaskSnapshot.get(issue.number);
+    const prev = previousTaskSnapshot.get(issue.url || issue.number);
     if (prev) {
-      if (issue.updatedAt && prev.updatedAt && issue.updatedAt !== prev.updatedAt) {
+      if (issue.updatedAt && prev.updatedAt && Date.parse(issue.updatedAt) > Date.parse(prev.updatedAt)) {
         dispatchTrafficNotification({
           title: `Task #${issue.number} Updated`,
-          body: `Updates recorded on assigned task "${issue.title}".`,
+          body: `Updates recorded on task "${issue.title}".`,
           category: 'task',
           tier: 'info',
           action: { type: 'open-url', url: issue.url },
+          revision: issue.updatedAt,
         });
         trafficDetected = true;
       }
     }
-    previousTaskSnapshot.set(issue.number, issue);
+    previousTaskSnapshot.set(issue.url || issue.number, issue);
   }
 
   return trafficDetected;
 }
 
-function dispatchTrafficNotification({ title, body, category = 'system', tier = 'info', action = null }) {
+function dispatchTrafficNotification({ title, body, category = 'system', tier = 'info', action = null, revision = null }) {
+  const event={title,body,category,tier,action,revision,source:'dev-central-monitor'};
+  if(!require('../robos-lib/notification-gate').claimNotification(path.join(CONFIG_DIR,'notification-monitor-ledger.json'),event))return false;
   const notifs = loadNotifications();
   const entry = {
     id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -809,7 +799,12 @@ function dispatchTrafficNotification({ title, body, category = 'system', tier = 
   }
 }
 
-async function triggerSync() {
+let syncInFlight=null;
+function triggerSync(){
+  if(!syncInFlight)syncInFlight=performSync().finally(()=>{syncInFlight=null;});
+  return syncInFlight;
+}
+async function performSync() {
   const data = await fetchLatestData();
   checkTrafficAndNotify(data.prs, data.issues);
 
@@ -825,11 +820,8 @@ async function triggerSync() {
 }
 
 function startBackgroundMonitor() {
-  // Prime snapshot
-  fetchLatestData().then(data => {
-    data.prs.forEach(pr => previousPRSnapshot.set(pr.number, pr));
-    data.issues.forEach(i => previousTaskSnapshot.set(i.number, i));
-  });
+  // First sync establishes a baseline; all later callers share the same request.
+  triggerSync().catch(error=>console.error('Background sync:',error.message));
 
   // Watch notifications file for changes made externally (e.g. by robos-notify CLI)
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
@@ -844,97 +836,25 @@ function startBackgroundMonitor() {
   } catch {}
 
   // Periodic polling every 30s
-  backgroundSyncTimer = setInterval(triggerSync, 30000);
+  backgroundSyncTimer = setInterval(()=>triggerSync().catch(error=>console.error('Background sync:',error.message)), 30000);
 }
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('dc-read-settings', () => readSettings());
 
-ipcMain.handle('dc-get-my-issues', async () => {
-  const settings = readSettings();
-  const ts = activeTS(settings);
-  if (!ts.repos || !ts.repos.length) {
-    if (isTestMode && settings.name !== 'no-task-servers') {
-      return { ok: true, data: getSampleIssues() };
-    }
-    return { ok: false, error: 'No task server configured' };
-  }
-  const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
-  try {
-    const r = cp.spawnSync('gh', [
-      'issue', 'list', '--repo', repo, '--assignee', '@me',
-      '--json', 'number,title,labels,state,updatedAt,url',
-      '--limit', '50',
-    ], { encoding: 'utf8', timeout: 15000 });
-    if (r.status === 0) {
-      const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
-    }
-  } catch (e) {}
-  return { ok: true, data: getSampleIssues() };
+ipcMain.handle('dc-get-my-issues', (_, scope) => {
+  if (scope === 'all' || scope === 'assigned') issueScope = scope;
+  return readList('issues');
 });
-
-ipcMain.handle('dc-get-my-prs', async () => {
-  const settings = readSettings();
-  const ts = activeTS(settings);
-  if (!ts.repos || !ts.repos.length) {
-    if (isTestMode && settings.name !== 'no-task-servers') {
-      return { ok: true, data: getSamplePRs() };
-    }
-    return { ok: false, error: 'No task server configured' };
-  }
-  const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
-  try {
-    const r = cp.spawnSync('gh', [
-      'pr', 'list', '--repo', repo, '--author', '@me',
-      '--json', 'number,title,state,url,headRefName,statusCheckRollup,reviewDecision,updatedAt,additions,deletions',
-      '--limit', '30',
-    ], { encoding: 'utf8', timeout: 15000 });
-    if (r.status === 0) {
-      const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
-    }
-  } catch (e) {}
-  return { ok: true, data: getSamplePRs() };
-});
-
-ipcMain.handle('dc-get-review-requests', async () => {
-  const settings = readSettings();
-  const ts = activeTS(settings);
-  if (!ts.repos || !ts.repos.length) {
-    if (isTestMode && settings.name !== 'no-task-servers') {
-      return { ok: true, data: getSampleReviewRequests() };
-    }
-    return { ok: false, error: 'No task server configured' };
-  }
-  const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
-  try {
-    const r = cp.spawnSync('gh', [
-      'pr', 'list', '--repo', repo, '--search', 'review-requested:@me',
-      '--json', 'number,title,state,url,author,updatedAt',
-      '--limit', '30',
-    ], { encoding: 'utf8', timeout: 15000 });
-    if (r.status === 0) {
-      const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
-    }
-  } catch (e) {}
-  return { ok: true, data: getSampleReviewRequests() };
-});
-
-ipcMain.handle('dc-get-recent-activity', async () => {
-  const eventsFile = path.join(CONFIG_DIR, 'journal-events.json');
-  try {
-    const events = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
-    if (events && events.length) return { ok: true, data: events.slice(0, 20) };
-  } catch {}
-  return { ok: true, data: getSampleActivity() };
-});
+ipcMain.handle('dc-get-my-prs', () => readList('prs'));
+ipcMain.handle('dc-get-review-requests', () => readList('reviews'));
+ipcMain.handle('dc-get-recent-activity', () => readActivity());
 
 ipcMain.handle('dc-open-url', (_, url) => shell.openExternal(url));
 
 ipcMain.handle('dc-review-get-task-proof', async (_, taskId = 'TASK-201') => {
+  if (!isDemoMode) return { ok: false, error: 'This demonstration action is unavailable. Open the real pull request to review or merge.' };
   return {
     taskId,
     title: 'TASK-201: Multi-Step Dynamic Form Submission',
@@ -968,6 +888,7 @@ ipcMain.handle('dc-review-get-task-proof', async (_, taskId = 'TASK-201') => {
 });
 
 ipcMain.handle('dc-review-signoff-merge', async (_, taskId = 'TASK-201') => {
+  if (!isDemoMode) return { ok: false, error: 'This demonstration action is unavailable. Open the real pull request to review or merge.' };
   return {
     ok: true,
     taskId,
@@ -983,18 +904,46 @@ ipcMain.handle('dc-review-signoff-merge', async (_, taskId = 'TASK-201') => {
 
 // ── Feature In-Progress & Lifetime History Handlers ──────────────────────────
 
-ipcMain.handle('dc-get-features', () => {
-  return { ok: true, data: loadFeatures(), activeFeature: getActiveFeature() };
+ipcMain.handle('dc-get-features', () => featureChoices());
+ipcMain.handle('dc-work-task-state', () => { const f = getActiveFeature(); return f?.issueUrl ? workTask.read(f.issueUrl) : null; });
+
+ipcMain.handle('dc-open-work-item', async (_, {url, action}) => {
+  try {
+    const board = await require('./task-board').fetchBoard(activeTS(readSettings()));
+    const item = board.flatMap(f=>[f,...f.tasks]).find(t=>t.id===url);
+    if(!item) throw Error('Ticket is not in the configured task server.');
+    if(action==='work' && !item.workable) throw Error('Resolve dependencies before working this ticket.');
+    const live=await workTask.inspect(url);
+    const plannerProjectId=workTask.plannerProject(url,live.issue);
+    const parent=board.find(f=>f.tasks.some(t=>t.id===url));
+    const previous=workTask.read(url);
+    workTask.save(url,{...live,plannerProjectId,workspace:previous.workspace || (parent && workTask.read(parent.id).workspace),autoStart:action==='work' && !previous.workerPid && !live.prs.length && (!previous.plan || !!previous.approvedPlanHash)});
+    await workTask.launchApp(action==='work'?'task-implementer':'task-planner',url,process.execPath);
+    return {ok:true};
+  } catch(error) { return {ok:false,error:error.message}; }
 });
 
-ipcMain.handle('dc-set-active-feature', (_, featureId) => {
-  const features = setActiveFeatureId(featureId);
-  const active = getActiveFeature();
-  updateTrayAndIcon();
-  if (win && win.webContents) {
-    win.webContents.send('dc-data-updated', { features, activeFeature: active });
-  }
-  return { ok: true, features, activeFeature: active };
+let assigningFeature = false;
+ipcMain.handle('dc-set-active-feature', async (_, featureId) => {
+  if (assigningFeature) return { ok: false, error: 'An assignment is already in progress.' };
+  assigningFeature = true;
+  try {
+    let result;
+    if (isDemoMode) {
+      result = { features: setActiveFeatureId(featureId), activeFeature: getActiveFeature() };
+    } else {
+      result = await assignFeature(featureId, activeTS(readSettings()), loadFeatures());
+      try { saveFeatures(result.features); }
+      catch (error) { return { ok: false, error: `GitHub assignment succeeded, but saving the current feature failed: ${error.message}` }; }
+    }
+    updateTrayAndIcon();
+    const choices = await featureChoices();
+    const dispatch = { message: 'Assignment saved. Select a workable task below.' };
+    const data = { ...result, features: choices.data, activeFeature:choices.activeFeature, dispatch };
+    if (win && win.webContents) win.webContents.send('dc-data-updated', data);
+    return { ok: true, ...data };
+  } catch (error) { return { ok: false, error: error.message }; }
+  finally { assigningFeature = false; }
 });
 
 ipcMain.handle('dc-update-feature-status', (_, { featureId, status }) => {
@@ -1078,6 +1027,7 @@ ipcMain.handle('open-app-context', (_, action) => {
 ipcMain.handle('dc-sync-now', async () => triggerSync());
 
 ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
+  if (!isDemoMode) return { ok: false, error: 'This demonstration action is unavailable. Open the real pull request to review or merge.' };
   const { type = 'pr_comment', prNumber = 84, commentText = 'Review feedback submitted on AST verification.', status = 'fail' } = payload;
 
   if (type === 'ci_failed') {
