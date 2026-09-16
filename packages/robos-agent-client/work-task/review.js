@@ -4,7 +4,8 @@ function prIdentity(url){const m=/^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pu
 async function context(url){
   prIdentity(url);
   const pr=await gh(['pr','view',url,'--json','number,title,body,url,state,isDraft,headRefOid,headRefName,baseRefName,author,files,statusCheckRollup']);
-  const diff=await command('gh',['pr','diff',url]);
+  // Read diff as data, stripping terminal control codes before display or AI input.
+  const diff=require('node:util').stripVTControlCharacters(await command('gh',['pr','diff',url,'--allow-escape-sequences']));
   const current=await gh(['pr','view',url,'--json','headRefOid']);
   if(current.headRefOid!==pr.headRefOid)throw Error('The PR changed while loading. Reload its review.');
   const file=pr.files?.[0]?.path||'(no changed files)';

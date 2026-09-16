@@ -67,7 +67,11 @@ async function resumeSession() {
     const btn=document.createElement('button');btn.id='session-planner';btn.className='btn';btn.textContent='Review plan in Task Planner';btn.onclick=()=>sessionCall('open-planner');document.getElementById('btn-start-agent').parentElement.append(btn);
     const review=document.createElement('button');review.id='session-review';review.className='btn';review.textContent='Open PR Review Theater';review.onclick=()=>sessionCall('route');btn.parentElement.append(review);
   }
-  document.getElementById('session-review').hidden=true;
+  const reviewButton=document.getElementById('session-review');reviewButton.hidden=!state.prs?.length;
+  let handoff=document.getElementById('session-review-handoff');if(!handoff){handoff=document.createElement('section');handoff.id='session-review-handoff';handoff.setAttribute('role','status');handoff.style.cssText='margin:12px 20px;padding:14px;border:1px solid #3b596d;border-radius:6px;display:flex;align-items:center;gap:16px;flex-wrap:wrap';document.querySelector('.workspace-header').after(handoff);}
+  handoff.hidden=!state.prs?.length;handoff.style.display=state.prs?.length?'flex':'none';
+  if(state.prs?.length){const message=document.createElement('span');message.style.flex='1';message.textContent='Implementation finished. '+state.prs.length+' PR'+(state.prs.length===1?' is':'s are')+' ready for human review in PR Review Theater. Reopen it here at any time.';handoff.replaceChildren(message,reviewButton);}
+
   document.getElementById('session-planner').textContent=state.plan?'Review plan in Task Planner':'Create plan in Task Planner';
   let blocker=document.getElementById('session-plan-blocker');if(!blocker){blocker=document.createElement('p');blocker.id='session-plan-blocker';blocker.setAttribute('role','status');document.querySelector('.workspace-header').after(blocker);}
   blocker.hidden=!!state.planReady||!!state.prs?.length;blocker.textContent=state.planBlocker||'';

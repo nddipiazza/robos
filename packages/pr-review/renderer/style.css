@@ -2102,3 +2102,9 @@ header h1 { font-size: 15px; font-weight: 600; }
 .review-policy-settings summary { cursor: pointer; }
 .review-policy-settings label { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
 .review-policy-settings p { color: #8b949e; font-size: 12px; }
+
+/* Readable teaching content, with comfortable line lengths. */
+#theater-course-brief .review-markdown{font-size:14px;line-height:1.75;max-width:100ch;margin:16px auto;}
+#theater-course-brief details{margin-top:24px;border-top:1px solid #344354;padding-top:16px;}
+#theater-course-brief summary{cursor:pointer;font-size:14px;font-weight:600;}
+#theater-course-brief label{font-size:14px;}

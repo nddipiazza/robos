@@ -29,15 +29,25 @@ window.prepareRealTheater=function() {
   for(const check of ctx.checks){const row=document.createElement('li');row.textContent=`${check.name||check.context}: ${check.conclusion||check.state||check.status}`;if(check.detailsUrl||check.targetUrl){const b=document.createElement('button');b.textContent='Open check';b.onclick=()=>window.api.openUrl(check.detailsUrl||check.targetUrl);row.append(b);}checks.append(row);}evidence.append(checks);
   if(!ctx.checks.length){const p=document.createElement('p');p.textContent='No automated checks reported by GitHub.';evidence.append(p);}
   const acknowledgement=document.createElement('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='real-evidence-reviewed';checkbox.onchange=()=>{ctx.validationGates.evidenceReviewed=checkbox.checked;renderTheaterSignOff();};acknowledgement.append(checkbox,' I reviewed the validation results and linked evidence for this commit.');evidence.append(acknowledgement);
+  const approve=document.querySelector('input[name=theater-decision][value=approve]').closest('label');approve.querySelector('strong').textContent='Approve and merge this PR';approve.querySelector('span').textContent='Merge the reviewed commit into '+ctx.pr.baseBranch+'. GitHub branch rules still apply.';
+  document.querySelector('input[name=theater-decision][value=request-changes]').closest('label').querySelector('span').textContent='Request revisions on GitHub; this does not restart the agent.';
+  document.querySelector('#gate-card-ci strong').textContent='GitHub automated checks';
   const sub=document.querySelector('#gate-card-ci .gate-subtext');sub.textContent='GitHub checks for the reviewed commit';
   document.querySelector('#gate-card-docs .gate-subtext').textContent='PR scope and documentation reviewed';
   document.getElementById('theater-certificate-card').classList.add('hidden');
   document.querySelector('#theater-certificate-card .cert-ribbon').textContent='Knowledge check recorded for this commit';
   document.querySelectorAll('[onclick="window.openAppCourseInHub()"] ').forEach(e=>e.hidden=true);
+  prepareSummaryAndChanges(ctx);
   renderTheaterSignOff();
 };
 window.renderRealSignOff=function() {
   const ctx=theaterContext,g=ctx.validationGates;
+  document.querySelector('#gate-card-docs strong').textContent='PR scope & documentation';
+  document.querySelector('#gate-card-elearning strong').textContent='Knowledge check';
+  document.getElementById('gate-card-ide').hidden=true;
+  let evidenceGate=document.getElementById('gate-card-evidence');if(!evidenceGate){evidenceGate=document.getElementById('gate-card-docs').cloneNode(true);evidenceGate.id='gate-card-evidence';evidenceGate.querySelector('[id^=gate-badge]').id='gate-badge-evidence';document.getElementById('gate-card-ci').after(evidenceGate);}evidenceGate.querySelector('strong').textContent='Validation & evidence';evidenceGate.querySelector('.gate-subtext').textContent='Review reported tests and remaining limitations';const evidenceBadge=document.getElementById('gate-badge-evidence');evidenceBadge.textContent=g.evidenceReviewed?'Reviewed':'Pending';evidenceBadge.className='gate-status-badge '+(g.evidenceReviewed?'gate-pass':'gate-pending');
+  for(const [id,stage] of [['docs',1],['diffs',3],['evidence',5],['elearning',7]]){const card=document.getElementById('gate-card-'+id);let link=card.querySelector('button');if(!link){link=document.createElement('button');link.className='btn-stage-nav';link.textContent='Review';card.append(link);}link.onclick=()=>window.setTheaterStage(stage);}
+
   for(const [id,pass,label] of [['elearning',g.elearningPassed,g.elearningPassed?`Passed (${ctx.quizScore}%)`:'Pending'],['docs',g.docsReviewed,g.docsReviewed?'Reviewed':'Pending'],['diffs',g.diffsInspected,g.diffsInspected?'Inspected':'Pending'],['ci',g.ciPassed,ctx.checks.length?(g.ciPassed?'Passing':'Pending / failed'):'No checks reported'],['ide',g.ideDiffLaunched,g.ideDiffLaunched?'Opened':'Optional']]){
     const e=document.getElementById('gate-badge-'+id);e.textContent=label;e.className='gate-status-badge '+(pass?'gate-pass':'gate-pending');
   }
@@ -46,7 +56,8 @@ window.renderRealSignOff=function() {
   if(!required&&!g.elearningPassed)document.getElementById('gate-badge-elearning').textContent='Optional';
   document.getElementById('gate-desc-elearning').textContent=required?'Certificate required by organization policy':'Optional — does not block merge';
   const button=document.getElementById('btn-theater-submit-review');
-  const approving=document.querySelector('input[name="theater-decision"]:checked')?.value==='approve';
+  const action=document.querySelector('input[name="theater-decision"]:checked')?.value;const approving=action==='approve';
+  button.textContent=approving?'Approve & merge PR':action==='request-changes'?'Submit change request':'Submit comment';
   button.disabled=approving && !((!required||g.elearningPassed)&&g.docsReviewed&&g.diffsInspected&&g.evidenceReviewed&&g.ciPassed);
   button.title=button.disabled?'Review the documentation, diffs, and evidence, and complete any required knowledge check before merging.':'Submit this review to GitHub';
 };
@@ -100,10 +111,11 @@ function prepareReviewSequence() {
     step.innerHTML='<span class="step-num">6</span> <span class="step-label">Knowledge check</span>';
     document.getElementById('step-btn-6').before(step);
   }
-  const labels={1:'Overview',2:'Documentation',3:'File diffs',4:'IDE review',5:'Validation & evidence',7:'Knowledge check',6:'Review & merge'};
-  const order=[1,2,3,4,5,7,6];
+  const labels={1:'Summary & training',3:'File changes',5:'Validation & evidence',7:'Knowledge check',6:'Review & merge'};
+  const order=[1,3,5,7,6];
+  for(const id of [2,4])document.getElementById('step-btn-'+id).hidden=true;
   order.forEach((id,i)=>{
-    const step=document.getElementById('step-btn-'+id);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
+    const step=document.getElementById('step-btn-'+id);document.getElementById('theater-stepper').append(step);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
     document.querySelector('#stage-'+id+' .stage-title-wrap h3').textContent=labels[id];
     const footer=document.querySelector('#stage-'+id+' .stage-nav-footer');if(!footer)return;footer.replaceChildren();
     for(const [target,text] of [[order[i-1],'← Back'],[order[i+1],'Next: '+labels[order[i+1]]+' →']]){if(!target)continue;const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=text;b.onclick=()=>window.setTheaterStage(target);footer.append(b);}
@@ -126,4 +138,22 @@ function prepareReviewSequence() {
   const refresh=()=>{document.getElementById('skip-knowledge-check').hidden=ctx.reviewPolicy.requireCompletionCertificate;document.getElementById('gate-pill-elearning').textContent=ctx.reviewPolicy.requireCompletionCertificate?'Knowledge check required':'Knowledge check optional';renderTheaterSignOff();};
   toggle.onchange=async()=>{toggle.disabled=true;try{const result=await window.api.setPRReviewPolicy({repo:ctx.pr.repo,required:toggle.checked});if(!result.ok)throw Error(result.error);ctx.reviewPolicy=result.policy;refresh();}catch(e){toggle.checked=ctx.reviewPolicy.requireCompletionCertificate;showError(e.message);}finally{toggle.disabled=false;}};
   document.querySelector('#stage-6 .stage-header').after(settings);refresh();
+}
+
+function prepareSummaryAndChanges(ctx){
+ const card=document.getElementById('theater-elearning-modules-card');
+ card.querySelector('h4').textContent='Developer summary & subject guide';
+ const brief=document.getElementById('theater-course-brief');brief.replaceChildren();
+ const status=document.createElement('p');status.setAttribute('role','status');
+ const lesson=document.createElement('article');lesson.className='review-markdown';
+ const retry=document.createElement('button');retry.className='btn-primary';retry.textContent='Retry summary & training';retry.hidden=true;
+ const docs=document.createElement('details');docs.innerHTML='<summary>PR description & linked documentation</summary>';const description=document.createElement('article');description.className='review-markdown';description.innerHTML=renderReviewMarkdown(ctx.pr.body||'No PR description supplied.');docs.append(description);
+ brief.append(status,lesson,retry,docs);
+ const generate=async()=>{retry.hidden=true;status.textContent='Preparing a developer summary and subject guide with Codex… You can review file changes while it loads.';try{const result=await window.api.reviewLesson({reviewId:ctx.reviewId});if(theaterContext!==ctx)return;if(!result.ok)throw Error(result.error);lesson.innerHTML=renderReviewMarkdown(result.markdown);status.textContent='AI explanation of this commit — verify it against the file changes.';document.getElementById('step-status-1').textContent='';}catch(e){if(theaterContext!==ctx)return;status.textContent='Summary unavailable: '+e.message;retry.hidden=false;}};retry.onclick=generate;generate();
+ function acknowledge(parent,id,text,key){document.getElementById(id)?.remove();const label=document.createElement('label');label.id=id;label.style.cssText='display:block;margin:18px 0';const box=document.createElement('input');box.type='checkbox';box.checked=!!ctx.validationGates[key];box.onchange=()=>{ctx.validationGates[key]=box.checked;renderTheaterSignOff();};label.append(box,' '+text);parent.append(label);}
+ acknowledge(brief,'summary-reviewed','I reviewed the PR scope and documentation.','docsReviewed');
+ const stage=document.getElementById('stage-3');
+ document.getElementById('review-diff-actions')?.remove();const actions=document.createElement('div');actions.id='review-diff-actions';actions.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap';stage.querySelector('.stage-nav-footer').before(actions);
+ for(const [name,ide] of [['Open in VS Code','vscode'],['Open in IntelliJ','intellij']]){const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=name;b.onclick=()=>window.launchTheaterIDE(ide);actions.append(b);}
+ acknowledge(actions,'diff-reviewed','I inspected the file changes for this commit.','diffsInspected');
 }

@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('api', {
   openInVSCode:          (opts) => ipcRenderer.invoke('open-in-vscode', opts),
   getIDEStatus:          ()     => ipcRenderer.invoke('get-ide-status'),
   openUrl:               (url)  => ipcRenderer.invoke('open-url', url),
+  reviewLesson: (opts) => ipcRenderer.invoke('pr-review-lesson',opts),
   // PR Review Theater
   fetchPRTheaterContext: (opts) => ipcRenderer.invoke('fetch-pr-theater-context', opts),
   fetchPRDiffContent:    (opts) => ipcRenderer.invoke('fetch-pr-diff-content', opts),

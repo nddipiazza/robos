@@ -419,7 +419,7 @@ async function runAIAnalysis() {
     additions: selectedPR.additions,
     deletions: selectedPR.deletions,
     changedFiles: prDetail ? prDetail.changedFiles : [],
-  });
+  }).catch(error=>({ok:false,error:error.message}));
 
   if (!result.ok) {
     summaryEl.innerHTML = `<div class="error-text">${esc(result.error)}</div>`;
@@ -595,6 +595,12 @@ window.openPRReviewTheater = async function(pr) {
   const titleEl = document.getElementById('theater-pr-title');
   if (titleEl) titleEl.textContent = `PR #${targetPR.number}: ${targetPR.title}`;
 
+  // Hide all old/demo content until this PR has loaded successfully.
+  theaterContext=null;
+  const content=document.querySelector('.theater-stage-content'),steps=document.getElementById('theater-stepper');
+  content.hidden=true;steps.hidden=true;
+  let loading=document.getElementById('theater-load-status');if(!loading){loading=document.createElement('div');loading.id='theater-load-status';loading.style.cssText='padding:32px';content.before(loading);}loading.hidden=false;loading.textContent='Loading PR description, file changes, and checks…';
+  document.getElementById('theater-target-app').textContent=targetPR.repo||'';
   // Fetch full theater context
   const res = await window.api.fetchPRTheaterContext({
     repo: targetPR.repo,
@@ -604,14 +610,13 @@ window.openPRReviewTheater = async function(pr) {
     headBranch: targetPR.headBranch,
     baseBranch: targetPR.baseBranch,
     changedFiles: prDetail ? prDetail.changedFiles : [],
-  });
+  }).catch(error=>({ok:false,error:error.message}));
 
   if (!res.ok) {
-    showError(res.error || 'Failed to load PR Review Theater context');
-    return;
+    loading.textContent='Could not load this PR: '+(res.error||'Unknown error');const retry=document.createElement('button');retry.className='btn-primary';retry.textContent='Retry loading PR';retry.onclick=()=>window.openPRReviewTheater(targetPR);loading.append(document.createElement('br'),retry);return;
   }
 
-  theaterContext = res;
+  theaterContext = res;loading.hidden=true;content.hidden=false;steps.hidden=false;
 
   // Set target app badge
   const appBadge = document.getElementById('theater-target-app');
@@ -683,8 +688,8 @@ window.setTheaterStage = function(stageNum) {
 
   // Mark gates based on progression
   if (theaterContext && theaterContext.validationGates) {
-    if (stageNum === 2) theaterContext.validationGates.docsReviewed = true;
-    if (stageNum === 3 && (theaterContext.real || theaterContext.validationGates.elearningPassed)) {
+    if (stageNum === 2 && !theaterContext.real) theaterContext.validationGates.docsReviewed = true;
+    if (stageNum === 3 && !theaterContext.real && theaterContext.validationGates.elearningPassed) {
       theaterContext.validationGates.diffsInspected = true;
     }
     renderTheaterSignOff();

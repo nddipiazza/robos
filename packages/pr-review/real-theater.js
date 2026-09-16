@@ -52,6 +52,7 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     await command('gh',['pr','review',url,action==='comment'?'--comment':'--request-changes','--body',body||'Reviewed in RobOS PR Review Theater.']);
     return {ok:true,merged:false,message:'Review submitted to GitHub.'};
   }
-  return {load,quiz,submit};
+  async function lesson({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before generating its summary.');return {ok:true,markdown:await require('./review-lesson').generate(ctx)};}
+  return {load,quiz,submit,lesson};
 }
 module.exports={createTheater,parseDiff};
