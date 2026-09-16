@@ -344,6 +344,8 @@ async function selectProject(id) {
     notesRow.classList.add('hidden');
   }
 
+  await renderProjectIDE(p);
+
   // Action buttons
   document.getElementById('btn-clone').disabled    = !!p._cloned;
   document.getElementById('btn-pull').disabled     = !p._cloned;
@@ -515,7 +517,8 @@ async function wireIdeDropdown(p) {
   const btn = document.getElementById('btn-open-ide');
   const menu = document.getElementById('ide-dropdown-menu');
   if (!btn || !menu) return;
-
+  if(p.ideId){const options=await gp.ideOptions();btn.textContent='Open in '+(options.ides.find(i=>i.id===p.ideId)?.name||p.ideId);btn.title='Open the configured project roots in the associated IDE';btn.onclick=async()=>{btn.disabled=true;try{const result=await gp.openWorkspace({id:p.id,workspace:p.localPath,ideId:p.ideId});if(!result.ok)throw Error(result.error);}catch(e){document.querySelector('#project-ide-settings [role=status]').textContent=e.message;}finally{btn.disabled=!p._cloned;}};return;}
+  btn.textContent='Choose IDE ▾';
   btn.onclick = async (e) => {
     e.stopPropagation();
     if (!menu.classList.contains('hidden')) { menu.classList.add('hidden'); return; }

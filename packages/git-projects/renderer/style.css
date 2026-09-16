@@ -609,3 +609,26 @@ html, body { height: 100%; background: #0d1117; color: #c9d1d9; font-family: -ap
   margin-top: 1px;
 }
 
+
+/* IDE associations: compact controls with a scrollable table for monorepos. */
+#project-ide-settings {margin:18px 0;padding:16px 0;border-block:1px solid #30363d;min-width:0;}
+#project-ide-settings header {display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+#project-ide-settings h3 {font-size:14px;font-weight:600;color:#e6edf3;}
+#project-ide-settings header span,#project-ide-settings summary span {color:#8b949e;font-size:12px;font-weight:400;}
+.project-ide-fields {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;}
+.project-ide-fields label {display:flex;flex-direction:column;gap:6px;color:#8b949e;font-size:12px;min-width:0;}
+#project-ide-settings select {min-width:0;max-width:100%;width:100%;height:34px;padding:6px 9px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:5px;font:13px system-ui;}
+#project-ide-settings .btn {min-height:34px;white-space:nowrap;}
+#project-ide-settings :is(button,select,summary):focus-visible {outline:2px solid #58a6ff;outline-offset:2px;}
+#project-ide-settings details {border-top:1px solid #21262d;margin-top:14px;padding-top:12px;}
+#project-ide-settings summary {cursor:pointer;font-size:13px;font-weight:500;}
+.project-root-scroll {max-height:330px;overflow:auto;margin-top:10px;border:1px solid #30363d;border-radius:5px;}
+#project-ide-settings table {width:100%;border-collapse:collapse;table-layout:fixed;text-align:left;}
+#project-ide-settings th {position:sticky;top:0;background:#161b22;color:#8b949e;font-weight:500;z-index:1;}
+#project-ide-settings :is(th,td) {padding:7px 10px;border-bottom:1px solid #21262d;overflow-wrap:anywhere;vertical-align:middle;}
+#project-ide-settings th:first-child {width:46%;}#project-ide-settings th:nth-child(2){width:18%;}
+#project-ide-settings td:first-child {font-family:monospace;font-size:12px;}
+.project-dependency-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:12px 0;max-height:220px;overflow:auto;}
+.project-dependency-list label {display:flex;align-items:center;gap:8px;}
+#project-ide-settings footer {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;}
+#project-ide-settings [role=status] {font-size:12px;color:#8b949e;flex:1;min-width:160px;}

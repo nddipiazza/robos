@@ -52,26 +52,7 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 // ── IDE detection ─────────────────────────────────────────────────────────────
-function detectIDEs() {
-  const candidates = [
-    { id: 'cursor',   cmd: 'cursor',    label: 'Cursor' },
-    { id: 'code',     cmd: 'code',      label: 'VS Code' },
-    { id: 'idea',     cmd: 'idea.sh',   label: 'IntelliJ IDEA' },
-    { id: 'webstorm', cmd: 'webstorm.sh',label: 'WebStorm' },
-    { id: 'pycharm',  cmd: 'pycharm.sh', label: 'PyCharm' },
-    { id: 'goland',   cmd: 'goland.sh',  label: 'GoLand' },
-    { id: 'clion',    cmd: 'clion.sh',   label: 'CLion' },
-    { id: 'rider',    cmd: 'rider.sh',   label: 'Rider' },
-  ];
-  return candidates.map(c => {
-    try {
-      const out = cp.execSync(`which ${c.cmd} 2>/dev/null`).toString().trim();
-      return { ...c, installed: !!out, path: out };
-    } catch {
-      return { ...c, installed: false, path: '' };
-    }
-  });
-}
+function detectIDEs() {return require('../robos-lib/project-ides').installed().map(ide=>({...ide,cmd:require('../robos-lib/project-ides').executable(ide)||ide.cmd,label:ide.name,installed:ide.available,path:require('../robos-lib/project-ides').executable(ide)||''}));}
 
 // ── Scan for workspaces ───────────────────────────────────────────────────────
 function scanWorkspaces(rootDirs, maxDepth = 6) {

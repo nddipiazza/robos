@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const{contextBridge,ipcRenderer}=require('electron');
-contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['plan-links','open-related-plan','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
+contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['review-pages','open-review-workspace','plan-links','open-related-plan','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
 
 })();
 const { contextBridge, ipcRenderer } = require('electron');

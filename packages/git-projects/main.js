@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -195,40 +195,14 @@ ipcMain.handle('pull', async (event, { localPath }) => {
 });
 
 // ── IDE detection & launch ────────────────────────────────────────────────────
-const KNOWN_IDES = [
-  { id: 'cursor', name: 'Cursor',              cmd: 'cursor' },
-  { id: 'code',   name: 'VS Code',             cmd: 'code'   },
-  { id: 'idea',   name: 'IntelliJ IDEA',       cmd: 'idea'   },
-  { id: 'webstorm', name: 'WebStorm',          cmd: 'webstorm' },
-  { id: 'pycharm',  name: 'PyCharm',           cmd: 'pycharm' },
-  { id: 'goland',   name: 'GoLand',            cmd: 'goland' },
-  { id: 'clion',    name: 'CLion',             cmd: 'clion' },
-  { id: 'rider',    name: 'Rider',             cmd: 'rider' },
-  { id: 'rustrover', name: 'RustRover',        cmd: 'rustrover' },
-  { id: 'fleet',    name: 'Fleet',             cmd: 'fleet' },
-  { id: 'zed',      name: 'Zed',              cmd: 'zed' },
-  { id: 'sublime',  name: 'Sublime Text',      cmd: 'subl' },
-  { id: 'windsurf', name: 'Windsurf',         cmd: 'windsurf' },
-];
-
-function detectInstalledIDEs() {
-  return KNOWN_IDES.filter(ide => {
-    try {
-      cp.execFileSync('which', [ide.cmd], { stdio: 'ignore' });
-      return true;
-    } catch { return false; }
-  });
-}
-
-ipcMain.handle('get-installed-ides', () => detectInstalledIDEs());
-
-ipcMain.handle('open-in-ide', (_, { cmd, localPath }) => {
-  cp.spawn(cmd, [localPath], {
-    env: { ...process.env, DISPLAY: process.env.DISPLAY || ':1' },
-    detached: true, stdio: 'ignore',
-  }).unref();
-  return { ok: true };
-});
+const projectIDEs=require('../robos-lib/project-ides');
+ipcMain.handle('get-installed-ides',()=>projectIDEs.installed().filter(i=>i.available));
+ipcMain.handle('attach-project-workspace',async(_,id)=>{try{const result=await dialog.showOpenDialog(_win,{title:'Add an existing checkout of this Git project',properties:['openDirectory']});if(result.canceled)return {ok:true,canceled:true};return {ok:true,project:await projectIDEs.attachWorkspace(id,result.filePaths[0])};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('open-project-workspace',async(_,input)=>{try{return await projectIDEs.openLocal(input.id,input.workspace,input.ideId);}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('discover-project-roots',async(_,input)=>{try{const id=typeof input==='string'?input:input.id;const p=readProjects().projects.find(p=>p.id===id);if(!p)throw Error('Unknown Git project');const root=input.workspace||p.localPath;if(root&&![p.localPath,...p.workspaces||[]].includes(root))throw Error('Register the checkout first.');if(root&&fs.existsSync(path.join(root,'.git')))return {ok:true,...require('../robos-lib/project-roots').discover(root)};const m=/github.com[/:]([\w.-]+\/[\w.-]+)/.exec(p.url);if(!m)throw Error('Clone this repository to discover its project roots.');const repo=m[1].replace(/\.git$/,'');const result=JSON.parse(await require('../robos-agent-client/work-task/core').command('gh',['api',`repos/${repo}/git/trees/${p.defaultBranch||'HEAD'}?recursive=1`]));return {ok:true,roots:require('../robos-lib/project-roots').fromFiles(result.tree.filter(f=>f.type==='blob').map(f=>f.path)),truncated:!!result.truncated};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('project-ide-options',()=>({ides:projectIDEs.installed(),defaultIde:projectIDEs.preferred(null)?.id||null}));
+ipcMain.handle('associate-project-ide',(_,input)=>{try{return {ok:true,project:projectIDEs.associate(input.id,input.ideId,input.dependsOn,input.projectRoots)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('open-in-ide',async(_, {cmd,localPath})=>{try{const ide=projectIDEs.catalog.find(i=>i.cmd===cmd);return await projectIDEs.launch(ide?.id,localPath);}catch(e){return {ok:false,error:e.message};}});
 
 ipcMain.handle('open-vscode', (_, localPath) => {
   cp.spawn('code', [localPath], {

@@ -6,6 +6,7 @@ window.prepareRealTheater=function() {
   prLink.href=ctx.pr.url;prLink.hidden=false;
   prLink.onclick=async event=>{event.preventDefault();try{const result=await window.api.openUrl(ctx.pr.url);if(!result.ok)showError(result.error||'Could not open the PR in Chrome.');}catch(error){showError(error.message);}};
   window.showReviewPlanLinks?.();
+  renderReviewPages();
   document.querySelector('.quiz-instruction').textContent='After reviewing the changes and evidence, check your understanding of this PR.';
   prepareReviewSequence();
   document.querySelector('#stage-1 .stage-title-wrap p').textContent='Understand the proposed change before reviewing its diff and evidence.';
@@ -62,18 +63,32 @@ window.renderRealSignOff=function() {
   const button=document.getElementById('btn-theater-submit-review');
   const action=document.querySelector('input[name="theater-decision"]:checked')?.value;const approving=action==='approve';
   button.textContent=approving?'Approve & merge PR':action==='request-changes'?'Submit change request':'Submit comment';
-  button.disabled=approving && !((!required||g.elearningPassed)&&g.docsReviewed&&g.diffsInspected&&g.evidenceReviewed&&g.ciPassed);
-  button.title=button.disabled?'Review the documentation, diffs, and evidence, and complete any required knowledge check before merging.':'Submit this review to GitHub';
+  const page=reviewPages.find(p=>p.url===ctx.pr.url);
+  const blocked=reviewPageCycle||page?.dependsOn.some(url=>reviewPages.some(p=>p.url===url&&p.state!=='MERGED'));
+  button.disabled=approving && (blocked||!((!required||g.elearningPassed)&&g.docsReviewed&&g.diffsInspected&&g.evidenceReviewed&&g.ciPassed));
+  button.title=blocked?'Merge prerequisite PR pages first; resolve dependency cycles in Git Projects.':button.disabled?'Review the documentation, diffs, and evidence, and complete any required knowledge check before merging.':'Submit this review to GitHub';
 };
 document.querySelectorAll('input[name="theater-decision"]').forEach(e=>e.addEventListener('change',()=>{if(theaterContext?.real)renderTheaterSignOff();}));
+let reviewPages=[];
+let reviewPageCycle=false;
+const reviewedPages=new Map();
+async function openReviewPage(pr){
+ if(theaterContext?.real)reviewedPages.set(theaterContext.reviewId,Object.fromEntries(['docsReviewed','diffsInspected','evidenceReviewed'].map(k=>[k,theaterContext.validationGates[k]])));
+ await window.openPRReviewTheater({...pr,repo:pr.repo||pr.repository?.nameWithOwner||new URL(pr.url).pathname.split('/').slice(1,3).join('/')});
+ if(theaterContext?.real&&reviewedPages.has(theaterContext.reviewId)){Object.assign(theaterContext.validationGates,reviewedPages.get(theaterContext.reviewId));prepareSummaryAndChanges(theaterContext);document.getElementById('real-evidence-reviewed').checked=!!theaterContext.validationGates.evidenceReviewed;renderTheaterSignOff();}
+}
+function renderReviewPages(){
+ let nav=document.getElementById('review-pr-pages');if(!nav){nav=document.createElement('nav');nav.id='review-pr-pages';nav.setAttribute('aria-label','Pull requests in merge order');document.querySelector('.theater-topbar').after(nav);}nav.replaceChildren();nav.hidden=!reviewPages.length;
+ const label=document.createElement('span');label.textContent=reviewPageCycle?'Dependency cycle — fix Git project dependencies before merging':'PR pages · dependency order';nav.append(label);
+ for(const [index,pr] of reviewPages.entries()){const b=document.createElement('button');b.textContent=`${index+1}. ${pr.repo} #${pr.number}`+(pr.state==='MERGED'?' · Merged':'');b.title=pr.title+(pr.dependsOn.length?' · Merge after '+pr.dependsOn.join(', '):' · No preceding PR dependency');b.className='btn-plan-link';b.setAttribute('aria-current',String(theaterContext?.pr.url===pr.url));b.onclick=()=>{nav.querySelectorAll('button').forEach(x=>x.disabled=true);openReviewPage(pr).catch(e=>showError(e.message)).finally(()=>nav.querySelectorAll('button').forEach(x=>x.disabled=false));};nav.append(b);}
+}
+window.refreshReviewPages=async()=>{const result=await window.workTask['review-pages']();if(result.ok){const merged=reviewPages.filter(p=>!result.data.pages.some(x=>x.url===p.url)).map(p=>({...p,state:'MERGED'}));reviewPages=[...merged,...result.data.pages];reviewPageCycle=result.data.cycle;renderReviewPages();renderTheaterSignOff();}};
 async function resumeReview() {
-  const r=await window.workTask.state();if(!r.ok||!r.data)return;
-  const prs=r.data.prs||[];
-  if(!prs.length){showError('This task has no linked open PR yet.');return;}
-  const open=pr=>window.openPRReviewTheater({...pr,repo:pr.repository?.nameWithOwner || new URL(pr.url).pathname.split('/').slice(1,3).join('/')});
-  if(prs.length===1)return open(prs[0]);
-  const list=document.getElementById('pr-list');
-  if(list){list.replaceChildren();for(const pr of prs){const b=document.createElement('button');b.textContent=`#${pr.number}: ${pr.title}`;b.onclick=()=>open(pr);list.append(b);}}
+ const state=await window.workTask.state();if(!state.ok||!state.data)return;
+ const result=await window.workTask['review-pages']();if(!result.ok)throw Error(result.error);
+ reviewPages=result.data.pages;reviewPageCycle=result.data.cycle;
+ if(!reviewPages.length){showError('This task has no linked open PR yet.');return;}
+ await openReviewPage(reviewPages.find(p=>p.state==='OPEN')||reviewPages[0]);
 }
 // Existing initialization is independent of a task's cross-repository PR route.
 setTimeout(()=>resumeReview().catch(e=>showError(e.message)),400);
@@ -81,11 +96,9 @@ setTimeout(()=>resumeReview().catch(e=>showError(e.message)),400);
 const originalLaunchTheaterIDE=window.launchTheaterIDE;
 window.launchTheaterIDE=async function(ide){
   if(!theaterContext?.real)return originalLaunchTheaterIDE(ide);
-  const p=theaterContext.pr;
-  const fn=ide==='vscode'?window.api.openInVSCode:window.api.openInIntelliJ;
-  const result=await fn({repo:p.repo,number:p.number,headBranch:p.headBranch,changedFiles:p.files.map(f=>f.path)});
-  if(!result.ok)showError(result.error||'Could not open IDE.');
-  else {theaterContext.validationGates.ideDiffLaunched=true;renderTheaterSignOff();}
+  const p=theaterContext.pr,page=reviewPages.find(page=>page.url===p.url);
+  const result=await window.workTask['open-review-workspace']({prUrl:p.url,ideId:page?.ide?.id,reviewedHead:p.headRefOid});
+  if(!result.ok)showError(result.error);else {theaterContext.validationGates.ideDiffLaunched=true;renderTheaterSignOff();}
 };
 
 window.showReviewPlanLinks=async function() {
@@ -184,7 +197,9 @@ function prepareSummaryAndChanges(ctx){
  acknowledge(brief,'summary-reviewed','I reviewed the PR scope and documentation.','docsReviewed');
  const stage=document.getElementById('stage-3');
  document.getElementById('review-diff-actions')?.remove();const actions=document.createElement('div');actions.id='review-diff-actions';actions.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap';stage.querySelector('.stage-nav-footer').before(actions);
- for(const [name,ide] of [['Open in VS Code','vscode'],['Open in IntelliJ','intellij']]){const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=name;b.onclick=()=>window.launchTheaterIDE(ide);actions.append(b);}
+ const page=reviewPages.find(p=>p.url===ctx.pr.url);
+ for(const ide of page?.ides||[]){const b=document.createElement('button');b.className='btn-stage-nav';b.textContent='Open session in '+ide.name;b.title='Open the preserved task workspace with all associated project roots';b.onclick=async()=>{b.disabled=true;b.textContent='Preparing '+ide.name+' workspace…';try{const result=await window.workTask['open-review-workspace']({prUrl:ctx.pr.url,ideId:ide.id,reviewedHead:ctx.pr.headRefOid});if(!result.ok)throw Error(result.error);b.textContent='Open session in '+ide.name;}catch(e){showError(e.message);b.textContent='Retry '+ide.name;}finally{b.disabled=false;}};actions.append(b);}
+ if(!page?.ides?.length){const help=document.createElement('span');help.textContent='Associate this repository with an IDE in RobOS Git Projects to open its session workspace.';actions.append(help);}
  acknowledge(actions,'diff-reviewed','I inspected the file changes for this commit.','diffsInspected');
 }
 

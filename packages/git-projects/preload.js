@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('gp', {
+  attachWorkspace: id => ipcRenderer.invoke('attach-project-workspace',id),
+  openWorkspace: input => ipcRenderer.invoke('open-project-workspace',input),
+  discoverRoots: id => ipcRenderer.invoke('discover-project-roots',id),
+  ideOptions: () => ipcRenderer.invoke('project-ide-options'),
+  associateIDE: input => ipcRenderer.invoke('associate-project-ide',input),
   readProjects:  ()              => ipcRenderer.invoke('read-projects'),
   writeProjects: (data)          => ipcRenderer.invoke('write-projects', data),
   parseUrl:      (url)           => ipcRenderer.invoke('parse-url', url),

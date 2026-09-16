@@ -1347,6 +1347,7 @@ window.submitTheaterReviewAction = async function() {
       feedbackEl.className = 'quiz-feedback pass';
       feedbackEl.innerHTML = `<strong>${esc(res.message)}</strong>`;
       if (res.merged) {
+        await window.refreshReviewPages?.();
         document.getElementById('detail-meta')?.insertAdjacentHTML('beforeend', '<span class="review-badge review-approved">✓ MERGED</span>');
       }
     } else {

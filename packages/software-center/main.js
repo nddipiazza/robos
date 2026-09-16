@@ -72,92 +72,6 @@ const TOOLS = [
     installCmd: 'wget -qO /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" && sudo dpkg -i /tmp/vscode.deb || sudo apt-get install -f -y && rm -f /tmp/vscode.deb && sudo cp /usr/share/applications/code.desktop /usr/share/applications/code.desktop.bak 2>/dev/null',
     uninstallCmd: 'sudo apt-get remove -y code && sudo rm -f /usr/share/applications/code.desktop',
   },
-  {
-    id: 'intellij-idea-community',
-    name: 'IntelliJ IDEA Community',
-    description: 'JetBrains Java/Kotlin IDE (free)',
-    category: 'IDE',
-    source: 'jetbrains.com (tar.gz)',
-    checkCmd: 'ls /opt/idea-IC-*/bin/idea.sh 2>/dev/null | grep -q .',
-    // Install via tarball so the IDE launches directly as Community Edition without a Trial/activation prompt.
-    // The snap package triggers JetBrains' new licensing wizard even for the free tier.
-    // JetBrains merged Community+Ultimate into a single tarball in 2025.x (code=IIC API now returns idea-IU).
-    // Use the last version that ships a dedicated Community (idea-IC) tarball to avoid the Trial/activation prompt.
-    installCmd: [
-      'curl -L --retry 3 -o /tmp/ideaIC.tar.gz "https://download-cdn.jetbrains.com/idea/ideaIC-2024.3.tar.gz"',
-      '&& sudo tar -xzf /tmp/ideaIC.tar.gz -C /opt',
-      '&& IDEA_DIR=$(ls -d /opt/idea-IC-* | tail -1)',
-      '&& sudo ln -sf "$IDEA_DIR/bin/idea.sh" /usr/local/bin/idea',
-      '&& ICON="$IDEA_DIR/bin/idea.svg"',
-      // Use echo+tee to avoid printf treating %f as a format specifier
-      '&& { echo "[Desktop Entry]"; echo "Type=Application"; echo "Name=IntelliJ IDEA Community"; echo "Exec=idea %f"; echo "Icon=$ICON"; echo "Categories=Development;IDE;"; echo "StartupWMClass=jetbrains-idea-ce"; echo "Terminal=false"; } | sudo tee /usr/share/applications/intellij-idea-community.desktop > /dev/null',
-      // Pre-seed config so first-run wizard (Trial nag) is suppressed
-      '&& mkdir -p "$HOME/.config/JetBrains/IdeaIC2024.3/options"',
-      '&& [ -f "$HOME/.config/JetBrains/IdeaIC2024.3/options/other.xml" ] || printf \'<?xml version="1.0" encoding="UTF-8"?>\\n<application>\\n  <component name="GeneralSettings"><option name="confirmExit" value="false" /></component>\\n  <component name="WelcomeScreen"><option name="showOnStartup" value="false" /></component>\\n</application>\\n\' > "$HOME/.config/JetBrains/IdeaIC2024.3/options/other.xml"',
-      '&& rm -f /tmp/ideaIC.tar.gz',
-    ].join(' '),
-    uninstallCmd: 'sudo rm -rf /opt/idea-IC-* /usr/local/bin/idea /usr/share/applications/intellij-idea-community.desktop',
-  },
-  {
-    id: 'pycharm-community',
-    name: 'PyCharm Community',
-    description: 'JetBrains Python IDE (free)',
-    category: 'IDE',
-    source: 'snap (pycharm-community)',
-    checkCmd: 'ls /snap/pycharm-community/current 2>/dev/null',
-    installCmd: 'sudo snap install pycharm-community --classic && sudo cp /var/lib/snapd/desktop/applications/pycharm-community_pycharm-community.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=PyCharm Community\nExec=pycharm-community %f\nIcon=/snap/pycharm-community/current/bin/pycharm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-pycharm-ce\nTerminal=false" > /usr/share/applications/pycharm-community.desktop\'',
-    uninstallCmd: 'sudo snap remove pycharm-community && sudo rm -f /usr/share/applications/pycharm-community*.desktop',
-  },
-  {
-    id: 'webstorm',
-    name: 'WebStorm',
-    description: 'JetBrains JavaScript/TypeScript IDE',
-    category: 'IDE',
-    source: 'snap (webstorm)',
-    checkCmd: 'ls /snap/webstorm/current 2>/dev/null',
-    installCmd: 'sudo snap install webstorm --classic && sudo cp /var/lib/snapd/desktop/applications/webstorm_webstorm.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=WebStorm\nExec=webstorm %f\nIcon=/snap/webstorm/current/bin/webstorm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-webstorm\nTerminal=false" > /usr/share/applications/webstorm.desktop\'',
-    uninstallCmd: 'sudo snap remove webstorm && sudo rm -f /usr/share/applications/webstorm*.desktop',
-  },
-  {
-    id: 'goland',
-    name: 'GoLand',
-    description: 'JetBrains Go IDE',
-    category: 'IDE',
-    source: 'snap (goland)',
-    checkCmd: 'ls /snap/goland/current 2>/dev/null',
-    installCmd: 'sudo snap install goland --classic && sudo cp /var/lib/snapd/desktop/applications/goland_goland.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=GoLand\nExec=goland %f\nIcon=/snap/goland/current/bin/goland.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-goland\nTerminal=false" > /usr/share/applications/goland.desktop\'',
-    uninstallCmd: 'sudo snap remove goland && sudo rm -f /usr/share/applications/goland*.desktop',
-  },
-  {
-    id: 'clion',
-    name: 'CLion',
-    description: 'JetBrains C/C++ IDE',
-    category: 'IDE',
-    source: 'snap (clion)',
-    checkCmd: 'ls /snap/clion/current 2>/dev/null',
-    installCmd: 'sudo snap install clion --classic && sudo cp /var/lib/snapd/desktop/applications/clion_clion.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=CLion\nExec=clion %f\nIcon=/snap/clion/current/bin/clion.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-clion\nTerminal=false" > /usr/share/applications/clion.desktop\'',
-    uninstallCmd: 'sudo snap remove clion && sudo rm -f /usr/share/applications/clion*.desktop',
-  },
-  {
-    id: 'rider',
-    name: 'Rider',
-    description: 'JetBrains .NET IDE',
-    category: 'IDE',
-    source: 'snap (rider)',
-    checkCmd: 'ls /snap/rider/current 2>/dev/null',
-    installCmd: 'sudo snap install rider --classic && sudo cp /var/lib/snapd/desktop/applications/rider_rider.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=Rider\nExec=rider %f\nIcon=/snap/rider/current/bin/rider.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rider\nTerminal=false" > /usr/share/applications/rider.desktop\'',
-    uninstallCmd: 'sudo snap remove rider && sudo rm -f /usr/share/applications/rider*.desktop',
-  },
-  {
-    id: 'rustrover',
-    name: 'RustRover',
-    description: 'JetBrains Rust IDE',
-    category: 'IDE',
-    source: 'snap (rustrover)',
-    checkCmd: 'ls /snap/rustrover/current 2>/dev/null',
-    installCmd: 'sudo snap install rustrover --classic && sudo cp /var/lib/snapd/desktop/applications/rustrover_rustrover.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=RustRover\nExec=rustrover %f\nIcon=/snap/rustrover/current/bin/rustrover.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rustrover\nTerminal=false" > /usr/share/applications/rustrover.desktop\'',
-    uninstallCmd: 'sudo snap remove rustrover && sudo rm -f /usr/share/applications/rustrover*.desktop',
-  },
 
   // ── Browsers ──
   {
@@ -341,9 +255,13 @@ const TOOLS = [
   },
 ];
 
+const jetbrains=require('../robos-lib/project-ides').catalog.filter(i=>i.family==='jetbrains').map(ide=>({...ide,snap:ide.id==='idea'?'intellij-idea':ide.id}));
+for(const ide of jetbrains)TOOLS.push({id:ide.id,name:ide.name,description:'JetBrains IDE · managed by RobOS Software Center',category:'IDE',source:'Official JetBrains stable snap',checkCmd:'snap list '+ide.snap,installCmd:'pkexec snap install '+ide.snap+' --classic',uninstallCmd:'pkexec snap remove '+ide.snap});
+TOOLS.push({id:'jetbrains-suite',name:'JetBrains IDE suite',description:'Install all JetBrains IDEs listed here. Existing installations are kept.',category:'IDE',source:'Official JetBrains stable snaps',checkCmd:'snap list '+jetbrains.map(i=>i.snap).join(' '),installCmd:"pkexec /bin/bash -c 'set -e; for tool in "+jetbrains.map(i=>i.snap).join(' ')+"; do snap list \"$tool\" >/dev/null 2>&1 || snap install \"$tool\" --classic; done'"});
+
 function checkInstalled(tool) {
   try {
-    execSync(tool.checkCmd, { stdio: 'pipe' });
+    execSync(tool.checkCmd, { stdio: 'pipe', timeout: 1500 });
     return true;
   } catch {
     return false;
@@ -359,6 +277,8 @@ function getToolsWithStatus() {
 }
 
 function runInstall(tool, action) {
+  if(installLogs[tool.id]?.installing)return;
+  if(action==='uninstall'&&!tool.uninstallCmd)return;
   const cmd = action === 'uninstall' ? tool.uninstallCmd : tool.installCmd;
   const src = tool.source ? ` from ${tool.source}` : '';
   const label = action === 'uninstall'
@@ -394,6 +314,7 @@ function runInstall(tool, action) {
     }
   });
 
+  proc.on('error',error=>{installLogs[tool.id].log+=error.message;installLogs[tool.id].installing=false;});
   proc.on('close', (code) => {
     installLogs[tool.id].installing = false;
     installLogs[tool.id].exitCode = code;

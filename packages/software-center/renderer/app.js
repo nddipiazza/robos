@@ -73,13 +73,13 @@ function renderTools() {
       logBtn.textContent = 'View Log';
       logBtn.addEventListener('click', () => showLog(tool));
       btnContainer.appendChild(logBtn);
-    } else if (tool.installed) {
+    } else if (tool.installed && tool.uninstallCmd) {
       const btn = document.createElement('button');
       btn.className = 'tool-btn uninstall';
       btn.textContent = 'Uninstall';
       btn.addEventListener('click', () => doInstall(tool.id, 'uninstall'));
       btnContainer.appendChild(btn);
-    } else {
+    } else if(!tool.installed) {
       const btn = document.createElement('button');
       btn.className = 'tool-btn install';
       btn.textContent = 'Install';

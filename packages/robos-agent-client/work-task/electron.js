@@ -16,6 +16,8 @@ function register({app,ipcMain,dialog},screen){
   ipcMain.handle('work-task-mcp-login',wrap(({serverId})=>require('../../robos-mcp-router/lib/remote-service').request('login',{serverId})));
   ipcMain.handle('work-task-open-runner',wrap(async()=>{current();await core.launchApp('robos-agent-task-runner',url,process.execPath);}));
   ipcMain.handle('work-task-state',wrap(async()=>{if(!url)return null;const s=current();const dir=core.folder(url);let output='';for(const mode of ['plan','implement']){const file=path.join(dir,`${mode}-output.txt`);if(fs.existsSync(file))output+=fs.readFileSync(file,'utf8').slice(-40000);}let events=[];const eventsFile=path.join(dir,'events.jsonl');if(fs.existsSync(eventsFile))events=fs.readFileSync(eventsFile,'utf8').split('\n').filter(Boolean).flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});return{...s,screen,...require('./plan-approval').readiness(s),planApproved:require('./plan-approval').approved(s),output,events,workflowView:await require('./workflow-view').load(s)};}));
+  ipcMain.handle('work-task-review-pages',wrap(()=>require('../../pr-review/review-workspaces').pages(current())));
+  ipcMain.handle('work-task-open-review-workspace',wrap(({prUrl,ideId,reviewedHead})=>require('../../pr-review/review-workspaces').open(current(),prUrl,ideId,reviewedHead)));
   ipcMain.handle('work-task-plan-links',wrap(async()=>{current();return require('./plan-links').links(url);}));
   ipcMain.handle('work-task-open-related-plan',wrap(async({targetUrl})=>{current();return require('./plan-links').open(url,targetUrl,process.execPath);}));
   ipcMain.handle('work-task-open-implementer',wrap(async()=>{current();await core.launchApp('task-implementer',url,process.execPath);}));

@@ -2115,3 +2115,7 @@ header h1 { font-size: 15px; font-weight: 600; }
 #review-inner-tabs button:focus-visible{outline:2px solid #00c9df;outline-offset:-2px;}
 #review-summary-state{font-size:12px;font-weight:400;color:#a8b6c3;}
 .review-inner-panel[hidden],.review-file-content>.stage-nav-footer[hidden]{display:none!important;}
+
+#review-pr-pages{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 24px;border-bottom:1px solid #30363d;background:#101820;}
+#review-pr-pages>span{color:#8b949e;font-size:12px;margin-right:8px;}
+#review-pr-pages [aria-current=true]{background:#174356;border-color:#69d3e9;}

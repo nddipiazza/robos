@@ -44,6 +44,7 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     if(action==='approve') {
       if(!gates?.docsReviewed || !gates?.diffsInspected || !gates?.evidenceReviewed)throw Error('Review the documentation, diff, and evidence before approving.');
       if(policy(repo).requireCompletionCertificate && !ctx.passed)throw Error('This organization requires a passed knowledge check before merging.');
+      await require('./review-workspaces').assertMergeOrder(url);
       const merged=await merge(url,ctx.pr.headRefOid,body);
       core.recordMergedPR(url,merged);
       return {ok:true,merged:true,...merged,message:`Merged reviewed commit ${ctx.pr.headRefOid} into ${ctx.pr.baseRefName}.`};
