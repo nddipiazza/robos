@@ -1,5 +1,6 @@
 'use strict';
 const path=require('path');
+const {publishedDependency}=require('./published-dependency');
 // Verify the exported result after the process ends. A zero CLI exit or an
 // already-existing PR is not evidence that the agent committed/pushed its work.
 async function verify(state,{command,gh}){
@@ -15,17 +16,12 @@ async function verify(state,{command,gh}){
   const fix=state.reviewFix?.repo?.toLowerCase()===repo.toLowerCase()?state.reviewFix:null;
   const baseline=fix?.head||(await git('rev-parse','refs/remotes/origin/HEAD')).trim();
   if(head===baseline)continue; // Untouched repository or a legitimate no-change fix.
-  const branch=(await git('symbolic-ref','--short','HEAD')).trim();
+  if(!fix&&await publishedDependency(state,repo,head,gh))continue;
+  let branch;try{branch=(await git('symbolic-ref','--short','HEAD')).trim();}catch{throw Error('Implementation incomplete: detached commits in '+repo+' do not match a linked remote PR.');}
   if(fix&&branch!==fix.branch)throw Error('Implementation incomplete: fix was committed on a different branch from the reviewed PR.');
   let remote;
   try{remote=await gh(['api','repos/'+repo+'/commits/'+encodeURIComponent(branch)]);}
-  catch{
-   // A dependency PR may be checked out under a local alias. Accept only its
-   // exact live remote head, never an unpublished change atop that dependency.
-   const linked=!fix&&(state.prs||[]).filter(pr=>pr.url?.startsWith('https://github.com/'+repo+'/pull/'));
-   for(const pr of linked||[]){try{const live=await gh(['pr','view',pr.url,'--json','headRefOid']);if(live.headRefOid===head){remote={sha:head};break;}}catch{}}
-   if(!remote)throw Error('Implementation incomplete: cannot verify the pushed branch for '+repo+'. Local commits are preserved in '+dir+'.');
-  }
+  catch{throw Error('Implementation incomplete: cannot verify the pushed branch for '+repo+'. Local commits are preserved in '+dir+'.');}
   if(remote.sha!==head)throw Error('Implementation incomplete: '+repo+' has commits that are not on its remote branch. Push did not finish. Local commits are preserved in '+dir+'.');
  }
 }

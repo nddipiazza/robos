@@ -27,3 +27,10 @@ test('a clean dependency PR checkout may use a local branch alias, but not unpub
  await verify(dependency,{command,gh:async args=>{if(args[0]==='api')throw Error('No alias on remote');return {headRefOid:'candidate'};}});
  await assert.rejects(verify(dependency,{command,gh:async args=>{if(args[0]==='api')throw Error('No alias on remote');return {headRefOid:'older'};}}),/cannot verify/);
 });
+
+test('detached dependency is accepted only when its clean head is the current linked PR head',async()=>{
+ const dependency={sandbox:state.sandbox,launchConfig:state.launchConfig,prs:[{url:'https://github.com/example/repo/pull/12'}]};
+ const command=async(bin,args)=>{if(args[0]==='symbolic-ref')throw Error('detached HEAD');return args[0]==='status'?'':args[1]==='HEAD'?'candidate':'base';};
+ await verify(dependency,{command,gh:async()=>({headRefOid:'candidate'})});
+ await assert.rejects(verify(dependency,{command,gh:async()=>({headRefOid:'older'})}),/detached commits/);
+});
