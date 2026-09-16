@@ -597,6 +597,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Hide all old/demo content until this PR has loaded successfully.
   theaterContext=null;
+  document.getElementById('theater-open-pr').hidden=true;
   const content=document.querySelector('.theater-stage-content'),steps=document.getElementById('theater-stepper');
   content.hidden=true;steps.hidden=true;
   let loading=document.getElementById('theater-load-status');if(!loading){loading=document.createElement('div');loading.id='theater-load-status';loading.style.cssText='padding:32px';content.before(loading);}loading.hidden=false;loading.textContent='Loading PR description, file changes, and checks…';

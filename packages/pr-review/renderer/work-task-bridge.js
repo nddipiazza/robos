@@ -2,6 +2,9 @@
 // Adapt the existing six-stage theater to verified GitHub data.
 window.prepareRealTheater=function() {
   const ctx=theaterContext;
+  const prLink=document.getElementById('theater-open-pr');
+  prLink.href=ctx.pr.url;prLink.hidden=false;
+  prLink.onclick=async event=>{event.preventDefault();try{const result=await window.api.openUrl(ctx.pr.url);if(!result.ok)showError(result.error||'Could not open the PR in Chrome.');}catch(error){showError(error.message);}};
   window.showReviewPlanLinks?.();
   document.querySelector('.quiz-instruction').textContent='After reviewing the changes and evidence, check your understanding of this PR.';
   prepareReviewSequence();
