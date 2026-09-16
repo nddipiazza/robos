@@ -26,3 +26,30 @@ test('refinement retains PR context and has its own cache entry, saved under the
  assert.throws(()=>refinementPrompt(ctx,{markdown:'text',instruction:'  '}),/refinement request/);
  assert.throws(()=>refinementPrompt(ctx,{markdown:'',instruction:'change'}),/refinement request/);
 });
+
+test('summary freshness counts newer commits without generating a lesson',async()=>{
+ const {freshness}=require('./review-lesson');
+ const saved={markdown:'Refined lesson',head:'abc'},pr={url:'https://github.com/example/repo/pull/1',headRefOid:'def'};
+ let calls=0;
+ const command=async(_cmd,args)=>{calls++;assert.equal(args[1],'repos/example/repo/compare/abc...def');return JSON.stringify({ahead_by:3,status:'ahead'});};
+ assert.deepEqual(await freshness(saved,pr,command),{...saved,stale:true,commitsBehind:3,diverged:false});
+ await freshness(saved,{...pr,headRefOid:'abc'},command);assert.equal(calls,1);
+ const unavailable=await freshness(saved,pr,async()=>{throw Error('offline');});
+ assert.equal(unavailable.commitsBehind,null);assert.equal(unavailable.stale,true);
+});
+
+test('PR-level saved summary survives a new head and keeps its source commit',()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+ const {cached,location}=require('./review-lesson');
+ const original=os.homedir,home=fs.mkdtempSync(path.join(os.tmpdir(),'robos-summary-cache-'));
+ os.homedir=()=>home;
+ try{
+  const ctx={pr:{url:'https://github.com/example/repo/pull/7',headRefOid:'new',title:'New change'},diff:'new diff'};
+  const loc=location(ctx,{});
+  fs.mkdirSync(loc.root,{recursive:true});
+  fs.writeFileSync(loc.prLatest,JSON.stringify({markdown:'Refined teaching',head:'old'}));
+  assert.deepEqual(cached(ctx),{markdown:'Refined teaching',head:'old'});
+  const other={...ctx,pr:{...ctx.pr,url:'https://github.com/example/repo/pull/8'}};
+  assert.equal(cached(other),null);
+ }finally{os.homedir=original;}
+});

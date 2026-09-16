@@ -2,6 +2,7 @@
 // Adapt the existing six-stage theater to verified GitHub data.
 window.prepareRealTheater=function() {
   const ctx=theaterContext;
+  ctx.lastRefresh=Date.now();
   const prLink=document.getElementById('theater-open-pr');
   prLink.href=ctx.pr.url;prLink.hidden=false;
   prLink.onclick=async event=>{event.preventDefault();try{const result=await window.api.openUrl(ctx.pr.url);if(!result.ok)showError(result.error||'Could not open the PR in Chrome.');}catch(error){showError(error.message);}};
@@ -176,6 +177,7 @@ function prepareSummaryAndChanges(ctx){
  editor.innerHTML='<h4>Refine summary &amp; training</h4><robos-ai-textarea show-submit="false" show-commands="false" show-agent="false" min-height="100" max-chars="20000" placeholder="What should change? For example, explain the key concept with a concrete example, or shorten the summary…"></robos-ai-textarea><div style="display:flex;gap:10px;margin-top:12px"><button class="btn-primary" data-update disabled>Choose model &amp; refine…</button><button class="btn-stage-nav" data-cancel>Cancel</button></div>';
  const input=editor.querySelector('robos-ai-textarea'),update=editor.querySelector('[data-update]');
  let busy=false;
+ ctx.summaryBusy=false;
  const updateButtons=()=>{refine.hidden=!ctx.savedSummary?.markdown;refine.disabled=busy;retry.disabled=busy;update.disabled=busy||!input.value?.trim();};
  input.addEventListener('input',updateButtons);input.addEventListener('change',updateButtons);
  input.addEventListener('robos-path-query',event=>{const query=event.detail.query.replace(/^~\//,'').toLowerCase();input._showMentions?.((ctx.pr.files||[]).filter(f=>f.path.toLowerCase().includes(query)).slice(0,12).map(f=>({name:f.path,path:f.path})));});
@@ -184,18 +186,18 @@ function prepareSummaryAndChanges(ctx){
  refine.setAttribute('aria-expanded','false');
  summaryActions.append(retry,refine);brief.append(status,summaryActions,editor,lesson,docs);
  const saved=ctx.savedSummary;
- if(saved?.markdown){lesson.innerHTML=renderReviewMarkdown(saved.markdown);status.textContent='Saved summary'+(saved.provider?' · '+saved.provider:'')+(saved.model?' · '+saved.model:'')+'. No AI request was made.';}else status.textContent='No summary or training generated. Choose an agent and model when you want to create it.';
- retry.hidden=false;retry.textContent=saved?.markdown?'Generate with another model…':'Generate summary & training…';
- document.getElementById('review-summary-state').textContent=saved?.markdown?'':' · Not generated';
+ if(saved?.markdown){lesson.innerHTML=renderReviewMarkdown(saved.markdown);status.textContent=saved.stale?(saved.commitsBehind===null?'PR changed since this summary was generated':saved.commitsBehind+' commit'+(saved.commitsBehind===1?'':'s')+' since this summary was updated')+(saved.diverged?' · Branch history changed':'')+' · Generated for '+saved.head.slice(0,7):'Summary for commit '+(saved.head||ctx.pr.headRefOid).slice(0,7)+(saved.model?' · '+saved.model:'');}else status.textContent='No summary or training generated. Choose an agent and model when you want to create it.';
+ retry.hidden=false;retry.textContent=saved?.stale?'Update summary & training…':saved?.markdown?'Generate with another model…':'Generate summary & training…';
+ document.getElementById('review-summary-state').textContent=saved?.stale?(saved.commitsBehind===null?' · Update available':' · '+saved.commitsBehind+' commit'+(saved.commitsBehind===1?'':'s')+' behind'):saved?.markdown?'':' · Not generated';
  document.getElementById('step-status-1').textContent='';
  updateButtons();
- const generate=async(launchConfig,refinement)=>{busy=true;updateButtons();status.textContent='Generating with '+launchConfig.provider+(launchConfig.model?' · '+launchConfig.model:'')+'… File changes remain available.';document.getElementById('review-summary-state').textContent=' · Generating…';try{const result=await window.api.reviewLesson({reviewId:ctx.reviewId,launchConfig,refinement});if(theaterContext!==ctx)return;if(!result.ok)throw Error(result.error);lesson.innerHTML=renderReviewMarkdown(result.markdown);ctx.savedSummary={markdown:result.markdown,...launchConfig};if(refinement&&input.value.trim()===refinement.instruction){input.value='';editor.hidden=true;refine.setAttribute('aria-expanded','false');}status.textContent='AI explanation · '+launchConfig.provider+(launchConfig.model?' · '+launchConfig.model:'')+' — verify it against the file changes.';document.getElementById('review-summary-state').textContent='';retry.textContent='Generate with another model…';}catch(e){if(theaterContext!==ctx)return;status.textContent='Summary unavailable: '+e.message;document.getElementById('review-summary-state').textContent=' · Retry needed';}finally{busy=false;if(theaterContext===ctx)updateButtons();}};
+ const generate=async(launchConfig,refinement)=>{busy=true;ctx.summaryBusy=true;updateButtons();status.textContent='Generating with '+launchConfig.provider+(launchConfig.model?' · '+launchConfig.model:'')+'… File changes remain available.';document.getElementById('review-summary-state').textContent=' · Generating…';try{const result=await window.api.reviewLesson({reviewId:ctx.reviewId,launchConfig,refinement});if(theaterContext!==ctx)return;if(!result.ok)throw Error(result.error);lesson.innerHTML=renderReviewMarkdown(result.markdown);ctx.savedSummary={markdown:result.markdown,...launchConfig,head:ctx.pr.headRefOid};if(refinement&&input.value.trim()===refinement.instruction){input.value='';editor.hidden=true;refine.setAttribute('aria-expanded','false');}status.textContent='AI explanation · '+launchConfig.provider+(launchConfig.model?' · '+launchConfig.model:'')+' — verify it against the file changes.';document.getElementById('review-summary-state').textContent='';retry.textContent='Generate with another model…';}catch(e){if(theaterContext!==ctx)return;status.textContent='Summary unavailable: '+e.message;document.getElementById('review-summary-state').textContent=' · Retry needed';}finally{busy=false;ctx.summaryBusy=false;if(theaterContext===ctx)updateButtons();}};
  const chooseModel=refinement=>window.openTaskRunnerLaunch({mode:'summary',call:async(action,input)=>{
   if(action==='launch-options'){const result=await window.api.reviewLessonOptions({reviewId:ctx.reviewId});if(!result.ok)throw Error(result.error);if(refinement){result.title='Refine summary & training';result.actionLabel='Refine';result.purpose='Update the existing summary using your prompt and the PR diff. The current summary stays available while AI works.';}return result;}
   if(action==='agent'){if(theaterContext!==ctx)throw Error('The selected PR changed. Reopen generation settings.');if(busy)throw Error('A summary update is already running.');void generate(input.launchConfig,refinement);return {ok:true};}
   throw Error('Unsupported summary action.');
  }});
- retry.onclick=()=>chooseModel();
+ retry.onclick=()=>chooseModel(ctx.savedSummary?.stale?{markdown:ctx.savedSummary.markdown,instruction:'Update this summary and training for the current PR changes. Preserve the existing refinements and useful teaching content; remove claims that no longer apply.'}:undefined);
  update.onclick=()=>{if(update.disabled)return;chooseModel({markdown:ctx.savedSummary.markdown,instruction:input.value.trim()});};
  input.addEventListener('robos-submit',()=>update.click());
  function acknowledge(parent,id,text,key){document.getElementById(id)?.remove();const label=document.createElement('label');label.id=id;label.style.cssText='display:block;margin:18px 0';const box=document.createElement('input');box.type='checkbox';box.checked=!!ctx.validationGates[key];box.onchange=()=>{ctx.validationGates[key]=box.checked;renderTheaterSignOff();};label.append(box,' '+text);parent.append(label);}
@@ -227,3 +229,28 @@ window.setReviewInnerTab=function(name){
 };
 
 window.refreshInlineReviewPR=async pr=>{if(theaterContext?.pr.url!==pr.url||document.getElementById('pr-review-theater').classList.contains('hidden'))return;await openReviewPage(pr);await window.refreshReviewPages();};
+
+// Check on return, never start a model request. Keep unchanged reviews and drafts intact.
+let focusRefreshPending=false;
+window.addEventListener('focus',async()=>{
+ const ctx=theaterContext;
+ if(!ctx?.real||ctx.summaryBusy||focusRefreshPending||Date.now()-(ctx.lastRefresh||0)<60000||document.getElementById('pr-review-theater').classList.contains('hidden'))return;
+ focusRefreshPending=true;ctx.lastRefresh=Date.now();
+ try{
+  const result=await window.api.reviewRevision({url:ctx.pr.url});
+  if(theaterContext!==ctx)return;
+  if(!result.ok)throw Error(result.error);
+  if(result.head!==ctx.pr.headRefOid||result.body!==(ctx.pr.body||'')||result.title!==ctx.pr.title){
+   const tab=document.getElementById('review-tab-summary')?.getAttribute('aria-selected')==='true'?'summary':'files';
+   const file=ctx.fileDiffs?.[activeDiffFileIndex]?.filePath;
+   const draft=document.querySelector('#theater-course-brief robos-ai-textarea')?.value;
+   await openReviewPage(ctx.pr);
+   if(theaterContext?.pr.url!==ctx.pr.url)return;
+   const index=theaterContext.fileDiffs.findIndex(f=>f.filePath===file);
+   if(index>=0){activeDiffFileIndex=index;renderTheaterDiffViewer();}
+   window.setReviewInnerTab(tab);
+   if(draft){const input=document.querySelector('#theater-course-brief robos-ai-textarea');input.value=draft;input.closest('section').hidden=false;input.dispatchEvent(new Event('input'));}
+  }
+ }catch(e){showError('Could not refresh PR: '+e.message);}
+ finally{focusRefreshPending=false;}
+});

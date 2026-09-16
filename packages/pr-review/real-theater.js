@@ -25,7 +25,7 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     const url=`https://github.com/${repo}/pull/${number}`;review.prIdentity(url);
     const ctx=await context(url),pr=ctx.pr;
     const id=`${url}@${pr.headRefOid}`;sessions.set(id,{...ctx,passed:false});
-    return {ok:true,real:true,savedSummary:require('./review-lesson').cached(ctx),reviewId:id,reviewPolicy:policy(repo),pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
+    return {ok:true,real:true,savedSummary:await require('./review-lesson').freshness(require('./review-lesson').cached(ctx),pr,command),reviewId:id,reviewPolicy:policy(repo),pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
       elearning:{course:{'@id':id,'dcterms:title':pr.title,'dcterms:description':`${pr.body || 'No PR description provided.'}\n\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nCommit: ${pr.headRefOid}\nFiles: ${(pr.files||[]).map(f=>f.path).join(', ')}`,'robos:estimatedDuration':'Review at your own pace','robos:topic':'Proposed change','robos:modules':[]},quiz:ctx.questions.map((q,i)=>({id:'q'+i,question:q.label,options:q.options,explanation:''}))},
       documentation:{markdown:pr.body||'No documentation or evidence supplied in this PR description.',mermaidText:'No verified diagram supplied.',dualReality:{blastRadius:[]}},
       fileDiffs:parseDiff(ctx.diff,pr.files),validationGates:{elearningPassed:false,docsReviewed:false,diffsInspected:false,ciPassed:review.checksReady(pr.statusCheckRollup)},checks:pr.statusCheckRollup||[]};

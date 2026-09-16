@@ -2136,3 +2136,13 @@ button.diff-line-number:hover,button.diff-line-number:focus-visible{background:#
 .changed-files-views{display:flex;gap:4px}.changed-files-toolbar button{background:transparent;color:#9fb2c4;border:1px solid #344354;border-radius:4px;padding:4px 8px;font:11px system-ui;cursor:pointer}.changed-files-toolbar button[aria-pressed=true]{color:#00bcd4;background:#16313e;border-color:#00bcd4}.changed-files-toolbar button:disabled{opacity:.4;cursor:default}
 .changed-files-toolbar input{box-sizing:border-box;width:100%;min-width:0;background:#0b1118;border:1px solid #344354;border-radius:4px;color:#dbe5ee;padding:5px 7px;font:12px system-ui}.changed-files-toolbar [data-tree-actions]{display:flex;gap:6px}.changed-files-toolbar [hidden]{display:none!important}
 .changed-files-entries{overflow:auto;flex:1;min-height:0}.changed-files-entries details{margin:0}.changed-files-entries summary{padding:6px 8px;color:#a8bfd3;cursor:pointer;font:12px system-ui;overflow-wrap:anywhere}.changed-files-entries summary:hover{background:#17212c}.changed-files-children{margin-left:12px;border-left:1px solid #243140}.changed-files-entries .diff-file-item{gap:8px;padding:7px 8px}.changed-files-entries .diff-file-path{min-width:0;overflow-wrap:anywhere;text-align:left}.changed-files-entries .diff-file-stats{flex-shrink:0;white-space:nowrap}.changed-files-empty{padding:12px;font:12px system-ui;color:#8fa2b3}.changed-files-toolbar :focus-visible,.changed-files-entries summary:focus-visible{outline:2px solid #00bcd4;outline-offset:-2px}
+
+/* Let the diff use every remaining pixel, with independent tree/code scrolling. */
+.theater-stage-content:has(#review-panel-files:not([hidden])){min-height:0;overflow:hidden;padding:12px 16px}
+#stage-1.active:has(#review-panel-files:not([hidden])){min-height:0;gap:10px}
+#review-panel-files:not([hidden]),.review-file-content{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
+#review-panel-files .diff-viewer-layout{height:auto;flex:1;min-height:0;width:100%}
+#review-panel-files .stage-header{flex-shrink:0}
+#stage-1:has(#review-panel-files:not([hidden])) #review-inner-tabs{margin-bottom:0;flex-shrink:0}
+#review-diff-actions,#stage-1>.stage-nav-footer{flex-shrink:0}
+#review-diff-actions #diff-reviewed{margin:8px 0!important}
