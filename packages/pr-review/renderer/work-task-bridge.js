@@ -37,6 +37,7 @@ window.prepareRealTheater=function() {
   document.getElementById('theater-certificate-card').classList.add('hidden');
   document.querySelector('#theater-certificate-card .cert-ribbon').textContent='Knowledge check recorded for this commit';
   document.querySelectorAll('[onclick="window.openAppCourseInHub()"] ').forEach(e=>e.hidden=true);
+  prepareReviewInnerTabs();
   prepareSummaryAndChanges(ctx);
   renderTheaterSignOff();
 };
@@ -46,7 +47,7 @@ window.renderRealSignOff=function() {
   document.querySelector('#gate-card-elearning strong').textContent='Knowledge check';
   document.getElementById('gate-card-ide').hidden=true;
   let evidenceGate=document.getElementById('gate-card-evidence');if(!evidenceGate){evidenceGate=document.getElementById('gate-card-docs').cloneNode(true);evidenceGate.id='gate-card-evidence';evidenceGate.querySelector('[id^=gate-badge]').id='gate-badge-evidence';document.getElementById('gate-card-ci').after(evidenceGate);}evidenceGate.querySelector('strong').textContent='Validation & evidence';evidenceGate.querySelector('.gate-subtext').textContent='Review reported tests and remaining limitations';const evidenceBadge=document.getElementById('gate-badge-evidence');evidenceBadge.textContent=g.evidenceReviewed?'Reviewed':'Pending';evidenceBadge.className='gate-status-badge '+(g.evidenceReviewed?'gate-pass':'gate-pending');
-  for(const [id,stage] of [['docs',1],['diffs',3],['evidence',5],['elearning',7]]){const card=document.getElementById('gate-card-'+id);let link=card.querySelector('button');if(!link){link=document.createElement('button');link.className='btn-stage-nav';link.textContent='Review';card.append(link);}link.onclick=()=>window.setTheaterStage(stage);}
+  for(const [id,stage] of [['docs',1],['diffs',3],['evidence',5],['elearning',7]]){const card=document.getElementById('gate-card-'+id);let link=card.querySelector('button');if(!link){link=document.createElement('button');link.className='btn-stage-nav';link.textContent='Review';card.append(link);}link.onclick=()=>{window.setTheaterStage(stage);if(stage===1)window.setReviewInnerTab('summary');};}
 
   for(const [id,pass,label] of [['elearning',g.elearningPassed,g.elearningPassed?`Passed (${ctx.quizScore}%)`:'Pending'],['docs',g.docsReviewed,g.docsReviewed?'Reviewed':'Pending'],['diffs',g.diffsInspected,g.diffsInspected?'Inspected':'Pending'],['ci',g.ciPassed,ctx.checks.length?(g.ciPassed?'Passing':'Pending / failed'):'No checks reported'],['ide',g.ideDiffLaunched,g.ideDiffLaunched?'Opened':'Optional']]){
     const e=document.getElementById('gate-badge-'+id);e.textContent=label;e.className='gate-status-badge '+(pass?'gate-pass':'gate-pending');
@@ -111,9 +112,9 @@ function prepareReviewSequence() {
     step.innerHTML='<span class="step-num">6</span> <span class="step-label">Knowledge check</span>';
     document.getElementById('step-btn-6').before(step);
   }
-  const labels={1:'Summary & training',3:'File changes',5:'Validation & evidence',7:'Knowledge check',6:'Review & merge'};
-  const order=[1,3,5,7,6];
-  for(const id of [2,4])document.getElementById('step-btn-'+id).hidden=true;
+  const labels={1:'Review changes',5:'Validation & evidence',7:'Knowledge check',6:'Review & merge'};
+  const order=[1,5,7,6];
+  for(const id of [2,3,4])document.getElementById('step-btn-'+id).hidden=true;
   order.forEach((id,i)=>{
     const step=document.getElementById('step-btn-'+id);document.getElementById('theater-stepper').append(step);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
     document.querySelector('#stage-'+id+' .stage-title-wrap h3').textContent=labels[id];
@@ -149,7 +150,7 @@ function prepareSummaryAndChanges(ctx){
  const retry=document.createElement('button');retry.className='btn-primary';retry.textContent='Retry summary & training';retry.hidden=true;
  const docs=document.createElement('details');docs.innerHTML='<summary>PR description & linked documentation</summary>';const description=document.createElement('article');description.className='review-markdown';description.innerHTML=renderReviewMarkdown(ctx.pr.body||'No PR description supplied.');docs.append(description);
  brief.append(status,lesson,retry,docs);
- const generate=async()=>{retry.hidden=true;status.textContent='Preparing a developer summary and subject guide with Codex… You can review file changes while it loads.';try{const result=await window.api.reviewLesson({reviewId:ctx.reviewId});if(theaterContext!==ctx)return;if(!result.ok)throw Error(result.error);lesson.innerHTML=renderReviewMarkdown(result.markdown);status.textContent='AI explanation of this commit — verify it against the file changes.';document.getElementById('step-status-1').textContent='';}catch(e){if(theaterContext!==ctx)return;status.textContent='Summary unavailable: '+e.message;retry.hidden=false;}};retry.onclick=generate;generate();
+ const generate=async()=>{retry.hidden=true;status.textContent='Preparing a developer summary and subject guide with Codex… File changes are available in the adjacent tab.';document.getElementById('review-summary-state').textContent=' · Preparing…';try{const result=await window.api.reviewLesson({reviewId:ctx.reviewId});if(theaterContext!==ctx)return;if(!result.ok)throw Error(result.error);lesson.innerHTML=renderReviewMarkdown(result.markdown);status.textContent='AI explanation of this commit — verify it against the file changes.';document.getElementById('step-status-1').textContent='';document.getElementById('review-summary-state').textContent='';}catch(e){if(theaterContext!==ctx)return;status.textContent='Summary unavailable: '+e.message;document.getElementById('review-summary-state').textContent=' · Retry needed';retry.hidden=false;}};retry.onclick=generate;generate();
  function acknowledge(parent,id,text,key){document.getElementById(id)?.remove();const label=document.createElement('label');label.id=id;label.style.cssText='display:block;margin:18px 0';const box=document.createElement('input');box.type='checkbox';box.checked=!!ctx.validationGates[key];box.onchange=()=>{ctx.validationGates[key]=box.checked;renderTheaterSignOff();};label.append(box,' '+text);parent.append(label);}
  acknowledge(brief,'summary-reviewed','I reviewed the PR scope and documentation.','docsReviewed');
  const stage=document.getElementById('stage-3');
@@ -157,3 +158,22 @@ function prepareSummaryAndChanges(ctx){
  for(const [name,ide] of [['Open in VS Code','vscode'],['Open in IntelliJ','intellij']]){const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=name;b.onclick=()=>window.launchTheaterIDE(ide);actions.append(b);}
  acknowledge(actions,'diff-reviewed','I inspected the file changes for this commit.','diffsInspected');
 }
+
+function prepareReviewInnerTabs(){
+ const stage=document.getElementById('stage-1');
+ let tabs=document.getElementById('review-inner-tabs');
+ if(!tabs){tabs=document.createElement('nav');tabs.id='review-inner-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','PR changes and explanation');
+ tabs.innerHTML='<button id="review-tab-files" role="tab" aria-controls="review-panel-files" data-review-tab="files">File changes</button><button id="review-tab-summary" role="tab" aria-controls="review-panel-summary" data-review-tab="summary">Summary &amp; training<span id="review-summary-state" aria-live="polite"></span></button>';
+ stage.querySelector('.stage-header').after(tabs);
+ for(const name of ['files','summary']){const panel=document.createElement('section');panel.id='review-panel-'+name;panel.className='review-inner-panel';panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','review-tab-'+name);tabs.after(panel);}
+ tabs.querySelectorAll('button').forEach(button=>{button.onclick=()=>window.setReviewInnerTab(button.dataset.reviewTab);button.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const name=e.key==='Home'?'files':e.key==='End'?'summary':button.dataset.reviewTab==='files'?'summary':'files';window.setReviewInnerTab(name);document.getElementById('review-tab-'+name).focus();}};});
+ }
+ const files=document.getElementById('stage-3');files.querySelector('.stage-title-wrap h3').hidden=true;files.querySelector('.stage-title-wrap p').textContent='Select a file to inspect its changes.';files.classList.remove('theater-stage','active');files.classList.add('review-file-content');files.querySelector('.stage-nav-footer').hidden=true;
+ document.getElementById('review-panel-files').append(files);
+ document.getElementById('review-panel-summary').append(document.getElementById('theater-elearning-modules-card'));
+ stage.querySelector('.stage-title-wrap p').textContent='Inspect file changes and use the AI explanation alongside your review. Summary generation does not block the diff.';
+ window.setReviewInnerTab('files');
+}
+window.setReviewInnerTab=function(name){
+ for(const value of ['files','summary']){const selected=value===name;const button=document.getElementById('review-tab-'+value),panel=document.getElementById('review-panel-'+value);if(!button||!panel)return;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;panel.hidden=!selected;}
+};

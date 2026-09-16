@@ -643,6 +643,7 @@ window.exitTheater = function() {
 };
 
 window.setTheaterStage = function(stageNum) {
+  if(theaterContext?.real&&stageNum===3&&document.getElementById('review-inner-tabs')){stageNum=1;window.setReviewInnerTab('files');}
   if(theaterContext?.real && stageNum===7 && !(theaterContext.validationGates.docsReviewed && theaterContext.validationGates.diffsInspected && theaterContext.validationGates.evidenceReviewed)) {
     showError('Review the documentation, diff, and evidence before taking the knowledge check.');return;
   }

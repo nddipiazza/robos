@@ -2108,3 +2108,10 @@ header h1 { font-size: 15px; font-weight: 600; }
 #theater-course-brief details{margin-top:24px;border-top:1px solid #344354;padding-top:16px;}
 #theater-course-brief summary{cursor:pointer;font-size:14px;font-weight:600;}
 #theater-course-brief label{font-size:14px;}
+
+#review-inner-tabs{display:flex;gap:4px;border-bottom:1px solid #344354;margin:0 0 20px;}
+#review-inner-tabs button{border:0;border-bottom:2px solid transparent;background:transparent;color:#9daebd;padding:12px 18px;cursor:pointer;font:600 14px system-ui;}
+#review-inner-tabs button[aria-selected=true]{color:#00c9df;border-bottom-color:#00c9df;background:#12222c;}
+#review-inner-tabs button:focus-visible{outline:2px solid #00c9df;outline-offset:-2px;}
+#review-summary-state{font-size:12px;font-weight:400;color:#a8b6c3;}
+.review-inner-panel[hidden],.review-file-content>.stage-nav-footer[hidden]{display:none!important;}
