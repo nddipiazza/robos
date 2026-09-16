@@ -82,6 +82,7 @@ window.renderRealSignOff=function() {
 };
 document.querySelectorAll('input[name="theater-decision"]').forEach(e=>e.addEventListener('change',()=>{if(theaterContext?.real)renderTheaterSignOff();}));
 let reviewPages=[];
+let reviewRepositories=[];
 let reviewPageCycle=false;
 const reviewedPages=new Map();
 async function openReviewPage(pr){
@@ -90,15 +91,20 @@ async function openReviewPage(pr){
  if(theaterContext?.real&&reviewedPages.has(theaterContext.reviewId)){Object.assign(theaterContext.validationGates,reviewedPages.get(theaterContext.reviewId));prepareSummaryAndChanges(theaterContext);document.getElementById('real-evidence-reviewed').checked=!!theaterContext.validationGates.evidenceReviewed;renderTheaterSignOff();}
 }
 function renderReviewPages(){
- let nav=document.getElementById('review-pr-pages');if(!nav){nav=document.createElement('nav');nav.id='review-pr-pages';nav.setAttribute('aria-label','Pull requests in merge order');document.querySelector('.theater-topbar').after(nav);}nav.replaceChildren();nav.hidden=!reviewPages.length;
- const label=document.createElement('span');label.textContent=reviewPageCycle?'Dependency cycle — fix Git project dependencies before merging':'PR pages · dependency order';nav.append(label);
- for(const [index,pr] of reviewPages.entries()){const b=document.createElement('button');b.textContent=`${index+1}. ${pr.repo} #${pr.number}`+(pr.state==='MERGED'?' · Merged':'');b.title=pr.title+(pr.dependsOn.length?' · Merge after '+pr.dependsOn.join(', '):' · No preceding PR dependency');b.className='btn-plan-link';b.setAttribute('aria-current',String(theaterContext?.pr.url===pr.url));b.onclick=()=>{nav.querySelectorAll('button').forEach(x=>x.disabled=true);openReviewPage(pr).catch(e=>showError(e.message)).finally(()=>nav.querySelectorAll('button').forEach(x=>x.disabled=false));};nav.append(b);}
+ let nav=document.getElementById('review-pr-pages');if(!nav){nav=document.createElement('nav');nav.id='review-pr-pages';nav.setAttribute('aria-label','Pull requests in merge order');nav.setAttribute('role','tablist');document.querySelector('.theater-topbar').after(nav);}nav.replaceChildren();nav.hidden=!reviewPages.length;
+ const label=document.createElement('span');label.textContent=reviewPageCycle?'Dependency cycle — fix Git project dependencies before merging':'Merge order';nav.append(label);
+ for(const [index,pr] of reviewPages.entries()){const b=document.createElement('button');b.textContent=`${index+1}. ${pr.repo.split('/').pop()} #${pr.number}`+(pr.state==='MERGED'?' · Merged':'');b.title=pr.title+(pr.dependsOn.length?' · Merge after '+pr.dependsOn.join(', '):' · No preceding PR dependency');b.className='btn-plan-link';b.setAttribute('role','tab');b.setAttribute('aria-selected',String(theaterContext?.pr.url===pr.url));b.setAttribute('aria-current',String(theaterContext?.pr.url===pr.url));b.onclick=()=>{nav.querySelectorAll('button').forEach(x=>x.disabled=true);openReviewPage(pr).catch(e=>showError(e.message)).finally(()=>nav.querySelectorAll('button').forEach(x=>x.disabled=false));};nav.append(b);}
+ const represented=new Set(reviewPages.map(p=>('https://github.com/'+p.repo).toLowerCase()));
+ for(const repo of reviewRepositories.filter(p=>!represented.has(p.url.toLowerCase()))){
+  const tab=document.createElement('button');tab.type='button';tab.setAttribute('role','tab');tab.disabled=true;tab.className='btn-plan-link pending-pr-tab';tab.textContent=repo.url.split('/').pop()+' · No linked PR yet';tab.title='This task includes the repository, but its agent has not produced a linked PR.';nav.append(tab);
+ }
+ nav.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const tabs=[...nav.querySelectorAll('button:not(:disabled)')],index=tabs.indexOf(document.activeElement);if(index<0)return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;tabs[next].focus();tabs[next].click();};
 }
-window.refreshReviewPages=async()=>{const result=await window.workTask['review-pages']();if(result.ok){const merged=reviewPages.filter(p=>!result.data.pages.some(x=>x.url===p.url)).map(p=>({...p,state:'MERGED'}));reviewPages=[...merged,...result.data.pages];reviewPageCycle=result.data.cycle;renderReviewPages();renderTheaterSignOff();}};
+window.refreshReviewPages=async()=>{const result=await window.workTask['review-pages']();if(result.ok){const merged=reviewPages.filter(p=>!result.data.pages.some(x=>x.url===p.url)).map(p=>({...p,state:'MERGED'}));reviewPages=[...merged,...result.data.pages];reviewRepositories=result.data.repositories||[];reviewPageCycle=result.data.cycle;renderReviewPages();renderTheaterSignOff();}};
 async function resumeReview() {
  const state=await window.workTask.state();if(!state.ok||!state.data)return;
  const result=await window.workTask['review-pages']();if(!result.ok)throw Error(result.error);
- reviewPages=result.data.pages;reviewPageCycle=result.data.cycle;
+ reviewPages=result.data.pages;reviewRepositories=result.data.repositories||[];reviewPageCycle=result.data.cycle;
  if(!reviewPages.length){showError('This task has no linked open PR yet.');return;}
  await openReviewPage(reviewPages.find(p=>p.state==='OPEN')||reviewPages[0]);
 }
@@ -251,6 +257,8 @@ window.addEventListener('focus',async()=>{
   const result=await window.api.reviewRevision({url:ctx.pr.url});
   if(theaterContext!==ctx)return;
   if(!result.ok)throw Error(result.error);
+  await window.refreshReviewPages();
+  if(theaterContext!==ctx)return;
   if(result.head!==ctx.pr.headRefOid||result.body!==(ctx.pr.body||'')||result.title!==ctx.pr.title){
    const tab=document.getElementById('review-tab-summary')?.getAttribute('aria-selected')==='true'?'summary':'files';
    const file=ctx.fileDiffs?.[activeDiffFileIndex]?.filePath;

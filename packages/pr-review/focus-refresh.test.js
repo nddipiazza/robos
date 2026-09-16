@@ -4,7 +4,7 @@ const source=fs.readFileSync(require.resolve('./renderer/work-task-bridge.js'),'
 function setup(){
  let listener,calls=0,reloads=0;
  const ctx={real:true,lastRefresh:Date.now()-61000,pr:{url:'pr',headRefOid:'old',body:'',title:'Title'},fileDiffs:[]};
- const window={addEventListener:(_,fn)=>listener=fn,api:{reviewRevision:async()=>{calls++;return {ok:true,head:'old',body:'',title:'Title'};}},setReviewInnerTab:()=>{}};
+ const window={refreshReviewPages:async()=>{},addEventListener:(_,fn)=>listener=fn,api:{reviewRevision:async()=>{calls++;return {ok:true,head:'old',body:'',title:'Title'};}},setReviewInnerTab:()=>{}};
  const context={window,theaterContext:ctx,document:{getElementById:()=>({classList:{contains:()=>false},getAttribute:()=>null}),querySelector:()=>null},activeDiffFileIndex:0,openReviewPage:async()=>{reloads++;},showError:message=>{throw Error(message);}};
  vm.runInNewContext('// Check on return,'+source,context);
  return {ctx,window,run:()=>listener(),counts:()=>({calls,reloads})};
