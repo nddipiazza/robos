@@ -2160,3 +2160,8 @@ button.diff-line-number:hover,button.diff-line-number:focus-visible{background:#
 #real-pr-evidence .review-evidence-checks li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #30363d;overflow-wrap:anywhere}
 #real-pr-evidence .review-evidence-checks button{flex-shrink:0}
 #real-pr-evidence button:focus-visible{outline:2px solid #00bcd4;outline-offset:3px}
+
+#knowledge-review-needed[hidden],#theater-quiz-card[hidden]{display:none!important}
+#knowledge-review-needed p{margin:12px 0;color:#a8bfd3}
+#knowledge-review-needed button{display:block;margin:8px 0}
+#theater-error{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;background:#391e24;border-bottom:1px solid #a44951;color:#ffccd1}

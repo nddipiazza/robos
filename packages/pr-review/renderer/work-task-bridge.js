@@ -48,6 +48,7 @@ window.prepareRealTheater=function() {
 };
 window.renderRealSignOff=function() {
   const ctx=theaterContext,g=ctx.validationGates;
+  window.renderKnowledgeReadiness?.();
   document.querySelector('#gate-card-docs strong').textContent='PR scope & documentation';
   document.querySelector('#gate-card-elearning strong').textContent='Knowledge check';
   document.getElementById('gate-card-ide').hidden=true;
@@ -254,3 +255,18 @@ window.addEventListener('focus',async()=>{
  }catch(e){showError('Could not refresh PR: '+e.message);}
  finally{focusRefreshPending=false;}
 });
+
+window.renderKnowledgeReadiness=function(){
+ const stage=document.getElementById('stage-7');if(!stage||!theaterContext?.real)return;
+ const steps=[['docsReviewed','Review PR scope & documentation',1,'summary'],['diffsInspected','Review file changes',1,'files'],['evidenceReviewed','Review validation & evidence',5]];
+ const pending=steps.filter(([key])=>!theaterContext.validationGates[key]);
+ let notice=document.getElementById('knowledge-review-needed');
+ if(!notice){notice=document.createElement('section');notice.id='knowledge-review-needed';notice.className='theater-card';notice.setAttribute('aria-label','Review steps remaining');stage.querySelector('.stage-header').after(notice);}
+ notice.hidden=!pending.length;notice.replaceChildren();
+ const title=document.createElement('h4');title.textContent='Finish reviewing before taking the knowledge check';notice.append(title);
+ const help=document.createElement('p');help.textContent='Review these sections and check their acknowledgement boxes:';notice.append(help);
+ for(const [,label,target,tab] of pending){const button=document.createElement('button');button.className='btn-stage-nav';button.textContent=label;button.onclick=()=>{setTheaterStage(target);if(tab)setReviewInnerTab(tab);};notice.append(button);}
+ if(!theaterContext.reviewPolicy?.requireCompletionCertificate){const skip=document.createElement('button');skip.className='btn-stage-nav';skip.textContent='Skip optional quiz → Review & merge';skip.onclick=()=>setTheaterStage(6);notice.append(skip);}
+ document.getElementById('theater-quiz-card').hidden=!!pending.length;
+ const submit=document.getElementById('btn-submit-quiz');submit.removeAttribute('onclick');submit.onclick=()=>window.submitTheaterQuiz();submit.disabled=!!pending.length;
+};

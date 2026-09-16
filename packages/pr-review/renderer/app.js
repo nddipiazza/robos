@@ -521,6 +521,12 @@ function timeAgo(dateStr) {
 }
 
 function showError(msg) {
+  const theater=document.getElementById('pr-review-theater');
+  if(theater&&!theater.classList.contains('hidden')){
+    let notice=document.getElementById('theater-error');
+    if(!notice){notice=document.createElement('div');notice.id='theater-error';notice.setAttribute('role','alert');theater.querySelector('.theater-stage-content').before(notice);}
+    notice.replaceChildren(document.createTextNode(msg));const dismiss=document.createElement('button');dismiss.textContent='Dismiss';dismiss.className='btn-stage-nav';dismiss.onclick=()=>notice.remove();notice.append(dismiss);return;
+  }
   errorBar.textContent = msg;
   errorBar.classList.remove("hidden");
 }
@@ -606,9 +612,7 @@ window.exitTheater = function() {
 
 window.setTheaterStage = function(stageNum) {
   if(theaterContext?.real&&stageNum===3&&document.getElementById('review-inner-tabs')){stageNum=1;window.setReviewInnerTab('files');}
-  if(theaterContext?.real && stageNum===7 && !(theaterContext.validationGates.docsReviewed && theaterContext.validationGates.diffsInspected && theaterContext.validationGates.evidenceReviewed)) {
-    showError('Review the documentation, diff, and evidence before taking the knowledge check.');return;
-  }
+  document.getElementById('theater-error')?.remove();
   currentTheaterStage = stageNum;
 
   // Update Stepper
