@@ -21,3 +21,10 @@ test('Codex planning exposes chat through MCP while retaining read-only shell sa
  assert.ok(options.includes('mcp_servers.robos_chat.command="node"'));
  assert.ok(options.includes('mcp_servers.robos_chat.args=["/home/agent/robos-chat.js","--mcp"]'));
 });
+
+test('both implementers can write evidence outside the repository; planning stays read-only',()=>{
+ assert.ok(agySettings('implement').permissions.allow.includes('write_file(/home/agent/evidence)'));
+ const options=args('codex','implement','');
+ assert.ok(options.some((v,i)=>v==='--add-dir'&&options[i+1]==='/home/agent/evidence'));
+ assert.ok(!args('codex','plan','').includes('--add-dir'));
+});

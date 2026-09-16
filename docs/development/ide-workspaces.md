@@ -23,3 +23,7 @@ Review pages can be inspected in any order. Merge is blocked in the backend unti
 ### Shared Open in IDE control
 
 Git Projects and PR Review Theater use `robos-lib/open-ide-dialog.js` and the shared `project-ides.choicesFor` resolver. One applicable installed IDE opens directly. Multiple IDE associations show a chooser explaining which repositories or project roots use each IDE; users can open one or several. Review sessions resolve associations across all selected Git projects, and every chosen IDE receives the complete session workspace. Missing installations point to Software Center; missing associations point to Git Projects. Backend validation rejects an unrelated IDE or an ambiguous request without a choice.
+
+### Session evidence
+
+Task Runner creates `/home/agent/evidence` outside the Git clones and exposes it as `ROBOS_EVIDENCE_DIR` to Codex and AGY. The sandbox exporter preserves it as `sessions/<session-id>/evidence` alongside `repos` before teardown. Build logs, screenshots, videos and test reports belong there, not in a committed `docs/validation` tree. The PR description and final response should summarize validation and reference evidence. Intentional documentation deliverables remain part of the source change.
