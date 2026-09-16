@@ -23,7 +23,9 @@
      const selection=editor.getSelection();
      const start=selection.startLineNumber;
      const end=Math.max(start,selection.endLineNumber-(selection.endColumn===1&&selection.endLineNumber>start?1:0));
-     onLine(side,end,start);
+     const rect=editor.getDomNode().getBoundingClientRect();
+     const position=editor.getScrolledVisiblePosition({lineNumber:selection.positionLineNumber,column:selection.positionColumn});
+     onLine(side,end,start,{x:rect.left+(position?.left||80),y:rect.top+(position?.top||0)+(position?.height||20),focus:()=>editor.focus()});
     };
     editor.onMouseUp(e=>{if(e.target.type===m.editor.MouseTargetType.GUTTER_LINE_NUMBERS&&e.target.position)reviewSelection();});
     editor.addAction({id:'robos-review-line',label:'PR comment / AI fix on selection',contextMenuGroupId:'navigation',run:reviewSelection});

@@ -12,13 +12,13 @@
    const data=await window.api.reviewSource({reviewId:ctx.reviewId,path:file.filePath});
    if(request!==sequence)return;if(!data.ok)throw Error(data.error);
    const host=document.createElement('div');host.className='source-diff-editor';host.style.visibility='hidden';container.append(host);
-   const editor=await window.RobosSourceDiff.create(host,'../node_modules/monaco-editor/min/vs',(side,line,startLine=line)=>{
+   const editor=await window.RobosSourceDiff.create(host,'../node_modules/monaco-editor/min/vs',(side,line,startLine=line,anchor)=>{
     const inDiff=file.hunks.some(h=>{
      const lines=new Set(h.lines.map(r=>side==='LEFT'?r.oldLine:r.newLine).filter(Number.isInteger));
      return line>=startLine&&line-startLine<lines.size&&Array.from({length:line-startLine+1},(_,i)=>startLine+i).every(n=>lines.has(n));
     });
     if(!inDiff){showError('Select a continuous line range within one diff hunk on the same side.');return;}
-    window.openInlineReview({ctx,path:file.filePath,line,startLine,side});
+    window.openInlineReview({ctx,path:file.filePath,line,startLine,side,anchor});
    });
    if(request!==sequence){editor.dispose();host.remove();return;}
    view=editor;status.textContent='Computing highlighted changes…';await view.show(data,currentDiffMode);

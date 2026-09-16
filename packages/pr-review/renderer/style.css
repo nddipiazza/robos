@@ -2149,7 +2149,9 @@ button.diff-line-number:hover,button.diff-line-number:focus-visible{background:#
 #diff-code-lines.source-diff-container{display:flex;flex-direction:column;padding:0;min-height:0;overflow:hidden;position:relative}
 .source-diff-editor{flex:1;min-height:0;width:100%}
 .source-diff-status{padding:16px;font:13px system-ui;color:#a8bfd3;white-space:normal}
-#theater-diff-display>#inline-review-panel{max-height:45%;overflow:auto;flex-shrink:0;margin:0;border-radius:0}
+#inline-review-panel[popover]{position:fixed;inset:auto;margin:0;width:min(640px,calc(100vw - 24px));max-width:none;max-height:min(680px,calc(100vh - 24px));box-sizing:border-box;overflow:auto;box-shadow:0 16px 60px #0009;border-color:#52758f}
+#inline-review-panel::backdrop{background:transparent}
+#inline-review-panel[popover]>header{position:sticky;top:-16px;background:#111c27;padding:8px 0;z-index:1}
 .source-diff-tools{display:flex;gap:4px;padding:4px 8px;border-bottom:1px solid #30363d;flex-shrink:0;flex-wrap:wrap;background:#161b22}
 .source-diff-tools button{font:12px system-ui;color:#a8bfd3;background:transparent;border:1px solid transparent;border-radius:3px;padding:4px 8px;cursor:pointer}
 .source-diff-tools button:hover,.source-diff-tools button[aria-pressed=true]{background:#243140;color:#e6edf3;border-color:#445568}
