@@ -60,8 +60,8 @@ async function resumeSession() {
   const provider=launched?(state.launchConfig?.provider||state.backend):null;
   const executionError=state.phase==='failed'&&!state.workerPid?(state.workflowView?.error||state.error||state.executionError?.text||'Agent execution failed.'):null;
   setAgentStatus(executionError || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),executionError?'done-err':agentRunning?'running':'');
-  document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':'Run Task';
-  document.getElementById('btn-start-agent').disabled=agentRunning||(!state.prs?.length&&!state.planReady);
+  document.getElementById('btn-start-text').textContent=state.prs?.length?'Continue task':'Run Task';
+  document.getElementById('btn-start-agent').disabled=agentRunning||!state.planReady;
   document.getElementById('btn-start-agent').title=state.planReady?'Review launch settings and implement the saved plan':state.planBlocker;
   if(!document.getElementById('session-planner')) {
     const btn=document.createElement('button');btn.id='session-planner';btn.className='btn';btn.textContent='Review plan in Task Planner';btn.onclick=()=>sessionCall('open-planner');document.getElementById('btn-start-agent').parentElement.append(btn);
@@ -70,7 +70,7 @@ async function resumeSession() {
   const reviewButton=document.getElementById('session-review');reviewButton.hidden=!state.prs?.length;
   let handoff=document.getElementById('session-review-handoff');if(!handoff){handoff=document.createElement('section');handoff.id='session-review-handoff';handoff.setAttribute('role','status');handoff.style.cssText='margin:12px 20px;padding:14px;border:1px solid #3b596d;border-radius:6px;display:flex;align-items:center;gap:16px;flex-wrap:wrap';document.querySelector('.workspace-header').after(handoff);}
   handoff.hidden=!state.prs?.length;handoff.style.display=state.prs?.length?'flex':'none';
-  if(state.prs?.length){const message=document.createElement('span');message.style.flex='1';message.textContent='Implementation finished. '+state.prs.length+' PR'+(state.prs.length===1?' is':'s are')+' ready for human review in PR Review Theater. Reopen it here at any time.';handoff.replaceChildren(message,reviewButton);}
+  if(state.prs?.length){const message=document.createElement('span');message.style.flex='1';message.textContent=state.prs.length+' linked PR'+(state.prs.length===1?'':'s')+'. '+(agentRunning?'The current task session is running.':state.phase==='failed'?'The latest run failed. Inspect the error below, then continue the task when ready.':'Open PR Review Theater to inspect the work, or continue the task if implementation remains.');handoff.replaceChildren(message,reviewButton);}
 
   document.getElementById('session-planner').textContent=state.plan?'Review plan in Task Planner':'Create plan in Task Planner';
   let blocker=document.getElementById('session-plan-blocker');if(!blocker){blocker=document.createElement('p');blocker.id='session-plan-blocker';blocker.setAttribute('role','status');document.querySelector('.workspace-header').after(blocker);}
@@ -81,7 +81,6 @@ handleStartAgent=async function() {
   if(!workSession) {setAgentStatus('Open a ticket using Work ticket in Dev Central.','done-err');return;}
   try {
     if(workSession.workerPid){await resumeSession();return;}
-    if(workSession.prs?.length){await sessionCall('route');return;}
     if(!workSession.planReady){setAgentStatus(workSession.planBlocker||'Save an implementation plan in Task Planner before running this task.','done-err');return;}
     await openTaskRunnerLaunch({mode:'implement',plan:workSession.plan||'',refinement:document.getElementById('extra-context').value||'',call:sessionCall,afterLaunch:resumeSession});
     await resumeSession();

@@ -53,8 +53,8 @@ with `gh auth refresh --hostname github.com --scopes read:packages` if needed.
 Do not put credentials in the image or exported repository files.
 
 Browser readiness is not full-stack readiness: sandbox localhost is isolated.
-Application backends, Gitea, and other test services must be provisioned separately
-inside the session or a deliberately configured test environment. The runner does
+Application backends, Gitea, and other test services are provided by an optional
+service environment profile (below), or started inside the session when appropriate. The runner does
 not mount the host Docker socket or silently connect tests to production.
 Package publication is a separate release action, not a validation prerequisite;
 validate consumer integration with a locally packed candidate package first.
@@ -106,3 +106,56 @@ pass. A prose-only README change does not trigger dependency installation, app
 builds, service startup or e2e. Executable docs/configuration still need checks for
 the behavior they affect. Explicit acceptance criteria and enforced CI gates remain
 in force. See `../robos-agent-client/validation-policy.js`.
+
+## Service environments
+
+The launch dialog can provision a repository-specific environment on the session's
+private Docker network. **None** is the default: documentation and small unit-test
+changes do not incur full-stack startup. The host coordinates Docker; neither
+Codex nor AGY gets a Docker socket. Candidate applications run inside the agent
+container and reach services by their manifest names.
+
+Register organization-owned profiles under `sandbox_environments` in
+`~/.config/robos/settings.json`:
+
+```json
+{
+  "id": "example-local",
+  "title": "Example local stack",
+  "description": "Disposable backend and database for integration tests",
+  "repository": "https://github.com/example/development",
+  "revision": "<full 40-character reviewed commit SHA>",
+  "manifest": "sandbox/environment.json",
+  "repositories": ["https://github.com/example/app"]
+}
+```
+
+The version-1 JSON manifest declares `sources` (named GitHub repositories pinned
+to commit SHAs), `services`, `agentEnvironment`, and agent `instructions`.
+`@profile/` paths refer to the profile repository; `@name/` paths refer to a declared
+source. All sources are fetched into this session's owned staging directory.
+No developer checkout is reused. Service fields are a deliberately limited Compose
+subset: image/build, command/entrypoint, environment, user/working_dir, healthcheck,
+depends_on, volumes, memoryMb/cpus, init and networkDisabled. A build declares
+`context` and a relative `dockerfile`. Volume objects declare `source`, `target`
+and `readOnly`: source paths must be read-only, other names create disposable
+session-owned volumes. Host ports, devices, host networking, privileged containers,
+external volumes, arbitrary Compose extensions and writable source mounts are rejected.
+
+The initial source build may take several minutes; Docker reuses image layers on
+later sessions. Start waits for health checks and successful initialization jobs.
+The conversation shows provisioning progress and fails before launching the agent
+if services cannot start. Startup logs and pinned source provenance are saved in
+the session's `environment` directory. Never place production credentials in a
+manifest, command, service log, build argument or source file. Existing registry
+secret bindings are supplied only to the agent, not infrastructure image builds.
+
+At completion, RobOS stops remaining processes in the agent container before
+exporting its repositories and evidence. It preserves bounded service logs under
+`evidence/environment`, disconnects the agent, and removes only the exact Compose
+project's containers, network and disposable data volumes. Images/build cache and
+pinned source snapshots remain reusable/inspectable. If cleanup fails, the task
+records `cleanup-required` with its project name; inspect the stored compose.json
+and cleanup-resources.json before retrying that exact project's teardown.
+
+Linux is verified first; Docker-backed macOS support still requires verification.
