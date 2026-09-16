@@ -124,7 +124,7 @@ async function runWorker(url,mode,electron){
     const eventsFile=path.join(dir,'events.jsonl');
     fs.writeFileSync(eventsFile,'',{mode:0o600});
     const event=(role,text,name)=>{const at=new Date().toISOString();fs.appendFileSync(eventsFile,JSON.stringify({role,text,name,at})+'\n');if(role==='error'&&!/WARN |Reading additional input/.test(text)){save(url,{lastDiagnostic:{text,at,phase:read(url).phase}});require('../../robos-lib/auth-notifications').reportAgent(state.backend,text);require('../../robos-lib/human-requests').reportError(url,text);}};
-    event('user',state.reviewFix?`Fix PR feedback for ${state.reviewFix.prUrl}\n${state.reviewFix.path}:${state.reviewFix.line} (${state.reviewFix.side})\n${state.reviewFix.instruction}`:`${mode==='plan'?'Draft implementation plan':'Implement saved plan'} for ${url}`);
+    event('user',state.reviewFix?`Fix PR feedback for ${state.reviewFix.prUrl}\n${state.reviewFix.path}:${state.reviewFix.startLine&&state.reviewFix.startLine!==state.reviewFix.line?state.reviewFix.startLine+'–':''}${state.reviewFix.line} (${state.reviewFix.side})\n${state.reviewFix.instruction}`:`${mode==='plan'?'Draft implementation plan':'Implement saved plan'} for ${url}`);
     try{
       const output=await require('../../robos-agent-task-runner/sandbox').run(url,mode,prompt,event);
       require('../../robos-lib/auth-notifications').resolve('agent',state.backend);

@@ -2,12 +2,12 @@
 (()=>{
  const drafts=new Map();let watching=null,polling=false;
  const check=result=>{if(!result?.ok)throw Error(result?.error||'Request failed');return result;};
- window.openInlineReview=async({ctx,path,line,side,row})=>{
+ window.openInlineReview=async({ctx,path,line,startLine=line,side,row})=>{
   document.getElementById('inline-review-panel')?.remove();
-  const target={reviewId:ctx.reviewId,path,line,side},key=JSON.stringify(target),draft=drafts.get(key)||{comment:'',fix:''};drafts.set(key,draft);
+  const target={reviewId:ctx.reviewId,path,line,startLine,side},key=JSON.stringify(target),draft=drafts.get(key)||{comment:'',fix:''};drafts.set(key,draft);
   const panel=document.createElement('section');panel.id='inline-review-panel';panel.setAttribute('aria-label','Review selected line');
   panel.innerHTML='<header><strong></strong><button type="button" data-close aria-label="Close inline review">×</button></header><div role="tablist"><button role="tab" data-tab="comment" aria-selected="true">PR comment</button><button role="tab" data-tab="fix" aria-selected="false">AI fix</button></div><section data-pane="comment" role="tabpanel"><div data-comments></div><label>Comment<textarea placeholder="Leave feedback on this line…" rows="3"></textarea></label><button type="button" data-post>Post comment</button></section><section data-pane="fix" role="tabpanel" hidden><robos-ai-textarea show-submit="false" show-commands="false" show-agent="false" min-height="100" placeholder="Describe what the agent should fix on this line…"></robos-ai-textarea><div data-runner></div></section><p role="status" aria-live="polite"></p>';
-  panel.querySelector('strong').textContent=`${path}:${line} · ${side==='LEFT'?'Old':'New'} version`;(row||document.getElementById('diff-code-lines')).after(panel);
+  panel.querySelector('strong').textContent=`${path}:${startLine===line?line:startLine+'–'+line} · ${side==='LEFT'?'Old':'New'} version`;(row||document.getElementById('diff-code-lines')).after(panel);
   const status=panel.querySelector('[role=status]'),comment=panel.querySelector('textarea'),fix=panel.querySelector('robos-ai-textarea'),post=panel.querySelector('[data-post]');
   comment.value=draft.comment;fix.value=draft.fix;
   const valid=()=>{if(theaterContext!==ctx)throw Error('The selected PR changed. Reopen feedback on its current diff.');};
@@ -17,7 +17,7 @@
   panel.querySelector('[data-close]').onclick=()=>panel.remove();
   const tabs=[...panel.querySelectorAll('[data-tab]')];for(const tab of tabs){tab.onclick=()=>{tabs.forEach(t=>t.setAttribute('aria-selected',String(t===tab)));panel.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==tab.dataset.tab);if(tab.dataset.tab==='fix')mountRunner();};tab.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const other=tabs.find(t=>t!==tab);other.click();other.focus();}};}
   const comments=panel.querySelector('[data-comments]');
-  const loadComments=async()=>{const result=check(await window.api.inlineComments(target));if(!panel.isConnected)return;comments.replaceChildren();for(const c of result.comments.filter(c=>c.path===path&&c.line===line&&c.side===side)){const article=document.createElement('article'),by=document.createElement('small'),body=document.createElement('div');by.textContent=(c.user?.login||'GitHub user')+' · '+new Date(c.created_at).toLocaleString();body.className='review-markdown';body.innerHTML=renderReviewMarkdown(c.body||'');article.append(by,body);comments.append(article);}};
+  const loadComments=async()=>{const result=check(await window.api.inlineComments(target));if(!panel.isConnected)return;comments.replaceChildren();for(const c of result.comments.filter(c=>c.path===path&&c.line>=startLine&&(c.start_line||c.line)<=line&&c.side===side)){const article=document.createElement('article'),by=document.createElement('small'),body=document.createElement('div');by.textContent=(c.user?.login||'GitHub user')+' · '+new Date(c.created_at).toLocaleString();body.className='review-markdown';body.innerHTML=renderReviewMarkdown(c.body||'');article.append(by,body);comments.append(article);}};
   post.onclick=async()=>{if(post.disabled)return;busy=true;update();status.textContent='Posting comment…';try{valid();check(await window.api.inlineComment({...target,body:comment.value}));comment.value='';draft.comment='';status.textContent='Comment posted to GitHub.';await loadComments();}catch(e){status.textContent=e.message;}finally{busy=false;update();}};
   async function mountRunner(){if(runner||runnerLoading)return;runnerLoading=true;try{valid();runner=await window.mountTaskRunnerLaunch({container:panel.querySelector('[data-runner]'),mode:'implement',isReady:()=>!!fix.value?.trim(),call:async(action,input)=>{
     valid();

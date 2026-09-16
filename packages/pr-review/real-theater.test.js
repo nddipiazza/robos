@@ -20,3 +20,23 @@ test('diff coordinates handle deletions, context, additions and multiple hunks',
  const diff='diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -8,2 +8,2 @@\n context\n-old\n+new\n@@ -30,0 +31,1 @@\n+later\n';
  const f=parseDiff(diff,[{path:'x'}])[0];assert.deepEqual(f.hunks.flatMap(h=>h.lines).map(r=>[r.oldLine,r.newLine]),[[8,8],[9,null],[null,9],[null,31]]);
 });
+
+test('multi-line comments send GitHub range coordinates and AI fixes receive the selected block',async()=>{
+ const calls=[];
+ const diff='diff --git a/doc.md b/doc.md\n--- a/doc.md\n+++ b/doc.md\n@@ -8,3 +8,3 @@\n context\n-old\n+new\n end\n@@ -30 +30 @@\n later\n';
+ const t=createTheater({context:async()=>({...await context(),diff}),command:async(_bin,args)=>{
+  calls.push(args);return JSON.stringify(args.includes('POST')?{id:1}:{state:'open',head:{sha:'abc',ref:'topic',repo:{full_name:'org/repo'}}});
+ }});
+ const c=await t.load({repo:'org/repo',number:1});
+ const input={reviewId:c.reviewId,path:'doc.md',startLine:8,line:10,side:'RIGHT',body:'Review this block'};
+ const selected=await t.inlineTarget(input);
+ assert.equal(selected.text,'context\nnew\nend');
+ assert.equal(selected.startLine,8);
+ await t.inlineComment(input);
+ const post=calls.find(a=>a.includes('POST'));
+ for(const value of ['start_line=8','start_side=RIGHT','line=10','side=RIGHT'])assert.ok(post.includes(value));
+ assert.equal((await t.inlineTarget({...input,side:'LEFT'})).text,'context\nold\nend');
+ await assert.rejects(t.inlineTarget({...input,line:30}),/continuous range/);
+ await assert.rejects(t.inlineTarget({...input,startLine:11}),/continuous range/);
+ await assert.rejects(t.inlineTarget({...input,startLine:0}),/continuous range/);
+});

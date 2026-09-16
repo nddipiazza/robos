@@ -19,8 +19,14 @@
    const m=await load(vs),view=new this();view.monaco=m;
    view.editor=m.editor.createDiffEditor(element,{theme:'vs-dark',readOnly:true,originalEditable:false,automaticLayout:true,renderSideBySide:true,ignoreTrimWhitespace:false,renderMarginRevertIcon:false,renderOverviewRuler:true,minimap:{enabled:false},scrollBeyondLastLine:false,hideUnchangedRegions:{enabled:true,contextLineCount:4},fontSize:13});
    for(const [side,editor] of [['LEFT',view.editor.getOriginalEditor()],['RIGHT',view.editor.getModifiedEditor()]]){
-    editor.onMouseDown(e=>{if(e.target.type===m.editor.MouseTargetType.GUTTER_LINE_NUMBERS&&e.target.position)onLine(side,e.target.position.lineNumber);});
-    editor.addAction({id:'robos-review-line',label:'PR comment / AI fix on this line',contextMenuGroupId:'navigation',run:()=>onLine(side,editor.getPosition().lineNumber)});
+    const reviewSelection=()=>{
+     const selection=editor.getSelection();
+     const start=selection.startLineNumber;
+     const end=Math.max(start,selection.endLineNumber-(selection.endColumn===1&&selection.endLineNumber>start?1:0));
+     onLine(side,end,start);
+    };
+    editor.onMouseUp(e=>{if(e.target.type===m.editor.MouseTargetType.GUTTER_LINE_NUMBERS&&e.target.position)reviewSelection();});
+    editor.addAction({id:'robos-review-line',label:'PR comment / AI fix on selection',contextMenuGroupId:'navigation',run:reviewSelection});
    }
    return view;
   }

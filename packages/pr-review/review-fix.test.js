@@ -25,3 +25,10 @@ test('completion refreshes only the launched session and PR, with failures repor
  assert.equal(completion(watch,{...done,phase:'failed'},target.prUrl,true),'error');
  assert.equal(completion(watch,{...done,reviewFix:{id:'two'}},target.prUrl,true),'superseded');
 });
+
+test('AI fix prompt retains the selected multi-line range and complete code block',()=>{
+ const fix={...target,startLine:2,line:4,text:'first\nsecond\nthird',instruction:'Simplify this block'};
+ const prompt=instructions(fix);
+ assert.ok(prompt.includes('x:2–4 (RIGHT)'));
+ assert.ok(prompt.includes('Code: first\nsecond\nthird'));
+});

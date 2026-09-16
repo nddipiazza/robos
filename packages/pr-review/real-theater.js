@@ -55,20 +55,22 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
   }
   async function lesson({reviewId,launchConfig,refinement}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before generating its summary.');return {ok:true,markdown:await require('./review-lesson').generate(ctx,launchConfig,refinement)};}
   async function lessonOptions({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const providers=await require('../robos-agent-client/providers').options();return {ok:true,textOnly:true,appLabel:'ROBOS PR REVIEW THEATER',title:'Generate summary & training',purpose:'Explain this PR and teach its relevant concepts from the supplied diff. No code changes or repository cloning. Existing summaries are reused when the commit, provider and model match.',actionLabel:'Generate',available:true,providers,provider:providers.find(p=>p.available)?.id,repositories:[],issue:{number:ctx.pr.number,title:ctx.pr.title}};}
-  async function inlineTarget({reviewId,path,line,side}) {
+  async function inlineTarget({reviewId,path,line,startLine=line,side}) {
     const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before commenting or requesting a fix.');
     const file=parseDiff(ctx.diff,ctx.pr.files).find(f=>f.filePath===path);
-    const row=file?.hunks.flatMap(h=>h.lines).find(r=>Number.isInteger(line)&&line>0&&(side==='LEFT'?r.oldLine===line:side==='RIGHT'&&r.newLine===line));
-    if(!row)throw Error('Select a line in the reviewed diff.');
+    if(!Number.isInteger(line)||!Number.isInteger(startLine)||startLine<1||line<startLine||!['LEFT','RIGHT'].includes(side))throw Error('Select a line or continuous range in the reviewed diff.');
+    const coordinate=r=>side==='LEFT'?r.oldLine:r.newLine;
+    const rows=file?.hunks.map(h=>h.lines.filter(r=>coordinate(r)>=startLine&&coordinate(r)<=line)).find(rows=>rows.length===line-startLine+1&&rows.every((r,i)=>coordinate(r)===startLine+i));
+    if(!rows)throw Error('Select a line or continuous range within one reviewed diff hunk.');
     const {repo,number}=review.prIdentity(ctx.pr.url);
     const live=JSON.parse(await command('gh',['api',`repos/${repo}/pulls/${number}`]));
     if(live.state!=='open'||live.head.sha!==ctx.pr.headRefOid)throw Error('The PR changed or closed. Refresh it before continuing.');
-    return {prUrl:ctx.pr.url,repo,number,head:live.head.sha,branch:live.head.ref,headRepo:live.head.repo?.full_name,path,line,side,text:row.text};
+    return {prUrl:ctx.pr.url,repo,number,head:live.head.sha,branch:live.head.ref,headRepo:live.head.repo?.full_name,path,line,startLine,side,text:rows.map(r=>r.text).join('\n')};
   }
   async function inlineComment(input){
     if(typeof input.body!=='string'||!input.body.trim()||input.body.length>60000)throw Error('Enter a comment (up to 60,000 characters).');
     const target=await inlineTarget(input);
-    const comment=JSON.parse(await command('gh',['api',`repos/${target.repo}/pulls/${target.number}/comments`,'--method','POST','-f',`body=${input.body.trim()}`,'-f',`commit_id=${target.head}`,'-f',`path=${target.path}`,'-F',`line=${target.line}`,'-f',`side=${target.side}`]));
+    const comment=JSON.parse(await command('gh',['api',`repos/${target.repo}/pulls/${target.number}/comments`,'--method','POST','-f',`body=${input.body.trim()}`,'-f',`commit_id=${target.head}`,'-f',`path=${target.path}`,'-F',`line=${target.line}`,'-f',`side=${target.side}`,...(target.startLine<target.line?['-F',`start_line=${target.startLine}`,'-f',`start_side=${target.side}`]:[])]));
     return {ok:true,comment};
   }
   async function source({reviewId,path}){
