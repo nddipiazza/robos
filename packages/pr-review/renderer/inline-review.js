@@ -7,7 +7,7 @@
   const target={reviewId:ctx.reviewId,path,line,side},key=JSON.stringify(target),draft=drafts.get(key)||{comment:'',fix:''};drafts.set(key,draft);
   const panel=document.createElement('section');panel.id='inline-review-panel';panel.setAttribute('aria-label','Review selected line');
   panel.innerHTML='<header><strong></strong><button type="button" data-close aria-label="Close inline review">×</button></header><div role="tablist"><button role="tab" data-tab="comment" aria-selected="true">PR comment</button><button role="tab" data-tab="fix" aria-selected="false">AI fix</button></div><section data-pane="comment" role="tabpanel"><div data-comments></div><label>Comment<textarea placeholder="Leave feedback on this line…" rows="3"></textarea></label><button type="button" data-post>Post comment</button></section><section data-pane="fix" role="tabpanel" hidden><robos-ai-textarea show-submit="false" show-commands="false" show-agent="false" min-height="100" placeholder="Describe what the agent should fix on this line…"></robos-ai-textarea><div data-runner></div></section><p role="status" aria-live="polite"></p>';
-  panel.querySelector('strong').textContent=`${path}:${line} · ${side==='LEFT'?'Old':'New'} version`;row.after(panel);
+  panel.querySelector('strong').textContent=`${path}:${line} · ${side==='LEFT'?'Old':'New'} version`;(row||document.getElementById('diff-code-lines')).after(panel);
   const status=panel.querySelector('[role=status]'),comment=panel.querySelector('textarea'),fix=panel.querySelector('robos-ai-textarea'),post=panel.querySelector('[data-post]');
   comment.value=draft.comment;fix.value=draft.fix;
   const valid=()=>{if(theaterContext!==ctx)throw Error('The selected PR changed. Reopen feedback on its current diff.');};

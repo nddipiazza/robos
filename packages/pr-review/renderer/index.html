@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; font-src 'self' data:;">
   <title>RobOS Agent-Generated Code Review Platform</title>
   <link rel="stylesheet" href="style.css">
 <script src="../../robos-lib/list-controls.js" data-app="pr-review"></script>
@@ -733,6 +733,8 @@
 <script src="../../robos-agent-task-runner/launch-dialog.js"></script>
 <script src="../../robos-lib/open-ide-dialog.js"></script>
 <script src="changed-files.js"></script>
+<script src="../../robos-lib/source-diff.js"></script>
+<script src="source-diff.js"></script>
 <script src="app.js"></script>
 <script src="../review-fix-state.js"></script>
 <script src="inline-review.js"></script>

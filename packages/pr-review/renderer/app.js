@@ -957,6 +957,7 @@ function renderCurrentFileDiff() {
   const codeContainer = document.getElementById('diff-code-lines');
   if (!codeContainer) return;
 
+  if(theaterContext.real){window.renderSourceDiff(theaterContext,file,currentDiffMode,codeContainer);return;}
   let html = '';
   for (const hunk of file.hunks) {
     html += `<div class="diff-hunk-bar">${esc(hunk.header)}</div>`;

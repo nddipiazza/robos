@@ -71,7 +71,12 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     const comment=JSON.parse(await command('gh',['api',`repos/${target.repo}/pulls/${target.number}/comments`,'--method','POST','-f',`body=${input.body.trim()}`,'-f',`commit_id=${target.head}`,'-f',`path=${target.path}`,'-F',`line=${target.line}`,'-f',`side=${target.side}`]));
     return {ok:true,comment};
   }
+  async function source({reviewId,path}){
+    const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');
+    if(!ctx.sourceLoader)ctx.sourceLoader=require('./review-source').createSourceLoader(ctx,command);
+    return {ok:true,...await ctx.sourceLoader(path)};
+  }
   async function inlineComments({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const {repo,number}=review.prIdentity(ctx.pr.url);const pages=JSON.parse(await command('gh',['api',`repos/${repo}/pulls/${number}/comments`,'--paginate','--slurp']));return {ok:true,comments:pages.flat()};}
-  return {load,quiz,submit,lesson,lessonOptions,inlineTarget,inlineComment,inlineComments};
+  return {source,load,quiz,submit,lesson,lessonOptions,inlineTarget,inlineComment,inlineComments};
 }
 module.exports={createTheater,parseDiff};

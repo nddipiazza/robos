@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('api', {
   inlineComments: input => ipcRenderer.invoke('pr-inline-comments',input),
   inlineFixOptions: input => ipcRenderer.invoke('pr-inline-fix-options',input),
   inlineFix: input => ipcRenderer.invoke('pr-inline-fix',input),
+  reviewSource: input => ipcRenderer.invoke('pr-review-source',input),
   reviewRevision: input => ipcRenderer.invoke('pr-review-revision',input),
   reviewLessonOptions: (opts) => ipcRenderer.invoke('pr-review-lesson-options',opts),
   reviewLesson: (opts) => ipcRenderer.invoke('pr-review-lesson',opts),

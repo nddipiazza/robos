@@ -2146,3 +2146,10 @@ button.diff-line-number:hover,button.diff-line-number:focus-visible{background:#
 #stage-1:has(#review-panel-files:not([hidden])) #review-inner-tabs{margin-bottom:0;flex-shrink:0}
 #review-diff-actions,#stage-1>.stage-nav-footer{flex-shrink:0}
 #review-diff-actions #diff-reviewed{margin:8px 0!important}
+#diff-code-lines.source-diff-container{display:flex;flex-direction:column;padding:0;min-height:0;overflow:hidden;position:relative}
+.source-diff-editor{flex:1;min-height:0;width:100%}
+.source-diff-status{padding:16px;font:13px system-ui;color:#a8bfd3;white-space:normal}
+#theater-diff-display>#inline-review-panel{max-height:45%;overflow:auto;flex-shrink:0;margin:0;border-radius:0}
+.source-diff-tools{display:flex;gap:4px;padding:4px 8px;border-bottom:1px solid #30363d;flex-shrink:0;flex-wrap:wrap;background:#161b22}
+.source-diff-tools button{font:12px system-ui;color:#a8bfd3;background:transparent;border:1px solid transparent;border-radius:3px;padding:4px 8px;cursor:pointer}
+.source-diff-tools button:hover,.source-diff-tools button[aria-pressed=true]{background:#243140;color:#e6edf3;border-color:#445568}
