@@ -30,7 +30,7 @@ async function run(url,mode,prompt,onEvent,selectedConfig){const state=core.read
  const registryEnvironment=await require('../robos-lib/registry-credentials').resolve(config.repositories,cli);
  if(!path.isAbsolute(binary))throw Error('Configure an absolute provider executable path.');
  const update=patch=>core.save(url,{sandbox:{...core.read(url).sandbox,...patch,id,artifacts:dir}});
- update({status:'provisioning'});onEvent('system','Creating isolated Linux user, RAM-backed home, private process/network namespaces and virtual display.');
+ update({status:'provisioning',environment:null});onEvent('system','Creating isolated Linux user, RAM-backed home, private process/network namespaces and virtual display.');
  let created=false,chat=null,environment=null;
  process.once('SIGTERM',earlyStop);
  try{
