@@ -1,20 +1,23 @@
 'use strict';
 const fs=require('node:fs');const path=require('node:path');const core=require('./core');const review=require('./review');
+let activeTaskUrl=null;
 function register({app,ipcMain,dialog},screen){
   ipcMain.handle('robos-provider-catalog',(_,options)=>require('../providers').options({refresh:options?.refresh===true}));
   let url=process.argv.find(a=>a.startsWith('--work-task='))?.slice(12)||null;
+  activeTaskUrl=url;
   const reviews=new Map();
-  app.on('second-instance',(_,argv)=>{const next=argv.find(a=>a.startsWith('--work-task='))?.slice(12);if(next){core.identity(next);url=next;for(const window of require('electron').BrowserWindow.getAllWindows())window.loadFile(path.join(__dirname,'../..',screen,'renderer/index.html'));}});
+  app.on('second-instance',(_,argv)=>{const next=argv.find(a=>a.startsWith('--work-task='))?.slice(12);if(next){core.identity(next);url=next;activeTaskUrl=url;for(const window of require('electron').BrowserWindow.getAllWindows())window.loadFile(path.join(__dirname,'../..',screen,'renderer/index.html'));}});
   const wrap=fn=>async(_,input)=>{try{return{ok:true,data:await fn(input||{})};}catch(e){return{ok:false,error:e.message};}};
   function current(){if(!url)throw Error('No /work-task session was opened');return core.read(url);}
   ipcMain.handle('work-task-select',wrap(async({issueUrl})=>{
-    const live=await core.inspect(issueUrl);url=issueUrl;
+    const live=await core.inspect(issueUrl);url=issueUrl;activeTaskUrl=url;
     return core.save(url,{...live,plannerProjectId:core.plannerProject(url,live.issue),autoStart:false});
   }));
   ipcMain.handle('work-task-launch-options',wrap(({mode,plan})=>{const state=current();if(mode)require('./plan-approval').assertStart(state,mode,plan,screen);return require('../../robos-agent-task-runner/sandbox').options(url);}));
   ipcMain.handle('work-task-mcp-status',wrap(({provider})=>require('../../robos-mcp-router/lib/remote-service').request('list',{provider})));
   ipcMain.handle('work-task-mcp-login',wrap(({serverId})=>require('../../robos-mcp-router/lib/remote-service').request('login',{serverId})));
   ipcMain.handle('work-task-open-runner',wrap(async()=>{current();await core.launchApp('robos-agent-task-runner',url,process.execPath);}));
+  ipcMain.handle('work-task-run-status',wrap(()=>{const s=current();return {phase:s.phase,workerPid:s.workerPid,reviewFix:s.reviewFix,error:s.error};}));
   ipcMain.handle('work-task-state',wrap(async()=>{if(!url)return null;const s=current();const dir=core.folder(url);let output='';for(const mode of ['plan','implement']){const file=path.join(dir,`${mode}-output.txt`);if(fs.existsSync(file))output+=fs.readFileSync(file,'utf8').slice(-40000);}let events=[];const eventsFile=path.join(dir,'events.jsonl');if(fs.existsSync(eventsFile))events=fs.readFileSync(eventsFile,'utf8').split('\n').filter(Boolean).flatMap(line=>{try{return [JSON.parse(line)];}catch{return [];}});return{...s,screen,...require('./plan-approval').readiness(s),planApproved:require('./plan-approval').approved(s),output,events,workflowView:await require('./workflow-view').load(s)};}));
   ipcMain.handle('work-task-review-ide-options',wrap(({prUrl})=>require('../../pr-review/review-workspaces').ideOptions(current(),prUrl)));
   ipcMain.handle('work-task-review-pages',wrap(()=>require('../../pr-review/review-workspaces').pages(current())));
@@ -33,4 +36,4 @@ function register({app,ipcMain,dialog},screen){
   ipcMain.handle('work-task-quiz',wrap(({prUrl,answers})=>{current();const ctx=reviews.get(prUrl);if(!ctx)throw Error('Load the PR first');const score=ctx.questions.filter((q,i)=>q.answer===answers?.[i]).length/ctx.questions.length;ctx.passed=score>=0.8;if(!ctx.passed)throw Error('Knowledge check requires at least 80%. Review the PR context and retry.');ctx.inspected=true;return{score,diff:ctx.diff,head:ctx.pr.headRefOid};}));
   ipcMain.handle('work-task-merge',wrap(async({prUrl,notes,reviewed})=>{current();const ctx=reviews.get(prUrl);if(!ctx||reviewed!==true)throw Error('Review the changes and evidence before approving.');if(require('./review-policy').get(review.prIdentity(prUrl).repo).requireCompletionCertificate&&!ctx.passed)throw Error('This organization requires a passed knowledge check before merging.');const merged=await review.approveAndMerge(prUrl,ctx.pr.headRefOid,notes,undefined,undefined,require('./required-signoff').requirement(current()));core.save(url,{phase:'merged',merged,reviewCertificate:{prUrl,head:ctx.pr.headRefOid,approvedAt:new Date().toISOString(),notes}});return merged;}));
 }
-module.exports={register};
+module.exports={register,currentURL:()=>activeTaskUrl};

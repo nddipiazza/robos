@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const{contextBridge,ipcRenderer}=require('electron');
-contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['review-ide-options','review-pages','open-review-workspace','plan-links','open-related-plan','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
+contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['run-status','mcp-login','mcp-status','open-runner','review-ide-options','review-pages','open-review-workspace','plan-links','open-related-plan','state','folder','save','approve-plan','agent','route','review','quiz','merge'].map(name=>[name,input=>ipcRenderer.invoke('work-task-'+name,input)])));
 
 })();
 const { contextBridge, ipcRenderer } = require('electron');
@@ -19,6 +19,10 @@ contextBridge.exposeInMainWorld('api', {
   openInVSCode:          (opts) => ipcRenderer.invoke('open-in-vscode', opts),
   getIDEStatus:          ()     => ipcRenderer.invoke('get-ide-status'),
   openUrl:               (url)  => ipcRenderer.invoke('open-url', url),
+  inlineComment: input => ipcRenderer.invoke('pr-inline-comment',input),
+  inlineComments: input => ipcRenderer.invoke('pr-inline-comments',input),
+  inlineFixOptions: input => ipcRenderer.invoke('pr-inline-fix-options',input),
+  inlineFix: input => ipcRenderer.invoke('pr-inline-fix',input),
   reviewLessonOptions: (opts) => ipcRenderer.invoke('pr-review-lesson-options',opts),
   reviewLesson: (opts) => ipcRenderer.invoke('pr-review-lesson',opts),
   // PR Review Theater

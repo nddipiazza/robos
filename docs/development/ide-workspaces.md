@@ -27,3 +27,9 @@ Git Projects and PR Review Theater use `robos-lib/open-ide-dialog.js` and the sh
 ### Session evidence
 
 Task Runner creates `/home/agent/evidence` outside the Git clones and exposes it as `ROBOS_EVIDENCE_DIR` to Codex and AGY. The sandbox exporter preserves it as `sessions/<session-id>/evidence` alongside `repos` before teardown. Build logs, screenshots, videos and test reports belong there, not in a committed `docs/validation` tree. The PR description and final response should summarize validation and reference evidence. Intentional documentation deliverables remain part of the source change.
+
+### Inline review feedback
+
+Click an old/new line number in File changes to open **PR comment** or **AI fix**. Comments are posted using GitHub's [review-comment API](https://docs.github.com/en/rest/pulls/comments), anchored to the reviewed commit, path, side and line. Existing comments show their author and timestamp. A changed or closed PR requires reloading before posting.
+
+AI fix starts a new Task Runner session for the existing task, using its saved Task Planner plan and the selected feedback. The shared launch dialog selects provider, model and sandbox resources. The sandbox checks out the exact reviewed PR head and the agent updates that branch without force-pushing or creating a duplicate PR/ticket. Fork PR fixes are currently unsupported. The runner opens for progress; an open theater refreshes on completion only if it still displays that PR. A new commit clears review acknowledgments and any old quiz result.

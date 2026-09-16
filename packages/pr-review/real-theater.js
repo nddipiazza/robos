@@ -11,10 +11,10 @@ function parseDiff(diff,files=[]) {
     const filePath=destination||source;
     const file=result.find(f=>f.filePath===filePath);
     if(!file)continue;
-    let hunk;
+    let hunk,oldLine,newLine;
     for(const line of lines) {
-      if(line.startsWith('@@')){hunk={header:line,lines:[]};file.hunks.push(hunk);}
-      else if(hunk && /^[ +\-]/.test(line))hunk.lines.push({type:line[0]==='+'?'add':line[0]==='-'?'del':'ctx',text:line.slice(1)});
+      if(line.startsWith('@@')){const match=/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);if(!match){hunk=null;continue;}oldLine=Number(match[1]);newLine=Number(match[2]);hunk={header:line,lines:[]};file.hunks.push(hunk);}
+      else if(hunk && /^[ +\-]/.test(line)){const type=line[0]==='+'?'add':line[0]==='-'?'del':'ctx';hunk.lines.push({type,text:line.slice(1),oldLine:type==='add'?null:oldLine++,newLine:type==='del'?null:newLine++});}
     }
   }
   return result;
@@ -55,6 +55,23 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
   }
   async function lesson({reviewId,launchConfig,refinement}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before generating its summary.');return {ok:true,markdown:await require('./review-lesson').generate(ctx,launchConfig,refinement)};}
   async function lessonOptions({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const providers=await require('../robos-agent-client/providers').options();return {ok:true,textOnly:true,appLabel:'ROBOS PR REVIEW THEATER',title:'Generate summary & training',purpose:'Explain this PR and teach its relevant concepts from the supplied diff. No code changes or repository cloning. Existing summaries are reused when the commit, provider and model match.',actionLabel:'Generate',available:true,providers,provider:providers.find(p=>p.available)?.id,repositories:[],issue:{number:ctx.pr.number,title:ctx.pr.title}};}
-  return {load,quiz,submit,lesson,lessonOptions};
+  async function inlineTarget({reviewId,path,line,side}) {
+    const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before commenting or requesting a fix.');
+    const file=parseDiff(ctx.diff,ctx.pr.files).find(f=>f.filePath===path);
+    const row=file?.hunks.flatMap(h=>h.lines).find(r=>Number.isInteger(line)&&line>0&&(side==='LEFT'?r.oldLine===line:side==='RIGHT'&&r.newLine===line));
+    if(!row)throw Error('Select a line in the reviewed diff.');
+    const {repo,number}=review.prIdentity(ctx.pr.url);
+    const live=JSON.parse(await command('gh',['api',`repos/${repo}/pulls/${number}`]));
+    if(live.state!=='open'||live.head.sha!==ctx.pr.headRefOid)throw Error('The PR changed or closed. Refresh it before continuing.');
+    return {prUrl:ctx.pr.url,repo,number,head:live.head.sha,branch:live.head.ref,headRepo:live.head.repo?.full_name,path,line,side,text:row.text};
+  }
+  async function inlineComment(input){
+    if(typeof input.body!=='string'||!input.body.trim()||input.body.length>60000)throw Error('Enter a comment (up to 60,000 characters).');
+    const target=await inlineTarget(input);
+    const comment=JSON.parse(await command('gh',['api',`repos/${target.repo}/pulls/${target.number}/comments`,'--method','POST','-f',`body=${input.body.trim()}`,'-f',`commit_id=${target.head}`,'-f',`path=${target.path}`,'-F',`line=${target.line}`,'-f',`side=${target.side}`]));
+    return {ok:true,comment};
+  }
+  async function inlineComments({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const {repo,number}=review.prIdentity(ctx.pr.url);const pages=JSON.parse(await command('gh',['api',`repos/${repo}/pulls/${number}/comments`,'--paginate','--slurp']));return {ok:true,comments:pages.flat()};}
+  return {load,quiz,submit,lesson,lessonOptions,inlineTarget,inlineComment,inlineComments};
 }
 module.exports={createTheater,parseDiff};

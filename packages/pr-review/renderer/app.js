@@ -537,8 +537,10 @@ let theaterContext = null;
 let currentTheaterStage = 1;
 let activeDiffFileIndex = 0;
 let currentDiffMode = 'unified';
+let theaterLoadSequence=0;
 
 window.openPRReviewTheater = async function(pr) {
+  const sequence=++theaterLoadSequence;
   const targetPR = pr || selectedPR;
   if (!targetPR) return;
   selectedPR = targetPR;
@@ -569,10 +571,12 @@ window.openPRReviewTheater = async function(pr) {
     changedFiles: prDetail ? prDetail.changedFiles : [],
   }).catch(error=>({ok:false,error:error.message}));
 
+  if(sequence!==theaterLoadSequence)return;
   if (!res.ok) {
     loading.textContent='Could not load this PR: '+(res.error||'Unknown error');const retry=document.createElement('button');retry.className='btn-primary';retry.textContent='Retry loading PR';retry.onclick=()=>window.openPRReviewTheater(targetPR);loading.append(document.createElement('br'),retry);return;
   }
 
+  activeDiffFileIndex=0;
   theaterContext = res;loading.hidden=true;content.hidden=false;steps.hidden=false;
 
   // Set target app badge
@@ -595,6 +599,7 @@ window.openPRReviewTheater = async function(pr) {
 };
 
 window.exitTheater = function() {
+  theaterLoadSequence++;
   const theaterEl = document.getElementById('pr-review-theater');
   if (theaterEl) theaterEl.classList.add('hidden');
 };
@@ -974,13 +979,16 @@ function renderCurrentFileDiff() {
       const prefix = line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' ';
       html += `
         <div class="diff-row ${rowClass}">
+          ${theaterContext.real ? ['LEFT','RIGHT'].map(side=>{const n=side==='LEFT'?line.oldLine:line.newLine;return n?`<button type="button" class="diff-line-number" data-review-line="${n}" data-review-side="${side}" title="Comment or request an AI fix on ${side==='LEFT'?'old':'new'} line ${n}">${n}</button>`:'<span class="diff-line-number"></span>';}).join('') : ''}
           <span class="diff-line-prefix">${prefix}</span>
           <span class="diff-line-content">${esc(line.text)}</span>
         </div>
       `;
     }
   }
+  document.getElementById('inline-review-panel')?.remove();
   codeContainer.innerHTML = html || '<div style="padding:12px; color:var(--muted);">No hunk changes in file</div>';
+  codeContainer.querySelectorAll('[data-review-line]').forEach(button=>button.onclick=()=>window.openInlineReview?.({ctx:theaterContext,path:file.filePath,line:Number(button.dataset.reviewLine),side:button.dataset.reviewSide,row:button.closest('.diff-row')}));
 }
 
 // ── Stage 4: IDE Branch Diff Bridge & Breakpoint Debugger ───────────────────

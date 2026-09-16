@@ -454,6 +454,9 @@ ipcMain.handle('get-ide-status', async () => {
 
 // ── IPC: PR Review Theater ────────────────────────────────────────────────
 
+for(const [channel,method] of [['pr-inline-comment','inlineComment'],['pr-inline-comments','inlineComments']])ipcMain.handle(channel,async(_,input)=>{try{return await realTheater[method](input);}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('pr-inline-fix-options',async(_,input)=>{try{await realTheater.inlineTarget(input);const url=require('../robos-agent-client/work-task/electron').currentURL();if(!url)throw Error('Open this PR from its RobOS task to run a fix.');const options=await require('../robos-agent-task-runner/sandbox').options(url);return {ok:true,...options,hideRepositories:true,title:'Fix PR feedback',purpose:'Run a focused fix on the existing PR branch, then return for review.',actionLabel:'Launch fix'};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('pr-inline-fix',async(_,input)=>{try{const target=await realTheater.inlineTarget(input);const url=require('../robos-agent-client/work-task/electron').currentURL();if(!url)throw Error('Open this PR from its RobOS task to run a fix.');return await require('./review-fix').start(url,target,input.instruction,input.launchConfig,process.execPath);}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('pr-review-lesson-options',async(_,input)=>{try{return await realTheater.lessonOptions(input);}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('pr-review-lesson',async(_,input)=>{try{return await realTheater.lesson(input);}catch(e){return {ok:false,error:e.message};}});
 

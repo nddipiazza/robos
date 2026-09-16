@@ -216,7 +216,7 @@ function prepareReviewInnerTabs(){
  for(const name of ['files','summary']){const panel=document.createElement('section');panel.id='review-panel-'+name;panel.className='review-inner-panel';panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','review-tab-'+name);tabs.after(panel);}
  tabs.querySelectorAll('button').forEach(button=>{button.onclick=()=>window.setReviewInnerTab(button.dataset.reviewTab);button.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const name=e.key==='Home'?'files':e.key==='End'?'summary':button.dataset.reviewTab==='files'?'summary':'files';window.setReviewInnerTab(name);document.getElementById('review-tab-'+name).focus();}};});
  }
- const files=document.getElementById('stage-3');files.querySelector('.stage-title-wrap h3').hidden=true;files.querySelector('.stage-title-wrap p').textContent='Select a file to inspect its changes.';files.classList.remove('theater-stage','active');files.classList.add('review-file-content');files.querySelector('.stage-nav-footer').hidden=true;
+ const files=document.getElementById('stage-3');files.querySelector('.stage-title-wrap h3').hidden=true;files.querySelector('.stage-title-wrap p').textContent='Select a file, then click a line number to comment or request an AI fix.';files.classList.remove('theater-stage','active');files.classList.add('review-file-content');files.querySelector('.stage-nav-footer').hidden=true;
  document.getElementById('review-panel-files').append(files);
  document.getElementById('review-panel-summary').append(document.getElementById('theater-elearning-modules-card'));
  stage.querySelector('.stage-title-wrap p').textContent='Inspect file changes and use the AI explanation alongside your review. Summary generation does not block the diff.';
@@ -225,3 +225,5 @@ function prepareReviewInnerTabs(){
 window.setReviewInnerTab=function(name){
  for(const value of ['files','summary']){const selected=value===name;const button=document.getElementById('review-tab-'+value),panel=document.getElementById('review-panel-'+value);if(!button||!panel)return;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;panel.hidden=!selected;}
 };
+
+window.refreshInlineReviewPR=async pr=>{if(theaterContext?.pr.url!==pr.url||document.getElementById('pr-review-theater').classList.contains('hidden'))return;await openReviewPage(pr);await window.refreshReviewPages();};

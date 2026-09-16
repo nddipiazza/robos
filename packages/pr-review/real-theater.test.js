@@ -7,3 +7,16 @@ test('diff available before quiz; quiz follows review and wrong answers fail',as
 test('optional certificate allows merge after review without quiz, but never without evidence',async()=>{let calls=0;const t=createTheater({context,policy:()=>({requireCompletionCertificate:false}),merge:async()=>{calls++;return {state:'MERGED'};}});const c=await t.load({repo:'org/repo',number:1});await assert.rejects(t.submit({...input(c),gates:{}}),/documentation/);await assert.rejects(t.submit({...input(c),number:2}),/Load this PR/);assert.equal(calls,0);assert((await t.submit(input(c))).merged);assert.equal(calls,1);});
 test('required certificate enforced server-side and current policy rechecked at merge',async()=>{let required=false,calls=0;const t=createTheater({context,policy:()=>({requireCompletionCertificate:required}),merge:async()=>{calls++;return {state:'MERGED'};}});const c=await t.load({repo:'org/repo',number:1});required=true;await assert.rejects(t.submit(input(c)),/requires a passed knowledge check/);assert.equal(calls,0);t.quiz({courseId:c.reviewId,answers:{q0:0},gates});assert((await t.submit(input(c))).merged);});
 test('binary files do not produce invented hunks',()=>assert.deepEqual(parseDiff('Binary files differ',[{path:'a.png',additions:0,deletions:0}])[0].hunks,[]));
+test('inline comments use reviewed commit and correct old/new line; stale heads cannot post',async()=>{
+ const calls=[];let head='abc';
+ const t=createTheater({context,command:async(bin,args)=>{calls.push(args);return JSON.stringify(args.includes('POST')?{id:123,body:'Please fix'}:{state:'open',head:{sha:head,ref:'topic',repo:{full_name:'org/repo'}}});}});
+ const c=await t.load({repo:'org/repo',number:1});const target={reviewId:c.reviewId,path:'doc.md',line:1,side:'RIGHT',body:'Please fix'};
+ await t.inlineComment(target);const post=calls.find(a=>a.includes('POST'));assert.ok(post.includes('commit_id=abc'));assert.ok(post.includes('line=1'));assert.ok(post.includes('side=RIGHT'));assert.ok(post.includes('path=doc.md'));
+ await assert.rejects(t.inlineComment({...target,side:'LEFT'}),/Select a line/);
+ await assert.rejects(t.inlineComment({...target,path:'unrelated'}),/Select a line/);
+ head='changed';await assert.rejects(t.inlineComment(target),/PR changed/);assert.equal(calls.filter(a=>a.includes('POST')).length,1);
+});
+test('diff coordinates handle deletions, context, additions and multiple hunks',()=>{
+ const diff='diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -8,2 +8,2 @@\n context\n-old\n+new\n@@ -30,0 +31,1 @@\n+later\n';
+ const f=parseDiff(diff,[{path:'x'}])[0];assert.deepEqual(f.hunks.flatMap(h=>h.lines).map(r=>[r.oldLine,r.newLine]),[[8,8],[9,null],[null,9],[null,31]]);
+});
