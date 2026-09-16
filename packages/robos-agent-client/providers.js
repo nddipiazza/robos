@@ -19,7 +19,7 @@ function binary(provider){
  const found=candidates.find(p=>p&&fs.existsSync(p));if(!found)throw Error('AGY is not installed. Install AGY or set ROBOS_AGY_PATH.');return fs.realpathSync(found);
 }
 function readAuthentication(provider){
- if(provider==='codex'){const file=path.join(os.homedir(),'.codex/auth.json');if(!fs.existsSync(file))throw Error('Sign in to Codex before launching.');return JSON.parse(fs.readFileSync(file,'utf8'));}
+ if(provider==='codex'){const file=path.join(process.env.CODEX_HOME||path.join(os.homedir(),'.codex'),'auth.json');if(!fs.existsSync(file))throw Error('Sign in to Codex before launching.');return JSON.parse(fs.readFileSync(file,'utf8'));}
  try{
  const raw=process.platform==='darwin'?execFileSync('security',['find-generic-password','-s','gemini','-a','antigravity','-w'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:10000}):execFileSync('/usr/bin/python3',['-c',agySecretScript],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:10000});
  const auth=JSON.parse(raw);if(!auth.token?.access_token)throw Error('Missing token');return auth;
@@ -28,11 +28,13 @@ function readAuthentication(provider){
 function authentication(provider){try{return readAuthentication(provider);}catch(error){require('../robos-lib/auth-notifications').reportAgent(provider,error.message);throw error;}}
 const modelCache=require('./model-cache').createCache({file:path.join(os.homedir(),'.config/robos/provider-model-cache.json')});
 async function models(id,{refresh=false}={}){
- const bin=binary(id),stat=fs.statSync(bin),key=[id,bin,stat.mtimeMs].join(':');
+ const bin=binary(id),stat=fs.statSync(bin);
+ const codexHome=process.env.CODEX_HOME||path.join(os.homedir(),'.codex');
+ let account='';if(id==='codex'){try{const auth=JSON.parse(fs.readFileSync(path.join(codexHome,'auth.json'),'utf8'));account=require('node:crypto').createHash('sha256').update(String(auth.tokens?.account_id||auth.account_id||codexHome)).digest('hex').slice(0,16);}catch{}}
+ const key=[id,id==='codex'?'cli-model-list-v1':'models-v1',bin,stat.mtimeMs,account].join(':');
  return modelCache.get(key,async()=>{
   if(id==='codex'){
-   const data=JSON.parse(fs.readFileSync(path.join(os.homedir(),'.codex/models_cache.json'),'utf8'));
-   return (data.models||[]).filter(m=>m.visibility!=='hide').map(m=>({id:m.slug,label:m.display_name||m.slug}));
+   return require('./codex-models').listModels(bin);
   }
   const {promisify}=require('node:util');const {stdout}=await promisify(require('node:child_process').execFile)(bin,['models'],{timeout:15000,maxBuffer:1024*1024});
   return stdout.split('\n').map(line=>line.trim().split('\t')).filter(parts=>parts.length>=2).map(([id,label])=>({id,label}));
@@ -42,7 +44,7 @@ async function options({refresh=false}={}){
  return Promise.all(['codex','agy'].map(async id=>{
   const item={id,label:id==='agy'?'AGY (Antigravity)':'Codex',available:true,model:'',models:[]};
   try{const bin=binary(id);if(!path.isAbsolute(bin)||!fs.existsSync(bin))throw Error('Provider executable is missing.');authentication(id);
-   if(id==='codex'){try{item.model=fs.readFileSync(path.join(os.homedir(),'.codex/config.toml'),'utf8').match(/^model\s*=\s*"([^"]+)"/m)?.[1]||'';}catch{}}
+   if(id==='codex'){try{item.model=fs.readFileSync(path.join(process.env.CODEX_HOME||path.join(os.homedir(),'.codex'),'config.toml'),'utf8').match(/^model\s*=\s*"([^"]+)"/m)?.[1]||'';}catch{}}
    const catalog=await models(id,{refresh});Object.assign(item,{models:catalog.models,modelsUpdatedAt:catalog.updatedAt,modelsStale:!!catalog.stale,modelsWarning:catalog.warning});
   }catch(error){require('../robos-lib/auth-notifications').reportAgent(id,error.message);item.available=false;item.error=error.message;}return item;
  }));
