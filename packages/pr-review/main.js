@@ -454,6 +454,7 @@ ipcMain.handle('get-ide-status', async () => {
 
 // ── IPC: PR Review Theater ────────────────────────────────────────────────
 
+ipcMain.handle('pr-review-lesson-options',async(_,input)=>{try{return await realTheater.lessonOptions(input);}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('pr-review-lesson',async(_,input)=>{try{return await realTheater.lesson(input);}catch(e){return {ok:false,error:e.message};}});
 
 ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {

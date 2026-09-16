@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('workTask',Object.fromEntries(['plan-links','ope
 
 })();
 const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invoke('robos-provider-catalog',options)});
 contextBridge.exposeInMainWorld('api', {
   getConfig:             ()     => ipcRenderer.invoke('get-config'),
   fetchPRs:              (opts) => ipcRenderer.invoke('fetch-prs', opts),
@@ -18,6 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   openInVSCode:          (opts) => ipcRenderer.invoke('open-in-vscode', opts),
   getIDEStatus:          ()     => ipcRenderer.invoke('get-ide-status'),
   openUrl:               (url)  => ipcRenderer.invoke('open-url', url),
+  reviewLessonOptions: (opts) => ipcRenderer.invoke('pr-review-lesson-options',opts),
   reviewLesson: (opts) => ipcRenderer.invoke('pr-review-lesson',opts),
   // PR Review Theater
   fetchPRTheaterContext: (opts) => ipcRenderer.invoke('fetch-pr-theater-context', opts),

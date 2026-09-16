@@ -25,7 +25,7 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     const url=`https://github.com/${repo}/pull/${number}`;review.prIdentity(url);
     const ctx=await context(url),pr=ctx.pr;
     const id=`${url}@${pr.headRefOid}`;sessions.set(id,{...ctx,passed:false});
-    return {ok:true,real:true,reviewId:id,reviewPolicy:policy(repo),pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
+    return {ok:true,real:true,savedSummary:require('./review-lesson').cached(ctx),reviewId:id,reviewPolicy:policy(repo),pr:{...pr,repo,headBranch:pr.headRefName,baseBranch:pr.baseRefName},targetApp:{title:repo},
       elearning:{course:{'@id':id,'dcterms:title':pr.title,'dcterms:description':`${pr.body || 'No PR description provided.'}\n\nBase: ${pr.baseRefName}\nHead: ${pr.headRefName}\nCommit: ${pr.headRefOid}\nFiles: ${(pr.files||[]).map(f=>f.path).join(', ')}`,'robos:estimatedDuration':'Review at your own pace','robos:topic':'Proposed change','robos:modules':[]},quiz:ctx.questions.map((q,i)=>({id:'q'+i,question:q.label,options:q.options,explanation:''}))},
       documentation:{markdown:pr.body||'No documentation or evidence supplied in this PR description.',mermaidText:'No verified diagram supplied.',dualReality:{blastRadius:[]}},
       fileDiffs:parseDiff(ctx.diff,pr.files),validationGates:{elearningPassed:false,docsReviewed:false,diffsInspected:false,ciPassed:review.checksReady(pr.statusCheckRollup)},checks:pr.statusCheckRollup||[]};
@@ -52,7 +52,8 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     await command('gh',['pr','review',url,action==='comment'?'--comment':'--request-changes','--body',body||'Reviewed in RobOS PR Review Theater.']);
     return {ok:true,merged:false,message:'Review submitted to GitHub.'};
   }
-  async function lesson({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before generating its summary.');return {ok:true,markdown:await require('./review-lesson').generate(ctx)};}
-  return {load,quiz,submit,lesson};
+  async function lesson({reviewId,launchConfig}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR before generating its summary.');return {ok:true,markdown:await require('./review-lesson').generate(ctx,launchConfig)};}
+  async function lessonOptions({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const providers=await require('../robos-agent-client/providers').options();return {ok:true,textOnly:true,appLabel:'ROBOS PR REVIEW THEATER',title:'Generate summary & training',purpose:'Explain this PR and teach its relevant concepts from the supplied diff. No code changes or repository cloning. Existing summaries are reused when the commit, provider and model match.',actionLabel:'Generate',available:true,providers,provider:providers.find(p=>p.available)?.id,repositories:[],issue:{number:ctx.pr.number,title:ctx.pr.title}};}
+  return {load,quiz,submit,lesson,lessonOptions};
 }
 module.exports={createTheater,parseDiff};
