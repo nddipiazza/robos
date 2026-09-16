@@ -19,7 +19,13 @@ async function verify(state,{command,gh}){
   if(fix&&branch!==fix.branch)throw Error('Implementation incomplete: fix was committed on a different branch from the reviewed PR.');
   let remote;
   try{remote=await gh(['api','repos/'+repo+'/commits/'+encodeURIComponent(branch)]);}
-  catch{throw Error('Implementation incomplete: cannot verify the pushed branch for '+repo+'. Local commits are preserved in '+dir+'.');}
+  catch{
+   // A dependency PR may be checked out under a local alias. Accept only its
+   // exact live remote head, never an unpublished change atop that dependency.
+   const linked=!fix&&(state.prs||[]).filter(pr=>pr.url?.startsWith('https://github.com/'+repo+'/pull/'));
+   for(const pr of linked||[]){try{const live=await gh(['pr','view',pr.url,'--json','headRefOid']);if(live.headRefOid===head){remote={sha:head};break;}}catch{}}
+   if(!remote)throw Error('Implementation incomplete: cannot verify the pushed branch for '+repo+'. Local commits are preserved in '+dir+'.');
+  }
   if(remote.sha!==head)throw Error('Implementation incomplete: '+repo+' has commits that are not on its remote branch. Push did not finish. Local commits are preserved in '+dir+'.');
  }
 }

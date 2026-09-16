@@ -20,3 +20,10 @@ test('missing export and remote verification failure fail visibly',async()=>{
  await assert.rejects(verify({...state,sandbox:null},deps()),/export is missing/);
  await assert.rejects(verify(state,{...deps(),gh:async()=>{throw Error('offline')}}),/cannot verify/);
 });
+
+test('a clean dependency PR checkout may use a local branch alias, but not unpublished commits',async()=>{
+ const dependency={sandbox:state.sandbox,launchConfig:state.launchConfig,prs:[{url:'https://github.com/example/repo/pull/12'}]};
+ const command=async(bin,args)=>args[0]==='status'?'':args[0]==='symbolic-ref'?'local-review':args[1]==='HEAD'?'candidate':'base';
+ await verify(dependency,{command,gh:async args=>{if(args[0]==='api')throw Error('No alias on remote');return {headRefOid:'candidate'};}});
+ await assert.rejects(verify(dependency,{command,gh:async args=>{if(args[0]==='api')throw Error('No alias on remote');return {headRefOid:'older'};}}),/cannot verify/);
+});
