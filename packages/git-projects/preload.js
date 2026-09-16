@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('gp', {
   attachWorkspace: id => ipcRenderer.invoke('attach-project-workspace',id),
   openWorkspace: input => ipcRenderer.invoke('open-project-workspace',input),
   discoverRoots: id => ipcRenderer.invoke('discover-project-roots',id),
+  workspaceIDEOptions: id => ipcRenderer.invoke('workspace-ide-options',id),
   ideOptions: () => ipcRenderer.invoke('project-ide-options'),
   associateIDE: input => ipcRenderer.invoke('associate-project-ide',input),
   readProjects:  ()              => ipcRenderer.invoke('read-projects'),

@@ -93,12 +93,17 @@ async function resumeReview() {
 // Existing initialization is independent of a task's cross-repository PR route.
 setTimeout(()=>resumeReview().catch(e=>showError(e.message)),400);
 
-const originalLaunchTheaterIDE=window.launchTheaterIDE;
-window.launchTheaterIDE=async function(ide){
-  if(!theaterContext?.real)return originalLaunchTheaterIDE(ide);
-  const p=theaterContext.pr,page=reviewPages.find(page=>page.url===p.url);
-  const result=await window.workTask['open-review-workspace']({prUrl:p.url,ideId:page?.ide?.id,reviewedHead:p.headRefOid});
-  if(!result.ok)showError(result.error);else {theaterContext.validationGates.ideDiffLaunched=true;renderTheaterSignOff();}
+window.launchTheaterIDE=async function(){
+  if(!theaterContext?.real){showError('Open a task-linked PR to launch its review workspace.');return;}
+  const ctx=theaterContext,p=ctx.pr;
+  try {
+    const result=await window.robosOpenIDE({
+      load:async()=>{const r=await window.workTask['review-ide-options']({prUrl:p.url});if(!r.ok)throw Error(r.error);return r.data;},
+      launch:async ideId=>{if(theaterContext!==ctx)throw Error('The selected PR changed. Open its IDE again.');const r=await window.workTask['open-review-workspace']({prUrl:p.url,ideId,reviewedHead:p.headRefOid});if(!r.ok)throw Error(r.error);return r.data;}
+    });
+    if(result&&theaterContext===ctx){ctx.validationGates.ideDiffLaunched=true;renderTheaterSignOff();}
+    return result;
+  }catch(e){showError(e.message);}
 };
 
 window.showReviewPlanLinks=async function() {
@@ -198,8 +203,7 @@ function prepareSummaryAndChanges(ctx){
  const stage=document.getElementById('stage-3');
  document.getElementById('review-diff-actions')?.remove();const actions=document.createElement('div');actions.id='review-diff-actions';actions.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap';stage.querySelector('.stage-nav-footer').before(actions);
  const page=reviewPages.find(p=>p.url===ctx.pr.url);
- for(const ide of page?.ides||[]){const b=document.createElement('button');b.className='btn-stage-nav';b.textContent='Open session in '+ide.name;b.title='Open the preserved task workspace with all associated project roots';b.onclick=async()=>{b.disabled=true;b.textContent='Preparing '+ide.name+' workspace…';try{const result=await window.workTask['open-review-workspace']({prUrl:ctx.pr.url,ideId:ide.id,reviewedHead:ctx.pr.headRefOid});if(!result.ok)throw Error(result.error);b.textContent='Open session in '+ide.name;}catch(e){showError(e.message);b.textContent='Retry '+ide.name;}finally{b.disabled=false;}};actions.append(b);}
- if(!page?.ides?.length){const help=document.createElement('span');help.textContent='Associate this repository with an IDE in RobOS Git Projects to open its session workspace.';actions.append(help);}
+ const openIDE=document.createElement('button');openIDE.className='btn-stage-nav';openIDE.textContent='Open in IDE';openIDE.title='Use the IDE associations of all Git projects in this task';openIDE.onclick=async()=>{openIDE.disabled=true;openIDE.textContent='Opening…';try{await window.launchTheaterIDE();}finally{openIDE.disabled=false;openIDE.textContent='Open in IDE';}};actions.append(openIDE);
  acknowledge(actions,'diff-reviewed','I inspected the file changes for this commit.','diffsInspected');
 }
 

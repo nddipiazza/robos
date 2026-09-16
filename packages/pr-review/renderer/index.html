@@ -61,14 +61,8 @@
           <button id="btn-enter-theater" class="btn-theater" title="Launch Full PR Review Theater (Training, Living Docs, Diff Viewer, IDE Bridge)">
             <span class="theater-icon">🎭</span> PR Review Theater
           </button>
-          <button id="btn-open-intellij" class="btn-ide btn-ide-intellij" title="Review in IntelliJ IDEA Pull Request tool window">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
-            Review in IntelliJ
-          </button>
-          <button id="btn-open-vscode" class="btn-ide btn-ide-vscode" title="Review in VS Code using GitHub Pull Requests extension">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-            Review in VS Code
-          </button>
+          <button id="btn-open-intellij" class="btn-ide btn-ide-intellij" title="Open using this workspace’s Git project IDE associations">Open in IDE</button>
+
         </div>
       </div>
 
@@ -149,7 +143,7 @@
             <label for="review-body" class="review-label">Review Feedback / Approval Summary</label>
             <textarea id="review-body" placeholder="Leave review feedback or approval notes (e.g. 'Approved! Verified mTLS client implementation against vaccine-gateway.')..." rows="4"></textarea>
           </div>
-          
+
           <div class="action-section ide-plugins-card">
             <h3>IDE Pull Request Review Plugins</h3>
             <p class="ide-plugins-desc">Seamlessly jump into your preferred IDE's native Pull Request review tool window without losing agent context or breakpoints:</p>
@@ -159,14 +153,14 @@
                   <strong>IntelliJ IDEA Pull Requests Plugin</strong>
                   <span>JetBrains native Pull Requests tool window with side-by-side diffs &amp; debug breakpoints (Port 63343)</span>
                 </div>
-                <button id="btn-action-intellij" class="btn-ide btn-ide-intellij">Open in IntelliJ</button>
+                <button id="btn-action-intellij" class="btn-ide btn-ide-intellij">Open in IDE</button>
               </div>
               <div class="ide-plugin-row">
                 <div class="ide-plugin-info">
                   <strong>VS Code Pull Requests &amp; Issues Extension</strong>
                   <span>Official Microsoft extension (<code>GitHub.vscode-pull-request-github</code>) with inline comments &amp; suggested changes</span>
                 </div>
-                <button id="btn-action-vscode" class="btn-ide btn-ide-vscode">Open in VS Code</button>
+
               </div>
               <div class="ide-plugin-row">
                 <div class="ide-plugin-info">
@@ -737,6 +731,7 @@
 <script src="markdown.js"></script>
   <script src="../../robos-lib/agent-selector.js"></script>
 <script src="../../robos-agent-task-runner/launch-dialog.js"></script>
+<script src="../../robos-lib/open-ide-dialog.js"></script>
 <script src="app.js"></script>
 <script src="work-task-bridge.js"></script>
 <script src="../../robos-lib/column-splitter.js" data-app="pr-review"></script>

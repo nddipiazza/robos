@@ -277,51 +277,7 @@ window.openFileInIDE = function(ide, filePath) {
 };
 
 async function openInIDE(ide, filePath) {
-  if (!selectedPR) return;
-  const targetFile = filePath || (prDetail?.changedFiles?.[0]) || "";
-
-  let result;
-  if (ide === "intellij") {
-    result = await window.api.openInIntelliJ({
-      repo: selectedPR.repo,
-      number: selectedPR.number,
-      headBranch: selectedPR.headBranch,
-      changedFiles: prDetail ? prDetail.changedFiles : [],
-      filePath: targetFile,
-      line: 34,
-    });
-  } else {
-    result = await window.api.openInVSCode({
-      repo: selectedPR.repo,
-      number: selectedPR.number,
-      headBranch: selectedPR.headBranch,
-      changedFiles: prDetail ? prDetail.changedFiles : [],
-      filePath: targetFile,
-      line: 34,
-    });
-  }
-
-  if (result.ok) {
-    const stepsHtml = (result.steps || []).map(s => `<div class="step-item">${esc(s)}</div>`).join("");
-    showAIActionOutput(`
-      <div class="ide-launch-output">
-        <div class="ide-launch-header">
-          <span class="ide-launch-badge">${esc(result.ide)} Pull Request Review</span>
-          <span class="ide-launch-plugin">${esc(result.plugin)}</span>
-        </div>
-        <p class="ide-launch-msg">${esc(result.message)}</p>
-        <div class="ide-launch-steps">${stepsHtml}</div>
-      </div>
-    `);
-
-    // Switch to review decision tab if not already on it
-    const actionsTab = document.querySelector('.tab-btn[data-tab="actions"]');
-    if (actionsTab && !actionsTab.classList.contains("active")) {
-      actionsTab.click();
-    }
-  } else {
-    showAIActionOutput(`<div class="error-text">Failed to launch IDE: ${esc(result.error)}</div>`);
-  }
+  return window.launchTheaterIDE();
 }
 
 function renderKGraphDiff(kg) {

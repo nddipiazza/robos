@@ -514,38 +514,15 @@ function openInExplorer(localPath) {
 let _cachedIDEs = null;
 
 async function wireIdeDropdown(p) {
-  const btn = document.getElementById('btn-open-ide');
-  const menu = document.getElementById('ide-dropdown-menu');
-  if (!btn || !menu) return;
-  if(p.ideId){const options=await gp.ideOptions();btn.textContent='Open in '+(options.ides.find(i=>i.id===p.ideId)?.name||p.ideId);btn.title='Open the configured project roots in the associated IDE';btn.onclick=async()=>{btn.disabled=true;try{const result=await gp.openWorkspace({id:p.id,workspace:p.localPath,ideId:p.ideId});if(!result.ok)throw Error(result.error);}catch(e){document.querySelector('#project-ide-settings [role=status]').textContent=e.message;}finally{btn.disabled=!p._cloned;}};return;}
-  btn.textContent='Choose IDE ▾';
-  btn.onclick = async (e) => {
-    e.stopPropagation();
-    if (!menu.classList.contains('hidden')) { menu.classList.add('hidden'); return; }
-    if (!_cachedIDEs) _cachedIDEs = await gp.getInstalledIDEs();
-    menu.innerHTML = '';
-    if (!_cachedIDEs.length) {
-      menu.innerHTML = '<div class="ide-dropdown-empty">No IDEs detected</div>';
-    } else {
-      for (const ide of _cachedIDEs) {
-        const item = document.createElement('button');
-        item.className = 'ide-dropdown-item';
-        item.textContent = ide.name;
-        item.addEventListener('click', (ev) => {
-          ev.stopPropagation();
-          menu.classList.add('hidden');
-          gp.openInIDE(ide.cmd, p.localPath);
-        });
-        menu.appendChild(item);
-      }
-    }
-    menu.classList.remove('hidden');
-  };
-
-  // Close dropdown when clicking outside
-  document.addEventListener('mousedown', (e) => {
-    if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add('hidden');
-  });
+  const btn=document.getElementById('btn-open-ide');
+  document.getElementById('ide-dropdown-menu')?.classList.add('hidden');
+  if(!btn)return;
+  btn.textContent='Open in IDE';
+  btn.title='Open with the IDEs associated with this Git project and its project roots';
+  btn.onclick=async()=>{btn.disabled=true;btn.textContent='Opening…';try{
+    await window.robosOpenIDE({load:()=>gp.workspaceIDEOptions(p.id),launch:ideId=>gp.openWorkspace({id:p.id,workspace:p.localPath,ideId})});
+  }catch(e){document.querySelector('#project-ide-settings [role=status]').textContent=e.message;}
+  finally{btn.disabled=!p._cloned;btn.textContent='Open in IDE';}};
 }
 
 // ── Clone / Pull ──────────────────────────────────────────────────────────────
