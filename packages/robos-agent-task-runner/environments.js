@@ -49,7 +49,7 @@ async function prepare({profile,id,dir,command,cli,onEvent,signal,stopped=()=>fa
   onEvent('system','Preparing '+profile.title+' from pinned source revisions.');await fetch('profile',profile);
   const manifest=JSON.parse(fs.readFileSync(sourcePath('@profile/'+profile.manifest,roots),'utf8'));
   for(const [name,source] of Object.entries(manifest.sources||{})){if(name==='profile')throw Error('Reserved source name');await fetch(name,source);}
-  const compiled=compile({...manifest,profileRevision:profile.revision},roots,project);fs.writeFileSync(file,JSON.stringify(compiled.compose,null,2));
+  const compiled=compile({...manifest,profileRevision:profile.revision},roots,project);const readinessScript=manifest.readinessScript?fs.readFileSync(sourcePath(manifest.readinessScript,roots),'utf8'):null;fs.writeFileSync(file,JSON.stringify(compiled.compose,null,2));
   fs.writeFileSync(path.join(root,'sources.json'),JSON.stringify({profile,...manifest.sources},null,2));
   onEvent('system','Building environment images; cached layers are reused. The first setup can take several minutes.');
   const missing=[];for(const [name,service] of Object.entries(compiled.compose.services)){if(service.build){try{await command(['image','inspect',service.image]);}catch{missing.push(name);}}}
@@ -57,6 +57,7 @@ async function prepare({profile,id,dir,command,cli,onEvent,signal,stopped=()=>fa
   active=true;onEvent('system','Starting services and waiting for health checks: '+Object.keys(manifest.services).join(', '));
   await execute(['up','--detach','--no-build','--wait','--wait-timeout','300'],600000);if(stopped())throw Error('Environment startup stopped');
   await command(['network','connect','--alias','agent',project+'_default',id]);
+  if(readinessScript){onEvent('system','Checking application readiness from inside the agent sandbox.');try{const result=await command(['exec','-i',...Object.entries(compiled.environment).flatMap(([key,value])=>['-e',key+'='+value]),id,'node'],readinessScript,{signal,timeout:60000});fs.writeFileSync(path.join(root,'readiness.log'),result);onEvent('system',result.trim());}catch(error){throw Error('Application environment is not ready: '+error.message);}}
   onEvent('system',profile.title+' is ready on this session’s private service network.');
   return {...compiled,finish,project};
  }catch(error){try{await finish();}catch(cleanup){error.environmentRecovery={id:profile.id,project,status:'cleanup-required'};onEvent('error','Environment cleanup failed for '+project+': '+cleanup.message);}throw error;}finally{fs.unlinkSync(path.join(registryDir,'config.json'));fs.rmdirSync(registryDir);}

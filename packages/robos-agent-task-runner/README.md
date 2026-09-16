@@ -131,7 +131,11 @@ Register organization-owned profiles under `sandbox_environments` in
 ```
 
 The version-1 JSON manifest declares `sources` (named GitHub repositories pinned
-to commit SHAs), `services`, `agentEnvironment`, and agent `instructions`.
+to commit SHAs), `services`, `agentEnvironment`, and agent `instructions`. An optional `readinessScript` is a
+source path to a Node.js check run inside the agent container after network attach
+and before provider credentials or the AI process are installed. It receives the
+profile environment, has a 60-second deadline, and must exit nonzero on failure.
+Use it for application readiness (such as local permissions), beyond open ports.
 `@profile/` paths refer to the profile repository; `@name/` paths refer to a declared
 source. All sources are fetched into this session's owned staging directory.
 No developer checkout is reused. Service fields are a deliberately limited Compose
