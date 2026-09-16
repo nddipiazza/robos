@@ -1,87 +1,32 @@
 ---
 name: pr-review-theater
-description: Inspect and orchestrate the full-featured PR Review Theater, verifying training knowledge checks, living documentation, in-app file diffs, and IDE branch comparisons.
+description: Review a task-linked PR in RobOS using its diff, relevant validation evidence, optional training and explicit human merge approval.
 ---
 
-# PR Review Theater & Interactive PR Validation
+# PR Review Theater
 
-The **PR Review Theater** is the immersive review and verification stage in the RobOS Agent Code Review Platform (`packages/pr-review`). Engineered to eliminate "rubber stamp" code reviews, it orchestrates an active, multi-modal verification experience across 6 stages:
+Open the task's linked PR in `packages/pr-review`. Review file changes immediately;
+do not generate AI training, take a quiz or run local tests simply to enter review.
 
-1. **Anti-Rubber-Stamp Training & Knowledge Check**:
-   - Mandatory interactive PR masterclass and knowledge checks with Certificate of Completion issuance.
-   - **Gating**: Code diffs (Stage 3) and review approval (Stage 6) remain strictly locked until the reviewer scores &ge; 80% on the knowledge check.
-   - Quick one-click launch to the application's comprehensive curriculum in the **RobOS eLearning Hub** (`packages/robos-elearning`).
-2. **Living Documentation, Sequence Flows & Interactive REST API Verification**:
-   - Living Architecture Guides and Mermaid sequence flows contrasting Production Reality against Proposed Reality.
-   - **Interactive REST API Runner**: Inspect pre-populated endpoint parameters, headers (mTLS), and request payload. Send live requests with round-trip latency metrics, response previews, and OpenAPI 3.1 & Pact contract verification.
-3. **In-App Semantic File Diff Viewer**:
-   - Syntax-highlighted unified and side-by-side file diffs with line-by-line inspection (unlocked only after passing Stage 1).
-4. **IDE Branch Diff Bridge & Interactive Breakpoint Runner**:
-   - Direct one-click branch compare and breakpoint runner for IntelliJ IDEA (port 63343 IPC / `idea diff`) and VS Code (`code --diff` / `vscode://` PR extension).
-   - **Interactive Breakpoint Debugger**: Start up the app with pre-set breakpoints at critical PR change lines (e.g. `VaccineGatewayClient.java:34`), inspect suspended thread call stacks and evaluated local variables (`this.sslContext`, `rootCaPath`, `petId`), and step through or resume execution.
-5. **Dual-Mode Proof-of-Work Canvas**:
-   - **Mode A: 1080p Recorded Xvfb Walkthrough Video**: Headless recording in virtual framebuffer with Piper neural TTS audio narration and synchronized WebVTT subtitle stream.
-   - **Mode B: Live Desktop Session**: Execute the robot proof live on the reviewer's active workstation display (`DISPLAY=:0`), driving UI and API interactions in real time with live streaming telemetry.
-6. **Validation Gates & Dual-Branch Merge**:
-   - Strict gating requiring eLearning quiz pass before merging Git code and Knowledge Graph branches simultaneously into `main`.
+1. Inspect the actual diff and task plan. Use List/Tree navigation and inline
+   comments or a focused AI fix through Task Runner when revisions are needed.
+2. Assess relevant existing validation. Apply the change-scoped policy in
+   `packages/robos-agent-client/validation-policy.js`. Prose-only README changes
+   normally need diff/format/link inspection, not builds, browsers or e2e. Reuse
+   valid passing checks for the same inputs/revision; do not repeat implementation
+   validation merely because the workflow entered review. Add a targeted check
+   only for uncovered risk or an explicit acceptance requirement. Missing proof
+   for an inapplicable check is not a failed validation.
+3. Generate or refine Summary & training only when requested, using the shared
+   agent/model/effort selector. Training is optional and costs provider credits.
+   Knowledge checks follow review; certificates gate merge only if organization
+   policy explicitly requires them. Never lock diff inspection behind training.
+4. Open associated IDEs only when useful for review. Do not start applications,
+   services, debugger sessions or narrated recordings as a default review ritual.
+5. Submit comments/change requests as authorized. Only explicit human approval
+   may merge the reviewed commit, subject to required signoff, GitHub branch rules
+   and prerequisite PR merge order. A review stage never grants merge authority.
 
-## When to Use
-
-Use this skill whenever:
-- Reviewing an autonomous AI pull request or developer feature branch without blind diff reading or rubber stamping.
-- Validating that reviewers genuinely understand architectural, contract, and security implications prior to approving code changes.
-- Verifying endpoint behavior via live interactive REST requests directly from the review interface.
-- Starting up the target application in IntelliJ IDEA or VS Code with synchronized breakpoints and suspended thread inspection.
-- Choosing between a recorded 1080p video proof and watching the robot execute live on the current desktop display session.
-- Enforcing Dual-Branch merges (Git code + Knowledge Graph branches) backed by an immutable Certificate of Completion.
-
-## Programmatic Usage
-
-```javascript
-const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
-const store = new SDLCKnowledgeGraphStore();
-
-// 1. Generate full PR Review Theater context
-const theaterCtx = store.generatePRReviewTheaterContext({
-  repo: 'acme/petstore-api',
-  prNumber: 12,
-  title: 'feat(service): verify rabies certificate over mTLS [PET-105]',
-  headBranch: 'feature/PET-105-rabies-verification',
-  baseBranch: 'main'
-});
-
-console.log('eLearning course:', theaterCtx.elearning.course['dcterms:title']);
-console.log('REST API endpoint:', theaterCtx.restCall.endpoint);
-console.log('Breakpoint target:', theaterCtx.ideBridge.breakpointSession.breakpointTarget);
-console.log('Desktop session display:', theaterCtx.desktopSession.display);
-
-// 2. Verify Reviewer Knowledge Check & issue Certificate of Completion
-const quizResult = store.verifyPRELearningQuiz({
-  courseId: theaterCtx.elearning.course['@id'],
-  answers: {
-    'q1-mtls': 1,
-    'q2-transaction': 2,
-    'q3-kgraph-merge': 1
-  },
-  reviewerId: 'robos'
-});
-
-console.log('Passed:', quizResult.passed, 'Score:', quizResult.score);
-console.log('Certificate hash:', quizResult.certificate['robos:verificationHash']);
-```
-
-## GUI Usage
-
-1. Launch the **Agent Code Review Platform**:
-   ```bash
-   electron packages/pr-review
-   ```
-2. Select any Pull Request from the queue.
-3. Click **"🎭 PR Review Theater"** in the header.
-4. Progress through the 6 stages:
-   - Complete the Stage 1 knowledge check quiz (score &ge;80%) to unlock code diff inspection and approval.
-   - Review living architecture docs and send live test requests from the Interactive REST API panel.
-   - Inspect unified and side-by-side code diffs in Stage 3.
-   - Fire up breakpoints in IntelliJ IDEA or VS Code and inspect paused thread variables.
-   - Choose between the 1080p video player or running the live proof in your current desktop session.
-   - Submit approval to merge both Git and Knowledge Graph branches simultaneously into `main`.
+Keep findings and validation notes concise. Do not fabricate successful checks,
+claim skipped checks passed, or create per-ticket validation audit documents in
+source repositories. Preserve raw run artifacts with the Task Runner session.

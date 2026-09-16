@@ -138,7 +138,17 @@ Always wrap these requires in try/catch for dev-harness compatibility (libs may 
 - Node.js 20+ and npm
 - For IntelliJ plugin: JDK 17+ and Gradle
 
-### Containerized Headless E2E Testing (Primary Feedback Mechanism)
+### Validation scope (default for all tasks)
+
+Select checks from the actual diff and affected behavior. A prose-only README edit
+normally needs diff/format/link inspection, not dependency installation, an app
+build, browser startup or e2e. Use focused tests for changed code and integration
+checks only for affected boundaries or uncovered user flows. Reuse relevant passing
+results, avoid repeating checks across workflow stages, and stop when sufficient
+checks pass. Explicit task-specific acceptance criteria and enforced CI gates still
+apply. See `packages/robos-agent-client/validation-policy.js` for the shared policy.
+
+### Containerized Headless E2E Testing (when applicable)
 Run isolated E2E tests in a Docker container with Xvfb virtual framebuffer and Picom/Mutter compositor:
 ```bash
 ./scripts/e2e-container.sh                        # Run full test suite in Docker

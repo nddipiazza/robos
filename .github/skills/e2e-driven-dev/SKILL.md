@@ -5,7 +5,21 @@ description: Execute task development using an End-to-End Driven Development (ED
 
 # E2E-Driven Development (EDD) Skill
 
-Perform feature development or bug fixing on a generic task using an **End-to-End Driven Development (EDD)** methodology. In this workflow, development begins by creating a narrated E2E test scenario that records video with neural voice narration (Piper TTS) and WebVTT captions. The test serves as both the executable specification and the user-facing verification artifact.
+## Choose validation before running it
+
+Apply RobOS change-scoped validation (`packages/robos-agent-client/validation-policy.js`).
+Inspect the actual change and identify the cheapest check that covers its risk.
+Prose-only documentation changes do not trigger app builds, dependency installation,
+unit/integration/e2e tests, service startup or proof recording. Executable examples,
+configuration and contract changes need checks for the behavior they affect.
+Reuse relevant passing CI or local results; do not repeat checks at each stage.
+Broaden validation only for a concrete uncovered risk, relevant failure or explicit
+task-specific requirement. Stop when sufficient checks pass. Report inapplicable
+checks briefly as not needed, never as failed or falsely passed.
+
+
+
+For an explicitly requested E2E workflow or a justified end-to-end behavior check, use an **End-to-End Driven Development (EDD)** methodology. In this workflow, development begins by creating a narrated E2E test scenario that records video with neural voice narration (Piper TTS) and WebVTT captions. The test serves as both the executable specification and the user-facing verification artifact.
 
 ---
 
@@ -14,7 +28,7 @@ Perform feature development or bug fixing on a generic task using an **End-to-En
 Use this skill when:
 - The user requests building a new feature, flow, or bug fix using E2E-driven development (`/e2e-driven-dev` or `/do-e2e-driven-dev`).
 - You need to deliver visual proof of feature completion accompanied by step-by-step spoken narration and synced captions.
-- Implementing UI/UX workflows across any RobOS app (`dev-central`, `git-projects`, `task-board`, etc.).
+- Validating an affected multi-step user flow that cheaper focused checks cannot cover across RobOS apps (`dev-central`, `git-projects`, `task-board`, etc.).
 
 ---
 

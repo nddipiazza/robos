@@ -5,6 +5,19 @@ description: Generate robust E2E and unit tests for RobOS Electron apps using th
 
 # Create a RobOS App Test
 
+## Choose validation before running it
+
+Apply RobOS change-scoped validation (`packages/robos-agent-client/validation-policy.js`).
+Inspect the actual change and identify the cheapest check that covers its risk.
+Prose-only documentation changes do not trigger app builds, dependency installation,
+unit/integration/e2e tests, service startup or proof recording. Executable examples,
+configuration and contract changes need checks for the behavior they affect.
+Reuse relevant passing CI or local results; do not repeat checks at each stage.
+Broaden validation only for a concrete uncovered risk, relevant failure or explicit
+task-specific requirement. Stop when sufficient checks pass. Report inapplicable
+checks briefly as not needed, never as failed or falsely passed.
+
+
 Generate a test for a RobOS Electron app using the robos-test framework.
 
 ## Input

@@ -1,0 +1,9 @@
+'use strict';
+// Shared by planning, implementation, review fixes, and sandbox execution.
+const instructions=`CHANGE-SCOPED VALIDATION — RobOS default:
+Choose checks from the actual diff and affected behavior, not the ticket type or a blanket workflow checklist. Briefly name the smallest useful check and the risk it covers. Plans propose checks; implementation reassesses them against the resulting diff.
+Prose-only README/docs: inspect the diff and relevant formatting, links or examples. No app dependency installation, build, unit/integration/e2e run, services, browser or proof video. Executable examples, configuration, scripts, dependencies, contracts and migrations are not automatically prose-only; check their affected behavior.
+Code/UI: prefer focused existing tests or direct reproduction. Add regression coverage when it has durable value, not tests that mirror the edit. Styling normally needs a focused visual check, not a full suite or narrated video. Run affected integration/e2e scenarios only for changed boundaries, important user flows not covered cheaply, or explicit task-specific acceptance criteria. Generic Testing stages and boilerplate 'always run e2e' do not justify expensive checks.
+Reuse trustworthy passing local/CI results for the same relevant revision, inputs and environment. Do not repeat checks at each workflow stage. Escalate only for relevant failures, changed inputs or uncovered risk. Do not fix unrelated infrastructure or retry unchanged failures. Stop when sufficient checks pass and applicable acceptance criteria are covered.
+Report results briefly; distinguish not applicable from failed/unverified. Unavailable CI is not a pass. No repository audit document is needed. Explicit user requirements and enforced CI/repository gates still apply; explain genuine conflicts rather than silently bypassing them.`;
+module.exports={instructions};

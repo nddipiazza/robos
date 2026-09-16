@@ -5,6 +5,7 @@
  * to produce the final prompt string.
  */
 'use strict';
+const {instructions:validationPolicy}=require('./validation-policy');
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ const DRAFT_PROMPT = `You are an AI development assistant implementing a softwar
 {{answers}}
 
 ## Instructions
+${validationPolicy}
+
 Implement the solution for this task. Follow the project conventions and coding standards. When done, provide a summary of all changes made, including:
 - Files created or modified
 - Key design decisions
@@ -79,6 +82,8 @@ const REVIEW_FIX_PROMPT = `You are an AI development assistant addressing code r
 This is review cycle #{{cycleNumber}}.
 
 ## Instructions
+${validationPolicy}
+
 Address each review comment. For each comment:
 1. Explain what you changed and why
 2. If you disagree with a comment, explain your reasoning

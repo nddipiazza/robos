@@ -96,3 +96,13 @@ configuration; no secret values belong in that configuration or in this settings
 The shared `robos-lib/registry-credentials` loader is available to other RobOS apps.
 It also accepts password-store references with `provider: "pass"` and `entry`.
 Only the first line of a password-store entry is used; notes are not credentials.
+
+## Change-scoped validation
+
+The default policy is shared by Task Planner, task/review-fix prompts, sandbox
+execution and workflow generation. Select the smallest check justified by the
+actual diff, reuse applicable existing results, and stop when sufficient checks
+pass. A prose-only README change does not trigger dependency installation, app
+builds, service startup or e2e. Executable docs/configuration still need checks for
+the behavior they affect. Explicit acceptance criteria and enforced CI gates remain
+in force. See `../robos-agent-client/validation-policy.js`.

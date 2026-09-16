@@ -18,3 +18,10 @@ In Task Planner, the human reviews/refines the plan and approves the exact plan
 before starting background implementation. Agents must leave a draft PR linked
 to the task and stop for PR Review Theater. Only a human's explicit approval in
 PR Review Theater can merge the reviewed commit; never autonomously merge.
+
+Validation follows the actual diff, not a blanket Testing stage. Apply the shared
+change-scoped policy in `packages/robos-agent-client/validation-policy.js`: prose-only
+README edits do not need application/e2e validation; code changes get focused checks;
+expand only for concrete risk or explicit requirements. Reuse relevant results and
+stop after sufficient checks pass. Do not reinstall dependencies or start a stack
+merely to satisfy a generic workflow checklist.

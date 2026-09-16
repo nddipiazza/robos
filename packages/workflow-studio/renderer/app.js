@@ -415,11 +415,11 @@ Make the workflow states reflect an AI-assisted SDLC where the AI agent actively
 1. Triages and investigates issues by reading code and GitHub context
 2. Sets up the developer workspace (clone/checkout branch)
 3. Drafts a fix or implementation
-4. Writes automated tests
+4. Selects the smallest useful validation from the actual change; writes tests only when they add meaningful coverage
 5. Creates a pull request
 6. Handles code review feedback
 
-Use descriptive state labels like "AI Triage", "AI Investigation", "AI Draft", "Human Review", "AI Testing", "AI PR Creation", "Code Review", "Done". Not every type needs all states — keep them lean and relevant.`;
+Use descriptive state labels like "AI Triage", "AI Investigation", "AI Draft", "Human Review", "AI Testing", "AI PR Creation", "Code Review", "Done". Not every type needs all states — keep them lean and relevant. Validation states must first assess the actual diff and affected behavior. Prose-only README edits need diff/format/link inspection, not app builds, dependency installation or e2e. Use focused checks for code changes; integration/e2e is conditional on changed boundaries, uncovered user-flow risk or explicit task-specific requirements. Reuse relevant passing CI/results, do not repeat checks at each stage, and stop once sufficient checks pass. Mark irrelevant checks not applicable, not failed. Do not generate mandatory full-suite scripts in on_enter_script; select relevant checks at runtime. Respect enforced CI gates.`;
 
 async function buildGeneratePrompt() {
   let rules = FALLBACK_JSON_RULES;
