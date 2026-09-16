@@ -2155,3 +2155,8 @@ button.diff-line-number:hover,button.diff-line-number:focus-visible{background:#
 .source-diff-tools{display:flex;gap:4px;padding:4px 8px;border-bottom:1px solid #30363d;flex-shrink:0;flex-wrap:wrap;background:#161b22}
 .source-diff-tools button{font:12px system-ui;color:#a8bfd3;background:transparent;border:1px solid transparent;border-radius:3px;padding:4px 8px;cursor:pointer}
 .source-diff-tools button:hover,.source-diff-tools button[aria-pressed=true]{background:#243140;color:#e6edf3;border-color:#445568}
+
+#real-pr-evidence .review-evidence-checks{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:8px}
+#real-pr-evidence .review-evidence-checks li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #30363d;overflow-wrap:anywhere}
+#real-pr-evidence .review-evidence-checks button{flex-shrink:0}
+#real-pr-evidence button:focus-visible{outline:2px solid #00bcd4;outline-offset:3px}
