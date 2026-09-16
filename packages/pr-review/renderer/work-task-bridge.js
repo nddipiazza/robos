@@ -155,7 +155,7 @@ function prepareReviewSequence() {
   const order=[1,5,7,6];
   for(const id of [2,3,4])document.getElementById('step-btn-'+id).hidden=true;
   order.forEach((id,i)=>{
-    const step=document.getElementById('step-btn-'+id);document.getElementById('theater-stepper').append(step);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
+    const step=document.getElementById('step-btn-'+id);step.removeAttribute('onclick');step.onclick=()=>window.setTheaterStage(id);document.getElementById('theater-stepper').append(step);step.querySelector('.step-num').textContent=i+1;step.querySelector('.step-label').textContent=labels[id];
     document.querySelector('#stage-'+id+' .stage-title-wrap h3').textContent=labels[id];
     const footer=document.querySelector('#stage-'+id+' .stage-nav-footer');if(!footer)return;footer.replaceChildren();
     for(const [target,text] of [[order[i-1],'← Back'],[order[i+1],'Next: '+labels[order[i+1]]+' →']]){if(!target)continue;const b=document.createElement('button');b.className='btn-stage-nav';b.textContent=text;b.onclick=()=>window.setTheaterStage(target);footer.append(b);}
