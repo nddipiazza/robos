@@ -36,7 +36,7 @@ window.refreshPlannerUX=function(session) {
   const primary=document.getElementById('planner-primary');
   const phase=plannerSession?.phase;
   primary.disabled=!!plannerSession?.workerPid;
-  primary.textContent=plannerSession?.prs?.length?'Open PR review':plannerSession?.planReady?'Start implementation':plannerSession?.plan?'Approve plan':plannerSession?'Generate plan':'Generate tasks';
+  primary.textContent=plannerSession?.prs?.length?'Open PR review':plannerSession?.planReady?'Implement Task':plannerSession?.plan?'Approve plan':plannerSession?'Generate plan':'Generate tasks';
   if(plannerSession?.workerPid)primary.textContent='Agent is working…';
   const record=selectedPlannerRecord();
   if(!plannerSession && record?.kind==='project')primary.textContent='Add feature';
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('generate-status').setAttribute('role','status');
   document.getElementById('planner-edit').onclick=()=>setPlannerEditing(!plannerEditing);
   document.getElementById('planner-save').onclick=async()=>{
-    try {if(plannerSession?.plan){const saved=await taskCall('save',{plan:getPromptValue(),workspace:plannerSession.workspace});routedTask=saved;window.refreshPlannerUX(await taskCall('state'));showGenerateStatus('Plan saved.');}else {await saveToProject();showGenerateStatus('Requirements saved.');}document.getElementById('prompt-input').dirty=false;setPlannerEditing(false);}catch(e){showGenerateStatus(e.message,true);}
+    try {if(plannerSession&&(plannerSession.plan||window.plannerDraftPlanId===currentProjectId)){if(!getPromptValue().trim())throw Error('Write an implementation plan before saving.');const saved=await taskCall('save',{plan:getPromptValue(),workspace:plannerSession.workspace});routedTask=saved;window.plannerDraftPlanId=null;window.refreshPlannerUX(await taskCall('state'));showGenerateStatus('Plan saved.');}else {await saveToProject();showGenerateStatus('Requirements saved.');}document.getElementById('prompt-input').dirty=false;setPlannerEditing(false);}catch(e){showGenerateStatus(e.message,true);}
   };
   document.getElementById('planner-import').onclick=()=>openTaskImport();
   document.getElementById('planner-add-task').onclick=()=>createPlannerWork('task');
@@ -102,7 +102,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(plannerSession.workerPid)return;
       const edited=getPromptValue();
       if(plannerSession.plan && edited!==plannerSession.plan){showGenerateStatus('The plan has changed. Save these changes before implementation; obtain signoff if this task requires it.',true);return;}
-      const id=plannerSession.planReady?'work-task-implement':plannerSession.plan?'work-task-approve':'btn-generate';
+      if(plannerSession.planReady){await taskCall('open-runner');return;}
+      const id=plannerSession.plan?'work-task-approve':'btn-generate';
       if(id==='btn-generate')await handleGenerate();else document.getElementById(id).click();
     }catch(e){showGenerateStatus(e.message,true);}
   };

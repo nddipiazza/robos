@@ -6,7 +6,9 @@ function plannerProjectTree(projects) {
     if(p.parentPlanId)return projects.find(x=>x.id===p.parentPlanId);
     const body=[p.prompt,...(p.tasks||[]).map(t=>t.body)].join('\n');
     const url=body.match(/Parent (?:Feature|Epic):\s*(https:\/\/github\.com\/[^\s)]+\/issues\/\d+)/i)?.[1];
-    const owner=byUrl.get(url);
+    // A separately opened ticket still belongs under the epic that contains it.
+    const containers=p.workTaskUrl?projects.filter(x=>x.id!==p.id&&['epic','feature'].includes(x.kind)&&(x.tasks||[]).some(t=>t.ticketUrl===p.workTaskUrl)):[];
+    const owner=byUrl.get(url)||(containers.length===1?containers[0]:undefined);
     if(owner?.product&&p.product&&owner.product.name.toLowerCase()!==p.product.name.toLowerCase())return undefined;
     return owner;
   }
