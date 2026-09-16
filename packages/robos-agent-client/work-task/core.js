@@ -131,7 +131,13 @@ async function runWorker(url,mode,electron){
       require('../../robos-lib/human-requests').resolveTask(url);
       fs.writeFileSync(outputFile,output,{mode:0o600});
       if(mode==='plan')save(url,{plan:output,approvedPlanHash:null,planApproval:null,phase:'plan-review',workerPid:null,error:null,executionError:null});
-      else{const live=await inspect(url);save(url,{...live,phase:live.prs.length?'review':'implementation-needs-attention',workerPid:null,executionError:null,error:live.prs.length?null:'Agent finished without a linked PR. Review the preserved output.'});if(live.prs.length&&!state.reviewFix)await launchApp('pr-review',url,electron);}
+      else{
+        await require('../../robos-agent-task-runner/completion').verify(read(url),{command,gh});
+        const live=await inspect(url);
+        if(!live.prs.length)throw Error('Implementation did not produce a linked PR. Review the preserved output.');
+        save(url,{...live,phase:'review',workerPid:null,executionError:null,error:null});
+        if(!state.reviewFix)await launchApp('pr-review',url,electron);
+      }
     }catch(e){event('error',e.message);save(url,{phase:read(url).phase==='stopped'?'stopped':'failed',workerPid:null,error:e.message,executionError:{text:e.message,at:new Date().toISOString(),phase:read(url).phase}});throw e;}
     return;
   }

@@ -28,3 +28,9 @@ test('both implementers can write evidence outside the repository; planning stay
  assert.ok(options.some((v,i)=>v==='--add-dir'&&options[i+1]==='/home/agent/evidence'));
  assert.ok(!args('codex','plan','').includes('--add-dir'));
 });
+
+test('Codex implementation relies on Docker isolation so Git metadata is writable',()=>{
+ const options=args('codex','implement','');
+ assert.equal(options[options.indexOf('--sandbox')+1],'danger-full-access');
+ assert.equal(args('codex','plan','')[args('codex','plan','').indexOf('--sandbox')+1],'read-only');
+});
