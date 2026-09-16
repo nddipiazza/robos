@@ -16,10 +16,11 @@ function discover(sessionRoot){
     if(item.isSymbolicLink()||item.name.startsWith('.'))continue;
     const full=path.join(dir,item.name);
     if(item.isDirectory())walk(full,depth+1);
-    else if(item.isFile()&&/\.(webm|mp4|html?)$/i.test(item.name))files.push({path:path.relative(evidence,full),video:/\.(webm|mp4)$/i.test(item.name)});
+    else if(item.isFile()&&/\.(webm|mp4|html?)$/i.test(item.name))files.push({path:path.relative(evidence,full),video:/\.(webm|mp4)$/i.test(item.name),modifiedAt:fs.statSync(full).mtime.toISOString()});
    }
   }
   walk(evidence);
+  files.sort((a,b)=>b.modifiedAt.localeCompare(a.modifiedAt)||a.path.localeCompare(b.path));
   if(files.length)sessions.push({id:entry.name,root:fs.realpathSync(evidence),files,time:fs.statSync(evidence).mtime.toISOString()});
  }
  return sessions.sort((a,b)=>b.time.localeCompare(a.time));

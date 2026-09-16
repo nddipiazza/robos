@@ -8,7 +8,7 @@
   document.getElementById(id).hidden=!items.length;
   if(!items.length)return;
   const select=document.querySelector('#'+id+' select');
-  for(const item of items){const option=document.createElement('option');option.value=item.url;option.textContent=item.path+' · '+new Date(item.session.time).toLocaleString();select.append(option);}
+  for(const item of items){const option=document.createElement('option');option.value=item.url;option.textContent=item.path+' · '+new Date(item.modifiedAt||item.session.time).toLocaleString();select.append(option);}
   const show=()=>document.querySelector('#'+id+' '+target).setAttribute(attribute,select.value);
   select.onchange=show;show();
  }

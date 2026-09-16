@@ -23,3 +23,9 @@ test('no evidence still supplies useful original check links without invented st
  const server=await start({title:'Docs',head:'abc',files:[{path:'README.md'}],checks:[{name:'Build',url:'https://github.com/o/r/actions/runs/1'}]});
  try{const data=await (await fetch(server.url+'data.json')).json();assert.deepEqual(data.sessions,[]);assert.equal(data.checks[0].name,'Build');assert.equal(data.checks[0].status,undefined);}finally{server.close();}
 });
+
+test('latest native recording and report precede older attempts regardless of filename',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'robos-evidence-order-')),evidence=path.join(root,'session','evidence');fs.mkdirSync(evidence,{recursive:true});
+ for(const [file,time] of [['a-old.webm',100],['z-new.webm',200],['a-old.html',100],['z-new.html',200]]){fs.writeFileSync(path.join(evidence,file),'fixture');fs.utimesSync(path.join(evidence,file),time,time);}
+ const files=discover(root)[0].files;assert.equal(files.filter(f=>f.video)[0].path,'z-new.webm');assert.equal(files.filter(f=>!f.video)[0].path,'z-new.html');
+});
