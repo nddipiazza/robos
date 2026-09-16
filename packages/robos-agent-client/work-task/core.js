@@ -42,12 +42,12 @@ function plannerProject(url, issue) {
   for(const name of fs.readdirSync(dir).filter(n=>n.endsWith('.json'))){try{const existing=JSON.parse(fs.readFileSync(path.join(dir,name)));if(existing.workTaskUrl===url&&existing.kind==='task')return existing.id;}catch{}}
   const file = path.join(dir, id + '.json');
   if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify({
-    id, hierarchyVersion:2, kind:['Feature','Epic'].includes(issue.issueType?.name)?'epic':'task', name: issue.title, prompt: `${issue.url}\n\n${issue.body || ''}`,
+    id, hierarchyVersion:2, kind:(()=>{const m=require('../../robos-lib/github-epics');const kind=m.logicalType(issue.issueType?.name,m.forIssue(url),issue.labels);return ['feature','epic'].includes(kind)?kind:'task';})(), name: issue.title, prompt: `${issue.url}\n\n${issue.body || ''}`,
     tasks: [{ title: issue.title, body: issue.body || '', labels: (issue.labels||[]).map(l=>typeof l==='string'?l:l.name),issueType:issue.issueType?.name||null, ticketKey: `#${issue.number}`, ticketUrl: issue.url, ticketStatus: issue.state }],
     features: [], techStack: '', createdAt: Date.now(), updatedAt: Date.now(), workTaskUrl: url,
   }, null, 2), { mode: 0o600, flag: 'wx' });
   const original=JSON.parse(fs.readFileSync(file,'utf8')),before=JSON.stringify(original),record=require('../../task-planner/lib/work-hierarchy').normalize(original);
-  record.kind=record.kind||(['Feature','Epic'].includes(issue.issueType?.name)?'epic':'task');
+  record.kind=record.kind||((()=>{const m=require('../../robos-lib/github-epics');const kind=m.logicalType(issue.issueType?.name,m.forIssue(url),issue.labels);return ['feature','epic'].includes(kind)?kind:'task';})());
   if(issue.issueType?.name){record.issueMetadata={...record.issueMetadata,type:issue.issueType.name};for(const task of record.tasks||[])if(task.ticketUrl===url)task.issueType=issue.issueType.name;}
   if(JSON.stringify(record)!==before)fs.writeFileSync(file,JSON.stringify(record,null,2));
   return id;

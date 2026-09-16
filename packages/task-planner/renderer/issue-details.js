@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  const parts=[kind.charAt(0).toUpperCase()+kind.slice(1).toLowerCase()+(number?' #'+number:'')];
  if(plannerSession?.phase)parts.push(plannerSession.phase.replaceAll('-',' '));
  if(plannerSession?.backend)parts.push(plannerSession.backend.charAt(0).toUpperCase()+plannerSession.backend.slice(1));
- badge.textContent=parts.join(' · ');badge.dataset.kind=kind.toLowerCase();
+ badge.textContent=parts.join(' · ');badge.title=meta?.epicMapping||'';let mapping=document.getElementById('planner-epic-mapping');if(!mapping){mapping=document.createElement('small');mapping.id='planner-epic-mapping';badge.after(mapping);}mapping.textContent=meta?.epicMapping||'';mapping.hidden=!meta?.epicMapping;badge.dataset.kind=kind.toLowerCase();
  document.getElementById('planner-context-line').hidden=true;tab.hidden=!record;tab.textContent=record?.workTaskUrl?'Ticket & repositories':'Repositories';
  const isTask=record?.kind==='task';document.querySelector('[data-planner-tab=tasks]').hidden=isTask;if(isTask&&plannerView==='tasks')setPlannerView('plan');
  if(recordId!==record?.id){recordId=record?.id;render(record);} };

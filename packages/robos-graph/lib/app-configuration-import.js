@@ -75,6 +75,7 @@ function plan(input,file=settingsFile){
   const mergedTypes=merge(existing?.issue_types,s.issue_types,t=>t.id),mergedWorkflows=merge(existing?.workflows,s.workflows,w=>w.type_id);
   if(!mergedWorkflows.length)warnings.push(`${s.name}: no workflows defined; Workflow Studio will need configuration.`);
   const row={...existing,id:existing?.id||s.id,kgraphId:s.kgraphId,name:existing?.name||s.name,type:s.type,url:s.url,repos:s.repos,use_gh_cli:existing?.use_gh_cli??true,issue_types:mergedTypes,workflows:mergedWorkflows};
+  delete row.github_epic_mode;
   if(hash(source.issue_types)!==hash(mergedTypes)||hash(source.workflows)!==hash(mergedWorkflows))edits.push({op:'update',id:s.kgraphId,set:{'robos:issueTypes':mergedTypes,'robos:workflows':mergedWorkflows}});
   return row;
  });

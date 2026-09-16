@@ -128,7 +128,7 @@ function renderSessionWorkflow(state) {
   panel.classList.toggle('has-error',!!error);
   const heading=document.createElement('div');heading.className='session-workflow-heading';
   const type=document.createElement('strong');type.className='session-issue-type';type.textContent=view?.issueType||'Issue type unavailable';heading.append(type);
-  const name=document.createElement('span');name.textContent=view?.workflow?.name||'No workflow configured for this issue type';heading.append(name);panel.append(heading);
+  const name=document.createElement('span');name.textContent=view?.workflow?.name||'No workflow configured for this issue type';heading.append(name);panel.append(heading);if(view?.epicMapping){const mapping=document.createElement('p');mapping.className='session-epic-mapping';mapping.textContent=view.epicMapping;panel.append(mapping);}
   if(view?.workflow){
     const current=document.createElement('p');current.className='session-workflow-current';current.textContent='Current stage: '+(view.currentStage||'Unresolved')+(error?' — Error':'');panel.append(current);
     const stages=document.createElement('ol');stages.className='session-workflow-stages';

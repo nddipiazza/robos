@@ -1,0 +1,5 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),m=require('./github-epics');
+const {typeArgs}=require('../task-planner/lib/github-issue-type');
+test('Epic requires Task type plus epic label, case insensitive',()=>{assert.equal(m.logicalType('Task',{},[]),'task');assert.equal(m.logicalType('Task',{},['Epic']),'epic');assert.equal(m.logicalType('Feature',{},['epic']),'feature');assert.equal(m.logicalType('Task',{type:'jira'},['epic']),'task');});
+test('outgoing epics always use Task plus label, ignoring retired modes',()=>{for(const mode of [undefined,'native','feature-parent']){const server={github_epic_mode:mode};const task=m.prepare({isEpic:true,labels:['frontend']},server);assert.deepEqual(typeArgs(task,server,{creating:true}),['--type','Task']);assert.deepEqual(task.labels,['frontend','epic']);assert.deepEqual(m.prepare(task,server).labels,task.labels);}});
+test('badge explains the actual representation',()=>{assert.equal(m.explanation('Task',{},['epic']),'GitHub: Task · label: epic');assert.equal(m.explanation('Task',{},[]),null);assert.equal(m.explanation('Feature',{},['epic']),null);});

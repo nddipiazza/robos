@@ -442,8 +442,9 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
   const results = [];
 
   if (serverInfo.type === 'github') {
-    for (const task of tasks) {
+    for (const inputTask of tasks) {
       try {
+        const task=require('../robos-lib/github-epics').prepare(inputTask,serverInfo);
         const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', task.body || '',...require('./lib/github-issue-type').typeArgs(task,serverInfo,{creating:true})];
         if (task.labels && task.labels.length) {
           for (const lbl of task.labels) {
@@ -598,7 +599,7 @@ ipcMain.handle('load-project', async (_, id) => {
     let metadataError=null;
     if(data.workTaskUrl){try{
       data.issueMetadata=await require('./lib/issue-metadata').metadata(data.workTaskUrl);
-      const type=data.issueMetadata.type?.toLowerCase();if(type&&!data.kind)data.kind=['feature','epic'].includes(type)?'epic':'task';
+      const type=data.issueMetadata.type?.toLowerCase();if(type){const mapping=require('../robos-lib/github-epics');const kind=mapping.logicalType(type,mapping.forIssue(data.workTaskUrl),data.issueMetadata.labels);data.kind=['feature','epic'].includes(kind)?kind:'task';data.issueMetadata.epicMapping=mapping.explanation(type,mapping.forIssue(data.workTaskUrl),data.issueMetadata.labels);}
       if(!Object.hasOwn(data,'repos'))data.repos=data.issueMetadata.repositories;
       fs.writeFileSync(projectFile(id),JSON.stringify(data,null,2));
     }catch(e){metadataError=e.message;}}
@@ -693,10 +694,13 @@ async function syncPlannerTask({ task, taskIndex, serverInfo, parentEpicKey, epi
 
   if (serverInfo.type === 'github') {
     try {
+      task=require('../robos-lib/github-epics').prepare(task,serverInfo);
+      if(task.labels?.includes('epic')){const check=cp.spawnSync('gh',['api',`repos/${serverInfo.repo}/labels/epic`],{encoding:'utf8'});if(check.status!==0){const created=cp.spawnSync('gh',['label','create','epic','--repo',serverInfo.repo,'--color','5319e7'],{encoding:'utf8'});if(created.status!==0)throw Error(created.stderr);}}
       if (task.ticketKey) {
         // Update existing issue — close and reopen isn't easy; update body/title via API
         const args = ['issue', 'edit', task.ticketKey, '--repo', serverInfo.repo,
           '--title', task.title, '--body', task.body || '',...require('./lib/github-issue-type').typeArgs(task,serverInfo)];
+        if(task.labels?.includes('epic'))args.push('--add-label','epic');
         const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 20000 });
         if (r.status !== 0) return { ok: false, error: r.stderr || 'gh issue edit failed' };
         return { ok: true, key: task.ticketKey, url: task.ticketUrl };

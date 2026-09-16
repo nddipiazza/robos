@@ -11,7 +11,7 @@ function readIssue(url) {
   const { repo, number } = issueIdentity(url);
   const data = JSON.parse(execFileSync('gh', ['api', `repos/${repo}/issues/${number}`], { encoding: 'utf8', timeout: 30000, maxBuffer: 4 * 1024 * 1024 }));
   if (data.pull_request || data.html_url !== url) throw new Error('Issue identity did not match');
-  return { url, number, title: data.title, body: data.body || '', state: data.state, stateReason: data.state_reason, type: data.type?.name || 'Task', updatedAt: data.updated_at };
+  return { url, number, title: data.title, body: data.body || '', state: data.state, stateReason: data.state_reason, type: data.type?.name || 'Task', labels:data.labels||[], updatedAt: data.updated_at };
 }
 function validatePlan(plan) {
   if (plan.version !== 1 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(plan.id || '')) throw new Error('Plan requires version 1 and a stable slug id');
@@ -26,7 +26,7 @@ function validatePlan(plan) {
     const identity = issueIdentity(item.url);
     if (identity.repo !== plan.repository || urls.has(item.url)) throw new Error('Duplicate issue or issue outside the plan repository');
     urls.add(item.url);
-    if (!['Feature', 'Task', 'Bug'].includes(item.type)) throw new Error('Unsupported issue type');
+    if (!['Epic', 'Feature', 'Task', 'Bug'].includes(item.type)) throw new Error('Unsupported issue type');
     if (typeof item.delivery !== 'string' || !item.delivery.trim()) throw new Error('Every work item requires a delivery plan');
   }
   const byUrl = new Map(plan.items.map(item => [item.url, item]));
@@ -44,7 +44,7 @@ function plans(root) {
 }
 function proposePlan(root, input, fetchIssue = readIssue) {
   const plan = structuredClone(validatePlan(input));
-  for (const item of plan.items) item.issue = fetchIssue(item.url);
+  for (const item of plan.items){item.issue=fetchIssue(item.url);const kind=require('../../robos-lib/github-epics').logicalType(item.issue.type||item.type,{type:'github'},item.issue.labels);item.type=kind[0].toUpperCase()+kind.slice(1);}
   const ws = new GraphWorkspace(root), doc = ws.read();
   const namespace=plan.namespace||'robos';
   const projectId = `urn:${namespace}:project:${plan.id}`;
@@ -58,7 +58,7 @@ function proposePlan(root, input, fetchIssue = readIssue) {
     { ...base, '@id': projectId, '@type': ['robos:Project'], 'dcterms:title': plan.name, 'dcterms:description': plan.summary, 'robos:status': plan.status, 'robos:taskServer': { '@id': serverId }, 'robos:planJson': JSON.stringify(plan), 'robos:documentation': plan.design }
   ];
   for (const item of plan.items) {
-    nodes.push({ ...base, '@id': issueId(item.url), '@type': [`robos:${item.type==='Feature'?'Epic':item.type}`], 'robos:hierarchyVersion':2, 'dcterms:title': `#${item.issue.number} ${item.issue.title}`, 'dcterms:description': item.issue.body, 'robos:status': item.issue.state, 'robos:url': item.url, 'robos:inProject': { '@id': projectId }, ...(item.type==='Bug'?{'robos:severity':'unknown'}:{}), ...(item.parent ? { 'robos:inEpic': { '@id': issueId(item.parent) } } : {}), ...(item.dependsOn?.length ? { 'robos:dependsOn': item.dependsOn.map(url => ({ '@id': issueId(url) })), 'robos:relationshipEvidence':item.dependsOn.map(url=>({predicate:'robos:dependsOn',target:issueId(url),evidence,note:'Ordered delivery dependency recorded in the project plan.'})) } : {}) });
+    nodes.push({ ...base, '@id': issueId(item.url), '@type': [`robos:${item.type}`], 'robos:hierarchyVersion':2, 'dcterms:title': `#${item.issue.number} ${item.issue.title}`, 'dcterms:description': item.issue.body, 'robos:status': item.issue.state, 'robos:url': item.url, 'robos:inProject': { '@id': projectId }, ...(item.type==='Bug'?{'robos:severity':'unknown'}:{}), ...(item.parent ? { [plan.items.find(p=>p.url===item.parent)?.type==='Feature'?'robos:inFeature':'robos:inEpic']: { '@id': issueId(item.parent) } } : {}), ...(item.dependsOn?.length ? { 'robos:dependsOn': item.dependsOn.map(url => ({ '@id': issueId(url) })), 'robos:relationshipEvidence':item.dependsOn.map(url=>({predicate:'robos:dependsOn',target:issueId(url),evidence,note:'Ordered delivery dependency recorded in the project plan.'})) } : {}) });
   }
   const current = new Map(doc['robos:nodes'].map(n => [n['@id'], n]));
   const edits = nodes.map(node => {

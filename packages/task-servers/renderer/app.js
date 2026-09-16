@@ -177,6 +177,7 @@ function githubForm(s) {
     <input class="editor-title" id="f-name" type="text" value="${esc(s.name)}" placeholder="Server name">
   </div>
 
+  <p class="hint">RobOS Epics use GitHub issue type <strong>Task</strong> with the <strong>epic</strong> label. Sub-issues represent their tasks and sub-epics.</p>
   <div class="form-section">
     <div class="form-section-title">Connection</div>
     <div class="form-row">

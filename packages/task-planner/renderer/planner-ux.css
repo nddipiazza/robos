@@ -184,3 +184,5 @@ body[data-planner-view=learning] #feature-toolbar, body[data-planner-view=learni
 .hierarchy-relations { max-height:220px; overflow:auto; display:grid; gap:8px; }
 .hierarchy-relations label { display:flex; gap:8px; align-items:center; }
 .planner-project-folder .planner-project-folder { margin-left:16px; border-left:1px solid #30363d; }
+
+#planner-epic-mapping { display:inline-block; color:#9aaabd; margin:4px 0 8px 12px; font-size:12px; }

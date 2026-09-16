@@ -34,11 +34,15 @@ are stable. New Features carry `robos:hierarchyVersion: 2`, `robos:inProject`, a
 `robos:relatedFeature`. Planner nesting uses `robos:parentWorkItem`. Projects retain
 `robos:hasRepository` and add `robos:webResources`.
 
-Legacy GitHub native Feature issues are imported as RobOS Epics. Their native
-server type is shown truthfully under Ticket & repositories; this migration does
-not rename GitHub organization-wide types. Epic submission uses a configured Epic
-type, with the legacy configured Feature type as a compatibility fallback. Saved
-plan import likewise maps legacy Feature entries to Epic, preserving references.
+GitHub has one Epic representation: native issue type **Task** plus the **epic**
+label. Outgoing creation and resync add that marker automatically. Unlabeled Task
+issues stay Tasks, and Feature issues stay Features. Labels are matched without
+case sensitivity. The Epic workflow is selected before the generic Task workflow.
+
+Planner and Runner show **Epic** and `GitHub: Task · label: epic` so the source
+representation is explicit. Task Servers explains this fixed mapping; there is no
+mode selector or organization-level type creation action. Hermetiq's existing 12
+Epics, including closed issue #2, use this representation.
 
 Dev Central calls the existing assigned delivery collections Epics. PR Review
 calls their parent plan Epic plan. Internal IPC names and learning IDs retain
