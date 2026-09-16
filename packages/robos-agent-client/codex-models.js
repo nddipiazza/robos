@@ -20,7 +20,7 @@ function listModels(binary,{spawnCLI=spawn,timeout=15000}={}){
     if(message.error)return finish(Error('Codex model discovery failed: '+(message.error.code||'RPC error')));
     if(requestId===0){send({method:'initialized',params:{}});page();continue;}
     if(!Array.isArray(message.result?.data))return finish(Error('Codex returned an invalid model list.'));
-    for(const m of message.result.data){const model=m.model||m.id;if(typeof model==='string'&&model&&!m.hidden)models.set(model,{id:model,label:m.displayName||model,isDefault:!!m.isDefault});}
+    for(const m of message.result.data){const model=m.model||m.id;if(typeof model==='string'&&model&&!m.hidden)models.set(model,{id:model,label:m.displayName||model,isDefault:!!m.isDefault,defaultReasoningEffort:m.defaultReasoningEffort||'',reasoningEfforts:(m.supportedReasoningEfforts||[]).filter(e=>typeof e.reasoningEffort==='string').map(e=>({id:e.reasoningEffort,description:e.description||''}))});}
     const cursor=message.result.nextCursor;if(cursor){if(cursors.has(cursor))return finish(Error('Codex repeated a model-list page.'));cursors.add(cursor);page(cursor);}else finish(models.size?null:Error('Codex returned no available models.'));
    }
   });

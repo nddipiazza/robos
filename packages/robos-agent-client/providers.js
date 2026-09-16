@@ -31,7 +31,7 @@ async function models(id,{refresh=false}={}){
  const bin=binary(id),stat=fs.statSync(bin);
  const codexHome=process.env.CODEX_HOME||path.join(os.homedir(),'.codex');
  let account='';if(id==='codex'){try{const auth=JSON.parse(fs.readFileSync(path.join(codexHome,'auth.json'),'utf8'));account=require('node:crypto').createHash('sha256').update(String(auth.tokens?.account_id||auth.account_id||codexHome)).digest('hex').slice(0,16);}catch{}}
- const key=[id,id==='codex'?'cli-model-list-v1':'models-v1',bin,stat.mtimeMs,account].join(':');
+ const key=[id,id==='codex'?'cli-model-list-v2':'models-v1',bin,stat.mtimeMs,account].join(':');
  return modelCache.get(key,async()=>{
   if(id==='codex'){
    return require('./codex-models').listModels(bin);
