@@ -916,14 +916,21 @@ function renderTheaterDiffViewer() {
   const fileListEl = document.getElementById('theater-diff-file-list');
   if (fileListEl) {
     fileListEl.innerHTML = files.map((f, idx) => `
-      <div class="diff-file-item ${idx === activeDiffFileIndex ? 'active' : ''}" onclick="window.selectDiffFile(${idx})">
+      <button type="button" class="diff-file-item ${idx === activeDiffFileIndex ? 'active' : ''}" data-file-index="${idx}" title="${esc(f.filePath)}" aria-pressed="${idx === activeDiffFileIndex}">
         <span class="diff-file-path">${esc(f.filePath.split('/').pop())}</span>
         <span class="diff-file-stats">
           <span class="stat-add">+${f.additions}</span>
           <span class="stat-del">-${f.deletions}</span>
         </span>
-      </div>
+      </button>
     `).join('');
+    fileListEl.querySelectorAll('[data-file-index]').forEach(button => {
+      button.addEventListener('click', () => window.selectDiffFile(Number(button.dataset.fileIndex)));
+    });
+  }
+  for (const mode of ['unified', 'split']) {
+    const button = document.getElementById('btn-diff-mode-' + mode);
+    if (button) { button.removeAttribute('onclick'); button.onclick = () => window.setDiffMode(mode); }
   }
 
   renderCurrentFileDiff();
@@ -933,6 +940,7 @@ window.selectDiffFile = function(idx) {
   activeDiffFileIndex = idx;
   document.querySelectorAll('.diff-file-item').forEach((el, i) => {
     el.classList.toggle('active', i === idx);
+    el.setAttribute('aria-pressed', String(i === idx));
   });
   renderCurrentFileDiff();
 };

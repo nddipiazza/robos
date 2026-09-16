@@ -2119,3 +2119,7 @@ header h1 { font-size: 15px; font-weight: 600; }
 #review-pr-pages{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 24px;border-bottom:1px solid #30363d;background:#101820;}
 #review-pr-pages>span{color:#8b949e;font-size:12px;margin-right:8px;}
 #review-pr-pages [aria-current=true]{background:#174356;border-color:#69d3e9;}
+
+/* File rows are real buttons: keyboard accessible and compatible with CSP. */
+button.diff-file-item { width:100%; text-align:left; background:transparent; font-family:inherit; border:0; border-bottom:1px solid #161b22; border-radius:0; }
+button.diff-file-item:focus-visible { outline:2px solid var(--accent, #00bcd4); outline-offset:-2px; }
