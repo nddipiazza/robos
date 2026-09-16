@@ -12,7 +12,7 @@ A task may select several repositories. Task Runner preserves those clones befor
 
 Review copies use the exact PR commits, with unchanged repositories at their preserved session commits. They are separate from the original exported clones and the developer's normal checkouts. Reopening a review preserves reviewer edits. If a PR changed since its theater page loaded, reload the page first. Missing exports are reported instead of falling back to the application's current working directory.
 
-JetBrains workspaces use `.idea/modules.xml`, per-root module files and VCS mappings. VS Code-family IDEs use a multi-root `.code-workspace`. Nested roots are excluded from their parent JetBrains module to avoid overlapping content roots. These files establish the project layout; language SDKs, package installation and runtime services still follow each project's development setup.
+JetBrains workspaces use `.idea/modules.xml`, per-root module files and VCS mappings for actual repository roots only. Nested application/test roots remain modules; they are not registered as separate Git repositories. VS Code-family IDEs use a multi-root `.code-workspace`. Nested roots are excluded from their parent JetBrains module to avoid overlapping content roots. These files establish the project layout; language SDKs, package installation and runtime services still follow each project's development setup.
 
 ## Multiple PRs
 

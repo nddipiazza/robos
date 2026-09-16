@@ -26,3 +26,8 @@ test('backend dependency gate requires merged predecessors, including closed-but
  const {assertPrerequisites}=require('./review-workspaces');const result={pages:[{url:'library',state:'OPEN',dependsOn:[]},{url:'service',state:'OPEN',dependsOn:['library']}]};
  assert.throws(()=>assertPrerequisites(result,'service'),/prerequisite/);result.pages[0].state='CLOSED';assert.throws(()=>assertPrerequisites(result,'service'),/prerequisite/);result.pages[0].state='MERGED';assert.doesNotThrow(()=>assertPrerequisites(result,'service'));result.cycle=true;assert.throws(()=>assertPrerequisites(result,'service'),/cycle/);
 });
+test('nested project modules share the repository Git root rather than registering subdirectories',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'robos-nested-vcs-')),repo=root+'/repos/forms';
+ const target=writeWorkspace(root+'/ide',[{name:'forms',path:repo,gitRoot:repo},{name:'forms-e2e',path:repo+'/e2e',gitRoot:repo},{name:'MVP',path:root+'/repos/MVP',gitRoot:root+'/repos/MVP'}],{family:'jetbrains'});
+ const vcs=fs.readFileSync(target+'/.idea/vcs.xml','utf8');assert.equal((vcs.match(/<mapping /g)||[]).length,2);assert(!vcs.includes('/e2e'));assert(fs.readFileSync(target+'/.idea/forms-e2e-1.iml','utf8').includes(repo+'/e2e'));
+});
