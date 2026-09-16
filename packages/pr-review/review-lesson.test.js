@@ -12,3 +12,17 @@ test('summary execution uses the explicitly selected provider and model',()=>{
  assert.throws(()=>argumentsFor({},'',''),/Choose/);
  const ctx={pr:{title:'Example'},diff:'diff'};assert.notEqual(location(ctx,{provider:'codex',model:'a'}).file,location(ctx,{provider:'codex',model:'b'}).file);
 });
+
+test('refinement retains PR context and has its own cache entry, saved under the same PR',()=>{
+ const {refinementPrompt,location}=require('./review-lesson');
+ const ctx={pr:{title:'Example PR',files:[{path:'src/example.ts'}]},diff:'actual change'};
+ const refinement={markdown:'Existing explanation',instruction:'Explain the key concept with an example'};
+ const prompt=refinementPrompt(ctx,refinement);
+ for(const text of ['Example PR','actual change','Existing explanation',refinement.instruction,'Preserve useful unrelated content'])assert.ok(prompt.includes(text));
+ const selection={provider:'agy',model:'example-model'};
+ const initial=location(ctx,selection),revised=location(ctx,selection,refinement);
+ assert.notEqual(initial.file,revised.file);assert.equal(initial.latest,revised.latest);
+ assert.notEqual(revised.file,location(ctx,selection,{...refinement,instruction:'Shorten it'}).file);
+ assert.throws(()=>refinementPrompt(ctx,{markdown:'text',instruction:'  '}),/refinement request/);
+ assert.throws(()=>refinementPrompt(ctx,{markdown:'',instruction:'change'}),/refinement request/);
+});
