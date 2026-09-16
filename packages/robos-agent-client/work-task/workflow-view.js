@@ -18,8 +18,10 @@ function view(state,issue,settings){
  const workflow=server?ticketWorkflow({...issue,issueType:nativeType,session:{...state,phase}},server):null;
  const definition=workflow&&server.workflows.find(w=>w.type_id===workflow.typeId);
  const type=server?.issue_types?.find(t=>t.id===workflow?.typeId);
- const error=state.error||state.executionError?.text||(['failed','implementation-needs-attention'].includes(state.phase)?'Agent execution needs attention.':null);
- return {error,issueType:require('../../robos-lib/github-epics').logicalType(nativeType,server,issue.labels)==='epic'?'Epic':nativeType||type?.label||'Issue type not set',serverIssueType:nativeType,epicMapping:require('../../robos-lib/github-epics').explanation(nativeType,server,issue.labels),serverName:server?.name||'Task server not configured',workflow,currentStage:workflow?.states.find(s=>s.current)?.label||null,nextStages:(definition?.transitions||[]).filter(t=>t.from===workflow?.states.find(s=>s.current)?.id).map(t=>workflow.states.find(s=>s.id===t.to)?.label).filter(Boolean),executionPhase:state.phase};
+ // Output errors can be recoverable; only a terminated failed run is a job failure.
+ const error=state.phase==='failed'&&!state.workerPid?(state.error||state.executionError?.text||'Agent execution failed.'):null;
+ const warning=state.phase==='implementation-needs-attention'&&!state.workerPid?(state.error||'Agent finished without a linked PR. Review the preserved output.'):null;
+ return {error,warning,issueType:require('../../robos-lib/github-epics').logicalType(nativeType,server,issue.labels)==='epic'?'Epic':nativeType||type?.label||'Issue type not set',serverIssueType:nativeType,epicMapping:require('../../robos-lib/github-epics').explanation(nativeType,server,issue.labels),serverName:server?.name||'Task server not configured',workflow,currentStage:workflow?.states.find(s=>s.current)?.label||null,nextStages:(definition?.transitions||[]).filter(t=>t.from===workflow?.states.find(s=>s.current)?.id).map(t=>workflow.states.find(s=>s.id===t.to)?.label).filter(Boolean),executionPhase:state.phase};
 }
 async function load(state){
  let settings={};try{settings=JSON.parse(fs.readFileSync(path.join(os.homedir(),'.config/robos/settings.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}

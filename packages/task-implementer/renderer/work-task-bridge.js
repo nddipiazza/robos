@@ -58,7 +58,7 @@ async function resumeSession() {
   agentRunning=!!state.workerPid;setAgentBusy(agentRunning);
   const launched=!!(state.sandbox?.id || state.workerPid || state.events?.some(e=>e.role==='assistant'));
   const provider=launched?(state.launchConfig?.provider||state.backend):null;
-  const executionError=state.workflowView?.error||state.error||state.executionError?.text;
+  const executionError=state.phase==='failed'&&!state.workerPid?(state.workflowView?.error||state.error||state.executionError?.text||'Agent execution failed.'):null;
   setAgentStatus(executionError || [provider,provider?state.launchConfig?.model:null,state.sandbox?.status||state.workflowView?.currentStage||state.phase||'Ready',provider&&state.launchConfig?state.launchConfig.memoryGb+' GiB':null].filter(Boolean).join(' · '),executionError?'done-err':agentRunning?'running':'');
   document.getElementById('btn-start-text').textContent=state.prs?.length?'Review PR':'Run Task';
   document.getElementById('btn-start-agent').disabled=agentRunning||(!state.prs?.length&&!state.planReady);
@@ -124,7 +124,7 @@ function renderSessionWorkflow(state) {
   if(!panel){panel=document.createElement('section');panel.id='session-workflow';panel.setAttribute('aria-label','Issue type and workflow');document.querySelector('.agent-output-header').before(panel);}
   panel.replaceChildren();
   const view=state.workflowView;
-  const error=view?.error||state.error||state.executionError?.text||(['failed','implementation-needs-attention'].includes(state.phase)?'Agent execution needs attention.':null);
+  const error=state.phase==='failed'&&!state.workerPid?(view?.error||state.error||state.executionError?.text||'Agent execution failed.'):null;
   panel.classList.toggle('has-error',!!error);
   const heading=document.createElement('div');heading.className='session-workflow-heading';
   const type=document.createElement('strong');type.className='session-issue-type';type.textContent=view?.issueType||'Issue type unavailable';heading.append(type);
