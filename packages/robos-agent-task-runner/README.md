@@ -39,8 +39,25 @@ remove it until its work has been recovered. Session memory is released when the
 container is removed. Stop terminates the agent process, then attempts export.
 
 Container support was verified on Linux. macOS requires a working Docker runtime
-and Linux-compatible provider binaries; it has not been verified. Additional language
-SDKs/build tools and live display mirroring are not provisioned by this image.
+and Linux-compatible provider binaries; it has not been verified. The image includes Node.js, native build tools, Xvfb, and Chromium's Linux
+libraries/fonts. Install the browser version matched to the repository with
+`npx playwright install chromium`; no root dependency installation is needed.
+Each container has 512 MiB of shared memory for browser rendering. Additional
+language SDKs and live display mirroring are not provisioned by this image.
+
+The authenticated GitHub token is exposed to the agent as `GH_TOKEN` and
+`NODE_AUTH_TOKEN` for repositories whose `.npmrc` references that variable.
+Private GitHub Packages also requires the token's `read:packages` permission;
+repository access alone is insufficient. Refresh GitHub CLI access on the host
+with `gh auth refresh --hostname github.com --scopes read:packages` if needed.
+Do not put credentials in the image or exported repository files.
+
+Browser readiness is not full-stack readiness: sandbox localhost is isolated.
+Application backends, Gitea, and other test services must be provisioned separately
+inside the session or a deliberately configured test environment. The runner does
+not mount the host Docker socket or silently connect tests to production.
+Package publication is a separate release action, not a validation prerequisite;
+validate consumer integration with a locally packed candidate package first.
 
 Codex and AGY use nested terminal sandboxes. Docker seccomp, AppArmor, and
 masked-system-path restrictions are disabled for this container to permit nested
@@ -57,7 +74,25 @@ not imported. The sandbox has its own repository read/write and terminal rules.
 AGY permission denials and native error results fail the run even if its process
 exits zero. No empty response is accepted as a completed plan.
 
-Agent errors appear immediately in red on the current workflow stage, with the
-error message beneath it. The failed stage is retained if execution stops. A new
+Recoverable errors remain in the output. Only a terminated failed job marks the
+current workflow stage red. The failed stage is retained if execution stops. A new
 launch or successful completion clears the active error; session history retains
 the original error messages.
+
+Additional private registries can use repository-scoped secret references in
+`~/.config/robos/settings.json` under `registry_secret_bindings`:
+
+```json
+[{"repository":"https://github.com/example/app","environment":"REGISTRY_NPM_TOKEN","provider":"google-secret-manager","project":"example-dev","secret":"registry-npm-token"}]
+```
+
+Only bindings matching selected repositories are loaded, using the host's existing
+gcloud identity. Values travel over stdin into the session's RAM-backed home and
+are excluded from repository export. An unavailable secret stops provisioning with
+an actionable login/access error. GitHub credentials cannot be overridden by these
+bindings. Registry URLs and placeholder variables remain in the repository's npm
+configuration; no secret values belong in that configuration or in this settings file.
+
+The shared `robos-lib/registry-credentials` loader is available to other RobOS apps.
+It also accepts password-store references with `provider: "pass"` and `entry`.
+Only the first line of a password-store entry is used; notes are not credentials.
