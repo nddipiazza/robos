@@ -13,7 +13,7 @@ window.prepareRealTheater=function() {
   document.querySelector('#stage-1 .stage-title-wrap p').textContent='Understand the proposed change before reviewing its diff and evidence.';
   document.querySelector('#step-btn-5 .step-label').textContent='Validation & Evidence';
   document.querySelector('#stage-5 .stage-title-wrap h3').textContent='Validation and evidence';
-  document.querySelector('#stage-5 .stage-title-wrap p').textContent='Inspect the reported checks and evidence links; distinguish completed validation from limitations.';
+  document.querySelector('#stage-5 .stage-title-wrap p').textContent='Watch the task demo or inspect its test reports. Open original PR checks for their results.';
   document.getElementById('theater-rest-card').hidden=true;
   document.getElementById('theater-debugger-card').hidden=true;
   document.querySelectorAll('#stage-4 .ide-target-box,#stage-4 .bridge-status-dot').forEach(e=>e.hidden=true);
@@ -25,15 +25,25 @@ window.prepareRealTheater=function() {
   document.querySelector('#stage-6 .stage-title-wrap h3').textContent='Review and merge';
   document.querySelector('#stage-6 .stage-title-wrap p').textContent='Approval merges this exact reviewed commit, subject to GitHub branch rules.';
   document.querySelectorAll('#stage-5 .canvas-mode-bar,#canvas-desktop-view,#canvas-video-view').forEach(e=>e.hidden=true);
-  const badge=document.getElementById('proof-canvas-badge');badge.textContent='Evidence requires review';badge.className='gate-pill';
+  const badge=document.getElementById('proof-canvas-badge');badge.textContent='Demo & test reports';badge.className='gate-pill';
   let evidence=document.getElementById('real-pr-evidence');
   if(!evidence){evidence=document.createElement('div');evidence.id='real-pr-evidence';evidence.className='theater-card';document.querySelector('#stage-5 .stage-nav-footer').before(evidence);}
   evidence.replaceChildren();
-  const description=document.createElement('pre');description.style.whiteSpace='pre-wrap';description.textContent=ctx.pr.body||'The PR has no evidence links or validation notes.';evidence.append(description);
-  const checks=document.createElement('ul');checks.className='review-evidence-checks';
-  for(const check of ctx.checks){const row=document.createElement('li');row.textContent=`${check.name||check.context}: ${check.conclusion||check.state||check.status}`;if(check.detailsUrl||check.targetUrl){const b=document.createElement('button');b.type='button';b.className='btn-stage-nav';b.textContent='Open check';b.title='Open '+(check.name||check.context||'check')+' in Chrome';b.onclick=()=>window.api.openUrl(check.detailsUrl||check.targetUrl);row.append(b);}checks.append(row);}evidence.append(checks);
-  if(!ctx.checks.length){const p=document.createElement('p');p.textContent='No automated checks reported by GitHub.';evidence.append(p);}
-  const acknowledgement=document.createElement('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='real-evidence-reviewed';checkbox.onchange=()=>{ctx.validationGates.evidenceReviewed=checkbox.checked;renderTheaterSignOff();};acknowledgement.append(checkbox,' I reviewed the validation results and linked evidence for this commit.');evidence.append(acknowledgement);
+  const frame=document.createElement('iframe');frame.id='review-evidence-viewer';frame.title='RobOS e2e test report viewer';frame.setAttribute('sandbox','allow-scripts allow-same-origin');evidence.append(frame);
+  const status=document.createElement('p');status.textContent='Loading task recordings and test reports…';evidence.append(status);
+  if(window.reviewEvidenceMessage)window.removeEventListener('message',window.reviewEvidenceMessage);
+  window.reviewEvidenceMessage=event=>{
+    if(event.source!==frame.contentWindow||event.data?.type!=='robos-open-check')return;
+    if(!ctx.checks.some(c=>(c.detailsUrl||c.targetUrl)===event.data.url))return;
+    window.api.openUrl(event.data.url);
+  };
+  window.addEventListener('message',window.reviewEvidenceMessage);
+  window.api.reviewEvidence({reviewId:ctx.reviewId}).then(result=>{
+    if(theaterContext!==ctx)return;
+    if(!result.ok)throw Error(result.error);
+    frame.src=result.url;status.remove();
+  }).catch(error=>{status.textContent='Could not load test reports: '+error.message;});
+  const acknowledgement=document.createElement('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='real-evidence-reviewed';checkbox.onchange=()=>{ctx.validationGates.evidenceReviewed=checkbox.checked;renderTheaterSignOff();};acknowledgement.append(checkbox,' I reviewed the available evidence and testing strategy for this change.');evidence.append(acknowledgement);
   const approve=document.querySelector('input[name=theater-decision][value=approve]').closest('label');approve.querySelector('strong').textContent='Approve and merge this PR';approve.querySelector('span').textContent='Merge the reviewed commit into '+ctx.pr.baseBranch+'. GitHub branch rules still apply.';
   document.querySelector('input[name=theater-decision][value=request-changes]').closest('label').querySelector('span').textContent='Request revisions on GitHub; this does not restart the agent.';
   document.querySelector('#gate-card-ci strong').textContent='GitHub automated checks';

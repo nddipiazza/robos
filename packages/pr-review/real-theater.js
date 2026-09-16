@@ -21,6 +21,7 @@ function parseDiff(diff,files=[]) {
 }
 function createTheater({context=review.context,merge=review.approveAndMerge,command=core.command,policy=require('../robos-agent-client/work-task/review-policy').get}={}) {
   const sessions=new Map();
+  let evidenceServer=null;
   async function load({repo,number}) {
     const url=`https://github.com/${repo}/pull/${number}`;review.prIdentity(url);
     const ctx=await context(url),pr=ctx.pr;
@@ -73,12 +74,23 @@ function createTheater({context=review.context,merge=review.approveAndMerge,comm
     const comment=JSON.parse(await command('gh',['api',`repos/${target.repo}/pulls/${target.number}/comments`,'--method','POST','-f',`body=${input.body.trim()}`,'-f',`commit_id=${target.head}`,'-f',`path=${target.path}`,'-F',`line=${target.line}`,'-f',`side=${target.side}`,...(target.startLine<target.line?['-F',`start_line=${target.startLine}`,'-f',`start_side=${target.side}`]:[])]));
     return {ok:true,comment};
   }
+  async function evidence({reviewId},taskUrl){
+    const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');
+    const viewer=require('../robos-lib/test-report-viewer/server');
+    const task=taskUrl?core.read(taskUrl):null;
+    const linked=task?.prs?.some(pr=>pr.url===ctx.pr.url);
+    const artifacts=linked?viewer.discover(require('path').join(core.folder(taskUrl),'sessions')):[];
+    const checks=(ctx.pr.statusCheckRollup||[]).map(c=>({name:c.name||c.context||'Check',url:c.detailsUrl||c.targetUrl})).filter(c=>/^https:\/\//.test(c.url||''));
+    evidenceServer?.close();
+    evidenceServer=await viewer.start({sessions:artifacts,title:ctx.pr.title,head:ctx.pr.headRefOid,checks,files:ctx.pr.files||[]});
+    return {ok:true,url:evidenceServer.url};
+  }
   async function source({reviewId,path}){
     const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');
     if(!ctx.sourceLoader)ctx.sourceLoader=require('./review-source').createSourceLoader(ctx,command);
     return {ok:true,...await ctx.sourceLoader(path)};
   }
   async function inlineComments({reviewId}){const ctx=sessions.get(reviewId);if(!ctx)throw Error('Reload this PR.');const {repo,number}=review.prIdentity(ctx.pr.url);const pages=JSON.parse(await command('gh',['api',`repos/${repo}/pulls/${number}/comments`,'--paginate','--slurp']));return {ok:true,comments:pages.flat()};}
-  return {source,load,quiz,submit,lesson,lessonOptions,inlineTarget,inlineComment,inlineComments};
+  return {evidence,source,load,quiz,submit,lesson,lessonOptions,inlineTarget,inlineComment,inlineComments};
 }
 module.exports={createTheater,parseDiff};
