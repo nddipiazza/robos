@@ -34,7 +34,7 @@ Video games represent the most complex frontier in automated testing:
 
 ## 2. The Dual-Suite Architecture
 
-To balance rapid developer iteration with exhaustive start-to-finish verification, RobOS separates tests into two distinct suites:
+To balance rapid developer iteration with realistic gameplay verification, RobOS separates tests into two distinct suites:
 
 ```mermaid
 graph TD
@@ -45,17 +45,17 @@ graph TD
         FOCUSED["Targeted Verification<br/><i>Trading, Fog of War, Aggro Peeling, Defeat Recovery</i>"]
     end
 
-    subgraph "Full Playthroughs (6 Features / 152 Steps)"
+    subgraph "Playthrough Scenarios (6 Features / 152 Steps)"
         FULL_RUN["Run: python3 run_cucumber_tests.py --playthrough"]
-        CHAR_CREAT["Character Creation Screen (Human, Elf, Dwarf, Halfling)"]
-        HOMESTEAD["Homestead Quest & Footlocker Looting"]
-        VILLAGE["Village Square Navigation & Blacksmith Dialogue"]
-        KEEP["Citadel Infiltration & Malakor Vanquishing"]
-        VICTORY["Victory Screen Reached Autonomously"]
+        SCENARIO["Play isolated game scenarios from start to finish as a player would"]
+        SEQUENCE["When used in sequence, they complete the entire game"]
+        CHAR_CREAT["Class Journeys (Human, Elf, Dwarf, Halfling)"]
+        QUESTING["Point A to Point B Autonomous Questing"]
+        EPIC["Expanded Epic Campaign Journey"]
     end
 
     ISO_RUN --> STATE_INJ --> SPLASH --> FOCUSED
-    FULL_RUN --> CHAR_CREAT --> HOMESTEAD --> VILLAGE --> KEEP --> VICTORY
+    FULL_RUN --> SCENARIO --> SEQUENCE --> CHAR_CREAT --> QUESTING --> EPIC
 ```
 
 ---

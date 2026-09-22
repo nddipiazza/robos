@@ -39,7 +39,7 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Engine / Profile** | Godot 4.3 (GL Compatibility) |
 | **Language & Stack** | GDScript (typed), Python 3.12+ (`behave`), FFmpeg |
 | **Ontology & Standard** | Schema.org `schema:VideoGame`, RobOS `robos:PCGame`, D&D 5e SRD |
-| **Testing Harness** | Dual E2E Suite: 11 Isolated Features + 6 Full Autonomous Playthroughs |
+| **Testing Harness** | Dual E2E Suite: 11 Isolated Features + 6 Start-to-Finish Playthrough Scenarios |
 | **Verification Score** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
 
 ```mermaid

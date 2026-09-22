@@ -116,9 +116,9 @@ RobOS enforces a strict separation between two types of automated E2E tests:
 1. **Normal Isolated Scenarios (11 Features)**:
    - Begin with a branded scenario splash banner displaying the BDD feature metadata.
    - Inject specific game states (`Given the heroes have state "village square"`) to test individual mechanics (shopkeeper trading, fog of war, condition tracking, corpse looting, defeat/wipeout recovery) in isolation.
-2. **Full Start-to-Finish Playthroughs (6 Features)**:
-   - Literally play the entire game from character creation to Victory as a human would.
-   - Powered by the **Infinity AI Engine**, which perceives enemy proximity, deploys combined-arms combat tactics, talks to NPCs, navigates obstacles, and breaches the keep.
+2. **Start-to-Finish Playthrough Scenarios (6 Features)**:
+   - Play isolated game scenarios from start to finish as a player would have to, and can be used in sequence to complete the entire game.
+   - Powered by the **Infinity AI Engine**, which perceives enemy proximity, deploys combined-arms combat tactics, talks to NPCs, navigates obstacles, and quests across scenes to achieve victory.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
   <div>
