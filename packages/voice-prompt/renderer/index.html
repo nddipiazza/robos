@@ -81,6 +81,29 @@
               <button id="btn-save-dictation" class="btn-primary">Save Voice Prompt</button>
               <button id="btn-clear-dictation" class="btn-secondary">Clear</button>
             </div>
+
+            <!-- RobOS Agent Streaming Panel -->
+            <div class="agent-stream-panel">
+              <div class="agent-stream-header">
+                <div class="agent-stream-toggle-wrap">
+                  <input type="checkbox" id="chk-stream-agent" class="agent-checkbox">
+                  <label for="chk-stream-agent">Auto-Stream to RobOS Agent</label>
+                </div>
+                <div class="agent-select-wrap">
+                  <label for="select-agent-target">Target:</label>
+                  <select id="select-agent-target" class="agent-select" title="Target RobOS Agent">
+                    <option value="fast-reactive">⚡ Fast Reactive Assistant</option>
+                    <option value="claude-code">Claude Code</option>
+                    <option value="github-copilot">GitHub Copilot</option>
+                    <option value="codex">Codex</option>
+                  </select>
+                </div>
+              </div>
+              <div class="agent-actions-row">
+                <button id="btn-send-agent" class="btn-agent-send">⚡ Send to Agent</button>
+                <span id="agent-status-badge" class="agent-status-badge idle">Agent: Standby</span>
+              </div>
+            </div>
           </div>
         </div>
 

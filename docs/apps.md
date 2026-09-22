@@ -865,6 +865,7 @@ An offline neural speech-to-text dictation agent engineered for hands-free AI pr
 - **Global Push-to-Talk Hotkey (`Super+V`)**: Summon dictation globally from any running RobOS app or terminal without losing focus or context.
 - **Audio Waveform Feedback**: Real-time microphone input visualization with animated volume amplitude bars via Web Audio API `AnalyserNode`.
 - **Universal REST API (`:19188`) & CLI (`robos-voice`)**: Control microphone listening, query active context, stream transcripts, and manage saved prompts programmatically. Read the full [Voice Prompt Dictation Guide]({{ site.baseurl }}{% link voice-prompt.md %}).
+![Voice Prompt Agent]({{ '/assets/images/voice-prompt-architecture.jpg' | relative_url }})
 
 ---
 

@@ -28,4 +28,8 @@ contextBridge.exposeInMainWorld('voicePrompt', {
   onInterimText: (callback) => {
     ipcRenderer.on('vp-event-interim-text', (_e, data) => callback(data));
   },
+  streamToAgent: (payload) => ipcRenderer.invoke('vp-stream-to-agent', payload),
+  onAgentResponse: (callback) => {
+    ipcRenderer.on('vp-event-agent-response', (_e, data) => callback(data));
+  },
 });

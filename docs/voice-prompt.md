@@ -41,62 +41,21 @@ The **RobOS Voice Prompt Agent** (`packages/voice-prompt`, CLI: `robos-voice`, b
 
 ## 2. System Architecture & Multimodal Pipeline
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        ROBOS VOICE PROMPT AGENT ARCHITECTURE                           │
-├───────────────────────┬──────────────────────────┬─────────────────────────────────────┤
-│ 1. AUDIO CAPTURE      │ 2. NEURAL STT ENGINE     │ 3. CONTEXT ENRICHMENT & ROUTING     │
-├───────────────────────┼──────────────────────────┼─────────────────────────────────────┤
-│ • PipeWire (pw-record)│ • Xenova Whisper (ONNX)  │ • Active Window (xdotool / xprop)   │
-│ • ALSA (arecord)      │ • 100% Offline / Local   │ • Process /proc/<pid>/cwd           │
-│ • SoX fallback        │ • 16 kHz Mono Float32    │ • Git branch / dirty status         │
-│ • Web Audio Analyser  │ • Streaming Chunk Passes │ • Global Hotkey (Super+V)           │
-│ • Real-time Waveform  │ • SSE Stream (:19188)    │ • Store (~/.config/robos/prompts)   │
-└───────────────────────┴──────────────────────────┴─────────────────────────────────────┘
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/voice-prompt-architecture.jpg' | relative_url }}" alt="RobOS Voice Prompt Agent Architecture: Audio Capture, Offline Neural STT, and Desktop Context Enrichment" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Voice Prompt Agent Architecture</strong>: 100% offline local neural Whisper speech-to-text pipeline with real-time streaming, active window context capture, and global push-to-talk execution. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
-The pipeline operates across 4 coordinated layers:
+### Execution Flow: Speech to Context-Enriched Prompt
 
-### Sequence Diagram: Speech to Context-Enriched Prompt
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Developer
-    participant UI as Voice Prompt UI / Hotkey (Super+V)
-    participant STT as STTEngine (Whisper ONNX)
-    participant Ctx as ContextProvider
-    participant Store as PromptStore (~/.config/robos)
-    participant API as HTTP REST API (:19188)
-    participant Agent as AI Coding Agent (Claude/Antigravity)
-
-    Developer->>UI: Press Super+V (or Click Mic)
-    UI->>STT: activate(device)
-    STT->>STT: Spawn pw-record / arecord (16kHz 16-bit WAV)
-    UI->>UI: Animate Live Waveform & "LISTENING ● STREAMING LIVE"
-    
-    loop Every ~2 Seconds While Speaking
-        STT->>STT: Extract WAV Float32 Samples
-        STT->>STT: Transcribe chunk via Whisper ONNX
-        STT->>UI: emit('interim-text', { text, isFinal: false })
-        STT->>API: SSE /api/stream -> push live text delta
-        UI->>Developer: Display streaming transcript in real time
-    end
-
-    Developer->>UI: Release Super+V (or Click Stop)
-    UI->>STT: deactivate()
-    STT->>STT: Finalize Whisper transcription & clean noise tokens
-    UI->>Ctx: getAggregatedContext()
-    Ctx->>Ctx: Query xprop window, PID, Git repo, branch
-    Ctx-->>UI: { appId, title, gitBranch, cwd, activeFile }
-    UI->>Store: savePrompt({ text, durationMs, metadata })
-    Store-->>UI: Saved Prompt Record (#VP-172688...)
-    UI->>API: emit('vp-event-dictation', prompt)
-    Developer->>Agent: "Execute latest voice prompt"
-    Agent->>API: GET /api/prompts?limit=1
-    API-->>Agent: Prompt text + enriched desktop context
-    Agent->>Agent: Execute requested refactoring
-```
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/voice-prompt-sequence-flow.jpg' | relative_url }}" alt="Speech to Context-Enriched Prompt Execution Flow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Speech to Context-Enriched Prompt Execution Flow</strong>: End-to-end lifecycle from push-to-talk activation and interim streaming to desktop context extraction and autonomous agent dispatch. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
 
 ---
 
@@ -151,6 +110,18 @@ The `ContextProvider` automatically queries the X11/Wayland desktop environment:
   "timestamp": "2026-09-22T10:14:00.000Z"
 }
 ```
+
+### 3.4 Direct Agent Dispatch & Auto-Streaming
+
+The Voice Prompt interface includes an integrated **RobOS Agent Streaming Panel** enabling zero-click execution:
+- **Auto-Stream to RobOS Agent**: When enabled via checkbox, finalized dictation is immediately routed to the selected coding agent without requiring manual copy-pasting.
+- **Configurable Agent Targets**: Select between:
+  - `fast-reactive`: Instant sub-second reactive coding assistant.
+  - `claude-code`: Anthropic Claude Code session.
+  - `github-copilot`: GitHub Copilot CLI harness.
+  - `codex`: OpenAI Codex reasoning model.
+- **Live Dispatch Status Indicator**: Real-time status pill animating from `Agent: Standby` &rarr; `Agent: Streaming...` &rarr; `Agent: Dispatched`.
+- **Manual "Send to Agent" Trigger**: Preview, edit or augment the recognized transcript before explicitly dispatching with one click.
 
 ---
 

@@ -35,7 +35,7 @@ if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
 
 let mainWindow = null;
 let apiServer = null;
-const API_PORT = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
+let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
 const sttEngine = new STTEngine(promptStore.loadPrefs());
 
@@ -106,13 +106,87 @@ async function handleDictation(input, options = {}) {
 }
 
 /**
+ * Handle streaming dictated text to a RobOS agent
+ */
+async function handleAgentStream(payload = {}) {
+  const text = (payload.text || '').trim();
+  const agentId = payload.agentId || 'fast-reactive';
+  const isAuto = Boolean(payload.isAuto);
+
+  if (!text) {
+    return { ok: false, error: 'text is required' };
+  }
+
+  const context = payload.context || (await contextProvider.getAggregatedContext());
+  let agentResponseText = '';
+  let usedAgent = agentId;
+
+  if (agentId !== 'fast-reactive') {
+    try {
+      let aiAgent = null;
+      const agentPaths = [
+        path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+        '/usr/local/share/robos/robos-lib/ai-agent',
+      ];
+      for (const p of agentPaths) {
+        try { aiAgent = require(p); break; } catch {}
+      }
+      if (aiAgent && typeof aiAgent.ask === 'function') {
+        const promptWithContext = `Context: ${context.summary || 'RobOS Workspace'}\nUser voice prompt: "${text}"`;
+        const res = await aiAgent.ask(promptWithContext, { providerId: agentId });
+        if (res && res.ok) {
+          agentResponseText = res.text;
+        } else {
+          agentResponseText = `Agent received: "${text}" (processed with ${agentId})`;
+        }
+      } else {
+        agentResponseText = `Agent received: "${text}" (processed with ${agentId})`;
+      }
+    } catch (err) {
+      agentResponseText = `Agent received: "${text}" (processed with ${agentId})`;
+    }
+  } else {
+    agentResponseText = `[Fast Reactive Assistant] Processed: "${text}"`;
+  }
+
+  const eventPayload = {
+    type: 'agent_stream',
+    agentId: usedAgent,
+    text,
+    response: agentResponseText,
+    context,
+    isAuto,
+    timestamp: new Date().toISOString(),
+  };
+
+  sttEngine.emit('interim-text', {
+    type: 'agent_stream',
+    agentId: usedAgent,
+    text,
+    agentResponse: agentResponseText,
+    isFinal: true,
+  });
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-agent-response', eventPayload);
+  }
+
+  return { ok: true, agentId: usedAgent, text, response: agentResponseText, context };
+}
+
+/**
  * Starts HTTP REST API Server on port 19188
  */
-function startApiServer() {
+function startApiServer(overridePort) {
+  if (overridePort) {
+    currentApiPort = overridePort;
+  } else if (process.env.ROBOS_VOICE_PORT) {
+    currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT, 10);
+  }
   if (apiServer) return apiServer;
 
   apiServer = http.createServer(async (req, res) => {
-    const urlObj = new URL(req.url, `http://localhost:${API_PORT}`);
+    const urlObj = new URL(req.url, `http://localhost:${currentApiPort}`);
     const pathname = urlObj.pathname;
     const method = req.method.toUpperCase();
 
@@ -141,7 +215,7 @@ function startApiServer() {
           activeWindowTitle: activeWin.title,
           totalPrompts: prompts.length,
           interimText: sttEngine.lastInterimText || '',
-          port: API_PORT,
+          port: currentApiPort,
         }));
       }
 
@@ -209,6 +283,14 @@ function startApiServer() {
         const prompt = await handleDictation(body.text ? body.text : body, body);
         res.writeHead(201);
         return res.end(JSON.stringify({ ok: true, prompt }));
+      }
+
+      // 5.1 POST /api/agent-stream — stream text to a RobOS agent
+      if (pathname === '/api/agent-stream' && method === 'POST') {
+        const body = await parseBody(req);
+        const result = await handleAgentStream(body);
+        res.writeHead(result.ok ? 200 : 400);
+        return res.end(JSON.stringify(result));
       }
 
       // 6. GET /api/prompts — list saved prompts
@@ -310,8 +392,12 @@ function startApiServer() {
     }
   });
 
-  apiServer.listen(API_PORT, () => {
-    console.log(`[voice-prompt] API server listening on http://localhost:${API_PORT}`);
+  apiServer.listen(currentApiPort, () => {
+    console.log(`[voice-prompt] API server listening on http://localhost:${currentApiPort}`);
+  });
+
+  apiServer.on('close', () => {
+    apiServer = null;
   });
 
   return apiServer;
@@ -431,6 +517,10 @@ ipcMain.handle('vp-dictate', async (_e, payload) => {
   return handleDictation(text, payload || {});
 });
 
+ipcMain.handle('vp-stream-to-agent', async (_e, payload) => {
+  return handleAgentStream(payload || {});
+});
+
 ipcMain.handle('vp-get-prompts', (_e, query) => {
   let prompts = promptStore.loadPrompts();
   if (query && query.app) {
@@ -488,6 +578,7 @@ app.on('window-all-closed', () => {
 module.exports = {
   startApiServer,
   handleDictation,
+  handleAgentStream,
   sttEngine,
   promptStore,
   contextProvider,

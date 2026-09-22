@@ -431,6 +431,110 @@ textarea#dictation-input:focus {
   border-color: var(--text-secondary);
 }
 
+/* RobOS Agent Stream Panel */
+.agent-stream-panel {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background-color: rgba(33, 38, 45, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.agent-stream-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.agent-stream-toggle-wrap input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent-cyan);
+}
+
+.agent-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.agent-select {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  outline: none;
+}
+
+.agent-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-agent-send {
+  background-color: rgba(0, 188, 212, 0.15);
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-agent-send:hover {
+  background-color: rgba(0, 188, 212, 0.3);
+}
+
+.agent-status-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.agent-status-badge.idle {
+  background-color: rgba(139, 148, 158, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.agent-status-badge.streaming {
+  background-color: rgba(0, 188, 212, 0.2);
+  color: #00bcd4;
+  border: 1px solid #00bcd4;
+  animation: pulse-stream 1.2s infinite ease-in-out;
+}
+
+.agent-status-badge.sent {
+  background-color: rgba(35, 134, 54, 0.2);
+  color: #4ade80;
+  border: 1px solid var(--accent-green);
+}
+
 /* Context Card */
 .context-card {
   gap: 10px;

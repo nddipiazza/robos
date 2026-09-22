@@ -16,6 +16,10 @@ const selectDevice = document.getElementById('select-device');
 const waveform = document.getElementById('recording-waveform');
 const dictationInput = document.getElementById('dictation-input');
 const streamingIndicator = document.getElementById('streaming-indicator');
+const chkStreamAgent = document.getElementById('chk-stream-agent');
+const selectAgentTarget = document.getElementById('select-agent-target');
+const btnSendAgent = document.getElementById('btn-send-agent');
+const agentStatusBadge = document.getElementById('agent-status-badge');
 const btnSaveDictation = document.getElementById('btn-save-dictation');
 const btnClearDictation = document.getElementById('btn-clear-dictation');
 const btnRefreshContext = document.getElementById('btn-refresh-context');
@@ -231,6 +235,49 @@ async function saveCurrentDictation() {
   showFeedback('Voice prompt saved with active app context!', 'success');
 }
 
+// Stream Current Dictated Text to RobOS Agent
+async function sendCurrentTextToAgent(isAuto = false) {
+  const text = dictationInput.value.trim();
+  if (!text || !window.voicePrompt) return;
+
+  const targetAgent = selectAgentTarget ? selectAgentTarget.value : 'fast-reactive';
+  if (agentStatusBadge) {
+    agentStatusBadge.className = 'agent-status-badge streaming';
+    agentStatusBadge.textContent = 'Agent: Streaming...';
+  }
+
+  try {
+    const res = await window.voicePrompt.streamToAgent({
+      text,
+      agentId: targetAgent,
+      isAuto,
+    });
+
+    if (agentStatusBadge) {
+      agentStatusBadge.className = 'agent-status-badge sent';
+      agentStatusBadge.textContent = 'Agent: Dispatched';
+      setTimeout(() => {
+        if (agentStatusBadge) {
+          agentStatusBadge.className = 'agent-status-badge idle';
+          agentStatusBadge.textContent = 'Agent: Standby';
+        }
+      }, 3000);
+    }
+
+    if (res && res.response) {
+      showFeedback(`Streamed to ${targetAgent}: "${res.response.slice(0, 50)}${res.response.length > 50 ? '...' : ''}"`, 'success');
+    } else {
+      showFeedback(`Streamed to RobOS agent (${targetAgent})!`, 'success');
+    }
+  } catch (err) {
+    if (agentStatusBadge) {
+      agentStatusBadge.className = 'agent-status-badge idle';
+      agentStatusBadge.textContent = 'Agent: Error';
+    }
+    showFeedback(`Agent stream error: ${err.message}`, 'error');
+  }
+}
+
 // Load and Render Prompts
 async function loadPrompts() {
   if (!window.voicePrompt) return;
@@ -329,6 +376,10 @@ function setupEventListeners() {
   btnClearDictation.addEventListener('click', () => { dictationInput.value = ''; });
   btnRefreshContext.addEventListener('click', refreshAppContext);
 
+  if (btnSendAgent) {
+    btnSendAgent.addEventListener('click', () => sendCurrentTextToAgent(false));
+  }
+
   inputSearch.addEventListener('input', renderPrompts);
 
   btnClearAll.addEventListener('click', async () => {
@@ -353,9 +404,15 @@ function setupEventListeners() {
         dictationInput.value = data.prompt.text;
         await loadPrompts();
         showFeedback(`Captured & Saved: "${data.prompt.text}"`, 'success');
+        if (chkStreamAgent && chkStreamAgent.checked) {
+          sendCurrentTextToAgent(true);
+        }
       } else if (data && data.text) {
         dictationInput.value = data.text;
         showFeedback(`Transcribed: "${data.text}"`, 'success');
+        if (chkStreamAgent && chkStreamAgent.checked) {
+          sendCurrentTextToAgent(true);
+        }
       } else {
         showFeedback('Listening stopped. No clear speech detected.', 'warning');
       }
