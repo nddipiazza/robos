@@ -240,20 +240,30 @@ function startApiServer() {
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health
       if (pathname === '/eval' && method === 'POST') {
         const body = await parseBody(req);
-        const js = body.__raw || (typeof body === 'string' ? body : body.js || '');
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          const result = await mainWindow.webContents.executeJavaScript(js || 'null');
-          res.writeHead(200);
-          return res.end(JSON.stringify({ result }));
+        const js = (typeof body === 'string' ? body : body.__raw || body.text || body.js || '');
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
+          try {
+            const result = await mainWindow.webContents.executeJavaScript(js || 'null');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ result }));
+          } catch (err) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: err.message, result: null }));
+          }
         } else {
-          res.writeHead(200);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ result: null }));
         }
       }
 
       if (pathname === '/health' && method === 'GET') {
-        res.writeHead(200);
-        return res.end(JSON.stringify({ ok: true, appId: 'voice-prompt', title: 'RobOS Voice Prompt' }));
+        if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents || mainWindow.webContents.isLoading()) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ ok: false, loading: true }));
+        }
+        const title = (typeof mainWindow.getTitle === 'function') ? mainWindow.getTitle() : 'RobOS Voice Prompt';
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: true, appId: 'voice-prompt', title }));
       }
 
       // Fallback 404
