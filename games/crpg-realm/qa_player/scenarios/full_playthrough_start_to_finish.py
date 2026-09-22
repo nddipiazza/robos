@@ -181,8 +181,8 @@ class FullPlaythroughStartToFinishScenario(BaseQAScenario):
         player.set_cucumber_step('And the player observes Blacksmith Brand working between anvil and forge', "Act 2: Demonstrating Brand ambient patrol AI in central plaza")
         time.sleep(2.5)
 
-        player.set_cucumber_step('When the player click-to-moves northeast to approach Blacksmith Brand', "Act 2: Demonstrating single click path line & animated destination reticle (1120, 830)")
-        player.move_player_to(1120, 830)
+        player.set_cucumber_step('When the player click-to-moves northeast to approach Blacksmith Brand', "Act 2: Demonstrating single click path line & animated destination reticle (820, 520)")
+        player.move_player_to(820, 520)
         time.sleep(3.5)
 
         player.set_cucumber_step('And the player speaks with Blacksmith Brand', "Act 2: Inquiring about the night's disturbances")
@@ -207,9 +207,9 @@ class FullPlaythroughStartToFinishScenario(BaseQAScenario):
         time.sleep(1.0)
 
         # Skirmish with Corrupted Shadow Hound in Eastern Ruins
-        player.set_cucumber_step('When the player queues navigational waypoints across the village toward the ancient ruins', "Act 2: Queued multi-point route across village expanse (1450, 820 -> 1750, 820)")
-        player.move_player_to(1450, 820)
-        player.queue_player_move(1750, 820)
+        player.set_cucumber_step('When the player queues navigational waypoints across the village toward the ancient ruins', "Act 2: Queued multi-point route across village expanse (1450, 750 -> 1850, 820)")
+        player.move_player_to(1450, 750)
+        player.queue_player_move(1850, 820)
         time.sleep(4.5)
 
         player.set_cucumber_step('Then the Shadow Hound charges to attack and the Hero strikes with weapon swing animations', "Act 2: Demonstrating 4-frame attack swing, slash VFX, & Action Log rolls")
@@ -217,8 +217,8 @@ class FullPlaythroughStartToFinishScenario(BaseQAScenario):
         time.sleep(5.0)  # Watch animated attack sequence, slash VFX, and hound collapse
 
         # Walk to Northern Citadel Ramparts / Garrison Portcullis
-        player.set_cucumber_step('When the player traverses north to the massive Garrison Portcullis', "Act 2: Camera glides north toward Citadel ramparts (1280, 360)")
-        player.move_player_to(1280, 360)
+        player.set_cucumber_step('When the player traverses north to the massive Garrison Portcullis', "Act 2: Camera glides north toward Citadel ramparts (1175, 360)")
+        player.move_player_to(1175, 360)
         time.sleep(4.0)
 
         player.set_cucumber_step('And the player unlocks the Portcullis using the Garrison Key', "Act 2: Unlocking iron portcullis & transitioning to keep")

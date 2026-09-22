@@ -172,8 +172,8 @@ class InfinityAIAgent(VideoGameQAPlayer):
 
         # 1. Approach and confer with Blacksmith Brand
         if talk_blacksmith:
-            self.log_agent("Moving to Blacksmith Brand in central square...")
-            self.move_player_to(1120, 850)
+            self.log_agent("Moving to Blacksmith Brand in forge workshop yard...")
+            self.move_player_to(820, 520)
             time.sleep(2.0)
             self.click_world_object("BlacksmithBrand")
             time.sleep(1.0)
@@ -194,9 +194,9 @@ class InfinityAIAgent(VideoGameQAPlayer):
         # 2. Engage and eliminate Corrupted Shadow Hound
         if slay_hound:
             self.log_agent("Traversing to eastern ruins to confront the Corrupted Shadow Hound...")
-            self.move_player_to(1450, 820)
+            self.move_player_to(1450, 750)
             time.sleep(1.2)
-            self.move_player_to(1750, 820)
+            self.move_player_to(1850, 820)
             time.sleep(1.5)
 
             # Autonomous combat engagement based on hero class
@@ -222,7 +222,7 @@ class InfinityAIAgent(VideoGameQAPlayer):
 
         # 3. Navigate north to Garrison Portcullis & Enter Keep
         self.log_agent("Navigating north toward Royal Garrison Portcullis...")
-        self.move_player_to(1280, 480)
+        self.move_player_to(1175, 360)
         time.sleep(2.0)
         self.click_world_object("GarrisonGate")
         self.wait_for_scene("GarrisonKeep", timeout=8.0)

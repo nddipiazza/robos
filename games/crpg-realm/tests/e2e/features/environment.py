@@ -167,11 +167,11 @@ def before_scenario(context, scenario):
                 target_scene = t.split(":", 1)[1]
 
         if target_scene == "Homestead":
-            if any(p in feature_file for p in ["05_multi_party", "06_infinity_aggro", "07_post_battle", "08_party_defeat", "10_", "11_", "12_", "13_"]) or \
+            if any(p in feature_file for p in ["05_multi_party", "06_infinity_aggro", "07_post_battle", "08_party_defeat", "12_tactical", "13_arena"]) or \
                any("tactical battle" in s.lower() or "tacticalbattle" in s.lower() or "arena" in s.lower() for s in all_step_names):
                 target_scene = "TacticalBattle"
-            elif any(p in feature_file for p in ["04_shopkeeper", "09_"]) or \
-                 any("villagesquare" in s.lower() or "blacksmith brand" in s.lower() or "trading window" in s.lower() for s in all_step_names):
+            elif any(p in feature_file for p in ["04_shopkeeper", "09_", "10_", "11_"]) or \
+                 any("villagesquare" in s.lower() or "village square" in s.lower() or "blacksmith brand" in s.lower() or "trading window" in s.lower() for s in all_step_names):
                 target_scene = "VillageSquare"
             elif any(p in feature_file for p in ["01_fog_of_war", "02_party_rtwp", "03_character_status", "06_", "07_", "08_"]) or \
                  any("homestead" in s.lower() for s in all_step_names):

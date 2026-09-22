@@ -10,7 +10,7 @@ extends Node2D
 @onready var hound = $ShadowHound
 @onready var hero = $HeroPlayer
 
-var brand_waypoints: Array[Vector2] = [Vector2(1140, 880), Vector2(1220, 850)]
+var brand_waypoints: Array[Vector2] = [Vector2(820, 470), Vector2(760, 470)]
 var brand_wp_idx: int = 0
 var brand_wait_timer: float = 3.0
 var brand_anim_timer: float = 0.0
@@ -22,17 +22,20 @@ func _ready() -> void:
 	print("Oakhaven Village Square loaded: Act 2 begins (2560x1440 Open World).")
 	if hero and hero.has_method("set_camera_limits"):
 		hero.set_camera_limits(0, 0, 2560, 1440)
-	hud.update_display("Active Quest: Investigate disturbance & speak to Blacksmith Brand")
+	if hud and hud.has_method("update_display"):
+		hud.update_display("Active Quest: Investigate disturbance & speak to Blacksmith Brand")
 	if GameState.party_members.size() > 1 and not has_node("PartyCompanion"):
 		var comp_scene = load("res://scenes/PartyCompanion.tscn")
-		if comp_scene:
+		if comp_scene and hero:
 			var comp = comp_scene.instantiate()
 			comp.global_position = hero.global_position + Vector2(-48, 24)
 			add_child(comp)
 			if has_node("FogOfWar"):
 				$FogOfWar.register_actor(comp)
-	blacksmith.body_clicked.connect(talk_to_blacksmith)
-	garrison_gate.door_entered.connect(try_enter_garrison)
+	if blacksmith and blacksmith.has_signal("body_clicked"):
+		blacksmith.body_clicked.connect(talk_to_blacksmith)
+	if garrison_gate and garrison_gate.has_signal("door_entered"):
+		garrison_gate.door_entered.connect(try_enter_garrison)
 	if has_node("ForestGate"):
 		$ForestGate.door_entered.connect(func():
 			GameState.spawn_position = Vector2(180, 720)
@@ -42,13 +45,17 @@ func _ready() -> void:
 	_load_brand_textures()
 
 	if hound:
-		var hw: Array[Vector2] = [Vector2(1780, 830), Vector2(1920, 800)]
+		var hw: Array[Vector2] = [Vector2(1950, 800), Vector2(2050, 800)]
 		hound.waypoints = hw
 		hound.hound_slain.connect(_on_hound_slain)
 		hound.body_clicked.connect(func(): trigger_hound_combat())
 
 	if has_node("FogOfWar"):
 		var fow = $FogOfWar
+		if hero:
+			fow.hero_node = hero
+			fow.register_actor(hero)
+			fow.update_fog_at_position(hero.global_position, true)
 		if hound:
 			fow.register_actor(hound)
 		if blacksmith:
@@ -59,77 +66,57 @@ func _ready() -> void:
 
 func get_nav_points() -> Array[Vector2]:
 	return [
-		# South Avenue & Spawn & Potion
-		Vector2(240, 1210),
-		Vector2(320, 1220),
-		Vector2(460, 1180),
-		Vector2(520, 1150),
-		Vector2(650, 1180),
-		Vector2(780, 1180),
-		Vector2(780, 1210),
-		Vector2(1050, 1180),
-		Vector2(1280, 1180),
-		Vector2(1380, 1150),
-		Vector2(1550, 1130),
-		Vector2(1750, 1180),
-		Vector2(2150, 1180),
-		# South-Central corridor & Plaza approach
-		Vector2(460, 950),
-		Vector2(650, 950),
-		Vector2(950, 1050),
-		Vector2(1050, 1020),
-		Vector2(1050, 920),
-		Vector2(1180, 920),
-		Vector2(1280, 950),
-		Vector2(1280, 920),
-		# West-East main thoroughfare & Plaza
-		Vector2(470, 750),
-		Vector2(600, 750),
-		Vector2(750, 750),
-		Vector2(850, 750),
-		Vector2(950, 660),
-		Vector2(950, 750),
-		Vector2(950, 850),
-		Vector2(1060, 630),
-		Vector2(1150, 540),
-		Vector2(1150, 760),
-		Vector2(1150, 860),
-		Vector2(1180, 860),
-		Vector2(1220, 890),
-		Vector2(1280, 660),
-		Vector2(1280, 750),
-		Vector2(1280, 850),
-		Vector2(1340, 820),
-		Vector2(1450, 820),
-		Vector2(1650, 820),
-		Vector2(1750, 820),
-		Vector2(1820, 820),
-		Vector2(1950, 820),
-		Vector2(2150, 800),
-		Vector2(2300, 780),
-		Vector2(2420, 780),
-		# North avenue (Garrison gate approach & Citadel)
-		Vector2(640, 280),
-		Vector2(680, 360),
-		Vector2(680, 480),
-		Vector2(1090, 490),
-		Vector2(1090, 540),
-		Vector2(1220, 270),
-		Vector2(1280, 480),
-		Vector2(1280, 360),
-		Vector2(1280, 240),
-		Vector2(1480, 550),
-		# East side locations: Apothecary, Shrine, Granary
-		Vector2(1660, 720),
-		Vector2(1750, 730),
-		Vector2(1750, 690),
-		Vector2(1920, 900),
-		Vector2(2150, 560),
-		Vector2(2180, 470),
-		Vector2(2240, 440),
-		Vector2(2180, 240),
-		Vector2(2260, 320),
-		Vector2(2280, 220)
+		# 1. South Avenue (Spawn from homestead / exit)
+		Vector2(380, 1340),
+		Vector2(520, 1260),
+		Vector2(680, 1200),
+		Vector2(850, 1180),
+		Vector2(1050, 1140),
+		Vector2(1200, 1120),
+		Vector2(1300, 1220),
+		Vector2(1300, 1340),
+		# 2. South-East Avenue
+		Vector2(1550, 1220),
+		Vector2(1700, 1160),
+		Vector2(1850, 1100),
+		Vector2(2000, 1180),
+		Vector2(2150, 1260),
+		# 3. Main Central Plaza Loop around fountain
+		Vector2(1100, 850),
+		Vector2(1150, 970),
+		Vector2(1300, 1000),
+		Vector2(1450, 970),
+		Vector2(1500, 850),
+		Vector2(1450, 750),
+		Vector2(1300, 730),
+		Vector2(1180, 750),
+		# 4. West Thoroughfare & Apothecary Approach
+		Vector2(550, 920),
+		Vector2(700, 900),
+		Vector2(850, 850),
+		Vector2(680, 740),
+		# 5. Blacksmith Yard & Anvil Approach
+		Vector2(750, 520),
+		Vector2(840, 520),
+		Vector2(920, 490),
+		# 6. North Avenue to Garrison Gate
+		Vector2(1100, 500),
+		Vector2(1170, 440),
+		Vector2(1175, 320),
+		Vector2(1175, 240),
+		# 7. Tavern Approach
+		Vector2(1300, 560),
+		Vector2(1400, 580),
+		Vector2(1520, 590),
+		# 8. Town Hall Approach
+		Vector2(1720, 640),
+		Vector2(1800, 680),
+		# 9. East Thoroughfare & Bakery Approach
+		Vector2(1720, 780),
+		Vector2(1880, 820),
+		Vector2(2040, 840),
+		Vector2(2180, 850),
+		Vector2(2360, 940)
 	]
 
 func _load_brand_textures() -> void:
@@ -142,6 +129,9 @@ func _load_brand_textures() -> void:
 		brand_idle_texture = load(p_idle)
 
 func _process(delta: float) -> void:
+	if not blacksmith or not blacksmith_sprite:
+		return
+
 	if action_log and action_log.is_dialogue_active:
 		# Face hero during dialogue
 		if blacksmith_sprite and hero:
