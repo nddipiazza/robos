@@ -297,7 +297,7 @@ class MemoryDataStore {
     const gig2 = this.getGigById(gig2Id);
     if (!gig1 || !gig2) throw new Error('One or both gigs not found');
 
-    const buddyId = 'buddy-' + Date.now();
+    const buddyId = 'buddy-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
     const newLink = {
       id: buddyId,
       gig1Id,
