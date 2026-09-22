@@ -154,6 +154,48 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(res.durationMs, 2500);
       assert.strictEqual(dictationResult.text, res.text);
     });
+
+    it('readWavToFloat32 correctly extracts samples even when data chunkSize is 0 (streaming)', () => {
+      const { readWavToFloat32 } = require('../../../voice-prompt/lib/stt-engine');
+      const header = Buffer.alloc(44);
+      header.write('RIFF', 0);
+      header.writeUInt32LE(36 + 100 * 2, 4);
+      header.write('WAVE', 8);
+      header.write('fmt ', 12);
+      header.writeUInt32LE(16, 16);
+      header.writeUInt16LE(1, 20); // PCM
+      header.writeUInt16LE(1, 22); // mono
+      header.writeUInt32LE(16000, 24); // rate
+      header.writeUInt32LE(32000, 28); // byte rate
+      header.writeUInt16LE(2, 32); // block align
+      header.writeUInt16LE(16, 34); // bits
+      header.write('data', 36);
+      header.writeUInt32LE(0, 40); // chunkSize = 0 (streaming pw-record style)
+
+      const pcmData = Buffer.alloc(200); // 100 samples
+      for (let i = 0; i < 100; i++) {
+        pcmData.writeInt16LE(1000, i * 2);
+      }
+      const testWav = path.join(tmpDir, 'test-stream.wav');
+      fs.writeFileSync(testWav, Buffer.concat([header, pcmData]));
+
+      const samples = readWavToFloat32(testWav);
+      assert.ok(samples);
+      assert.strictEqual(samples.length, 100);
+      assert.ok(Math.abs(samples[0] - (1000 / 32768.0)) < 0.001);
+    });
+
+    it('emits interim-text event during streaming dictation', async () => {
+      const engine = new STTEngine();
+      let interimFired = false;
+      engine.on('interim-text', (data) => {
+        interimFired = true;
+        assert.strictEqual(data.text, 'Streaming interim speech');
+      });
+
+      engine.emit('interim-text', { text: 'Streaming interim speech', isFinal: false });
+      assert.strictEqual(interimFired, true);
+    });
   });
 
   describe('HTTP REST API Endpoints', () => {

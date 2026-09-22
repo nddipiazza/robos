@@ -38,10 +38,13 @@ describe('Voice Prompt Agent E2E Test Suite', () => {
       await new Promise(r => setTimeout(r, 200));
 
       const recordingStatus = await evalJS(app.port, 'document.getElementById("status-text")?.textContent');
-      assert.strictEqual(recordingStatus, 'LISTENING ● REC');
+      assert.ok(recordingStatus.includes('LISTENING'), `recordingStatus should contain LISTENING, got: ${recordingStatus}`);
 
       const isWaveformVisible = await evalJS(app.port, '!document.getElementById("recording-waveform").classList.contains("hidden")');
       assert.strictEqual(isWaveformVisible, true);
+
+      const isStreamingVisible = await evalJS(app.port, '!document.getElementById("streaming-indicator").classList.contains("hidden")');
+      assert.strictEqual(isStreamingVisible, true);
 
       // 4. Test speech-to-text dictation and context metadata attachment
       const testPromptText = 'Investigate high memory usage in kubernetes cluster pods';

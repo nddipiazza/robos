@@ -25,4 +25,7 @@ contextBridge.exposeInMainWorld('voicePrompt', {
   onDictation: (callback) => {
     ipcRenderer.on('vp-event-dictation', (_e, data) => callback(data));
   },
+  onInterimText: (callback) => {
+    ipcRenderer.on('vp-event-interim-text', (_e, data) => callback(data));
+  },
 });

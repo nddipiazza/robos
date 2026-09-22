@@ -15,6 +15,7 @@ const btnMicLabel = document.getElementById('btn-mic-label');
 const selectDevice = document.getElementById('select-device');
 const waveform = document.getElementById('recording-waveform');
 const dictationInput = document.getElementById('dictation-input');
+const streamingIndicator = document.getElementById('streaming-indicator');
 const btnSaveDictation = document.getElementById('btn-save-dictation');
 const btnClearDictation = document.getElementById('btn-clear-dictation');
 const btnRefreshContext = document.getElementById('btn-refresh-context');
@@ -162,11 +163,12 @@ function setRecordingState(active) {
   isRecording = active;
   if (active) {
     statusPill.className = 'status-pill recording';
-    statusText.textContent = 'LISTENING ● REC';
+    statusText.textContent = 'LISTENING ● STREAMING LIVE';
     btnToggleMic.className = 'btn-mic-toggle recording';
     btnMicLabel.textContent = 'Stop Listening';
     btnToggleMic.disabled = false;
     waveform.classList.remove('hidden');
+    if (streamingIndicator) streamingIndicator.classList.remove('hidden');
     startAudioWaveform();
   } else {
     stopAudioWaveform();
@@ -176,6 +178,7 @@ function setRecordingState(active) {
     btnMicLabel.textContent = 'Activate Microphone';
     btnToggleMic.disabled = false;
     waveform.classList.add('hidden');
+    if (streamingIndicator) streamingIndicator.classList.add('hidden');
   }
 }
 
@@ -184,8 +187,8 @@ async function toggleActivation() {
   if (!window.voicePrompt) return;
   if (isRecording) {
     statusPill.className = 'status-pill transcribing';
-    statusText.textContent = 'TRANSCRIBING ● PROCESSING...';
-    btnMicLabel.textContent = 'Transcribing...';
+    statusText.textContent = 'FINALIZING TRANSCRIPTION...';
+    btnMicLabel.textContent = 'Finalizing...';
     btnToggleMic.disabled = true;
 
     try {
@@ -209,7 +212,7 @@ async function toggleActivation() {
     const selectedDeviceId = selectDevice.value;
     await window.voicePrompt.activate({ device: selectedDeviceId });
     setRecordingState(true);
-    showFeedback('Microphone active! Speak now, then click "Stop Listening" or press Super+V.', 'success');
+    showFeedback('Microphone active! Speak now — text streams live as you speak.', 'success');
   }
 }
 
@@ -360,6 +363,14 @@ function setupEventListeners() {
     window.voicePrompt.onDictation(() => {
       loadPrompts();
     });
+    if (typeof window.voicePrompt.onInterimText === 'function') {
+      window.voicePrompt.onInterimText((data) => {
+        if (data && data.text) {
+          dictationInput.value = data.text;
+          dictationInput.scrollTop = dictationInput.scrollHeight;
+        }
+      });
+    }
   }
 }
 

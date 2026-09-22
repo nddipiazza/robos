@@ -39,6 +39,12 @@ const API_PORT = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
 const sttEngine = new STTEngine(promptStore.loadPrefs());
 
+sttEngine.on('interim-text', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-interim-text', data);
+  }
+});
+
 // Optional dom-snapshot integration
 let _debugServer = null;
 try {
@@ -134,8 +140,26 @@ function startApiServer() {
           activeApp: activeWin.appId || 'desktop',
           activeWindowTitle: activeWin.title,
           totalPrompts: prompts.length,
+          interimText: sttEngine.lastInterimText || '',
           port: API_PORT,
         }));
+      }
+
+      // 1.1 GET /api/stream — Server-Sent Events (SSE) for live streaming dictation
+      if (pathname === '/api/stream' && method === 'GET') {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        const onInterim = (data) => {
+          try { res.write(`data: ${JSON.stringify(data)}\n\n`); } catch {}
+        };
+        sttEngine.on('interim-text', onInterim);
+        req.on('close', () => {
+          sttEngine.off('interim-text', onInterim);
+        });
+        return;
       }
 
       // 2. POST /api/activate

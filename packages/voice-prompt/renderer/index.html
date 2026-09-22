@@ -72,7 +72,10 @@
 
           <!-- Dictation Stream Area -->
           <div class="dictation-input-wrapper">
-            <label for="dictation-input">Recognized Speech Text:</label>
+            <div class="dictation-header-row">
+              <label for="dictation-input">Recognized Speech Text:</label>
+              <span id="streaming-indicator" class="streaming-indicator hidden">● Live Streaming Dictation</span>
+            </div>
             <textarea id="dictation-input" placeholder="Speak into your configured microphone or type here to dictate..."></textarea>
             <div class="dictation-actions">
               <button id="btn-save-dictation" class="btn-primary">Save Voice Prompt</button>

@@ -11,6 +11,8 @@ function cleanTranscript(text) {
   return text
     .replace(/\[(?:BLANK_AUDIO|silence|music|applause|laughter|noise)\]/gi, '')
     .replace(/\((?:music|applause|laughter|noise)\)/gi, '')
+    .replace(/\[.*?\]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -18,25 +20,35 @@ function readWavToFloat32(filePath) {
   if (!fs.existsSync(filePath)) return null;
   try {
     const buffer = fs.readFileSync(filePath);
+    if (buffer.length <= 44) return null;
     let offset = 12;
     while (offset < buffer.length - 8) {
       const chunkId = buffer.toString('ascii', offset, offset + 4);
       const chunkSize = buffer.readUInt32LE(offset + 4);
       if (chunkId === 'data') {
         const dataOffset = offset + 8;
-        const sampleCount = Math.floor(chunkSize / 2);
+        const availableBytes = (chunkSize > 0 && chunkSize <= buffer.length - dataOffset)
+          ? chunkSize
+          : Math.max(0, buffer.length - dataOffset);
+        const sampleCount = Math.floor(availableBytes / 2);
+        if (sampleCount <= 0) return null;
         const float32 = new Float32Array(sampleCount);
         for (let i = 0; i < sampleCount; i++) {
           float32[i] = buffer.readInt16LE(dataOffset + i * 2) / 32768.0;
         }
         return float32;
       }
-      offset += 8 + chunkSize;
+      if (chunkSize <= 0) {
+        offset += 8;
+      } else {
+        offset += 8 + chunkSize;
+      }
     }
     // Fallback: standard 44-byte WAV header
     if (buffer.length > 44) {
       const dataOffset = 44;
       const sampleCount = Math.floor((buffer.length - dataOffset) / 2);
+      if (sampleCount <= 0) return null;
       const float32 = new Float32Array(sampleCount);
       for (let i = 0; i < sampleCount; i++) {
         float32[i] = buffer.readInt16LE(dataOffset + i * 2) / 32768.0;
@@ -59,6 +71,9 @@ class STTEngine extends EventEmitter {
     this.currentRecordingFile = null;
     this.recordingStartTime = null;
     this.transcriberPromise = null;
+    this.streamInterval = null;
+    this.isTranscribing = false;
+    this.lastInterimText = '';
 
     if (process.env.ROBOS_TEST !== '1') {
       this.getTranscriber().catch(() => {});
@@ -211,6 +226,49 @@ class STTEngine extends EventEmitter {
       this.recordingProcess = null;
     }
 
+    this.lastInterimText = '';
+
+    // Start streaming interim transcription interval if not in test mode
+    if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+      if (this.streamInterval) clearInterval(this.streamInterval);
+      this.streamInterval = setInterval(async () => {
+        if (!this.active || this.isTranscribing) return;
+        const recFile = this.currentRecordingFile;
+        if (!recFile || !fs.existsSync(recFile)) return;
+
+        try {
+          const stats = fs.statSync(recFile);
+          // Need at least ~1.5s of 16kHz 16-bit mono audio (16000 * 2 * 1.5 = 48000 bytes)
+          if (stats.size < 48000) return;
+
+          this.isTranscribing = true;
+          const samples = readWavToFloat32(recFile);
+          if (samples && samples.length >= 24000) {
+            const transcriber = await this.getTranscriber();
+            if (transcriber && this.active) {
+              const opts = samples.length > 16000 * 30
+                ? { chunk_length_s: 30, stride_length_s: 5 }
+                : {};
+              const res = await transcriber(samples, opts);
+              const text = cleanTranscript(res?.text || '');
+              if (text && this.active && text !== this.lastInterimText) {
+                this.lastInterimText = text;
+                this.emit('interim-text', {
+                  text,
+                  isFinal: false,
+                  elapsedMs: Date.now() - (this.recordingStartTime || Date.now()),
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[stt-engine] Streaming transcribe error:', err.message);
+        } finally {
+          this.isTranscribing = false;
+        }
+      }, 2000);
+    }
+
     this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile });
     return { ok: true, active: true, device, startTime: this.recordingStartTime };
   }
@@ -223,6 +281,11 @@ class STTEngine extends EventEmitter {
     const durationMs = this.recordingStartTime ? Date.now() - this.recordingStartTime : 0;
     this.active = false;
     this.recordingStartTime = null;
+
+    if (this.streamInterval) {
+      clearInterval(this.streamInterval);
+      this.streamInterval = null;
+    }
 
     const recFile = this.currentRecordingFile;
     this.currentRecordingFile = null;
@@ -246,6 +309,12 @@ class STTEngine extends EventEmitter {
       });
     }
 
+    // Wait briefly if an interim transcription pass is currently in flight
+    for (let i = 0; i < 25; i++) {
+      if (!this.isTranscribing) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+
     let text = '';
     if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
       if (recFile && fs.existsSync(recFile)) {
@@ -263,7 +332,10 @@ class STTEngine extends EventEmitter {
           if (samples && samples.length >= 1600) {
             const transcriber = await this.getTranscriber();
             if (transcriber) {
-              const res = await transcriber(samples);
+              const opts = samples.length > 16000 * 30
+                ? { chunk_length_s: 30, stride_length_s: 5 }
+                : {};
+              const res = await transcriber(samples, opts);
               text = cleanTranscript(res?.text || '');
             }
           }
@@ -275,6 +347,12 @@ class STTEngine extends EventEmitter {
       }
     }
 
+    if (!text && this.lastInterimText) {
+      text = this.lastInterimText;
+    }
+    this.lastInterimText = text;
+
+    this.emit('interim-text', { text, isFinal: true, durationMs });
     this.emit('deactivated', { durationMs, text });
     return { ok: true, active: false, durationMs, text };
   }

@@ -348,9 +348,33 @@ body {
   gap: 6px;
 }
 
-.dictation-input-wrapper label {
+.dictation-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dictation-header-row label {
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+.streaming-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: #00bcd4;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: pulse-stream 1.2s infinite ease-in-out;
+}
+
+.streaming-indicator.hidden {
+  display: none;
+}
+
+@keyframes pulse-stream {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 textarea#dictation-input {
