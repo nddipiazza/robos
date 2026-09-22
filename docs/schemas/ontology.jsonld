@@ -25,7 +25,7 @@
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
   "dcterms:description": "RobOS SDLC class and predicate ontology, with complete built-in shape coverage and RobOS-owned classification codes expressed using Schema.org CategoryCode and CategoryCodeSet.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 180,
+  "robos:totalClasses": 182,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -447,6 +447,42 @@
       },
       "robos:shaclShape": "urn:robos:shape:NoSQLDatabaseShape",
       "robos:package": "core-platform",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:SearchIndex",
+      "@type": "rdfs:Class",
+      "rdfs:label": "SearchIndex",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:shaclShape": "urn:robos:shape:SearchIndexShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:SearchCluster",
+      "@type": "rdfs:Class",
+      "rdfs:label": "SearchCluster",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DataStore"
+      },
+      "robos:shaclShape": "urn:robos:shape:SearchClusterShape",
+      "robos:package": "core-platform",
+      "rdfs:seeAlso": {
+        "@id": "https://schema.org/DataStore"
+      },
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/data"

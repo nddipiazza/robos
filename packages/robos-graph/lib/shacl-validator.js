@@ -721,6 +721,50 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://schema.org/DataStore"
   },
   {
+    "shapeId": "urn:robos:shape:SearchIndexShape",
+    "targetClass": "robos:SearchIndex",
+    "targetClasses": [
+      "robos:SearchIndex"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Search Index must have a title or display name."
+      },
+      {
+        "path": "robos:engine",
+        "minCount": 1,
+        "message": "Search Index must declare its engine (luxir, solr, elasticsearch, opensearch)."
+      }
+    ],
+    "refersFrom": "https://schema.org/DataStore",
+    "schemaOrgType": "https://schema.org/DataStore",
+    "domainStandard": "https://schema.org/DataStore"
+  },
+  {
+    "shapeId": "urn:robos:shape:SearchClusterShape",
+    "targetClass": "robos:SearchCluster",
+    "targetClasses": [
+      "robos:SearchCluster"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Search Cluster must have a title or display name."
+      },
+      {
+        "path": "robos:engine",
+        "minCount": 1,
+        "message": "Search Cluster must declare its engine (luxir, solr, elasticsearch, opensearch)."
+      }
+    ],
+    "refersFrom": "https://schema.org/DataStore",
+    "schemaOrgType": "https://schema.org/DataStore",
+    "domainStandard": "https://schema.org/DataStore"
+  },
+  {
     "shapeId": "urn:robos:shape:MessageBrokerShape",
     "targetClass": "robos:MessageBroker",
     "targetClasses": [

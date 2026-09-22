@@ -17,6 +17,7 @@ const { GherkinLinker, SAMPLE_GHERKIN_FEATURE } = require('./gherkin-linker');
 const { KGraphPackageManager } = require('./package-manager');
 const { KGraphRepoManager } = require('./repo-manager');
 const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = require('./devops-integrations');
+const { LuxirIndexer } = require('./luxir-indexer');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const DEFAULT_GRAPH_PATH = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
@@ -414,6 +415,7 @@ class SDLCKnowledgeGraphStore {
     this.bulkRepoImporter = new BulkRepoImporter();
     this.resourceImporter = new KGraphResourceImporter();
     this.gherkinLinker = new GherkinLinker();
+    this.luxirIndexer = new LuxirIndexer(opts.luxirOptions || {});
     this.init();
   }
 
@@ -2503,6 +2505,11 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
     this.parser.loadNodes(this.parser.nodes);
     this.save();
     this.latestDocSyncPrompt = this.discernDocUpdates({ action: exists ? 'updated' : 'added', node });
+    try {
+      if (this.luxirIndexer) {
+        this.luxirIndexer.indexNode(node).catch(() => {});
+      }
+    } catch {}
     return node;
   }
 
@@ -2562,11 +2569,33 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
     this.packageManager.saveDirtyPackages(this.filePath);
 
     this.latestDocSyncPrompt = this.discernDocUpdates({ action: 'deleted', node: existingNode });
+    try {
+      if (this.luxirIndexer) {
+        this.luxirIndexer.deleteNode(nodeId).catch(() => {});
+      }
+    } catch {}
     return true;
   }
 
   deleteNode(nodeId, options) {
     return this.removeNode(nodeId, options);
+  }
+
+  async reindexToLuxir() {
+    if (!this.luxirIndexer) return { ok: false, error: 'LuxirIndexer not initialized' };
+    return await this.luxirIndexer.bulkIndex(this.parser.nodes);
+  }
+
+  async searchWithLuxir(searchQuery = '', filter = {}) {
+    if (this.luxirIndexer) {
+      try {
+        const res = await this.luxirIndexer.search(searchQuery, filter);
+        if (res && res.ok && Array.isArray(res.results) && res.results.length > 0) {
+          return res.results;
+        }
+      } catch {}
+    }
+    return this.searchNodes(searchQuery, filter);
   }
 
   searchNodes(searchQuery = '', filter = {}) {

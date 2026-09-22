@@ -643,6 +643,102 @@
       "robos:namespace": "robos.platform"
     },
     {
+      "@id": "urn:robos:search:luxir-kgraph-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Luxir Knowledge Graph Search Index",
+      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
+      "robos:engine": "luxir",
+      "robos:indexName": "kgraph_nodes",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "robos:readiness": "not-yet-prod-ready",
+      "robos:maturity": "pre-release",
+      "robos:host": "localhost",
+      "robos:port": 8983,
+      "robos:features": [
+        "full-text",
+        "vector-search",
+        "faceting",
+        "instant-warmup",
+        "no-gc"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#luxir",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:solr-enterprise-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Apache Solr Enterprise Search Index",
+      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
+      "robos:engine": "solr",
+      "robos:indexName": "enterprise_catalog",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "solr.internal.acme.corp",
+      "robos:port": 8983,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#solr",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:elasticsearch-telemetry-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
+      "dcterms:description": "Production Elasticsearch cluster index housing distributed traces, APM metrics, and microservice logs.",
+      "robos:engine": "elasticsearch",
+      "robos:indexName": "telemetry-events",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "elasticsearch.internal.acme.corp",
+      "robos:port": 9200,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#elasticsearch",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:opensearch-cluster-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "OpenSearch Production Cluster Index",
+      "dcterms:description": "Production-grade OpenSearch vector and log search cluster backing full-text search across SDLC artifacts.",
+      "robos:engine": "opensearch",
+      "robos:indexName": "sdlc_artifacts",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "opensearch.internal.acme.corp",
+      "robos:port": 9200,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#opensearch",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
       "@id": "https://robos.dev/ns/technology#postgresql",
       "@type": [
         "schema:DefinedTerm"
@@ -772,6 +868,60 @@
       "robos:package": "core-platform",
       "schema:termCode": "pulumi",
       "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#luxir",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Luxir",
+      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
+      "robos:package": "core-platform",
+      "schema:termCode": "luxir",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#solr",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Apache Solr",
+      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
+      "robos:package": "core-platform",
+      "schema:termCode": "solr",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#elasticsearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Elasticsearch",
+      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
+      "robos:package": "core-platform",
+      "schema:termCode": "elasticsearch",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#opensearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "OpenSearch",
+      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
+      "robos:package": "core-platform",
+      "schema:termCode": "opensearch",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
       "robos:namespace": "robos.platform"
     },
     {
@@ -1570,6 +1720,102 @@
       "robos:namespace": "robos.platform"
     },
     {
+      "@id": "urn:robos:search:luxir-kgraph-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Luxir Knowledge Graph Search Index",
+      "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
+      "robos:engine": "luxir",
+      "robos:indexName": "kgraph_nodes",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "robos:readiness": "not-yet-prod-ready",
+      "robos:maturity": "pre-release",
+      "robos:host": "localhost",
+      "robos:port": 8983,
+      "robos:features": [
+        "full-text",
+        "vector-search",
+        "faceting",
+        "instant-warmup",
+        "no-gc"
+      ],
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#luxir",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:solr-enterprise-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Apache Solr Enterprise Search Index",
+      "dcterms:description": "Production-grade Apache Solr search collection for faceted enterprise documentation and architectural index search.",
+      "robos:engine": "solr",
+      "robos:indexName": "enterprise_catalog",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "solr.internal.acme.corp",
+      "robos:port": 8983,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#solr",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:elasticsearch-telemetry-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "Elasticsearch Observability & Telemetry Index",
+      "dcterms:description": "Production Elasticsearch cluster index housing distributed traces, APM metrics, and microservice logs.",
+      "robos:engine": "elasticsearch",
+      "robos:indexName": "telemetry-events",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "elasticsearch.internal.acme.corp",
+      "robos:port": 9200,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#elasticsearch",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
+      "@id": "urn:robos:search:opensearch-cluster-index",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:SearchIndex",
+        "schema:DataStore"
+      ],
+      "dcterms:title": "OpenSearch Production Cluster Index",
+      "dcterms:description": "Production-grade OpenSearch vector and log search cluster backing full-text search across SDLC artifacts.",
+      "robos:engine": "opensearch",
+      "robos:indexName": "sdlc_artifacts",
+      "robos:productionReady": true,
+      "robos:status": "active",
+      "robos:readiness": "production-ready",
+      "robos:host": "opensearch.internal.acme.corp",
+      "robos:port": 9200,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:technology": "https://robos.dev/ns/technology#opensearch",
+      "robos:schemaOrgType": "https://schema.org/DataStore",
+      "robos:domainStandard": "https://schema.org/DataStore"
+    },
+    {
       "@id": "https://robos.dev/ns/technology#postgresql",
       "@type": [
         "schema:DefinedTerm"
@@ -1699,6 +1945,60 @@
       "robos:package": "core-platform",
       "schema:termCode": "pulumi",
       "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#luxir",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Luxir",
+      "dcterms:description": "Next-generation native C++ hybrid full-text and vector search engine created by Yonik Seeley. Single-node pre-release architecture with instant startup and zero GC overhead. Evaluated as experimental and not yet production-ready.",
+      "robos:package": "core-platform",
+      "schema:termCode": "luxir",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": false,
+      "robos:status": "experimental",
+      "robos:maturity": "pre-release",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#solr",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Apache Solr",
+      "dcterms:description": "Enterprise open-source search platform built on Apache Lucene, providing distributed indexing, replication, and faceted search.",
+      "robos:package": "core-platform",
+      "schema:termCode": "solr",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#elasticsearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Elasticsearch",
+      "dcterms:description": "Distributed, JSON-based search and analytics engine designed for horizontal scalability, reliability, and real-time search.",
+      "robos:package": "core-platform",
+      "schema:termCode": "elasticsearch",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#opensearch",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "OpenSearch",
+      "dcterms:description": "Community-driven, open-source search and analytics suite derived from Elasticsearch, with built-in vector search and SQL support.",
+      "robos:package": "core-platform",
+      "schema:termCode": "opensearch",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:productionReady": true,
       "robos:namespace": "robos.platform"
     },
     {

@@ -21,7 +21,7 @@
     ['services', 'Services & processing', 'Microservice DataPipeline'],
     ['applications', 'Applications & entry points', 'DesktopApp ConsoleApp MobileApp FrontEndApp PCGame MobileGame WebRoute CLICommand CLIFlag'],
     ['contracts', 'Contracts & data models', 'Contract ProtobufContract GraphQLContract APIEndpoint DataModel Entity'],
-    ['data', 'Data stores & messaging', 'Database NoSQLDatabase MessageBroker DatabaseSchema DatabaseTable DatabaseColumn DatabaseIndex NoSQLCollection MessageTopic ConsumerGroup DataStore BrokerDefinition'],
+    ['data', 'Data stores & messaging', 'Database NoSQLDatabase MessageBroker SearchIndex SearchCluster DatabaseSchema DatabaseTable DatabaseColumn DatabaseIndex NoSQLCollection MessageTopic ConsumerGroup DataStore BrokerDefinition'],
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
     ['infrastructure', 'Infrastructure & delivery', 'RemoteExecutionCluster KubernetesCluster Environment GitOpsDeployment CICDPipeline KubernetesNamespace KubernetesDeployment KubernetesService KubernetesIngress PipelineStage PipelineJob PipelineStep EnvironmentProfile DevOpsIntegration PassCredential'],
     ['organization', 'Organization & people', 'Team Company GitProjectOrganization'],

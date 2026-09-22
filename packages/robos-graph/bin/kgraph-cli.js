@@ -44,8 +44,11 @@ Commands:
   recover                       Complete an interrupted write
 
 Global: --graph-root <workspace> (or ROBOS_GRAPH_ROOT), --require-evidence
-  search <query>                 Search nodes across packages by text, title, tags, or URI
-                                 Options: --type <type>, --package <pkg>, --json
+  search <query>                 Full-text and semantic search across all packages
+                                 Options: --type <type>, --package <pkg>, --team <team>, --engine <luxir|memory>, --json
+
+  index                          Index or re-index Knowledge Graph nodes into hybrid search engine
+                                 Options: --engine <luxir|memory>, --json
 
   get <node-id>                  Inspect node details, incoming/outgoing reference counts
                                  Options: --json
@@ -114,11 +117,20 @@ async function main() {
       case 'find':
       case 's': {
         const query = _[1] || flags.query || '';
-        const results = store.searchNodes(query, {
-          type: flags.type,
-          package: flags.package || flags.pkg,
-          ownerTeam: flags['owner-team'] || flags.team,
-        });
+        let results;
+        if (flags.engine === 'luxir') {
+          results = await store.searchWithLuxir(query, {
+            type: flags.type,
+            package: flags.package || flags.pkg,
+            ownerTeam: flags['owner-team'] || flags.team,
+          });
+        } else {
+          results = store.searchNodes(query, {
+            type: flags.type,
+            package: flags.package || flags.pkg,
+            ownerTeam: flags['owner-team'] || flags.team,
+          });
+        }
 
         if (isJson) {
           console.log(JSON.stringify(results, null, 2));
@@ -136,6 +148,28 @@ async function main() {
             }
             console.log('');
           }
+        }
+        break;
+      }
+
+      case 'index':
+      case 'reindex': {
+        const engine = flags.engine || 'luxir';
+        if (engine === 'luxir') {
+          console.log(`\n⚡ Indexing Knowledge Graph nodes into Luxir search engine...`);
+          const res = await store.reindexToLuxir();
+          if (isJson) {
+            console.log(JSON.stringify(res, null, 2));
+          } else if (res.ok) {
+            console.log(`\x1b[32m✔ Successfully indexed ${res.totalDocs} nodes into Luxir index "${store.luxirIndexer.indexName}".\x1b[0m\n`);
+          } else if (res.offline) {
+            console.log(`\x1b[33mℹ Luxir server is offline or unreachable at ${store.luxirIndexer.endpoint}.\x1b[0m`);
+            console.log(`  Formatted ${res.totalDocs} Knowledge Graph documents ready for indexing when Luxir is started.\n`);
+          } else {
+            console.error(`\x1b[31m✖ Failed to index nodes into Luxir: ${res.error}\x1b[0m\n`);
+          }
+        } else {
+          console.log(`Reindexed ${store.parser.nodes.length} nodes using in-memory store.`);
         }
         break;
       }
