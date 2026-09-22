@@ -54,44 +54,10 @@ The **Gig Bandit** (`getemgigs.com`) is a production-grade RobOS web application
 | **CI/CD Pipeline** | GitHub Actions (`.github/workflows/ci.yml`) with automated build, test, and Vercel CD |
 | **Testing Harness** | Native Node.js Test Runner: 3 Suites, 6 Tests (100% Passed) |
 
-```mermaid
-flowchart TD
-    subgraph FRONTEND ["Next.js 15 Client Layer (getemgigs.com)"]
-        Hero["Live Hero & Metrics"]
-        BuddyFinder["Buddy Gig Matcher Modal"]
-        Sim["Interactive Geolocation & Escrow Simulator"]
-        STPPool["Stay-To-Play Ticket Swap Pool"]
-        GigGrid["Live Filterable Gigs Directory"]
-    end
-
-    subgraph API_EDGE ["Vercel Edge & Serverless API Routes"]
-        APIGigs["/api/gigs (Catalog & Filtering)"]
-        APIBuddy["/api/buddy (Mutual Agreement Ledger)"]
-        APICheckin["/api/checkin (Haversine GPS Verification)"]
-        APIEscrow["/api/escrow (Security Deposit Locks & Forfeitures)"]
-        APISTP["/api/stay-to-play (Reciprocal Venue Ticket Pool)"]
-    end
-
-    subgraph CORE_ENGINES ["RobOS Application Engines"]
-        GeoEngine["Haversine Radius Calculator (150m Venue Geofence)"]
-        EscrowEngine["Escrow State Machine (Lock -> Reimbursed | Forfeited)"]
-        Store["Pluggable Storage Layer (Embedded / Atlas / Postgres / KV)"]
-    end
-
-    Hero --> APIGigs
-    BuddyFinder --> APIBuddy
-    Sim --> APICheckin
-    Sim --> APIEscrow
-    STPPool --> APISTP
-    GigGrid --> APIGigs
-
-    APICheckin --> GeoEngine
-    APICheckin --> EscrowEngine
-    APIEscrow --> EscrowEngine
-    APIBuddy --> Store
-    APISTP --> Store
-    EscrowEngine --> Store
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/architecture-diagram.jpg' | relative_url }}" alt="The Gig Bandit Platform Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 1: High-level platform architecture showing Next.js 15 client layer, Vercel Edge API routes, and RobOS application engines.</em></p>
+</div>
 
 ---
 
@@ -104,40 +70,10 @@ Local bands constantly struggle to get people to attend their shows. They don't 
 The **Buddy Gig** feature allows two groups to link their gigs together. Each group agrees to attend the other group's gig:
 > *"I'll go to your gig if you go to my gig."*
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor BandA as Group A (e.g. The Neon Vipers)
-    actor BandB as Group B (e.g. Velvet Riot)
-    participant Platform as The Gig Bandit (getemgigs.com)
-    participant Escrow as Escrow Smart Ledger
-    participant GPS as Geolocation Verification (150m)
-
-    BandA->>Platform: Register Gig (Oct 2, The Subterranean Lounge)
-    BandB->>Platform: Register Gig (Oct 10, The Subterranean Lounge)
-    BandA->>BandB: Send Buddy Gig Request ("You scratch my back, I'll scratch yours")
-    BandB->>Platform: Accept Buddy Gig Request
-    BandA->>Escrow: Lock $50 Refundable Security Deposit
-    BandB->>Escrow: Lock $50 Refundable Security Deposit
-    Note over Escrow: Status: ESCROW_LOCKED ($100 Total)
-
-    rect rgb(20, 30, 50)
-        Note over BandB,GPS: GIG 1 DAY (Oct 2): Does Velvet Riot Attend?
-        alt Velvet Riot Attends Show
-            BandB->>GPS: Check-In via Mobile Browser (GPS Fix)
-            GPS->>Platform: Coordinate Verified: 24m from Venue (<= 150m)
-            Platform->>Escrow: Unlock $50 Deposit -> REIMBURSED to Velvet Riot
-            Platform->>BandB: Reputation Score +2
-            Note over BandA: WIN: The Neon Vipers got a packed crowd!
-        else Velvet Riot Bails (No-Show)
-            Note over Platform: 6:00 AM Next Morning Reconciliation
-            Platform->>Escrow: Forfeit Velvet Riot's $50 Deposit
-            Escrow->>BandA: Transfer $50 Payout to The Neon Vipers
-            Platform->>BandB: Reputation Score -8 (Bailed)
-            Note over BandA: WIN: The Neon Vipers received $50 compensation!
-        end
-    end
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/buddy-gig-escrow-flow.jpg' | relative_url }}" alt="Buddy Gig Escrow and Geolocation Verification Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 2: Buddy Gig reciprocal agreement lifecycle &mdash; security deposit escrow lock, 150m GPS verification, and next-morning automated payout reconciliation.</em></p>
+</div>
 
 ### The Security Deposit Escrow: Eliminating the Bail Factor
 If you think through mutual attendance agreements, the fatal flaw is obvious: **How do you keep a band from bailing and flaking out?**
@@ -163,21 +99,10 @@ Anyone who has ever played in a band knows traditional **pay-to-play** is an exp
 - Instead of paying to play at your own gig which is ridiculous, you pay to attend another band's gig—which is awesome, builds scene solidarity, and is something artists should be doing anyway!
 - Venues still guarantee bar and door revenue, but bands are invested in the mutual success of other acts rather than competing against them.
 
-```mermaid
-flowchart TD
-    subgraph OLD_PAY_TO_PLAY ["Traditional Predatory Pay-To-Play"]
-        V1["Venue Pre-sells 30 Tickets to Band ($360)"] --> B1["Band Begs Friends / Family to Buy Tickets"]
-        B1 --> F1["Unsold Tickets Paid Out of Band's Pocket"]
-        F1 --> R1["Result: Band Broke, Room Half-Empty, Resentment High"]
-    end
-
-    subgraph NEW_STAY_TO_PLAY ["The Gig Bandit: Stay-To-Play Model"]
-        V2["Venue Partners with Stay-To-Play Network"] --> B2["Band Buys 4 Tickets ($48) to Sister Band's Show"]
-        B2 --> A2["Band Attends Sister Band's Show (Support & Camaraderie)"]
-        A2 --> R2["Sister Band Attends Your Show on Reciprocal Slot"]
-        R2 --> W2["Result: Both Shows Packed, Bar Profits, Zero Exploitation!"]
-    end
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/stay-to-play-comparison.jpg' | relative_url }}" alt="Traditional Pay-To-Play vs The Gig Bandit Stay-To-Play Model" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 3: Comparative analysis between predatory pay-to-play debt models and reciprocal Stay-To-Play ticket economics.</em></p>
+</div>
 
 ---
 
@@ -188,6 +113,7 @@ The verification engine uses the **Haversine Great-Circle Formula** to calculate
 $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}\right)$$
 
 Where:
+
 - $R = 6,371,000\text{ meters}$ (Earth mean radius)
 - $\phi_1, \phi_2$ are the latitudes in radians
 - $\Delta\phi = \phi_2 - \phi_1$

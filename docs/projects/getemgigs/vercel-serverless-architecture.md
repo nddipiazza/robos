@@ -24,24 +24,10 @@ A technical overview of the Next.js 15 App Router architecture, zero-cost persis
 
 The Gig Bandit is engineered for zero maintenance and zero operational hosting costs on Vercel's free hobby tier:
 
-```mermaid
-flowchart TD
-    User["Musician / Mobile Attendee (getemgigs.com)"] --> Edge["Vercel Edge Global Anycast CDN"]
-    Edge --> AppRouter["Next.js 15 App Router (SSR & Static Assets)"]
-    Edge --> API["Serverless Edge API Routes (/api/*)"]
-    
-    subgraph STORAGE_TIER ["Zero-Cost Pluggable Storage Tier"]
-        Memory["Embedded Zero-Config Store (Default)"]
-        Atlas["MongoDB Atlas M0 Free Tier (MONGODB_URI)"]
-        VP["Vercel Postgres Free Tier (POSTGRES_URL)"]
-        VKV["Vercel KV / Upstash Redis (KV_REST_API_URL)"]
-    end
-
-    API --> Memory
-    API -.-> Atlas
-    API -.-> VP
-    API -.-> VKV
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/vercel-edge-architecture.jpg' | relative_url }}" alt="The Gig Bandit Vercel Edge and Serverless Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: Vercel Anycast Edge CDN, Next.js 15 App Router, Serverless Edge APIs, and pluggable zero-cost database tiers.</em></p>
+</div>
 
 ---
 

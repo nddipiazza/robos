@@ -46,35 +46,10 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Verification Score** | **3 Suites, 6 Tests (100% Passed)** |
 | **Live Production** | [https://getemgigs.com](https://getemgigs.com) ([thegigbandit.vercel.app](https://thegigbandit.vercel.app)) · [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit) · [GitHub](https://github.com/nddipiazza/thegigbandit) |
 
-```mermaid
-flowchart LR
-    subgraph MUSIC_COMMUNITY ["Local Music Scene Ecosystem"]
-        BandA["Group A (e.g. The Neon Vipers)"]
-        BandB["Group B (e.g. Velvet Riot)"]
-        Venue["Local Live Venue (Austin / Nashville / Brooklyn)"]
-    end
-
-    subgraph PLATFORM_LAYER ["The Gig Bandit Platform (getemgigs.com)"]
-        Router["Next.js 15 App Router & Edge Functions"]
-        Escrow["Security Deposit Escrow ($50 Refundable)"]
-        Geo["Haversine Geolocation Engine (150m Radius)"]
-        STP["Stay-to-Play Reciprocal Ticket Pool"]
-    end
-
-    subgraph VERIFICATION_OUTCOMES ["Attendance & Payout Settlement"]
-        Yes["Attended: GPS Verified <= 150m"] -->|Unlock| Refund["Deposit Reimbursed + Reputation Up"]
-        No["Bailed: No-Show at 6:00 AM"] -->|Forfeit| HostPayout["Deposit Paid Directly to Host Band"]
-        PoolTrade["Bands Buy Tickets to Fellow Act's Show"] -->|Reciprocal| Crowd["Crowds Guaranteed + 0 Exploitation"]
-    end
-
-    BandA <-->|Buddy Gig Agreement| Escrow
-    BandB <-->|Buddy Gig Agreement| Escrow
-    Escrow --> Geo
-    Geo --> Yes
-    Geo --> No
-    Venue --> STP
-    STP --> PoolTrade
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/buddy-gig-escrow-flow.jpg' | relative_url }}" alt="The Gig Bandit Reciprocal Buddy Gig Ecosystem" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: Reciprocal Buddy Gig attendance agreement, escrow deposit locking, and automated geolocation verification.</em></p>
+</div>
 
 ---
 

@@ -43,20 +43,7 @@ In Stay-To-Play:
 - The venue collects `$96` in ticket sales across both dates, plus **guaranteed beverage sales** from engaged musicians spending the evening at the venue.
 - Both bands perform to rooms with confirmed, enthusiastic fellow artists in the front row.
 
-```mermaid
-graph LR
-    subgraph VENUE_BENEFITS ["Venue Economics"]
-        Door["Stable Door Revenue"]
-        Bar["Higher Bar & Food Tab"]
-        Retention["Loyal Artist Network"]
-    end
-
-    subgraph BAND_BENEFITS ["Artist Economics"]
-        NoRisk["Zero Unsold Ticket Debt"]
-        Reciprocal["Guaranteed Peer Audience"]
-        Camaraderie["Creative Collaboration"]
-    end
-
-    STP["Stay-To-Play Pool"] --> VENUE_BENEFITS
-    STP --> BAND_BENEFITS
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/stay-to-play-benefits.jpg' | relative_url }}" alt="Stay-To-Play Symbiotic Economic Benefits" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: Symbiotic economics of the Stay-To-Play reciprocal ticket pool &mdash; balancing venue door/bar revenues with zero artist debt.</em></p>
+</div>

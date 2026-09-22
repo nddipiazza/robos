@@ -24,34 +24,10 @@ A technical guide detailing the escrow state machine, Haversine distance calcula
 
 The security deposit escrow operates as a deterministic finite state machine (FSM) governing financial locks between two participating groups:
 
-```mermaid
-stateDiagram-v2
-    [*] --> DRAFT_OFFER: Group A proposes Buddy Gig
-    DRAFT_OFFER --> ESCROW_LOCKED: Group B accepts & deposits placed ($50 each)
-    
-    state ESCROW_LOCKED {
-        [*] --> AWAITING_SHOW_1: Doors Open for Gig 1
-        AWAITING_SHOW_1 --> GIG_1_VERIFIED: Group B GPS Check-in <= 150m
-        GIG_1_VERIFIED --> DEPOSIT_B_REIMBURSED: Instant Refund to Group B
-        
-        AWAITING_SHOW_1 --> GIG_1_BAILED: 6:00 AM Next Morning (No Check-in)
-        GIG_1_BAILED --> DEPOSIT_B_FORFEITED: $50 Paid Directly to Group A
-    }
-
-    state ESCROW_CYCLE_2 {
-        [*] --> AWAITING_SHOW_2: Doors Open for Gig 2
-        AWAITING_SHOW_2 --> GIG_2_VERIFIED: Group A GPS Check-in <= 150m
-        GIG_2_VERIFIED --> DEPOSIT_A_REIMBURSED: Instant Refund to Group A
-        
-        AWAITING_SHOW_2 --> GIG_2_BAILED: 6:00 AM Next Morning (No Check-in)
-        GIG_2_BAILED --> DEPOSIT_A_FORFEITED: $50 Paid Directly to Group B
-    }
-
-    DEPOSIT_B_REIMBURSED --> ESCROW_CYCLE_2
-    DEPOSIT_B_FORFEITED --> ESCROW_CYCLE_2
-    DEPOSIT_A_REIMBURSED --> [*]: Contract Complete
-    DEPOSIT_A_FORFEITED --> [*]: Contract Complete
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/getemgigs/escrow-state-machine.jpg' | relative_url }}" alt="Buddy Gig Escrow Lifecycle State Machine" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: Escrow state machine transitions &mdash; locking $50 deposits, 150m GPS verification, and next-morning automated forfeiture resolution.</em></p>
+</div>
 
 ---
 

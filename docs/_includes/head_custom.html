@@ -44,6 +44,33 @@
 </script>
 <script defer src="{{ '/assets/js/image-zoom.js' | relative_url }}"></script>
 
+<!-- KaTeX & MathJax Mathematical Notation Support -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    function initMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+          throwOnError: false
+        });
+      } else {
+        setTimeout(initMath, 150);
+      }
+    }
+    initMath();
+  });
+</script>
+
+
 <!-- Open Graph meta for LinkedIn / Twitter / Slack link previews -->
 <meta property="og:title" content="RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness" />
 <meta property="og:description" content="Autonomous AI agents that prove their work. Automated 1080p video proof-of-work, semantic blast-radius diffs, and zero-residue sandboxes." />
