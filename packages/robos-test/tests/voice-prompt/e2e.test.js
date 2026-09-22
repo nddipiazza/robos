@@ -10,7 +10,7 @@ const { evalJS, getSnapshot } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
 
 describe('Voice Prompt Agent E2E Test Suite', () => {
-  it('launches Voice Prompt app, validates UI rendering, device selection, activation, and dictation with context metadata', async () => {
+  it('launches Voice Prompt app, validates UI rendering, device selection, activation, and dictation with context metadata', { timeout: 60000 }, async () => {
     const app = await launchApp('voice-prompt', {
       ...scenarios['all-good'],
       env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
@@ -74,8 +74,12 @@ describe('Voice Prompt Agent E2E Test Suite', () => {
 
       // 7. Deactivate microphone
       await evalJS(app.port, 'document.getElementById("btn-toggle-mic").click()');
-      await new Promise(r => setTimeout(r, 200));
-      const finalStatus = await evalJS(app.port, 'document.getElementById("status-text")?.textContent');
+      let finalStatus = '';
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 250));
+        finalStatus = await evalJS(app.port, 'document.getElementById("status-text")?.textContent');
+        if (finalStatus === 'STANDBY') break;
+      }
       assert.strictEqual(finalStatus, 'STANDBY');
 
     } finally {

@@ -152,11 +152,20 @@ function startApiServer() {
       // 3. POST /api/deactivate
       if (pathname === '/api/deactivate' && method === 'POST') {
         const result = await sttEngine.deactivate();
+        let promptEntry = null;
+        if (result.text && result.text.trim()) {
+          promptEntry = await handleDictation(result.text, {
+            durationMs: result.durationMs,
+            confidence: 0.95,
+            device: sttEngine.configuredDevice,
+          });
+        }
+        const fullResult = { ...result, prompt: promptEntry };
         if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('vp-event-deactivated', result);
+          mainWindow.webContents.send('vp-event-deactivated', fullResult);
         }
         res.writeHead(200);
-        return res.end(JSON.stringify(result));
+        return res.end(JSON.stringify(fullResult));
       }
 
       // 4. GET /api/context — query active RobOS app context in real-time
@@ -321,9 +330,18 @@ function createWindow() {
     const key = prefs.pushToTalkKey || 'Super+V';
     globalShortcut.register(key, async () => {
       if (sttEngine.isActive()) {
-        await sttEngine.deactivate();
+        const res = await sttEngine.deactivate();
+        let promptEntry = null;
+        if (res.text && res.text.trim()) {
+          promptEntry = await handleDictation(res.text, {
+            durationMs: res.durationMs,
+            confidence: 0.95,
+            device: sttEngine.configuredDevice,
+          });
+        }
+        const fullResult = { ...res, prompt: promptEntry };
         if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('vp-event-deactivated', { durationMs: 0 });
+          mainWindow.webContents.send('vp-event-deactivated', fullResult);
         }
       } else {
         const res = await sttEngine.activate();
@@ -369,10 +387,19 @@ ipcMain.handle('vp-activate', async (_e, options) => {
 
 ipcMain.handle('vp-deactivate', async () => {
   const res = await sttEngine.deactivate();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('vp-event-deactivated', res);
+  let promptEntry = null;
+  if (res.text && res.text.trim()) {
+    promptEntry = await handleDictation(res.text, {
+      durationMs: res.durationMs,
+      confidence: 0.95,
+      device: sttEngine.configuredDevice,
+    });
   }
-  return res;
+  const fullResult = { ...res, prompt: promptEntry };
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-deactivated', fullResult);
+  }
+  return fullResult;
 });
 
 ipcMain.handle('vp-dictate', async (_e, payload) => {

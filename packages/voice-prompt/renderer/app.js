@@ -2,7 +2,10 @@
 
 let isRecording = false;
 let currentPrompts = [];
-let speechRecognizer = null;
+let audioCtx = null;
+let mediaStream = null;
+let analyserNode = null;
+let animFrameId = null;
 
 // DOM Elements
 const statusPill = document.getElementById('status-pill');
@@ -24,13 +27,24 @@ const promptsCount = document.getElementById('prompts-count');
 const inputSearch = document.getElementById('input-search');
 const btnClearAll = document.getElementById('btn-clear-all');
 const statDevice = document.getElementById('stat-device');
+const feedbackBanner = document.getElementById('feedback-banner');
+
+function showFeedback(msg, type = 'success') {
+  if (!feedbackBanner) return;
+  feedbackBanner.className = `feedback-banner ${type}`;
+  feedbackBanner.textContent = msg;
+  feedbackBanner.classList.remove('hidden');
+  clearTimeout(feedbackBanner._timer);
+  feedbackBanner._timer = setTimeout(() => {
+    feedbackBanner.classList.add('hidden');
+  }, 6000);
+}
 
 // Initialize
 async function init() {
   await loadDevices();
   await refreshAppContext();
   await loadPrompts();
-  setupSpeechRecognition();
   setupEventListeners();
 
   // Periodic background context refresh
@@ -48,7 +62,9 @@ async function loadDevices() {
       const opt = document.createElement('option');
       opt.value = d.id;
       opt.textContent = d.name;
-      if (d.id === prefs.configuredDevice) opt.selected = true;
+      if (d.id === prefs.configuredDevice || (d.isDefault && prefs.configuredDevice === 'default')) {
+        opt.selected = true;
+      }
       selectDevice.appendChild(opt);
     });
     statDevice.textContent = selectDevice.options[selectDevice.selectedIndex]?.text || 'Default';
@@ -57,36 +73,49 @@ async function loadDevices() {
   }
 }
 
-// Setup Speech Recognition (Chromium / WebKit)
-function setupSpeechRecognition() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRec) {
-    try {
-      speechRecognizer = new SpeechRec();
-      speechRecognizer.continuous = true;
-      speechRecognizer.interimResults = true;
-      speechRecognizer.lang = 'en-US';
+// Live audio waveform using Web Audio API
+async function startAudioWaveform() {
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(mediaStream);
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 64;
+    source.connect(analyserNode);
 
-      speechRecognizer.onresult = (event) => {
-        let interim = '';
-        let final = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            final += event.results[i][0].transcript;
-          } else {
-            interim += event.results[i][0].transcript;
-          }
-        }
-        dictationInput.value = (final || interim).trim();
-      };
+    const bufferLength = analyserNode.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const bars = waveform.querySelectorAll('.wave-bar');
 
-      speechRecognizer.onerror = (err) => {
-        console.warn('Speech recognition error:', err);
-      };
-    } catch (e) {
-      console.warn('Speech recognition setup notice:', e);
+    function animate() {
+      if (!isRecording) return;
+      animFrameId = requestAnimationFrame(animate);
+      analyserNode.getByteFrequencyData(dataArray);
+
+      bars.forEach((bar, index) => {
+        const val = dataArray[index % bufferLength] || 0;
+        const height = Math.max(4, (val / 255) * 36);
+        bar.style.height = `${height}px`;
+      });
     }
+    animate();
+  } catch (err) {
+    console.warn('Microphone audio waveform preview notice:', err.message);
   }
+}
+
+function stopAudioWaveform() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  if (audioCtx) {
+    try { audioCtx.close(); } catch {}
+    audioCtx = null;
+  }
+  const bars = waveform.querySelectorAll('.wave-bar');
+  bars.forEach(b => { b.style.height = '4px'; });
 }
 
 // Refresh Active RobOS App Context
@@ -136,21 +165,17 @@ function setRecordingState(active) {
     statusText.textContent = 'LISTENING ● REC';
     btnToggleMic.className = 'btn-mic-toggle recording';
     btnMicLabel.textContent = 'Stop Listening';
+    btnToggleMic.disabled = false;
     waveform.classList.remove('hidden');
-
-    if (speechRecognizer) {
-      try { speechRecognizer.start(); } catch {}
-    }
+    startAudioWaveform();
   } else {
+    stopAudioWaveform();
     statusPill.className = 'status-pill idle';
     statusText.textContent = 'STANDBY';
     btnToggleMic.className = 'btn-mic-toggle idle';
     btnMicLabel.textContent = 'Activate Microphone';
+    btnToggleMic.disabled = false;
     waveform.classList.add('hidden');
-
-    if (speechRecognizer) {
-      try { speechRecognizer.stop(); } catch {}
-    }
   }
 }
 
@@ -158,20 +183,37 @@ function setRecordingState(active) {
 async function toggleActivation() {
   if (!window.voicePrompt) return;
   if (isRecording) {
-    await window.voicePrompt.deactivate();
-    setRecordingState(false);
-    // If text was dictated, automatically prompt save
-    if (dictationInput.value.trim()) {
-      await saveCurrentDictation();
+    statusPill.className = 'status-pill transcribing';
+    statusText.textContent = 'TRANSCRIBING ● PROCESSING...';
+    btnMicLabel.textContent = 'Transcribing...';
+    btnToggleMic.disabled = true;
+
+    try {
+      const res = await window.voicePrompt.deactivate();
+      setRecordingState(false);
+      if (res && res.prompt) {
+        dictationInput.value = res.prompt.text;
+        await loadPrompts();
+        showFeedback(`Captured & Saved: "${res.prompt.text}"`, 'success');
+      } else if (res && res.text) {
+        dictationInput.value = res.text;
+        showFeedback(`Transcribed: "${res.text}"`, 'success');
+      } else {
+        showFeedback('Listening stopped. No clear speech detected (silence or background noise). Speak clearly into your mic and try again.', 'warning');
+      }
+    } catch (err) {
+      setRecordingState(false);
+      showFeedback('Transcription error: ' + err.message, 'error');
     }
   } else {
     const selectedDeviceId = selectDevice.value;
     await window.voicePrompt.activate({ device: selectedDeviceId });
     setRecordingState(true);
+    showFeedback('Microphone active! Speak now, then click "Stop Listening" or press Super+V.', 'success');
   }
 }
 
-// Save Current Dictation
+// Save Current Dictation (manual edit or typing)
 async function saveCurrentDictation() {
   const text = dictationInput.value.trim();
   if (!text || !window.voicePrompt) return;
@@ -183,6 +225,7 @@ async function saveCurrentDictation() {
 
   dictationInput.value = '';
   await loadPrompts();
+  showFeedback('Voice prompt saved with active app context!', 'success');
 }
 
 // Load and Render Prompts
@@ -294,11 +337,27 @@ function setupEventListeners() {
     }
   });
 
-  // Hotkey triggers from main process
+  // Hotkey triggers and IPC events from main process
   if (window.voicePrompt) {
-    window.voicePrompt.onActivated(() => setRecordingState(true));
-    window.voicePrompt.onDeactivated(() => setRecordingState(false));
-    window.voicePrompt.onDictation((prompt) => {
+    window.voicePrompt.onActivated(() => {
+      setRecordingState(true);
+      showFeedback('Microphone listening via hotkey Super+V... Speak now!', 'success');
+    });
+    window.voicePrompt.onDeactivated(async (data) => {
+      setRecordingState(false);
+      btnToggleMic.disabled = false;
+      if (data && data.prompt) {
+        dictationInput.value = data.prompt.text;
+        await loadPrompts();
+        showFeedback(`Captured & Saved: "${data.prompt.text}"`, 'success');
+      } else if (data && data.text) {
+        dictationInput.value = data.text;
+        showFeedback(`Transcribed: "${data.text}"`, 'success');
+      } else {
+        showFeedback('Listening stopped. No clear speech detected.', 'warning');
+      }
+    });
+    window.voicePrompt.onDictation(() => {
       loadPrompts();
     });
   }
