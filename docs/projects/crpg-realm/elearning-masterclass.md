@@ -17,7 +17,7 @@ The definitive architectural deep-dive into party-based tactical isometric cRPGs
     <strong style="color: #38bdf8; font-size: 1.05rem;">🎓 Interactive Web Edition Available</strong><br>
     <span style="color: #c9d1d9; font-size: 0.9rem;">Take this masterclass directly in your browser with interactive lab checklists, instant quiz checks, and verifiable Knowledge Graph completion certificates.</span>
   </div>
-  <a href="/elearning/robos-crpg-engine" class="btn btn-primary" style="background: #00bcd4; color: #0d1117; font-weight: 700; padding: 8px 18px; border-radius: 6px; text-decoration: none;">Launch Web eLearning &rarr;</a>
+  <a href="/projects/crpg-realm/elearning/" class="btn btn-primary" style="background: #00bcd4; color: #0d1117; font-weight: 700; padding: 8px 18px; border-radius: 6px; text-decoration: none;">Launch Web eLearning &rarr;</a>
 </div>
 
 ## Table of contents
@@ -312,7 +312,7 @@ static func get_class_data(class_id: String) -> Dictionary:
 
 You can launch and complete this full course interactively inside the **RobOS eLearning Hub** or online via GitHub Pages:
 
-- 🌐 **Interactive Web Edition**: [www.rowbose.com/elearning/robos-crpg-engine](https://www.rowbose.com/elearning/robos-crpg-engine)
+- 🌐 **Interactive Web Edition**: [www.rowbose.com/projects/crpg-realm/elearning/](https://www.rowbose.com/projects/crpg-realm/elearning/)
 - 🖥️ **Desktop Player**:
 ```bash
 # Launch central eLearning player loaded to the cRPG Masterclass

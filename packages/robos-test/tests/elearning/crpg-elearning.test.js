@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +14,16 @@ describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
   const store = new SDLCKnowledgeGraphStore({
     filePath: graphFile,
     rootDir: path.join(rootRepo, '.robos'),
+  });
+
+  let issuedCertId = null;
+
+  after(() => {
+    if (issuedCertId) {
+      try {
+        store.deleteNode(issuedCertId);
+      } catch {}
+    }
   });
 
   it('Course node exists in Knowledge Graph store with correct metadata', () => {
@@ -103,6 +113,7 @@ describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
     assert.ok(cert);
     assert.strictEqual(cert.ok, true);
     assert.ok(cert.certificate);
+    issuedCertId = cert.certificate['@id'];
     assert.strictEqual(cert.certificate['robos:recipientUser'], 'dungeon-master-robos');
     assert.strictEqual(cert.certificate['robos:scorePercentage'], 100);
     assert.ok(cert.certificate['robos:verificationHash'].startsWith('ROBOS-CERT-'));

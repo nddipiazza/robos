@@ -552,7 +552,7 @@ const DEFAULT_TEMPLATES = [
         { title: `${a.gameTitle}: Flare RPG Open-Source Paperdoll Assets & Spritesheet Pipeline`, body: `Harvest CC-BY-SA 3.0 animated 8-directional character sprites (walk, attack, hurt, death), modular paperdoll items (armor, shields, weapons), and Game-Icons.net ability SVGs.` },
         { title: `${a.gameTitle}: 3-Mode Expandable Activity Log & In-Log Branching Dialogue`, body: `Build HUD.gd supporting 124px combat log, 240px numbered in-log dialogue (keys 1-9), and 420px quest journal with d20 roll breakdowns.` },
         { title: `${a.gameTitle}: Autonomous Infinity AI Agent & Headless BDD Video Proof`, body: `Build qa_player/infinity_ai_agent.py with 140px proximity threat trigger, combined-arms role tactics, behave BDD test suite, and 1080p FFmpeg video proof-of-work in Xvfb display :99.` },
-        { title: `${a.gameTitle}: Interactive eLearning Masterclass & GitHub Pages Publication`, body: `Generate 5-module interactive eLearning course, verifiable Certificate of Completion (schema:EducationalOccupationalCredential), and publish to GitHub Pages at www.rowbose.com/elearning/robos-crpg-engine.` },
+        { title: `${a.gameTitle}: Interactive eLearning Masterclass & GitHub Pages Publication`, body: `Generate 5-module interactive eLearning course, verifiable Certificate of Completion (schema:EducationalOccupationalCredential), and publish to GitHub Pages at www.rowbose.com/projects/crpg-realm/elearning/.` },
       ]
     })
   },

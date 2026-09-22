@@ -55,9 +55,11 @@ function generateELearningWebsite(store, options = {}) {
   const courseSlug = (course['@id'] || courseId).replace(/.*:/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const isCrpg = courseSlug.includes('crpg') || (course['dcterms:title'] || '').toLowerCase().includes('crpg');
 
-  const permalink = options.permalink || (isCrpg ? '/elearning/robos-crpg-engine' : `/elearning/${courseSlug}`);
-  const outputFileName = isCrpg ? 'robos-crpg-engine.html' : `${courseSlug}.html`;
-  const defaultOutputPath = path.join(process.cwd(), 'docs', 'elearning', outputFileName);
+  const permalink = options.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : `/elearning/${courseSlug}`);
+  const outputFileName = isCrpg ? 'elearning.html' : `${courseSlug}.html`;
+  const defaultOutputPath = isCrpg
+    ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', outputFileName)
+    : path.join(process.cwd(), 'docs', 'elearning', outputFileName);
   const outputPath = options.outputFilePath || defaultOutputPath;
 
   // Resolve living documentation markdown file
@@ -158,13 +160,33 @@ function buildStandaloneHtml(params) {
   // Parse markdown documentation into structured sections
   const docHtml = parseLivingDocMarkdown(docMarkdown);
 
+  const cleanPermalink = permalink.endsWith('/') ? permalink : `${permalink}/`;
+  const basePermalink = permalink.replace(/\/$/, '');
+  const redirectList = [
+    `${basePermalink}`,
+    `${basePermalink}.html`,
+    `${cleanPermalink}`,
+  ];
+  if (isCrpg) {
+    redirectList.push(
+      '/projects/crpg-realm/robos-crpg-engine',
+      '/projects/crpg-realm/robos-crpg-engine/',
+      '/elearning/robos-crpg-engine',
+      '/elearning/robos-crpg-engine/',
+      '/elearning/robos-crpg-engine.html'
+    );
+  }
+  const uniqueRedirects = Array.from(new Set(redirectList.filter(r => r !== permalink)));
+
   return `---
 layout: null
 title: "RobOS eLearning — ${courseTitle.replace(/"/g, '\\"')}"
-permalink: ${permalink}
+${isCrpg ? `parent: Tactical cRPG & Infinity AI Engine
+grand_parent: RobOS Projects
+nav_order: 5
+` : ''}permalink: ${permalink}
 redirect_from:
-  - ${permalink}.html
-  - ${permalink}/
+${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -981,13 +1003,19 @@ redirect_from:
       <a href="https://rowbose.com/" class="brand-link">
         <span>⬡</span>
         <strong>RobOS</strong>
-        <span class="brand-badge">eLearning Hub</span>
+        <span class="brand-badge">${isCrpg ? 'Projects' : 'eLearning Hub'}</span>
       </a>
-      <span style="color: var(--border);">|</span>
-      <a href="/projects/crpg-realm/" class="top-link">⚔️ cRPG Realm Project</a>
-      <a href="/projects/crpg-realm/elearning-masterclass.html" class="top-link">📖 Living Architecture Guide</a>
+      <span style="color: var(--border);">/</span>
+      ${isCrpg ? `
+      <a href="/projects/crpg-realm/" class="top-link">⚔️ Tactical cRPG Realm</a>
+      <span style="color: var(--border);">/</span>
+      <span style="color: #38bdf8; font-size: 13px; font-weight: 600;">Interactive Masterclass</span>
+      ` : `
+      <span style="color: var(--text-bright); font-size: 13px; font-weight: 600;">${courseTitle}</span>
+      `}
     </div>
     <div class="top-nav-right">
+      ${isCrpg ? `<a href="/projects/crpg-realm/elearning-masterclass.html" class="top-link">📖 Living Architecture Guide</a>` : ''}
       <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="top-link">⭐ GitHub</a>
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="top-link">💬 Discord</a>
     </div>
@@ -1042,14 +1070,14 @@ redirect_from:
       <h3>Curriculum Modules</h3>
       <ul class="module-list" id="module-nav-list">
         ${modules.map((m, idx) => `
-          <li class="module-item \${idx === 0 ? 'active' : ''}" id="nav-mod-\${idx}" onclick="selectModule(\${idx})">
+          <li class="module-item ${idx === 0 ? 'active' : ''}" id="nav-mod-${idx}" onclick="selectModule(${idx})">
             <div class="module-item-title">
-              <span>\${idx + 1}. \${m.title ? m.title.replace(/^Module \\d+:\\s*/i, '') : 'Module ' + (idx + 1)}</span>
+              <span>${idx + 1}. ${m.title ? m.title.replace(/^Module \d+:\s*/i, '') : 'Module ' + (idx + 1)}</span>
             </div>
             <div class="module-item-meta">
-              <span>⏱️ \${m.durationMinutes || 15} mins</span>
-              <span>🧪 \${(m.labSteps || []).length} labs</span>
-              <span>📝 \${(m.quiz || []).length} quiz</span>
+              <span>⏱️ ${m.durationMinutes || 15} mins</span>
+              <span>🧪 ${(m.labSteps || []).length} labs</span>
+              <span>📝 ${(m.quiz || []).length} quiz</span>
             </div>
           </li>
         `).join('')}

@@ -46,7 +46,7 @@ Rather than being a static demo, the entire campaign slice is governed by an **a
 | **Assets & Art** | 100% genuine open-source assets from Flare RPG / OpenGameArt (CC-BY-SA, CC0) |
 | **Testing Harness** | Headless Xvfb virtual framebuffer execution, 1080p FFmpeg video proof-of-work, behave BDD |
 | **Verification Metrics** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
-| **Interactive eLearning** | [www.rowbose.com/elearning/robos-crpg-engine](/elearning/robos-crpg-engine) (5 modules, labs, quizzes, verified certificate) |
+| **Interactive eLearning** | [www.rowbose.com/projects/crpg-realm/elearning/](/projects/crpg-realm/elearning/) (5 modules, labs, quizzes, verified certificate) |
 
 ---
 
@@ -138,11 +138,17 @@ RobOS enforces a strict separation between two types of automated E2E tests:
 
 Explore the technical deep-dives into how the cRPG realm and its AI harness are constructed:
 
-1. [**Autonomous Game Creation Process & Architecture**]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})  
+1. [**Interactive Tactical cRPG Masterclass**]({{ '/projects/crpg-realm/elearning/' | relative_url }})  
+   *Hands-on interactive 5-module curriculum, live lab checklists, instant knowledge check quizzes, and verifiable W3C completion credential.*
+
+2. [**Tactical cRPG Architecture & Masterclass Living Spec**]({{ '/projects/crpg-realm/elearning-masterclass.html' | relative_url }})  
+   *Comprehensive engineering specification, combat math formulas, colliders, and SCORM 2004 curriculum guide.*
+
+3. [**Autonomous Game Creation Process & Architecture**]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})  
    *Ontological modeling, CC-BY-SA asset harvesting, data pipeline, and GDScript code generation.*
 
-2. [**Infinity AI Engine & BDD Verification Harness**]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})  
+4. [**Infinity AI Engine & BDD Verification Harness**]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})  
    *Threat radar, combined-arms tactics, human mouse simulation, and containerized video proof-of-work.*
 
-3. [**World Systems, Collision Pathfinding & NPC Dialogue**]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})  
+5. [**World Systems, Collision Pathfinding & NPC Dialogue**]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})  
    *Building colliders, Pathfinder.gd obstacle avoidance, 18-NPC roster, and dynamic Fog of War shaders.*
