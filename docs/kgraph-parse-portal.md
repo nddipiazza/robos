@@ -180,6 +180,53 @@ Generates customized Kubernetes Helm values for Hermetiq's Buildbarn chart (`oci
 
 ---
 
+---
+
+## Direct CLI Access & Luxir Portal CLI
+
+In addition to the Electron GUI and REST API, the portal includes a standalone CLI tool (`packages/kgraph-parse-portal/bin/luxir-portal-cli.js`) and an in-app interactive Tilix terminal console (`#tab-cli`):
+
+```bash
+# Query the Luxir index directly from the terminal
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract"
+
+# Search with faceted SHACL type filter
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract" --type robos:Contract
+
+# Inspect raw Luxir index JSON document by path or ID
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml
+
+# Check Luxir C++ engine state (:8983) and indexed document distribution
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
+
+# Direct REST query via cURL
+curl -s "http://localhost:19192/api/v1/search?q=Contract" | jq .
+```
+
+---
+
+## Visual Proof-of-Work & Evidence
+
+The portal's capabilities have been verified through automated headless E2E BDD test runs in Xvfb virtual framebuffers with 1080p video walkthroughs and high-resolution terminal captures:
+
+### 1. Direct CLI Search Query
+Terminal execution querying the Luxir search index directly, returning indexed OpenAPI 3.1 contracts and gRPC Protobuf specifications with AST symbols, roles, and cryptographic SHA-256 evidence.
+![Direct Luxir CLI Search Query](/assets/images/screenshots/09_luxir_cli_search_direct.png)
+
+### 2. Direct Document Inspection
+Inspecting the complete raw Luxir JSON index document for `openapi.yaml`, demonstrating indexed SHACL types, AST symbol hierarchies, MIME classifications, and content preview.
+![Direct Luxir CLI Document Inspection](/assets/images/screenshots/10_luxir_cli_inspect_doc.png)
+
+### 3. Direct REST API Execution via cURL
+Querying the running KGraph Parse Portal REST gateway directly with cURL, demonstrating HTTP JSON payload responses with search scores, hit counts, and structured AST symbols.
+![Direct cURL REST API Query](/assets/images/screenshots/11_luxir_curl_rest_direct.png)
+
+### 4. Luxir Engine Status & Document Distribution
+Status report displaying Luxir engine state (`READY`), endpoint (`:8983`), index name (`robos_kgraph`), and distribution across indexed SHACL types.
+![Luxir Engine Status Report](/assets/images/screenshots/12_luxir_cli_status_engine.png)
+
+---
+
 ## Running the Application
 
 ### Via RobOS App Launcher
@@ -190,6 +237,10 @@ Open the **App Launcher** (Super key or Panel grid) and select **KGraph Parse Po
 # Start the web and REST API server
 node packages/kgraph-parse-portal/server.js
 
-# Or launch the full Electron desktop UI
+# Launch the full Electron desktop UI
 electron packages/kgraph-parse-portal
+
+# Use the direct Luxir CLI
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
 ```
+

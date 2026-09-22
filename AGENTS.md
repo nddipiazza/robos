@@ -107,6 +107,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
 | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
 | **Schema Studio & Registry** | Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape generation, and live JSON-LD validator |
+| **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, Hermetiq Buildbarn Helm RBE, and Tika 4.0 gRPC |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
 | **RobOS eLearning** | Interactive eLearning player, hands-on lab runner, and Knowledge Graph completion certificate hub |
 | **Claude Console** | Enhanced Claude Code GUI |
@@ -240,7 +241,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 RobOS maintains a modular, packaged Dual-State SDLC Knowledge Graph. Rather than storing the universe in a single monolithic file, the Knowledge Graph is organized into namespaced, multi-file packages under `.robos/kgraphs/<package-id>/package.jsonld` indexed by `.robos/kgraph.yaml` (while maintaining backwards-compatible aggregated synchronization to `.robos/knowledge-graph.jsonld`).
 
 **Standard RobOS Packages & Namespaces**:
-- **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), Model Context Protocol servers (`robos:MCPServer`), AI context sources (`robos:ContextSource`), polyglot and monorepo build systems (`robos:BuildSystem`: Bazel, Buck2, Maven, Gradle, Cargo, Go Modules, pnpm, CMake, and `robos:RemoteExecutionCluster`), and prompt optimization strategies (`robos:PromptStrategy` [Caveman], `robos:PromptOptimizer` [DSPy]).
+- **`core-platform`** (`robos.core`): System architecture, C4 topology, microservices, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), search indices (`robos:SearchIndex`: Luxir, Solr, Elasticsearch, OpenSearch), Kafka message brokers (`robos:MessageBroker`), Model Context Protocol servers (`robos:MCPServer`), AI context sources (`robos:ContextSource`), polyglot and monorepo build systems (`robos:BuildSystem`: Bazel, Buck2, Maven, Gradle, Cargo, Go Modules, pnpm, CMake, and `robos:RemoteExecutionCluster`), and prompt optimization strategies (`robos:PromptStrategy` [Caveman], `robos:PromptOptimizer` [DSPy]).
 - **`organization`** (`robos.org`): Team Topologies, human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), Task servers (`robos:TaskServer`), and enterprise directory sync.
 - **`services`** (`robos.services`): Microservices, OpenAPI 3.1 contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and consumer-driven contract tests.
 - **`applications`** (`robos.apps`): Client applications, frontend SPAs, desktop apps, mobile apps, PC/mobile games, and CLI tools.

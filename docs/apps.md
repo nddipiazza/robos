@@ -7,7 +7,7 @@ nav_order: 10
 # RobOS App Suite
 {: .no_toc }
 
-The complete suite of 52 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
+The complete suite of 53 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
 {: .fs-6 .fw-300 }
 
 ## Official Application Directory
@@ -20,7 +20,7 @@ The complete suite of 52 native developer desktop applications covering the enti
     <a href="#arch-planning" class="robos-app-nav-pill">Software Architecture & Planning <span class="pill-count">9</span></a>
     <a href="#code-review" class="robos-app-nav-pill">Code, Repositories & Review <span class="pill-count">3</span></a>
     <a href="#databases-streams" class="robos-app-nav-pill">Databases & Event Streams <span class="pill-count">3</span></a>
-    <a href="#apis-testing" class="robos-app-nav-pill">APIs, Contracts & Testing <span class="pill-count">3</span></a>
+    <a href="#apis-testing" class="robos-app-nav-pill">APIs, Contracts & Testing <span class="pill-count">4</span></a>
     <a href="#devops-cloud" class="robos-app-nav-pill">DevOps, Cloud & Distributed Build <span class="pill-count">5</span></a>
     <a href="#security-vault" class="robos-app-nav-pill">Security, Credentials & Pass Vault <span class="pill-count">5</span></a>
   </div>
@@ -505,9 +505,20 @@ The complete suite of 52 native developer desktop applications covering the enti
   <div id="apis-testing" class="robos-cat-group">
     <div class="robos-cat-header">
       <h3 class="robos-cat-title">APIs, Contracts & Testing</h3>
-      <span class="robos-cat-badge">3 Apps</span>
+      <span class="robos-cat-badge">4 Apps</span>
     </div>
     <div class="robos-apps-grid">
+      <a href="{{ '/kgraph-parse-portal.html' | relative_url }}" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/kgraph-parse-portal.svg' | relative_url }}" width="38" height="38" alt="KGraph Parse Portal icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">KGraph Parse Portal</div>
+          <span class="robos-app-pkg">robos:kgraph-parse-portal</span>
+          <p class="robos-app-desc">Heavy-scale ingestion portal fronting Luxir C++ search index, Hermetiq Buildbarn Helm RBE, and Tika 4.0 gRPC.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
       <a href="#robos-rest-api-client" class="robos-app-card">
         <div class="robos-app-icon-wrap">
           <img src="{{ '/assets/images/icons/rest-client.svg' | relative_url }}" width="38" height="38" alt="REST API Client & Runner icon" loading="lazy">

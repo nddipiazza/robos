@@ -1266,12 +1266,21 @@ Generates customized Kubernetes Helm values for Hermetiq's Buildbarn chart (<cod
 <h3>Via RobOS App Launcher</h3>
 Open the <strong>App Launcher</strong> (Super key or Panel grid) and select <strong>KGraph Parse Portal</strong>.
 
-<h3>Via Terminal</h3>
+<h3>Via Terminal & Direct Luxir CLI</h3>
 <pre><code class="language-bash"># Start the web and REST API server
 node packages/kgraph-parse-portal/server.js
 
-# Or launch the full Electron desktop UI
-electron packages/kgraph-parse-portal</code></pre>
+# Launch the full Electron desktop UI
+electron packages/kgraph-parse-portal
+
+# Query the Luxir search index directly via CLI
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract"
+
+# Inspect raw Luxir index JSON document
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml
+
+# Check Luxir C++ engine state (:8983)
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status</code></pre>
         </article>
       </section>
 

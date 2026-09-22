@@ -26,7 +26,7 @@ Foundational architectural graph, system roots, and platform configuration.
 - **Package Store ID**: `core-platform`
 - **Ontology Namespace**: `robos.platform`
 - **GitOps Package File**: `.robos/kgraphs/core-platform/package.jsonld`
-- **Schemas Defined**: 21
+- **Schemas Defined**: 22
 
 ---
 
@@ -37,6 +37,7 @@ Foundational architectural graph, system roots, and platform configuration.
 | [**Build System** (`robos:BuildSystem`)]({{ '/schemas/core-platform/build-system.html' | relative_url }}) | `urn:robos:shape:BuildSystemShape` | `dcterms:title`, `robos:buildTool`, `robos:configFile` | [View Schema &rarr;]({{ '/schemas/core-platform/build-system.html' | relative_url }}) |
 | [**Database** (`robos:Database`)]({{ '/schemas/core-platform/database.html' | relative_url }}) | `urn:robos:shape:DatabaseShape` | `dcterms:title`, `robos:engine`, `robos:databaseName`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/database.html' | relative_url }}) |
 | [**NoSQL Database** (`robos:NoSQLDatabase`)]({{ '/schemas/core-platform/nosql-database.html' | relative_url }}) | `urn:robos:shape:NoSQLDatabaseShape` | `dcterms:title`, `robos:engine`, `robos:host` | [View Schema &rarr;]({{ '/schemas/core-platform/nosql-database.html' | relative_url }}) |
+| [**Search Index** (`robos:SearchIndex`)]({{ '/schemas/core-platform/search-index.html' | relative_url }}) | `urn:robos:shape:SearchIndexShape` | `dcterms:title`, `robos:engine` | [View Schema &rarr;]({{ '/schemas/core-platform/search-index.html' | relative_url }}) |
 | [**Message Broker** (`robos:MessageBroker`)]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) | `urn:robos:shape:MessageBrokerShape` | `dcterms:title`, `robos:brokerType`, `robos:endpoint` | [View Schema &rarr;]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) |
 | [**MCP Server** (`robos:MCPServer`)]({{ '/schemas/core-platform/mcp-server.html' | relative_url }}) | `urn:robos:shape:MCPServerShape` | `dcterms:title`, `robos:transport`, `robos:toolsProvided`, `robos:endpoint`, `robos:resourcesProvided`, `robos:promptsProvided` | [View Schema &rarr;]({{ '/schemas/core-platform/mcp-server.html' | relative_url }}) |
 | [**Context Source** (`robos:ContextSource`)]({{ '/schemas/core-platform/context-source.html' | relative_url }}) | `urn:robos:shape:ContextSourceShape` | `dcterms:title`, `robos:sourceType`, `robos:location` | [View Schema &rarr;]({{ '/schemas/core-platform/context-source.html' | relative_url }}) |
