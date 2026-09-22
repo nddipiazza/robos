@@ -108,13 +108,37 @@
         <div class="form-group">
           <label for="new-app-tech">Technology Stack & Language</label>
           <select id="new-app-tech">
+            <option value="Next.js 15 / React / TailwindCSS (Vercel + GitHub)">Next.js 15 / React / TailwindCSS (Vercel + GitHub)</option>
             <option value="Java 21 / Spring Boot 3">Java 21 / Spring Boot 3</option>
             <option value="Node.js 20 / TypeScript / Express">Node.js 20 / TypeScript / Express</option>
+            <option value="Vite / React / TypeScript (SPA)">Vite / React / TypeScript (SPA)</option>
             <option value="Go 1.22 / Gin">Go 1.22 / Gin</option>
             <option value="Python 3.11 / FastAPI">Python 3.11 / FastAPI</option>
             <option value="Electron 29 / Vanilla JS">Electron 29 / Vanilla JS</option>
             <option value="Rust / Tokio">Rust / Tokio</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label for="new-app-deploy">Deployment & Hosting Target</label>
+          <select id="new-app-deploy">
+            <option value="vercel">Vercel (Serverless / Edge Functions)</option>
+            <option value="docker">Docker Container / Kubernetes</option>
+            <option value="cloudflare">Cloudflare Pages / Workers</option>
+            <option value="self-hosted">Self-Hosted / Standalone Linux</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-app-storage">Data Storage & Persistence Layer</label>
+          <select id="new-app-storage">
+            <option value="embedded-json">Zero-Config Embedded JSON / Vercel KV</option>
+            <option value="mongodb">MongoDB Atlas (Mongoose ODM)</option>
+            <option value="postgres">PostgreSQL / Supabase / Neon</option>
+            <option value="sqlite">SQLite / Turso LibSQL</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-app-domain">Custom Domain (Optional)</label>
+          <input type="text" id="new-app-domain" placeholder="e.g. getemgigs.com">
         </div>
         <div class="form-group">
           <label for="new-app-team">Team Ownership (.robos/teams.yaml)</label>
@@ -134,6 +158,7 @@
         <div class="form-group">
           <label for="new-contract-type">Specification Type</label>
           <select id="new-contract-type">
+            <option value="next-routes">Next.js App Router API Routes (/api/*)</option>
             <option value="openapi">OpenAPI 3.1 (REST API)</option>
             <option value="typespec">Microsoft TypeSpec (.tsp)</option>
             <option value="protobuf">Protobuf gRPC (.proto)</option>

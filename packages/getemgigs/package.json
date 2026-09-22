@@ -1,0 +1,24 @@
+{
+  "name": "getemgigs",
+  "version": "1.0.0-beta",
+  "type": "module",
+  "private": true,
+  "description": "The Gig Bandit (getemgigs.com) — Revolutionary platform for the local music scene with Buddy Gig geolocation escrow and Venue Stay-To-Play reciprocal ticket economics.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

@@ -299,17 +299,25 @@ ipcMain.handle('app-wizard:generate-new-app', async (_, spec) => {
     const targetDir = spec.targetDir || path.join(robosRoot, 'packages', spec.slug);
     fs.mkdirSync(targetDir, { recursive: true });
 
+    const isVercel = spec.deploy === 'vercel' || (spec.technology && spec.technology.includes('Next.js')) || (spec.technology && spec.technology.includes('Vercel')) || spec.archetype === 'robos:FrontEndApp';
+    const domain = spec.domain || (spec.slug === 'getemgigs' ? 'getemgigs.com' : spec.slug + '.com');
+    const repoSlug = 'nddipiazza/' + spec.slug;
+
     // 1. catalog-info.yaml
     const catalogInfo = 'apiVersion: backstage.io/v1alpha1\n' +
       'kind: Component\n' +
       'metadata:\n' +
       '  name: ' + spec.slug + '\n' +
       '  title: "' + spec.name + '"\n' +
-      '  description: "' + (spec.description || 'RobOS Scaffolding') + '"\n' +
-      '  tags: [' + spec.archetype.replace('robos:', '').toLowerCase() + ', ' + (spec.technology || 'general').toLowerCase().replace(/[^a-z0-9]/g, '-') + ']\n' +
+      '  description: "' + (spec.description || (isVercel ? 'Next.js 15 Serverless & Edge Web Application deployed on Vercel' : 'RobOS Scaffolding')) + '"\n' +
+      '  annotations:\n' +
+      '    github.com/project-slug: "' + repoSlug + '"\n' +
+      '    vercel.com/project-name: "' + spec.slug + '"\n' +
+      '    robos.dev/domain: "' + domain + '"\n' +
+      '  tags: [' + (isVercel ? 'frontend, nextjs, react, vercel, github, edge' : spec.archetype.replace('robos:', '').toLowerCase() + ', ' + (spec.technology || 'general').toLowerCase().replace(/[^a-z0-9]/g, '-')) + ']\n' +
       'spec:\n' +
-      '  type: ' + spec.archetype.replace('robos:', '').toLowerCase() + '\n' +
-      '  lifecycle: experimental\n' +
+      '  type: ' + (isVercel ? 'website' : spec.archetype.replace('robos:', '').toLowerCase()) + '\n' +
+      '  lifecycle: production\n' +
       '  owner: ' + (spec.team || 'platform-team') + '\n';
     fs.writeFileSync(path.join(targetDir, 'catalog-info.yaml'), catalogInfo, 'utf8');
 
@@ -317,24 +325,121 @@ ipcMain.handle('app-wizard:generate-new-app', async (_, spec) => {
     const devSetup = '#!/usr/bin/env bash\n' +
       '# Automated Developer Setup for ' + spec.name + '\n' +
       'set -euo pipefail\n\n' +
+      'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n' +
+      'cd "$DIR"\n\n' +
       'echo "==> Setting up environment for ' + spec.name + '..."\n' +
       'echo "==> Technology: ' + spec.technology + '"\n' +
-      'echo "==> Archetype: ' + spec.archetype + '"\n\n' +
+      'echo "==> Archetype: ' + spec.archetype + '"\n' +
+      'echo "==> Domain: ' + domain + '"\n\n' +
+      'command -v node >/dev/null 2>&1 || { echo "Error: Node.js (v20+) is required"; exit 1; }\n' +
+      'command -v npm >/dev/null 2>&1 || { echo "Error: npm is required"; exit 1; }\n' +
       'command -v git >/dev/null 2>&1 || { echo "Error: git is required"; exit 1; }\n\n' +
-      'echo "✓ Environment verification passed for ' + spec.slug + '!"\n';
+      'echo "==> Installing project dependencies..."\n' +
+      'if [ -f package.json ]; then\n' +
+      '  npm install --quiet\n' +
+      'fi\n\n' +
+      'echo "✓ Environment verification passed for ' + spec.slug + '!"\n' +
+      'echo "To start development server: npm run dev"\n';
     const devSetupPath = path.join(targetDir, 'dev-setup.sh');
     fs.writeFileSync(devSetupPath, devSetup, { mode: 0o755 });
 
-    // 3. Dockerfile
-    const dockerfile = 'FROM alpine:3.19\n' +
-      'LABEL maintainer="RobOS Engineering Team"\n' +
-      'LABEL robos.package="' + spec.urn + '"\n' +
-      'WORKDIR /app\n' +
-      'COPY . .\n' +
-      'CMD ["echo", "Running ' + spec.name + '"]\n';
-    fs.writeFileSync(path.join(targetDir, 'Dockerfile'), dockerfile, 'utf8');
+    if (isVercel) {
+      // 3a. vercel.json
+      const vercelJson = JSON.stringify({
+        $schema: 'https://openapi.vercel.sh/vercel.json',
+        cleanUrls: true,
+        trailingSlash: false,
+        headers: [
+          {
+            source: '/(.*)',
+            headers: [
+              { key: 'X-Content-Type-Options', value: 'nosniff' },
+              { key: 'X-Frame-Options', value: 'DENY' },
+              { key: 'X-XSS-Protection', value: '1; mode=block' },
+              { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }
+            ]
+          }
+        ]
+      }, null, 2);
+      fs.writeFileSync(path.join(targetDir, 'vercel.json'), vercelJson, 'utf8');
 
-    // 4. Contract file if OpenAPI
+      // 3b. .github/workflows/ci.yml
+      const ghDir = path.join(targetDir, '.github', 'workflows');
+      fs.mkdirSync(ghDir, { recursive: true });
+      const ciYml = 'name: CI & Vercel Deployment\n\n' +
+        'on:\n' +
+        '  push:\n' +
+        '    branches: [main]\n' +
+        '  pull_request:\n' +
+        '    branches: [main]\n\n' +
+        'jobs:\n' +
+        '  verify-and-test:\n' +
+        '    runs-on: ubuntu-latest\n' +
+        '    steps:\n' +
+        '      - name: Checkout Code\n' +
+        '        uses: actions/checkout@v4\n\n' +
+        '      - name: Setup Node.js 22\n' +
+        '        uses: actions/setup-node@v4\n' +
+        '        with:\n' +
+        '          node-version: 22\n' +
+        '          cache: "npm"\n\n' +
+        '      - name: Install Dependencies\n' +
+        '        run: npm ci || npm install\n\n' +
+        '      - name: Run Test Suite\n' +
+        '        run: npm test --if-present\n\n' +
+        '      - name: Verify Production Build\n' +
+        '        run: npm run build\n\n' +
+        '  deploy-vercel:\n' +
+        '    needs: verify-and-test\n' +
+        '    if: github.ref == \'refs/heads/main\' && github.event_name == \'push\'\n' +
+        '    runs-on: ubuntu-latest\n' +
+        '    steps:\n' +
+        '      - name: Checkout Code\n' +
+        '        uses: actions/checkout@v4\n\n' +
+        '      - name: Deploy to Vercel Production\n' +
+        '        uses: amondnet/vercel-action@v25\n' +
+        '        with:\n' +
+        '          vercel-token: ${{ secrets.VERCEL_TOKEN }}\n' +
+        '          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}\n' +
+        '          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}\n' +
+        '          vercel-args: "--prod"\n';
+      fs.writeFileSync(path.join(ghDir, 'ci.yml'), ciYml, 'utf8');
+
+      // 3c. DEPLOYMENT.md
+      const deploymentMd = '# Vercel Deployment & Custom Domain Setup: ' + domain + '\n\n' +
+        '## 1. Quick Deploy with Vercel\n' +
+        'You can deploy this project directly to Vercel using the GitHub integration or Vercel CLI:\n\n' +
+        '```bash\n' +
+        'npm install -g vercel\n' +
+        'vercel\n' +
+        'vercel --prod\n' +
+        '```\n\n' +
+        '## 2. Setting Up Custom Domain (' + domain + ')\n' +
+        '1. Open your Vercel Project Dashboard.\n' +
+        '2. Navigate to **Settings** &rarr; **Domains**.\n' +
+        '3. Enter `' + domain + '` and `www.' + domain + '`.\n' +
+        '4. Add the provided DNS records to your domain registrar:\n' +
+        '   - **A Record**: `@` &rarr; `76.76.21.21`\n' +
+        '   - **CNAME Record**: `www` &rarr; `cname.vercel-dns.com`\n\n' +
+        '## 3. Environment Variables & Free Storage\n' +
+        'The application operates in **zero-config mode** out of the box using its built-in memory/JSON store.\n' +
+        'To connect persistent cloud storage on Vercel:\n' +
+        '- **MongoDB Atlas (Free M0)**: Set `MONGODB_URI`\n' +
+        '- **Vercel Postgres (Free)**: Set `POSTGRES_URL`\n' +
+        '- **Vercel KV / Redis**: Set `KV_REST_API_URL` and `KV_REST_API_TOKEN`\n';
+      fs.writeFileSync(path.join(targetDir, 'DEPLOYMENT.md'), deploymentMd, 'utf8');
+    } else {
+      // Standard Dockerfile for non-Vercel apps
+      const dockerfile = 'FROM alpine:3.19\n' +
+        'LABEL maintainer="RobOS Engineering Team"\n' +
+        'LABEL robos.package="' + spec.urn + '"\n' +
+        'WORKDIR /app\n' +
+        'COPY . .\n' +
+        'CMD ["echo", "Running ' + spec.name + '"]\n';
+      fs.writeFileSync(path.join(targetDir, 'Dockerfile'), dockerfile, 'utf8');
+    }
+
+    // 4. Contract file if OpenAPI or Microservice
     if (spec.contractType === 'openapi' || spec.archetype === 'robos:Microservice') {
       const openapiYaml = 'openapi: 3.1.0\n' +
         'info:\n' +
@@ -367,10 +472,11 @@ ipcMain.handle('app-wizard:generate-new-app', async (_, spec) => {
     const packagesYamlPath = path.join(robosRoot, '.robos', 'packages.yaml');
     if (fs.existsSync(packagesYamlPath)) {
       let content = fs.readFileSync(packagesYamlPath, 'utf8');
+      const repoUrl = 'github.com/' + repoSlug;
       const entry = '  - id: "' + spec.urn + '"\n' +
         '    title: "' + spec.name + '"\n' +
         '    type: "' + spec.archetype + '"\n' +
-        '    repository: "github.com/acme/' + spec.slug + '"\n' +
+        '    repository: "' + repoUrl + '"\n' +
         '    technology: "' + spec.technology + '"\n';
       if (!content.includes(spec.urn)) {
         content += entry;
@@ -378,10 +484,34 @@ ipcMain.handle('app-wizard:generate-new-app', async (_, spec) => {
       }
     }
 
+    // 6. Update ~/.config/robos/git-projects.json
+    try {
+      const gitProjectsPath = path.join(os.homedir(), '.config', 'robos', 'git-projects.json');
+      let projects = [];
+      if (fs.existsSync(gitProjectsPath)) {
+        try { projects = JSON.parse(fs.readFileSync(gitProjectsPath, 'utf8')); } catch {}
+      }
+      if (!projects.some(p => p.slug === spec.slug || p.path === targetDir)) {
+        projects.push({
+          name: spec.name,
+          slug: spec.slug,
+          path: targetDir,
+          archetype: spec.archetype,
+          technology: spec.technology,
+          domain: domain,
+          importedAt: new Date().toISOString(),
+        });
+        fs.mkdirSync(path.dirname(gitProjectsPath), { recursive: true });
+        fs.writeFileSync(gitProjectsPath, JSON.stringify(projects, null, 2), 'utf8');
+      }
+    } catch {}
+
     return {
       success: true,
       targetDir,
       urn: spec.urn,
+      isVercel,
+      domain,
       catalogInfoPath: path.join(targetDir, 'catalog-info.yaml'),
       devSetupPath,
     };

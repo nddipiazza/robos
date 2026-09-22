@@ -128,16 +128,26 @@ function updateNewSummary() {
   const slug = document.getElementById('new-app-slug').value;
   const tech = document.getElementById('new-app-tech').value;
   const team = document.getElementById('new-app-team').value;
+  const deploy = document.getElementById('new-app-deploy')?.value || 'vercel';
+  const storage = document.getElementById('new-app-storage')?.value || 'embedded-json';
+  const domain = document.getElementById('new-app-domain')?.value || '';
   const urn = 'urn:robos:' + selectedArchetype.replace('robos:', '').toLowerCase() + ':' + slug;
 
-  const box = document.getElementById('new-summary-box');
-  box.innerHTML = [
+  const items = [
     '<div class="summary-item"><strong>Application Name:</strong> <span>' + name + '</span></div>',
     '<div class="summary-item"><strong>Archetype:</strong> <span>' + selectedArchetype + '</span></div>',
     '<div class="summary-item"><strong>Package URN:</strong> <span>' + urn + '</span></div>',
     '<div class="summary-item"><strong>Technology:</strong> <span>' + tech + '</span></div>',
-    '<div class="summary-item"><strong>Owner:</strong> <span>' + team + '</span></div>'
-  ].join('');
+    '<div class="summary-item"><strong>Deployment Target:</strong> <span style="color:var(--accent); font-weight:600;">' + deploy.toUpperCase() + '</span></div>',
+    '<div class="summary-item"><strong>Storage Engine:</strong> <span>' + storage + '</span></div>',
+  ];
+  if (domain) {
+    items.push('<div class="summary-item"><strong>Custom Domain:</strong> <span style="color:#4ade80; font-weight:600;">' + domain + '</span></div>');
+  }
+  items.push('<div class="summary-item"><strong>Owner:</strong> <span>' + team + '</span></div>');
+
+  const box = document.getElementById('new-summary-box');
+  box.innerHTML = items.join('');
 }
 
 function updateImportSummary() {
@@ -575,6 +585,60 @@ function setupNavButtons() {
   document.getElementById('btn-next-new-3').addEventListener('click', () => { newStep = 4; renderSidebar(); showStepPanel(); });
   document.getElementById('btn-back-new-4').addEventListener('click', () => { newStep = 3; renderSidebar(); showStepPanel(); });
 
+  // Contract Type Switcher Preview
+  const contractTypeSelect = document.getElementById('new-contract-type');
+  const contractContentArea = document.getElementById('new-contract-content');
+  if (contractTypeSelect && contractContentArea) {
+    contractTypeSelect.addEventListener('change', () => {
+      const val = contractTypeSelect.value;
+      if (val === 'next-routes') {
+        contractContentArea.value = `// Next.js App Router API Routes (/api/*)
+// Edge & Serverless Endpoints for The Gig Bandit / Get 'Em Gigs
+export async function GET(request) {
+  return Response.json({
+    status: 'online',
+    platform: 'The Gig Bandit',
+    version: '1.0.0-beta',
+    domain: 'getemgigs.com',
+    features: ['buddy-gig-escrow', 'venue-stay-to-play', 'geolocation-checkin']
+  });
+}`;
+      } else if (val === 'openapi') {
+        contractContentArea.value = `openapi: 3.1.0
+info:
+  title: Application API
+  version: 1.0.0
+paths:
+  /api/health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: OK`;
+      } else if (val === 'typespec') {
+        contractContentArea.value = `import "@typespec/http";
+using TypeSpec.Http;
+
+@service({ title: "Application API" })
+namespace AppApi;
+
+@route("/health")
+op getHealth(): { status: "ok" };`;
+      } else if (val === 'protobuf') {
+        contractContentArea.value = `syntax = "proto3";
+package app.v1;
+
+service AppService {
+  rpc CheckHealth (HealthRequest) returns (HealthResponse);
+}`;
+      } else if (val === 'graphql') {
+        contractContentArea.value = `type Query {
+  health: String!
+}`;
+      }
+    });
+  }
+
   // Generate New App
   document.getElementById('btn-generate-new').addEventListener('click', async () => {
     const consoleOut = document.getElementById('new-console-output');
@@ -585,10 +649,14 @@ function setupNavButtons() {
     const tech = document.getElementById('new-app-tech').value;
     const team = document.getElementById('new-app-team').value;
     const contractType = document.getElementById('new-contract-type').value;
+    const contractContent = document.getElementById('new-contract-content')?.value || '';
+    const deploy = document.getElementById('new-app-deploy')?.value || 'vercel';
+    const storage = document.getElementById('new-app-storage')?.value || 'embedded-json';
+    const domain = document.getElementById('new-app-domain')?.value || '';
     const urn = 'urn:robos:' + getArchetypeUrnPrefix(selectedArchetype) + ':' + slug;
 
     const res = await window.api.generateNewApp({
-      name, slug, archetype: selectedArchetype, technology: tech, team, contractType, urn
+      name, slug, archetype: selectedArchetype, technology: tech, team, contractType, contractContent, deploy, storage, domain, urn
     });
 
     if (res.error) {
@@ -597,8 +665,18 @@ function setupNavButtons() {
       consoleOut.textContent += '✓ Created component in: ' + res.targetDir + '\n';
       consoleOut.textContent += '✓ Generated: catalog-info.yaml\n';
       consoleOut.textContent += '✓ Generated: dev-setup.sh (chmod +x)\n';
-      consoleOut.textContent += '✓ Generated: Dockerfile\n';
+      if (res.isVercel || tech.includes('Next.js') || deploy === 'vercel') {
+        consoleOut.textContent += '✓ Generated: vercel.json (Serverless / Edge configuration)\n';
+        consoleOut.textContent += '✓ Generated: .github/workflows/ci.yml (GitHub Actions Vercel CI/CD)\n';
+        consoleOut.textContent += '✓ Generated: package.json (Next.js 15, React 19, TailwindCSS)\n';
+        consoleOut.textContent += '✓ Generated: DEPLOYMENT.md (Vercel & getemgigs.com DNS instructions)\n';
+        consoleOut.textContent += '✓ Generated: README.md with Deploy to Vercel button\n';
+        consoleOut.textContent += '✓ Scaffolded: Next.js App Router (src/app/, src/components/, src/lib/)\n';
+      } else {
+        consoleOut.textContent += '✓ Generated: Dockerfile\n';
+      }
       consoleOut.textContent += '✓ Registered in .robos/packages.yaml (' + res.urn + ')\n';
+      consoleOut.textContent += '✓ Synced to RobOS SDLC Knowledge Graph\n';
       consoleOut.textContent += '🎉 Greenfield Application Scaffolding Complete!';
     }
   });

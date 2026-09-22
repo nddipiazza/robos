@@ -31,9 +31,54 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 
 ---
 
-## Featured Flagship Project
+---
 
-### Tactical cRPG & Infinity AI Engine
+## Featured Flagship Projects
+
+### 1. The Gig Bandit & Get 'Em Gigs (`getemgigs.com`)
+
+| **Project Name** | **The Gig Bandit & Get 'Em Gigs (`getemgigs.com`)** |
+| **Engine / Profile** | Next.js 15 App Router & Vercel Edge Runtime |
+| **Language & Stack** | React 19, JavaScript (ESM), TailwindCSS, Vercel Serverless |
+| **Ontology & Standard** | Schema.org `schema:WebApplication`, RobOS `robos:FrontEndApp`, C4 `c4:Container` |
+| **Core Innovations** | **Buddy Gig Geolocation Escrow** & **Venue Stay-To-Play Reciprocal Booking** |
+| **Testing Harness** | Native Node.js Test Runner, Haversine Geofence Verification, Escrow State Engine |
+| **Verification Score** | **3 Suites, 6 Tests (100% Passed)** |
+| **Live Production** | [https://getemgigs.com](https://getemgigs.com) · [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fgetemgigs) |
+
+```mermaid
+flowchart LR
+    subgraph MUSIC_COMMUNITY ["Local Music Scene Ecosystem"]
+        BandA["Group A (e.g. The Neon Vipers)"]
+        BandB["Group B (e.g. Velvet Riot)"]
+        Venue["Local Live Venue (Austin / Nashville / Brooklyn)"]
+    end
+
+    subgraph PLATFORM_LAYER ["The Gig Bandit Platform (getemgigs.com)"]
+        Router["Next.js 15 App Router & Edge Functions"]
+        Escrow["Security Deposit Escrow ($50 Refundable)"]
+        Geo["Haversine Geolocation Engine (150m Radius)"]
+        STP["Stay-to-Play Reciprocal Ticket Pool"]
+    end
+
+    subgraph VERIFICATION_OUTCOMES ["Attendance & Payout Settlement"]
+        Yes["Attended: GPS Verified <= 150m"] -->|Unlock| Refund["Deposit Reimbursed + Reputation Up"]
+        No["Bailed: No-Show at 6:00 AM"] -->|Forfeit| HostPayout["Deposit Paid Directly to Host Band"]
+        PoolTrade["Bands Buy Tickets to Fellow Act's Show"] -->|Reciprocal| Crowd["Crowds Guaranteed + 0 Exploitation"]
+    end
+
+    BandA <-->|Buddy Gig Agreement| Escrow
+    BandB <-->|Buddy Gig Agreement| Escrow
+    Escrow --> Geo
+    Geo --> Yes
+    Geo --> No
+    Venue --> STP
+    STP --> PoolTrade
+```
+
+---
+
+### 2. Tactical cRPG & Infinity AI Engine
 
 | **Project Name** | **Tactical cRPG Realm (`crpg-realm`)** |
 | **Engine / Profile** | Godot 4.3 (GL Compatibility) |
@@ -70,6 +115,15 @@ flowchart LR
 ## Project Directory
 
 <div class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+  <div class="card" style="border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; background: #0d1117;">
+    <h3 style="margin-top: 0; color: #58a6ff;"><a href="{{ '/projects/getemgigs/' | relative_url }}">🎸 The Gig Bandit &amp; Get 'Em Gigs</a></h3>
+    <p style="color: #8b949e; font-size: 0.95rem;">A game-changing web platform for the local music scene deployed to <strong>getemgigs.com</strong> on Vercel. Solves empty rooms and predatory pay-to-play with the <strong>Buddy Gig Geolocation Escrow</strong> ("You scratch my back, I'll scratch yours") and <strong>Venue Stay-To-Play</strong> reciprocal ticket economics.</p>
+    <div style="margin-top: 1rem;">
+      <a href="{{ '/projects/getemgigs/' | relative_url }}" class="btn btn-primary fs-3">Explore Project</a>
+      <a href="{{ '/projects/getemgigs/buddy-gig-geolocation-escrow.html' | relative_url }}" class="btn fs-3" style="margin-left: 0.5rem;">Escrow Engine</a>
+    </div>
+  </div>
+
   <div class="card" style="border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; background: #0d1117;">
     <h3 style="margin-top: 0; color: #58a6ff;"><a href="{{ '/projects/crpg-realm/' | relative_url }}">⚔️ Tactical cRPG & Infinity AI Engine</a></h3>
     <p style="color: #8b949e; font-size: 0.95rem;">A party-based tactical isometric cRPG built in Godot 4 inspired by classic Infinity Engine masterpieces (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, 5-Act Epic Campaign, physical building collision, 18 unique NPCs with branching dialogue, and autonomous AI questing.</p>

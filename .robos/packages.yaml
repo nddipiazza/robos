@@ -260,3 +260,8 @@ packages:
     type: "robos:Database"
     repository: "github.com/sdlc-resources-for-acme-global/component"
     technology: "Polyglot"
+  - id: "urn:robos:frontend-app:getemgigs"
+    title: "The Gig Bandit (getemgigs.com)"
+    type: "robos:FrontEndApp"
+    repository: "github.com/nddipiazza/getemgigs"
+    technology: "Next.js 15 / React 19 / TailwindCSS (Vercel + GitHub)"
