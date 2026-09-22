@@ -288,6 +288,12 @@ const BUILTIN_APPS = [
     category: 'Education',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
   },
+  {
+    appId: 'kgraph-parse-portal',
+    label: 'KGraph Parse Portal',
+    category: 'Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="8" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/><circle cx="12" cy="17" r="1.5"/><line x1="12" y1="9" x2="12" y2="3"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="8" y1="10" x2="12" y2="12"/><line x1="16" y1="10" x2="12" y2="12"/><line x1="12" y1="12" x2="12" y2="17"/></svg>'
+  },
 ];
 
 function getIcon(appId) {

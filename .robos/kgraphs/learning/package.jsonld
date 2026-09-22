@@ -771,6 +771,152 @@
       "robos:status": "issued",
       "robos:package": "learning",
       "robos:namespace": "robos.learning"
+    },
+    {
+      "@id": "urn:robos:elearning:course:kgraph-parse-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
+      ],
+      "dcterms:title": "RobOS Kgraph Parse Portal Masterclass: Heavy-Scale Ingestion, Tika gRPC, Luxir Search & Buildbarn RBE",
+      "dcterms:description": "Master heavy-scale Knowledge Graph ingestion across web resources and Linux filesystems. Learn how every Linux file maps into the KGraph with cryptographic SHA-256 evidence, disambiguate ambiguous MIME types into precise architectural contracts, stream document parsing over Apache Tika 4.0 gRPC, orchestrate Hermetiq Buildbarn Helm charts (REAPI v2) for distributed build/parse clusters, and bridge nodes into the ultra-fast Luxir C++ search index with W3C SHACL validation gates.",
+      "robos:topic": "Heavy-Scale SDLC Ingestion & Connectors Architecture",
+      "robos:difficulty": "Advanced",
+      "robos:targetAudience": "Platform Architects, DevOps Engineers, AI Agent Harness Developers, SDLC Engineers",
+      "robos:estimatedDuration": "50 minutes",
+      "robos:modulesCount": 4,
+      "robos:targetApplication": "urn:robos:app:kgraph-parse-portal",
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course",
+      "robos:status": "published",
+      "robos:modules": [
+        {
+          "id": "mod-01-linux-fs-ingestion",
+          "title": "Module 1: Universal Linux Filesystem Ingestion & Cryptographic Evidence",
+          "durationMinutes": 12,
+          "overview": "Discover how every file, device node, Unix domain socket, named pipe, systemd service, and compiled ELF binary on a Linux operating system is extracted into the RobOS Knowledge Graph with verifiable SHA-256 evidence.",
+          "labSteps": [
+            "Scan local project directory using POST /api/v1/crawl or the Portal UI",
+            "Inspect the generated robos:evidence structure containing repository, path, line, and sha256 hash",
+            "Verify Linux systemd unit and ELF executable classification"
+          ],
+          "quiz": [
+            {
+              "question": "What cryptographic evidence is attached to every ingested Linux file node in RobOS?",
+              "options": [
+                "SHA-256 content hash, repository context, relative path, and working-tree revision",
+                "MD5 checksum only",
+                "Git commit hash without line or path information",
+                "No evidence is stored to conserve disk space"
+              ],
+              "answer": "SHA-256 content hash, repository context, relative path, and working-tree revision"
+            },
+            {
+              "question": "How are Unix domain sockets and named pipes represented in the KGraph?",
+              "options": [
+                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
+                "They are ignored and discarded during filesystem scans",
+                "As plain text documents",
+                "As generic database tables"
+              ],
+              "answer": "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types"
+            }
+          ]
+        },
+        {
+          "id": "mod-02-mime-disambiguation",
+          "title": "Module 2: Contextual MIME & Directory Archetype Disambiguation",
+          "durationMinutes": 12,
+          "overview": "Learn how the RobOS disambiguation engine parses beyond raw MIME headers to classify JSON into Node manifests vs tsconfig vs OpenAPI specs, and YAML into Helm charts vs Kubernetes manifests vs CI/CD pipelines.",
+          "labSteps": [
+            "Test file classification in the MIME Disambiguation tab for package.json, Chart.yaml, and openapi.yaml",
+            "Inspect directory archetype detection across Maven, Cargo, Go, Bazel, and Godot projects",
+            "Verify W3C SHACL shape targetClass assignments"
+          ],
+          "quiz": [
+            {
+              "question": "When a YAML file contains apiVersion: and kind: Deployment, how is it classified?",
+              "options": [
+                "robos:KubernetesManifest with targetClass robos:GitOpsDeployment",
+                "robos:HelmChartDefinition",
+                "Generic text/plain document",
+                "robos:ConfigurationFile without schema validation"
+              ],
+              "answer": "robos:KubernetesManifest with targetClass robos:GitOpsDeployment"
+            },
+            {
+              "question": "What marker file signals a Bazel monorepo archetype to the directory scanner?",
+              "options": [
+                "MODULE.bazel or WORKSPACE",
+                "pom.xml",
+                "Cargo.toml",
+                "package.json"
+              ],
+              "answer": "MODULE.bazel or WORKSPACE"
+            }
+          ]
+        },
+        {
+          "id": "mod-03-tika-grpc",
+          "title": "Module 3: Apache Tika 4.0 Streaming tika-grpc Architecture",
+          "durationMinutes": 12,
+          "overview": "Examine the high-throughput, non-blocking gRPC streaming protocol between RobOS and the Apache Tika 4.0 daemon on port 50051, along with resilient offline fallback handling and multi-language AST extraction.",
+          "labSteps": [
+            "Inspect packages/kgraph-parse-portal/lib/tika-grpc-connector.js",
+            "Test AST symbol extraction across TypeScript, Python, and Protobuf files",
+            "Verify zero-downtime offline fallback when Tika daemon is offline"
+          ],
+          "quiz": [
+            {
+              "question": "What is the primary architectural advantage of streaming documents over tika-grpc?",
+              "options": [
+                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
+                "It converts all documents directly to PNG images",
+                "It requires zero network configuration",
+                "It eliminates the need for schema validation"
+              ],
+              "answer": "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes"
+            }
+          ]
+        },
+        {
+          "id": "mod-04-buildbarn-luxir",
+          "title": "Module 4: Hermetiq Buildbarn Helm Charts (RBE) & Luxir C++ Search Index",
+          "durationMinutes": 14,
+          "overview": "Deploy distributed Remote Build Execution (REAPI v2) for Bazel/Buck2 and heavy parse workers using Hermetiq Buildbarn Helm charts (oci://ghcr.io/hermetiq/buildbarn), and bridge parsed nodes into the Luxir C++ search index.",
+          "labSteps": [
+            "Generate Buildbarn Helm values.yaml using POST /api/v1/rbe/values or the Portal UI",
+            "Verify the OCI Helm registry command: helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn",
+            "Index nodes into Luxir and execute faceted sub-millisecond search queries"
+          ],
+          "quiz": [
+            {
+              "question": "What OCI registry chart is used to deploy Buildbarn Remote Build Execution in RobOS?",
+              "options": [
+                "oci://ghcr.io/hermetiq/buildbarn",
+                "docker.io/buildbarn/monolithic",
+                "helm.elastic.co/buildbarn",
+                "oci://quay.io/robos/buildbarn"
+              ],
+              "answer": "oci://ghcr.io/hermetiq/buildbarn"
+            },
+            {
+              "question": "Which REAPI v2 components are deployed by the Hermetiq Buildbarn Helm chart?",
+              "options": [
+                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
+                "PostgreSQL database and Redis cache only",
+                "Only bb-storage without a worker pool",
+                "A monolithic single-node executable"
+              ],
+              "answer": "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)"
+            }
+          ]
+        }
+      ]
     }
   ],
   "@graph": [
@@ -1459,6 +1605,152 @@
       "robos:status": "issued",
       "robos:package": "learning",
       "robos:namespace": "robos.learning"
+    },
+    {
+      "@id": "urn:robos:elearning:course:kgraph-parse-portal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ELearningCourse",
+        "robos:ELearning",
+        "schema:Course"
+      ],
+      "dcterms:title": "RobOS Kgraph Parse Portal Masterclass: Heavy-Scale Ingestion, Tika gRPC, Luxir Search & Buildbarn RBE",
+      "dcterms:description": "Master heavy-scale Knowledge Graph ingestion across web resources and Linux filesystems. Learn how every Linux file maps into the KGraph with cryptographic SHA-256 evidence, disambiguate ambiguous MIME types into precise architectural contracts, stream document parsing over Apache Tika 4.0 gRPC, orchestrate Hermetiq Buildbarn Helm charts (REAPI v2) for distributed build/parse clusters, and bridge nodes into the ultra-fast Luxir C++ search index with W3C SHACL validation gates.",
+      "robos:topic": "Heavy-Scale SDLC Ingestion & Connectors Architecture",
+      "robos:difficulty": "Advanced",
+      "robos:targetAudience": "Platform Architects, DevOps Engineers, AI Agent Harness Developers, SDLC Engineers",
+      "robos:estimatedDuration": "50 minutes",
+      "robos:modulesCount": 4,
+      "robos:targetApplication": "urn:robos:app:kgraph-parse-portal",
+      "robos:package": "learning",
+      "robos:namespace": "robos.learning",
+      "robos:schemaOrgType": "https://schema.org/Course",
+      "robos:domainStandard": "https://schema.org/Course",
+      "robos:status": "published",
+      "robos:modules": [
+        {
+          "id": "mod-01-linux-fs-ingestion",
+          "title": "Module 1: Universal Linux Filesystem Ingestion & Cryptographic Evidence",
+          "durationMinutes": 12,
+          "overview": "Discover how every file, device node, Unix domain socket, named pipe, systemd service, and compiled ELF binary on a Linux operating system is extracted into the RobOS Knowledge Graph with verifiable SHA-256 evidence.",
+          "labSteps": [
+            "Scan local project directory using POST /api/v1/crawl or the Portal UI",
+            "Inspect the generated robos:evidence structure containing repository, path, line, and sha256 hash",
+            "Verify Linux systemd unit and ELF executable classification"
+          ],
+          "quiz": [
+            {
+              "question": "What cryptographic evidence is attached to every ingested Linux file node in RobOS?",
+              "options": [
+                "SHA-256 content hash, repository context, relative path, and working-tree revision",
+                "MD5 checksum only",
+                "Git commit hash without line or path information",
+                "No evidence is stored to conserve disk space"
+              ],
+              "answer": "SHA-256 content hash, repository context, relative path, and working-tree revision"
+            },
+            {
+              "question": "How are Unix domain sockets and named pipes represented in the KGraph?",
+              "options": [
+                "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types",
+                "They are ignored and discarded during filesystem scans",
+                "As plain text documents",
+                "As generic database tables"
+              ],
+              "answer": "As robos:LinuxSocket and robos:LinuxNamedPipe with inode/socket and inode/fifo MIME types"
+            }
+          ]
+        },
+        {
+          "id": "mod-02-mime-disambiguation",
+          "title": "Module 2: Contextual MIME & Directory Archetype Disambiguation",
+          "durationMinutes": 12,
+          "overview": "Learn how the RobOS disambiguation engine parses beyond raw MIME headers to classify JSON into Node manifests vs tsconfig vs OpenAPI specs, and YAML into Helm charts vs Kubernetes manifests vs CI/CD pipelines.",
+          "labSteps": [
+            "Test file classification in the MIME Disambiguation tab for package.json, Chart.yaml, and openapi.yaml",
+            "Inspect directory archetype detection across Maven, Cargo, Go, Bazel, and Godot projects",
+            "Verify W3C SHACL shape targetClass assignments"
+          ],
+          "quiz": [
+            {
+              "question": "When a YAML file contains apiVersion: and kind: Deployment, how is it classified?",
+              "options": [
+                "robos:KubernetesManifest with targetClass robos:GitOpsDeployment",
+                "robos:HelmChartDefinition",
+                "Generic text/plain document",
+                "robos:ConfigurationFile without schema validation"
+              ],
+              "answer": "robos:KubernetesManifest with targetClass robos:GitOpsDeployment"
+            },
+            {
+              "question": "What marker file signals a Bazel monorepo archetype to the directory scanner?",
+              "options": [
+                "MODULE.bazel or WORKSPACE",
+                "pom.xml",
+                "Cargo.toml",
+                "package.json"
+              ],
+              "answer": "MODULE.bazel or WORKSPACE"
+            }
+          ]
+        },
+        {
+          "id": "mod-03-tika-grpc",
+          "title": "Module 3: Apache Tika 4.0 Streaming tika-grpc Architecture",
+          "durationMinutes": 12,
+          "overview": "Examine the high-throughput, non-blocking gRPC streaming protocol between RobOS and the Apache Tika 4.0 daemon on port 50051, along with resilient offline fallback handling and multi-language AST extraction.",
+          "labSteps": [
+            "Inspect packages/kgraph-parse-portal/lib/tika-grpc-connector.js",
+            "Test AST symbol extraction across TypeScript, Python, and Protobuf files",
+            "Verify zero-downtime offline fallback when Tika daemon is offline"
+          ],
+          "quiz": [
+            {
+              "question": "What is the primary architectural advantage of streaming documents over tika-grpc?",
+              "options": [
+                "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes",
+                "It converts all documents directly to PNG images",
+                "It requires zero network configuration",
+                "It eliminates the need for schema validation"
+              ],
+              "answer": "Zero-copy streaming over HTTP/2 prevents workstation memory leaks and isolates parser crashes"
+            }
+          ]
+        },
+        {
+          "id": "mod-04-buildbarn-luxir",
+          "title": "Module 4: Hermetiq Buildbarn Helm Charts (RBE) & Luxir C++ Search Index",
+          "durationMinutes": 14,
+          "overview": "Deploy distributed Remote Build Execution (REAPI v2) for Bazel/Buck2 and heavy parse workers using Hermetiq Buildbarn Helm charts (oci://ghcr.io/hermetiq/buildbarn), and bridge parsed nodes into the Luxir C++ search index.",
+          "labSteps": [
+            "Generate Buildbarn Helm values.yaml using POST /api/v1/rbe/values or the Portal UI",
+            "Verify the OCI Helm registry command: helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn",
+            "Index nodes into Luxir and execute faceted sub-millisecond search queries"
+          ],
+          "quiz": [
+            {
+              "question": "What OCI registry chart is used to deploy Buildbarn Remote Build Execution in RobOS?",
+              "options": [
+                "oci://ghcr.io/hermetiq/buildbarn",
+                "docker.io/buildbarn/monolithic",
+                "helm.elastic.co/buildbarn",
+                "oci://quay.io/robos/buildbarn"
+              ],
+              "answer": "oci://ghcr.io/hermetiq/buildbarn"
+            },
+            {
+              "question": "Which REAPI v2 components are deployed by the Hermetiq Buildbarn Helm chart?",
+              "options": [
+                "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)",
+                "PostgreSQL database and Redis cache only",
+                "Only bb-storage without a worker pool",
+                "A monolithic single-node executable"
+              ],
+              "answer": "bb-storage (CAS/AC), bb-scheduler (queue), bb-worker (runners), and bb-frontend (REAPI endpoint)"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

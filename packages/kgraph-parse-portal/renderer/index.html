@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS KGraph Parse Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="3"/>
+            <circle cx="8" cy="10" r="1.5"/>
+            <circle cx="16" cy="10" r="1.5"/>
+            <circle cx="12" cy="17" r="1.5"/>
+            <line x1="12" y1="9" x2="12" y2="3"/>
+            <line x1="12" y1="15" x2="12" y2="21"/>
+            <line x1="8" y1="10" x2="12" y2="12"/>
+            <line x1="16" y1="10" x2="12" y2="12"/>
+            <line x1="12" y1="12" x2="12" y2="17"/>
+          </svg>
+        </div>
+        <div class="header-title-box">
+          <h1 class="header-title">RobOS Kgraph Parse Portal</h1>
+          <span class="header-subtitle">Heavy-Scale Connectors • Apache Tika 4.0 gRPC • Luxir Search • Hermetiq Buildbarn RBE</span>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="status-badge" id="badge-tika"><span class="dot"></span> Tika gRPC</span>
+        <span class="status-badge" id="badge-luxir"><span class="dot"></span> Luxir Index</span>
+        <span class="status-badge" id="badge-rbe"><span class="dot"></span> Buildbarn RBE</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-crawler">Filesystem Crawler & Ingestion</button>
+      <button class="tab-btn" data-tab="tab-classifier">MIME & Archetype Disambiguation</button>
+      <button class="tab-btn" data-tab="tab-search">Luxir Search Explorer</button>
+      <button class="tab-btn" data-tab="tab-rbe">Hermetiq Buildbarn RBE</button>
+      <button class="tab-btn" data-tab="tab-doc">Documentation & Living Specs</button>
+    </nav>
+
+    <!-- Main Content Panes -->
+    <main class="content-area">
+      <!-- Tab 1: Crawler & Ingestion -->
+      <section id="tab-crawler" class="tab-pane active">
+        <div class="pane-grid">
+          <div class="panel panel-left">
+            <h2 class="panel-heading">Crawl & Extract Knowledge Graph</h2>
+            <p class="panel-desc">Any file or directory on a Linux OS maps into the RobOS Knowledge Graph with SHA-256 evidence.</p>
+            
+            <div class="form-group">
+              <label for="crawl-path">Target Linux Filesystem Path:</label>
+              <div class="input-row">
+                <input type="text" id="crawl-path" placeholder="/home/ndipiazza/source/robos" class="form-input" value="/home/ndipiazza/source/robos/packages/kgraph-parse-portal">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="crawl-depth">Max Depth:</label>
+                <input type="number" id="crawl-depth" value="5" min="1" max="20" class="form-input">
+              </div>
+              <div class="form-group flex-1">
+                <label for="crawl-package">Target Package:</label>
+                <select id="crawl-package" class="form-input">
+                  <option value="core-platform">core-platform</option>
+                  <option value="applications">applications</option>
+                  <option value="services">services</option>
+                  <option value="devops">devops</option>
+                  <option value="organization">organization</option>
+                  <option value="learning">learning</option>
+                  <option value="documentation">documentation</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="btn-group">
+              <button id="btn-crawl" class="btn btn-primary">Scan & Extract Nodes</button>
+              <button id="btn-ingest" class="btn btn-secondary">Commit to RobOS KGraph</button>
+            </div>
+
+            <hr class="divider">
+
+            <h3 class="sub-heading">Or Parse Single Document / Snippet</h3>
+            <div class="form-group">
+              <label for="parse-filename">Virtual File Name:</label>
+              <input type="text" id="parse-filename" placeholder="api-contract.proto" class="form-input" value="pet-service.proto">
+            </div>
+            <div class="form-group">
+              <label for="parse-content">File / Specification Content:</label>
+              <textarea id="parse-content" rows="6" class="form-textarea" placeholder="syntax = 'proto3'; service PetStore { rpc GetPet(PetRequest) returns (PetResponse); }"></textarea>
+            </div>
+            <button id="btn-parse-doc" class="btn btn-outline">Parse Document via Tika gRPC</button>
+          </div>
+
+          <div class="panel panel-right">
+            <div class="panel-header-row">
+              <h2 class="panel-heading">Extracted KGraph Nodes (JSON-LD)</h2>
+              <span id="crawler-stats" class="stats-counter">0 nodes ready</span>
+            </div>
+            <div id="archetype-banner" class="archetype-banner hidden">
+              <span class="archetype-label">Detected Archetype:</span>
+              <strong id="archetype-name">-</strong>
+              <span id="archetype-details" class="archetype-details"></span>
+            </div>
+            <pre id="jsonld-viewer" class="code-viewer"><code>// Run scan or parse to inspect extracted RDF/JSON-LD nodes...</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: MIME & Archetype Classifier -->
+      <section id="tab-classifier" class="tab-pane">
+        <div class="panel">
+          <h2 class="panel-heading">Linux Filesystem & MIME Disambiguation Matrix</h2>
+          <p class="panel-desc">A single MIME type or extension carries wildly distinct semantic implications in enterprise software development. RobOS automatically disambiguates them into exact architectural nodes.</p>
+
+          <div class="classifier-demo-box">
+            <label>Test Filename / Virtual Path:</label>
+            <div class="input-row">
+              <input type="text" id="test-classify-input" class="form-input" value="openapi.yaml" placeholder="e.g. package.json, Chart.yaml, /dev/sda1, auth.service, pet.proto">
+              <button id="btn-test-classify" class="btn btn-primary">Classify File</button>
+            </div>
+            <div id="classify-result" class="classify-result-card hidden">
+              <div class="result-row"><span>Semantic KGraph Type:</span> <strong id="res-semantic-type" class="cyan-text">-</strong></div>
+              <div class="result-row"><span>Target SHACL Class:</span> <code id="res-target-class">-</code></div>
+              <div class="result-row"><span>Raw MIME Type:</span> <span id="res-raw-mime">-</span></div>
+              <div class="result-row"><span>Semantic Role:</span> <span id="res-role">-</span></div>
+            </div>
+          </div>
+
+          <h3 class="sub-heading mt-4">Built-in Semantic Mapping Rules</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Pattern / Path</th>
+                  <th>Raw MIME</th>
+                  <th>Semantic Meaning</th>
+                  <th>Target KGraph Shape</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>package.json</code></td><td>application/json</td><td>Node.js Manifest & Dependencies</td><td><code>robos:SourceArtifact</code></td></tr>
+                <tr><td><code>openapi.yaml</code> / <code>*.json</code></td><td>text/yaml</td><td>REST API Contract (OpenAPI 3.1)</td><td><code>robos:Contract</code></td></tr>
+                <tr><td><code>*.proto</code></td><td>text/x-protobuf</td><td>gRPC Protobuf Microservice Contract</td><td><code>robos:ProtobufContract</code></td></tr>
+                <tr><td><code>Chart.yaml</code></td><td>application/x-yaml</td><td>Kubernetes Helm Chart Metadata</td><td><code>robos:GitOpsDeployment</code></td></tr>
+                <tr><td><code>*.service</code></td><td>text/plain</td><td>Linux Systemd Service Daemon</td><td><code>robos:SystemdService</code></td></tr>
+                <tr><td><code>ELF Executable</code></td><td>application/x-executable</td><td>Linux Native Compiled Binary</td><td><code>robos:BinaryExecutable</code></td></tr>
+                <tr><td><code>project.godot</code></td><td>text/plain</td><td>Godot 4 Game Engine Manifest</td><td><code>robos:PCGame</code></td></tr>
+                <tr><td><code>MODULE.bazel</code></td><td>text/plain</td><td>Bazel Distributed Build Workspace</td><td><code>robos:BuildSystem</code></td></tr>
+                <tr><td><code>pom.xml</code></td><td>application/xml</td><td>Maven JVM Microservice Project</td><td><code>robos:Microservice</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Luxir Search Explorer -->
+      <section id="tab-search" class="tab-pane">
+        <div class="panel">
+          <div class="panel-header-row">
+            <div>
+              <h2 class="panel-heading">Luxir Hybrid Search Index Explorer</h2>
+              <p class="panel-desc">Query indexed source artifacts, contracts, and projects via high-performance C++ Luxir engine.</p>
+            </div>
+            <div class="luxir-stats-tag" id="luxir-index-count">0 items indexed</div>
+          </div>
+
+          <div class="search-bar-box">
+            <input type="text" id="search-query" class="form-input search-input" placeholder="Search by title, path, protocol, AST symbol, or keyword...">
+            <button id="btn-search" class="btn btn-primary">Search Index</button>
+          </div>
+
+          <div class="search-facets">
+            <div class="facet-pill active" data-filter="">All Items</div>
+            <div class="facet-pill" data-filter="Contract">Contracts (OpenAPI/gRPC)</div>
+            <div class="facet-pill" data-filter="Microservice">Microservices</div>
+            <div class="facet-pill" data-filter="SourceArtifact">Source Files</div>
+            <div class="facet-pill" data-filter="DocumentationPage">Living Docs</div>
+          </div>
+
+          <div id="search-results-list" class="search-results-list">
+            <div class="empty-state">No search results yet. Perform a scan in the Crawler tab or search above.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Hermetiq Buildbarn RBE -->
+      <section id="tab-rbe" class="tab-pane">
+        <div class="pane-grid">
+          <div class="panel panel-left">
+            <h2 class="panel-heading">Hermetiq Buildbarn Helm Integration</h2>
+            <p class="panel-desc">Deploy and orchestrate distributed Remote Build Execution (REAPI v2) for Bazel, Buck2, and KGraph Parse Portal workers from <code>oci://ghcr.io/hermetiq/buildbarn</code>.</p>
+
+            <div class="form-group">
+              <label for="rbe-cluster-name">RBE Cluster Name:</label>
+              <input type="text" id="rbe-cluster-name" class="form-input" value="robos-buildbarn-rbe">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="rbe-replicas">Replicas:</label>
+                <input type="number" id="rbe-replicas" class="form-input" value="2" min="1" max="10">
+              </div>
+              <div class="form-group flex-1">
+                <label for="rbe-storage">CAS Storage Size:</label>
+                <input type="text" id="rbe-storage" class="form-input" value="100Gi">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="rbe-endpoint">REAPI v2 Frontend Endpoint:</label>
+              <input type="text" id="rbe-endpoint" class="form-input" value="127.0.0.1:8980">
+            </div>
+
+            <div class="btn-group">
+              <button id="btn-generate-helm" class="btn btn-primary">Generate Helm Values</button>
+              <button id="btn-probe-rbe" class="btn btn-secondary">Probe Cluster Health</button>
+              <button id="btn-register-rbe-node" class="btn btn-outline">Register in KGraph</button>
+            </div>
+
+            <div id="rbe-probe-result" class="probe-result-box hidden"></div>
+          </div>
+
+          <div class="panel panel-right">
+            <h2 class="panel-heading">Generated Helm Chart Configuration</h2>
+            <p class="panel-desc">OCI Target: <code>oci://ghcr.io/hermetiq/buildbarn</code></p>
+            <pre id="rbe-helm-viewer" class="code-viewer"><code># Click "Generate Helm Values" to view customized Buildbarn values.yaml...</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 5: Documentation -->
+      <section id="tab-doc" class="tab-pane">
+        <div class="panel">
+          <h2 class="panel-heading">RobOS KGraph Parse Portal Architecture</h2>
+          <div class="doc-markdown-body">
+            <h3>Overview</h3>
+            <p>The <strong>RobOS Kgraph Parse Portal</strong> is a heavy-scale connectors webapp and headless ingestion portal designed to map any Linux filesystem resource or web document into the validated Dual-State Knowledge Graph.</p>
+            
+            <h3>Core Capabilities</h3>
+            <ul>
+              <li><strong>Linux Filesystem Ingestion</strong>: Every file on a Linux OS (executables, shared libraries, systemd services, Unix domain sockets, named pipes, device nodes, source code) finds representation in the KGraph with cryptographically verifiable <code>robos:evidence</code> (SHA-256 hash, relative path, working-tree revision).</li>
+              <li><strong>MIME Disambiguation</strong>: Contextual disambiguation of ambiguous MIME types (e.g. <code>application/json</code> into Node.js manifests vs TypeScript configs vs OpenAPI specs vs JSON-LD graphs; YAML into Helm charts vs Kubernetes manifests vs CI/CD pipelines).</li>
+              <li><strong>Apache Tika 4.0 Streaming gRPC</strong>: Native integration with <code>tika-grpc</code> for document extraction, AST symbol identification, and polyglot text extraction with resilient offline fallbacks.</li>
+              <li><strong>Hermetiq Buildbarn Helm RBE</strong>: Orchestrates remote build execution clusters via <code>oci://ghcr.io/hermetiq/buildbarn</code> for high-throughput Bazel/Buck2 builds and heavy parse worker distribution.</li>
+              <li><strong>Luxir Search Index</strong>: Bridges parsed KGraph nodes to the C++ Luxir search index for sub-millisecond full-text and faceted search queries.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

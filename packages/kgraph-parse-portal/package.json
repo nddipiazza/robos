@@ -1,0 +1,22 @@
+{
+  "name": "kgraph-parse-portal",
+  "version": "1.0.0",
+  "description": "RobOS Kgraph Parse Portal - Heavy-scale connectors webapp & headless parsing portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server.js",
+    "electron": "electron .",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "robos",
+    "knowledge-graph",
+    "tika-grpc",
+    "luxir",
+    "buildbarn",
+    "rbe",
+    "connectors"
+  ],
+  "author": "RobOS Core Platform Team",
+  "license": "Apache-2.0"
+}

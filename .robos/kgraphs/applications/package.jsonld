@@ -283,6 +283,36 @@
       "robos:hasCertificate": [
         "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
       ]
+    },
+    {
+      "@id": "urn:robos:app:kgraph-parse-portal",
+      "@type": [
+        "robos:DesktopApp",
+        "robos:FrontEndApp",
+        "schema:SoftwareApplication",
+        "schema:WebApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "RobOS Kgraph Parse Portal",
+      "dcterms:description": "Universal connectors webapp and desktop portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC",
+      "robos:desktopFramework": "Electron",
+      "robos:frontendFramework": "Vanilla JS",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:apiPort": 19192,
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:hasELearning": [
+        "urn:robos:elearning:course:kgraph-parse-portal"
+      ],
+      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal"
     }
   ],
   "@graph": [
@@ -483,6 +513,36 @@
       "robos:hasCertificate": [
         "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
       ]
+    },
+    {
+      "@id": "urn:robos:app:kgraph-parse-portal",
+      "@type": [
+        "robos:DesktopApp",
+        "robos:FrontEndApp",
+        "schema:SoftwareApplication",
+        "schema:WebApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "RobOS Kgraph Parse Portal",
+      "dcterms:description": "Universal connectors webapp and desktop portal fronting Luxir search index, Hermetiq Buildbarn Helm charts (RBE), and Apache Tika 4.0 streaming tika-grpc.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:technology": "Electron / Express / Luxir / Buildbarn / Tika gRPC",
+      "robos:desktopFramework": "Electron",
+      "robos:frontendFramework": "Vanilla JS",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
+      "robos:apiPort": 19192,
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:robos-kgraph-parse-portal",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:hasELearning": [
+        "urn:robos:elearning:course:kgraph-parse-portal"
+      ],
+      "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal"
     }
   ]
 }
