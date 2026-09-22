@@ -24,42 +24,10 @@ A technical guide explaining how RobOS autonomously models, scaffolds, ingests a
 
 Creating a complex video game from scratch is notoriously prone to hallucination, spaghetti code, and asset mismatches when driven by raw LLM prompts. **RobOS replaces naive prompting with a 4-phase Knowledge Graph-First generation pipeline**:
 
-```mermaid
-graph TD
-    subgraph "Phase 1: Ontological Modeling"
-        KG["Knowledge Graph Entity<br/><i>robos:PCGame & schema:VideoGame</i>"]
-        SHACL["W3C SHACL Shapes<br/><i>PCGameShape, MonsterShape, SpellShape</i>"]
-    end
-
-    subgraph "Phase 2: Schema & Data Layer"
-        JSONS["JSON Schemas (schemas/v1/)"]
-        DATA["Game Datasets (data/v1/)<br/><i>classes, races, spells, items, monsters, npcs</i>"]
-        GEN["GDScript Model Generator<br/><i>generate-schema-classes.sh</i>"]
-    end
-
-    subgraph "Phase 3: Open-Source Asset Harvesting"
-        FLARE["Flare RPG & OpenGameArt Assets<br/><i>CC-BY-SA / CC0</i>"]
-        SLICE["Texture Slicing & Walk Cycle Assembly"]
-        MAPS["2560x1440 Pre-rendered Environments"]
-    end
-
-    subgraph "Phase 4: Scene & Systems Composition"
-        GODOT["Godot 4.3 Engine (Compatibility Profile)"]
-        SCENE["Node2D / StaticBody2D / Area2D Scenes"]
-        RTWP["RTwP Combat, Fog of War, Activity Log"]
-    end
-
-    KG --> JSONS
-    SHACL --> JSONS
-    JSONS --> DATA
-    DATA --> GEN
-    GEN --> GODOT
-    FLARE --> SLICE
-    SLICE --> MAPS
-    MAPS --> SCENE
-    SCENE --> GODOT
-    GODOT --> RTWP
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/crpg-realm/game_generation_paradigm.png' | relative_url }}" alt="The RobOS Game Generation Paradigm" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 1: The 4-Phase RobOS Knowledge Graph-First Game Generation Pipeline: Ontological Modeling &rarr; Schema &amp; Data Layer &rarr; Open-Source Asset Harvesting &rarr; Scene &amp; Systems Composition.</em></p>
+</div>
 
 ---
 

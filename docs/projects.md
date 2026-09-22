@@ -43,20 +43,20 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Verification Score** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
 
 ```mermaid
-graph LR
-    subgraph "Knowledge Graph & Schemas"
+flowchart LR
+    subgraph KG_LAYER ["Knowledge Graph and Schemas"]
         KG["crpg_game_v1.schema.json"] --> DS["data/v1/ (Classes, Spells, Monsters, NPCs)"]
         DS --> GD["src/generated/v1/DataStoreV1.gd"]
     end
 
-    subgraph "Godot 4.3 Runtime Engine"
+    subgraph ENGINE_LAYER ["Godot 4.3 Runtime Engine"]
         GD --> World["5-Act Epic Campaign Scenes"]
         World --> RTwP["RTwP Combat & Round Timer (6.0s)"]
         World --> Phys["StaticBody2D Colliders & Pathfinder.gd"]
         World --> ActLog["3-Mode Infinity Engine Activity Log"]
     end
 
-    subgraph "Autonomous QA & Verification"
+    subgraph QA_LAYER ["Autonomous QA and Verification"]
         HTTP["GameControlServer (HTTP :18090)"] <--> AI["Infinity AI Agent (qa_player)"]
         AI --> BDD["Cucumber BDD Scenarios (17 Features)"]
         BDD --> Video["1080p Video Proof-of-Work (FFmpeg + Xvfb)"]
