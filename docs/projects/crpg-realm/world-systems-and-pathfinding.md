@@ -51,15 +51,10 @@ All structures use `StaticBody2D` with `collision_layer = 1` and `collision_mask
 
 To prevent party members from getting stuck against solid walls, the navigation system employs a dual-tier pathfinding algorithm:
 
-```mermaid
-graph TD
-    Start["Party Click / AI Move Command"] --> Direct{"Direct Line-of-Sight Clear?<br/><i>Physics Raycast on Layer 1</i>"}
-    Direct -- Yes --> StraightLine["Move Directly to Target"]
-    Direct -- No --> NavGraph["Query NavPoints & Visibility Graph<br/><i>get_nav_points()</i>"]
-    NavGraph --> AStar["A* Shortest Path through Corridors"]
-    AStar --> Queue["Populate Hero waypoint_queue"]
-    Queue --> Smooth["Execute Smooth Movement & Arrival Bursts"]
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/crpg-realm/pathfinder_obstacle_avoidance.jpg' | relative_url }}" alt="2D Obstacle-Avoidance Pathfinding Architecture & A* Visibility Graph" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d; box-shadow: 0 4px 24px rgba(0,0,0,0.5);" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 2: Dual-tier obstacle-avoidance pathfinding: Layer 1 physics raycast detects solid building collision footprints and routes heroes through safe A* corridor waypoints.</em></p>
+</div>
 
 ### Safe Village Corridor Waypoints
 `VillageSquare.gd:get_nav_points()` provides guaranteed traversable waypoints through the town:
@@ -93,7 +88,7 @@ The realm features 18 fully scripted NPCs with branching dialogue trees defined 
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}" alt="In-Log Branching Dialogue" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 2: In-log dialogue tree with numbered responses, journal quest updates, and auto-facing.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 3: In-log dialogue tree with numbered responses, journal quest updates, and auto-facing.</em></p>
 </div>
 
 ### Dynamic NPC Facing Behavior
@@ -108,11 +103,11 @@ Unexplored areas of the map are shrouded in darkness using a hardware-accelerate
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
   <div>
     <img src="{{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}" alt="Fog of War Vision Reveal" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-    <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 3: Fog of War revealing terrain around the party hero and companion light sources.</em></p>
+    <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 4: Fog of War revealing terrain around the party hero and companion light sources.</em></p>
   </div>
   <div>
     <img src="{{ '/assets/images/crpg-realm/shopkeeper_trading_economy.png' | relative_url }}" alt="Shopkeeper Trading Economy" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-    <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 4: Shopkeeper economy window with dual party/merchant inventory grids and gold balances.</em></p>
+    <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 5: Shopkeeper economy window with dual party/merchant inventory grids and gold balances.</em></p>
   </div>
 </div>
 
@@ -130,5 +125,5 @@ Unexplored areas of the map are shrouded in darkness using a hardware-accelerate
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/crpg-realm/epic_campaign_victory.png' | relative_url }}" alt="Campaign Victory Climax" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 5: The climax of the epic campaign: Captain Malakor is vanquished, the crypt is sealed, and the realm is saved.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 6: The climax of the epic campaign: Captain Malakor is vanquished, the crypt is sealed, and the realm is saved.</em></p>
 </div>
