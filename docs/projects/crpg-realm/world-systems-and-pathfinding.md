@@ -29,15 +29,21 @@ In earlier 2D RPG implementations, buildings were often simple background drawin
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 1: Party navigating through safe street corridors between Farmer Giles' Cottage, Miller Hob's post, and stone ramparts with waypoint line telemetry.</em></p>
 </div>
 
-### Building Structures in Oakhaven Village:
-- **`The Rusty Dragon Inn` (`HouseInn`)**: `400×160` footprint at `Vector2(700, 480)`.
-- **`Brand's Forge & Armory` (`HouseBlacksmith`)**: `420×150` footprint at `Vector2(1180, 660)`.
-- **`Maybelle's Remedies` (`HouseApothecary`)**: `300×180` footprint at `Vector2(380, 500)`.
-- **`Oakhaven Town Hall` (`HouseTownHall`)**: `360×180` footprint at `Vector2(1650, 460)`.
-- **`Farmer Giles' Cottage` (`HouseCottage`)**: `380×150` footprint at `Vector2(720, 960)`.
-- **Stone Ramparts (`WallNorthLeft` & `WallNorthRight`)**: `380×80` solid stone masonry flanking the garrison gate.
+### Building Structures in Oakhaven Village (2560×1440 Pre-Rendered Plate):
+- **`The Rusty Dragon Inn` (`HouseInn`, `door-id-inn`)**: `360×180` two-story Tudor timber tavern footprint at `Vector2(410, 640)`.
+- **`Oakhaven Town Hall & Guildhouse` (`HouseTownHall`, `door-id-townhall`)**: `320×260` stone clock-tower civic hall at `Vector2(1090, 330)`.
+- **`Brand's Forge & Armory` (`HouseBlacksmith`, `door-id-blacksmith`)**: `220×140` stone forge with outdoor glowing furnace & anvil at `Vector2(1520, 460)`.
+- **`Maybelle's Remedies & Garden` (`HouseApothecary`, `door-id-apothecary`)**: `280×140` thatched apothecary with flower garden fence at `Vector2(1810, 600)`.
+- **`Farmer Giles' Thatched Cottage` (`HouseCottage`, `door-id-farmhouse`)**: `240×190` rustic farm cottage at `Vector2(140, 1120)`.
+- **`Elder Martha's Cottage` (`HouseElderCottage`, `door-id-elder`)**: `280×180` thatched cottage at `Vector2(670, 1340)`.
+- **`Royal Guard Barracks` (`HouseBarracks`, `door-id-barracks`)**: `340×220` garrison quarters at `Vector2(1620, 1250)`.
+- **`Ranger Kaelen's Lodge` (`HouseRangerLodge`, `door-id-ranger`)**: `320×200` woodland outpost lodge at `Vector2(1990, 990)`.
+- **`Sister Althea's Shrine of Light` (`HouseShrine`, `door-id-shrine`)**: `240×200` stone chapel with stained-glass rose window at `Vector2(2310, 340)`.
+- **`Miller Hob's Windmill & Granary` (`HouseMill`, `door-id-mill`)**: Hilltop windmill and granary silo at `Vector2(2330, 130)`.
+- **`Royal Garrison Gate & Northern Ramparts` (`GarrisonGate`, `door-id-1`)**: Massive stone gatehouse with iron portcullis at `Vector2(1280, 220)`.
+- **`Central Fountain & Market Plaza`**: Stone fountain pool (`radius 50.0` at `Vector2(1150, 660)`) flanked by 5 active market stalls.
 
-All structures use `StaticBody2D` with `collision_layer = 1` and `collision_mask = 1`, blocking all character movement vectors.
+All structures use `StaticBody2D` with `collision_layer = 1` and `collision_mask = 1`, physically blocking character movement vectors.
 
 ---
 
@@ -57,11 +63,11 @@ graph TD
 
 ### Safe Village Corridor Waypoints
 `VillageSquare.gd:get_nav_points()` provides guaranteed traversable waypoints through the town:
-- **Southern Plaza Trail**: `(500, 1200)` to `(800, 1200)`
-- **Central Thoroughfare**: `(1280, 1100)` to `(1280, 750)`
-- **Apothecary / Inn Alley**: `(540, 520)` to `(540, 680)`
-- **Town Hall Eastern Plaza**: `(1850, 540)` to `(2100, 750)`
-- **Garrison Gate Approach**: `(1280, 320)` to `(1280, 200)`
+- **Southern Plaza Trail**: `(240, 1210)` through `(1280, 1180)` connecting cottages and southern gate
+- **Central Thoroughfare & Fountain Ring**: `(950, 660)` to `(1280, 850)` circling the fountain and market stalls
+- **West Tavern / Inn Approach**: `(470, 750)` to `(750, 750)`
+- **Apothecary & Eastern Road**: `(1450, 820)` through `(2420, 780)` to Whispering Forest
+- **Citadel Ramparts & Garrison Gate**: `(1280, 480)` to `(1280, 240)`
 
 When the player or AI issues a movement order across town, `Pathfinder.gd` calculates intermediate waypoints avoiding all house bounding boxes.
 

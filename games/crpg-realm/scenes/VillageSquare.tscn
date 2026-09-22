@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://village01"]
+[gd_scene load_steps=43 format=3 uid="uid://village01"]
 
 [ext_resource type="Script" path="res://scripts/VillageSquare.gd" id="1_vs"]
 [ext_resource type="Script" path="res://scripts/ClickableObject.gd" id="2_co"]
@@ -16,12 +16,6 @@
 [ext_resource type="PackedScene" path="res://scenes/components/SettingsModal.tscn" id="16_sm"]
 [ext_resource type="PackedScene" path="res://scenes/components/FogOfWar.tscn" id="17_fow"]
 [ext_resource type="PackedScene" path="res://scenes/components/CharacterStatusWindow.tscn" id="18_csw"]
-[ext_resource type="Texture2D" path="res://assets/structures/building_inn.png" id="19_inn"]
-[ext_resource type="Texture2D" path="res://assets/structures/building_blacksmith.png" id="20_bsm"]
-[ext_resource type="Texture2D" path="res://assets/structures/building_apothecary.png" id="21_apo"]
-[ext_resource type="Texture2D" path="res://assets/structures/building_townhall.png" id="22_twh"]
-[ext_resource type="Texture2D" path="res://assets/structures/building_cottage1.png" id="23_cot"]
-[ext_resource type="Texture2D" path="res://assets/structures/stone_wall_section.png" id="24_wal"]
 [ext_resource type="PackedScene" path="res://scenes/components/NPCCharacter.tscn" id="25_npc"]
 [ext_resource type="PackedScene" path="res://scenes/components/GroundItem.tscn" id="26_itm"]
 [ext_resource type="Texture2D" path="res://assets/icons/potions/potion_healing.png" id="27_pot"]
@@ -30,38 +24,74 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_box"]
 size = Vector2(90, 90)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(70, 70)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_border_v"]
 size = Vector2(60, 1440)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_wall"]
-size = Vector2(1000, 100)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_wall_left"]
+size = Vector2(540, 240)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_south_wall"]
-size = Vector2(1000, 80)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate_tower"]
+size = Vector2(50, 160)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_tree"]
-radius = 42.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_wall_mid"]
+size = Vector2(180, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_wall_right"]
+size = Vector2(1210, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_south_wall_left"]
+size = Vector2(500, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_south_wall_right"]
+size = Vector2(1200, 80)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fountain"]
+radius = 50.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_anvil"]
-radius = 22.0
+radius = 20.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stall"]
+size = Vector2(80, 50)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house_inn"]
-size = Vector2(400, 160)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_smith"]
-size = Vector2(420, 150)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_apo"]
-size = Vector2(300, 180)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_town"]
 size = Vector2(360, 180)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_cot"]
-size = Vector2(380, 150)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_town"]
+size = Vector2(320, 260)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_stone_wall"]
-size = Vector2(380, 80)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_smith"]
+size = Vector2(220, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_apo"]
+size = Vector2(280, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fence_apo"]
+size = Vector2(260, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_cot"]
+size = Vector2(240, 190)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_elder"]
+size = Vector2(280, 180)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_barracks"]
+size = Vector2(340, 220)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_ranger"]
+size = Vector2(320, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_shrine"]
+size = Vector2(240, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_mill"]
+size = Vector2(130, 130)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_silo"]
+size = Vector2(90, 110)
 
 [node name="VillageSquare" type="Node2D"]
 y_sort_enabled = true
@@ -90,58 +120,76 @@ position = Vector2(2530, 720)
 shape = SubResource("RectangleShape2D_border_v")
 
 [node name="NorthWallLeft" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(550, 50)
-shape = SubResource("RectangleShape2D_north_wall")
+position = Vector2(270, 120)
+shape = SubResource("RectangleShape2D_north_wall_left")
+
+[node name="NorthGateTowerLeft" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(565, 160)
+shape = SubResource("RectangleShape2D_gate_tower")
+
+[node name="NorthGateTowerRight" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(715, 160)
+shape = SubResource("RectangleShape2D_gate_tower")
+
+[node name="NorthWallMid" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(830, 170)
+shape = SubResource("RectangleShape2D_north_wall_mid")
 
 [node name="NorthWallRight" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(2010, 50)
-shape = SubResource("RectangleShape2D_north_wall")
+position = Vector2(1955, 70)
+shape = SubResource("RectangleShape2D_north_wall_right")
 
 [node name="SouthBorderLeft" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(500, 1400)
-shape = SubResource("RectangleShape2D_south_wall")
+position = Vector2(250, 1400)
+shape = SubResource("RectangleShape2D_south_wall_left")
 
 [node name="SouthBorderRight" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(2060, 1400)
-shape = SubResource("RectangleShape2D_south_wall")
+position = Vector2(1960, 1400)
+shape = SubResource("RectangleShape2D_south_wall_right")
 
-[node name="TreeLeft" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(320, 960)
-shape = SubResource("CircleShape2D_tree")
-
-[node name="TreeRight1" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(1600, 980)
-shape = SubResource("CircleShape2D_tree")
-
-[node name="TreeRight2" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(2100, 1100)
-shape = SubResource("CircleShape2D_tree")
+[node name="CentralFountain" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1150, 660)
+shape = SubResource("CircleShape2D_fountain")
 
 [node name="BlacksmithAnvil" type="CollisionShape2D" parent="VillageBoundaries"]
-position = Vector2(1140, 890)
+position = Vector2(1450, 520)
 shape = SubResource("CircleShape2D_anvil")
+
+[node name="MarketStall1" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(980, 530)
+shape = SubResource("RectangleShape2D_stall")
+
+[node name="MarketStall2" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1320, 530)
+shape = SubResource("RectangleShape2D_stall")
+
+[node name="MarketStall3" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1080, 780)
+shape = SubResource("RectangleShape2D_stall")
+
+[node name="MarketStall4" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1380, 780)
+shape = SubResource("RectangleShape2D_stall")
+
+[node name="MarketStall5" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1530, 730)
+shape = SubResource("RectangleShape2D_stall")
 
 ; ── Buildings & Physical Houses ──────────────────────────────────────────
 
 [node name="HouseInn" type="StaticBody2D" parent="."]
-position = Vector2(700, 480)
+position = Vector2(410, 640)
 collision_layer = 1
 collision_mask = 1
 
-[node name="Sprite" type="Sprite2D" parent="HouseInn"]
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("19_inn")
-offset = Vector2(0, -40)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HouseInn"]
-position = Vector2(0, 30)
 shape = SubResource("RectangleShape2D_house_inn")
 
 [node name="Label" type="Label" parent="HouseInn"]
 offset_left = -140.0
-offset_top = -170.0
+offset_top = -110.0
 offset_right = 140.0
-offset_bottom = -145.0
+offset_bottom = -85.0
 theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -149,25 +197,39 @@ theme_override_font_sizes/font_size = 14
 text = "The Rusty Dragon Inn"
 horizontal_alignment = 1
 
-[node name="HouseBlacksmith" type="StaticBody2D" parent="."]
-position = Vector2(1180, 660)
+[node name="HouseTownHall" type="StaticBody2D" parent="."]
+position = Vector2(1090, 330)
 collision_layer = 1
 collision_mask = 1
 
-[node name="Sprite" type="Sprite2D" parent="HouseBlacksmith"]
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("20_bsm")
-offset = Vector2(0, -30)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseTownHall"]
+shape = SubResource("RectangleShape2D_house_town")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseBlacksmith"]
-position = Vector2(0, 35)
-shape = SubResource("RectangleShape2D_house_smith")
-
-[node name="Label" type="Label" parent="HouseBlacksmith"]
+[node name="Label" type="Label" parent="HouseTownHall"]
 offset_left = -140.0
 offset_top = -150.0
 offset_right = 140.0
 offset_bottom = -125.0
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Oakhaven Town Hall"
+horizontal_alignment = 1
+
+[node name="HouseBlacksmith" type="StaticBody2D" parent="."]
+position = Vector2(1520, 460)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseBlacksmith"]
+shape = SubResource("RectangleShape2D_house_smith")
+
+[node name="Label" type="Label" parent="HouseBlacksmith"]
+offset_left = -140.0
+offset_top = -90.0
+offset_right = 140.0
+offset_bottom = -65.0
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -176,24 +238,22 @@ text = "Brand's Forge & Armory"
 horizontal_alignment = 1
 
 [node name="HouseApothecary" type="StaticBody2D" parent="."]
-position = Vector2(380, 500)
+position = Vector2(1810, 600)
 collision_layer = 1
 collision_mask = 1
 
-[node name="Sprite" type="Sprite2D" parent="HouseApothecary"]
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("21_apo")
-offset = Vector2(0, -50)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HouseApothecary"]
-position = Vector2(0, 50)
 shape = SubResource("RectangleShape2D_house_apo")
+
+[node name="GardenFence" type="CollisionShape2D" parent="HouseApothecary"]
+position = Vector2(0, 120)
+shape = SubResource("RectangleShape2D_fence_apo")
 
 [node name="Label" type="Label" parent="HouseApothecary"]
 offset_left = -120.0
-offset_top = -190.0
+offset_top = -90.0
 offset_right = 120.0
-offset_bottom = -165.0
+offset_bottom = -65.0
 theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -201,51 +261,19 @@ theme_override_font_sizes/font_size = 14
 text = "Maybelle's Remedies"
 horizontal_alignment = 1
 
-[node name="HouseTownHall" type="StaticBody2D" parent="."]
-position = Vector2(1650, 460)
-collision_layer = 1
-collision_mask = 1
-
-[node name="Sprite" type="Sprite2D" parent="HouseTownHall"]
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("22_twh")
-offset = Vector2(0, -60)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseTownHall"]
-position = Vector2(0, 60)
-shape = SubResource("RectangleShape2D_house_town")
-
-[node name="Label" type="Label" parent="HouseTownHall"]
-offset_left = -140.0
-offset_top = -210.0
-offset_right = 140.0
-offset_bottom = -185.0
-theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_y = 1
-theme_override_font_sizes/font_size = 14
-text = "Oakhaven Town Hall"
-horizontal_alignment = 1
-
 [node name="HouseCottage" type="StaticBody2D" parent="."]
-position = Vector2(720, 960)
+position = Vector2(140, 1120)
 collision_layer = 1
 collision_mask = 1
-
-[node name="Sprite" type="Sprite2D" parent="HouseCottage"]
-scale = Vector2(0.85, 0.85)
-texture = ExtResource("23_cot")
-offset = Vector2(0, -30)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HouseCottage"]
-position = Vector2(0, 35)
 shape = SubResource("RectangleShape2D_house_cot")
 
 [node name="Label" type="Label" parent="HouseCottage"]
-offset_left = -130.0
-offset_top = -150.0
-offset_right = 130.0
-offset_bottom = -125.0
+offset_left = -120.0
+offset_top = -115.0
+offset_right = 120.0
+offset_bottom = -90.0
 theme_override_colors/font_color = Color(0.95, 0.95, 0.8, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -253,36 +281,114 @@ theme_override_font_sizes/font_size = 14
 text = "Farmer Giles' Cottage"
 horizontal_alignment = 1
 
-; ── Stone Walls & Ramparts ──────────────────────────────────────────────
-
-[node name="WallNorthLeft" type="StaticBody2D" parent="."]
-position = Vector2(880, 200)
+[node name="HouseElderCottage" type="StaticBody2D" parent="."]
+position = Vector2(670, 1340)
 collision_layer = 1
 collision_mask = 1
 
-[node name="Sprite" type="Sprite2D" parent="WallNorthLeft"]
-scale = Vector2(0.8, 0.7)
-texture = ExtResource("24_wal")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseElderCottage"]
+shape = SubResource("RectangleShape2D_house_elder")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallNorthLeft"]
-shape = SubResource("RectangleShape2D_stone_wall")
+[node name="Label" type="Label" parent="HouseElderCottage"]
+offset_left = -120.0
+offset_top = -110.0
+offset_right = 120.0
+offset_bottom = -85.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Elder Martha's Cottage"
+horizontal_alignment = 1
 
-[node name="WallNorthRight" type="StaticBody2D" parent="."]
-position = Vector2(1680, 200)
+[node name="HouseBarracks" type="StaticBody2D" parent="."]
+position = Vector2(1620, 1250)
 collision_layer = 1
 collision_mask = 1
 
-[node name="Sprite" type="Sprite2D" parent="WallNorthRight"]
-scale = Vector2(0.8, 0.7)
-texture = ExtResource("24_wal")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseBarracks"]
+shape = SubResource("RectangleShape2D_house_barracks")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallNorthRight"]
-shape = SubResource("RectangleShape2D_stone_wall")
+[node name="Label" type="Label" parent="HouseBarracks"]
+offset_left = -120.0
+offset_top = -130.0
+offset_right = 120.0
+offset_bottom = -105.0
+theme_override_colors/font_color = Color(0.9, 0.85, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Royal Guard Barracks"
+horizontal_alignment = 1
+
+[node name="HouseRangerLodge" type="StaticBody2D" parent="."]
+position = Vector2(1990, 990)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseRangerLodge"]
+shape = SubResource("RectangleShape2D_house_ranger")
+
+[node name="Label" type="Label" parent="HouseRangerLodge"]
+offset_left = -120.0
+offset_top = -120.0
+offset_right = 120.0
+offset_bottom = -95.0
+theme_override_colors/font_color = Color(0.8, 0.95, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Ranger Kaelen's Lodge"
+horizontal_alignment = 1
+
+[node name="HouseShrine" type="StaticBody2D" parent="."]
+position = Vector2(2310, 340)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseShrine"]
+shape = SubResource("RectangleShape2D_house_shrine")
+
+[node name="Label" type="Label" parent="HouseShrine"]
+offset_left = -130.0
+offset_top = -120.0
+offset_right = 130.0
+offset_bottom = -95.0
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Sister Althea's Shrine"
+horizontal_alignment = 1
+
+[node name="HouseMill" type="StaticBody2D" parent="."]
+position = Vector2(2330, 130)
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseMill"]
+shape = SubResource("RectangleShape2D_house_mill")
+
+[node name="SiloCollision" type="CollisionShape2D" parent="HouseMill"]
+position = Vector2(-230, 20)
+shape = SubResource("RectangleShape2D_house_silo")
+
+[node name="Label" type="Label" parent="HouseMill"]
+offset_left = -110.0
+offset_top = -85.0
+offset_right = 110.0
+offset_bottom = -60.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Miller Hob's Granary"
+horizontal_alignment = 1
 
 ; ── Doors & Portals ──────────────────────────────────────────────────────
 
 [node name="GarrisonGate" type="Area2D" parent="."]
-position = Vector2(1280, 200)
+position = Vector2(1280, 220)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -295,15 +401,15 @@ required_key = "garrison-key"
 opens_quest_stage = 4
 
 [node name="Sprite" type="Sprite2D" parent="GarrisonGate"]
-scale = Vector2(0.75, 0.75)
+scale = Vector2(0.55, 0.55)
 texture = ExtResource("10_gat")
-offset = Vector2(0, -15)
+offset = Vector2(0, -10)
 
 [node name="Label" type="Label" parent="GarrisonGate"]
 offset_left = -120.0
-offset_top = -80.0
+offset_top = -75.0
 offset_right = 120.0
-offset_bottom = -55.0
+offset_bottom = -50.0
 theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -315,7 +421,7 @@ horizontal_alignment = 1
 shape = SubResource("RectangleShape2D_box")
 
 [node name="ForestGate" type="Area2D" parent="."]
-position = Vector2(2380, 780)
+position = Vector2(2420, 780)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -326,15 +432,15 @@ target_scene = "res://scenes/WhisperingForest.tscn"
 target_spawn = Vector2(180, 720)
 
 [node name="Sprite" type="Sprite2D" parent="ForestGate"]
-scale = Vector2(0.75, 0.75)
+scale = Vector2(0.55, 0.55)
 texture = ExtResource("10_gat")
-offset = Vector2(0, -15)
+offset = Vector2(0, -10)
 
 [node name="Label" type="Label" parent="ForestGate"]
 offset_left = -120.0
-offset_top = -80.0
+offset_top = -75.0
 offset_right = 120.0
-offset_bottom = -55.0
+offset_bottom = -50.0
 theme_override_colors/font_color = Color(0.6, 1, 0.7, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -346,7 +452,7 @@ horizontal_alignment = 1
 shape = SubResource("RectangleShape2D_box")
 
 [node name="DoorInn" type="Area2D" parent="."]
-position = Vector2(700, 550)
+position = Vector2(470, 750)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -355,10 +461,10 @@ door_id = "door-id-inn"
 door_name = "Tavern Door"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorInn"]
-shape = SubResource("RectangleShape2D_box")
+shape = SubResource("RectangleShape2D_door")
 
 [node name="DoorBlacksmith" type="Area2D" parent="."]
-position = Vector2(1180, 740)
+position = Vector2(1480, 550)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -367,10 +473,10 @@ door_id = "door-id-blacksmith"
 door_name = "Forge Door"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBlacksmith"]
-shape = SubResource("RectangleShape2D_box")
+shape = SubResource("RectangleShape2D_door")
 
 [node name="DoorApothecary" type="Area2D" parent="."]
-position = Vector2(380, 620)
+position = Vector2(1750, 690)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -379,10 +485,10 @@ door_id = "door-id-apothecary"
 door_name = "Apothecary Door"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorApothecary"]
-shape = SubResource("RectangleShape2D_box")
+shape = SubResource("RectangleShape2D_door")
 
 [node name="DoorTownHall" type="Area2D" parent="."]
-position = Vector2(1650, 580)
+position = Vector2(1090, 480)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -391,10 +497,10 @@ door_id = "door-id-townhall"
 door_name = "Town Hall Door"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorTownHall"]
-shape = SubResource("RectangleShape2D_box")
+shape = SubResource("RectangleShape2D_door")
 
 [node name="DoorCottage" type="Area2D" parent="."]
-position = Vector2(720, 1030)
+position = Vector2(240, 1210)
 collision_layer = 1
 collision_mask = 1
 input_pickable = true
@@ -403,7 +509,67 @@ door_id = "door-id-farmhouse"
 door_name = "Farmhouse Door"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorCottage"]
-shape = SubResource("RectangleShape2D_box")
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorElder" type="Area2D" parent="."]
+position = Vector2(670, 1250)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-elder"
+door_name = "Elder's Cottage Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorElder"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorBarracks" type="Area2D" parent="."]
+position = Vector2(1550, 1130)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-barracks"
+door_name = "Barracks Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBarracks"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorRanger" type="Area2D" parent="."]
+position = Vector2(1920, 900)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-ranger"
+door_name = "Ranger's Lodge Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorRanger"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorShrine" type="Area2D" parent="."]
+position = Vector2(2240, 440)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-shrine"
+door_name = "Shrine Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorShrine"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorMill" type="Area2D" parent="."]
+position = Vector2(2280, 220)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-mill"
+door_name = "Mill Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorMill"]
+shape = SubResource("RectangleShape2D_door")
 
 ; ── Ground Items ─────────────────────────────────────────────────────────
 
@@ -414,13 +580,13 @@ item_name = "Lesser Healing Draught"
 icon_texture = ExtResource("27_pot")
 
 [node name="GroundItem_Scroll" parent="." instance=ExtResource("26_itm")]
-position = Vector2(1380, 820)
+position = Vector2(1280, 920)
 item_id = "item-id-scroll"
 item_name = "Scroll of Arcane Blast"
 icon_texture = ExtResource("28_scr")
 
 [node name="GroundItem_Sword" parent="." instance=ExtResource("26_itm")]
-position = Vector2(1240, 890)
+position = Vector2(1220, 890)
 item_id = "item-id-iron-sword"
 item_name = "Militia Shortsword"
 
@@ -465,77 +631,77 @@ horizontal_alignment = 1
 shape = SubResource("RectangleShape2D_box")
 
 [node name="NPC_Innkeeper" parent="." instance=ExtResource("25_npc")]
-position = Vector2(650, 580)
+position = Vector2(520, 770)
 npc_id = "npc-id-innkeeper"
 npc_name = "Barkeep Corwin"
 custom_sprite_path = "res://assets/sprites/npcs/npc_trader.png"
 portrait_path = "res://assets/portraits/portrait_male01.png"
 
 [node name="NPC_Guildmaster" parent="." instance=ExtResource("25_npc")]
-position = Vector2(1600, 630)
+position = Vector2(1050, 500)
 npc_id = "npc-id-guildmaster"
 npc_name = "Guildmaster Aldous"
 custom_sprite_path = "res://assets/sprites/npcs/npc_guildmaster.png"
 portrait_path = "res://assets/portraits/portrait_male03.png"
 
 [node name="NPC_Herbalist" parent="." instance=ExtResource("25_npc")]
-position = Vector2(430, 660)
+position = Vector2(1660, 720)
 npc_id = "npc-id-herbalist"
 npc_name = "Maybelle the Apothecary"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman1.png"
 portrait_path = "res://assets/portraits/portrait_female01.png"
 
 [node name="NPC_Guard" parent="." instance=ExtResource("25_npc")]
-position = Vector2(1220, 230)
+position = Vector2(1220, 270)
 npc_id = "npc-id-guard"
 npc_name = "Gate Guard Garrick"
 custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"
 portrait_path = "res://assets/portraits/portrait_male05.png"
 
 [node name="NPC_Farmer" parent="." instance=ExtResource("25_npc")]
-position = Vector2(660, 1060)
+position = Vector2(320, 1220)
 npc_id = "npc-id-farmer"
 npc_name = "Farmer Giles"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant1.png"
 portrait_path = "res://assets/portraits/portrait_male07.png"
 
 [node name="NPC_Priestess" parent="." instance=ExtResource("25_npc")]
-position = Vector2(960, 850)
+position = Vector2(2180, 470)
 npc_id = "npc-id-priestess"
 npc_name = "Sister Althea"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman2.png"
 portrait_path = "res://assets/portraits/portrait_female03.png"
 
 [node name="NPC_Miller" parent="." instance=ExtResource("25_npc")]
-position = Vector2(450, 1050)
+position = Vector2(2180, 240)
 npc_id = "npc-id-miller"
 npc_name = "Miller Hob"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant2.png"
 portrait_path = "res://assets/portraits/portrait_male09.png"
 
 [node name="NPC_Hunter" parent="." instance=ExtResource("25_npc")]
-position = Vector2(2300, 810)
+position = Vector2(2280, 780)
 npc_id = "npc-id-hunter"
 npc_name = "Ranger Kaelen"
 custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"
 portrait_path = "res://assets/portraits/portrait_ranger.png"
 
 [node name="NPC_Bard" parent="." instance=ExtResource("25_npc")]
-position = Vector2(750, 580)
+position = Vector2(1060, 630)
 npc_id = "npc-id-bard"
 npc_name = "Lyra the Minstrel"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman1.png"
 portrait_path = "res://assets/portraits/portrait_bard.png"
 
 [node name="NPC_Merchant" parent="." instance=ExtResource("25_npc")]
-position = Vector2(1420, 850)
+position = Vector2(1340, 820)
 npc_id = "npc-id-merchant"
 npc_name = "Trader Borin"
 custom_sprite_path = "res://assets/sprites/npcs/npc_trader.png"
 portrait_path = "res://assets/portraits/portrait_male11.png"
 
 [node name="NPC_Elder" parent="." instance=ExtResource("25_npc")]
-position = Vector2(1050, 1020)
+position = Vector2(780, 1210)
 npc_id = "npc-id-elder"
 npc_name = "Elder Martha"
 custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman2.png"
@@ -544,7 +710,7 @@ portrait_path = "res://assets/portraits/portrait_female05.png"
 ; ── Monsters ─────────────────────────────────────────────────────────────
 
 [node name="ShadowHound" parent="." instance=ExtResource("14_hnd_scene")]
-position = Vector2(1850, 820)
+position = Vector2(1820, 820)
 
 ; ── HUD & Overlay ────────────────────────────────────────────────────────
 
