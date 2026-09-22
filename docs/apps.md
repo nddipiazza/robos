@@ -515,7 +515,7 @@ The complete suite of 53 native developer desktop applications covering the enti
         <div class="robos-app-body">
           <div class="robos-app-name">KGraph Parse Portal</div>
           <span class="robos-app-pkg">robos:kgraph-parse-portal</span>
-          <p class="robos-app-desc">Heavy-scale ingestion portal fronting Luxir C++ search index, Hermetiq Buildbarn Helm RBE, and Tika 4.0 gRPC.</p>
+          <p class="robos-app-desc">Heavy-scale ingestion portal fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC.</p>
           <span class="robos-app-link-badge">Explore Guide ↗</span>
         </div>
       </a>

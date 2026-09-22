@@ -107,7 +107,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Agent Code Review Platform** | Autonomous AI pull request auditor, semantic diffs, security audits, and IDE review bridge (IntelliJ IDEA & VS Code PR plugins) |
 | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser, SHACL validator, eLearning generator, and living documentation sync |
 | **Schema Studio & Registry** | Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape generation, and live JSON-LD validator |
-| **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, Hermetiq Buildbarn Helm RBE, and Tika 4.0 gRPC |
+| **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
 | **RobOS eLearning** | Interactive eLearning player, hands-on lab runner, and Knowledge Graph completion certificate hub |
 | **Claude Console** | Enhanced Claude Code GUI |

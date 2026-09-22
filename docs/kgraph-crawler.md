@@ -10,9 +10,9 @@ permalink: /kgraph-crawler.html
 {: .no_toc }
 
 > [!NOTE]
-> **Implementation Evolution**: The crawler architecture described here is officially realized and superseded by the **[RobOS Kgraph Parse Portal](./kgraph-parse-portal.html)** (`packages/kgraph-parse-portal`), a heavy-scale connectors webapp and desktop application fronting a **Luxir C++ search index**, **Hermetiq Buildbarn Helm charts (`oci://ghcr.io/hermetiq/buildbarn`)** for Remote Build Execution (RBE), and **Apache Tika 4.0 streaming `tika-grpc`**.
+> **Implementation Evolution**: The crawler architecture described here is officially realized and superseded by the **[RobOS Kgraph Parse Portal](./kgraph-parse-portal.html)** (`packages/kgraph-parse-portal`), a heavy-scale connectors webapp and desktop application fronting a **Luxir C++ search index**, contextual MIME disambiguation, and **Apache Tika 4.0 streaming `tika-grpc`**.
 
-Systematic schema inference, automated package generation, and multi-source ingestion powered by Apache Tika 4.0 Pipes, `tika-grpc`, and Hermetiq Buildbarn RBE.
+Systematic schema inference, automated package generation, and multi-source ingestion powered by Apache Tika 4.0 Pipes, `tika-grpc`, and contextual Linux filesystem classification.
 {: .fs-6 .fw-300 }
 
 ## Table of contents

@@ -228,7 +228,7 @@ RobOS includes a complete suite of lightweight, high-performance developer tools
 | | **REST API Client** | Git-backed UseBruno (`.bru`) REST collection runner and microservice verifier. |
 | | **gRPC Client** | BloomRPC/Kreya-style Protobuf dynamic reflection microservice testing client. |
 | | **GraphQL Client** | GraphiQL-style schema explorer, query editor, and variable runner. |
-| | **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, Hermetiq Buildbarn Helm RBE, and Tika 4.0 gRPC. |
+| | **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC. |
 | **Governance** | **Agent Code Review Platform** | Autonomous AI PR auditor, semantic diffs, security audits, and IDE review bridge. |
 | | **Workflow Studio** | Visual SDLC lifecycle, issue state machines, and approval pipelines. |
 | | **Task Planner** | Multi-domain AI task planning with interactive web forms and Jira/GitHub sync. |
