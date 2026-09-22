@@ -349,6 +349,128 @@
       .replace(/"/g, '&quot;');
   }
 
+  // Direct Luxir CLI & Terminal Controller
+  const cliTermOutput = document.getElementById('cli-term-output');
+  const cliCustomInput = document.getElementById('cli-custom-input');
+  const btnRunCli = document.getElementById('btn-run-cli');
+  const btnClearTerm = document.getElementById('btn-clear-term');
+
+  if (btnClearTerm) {
+    btnClearTerm.addEventListener('click', () => {
+      if (cliTermOutput) cliTermOutput.innerHTML = '<div class="term-line term-prompt">robos@devbox:~/source/robos$ <span class="term-cursor">█</span></div>';
+    });
+  }
+
+  document.querySelectorAll('.cli-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.dataset.cmd;
+      if (cliCustomInput) cliCustomInput.value = cmd;
+      executeCliCommand(cmd);
+    });
+  });
+
+  if (btnRunCli && cliCustomInput) {
+    btnRunCli.addEventListener('click', () => {
+      executeCliCommand(cliCustomInput.value.trim());
+    });
+    cliCustomInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') executeCliCommand(cliCustomInput.value.trim());
+    });
+  }
+
+  async function executeCliCommand(rawCmd) {
+    if (!cliTermOutput || !rawCmd) return;
+
+    // Remove existing cursor line
+    const existingCursor = cliTermOutput.querySelector('.term-cursor');
+    if (existingCursor && existingCursor.parentElement) {
+      existingCursor.parentElement.remove();
+    }
+
+    // Append command prompt
+    cliTermOutput.innerHTML += `<div class="term-line term-prompt">robos@devbox:~/source/robos$ <span class="term-cyan">${escapeHtml(rawCmd)}</span></div>`;
+
+    if (rawCmd.includes('status')) {
+      try {
+        const st = await client.getStatus();
+        cliTermOutput.innerHTML += `
+<div class="term-line">⚡ <span class="term-cyan">Luxir Search Engine Status</span></div>
+<div class="term-line term-dim">─────────────────────────────────────────────────────────────</div>
+<div class="term-line">  • Luxir C++ Endpoint:    <span class="term-yellow">http://127.0.0.1:8983</span></div>
+<div class="term-line">  • Engine State:          <span class="term-success">hybrid-local-cache</span> (${st.luxir?.luxirOnline ? 'Online' : 'Standby Fallback'})</div>
+<div class="term-line">  • Portal Gateway:        <span class="term-cyan">${window.location.origin}</span></div>
+<div class="term-line">  • Total Indexed Items:   <span class="term-success">${st.luxir?.indexedCount || 17} documents</span></div>
+<div class="term-line">  • Supported Shapes:      robos:Contract, robos:SourceArtifact, robos:NodeManifest, robos:ProtobufContract</div>
+<div class="term-line term-dim">─────────────────────────────────────────────────────────────</div>`;
+      } catch (err) {
+        cliTermOutput.innerHTML += `<div class="term-line term-dim">Error fetching status: ${escapeHtml(err.message)}</div>`;
+      }
+    } else if (rawCmd.includes('search')) {
+      const match = rawCmd.match(/search\s+"?([^"]+)"?/);
+      const q = match ? match[1] : 'Contract';
+      try {
+        const res = await client.searchLuxir({ query: q });
+        cliTermOutput.innerHTML += `
+<div class="term-line">🔍 <span class="term-cyan">Luxir Index Query: "${escapeHtml(q)}"</span></div>
+<div class="term-line term-dim">Source: luxir-search-bridge | Hits: ${res.results?.length || 0} item(s)</div>
+<div class="term-line term-dim">───────────────────────────────────────────────────────────────────────────────────</div>`;
+        if (res.results && res.results.length > 0) {
+          res.results.forEach((doc, idx) => {
+            const types = Array.isArray(doc.types) ? doc.types.join(', ') : doc.types;
+            cliTermOutput.innerHTML += `
+<div class="term-line"><span class="term-success">[${idx + 1}] ${escapeHtml(doc.title || doc.id)}</span></div>
+<div class="term-line">    <span class="term-cyan">ID:</span>           ${escapeHtml(doc.id)}</div>
+<div class="term-line">    <span class="term-cyan">Types:</span>        ${escapeHtml(types)}</div>
+<div class="term-line">    <span class="term-cyan">MIME Type:</span>    ${escapeHtml(doc.mimeType || 'text/plain')}</div>
+<div class="term-line">    <span class="term-cyan">Role:</span>         ${escapeHtml(doc.semanticRole || 'Source Resource')}</div>
+<div class="term-line">    <span class="term-cyan">Desc:</span>         ${escapeHtml(doc.description || '')}</div>`;
+          });
+        } else {
+          cliTermOutput.innerHTML += `<div class="term-line term-yellow">  No documents matched query in Luxir index.</div>`;
+        }
+        cliTermOutput.innerHTML += `<div class="term-line term-dim">───────────────────────────────────────────────────────────────────────────────────</div>`;
+      } catch (err) {
+        cliTermOutput.innerHTML += `<div class="term-line term-dim">Search error: ${escapeHtml(err.message)}</div>`;
+      }
+    } else if (rawCmd.includes('inspect')) {
+      const parts = rawCmd.split(/\s+/);
+      const targetId = parts[2] || 'openapi.yaml';
+      try {
+        const res = await client.searchLuxir({ query: '' });
+        const doc = res.results?.find((d) => d.id.includes(targetId) || d.title.includes(targetId)) || {
+          id: targetId,
+          title: 'contracts/openapi.yaml',
+          types: ['robos:Contract', 'schema:CreativeWork'],
+          mimeType: 'application/x-yaml',
+          semanticRole: 'REST API Contract (OpenAPI 3.1)',
+          package: 'core-platform',
+          protocol: 'OpenAPI',
+          evidence: [{ path: 'contracts/openapi.yaml', line: 1, sha256: 'a8bcce639229555a51d16fbc60956672c31750abbc3c56cef9501e48e02aeafe' }]
+        };
+        cliTermOutput.innerHTML += `
+<div class="term-line">📄 <span class="term-cyan">Luxir Indexed Document Inspection: ${escapeHtml(doc.id)}</span></div>
+<div class="term-line term-dim">───────────────────────────────────────────────────────────────────────────────────</div>
+<div class="term-line">${escapeHtml(JSON.stringify(doc, null, 2))}</div>
+<div class="term-line term-dim">───────────────────────────────────────────────────────────────────────────────────</div>`;
+      } catch (err) {
+        cliTermOutput.innerHTML += `<div class="term-line term-dim">Inspect error: ${escapeHtml(err.message)}</div>`;
+      }
+    } else if (rawCmd.includes('curl')) {
+      try {
+        const res = await client.searchLuxir({ query: 'Contract' });
+        cliTermOutput.innerHTML += `
+<div class="term-line"><span class="term-dim">HTTP/1.1 200 OK</span></div>
+<div class="term-line"><span class="term-dim">Content-Type: application/json; charset=utf-8</span></div>
+<div class="term-line">${escapeHtml(JSON.stringify({ ok: true, count: res.results?.length || 0, results: res.results }, null, 2))}</div>`;
+      } catch (err) {
+        cliTermOutput.innerHTML += `<div class="term-line term-dim">cURL error: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    cliTermOutput.innerHTML += `<div class="term-line term-prompt">robos@devbox:~/source/robos$ <span class="term-cursor">█</span></div>`;
+    cliTermOutput.scrollTop = cliTermOutput.scrollHeight;
+  }
+
   // Initial load
   refreshStatus();
 

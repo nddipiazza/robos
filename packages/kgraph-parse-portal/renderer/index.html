@@ -42,6 +42,7 @@
       <button class="tab-btn active" data-tab="tab-crawler">Filesystem Crawler & Ingestion</button>
       <button class="tab-btn" data-tab="tab-classifier">MIME & Archetype Disambiguation</button>
       <button class="tab-btn" data-tab="tab-search">Luxir Search Explorer</button>
+      <button class="tab-btn" data-tab="tab-cli">Direct Luxir CLI</button>
       <button class="tab-btn" data-tab="tab-rbe">Hermetiq Buildbarn RBE</button>
       <button class="tab-btn" data-tab="tab-doc">Documentation & Living Specs</button>
     </nav>
@@ -192,7 +193,51 @@
         </div>
       </section>
 
-      <!-- Tab 4: Hermetiq Buildbarn RBE -->
+      <!-- Tab 4: Direct Luxir CLI & Terminal Console -->
+      <section id="tab-cli" class="tab-pane">
+        <div class="pane-grid">
+          <div class="panel panel-left">
+            <h2 class="panel-heading">Direct Luxir CLI & REST Access</h2>
+            <p class="panel-desc">Execute direct command-line queries against the C++ Luxir Search Index and REST Gateway proving indexed artifacts.</p>
+
+            <div class="form-group">
+              <label>Preset CLI Commands:</label>
+              <div class="cli-quick-buttons">
+                <button class="btn btn-outline btn-sm cli-btn" data-cmd="luxir-portal-cli search &quot;Contract&quot;">$ luxir-portal-cli search "Contract"</button>
+                <button class="btn btn-outline btn-sm cli-btn" data-cmd="luxir-portal-cli inspect urn:robos:file:kgraph-parse-portal:contracts-openapi.yaml">$ luxir-portal-cli inspect openapi.yaml</button>
+                <button class="btn btn-outline btn-sm cli-btn" data-cmd="luxir-portal-cli inspect urn:robos:file:kgraph-parse-portal:contracts-tika-service.proto">$ luxir-portal-cli inspect tika-service.proto</button>
+                <button class="btn btn-outline btn-sm cli-btn" data-cmd="curl -s http://localhost:19192/api/v1/search?q=Contract | jq .">$ curl /api/v1/search?q=Contract</button>
+                <button class="btn btn-outline btn-sm cli-btn" data-cmd="luxir-portal-cli status">$ luxir-portal-cli status</button>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <label for="cli-custom-input">Custom CLI Command:</label>
+              <div class="input-row">
+                <input type="text" id="cli-custom-input" class="form-input" value="luxir-portal-cli search &quot;Contract&quot;" placeholder="e.g. luxir-portal-cli search &quot;tika&quot;">
+                <button id="btn-run-cli" class="btn btn-primary">Execute CLI</button>
+              </div>
+            </div>
+
+            <div class="cli-meta-card mt-4">
+              <div class="meta-row"><span>Engine:</span> <strong>Luxir C++ Search Index (:8983)</strong></div>
+              <div class="meta-row"><span>CLI Binary:</span> <code>packages/kgraph-parse-portal/bin/luxir-portal-cli.js</code></div>
+              <div class="meta-row"><span>Index Name:</span> <code>robos_kgraph</code></div>
+              <div class="meta-row"><span>Protocol:</span> <code>REAPI v2 / HTTP REST</code></div>
+            </div>
+          </div>
+
+          <div class="panel panel-right">
+            <div class="panel-header-row">
+              <h2 class="panel-heading">🖥️ Terminal Console (Tilix Dark)</h2>
+              <button id="btn-clear-term" class="btn btn-outline btn-sm">Clear Terminal</button>
+            </div>
+            <pre id="cli-term-output" class="cli-term-pane"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 5: Hermetiq Buildbarn RBE -->
       <section id="tab-rbe" class="tab-pane">
         <div class="pane-grid">
           <div class="panel panel-left">

@@ -533,6 +533,109 @@ body {
 }
 
 /* ==========================================================================
+   Direct Luxir CLI & Terminal Console Styles
+   ========================================================================== */
+
+.cli-quick-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cli-quick-buttons .cli-btn {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  background: rgba(0, 188, 212, 0.05);
+  color: #38bdf8;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cli-quick-buttons .cli-btn:hover {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: var(--cyan);
+}
+
+.cli-meta-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.meta-row span {
+  color: var(--text-muted);
+}
+
+.meta-row code {
+  color: #38bdf8;
+}
+
+.cli-term-pane {
+  background-color: #030712;
+  border: 1.5px solid #1f2937;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', var(--font-mono), monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #e5e7eb;
+  height: calc(100vh - 220px);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.term-line {
+  margin-bottom: 3px;
+}
+
+.term-prompt {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.term-cyan {
+  color: #38bdf8;
+}
+
+.term-yellow {
+  color: #facc15;
+}
+
+.term-dim {
+  color: #6b7280;
+}
+
+.term-success {
+  color: #10b981;
+}
+
+.term-cursor {
+  display: inline-block;
+  animation: termBlink 1s step-start infinite;
+}
+
+@keyframes termBlink {
+  50% { opacity: 0; }
+}
+
+/* ==========================================================================
    QA E2E Cucumber Splash Card, Step HUD & Virtual Cursor Overlay
    ========================================================================== */
 
