@@ -262,7 +262,8 @@
           "path": "packages/robos-test/docker/kgraph.Dockerfile",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.devops"
     }
   ],
   "@graph": [
@@ -422,6 +423,28 @@
       "robos:namespace": "robos.devops",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:source:workspace-test-runtime",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Isolated Electron graph test runtime",
+      "robos:package": "devops",
+      "robos:sourcePath": "packages/robos-test/docker/kgraph.Dockerfile",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/docker/kgraph.Dockerfile",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.devops"
     }
   ]
 }

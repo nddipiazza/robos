@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=cRPG Masterclass
+Comment=Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass
+Exec=/usr/bin/electron /usr/local/share/robos/robos-crpg-elearning/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-crpg-elearning/icon.svg
+Terminal=false
+Categories=Education;Development;Game;
+X-RobOS-Category=Education
+StartupWMClass=robos-crpg-elearning

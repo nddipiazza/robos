@@ -509,6 +509,54 @@ const DEFAULT_TEMPLATES = [
 
   // ── Game Development ─────────────────────────────────────────────────────────
   {
+    id: 'robos-crpg-game',
+    title: 'Plan to Create a Tactical cRPG Game (Godot 4 Infinity Engine)',
+    category: 'Game Development',
+    icon: '⚔️',
+    description: 'Design and build a party-based tactical isometric cRPG using Godot 4.3 (GL Compatibility), D&D 5e SRD mathematical action economy, Flare RPG CC-BY-SA paperdoll assets, 3-mode Activity Log, and autonomous Infinity AI Agent verification.',
+    fields: [
+      { id: 'gameTitle', label: 'cRPG Title', type: 'text', default: 'realm-of-heroes', required: true, help: 'Identifier for repository and game package URN' },
+      { id: 'ruleset', label: 'Combat & Ruleset Engine', type: 'select', default: 'dnd5e-srd', options: [
+        { value: 'dnd5e-srd', label: 'D&D 5e SRD 5.1 (Real-Time with Pause)', desc: 'd20 rolls vs AC, 6.0s round timer, advantage/disadvantage, spell save DC' },
+        { value: 'custom-d20', label: 'Custom d20 Tactical Ruleset', desc: 'Custom ability scores, initiative ticks, and status conditions' },
+        { value: 'turn-based-grid', label: 'Turn-Based Hex/Square Grid', desc: 'Action-point grid tactics like Divinity / Fallout 2' },
+      ]},
+      { id: 'rendererProfile', label: 'Godot Renderer Profile', type: 'select', default: 'gl-compatibility', options: [
+        { value: 'gl-compatibility', label: 'GL Compatibility (OpenGL 3.3 / WebGL 2.0)', desc: 'Zero shader stutter, runs in headless Docker/Xvfb (:99)' },
+        { value: 'vulkan-forward-plus', label: 'Vulkan Forward+', desc: 'Modern PC GPU pipeline with dynamic lighting' },
+      ]},
+      { id: 'assetPipeline', label: 'Asset Harvesting Pipeline', type: 'select', default: 'flare-rpg', options: [
+        { value: 'flare-rpg', label: 'Flare RPG CC-BY-SA 3.0 (Paperdoll & 8-Directional Sprites)', desc: '100+ animated creatures, paperdoll armor, swords, shields, Game-Icons.net vector icons' },
+        { value: 'opengameart-custom', label: 'OpenGameArt CC0 / CC-BY Custom Sprites', desc: 'Curated 2.5D isometric tiles and characters' },
+      ]},
+      { id: 'hudConsole', label: 'HUD & Activity Log Sizing', type: 'select', default: 'infinity-3mode', options: [
+        { value: 'infinity-3mode', label: '3-Mode Expandable Activity Log (Small 124px / Medium 240px / Large 420px)', desc: 'In-log numbered dialogue trees (keys 1-9) without popup modals' },
+        { value: 'classic-fixed', label: 'Classic Fixed-Height Bottom Console', desc: 'Fixed 160px combat text pane' },
+      ]},
+      { id: 'aiAgentVerification', label: 'Autonomous Verification', type: 'select', default: 'infinity-ai-agent', options: [
+        { value: 'infinity-ai-agent', label: 'Autonomous Infinity AI Agent (:18090 REST + Xvfb 1080p Video)', desc: '140px proximity radar, combined-arms tactics, behave BDD, 1080p MP4 proof' },
+        { value: 'unit-tests-only', label: 'Standard GDScript Unit Tests Only', desc: 'GUT framework unit test runner' },
+      ]},
+      { id: 'campaignScope', label: 'Campaign Scope & Map Zones', type: 'textarea', default: '5-Act Epic Campaign: Homestead Manor, Oakhaven Village Square (11 physical buildings, Layer 1 colliders), Whispering Forest, Ancient Catacombs, and Garrison Keep Boss Combat.', help: 'Describe story arcs, map zones, physical building colliders, and boss encounters' },
+    ],
+    generatePlan: (a) => makePlan({
+      prompt: `Scaffold and implement tactical cRPG "${a.gameTitle}" using Godot 4 (${a.rendererProfile}) with ${a.ruleset} combat, ${a.assetPipeline} assets, ${a.hudConsole}, and ${a.aiAgentVerification}. Scope: ${a.campaignScope}`,
+      epicTitle: `Epic: ${a.gameTitle} Tactical cRPG Architecture & Development`,
+      epicName: `${a.gameTitle}-cRPG`,
+      epicBody: `Implement end-to-end tactical isometric cRPG with D&D 5e SRD mathematical rules, physical building collision geometry, Flare RPG asset integration, and autonomous Infinity AI Agent verification.`,
+      labels: ['game', 'crpg', 'godot', 'infinity-engine', 'dnd5e'],
+      stories: [
+        { title: `${a.gameTitle}: Knowledge Graph-First Ontological Modeling & Schemas`, body: `Model game classes, monsters, spells, and dialogue trees in .robos/kgraphs/crpg/package.jsonld conforming to W3C CRPGGameShape. Compile typed DataStoreV1.gd singletons.` },
+        { title: `${a.gameTitle}: Godot 4.3 GL Compatibility Viewport & Layer 1 Physical Colliders`, body: `Configure 1920x1080 Camera2D clamped across 2560x1440 background plates. Implement StaticBody2D building collision footprints and Pathfinder.gd A* corridor navigation.` },
+        { title: `${a.gameTitle}: D&D 5e SRD Real-Time with Pause Combat Engine`, body: `Implement CombatEngine.gd with 6.0-second combat round timer, d20 attack rolls vs AC, advantage/disadvantage probability curves, Nat 20 double damage dice, and spell save DC calculations.` },
+        { title: `${a.gameTitle}: Flare RPG Open-Source Paperdoll Assets & Spritesheet Pipeline`, body: `Harvest CC-BY-SA 3.0 animated 8-directional character sprites (walk, attack, hurt, death), modular paperdoll items (armor, shields, weapons), and Game-Icons.net ability SVGs.` },
+        { title: `${a.gameTitle}: 3-Mode Expandable Activity Log & In-Log Branching Dialogue`, body: `Build HUD.gd supporting 124px combat log, 240px numbered in-log dialogue (keys 1-9), and 420px quest journal with d20 roll breakdowns.` },
+        { title: `${a.gameTitle}: Autonomous Infinity AI Agent & Headless BDD Video Proof`, body: `Build qa_player/infinity_ai_agent.py with 140px proximity threat trigger, combined-arms role tactics, behave BDD test suite, and 1080p FFmpeg video proof-of-work in Xvfb display :99.` },
+        { title: `${a.gameTitle}: Interactive eLearning Masterclass & GitHub Pages Publication`, body: `Generate 5-module interactive eLearning course, verifiable Certificate of Completion (schema:EducationalOccupationalCredential), and publish to GitHub Pages at www.rowbose.com/elearning/robos-crpg-engine.` },
+      ]
+    })
+  },
+  {
     id: 'godot-game',
     title: 'Plan to Create a Godot Game',
     category: 'Game Development',

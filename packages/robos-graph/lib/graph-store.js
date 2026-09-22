@@ -1841,6 +1841,11 @@ electron packages/${appSlug}-elearning
     };
   }
 
+  generateELearningWebsite(options = {}) {
+    const { generateELearningWebsite } = require('./elearning-web-generator');
+    return generateELearningWebsite(this, options);
+  }
+
   launchELearningApp(options = {}) {
     const appId = typeof options === 'string' ? options : (options.appId || options.courseId || '');
     const appNode = this.findApplicationNode(appId);

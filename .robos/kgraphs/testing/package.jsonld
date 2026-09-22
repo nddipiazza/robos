@@ -705,7 +705,8 @@
       ],
       "robos:targets": {
         "@id": "urn:robos:source:workspace-explorer"
-      }
+      },
+      "robos:namespace": "robos.testing"
     },
     {
       "@id": "urn:robos:source:inspector-groups-e2e",
@@ -753,7 +754,8 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:namespace": "robos.testing"
     }
   ],
   "@graph": [
@@ -1026,7 +1028,9 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestSuite",
       "robos:schemaOrgType": "https://schema.org/ItemList",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestSuite",
+      "robos:testsService": "urn:robos:service:billing-api",
+      "robos:testingType": "BDD Acceptance"
     },
     {
       "@id": "urn:robos:test-exec:checkout-standard-items-latest",
@@ -1353,6 +1357,31 @@
       "robos:domainStandard": "https://schema.org/SoftwareApplication"
     },
     {
+      "@id": "urn:robos:source:workspace-e2e",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Real Electron review/save/reopen test",
+      "robos:package": "testing",
+      "robos:sourcePath": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-test/tests/sdlc-graph/workspace-review.e2e.js",
+          "line": 1
+        }
+      ],
+      "robos:targets": {
+        "@id": "urn:robos:source:workspace-explorer"
+      },
+      "robos:namespace": "robos.testing"
+    },
+    {
       "@id": "urn:robos:source:inspector-groups-e2e",
       "@type": [
         "robos:SourceArtifact",
@@ -1398,7 +1427,8 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:namespace": "robos.testing"
     }
   ]
 }

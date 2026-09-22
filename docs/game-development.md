@@ -118,11 +118,20 @@ Conforms to `urn:robos:shape:MobileGameShape`:
 
 ---
 
+## Planning Game Projects with Task Planner
+
+RobOS Task Planner includes dedicated game development project templates:
+- **Plan to Create a Tactical cRPG Game (Godot 4 Infinity Engine)** (`robos-crpg-game`): Generates a 7-story phased DAG plan spanning KGraph-first ontological modeling, Godot 4.3 GL Compatibility viewport and Layer 1 physical colliders, D&D 5e SRD real-time with pause combat, Flare RPG paperdoll asset pipeline, 3-mode expandable Activity Log, autonomous Infinity AI Agent verification, and interactive eLearning course generation.
+- **Plan to Create a Godot Game** (`godot-game`): Scaffolds 2D/3D Godot game loops, scene tree topologies, and physics controller tasks.
+
+---
+
 ## Flagship Game Showcase
 
 Explore our fully realized, production-grade video game project built, verified, and governed end-to-end within RobOS:
 
 - **[⚔️ Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }})**: A party-based tactical isometric cRPG built in Godot 4.3 inspired by classic Infinity Engine titles (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, a 5-Act Epic Campaign, physical building collisions with A* pathfinding corridors, 18 unique NPCs with branching dialogue, and autonomous AI agents capable of questing through the entire game.
+  - [Interactive eLearning Masterclass]({{ '/elearning/robos-crpg-engine' | relative_url }})
   - [Game Creation & Architecture Deep-Dive]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})
   - [Infinity AI Agent & E2E Verification Harness]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})
   - [World Systems, Physical Buildings & Pathfinding]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})

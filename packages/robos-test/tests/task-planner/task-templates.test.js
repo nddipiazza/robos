@@ -31,10 +31,10 @@ describe('Task Planner - Task Templates', () => {
       }
     });
 
-    it('provides at least 50 built-in templates (currently 66)', () => {
+    it('provides at least 50 built-in templates (currently 67)', () => {
       const templates = manager.listTemplates();
       assert.ok(templates.length >= 50, `Expected at least 50 templates, got ${templates.length}`);
-      assert.strictEqual(templates.length, 66, 'Found exactly 66 default templates');
+      assert.strictEqual(templates.length, 67, 'Found exactly 67 default templates');
     });
 
     it('organizes templates across distinct SDLC categories', () => {
@@ -57,6 +57,7 @@ describe('Task Planner - Task Templates', () => {
         'backend-web-service',   // plan to create a back-end web service
         'frontend-web-app',      // plan to create a front-end web application
         'godot-game',            // plan to create a godot game
+        'robos-crpg-game',       // plan to create a tactical crpg game
         'java-library',          // plan to create a java library
         'mobile-app',            // plan to create a mobile app
         'react-frontend-app',    // plan to create a react front-end app
@@ -78,6 +79,8 @@ describe('Task Planner - Task Templates', () => {
       assert.ok(manager.getTemplate('plan-to-create-backend-service'));
       assert.ok(manager.getTemplate('godot-game'));
       assert.ok(manager.getTemplate('create-godot-game'));
+      assert.ok(manager.getTemplate('robos-crpg-game'));
+      assert.ok(manager.getTemplate('robos-crpg'));
     });
 
     it('generates a valid plan for "backend-web-service"', () => {
@@ -132,6 +135,35 @@ describe('Task Planner - Task Templates', () => {
       assert.ok(plan.tasks.length >= 4);
       const physicsTask = plan.tasks.find(t => t.title.includes('Mechanics') || t.title.includes('Controller') || t.title.includes('Physics'));
       assert.ok(physicsTask, 'Found game mechanics task');
+    });
+
+    it('generates a valid plan for "robos-crpg-game"', () => {
+      const tpl = manager.getTemplate('robos-crpg-game');
+      assert.ok(tpl, 'robos-crpg-game template exists');
+      const plan = tpl.generatePlan({
+        gameTitle: 'realm-of-heroes',
+        ruleset: 'dnd5e-srd',
+        rendererProfile: 'gl-compatibility',
+        assetPipeline: 'flare-rpg',
+        hudConsole: 'infinity-3mode',
+        aiAgentVerification: 'infinity-ai-agent',
+        campaignScope: '5-Act Epic Campaign with physical building colliders'
+      });
+
+      assert.ok(plan.prompt.includes('realm-of-heroes'));
+      assert.strictEqual(plan.tasks.length, 8, 'Has 1 Epic + 7 child stories');
+      const epic = plan.tasks.find(t => t.isEpic);
+      assert.ok(epic, 'Contains Epic');
+      assert.ok(epic.title.includes('realm-of-heroes'));
+      const stories = plan.tasks.filter(t => !t.isEpic);
+      assert.strictEqual(stories.length, 7, 'Contains exactly 7 child stories');
+      assert.ok(stories.some(s => s.title.includes('Ontological Modeling')));
+      assert.ok(stories.some(s => s.title.includes('GL Compatibility Viewport')));
+      assert.ok(stories.some(s => s.title.includes('D&D 5e SRD')));
+      assert.ok(stories.some(s => s.title.includes('Flare RPG')));
+      assert.ok(stories.some(s => s.title.includes('Activity Log')));
+      assert.ok(stories.some(s => s.title.includes('Infinity AI Agent')));
+      assert.ok(stories.some(s => s.title.includes('Interactive eLearning Masterclass')));
     });
 
     it('generates a valid plan for "java-library"', () => {
@@ -224,7 +256,7 @@ describe('Task Planner - Task Templates', () => {
 
       // Verify listing includes the custom template
       const all = manager.listTemplates();
-      assert.strictEqual(all.length, 67, 'Total templates incremented to 67');
+      assert.strictEqual(all.length, 68, 'Total templates incremented to 68');
 
       // Test generating plan from custom template
       const plan = manager.generatePlan(customId, { mfeName: 'mfe-cart', port: 3002 });
@@ -236,7 +268,7 @@ describe('Task Planner - Task Templates', () => {
       const delRes = manager.deleteCustomTemplate(customId);
       assert.strictEqual(delRes.ok, true, 'Successfully deleted custom template');
       assert.strictEqual(manager.getTemplate(customId), null, 'Custom template no longer exists');
-      assert.strictEqual(manager.listTemplates().length, 66, 'Count back to 66');
+      assert.strictEqual(manager.listTemplates().length, 67, 'Count back to 67');
     });
   });
 

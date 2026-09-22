@@ -21,9 +21,34 @@
         </div>
       </div>
       <div class="header-right">
+        <!-- Voice Assistant Toolbar -->
+        <div class="voice-assistant-toolbar">
+          <button id="btn-toggle-voice" class="btn-voice-toggle idle" title="Toggle Real-Time Voice Suggestions">
+            <span class="mic-dot"></span>
+            <span id="btn-voice-label">🎤 Voice Suggestions: OFF</span>
+          </button>
+          <div class="agent-selector-group">
+            <label for="select-voice-agent">Agent:</label>
+            <select id="select-voice-agent" class="agent-select" disabled title="Select RobOS Agent to process voice suggestions">
+              <option value="fast-reactive">⚡ Fast Reactive Agent</option>
+              <option value="claude-code">Claude Code</option>
+              <option value="github-copilot">GitHub Copilot</option>
+              <option value="codex">Codex</option>
+            </select>
+          </div>
+          <div id="voice-activity-ticker" class="voice-ticker hidden">
+            <span class="ticker-pulse"></span>
+            <span id="ticker-status">Listening to stream…</span>
+            <span id="ticker-speech" class="ticker-speech"></span>
+          </div>
+        </div>
+
         <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
           <option value="">Switch Course…</option>
         </select>
+        <button class="btn btn-outline" id="btn-export-web" onclick="window.exportCourseWebsite()" title="Export self-contained interactive website for GitHub Pages" style="font-size: 11px; padding: 5px 10px;">
+          🌐 Export Website
+        </button>
         <div class="progress-container">
           <div class="progress-label">Course Progress: <span id="progress-percent">0%</span></div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div></div>
@@ -43,6 +68,7 @@
       </aside>
 
       <main class="content-panel" id="content-panel">
+        <div id="voice-feedback-banner" class="voice-feedback-banner hidden"></div>
         <div id="module-content">
           <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
         </div>

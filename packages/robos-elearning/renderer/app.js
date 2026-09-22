@@ -32,6 +32,8 @@ async function initApp() {
   } catch (err) {
     console.error('Error initializing course:', err);
   }
+
+  setupVoiceAssistant();
 }
 
 async function loadCourse(courseOrAppId) {
@@ -214,4 +216,189 @@ window.showCertificateModal = function() {
 window.closeCertificateModal = function() {
   const m = document.getElementById('cert-modal');
   if (m) m.style.display = 'none';
+};
+
+// ── Voice Assistant & Real-Time Co-Authoring ─────────────────────────────────
+
+let isVoiceActive = false;
+
+function setupVoiceAssistant() {
+  const btnToggleVoice = document.getElementById('btn-toggle-voice');
+
+  if (btnToggleVoice) {
+    btnToggleVoice.addEventListener('click', toggleVoiceRecording);
+  }
+
+  if (window.robosELearning && window.robosELearning.onVoiceStreamEvent) {
+    window.robosELearning.onVoiceStreamEvent((data) => {
+      const ticker = document.getElementById('voice-activity-ticker');
+      const tickerStatus = document.getElementById('ticker-status');
+      const tickerSpeech = document.getElementById('ticker-speech');
+
+      if (data.type === 'stream_closed') {
+        if (isVoiceActive) {
+          setVoiceUIState(false);
+        }
+      } else if (data.text) {
+        if (tickerSpeech) {
+          tickerSpeech.textContent = `"${data.text}"`;
+        }
+        if (tickerStatus) {
+          tickerStatus.textContent = data.isFinal ? 'Captured clause:' : 'Listening:';
+        }
+      }
+    });
+  }
+
+  if (window.robosELearning && window.robosELearning.onVoiceMutation) {
+    window.robosELearning.onVoiceMutation((mutation) => {
+      applyCourseMutation(mutation);
+    });
+  }
+}
+
+function setVoiceUIState(active) {
+  isVoiceActive = active;
+  const btn = document.getElementById('btn-toggle-voice');
+  const label = document.getElementById('btn-voice-label');
+  const select = document.getElementById('select-voice-agent');
+  const ticker = document.getElementById('voice-activity-ticker');
+
+  if (active) {
+    if (btn) btn.className = 'btn-voice-toggle active';
+    if (label) label.textContent = '🔴 Voice Suggestions: ON';
+    if (select) select.disabled = false;
+    if (ticker) ticker.classList.remove('hidden');
+  } else {
+    if (btn) btn.className = 'btn-voice-toggle idle';
+    if (label) label.textContent = '🎤 Voice Suggestions: OFF';
+    if (select) select.disabled = true;
+    if (ticker) ticker.classList.add('hidden');
+  }
+}
+
+async function toggleVoiceRecording() {
+  if (!window.robosELearning) return;
+  const select = document.getElementById('select-voice-agent');
+  const agentId = select ? select.value : 'fast-reactive';
+
+  if (!isVoiceActive) {
+    setVoiceUIState(true);
+    showVoiceFeedback(`🎤 Voice Assistant active (${agentId})! Speak suggestions to modify the curriculum live.`);
+    try {
+      await window.robosELearning.startVoiceAssistant({ agentId });
+    } catch (err) {
+      console.warn('Voice assistant start error:', err.message);
+    }
+  } else {
+    setVoiceUIState(false);
+    showVoiceFeedback('Voice suggestions deactivated.', 3000);
+    try {
+      await window.robosELearning.stopVoiceAssistant();
+    } catch (err) {
+      console.warn('Voice assistant stop error:', err.message);
+    }
+  }
+}
+
+function showVoiceFeedback(msg, durationMs = 5000) {
+  const banner = document.getElementById('voice-feedback-banner');
+  if (!banner) return;
+  banner.textContent = msg;
+  banner.classList.remove('hidden');
+  clearTimeout(banner._timer);
+  banner._timer = setTimeout(() => {
+    banner.classList.add('hidden');
+  }, durationMs);
+}
+
+function applyCourseMutation(mutation) {
+  if (!activeCourse) return;
+  if (!activeCourse['robos:modules'] || !activeCourse['robos:modules'].length) {
+    activeCourse['robos:modules'] = [{
+      title: 'Introduction Module',
+      durationMinutes: 15,
+      overview: 'Module overview',
+      labSteps: [],
+      quiz: [],
+    }];
+  }
+
+  const m = activeCourse['robos:modules'][currentModIdx] || activeCourse['robos:modules'][0];
+
+  switch (mutation.type) {
+    case 'ADD_LAB_STEP': {
+      if (!m.labSteps) m.labSteps = [];
+      m.labSteps.push(mutation.stepText);
+      showVoiceFeedback(`⚡ Added Step: "${mutation.stepText}"`);
+      break;
+    }
+    case 'REMOVE_LAB_STEP': {
+      if (m.labSteps && m.labSteps.length > mutation.stepIndex && mutation.stepIndex >= 0) {
+        const removed = m.labSteps.splice(mutation.stepIndex, 1);
+        showVoiceFeedback(`⚡ Removed Step ${mutation.stepIndex + 1}: "${removed[0]}"`);
+      }
+      break;
+    }
+    case 'UPDATE_MODULE_TITLE': {
+      m.title = mutation.title;
+      showVoiceFeedback(`⚡ Updated Module Title: "${mutation.title}"`);
+      break;
+    }
+    case 'UPDATE_OVERVIEW': {
+      m.overview = mutation.overview;
+      showVoiceFeedback(`⚡ Updated Module Overview`);
+      break;
+    }
+    case 'ADD_QUIZ_QUESTION': {
+      if (!m.quiz) m.quiz = [];
+      m.quiz.push(mutation.quiz);
+      showVoiceFeedback(`⚡ Added Quiz Question: "${mutation.quiz.question}"`);
+      break;
+    }
+    case 'UPDATE_DIFFICULTY': {
+      activeCourse['robos:difficulty'] = mutation.difficulty;
+      const diffEl = document.getElementById('course-difficulty');
+      if (diffEl) diffEl.textContent = mutation.difficulty;
+      showVoiceFeedback(`⚡ Updated Difficulty to: ${mutation.difficulty}`);
+      break;
+    }
+    default:
+      if (mutation.stepText) {
+        if (!m.labSteps) m.labSteps = [];
+        m.labSteps.push(mutation.stepText);
+        showVoiceFeedback(`⚡ Applied Suggestion: "${mutation.stepText}"`);
+      }
+  }
+
+  // Immediately re-render active module to show updates live
+  renderModule(currentModIdx);
+  renderModuleNav();
+  updateProgress();
+}
+
+window.exportCourseWebsite = async function() {
+  if (!activeCourse) {
+    alert('No active course selected to export.');
+    return;
+  }
+  const btn = document.getElementById('btn-export-web');
+  const originalText = btn ? btn.textContent : '';
+  if (btn) btn.textContent = '⏳ Exporting…';
+
+  try {
+    const res = await window.robosELearning.exportWebsite({
+      courseId: activeCourse['@id'],
+      appId: activeApp ? activeApp['@id'] : null,
+    });
+    if (res && res.ok) {
+      alert(`✅ Successfully exported standalone interactive website!\n\nPath: ${res.filePath}\nPermalink: ${res.permalink}`);
+    } else {
+      alert(`❌ Export failed: ${(res && res.error) || 'Unknown error'}`);
+    }
+  } catch (err) {
+    alert(`❌ Export error: ${err.message}`);
+  } finally {
+    if (btn) btn.textContent = originalText;
+  }
 };

@@ -14,6 +14,7 @@ const { KGraphResourceImporter, DEFAULT_MOCK_REGISTRY } = require('./lib/resourc
 const { KGraphPackageManager, DEFAULT_PACKAGES } = require('./lib/package-manager');
 const { KGraphRepoManager } = require('./lib/repo-manager');
 const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = require('./lib/devops-integrations');
+const { generateELearningWebsite } = require('./lib/elearning-web-generator');
 
 module.exports = {
   OSLCGraphParser,
@@ -41,4 +42,5 @@ module.exports = {
   DevOpsIntegrationManager,
   DEVOPS_CATEGORIES,
   DEVOPS_PROVIDERS,
+  generateELearningWebsite,
 };

@@ -569,7 +569,8 @@
           "path": "AGENTS.md",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.org"
     }
   ],
   "@graph": [
@@ -620,7 +621,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:team:architecture-guild",
@@ -638,7 +644,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:person:admin",
@@ -688,7 +699,12 @@
       "robos:package": "organization",
       "robos:namespace": "robos.org",
       "robos:schemaOrgType": "https://schema.org/ProjectTeam",
-      "robos:domainStandard": "https://schema.org/ProjectTeam"
+      "robos:domainStandard": "https://schema.org/ProjectTeam",
+      "robos:memberCount": 5,
+      "robos:status": "active",
+      "robos:hasProject": [
+        "urn:robos:project:enterprise-core"
+      ]
     },
     {
       "@id": "urn:robos:git-org:apache",
@@ -1020,6 +1036,28 @@
         "urn:robos:team:founding-core"
       ],
       "robos:package": "organization",
+      "robos:namespace": "robos.org"
+    },
+    {
+      "@id": "urn:robos:source:workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "RobOS source workspace",
+      "robos:package": "organization",
+      "robos:sourcePath": "AGENTS.md",
+      "robos:sourceKind": "git-repository",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "AGENTS.md",
+          "line": 1
+        }
+      ],
       "robos:namespace": "robos.org"
     }
   ]

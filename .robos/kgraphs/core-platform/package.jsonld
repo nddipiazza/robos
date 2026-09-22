@@ -651,7 +651,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "postgresql",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#redis",
@@ -662,7 +663,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "redis",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#nats-jetstream",
@@ -673,7 +675,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "nats-jetstream",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#victoriametrics",
@@ -684,7 +687,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "victoriametrics",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#victorialogs",
@@ -695,7 +699,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "victorialogs",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#bazel",
@@ -706,7 +711,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "bazel",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#buildbarn",
@@ -717,7 +723,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "buildbarn",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#react",
@@ -728,7 +735,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "react",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#protobuf",
@@ -739,7 +747,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "protobuf",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#helm",
@@ -750,7 +759,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "helm",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/technology#pulumi",
@@ -761,7 +771,8 @@
       "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "pulumi",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/technology"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/protocol#reapi-v2",
@@ -772,7 +783,8 @@
       "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "reapi-v2",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/protocol#bazel-bep",
@@ -783,7 +795,8 @@
       "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "bazel-bep",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/protocol#completed-action-logger",
@@ -794,7 +807,8 @@
       "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "completed-action-logger",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "https://robos.dev/ns/protocol#mcp",
@@ -805,7 +819,8 @@
       "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
       "robos:package": "core-platform",
       "schema:termCode": "mcp",
-      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol"
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:graph-workspace",
@@ -826,7 +841,8 @@
           "path": "packages/robos-graph/lib/graph-workspace.js",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:source-extractor",
@@ -847,7 +863,8 @@
           "path": "packages/robos-graph/lib/source-extractor.js",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:workspace-commands",
@@ -868,7 +885,8 @@
           "path": "packages/robos-graph/lib/workspace-commands.js",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:workspace-review",
@@ -889,7 +907,8 @@
           "path": "packages/robos-graph/lib/workspace-review.js",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:source-shapes",
@@ -910,7 +929,8 @@
           "path": "packages/robos-graph/lib/source-shapes.js",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:inspector-groups",
@@ -939,7 +959,8 @@
       ],
       "robos:classificationOrigin": "inferred",
       "robos:declaredName": "RobosInspectorGroups",
-      "robos:version": "1.0.0"
+      "robos:version": "1.0.0",
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -987,7 +1008,8 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
-      ]
+      ],
+      "robos:namespace": "robos.platform"
     }
   ],
   "@graph": [
@@ -1002,6 +1024,67 @@
       "robos:namespace": "robos.platform",
       "robos:version": "1.0.0",
       "robos:status": "active"
+    },
+    {
+      "@id": "urn:robos:agent-router:harnessrouter",
+      "@type": [
+        "robos:AgentRouter",
+        "robos:HarnessRouter",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
+      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
+      "robos:protocol": "UHP",
+      "robos:protocolVersion": "2026-08-11",
+      "robos:conformanceClass": "Full",
+      "robos:openSource": true,
+      "robos:license": "Apache-2.0",
+      "robos:defaultEndpoint": "http://127.0.0.1:3000",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform",
+      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://harnessrouter.ai/",
+      "robos:supportedHarnesses": [
+        "claude-code",
+        "codex",
+        "github-copilot",
+        "gemini-cli",
+        "hermes",
+        "oh-my-pi"
+      ]
+    },
+    {
+      "@id": "urn:robos:security:prompt-security-guard",
+      "@type": [
+        "robos:SecurityGuard",
+        "robos:PromptSecurityGuard",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Prompt Security Guard & OSS Guardrails Engine",
+      "dcterms:description": "Open-source prompt security guardrail engine preventing developers from intentionally or unintentionally sending secrets, credentials, PII, and prompt injections to AI agents. Built on Gitleaks, TruffleHog, Microsoft Presidio, and OWASP LLM01 standards.",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.security",
+      "robos:refersFrom": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://github.com/gitleaks/gitleaks",
+      "robos:supportedStandards": [
+        "Gitleaks v8+",
+        "TruffleHog",
+        "Microsoft Presidio",
+        "OWASP LLM01: Prompt Injection",
+        "OWASP LLM02: Sensitive Information Disclosure",
+        "NIST SP 800-53"
+      ],
+      "robos:supportedModes": [
+        "redact",
+        "block",
+        "warn",
+        "audit-only",
+        "off"
+      ]
     },
     {
       "@id": "urn:robos:build-system:acme-monorepo-bazel",
@@ -1240,7 +1323,73 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "ast_search",
+          "description": "Perform structural AST pattern matching across source files",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "AST pattern or symbol name"
+              },
+              "filePattern": {
+                "type": "string",
+                "description": "Glob filter (e.g. **/*.js)"
+              },
+              "maxResults": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            "required": [
+              "query"
+            ]
+          }
+        },
+        {
+          "name": "symbol_lookup",
+          "description": "Resolve declaration location, signature, and usages of a code symbol",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Identifier name"
+              },
+              "includeReferences": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "symbol"
+            ]
+          }
+        },
+        {
+          "name": "dependency_graph",
+          "description": "Calculate import and call graph for target module or package",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "entrypoint": {
+                "type": "string",
+                "description": "Path to entrypoint file"
+              },
+              "depth": {
+                "type": "integer",
+                "default": 2
+              }
+            },
+            "required": [
+              "entrypoint"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:mcp:kgraph-navigator",
@@ -1262,7 +1411,54 @@
       "robos:package": "core-platform",
       "robos:namespace": "robos.platform",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://modelcontextprotocol.io/specification"
+      "robos:domainStandard": "https://modelcontextprotocol.io/specification",
+      "robos:tools": [
+        {
+          "name": "query_nodes",
+          "description": "Search and filter knowledge graph nodes by type or keyword",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "RDF type filter"
+              },
+              "text": {
+                "type": "string",
+                "description": "Full-text search query"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 20
+              }
+            }
+          }
+        },
+        {
+          "name": "blast_radius",
+          "description": "Perform recursive dependency and impact traversal for a graph node",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "description": "Target URN"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "upstream",
+                  "downstream"
+                ],
+                "default": "downstream"
+              }
+            },
+            "required": [
+              "nodeId"
+            ]
+          }
+        }
+      ]
     },
     {
       "@id": "urn:robos:agent:strategy:caveman-compression",
@@ -1358,6 +1554,312 @@
       "robos:domainStandard": "https://kafka.apache.org/"
     },
     {
+      "@id": "urn:robos:db:db-9wv0p",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Database",
+        "robos:RelationalDatabase"
+      ],
+      "dcterms:title": "DB Database (acme_db)",
+      "dcterms:description": "Imported undefined database connection postgresql://admin:secret@db.internal:5432/acme_db",
+      "robos:databaseName": "acme_db",
+      "robos:engine": "postgresql",
+      "robos:host": "db.internal",
+      "robos:port": 5432,
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#postgresql",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "PostgreSQL",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "postgresql",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#redis",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Redis",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "redis",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#nats-jetstream",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "NATS JetStream",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "nats-jetstream",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victoriametrics",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaMetrics",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victoriametrics",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#victorialogs",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "VictoriaLogs",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "victorialogs",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#bazel",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#buildbarn",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "buildbarn",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#react",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "React",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "react",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#protobuf",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Protocol Buffers",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "protobuf",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#helm",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Helm",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "helm",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/technology#pulumi",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Pulumi",
+      "dcterms:description": "Reusable technology identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "pulumi",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/technology",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#reapi-v2",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Remote Execution API v2",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "reapi-v2",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#bazel-bep",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Bazel Build Event Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "bazel-bep",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#completed-action-logger",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Buildbarn CompletedActionLogger",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "completed-action-logger",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "https://robos.dev/ns/protocol#mcp",
+      "@type": [
+        "schema:DefinedTerm"
+      ],
+      "dcterms:title": "Model Context Protocol",
+      "dcterms:description": "Reusable protocol identity; deployment configuration and usage relationships belong to consuming workspaces.",
+      "robos:package": "core-platform",
+      "schema:termCode": "mcp",
+      "schema:inDefinedTermSet": "https://robos.dev/ns/protocol",
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:source:graph-workspace",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "External graph workspace and revision store",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/graph-workspace.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/graph-workspace.js",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:source:source-extractor",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Tracked source evidence extractor",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-extractor.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-extractor.js",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:source:workspace-commands",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Workspace CLI commands",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-commands.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-commands.js",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:source:workspace-review",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Agent review and proposal workflow",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/workspace-review.js",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.platform"
+    },
+    {
+      "@id": "urn:robos:source:source-shapes",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source declaration shapes",
+      "robos:package": "core-platform",
+      "robos:sourcePath": "packages/robos-graph/lib/source-shapes.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/lib/source-shapes.js",
+          "line": 1
+        }
+      ],
+      "robos:namespace": "robos.platform"
+    },
+    {
       "@id": "urn:robos:source:inspector-groups",
       "@type": [
         "robos:SourceArtifact",
@@ -1383,8 +1885,9 @@
         }
       ],
       "robos:classificationOrigin": "inferred",
+      "robos:declaredName": "RobosInspectorGroups",
       "robos:version": "1.0.0",
-      "robos:declaredName": "Schemapropertygroupcatalog"
+      "robos:namespace": "robos.platform"
     },
     {
       "@id": "urn:robos:source:inspector-property-groups",
@@ -1433,8 +1936,7 @@
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
       ],
-      "robos:version": "1.0.0",
-      "robos:declaredName": "Recordedpropertygroupresolution"
+      "robos:namespace": "robos.platform"
     }
   ]
 }

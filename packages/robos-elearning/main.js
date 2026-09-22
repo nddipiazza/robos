@@ -1,9 +1,26 @@
 'use strict';
-const { app, BrowserWindow, ipcMain } = require('electron');
+let electronPkg;
+try {
+  electronPkg = require('electron');
+} catch {}
+
+const isElectronRuntime = electronPkg && typeof electronPkg === 'object' && typeof electronPkg.app === 'object';
+const app = isElectronRuntime ? electronPkg.app : {
+  setName: () => {},
+  setPath: () => {},
+  commandLine: { appendSwitch: () => {} },
+  whenReady: () => new Promise(() => {}),
+  on: () => {},
+  quit: () => {},
+};
+const BrowserWindow = isElectronRuntime ? electronPkg.BrowserWindow : class {};
+const ipcMain = isElectronRuntime ? electronPkg.ipcMain : { handle: () => {}, on: () => {} };
+
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { spawn } = require('child_process');
+const http = require('http');
 
 app.setName('robos-elearning');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'robos-elearning'));
@@ -124,11 +141,14 @@ ipcMain.handle('elearning:get-course', async (_, courseIdOrAppId) => {
 
   if (courseIdOrAppId) {
     course = store.getNode(courseIdOrAppId);
+    if (!course && typeof store.findELearning === 'function') {
+      course = store.findELearning(courseIdOrAppId);
+    }
     if (!course) {
       appNode = store.findApplicationNode(courseIdOrAppId);
       if (appNode && appNode['robos:hasELearning']) {
         const cId = Array.isArray(appNode['robos:hasELearning']) ? appNode['robos:hasELearning'][0] : appNode['robos:hasELearning'];
-        course = store.getNode(cId);
+        course = store.getNode(cId) || (typeof store.findELearning === 'function' ? store.findELearning(cId) : null);
       }
     }
   }
@@ -160,3 +180,267 @@ ipcMain.handle('elearning:list-certificates', async (_, opts = {}) => {
   }
   return [];
 });
+
+ipcMain.handle('elearning:export-website', async (_, opts = {}) => {
+  const store = getGraphStore();
+  if (store && typeof store.generateELearningWebsite === 'function') {
+    return store.generateELearningWebsite(opts);
+  }
+  return { ok: false, error: 'Store or website generator not available' };
+});
+
+// ── Voice Assistant & Real-Time Course Co-Authoring ─────────────────────────
+
+let voiceAssistantState = {
+  active: false,
+  agentId: 'fast-reactive',
+  streamReq: null,
+  lastProcessedText: '',
+  taskActive: false,
+};
+
+/**
+ * Fast Reactive / AI Agent suggestion parser for real-time eLearning curriculum mutation
+ */
+async function parseVoiceSuggestion(text, agentId = 'fast-reactive') {
+  if (!text || typeof text !== 'string') return null;
+  const clean = text.trim();
+
+  // 1. Add Lab Step
+  const addStepMatch = clean.match(/^(?:please\s+)?(?:add|create|insert|include)\s+(?:a\s+|new\s+)?(?:lab\s+)?step(?:\s+to|\s+for|:)?\s+(.*)$/i);
+  if (addStepMatch && addStepMatch[1]) {
+    return {
+      type: 'ADD_LAB_STEP',
+      stepText: addStepMatch[1].replace(/^[,\s.:]+|[.\s]+$/g, '').trim(),
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 2. Remove Lab Step
+  const removeStepMatch = clean.match(/^(?:please\s+)?(?:remove|delete)\s+(?:lab\s+)?step\s+(\d+)/i);
+  if (removeStepMatch && removeStepMatch[1]) {
+    return {
+      type: 'REMOVE_LAB_STEP',
+      stepIndex: parseInt(removeStepMatch[1], 10) - 1,
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 3. Update Module Title
+  const titleMatch = clean.match(/^(?:please\s+)?(?:change|set|update|rename)\s+(?:the\s+)?(?:module\s+)?title\s+to\s+(.*)$/i);
+  if (titleMatch && titleMatch[1]) {
+    return {
+      type: 'UPDATE_MODULE_TITLE',
+      title: titleMatch[1].replace(/^[,\s.:"']+|[.\s"']+$/g, '').trim(),
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 4. Update Overview
+  const overviewMatch = clean.match(/^(?:please\s+)?(?:change|set|update)\s+(?:the\s+)?overview\s+to\s+(.*)$/i);
+  if (overviewMatch && overviewMatch[1]) {
+    return {
+      type: 'UPDATE_OVERVIEW',
+      overview: overviewMatch[1].replace(/^[,\s.:"']+|[.\s"']+$/g, '').trim(),
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 5. Add Quiz Question
+  const quizMatch = clean.match(/^(?:please\s+)?(?:add|create)\s+(?:a\s+)?quiz\s+question:?\s*(.*?)(?:\s*(?:with\s+)?answer:?\s*(.*))?$/i);
+  if (quizMatch && quizMatch[1]) {
+    const qText = quizMatch[1].replace(/^[,\s.:"']+|[.\s"']+$/g, '').trim();
+    const ansText = (quizMatch[2] || 'True').replace(/^[,\s.:"']+|[.\s"']+$/g, '').trim();
+    return {
+      type: 'ADD_QUIZ_QUESTION',
+      quiz: {
+        question: qText,
+        answer: ansText,
+        options: [ansText, 'Alternative Choice A', 'Alternative Choice B'],
+        explanation: 'Created dynamically via RobOS Voice Assistant',
+      },
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 6. Update Difficulty
+  const diffMatch = clean.match(/^(?:please\s+)?(?:change|set)\s+difficulty\s+to\s+(beginner|intermediate|advanced)/i);
+  if (diffMatch && diffMatch[1]) {
+    const cap = diffMatch[1].charAt(0).toUpperCase() + diffMatch[1].slice(1).toLowerCase();
+    return {
+      type: 'UPDATE_DIFFICULTY',
+      difficulty: cap,
+      agentId,
+      rawText: clean,
+    };
+  }
+
+  // 7. General AI CLI Agent query if configured and not fast-reactive
+  if (agentId !== 'fast-reactive') {
+    try {
+      let aiAgent = null;
+      const agentPaths = [
+        path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+        '/usr/local/share/robos/robos-lib/ai-agent',
+      ];
+      for (const p of agentPaths) {
+        try { aiAgent = require(p); break; } catch {}
+      }
+      if (aiAgent && typeof aiAgent.ask === 'function') {
+        const prompt = `You are an interactive eLearning curriculum authoring agent.
+User suggestion: "${clean}"
+If this suggestion asks to add a lab step, reply JSON: {"type": "ADD_LAB_STEP", "stepText": "..."}
+If this suggestion asks to change title, reply JSON: {"type": "UPDATE_MODULE_TITLE", "title": "..."}
+If this suggestion asks to change overview, reply JSON: {"type": "UPDATE_OVERVIEW", "overview": "..."}
+If this suggestion asks to add a quiz question, reply JSON: {"type": "ADD_QUIZ_QUESTION", "quiz": {"question": "...", "answer": "...", "options": ["..."]}}
+Reply with only valid JSON.`;
+        const res = await aiAgent.ask(prompt, { providerId: agentId });
+        if (res && res.ok && res.text) {
+          const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return { ...parsed, agentId, rawText: clean };
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
+function stopVoiceAssistant() {
+  if (voiceAssistantState.streamReq) {
+    try { voiceAssistantState.streamReq.destroy(); } catch {}
+    voiceAssistantState.streamReq = null;
+  }
+  voiceAssistantState.active = false;
+  voiceAssistantState.taskActive = false;
+
+  // Deactivate voice prompt microphone if running
+  const deactReq = http.request({
+    hostname: '127.0.0.1',
+    port: 19188,
+    path: '/api/deactivate',
+    method: 'POST',
+  }, () => {});
+  deactReq.on('error', () => {});
+  deactReq.end();
+
+  if (win && !win.isDestroyed()) {
+    win.webContents.send('elearning:voice-stream-event', { type: 'stream_closed' });
+  }
+
+  return { ok: true, active: false };
+}
+
+function startVoiceAssistant(options = {}) {
+  stopVoiceAssistant();
+
+  const agentId = options.agentId || 'fast-reactive';
+  voiceAssistantState.active = true;
+  voiceAssistantState.agentId = agentId;
+  voiceAssistantState.lastProcessedText = '';
+  voiceAssistantState.taskActive = true;
+
+  // 1. Activate voice prompt microphone if daemon is running
+  const actReq = http.request({
+    hostname: '127.0.0.1',
+    port: 19188,
+    path: '/api/activate',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  }, () => {});
+  actReq.on('error', () => {});
+  actReq.end();
+
+  // 2. Open SSE stream connection to voice prompt daemon
+  const sseReq = http.request({
+    hostname: '127.0.0.1',
+    port: 19188,
+    path: '/api/stream',
+    method: 'GET',
+    headers: { 'Accept': 'text/event-stream' },
+  }, (res) => {
+    res.setEncoding('utf8');
+    let buffer = '';
+
+    res.on('data', async (chunk) => {
+      buffer += chunk;
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep trailing incomplete chunk
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          try {
+            const data = JSON.parse(line.slice(5).trim());
+            if (win && !win.isDestroyed()) {
+              win.webContents.send('elearning:voice-stream-event', data);
+            }
+
+            if (data && data.text) {
+              const text = data.text.trim();
+              if (text && text !== voiceAssistantState.lastProcessedText) {
+                const mutation = await parseVoiceSuggestion(text, voiceAssistantState.agentId);
+                if (mutation && mutation.type) {
+                  voiceAssistantState.lastProcessedText = text;
+                  if (win && !win.isDestroyed()) {
+                    win.webContents.send('elearning:voice-mutation', mutation);
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+      }
+    });
+
+    res.on('end', () => {
+      stopVoiceAssistant();
+    });
+
+    res.on('close', () => {
+      stopVoiceAssistant();
+    });
+  });
+
+  sseReq.on('error', (err) => {
+    console.warn('[robos-elearning] SSE voice stream notice:', err.message);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('elearning:voice-stream-event', { type: 'stream_error', error: err.message });
+    }
+  });
+
+  sseReq.end();
+  voiceAssistantState.streamReq = sseReq;
+
+  return { ok: true, active: true, agentId };
+}
+
+ipcMain.handle('elearning:start-voice-assistant', async (_, opts) => {
+  return startVoiceAssistant(opts);
+});
+
+ipcMain.handle('elearning:stop-voice-assistant', async () => {
+  return stopVoiceAssistant();
+});
+
+ipcMain.handle('elearning:get-voice-status', async () => {
+  return {
+    active: voiceAssistantState.active,
+    agentId: voiceAssistantState.agentId,
+    taskActive: voiceAssistantState.taskActive,
+  };
+});
+
+module.exports = {
+  parseVoiceSuggestion,
+  startVoiceAssistant,
+  stopVoiceAssistant,
+  getVoiceAssistantState: () => voiceAssistantState,
+};

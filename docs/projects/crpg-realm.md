@@ -46,6 +46,7 @@ Rather than being a static demo, the entire campaign slice is governed by an **a
 | **Assets & Art** | 100% genuine open-source assets from Flare RPG / OpenGameArt (CC-BY-SA, CC0) |
 | **Testing Harness** | Headless Xvfb virtual framebuffer execution, 1080p FFmpeg video proof-of-work, behave BDD |
 | **Verification Metrics** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
+| **Interactive eLearning** | [www.rowbose.com/elearning/robos-crpg-engine](/elearning/robos-crpg-engine) (5 modules, labs, quizzes, verified certificate) |
 
 ---
 

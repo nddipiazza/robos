@@ -147,7 +147,7 @@
       "dcterms:description": "Quantizes continuous real-time execution into synchronized rounds and combat turns. Regulates actor initiative, action recovery periods, casting phase intervals, and automated pause arbitration.",
       "robos:sourceModule": "gemrb/core/GameControl.cpp",
       "robos:timingSpecifications": {
-        "roundDurationSeconds": 6.0,
+        "roundDurationSeconds": 6,
         "ticksPerRound": 100,
         "tickDurationMilliseconds": 60,
         "phasesPerRound": 10,
@@ -1154,7 +1154,9 @@
       "dcterms:title": "ADR-001: Pre-Rendered Isometric Projection with WED Wall Polygon Depth Masks",
       "robos:status": "accepted",
       "robos:context": "Infinity Engine games use pre-rendered 2D backgrounds created in 3D modeling packages (Softimage/3ds Max), rendered to flat 2D tilemaps. To create the illusion of depth without real-time 3D geometry, sprites must be dynamically occluded when passing behind walls, arches, and pillars.",
-      "robos:decision": "Store 2D convex wall polygons in the WED (Wall & Elevation Description) format. During the rendering pass, compute the intersection of moving sprites with active wall polygons. Pixels within the polygon boundary are clipped against the background buffer using hardware stencil/scissor tests or software rasterization, allowing 2.5D visual occlusion with negligible computational overhead."
+      "robos:decision": "Store 2D convex wall polygons in the WED (Wall & Elevation Description) format. During the rendering pass, compute the intersection of moving sprites with active wall polygons. Pixels within the polygon boundary are clipped against the background buffer using hardware stencil/scissor tests or software rasterization, allowing 2.5D visual occlusion with negligible computational overhead.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
     },
     {
       "@id": "urn:robos:infinity:adr:002-rtwp-100-tick-round-cycle",
@@ -1165,7 +1167,9 @@
       "dcterms:title": "ADR-002: RTwP 100-Tick Round Cycle with Action Speed Quanta",
       "robos:status": "accepted",
       "robos:context": "Tabletop AD&D 2nd Edition uses discrete 1-minute combat rounds. A real-time computer RPG requires fast, tactile feedback while faithfully preserving tabletop turn mechanics and spell casting times.",
-      "robos:decision": "Establish a fixed 6.0-second round divided into exactly 100 engine ticks (1 tick = 60ms). Each actor executes up to their allotted attacks per round within those 100 ticks, with attack timing distributed according to weapon speed factors. Spells require a discrete casting time (CastingTime * 10 ticks); any damage sustained before the tick countdown finishes results in spell disruption and lost spell slot."
+      "robos:decision": "Establish a fixed 6.0-second round divided into exactly 100 engine ticks (1 tick = 60ms). Each actor executes up to their allotted attacks per round within those 100 ticks, with attack timing distributed according to weapon speed factors. Spells require a discrete casting time (CastingTime * 10 ticks); any damage sustained before the tick countdown finishes results in spell disruption and lost spell slot.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
     },
     {
       "@id": "urn:robos:infinity:adr:003-opcode-driven-modifier-pipeline",
@@ -1176,7 +1180,9 @@
       "dcterms:title": "ADR-003: Opcode-Driven Modifier Stacking & Dispel System",
       "robos:status": "accepted",
       "robos:context": "Infinity Engine games feature hundreds of overlapping spells, magical items, curses, and environmental conditions. Hardcoding special cases into character attributes leads to exponential complexity and bugs.",
-      "robos:decision": "Implement a generalized Effect Opcode Queue attached to each Actor. All modifications (AC bonuses, stat drains, invisibility, haste, poison ticks) are decoupled into discrete Effect instances containing Opcode number, duration, target parameter, and source caster level. When an effect is added, removed, or dispelled, the engine re-evaluates the queue to recompute net derived statistics dynamically."
+      "robos:decision": "Implement a generalized Effect Opcode Queue attached to each Actor. All modifications (AC bonuses, stat drains, invisibility, haste, poison ticks) are decoupled into discrete Effect instances containing Opcode number, duration, target parameter, and source caster level. When an effect is added, removed, or dispelled, the engine re-evaluates the queue to recompute net derived statistics dynamically.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
     },
     {
       "@id": "urn:robos:infinity:adr:004-dual-tier-pathfinding",
@@ -1187,7 +1193,9 @@
       "dcterms:title": "ADR-004: Dual-Tier A* Waypoint and 16x12 Search Bitmask Navigation",
       "robos:status": "accepted",
       "robos:context": "Infinity Engine areas can measure up to 5,000x5,000 pixels with up to 6 party members and dozens of monsters pathfinding simultaneously. Running per-pixel A* across such vast maps causes severe CPU bottlenecking.",
-      "robos:decision": "Employ a dual-tier navigation system: 1) High-level waypoint graph A* for planning coarse paths across area sectors; 2) Low-level 16x12 pixel search map bitmask for fine-grained obstacle and wall avoidance. Actors possess circular collision hulls at their feet and perform dynamic local avoidance when encountering allies or moving monsters."
+      "robos:decision": "Employ a dual-tier navigation system: 1) High-level waypoint graph A* for planning coarse paths across area sectors; 2) Low-level 16x12 pixel search map bitmask for fine-grained obstacle and wall avoidance. Actors possess circular collision hulls at their feet and perform dynamic local avoidance when encountering allies or moving monsters.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
     },
     {
       "@id": "urn:robos:infinity:blueprint:cplusplus-interfaces",
@@ -1197,7 +1205,1197 @@
       ],
       "dcterms:title": "Core Subsystem C++ Interfaces for Autonomous AI Engine Generation",
       "robos:language": "cpp",
-      "robos:codeContent": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB"
+      "robos:codeContent": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:infinity:engine:gemrb-infinity",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:SoftwareSystem",
+        "robos:GameEngine",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "GemRB: Open-Source Infinity Engine Architecture",
+      "dcterms:description": "A modular, portable, clean-room reimplementation of BioWare's 2D Infinity Engine (originally powering Baldur's Gate 1 & 2, Icewind Dale 1 & 2, and Planescape: Torment). Decouples engine logic and execution runtime from proprietary BioWare game assets.",
+      "robos:repository": "github.com/gemrb/gemrb",
+      "robos:technology": "C++20, Python 3, SDL2, OpenAL Soft, OpenGL / Vulkan",
+      "robos:architecturalStyle": "Modular Microkernel with Dynamic Plugin Subsystems",
+      "robos:license": "GNU General Public License v2.0 or later",
+      "robos:assetRequirements": "Requires original BioWare game data files (CHITIN.KEY and BIF archives) for copyrighted content (maps, sounds, character sprites, and dialogue texts). Contains 100% clean-room game logic, rules engine, bytecode interpreter, and rendering pipeline without BioWare binaries.",
+      "robos:supportedTitles": [
+        "Baldur's Gate 1: Tales of the Sword Coast",
+        "Baldur's Gate 2: Shadows of Amn & Throne of Bhaal",
+        "Icewind Dale 1: Heart of Winter",
+        "Icewind Dale 2",
+        "Planescape: Torment"
+      ],
+      "robos:rulesets": [
+        "Advanced Dungeons & Dragons 2nd Edition (AD&D 2e)",
+        "Dungeons & Dragons 3rd Edition (D&D 3e for IWD2)"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity",
+      "robos:hasSubsystems": [
+        "urn:robos:infinity:subsystem:kernel-interface",
+        "urn:robos:infinity:subsystem:vfs-resource-manager",
+        "urn:robos:infinity:subsystem:binary-codec-pipeline",
+        "urn:robos:infinity:subsystem:rtwp-game-loop",
+        "urn:robos:infinity:subsystem:bcs-script-vm",
+        "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "urn:robos:infinity:subsystem:rules-combat-engine",
+        "urn:robos:infinity:subsystem:effect-opcode-queue",
+        "urn:robos:infinity:subsystem:pathfinding-spatial-grid",
+        "urn:robos:infinity:subsystem:isometric-compositor",
+        "urn:robos:infinity:subsystem:spatial-audio-engine",
+        "urn:robos:infinity:subsystem:gui-window-system",
+        "urn:robos:infinity:subsystem:save-load-serializer"
+      ]
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:kernel-interface",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Core Kernel, Lifecycle & Plugin Manager Subsystem",
+      "dcterms:description": "The central engine orchestrator (Interface / PluginManager). Bootstraps configuration files (gemrb.cfg), handles game type discovery (BG1 vs BG2 vs IWD), dynamically loads shared library driver plugins (.so/.dll), initializes platform windows via SDL2, and routes global events.",
+      "robos:sourceModule": "gemrb/core/Interface.cpp",
+      "robos:coreResponsibilities": [
+        "Engine bootstrap and command line / config argument ingestion",
+        "Plugin discovery, dynamic linking, and lifecycle management (PluginManager)",
+        "Platform abstraction layer (window creation, OS input events via SDL2)",
+        "Inter-subsystem event publishing and subscriber notification bus",
+        "GameType state configuration (sets active ruleset, max party size, slot counts)"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:vfs-resource-manager",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Virtual File System (VFS) & Key/BIF Resource Manager",
+      "dcterms:description": "Indexes BioWare archive files and resolves resource queries by 8-character ResRef and 16-bit resource type. Implements strict lookup precedence: Override Directory -> User Mods / DLC -> CHITIN.KEY BIF Archives -> CD Archives, backed by thread-safe LRU caching.",
+      "robos:sourceModule": "gemrb/core/ResourceManager.cpp, gemrb/plugins/KEYImporter/",
+      "robos:coreResponsibilities": [
+        "Parsing CHITIN.KEY master index containing BIF file table and resource descriptor table",
+        "Mapping 32-bit Resource ID (ResRef 8-char string + 16-bit Type) to physical BIF offset and uncompressed length",
+        "Transparent filesystem override resolution: checks override/ directory first before querying BIF archives",
+        "LRU resource memory cache with reference counting and automatic eviction under memory pressure",
+        "Case-insensitive cross-platform path normalization for Linux, macOS, and Windows"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:binary-codec-pipeline",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "IESDP Binary Resource Codec & Streaming Parser Pipeline",
+      "dcterms:description": "High-performance deserializers and encoders for all proprietary BioWare formats defined in the Infinity Engine Structures Description Project (IESDP). Handles little-endian binary decoding, RLE compression, and typed model instantiation.",
+      "robos:sourceModule": "gemrb/core/ResourceFactory.cpp, gemrb/plugins/*Importer/",
+      "robos:supportedCodecs": [
+        "2DA: Whitespace-delimited 2D rule matrix reader",
+        "ARE: Area / Map geometry, triggers, ambient emitters, and actor spawn parser",
+        "WED: Wall, Elevation & Door polygon clipping mask parser",
+        "TIS: 64x64 pixel PVRTC / paletted background tilemap decoder",
+        "MOS: Full-screen UI and backdrop image decoder",
+        "BAM: BioWare Animation Manager multi-frame sprite decoder with RLE decompression",
+        "CRE: Creature stat block, equipment slot, and script attachment parser",
+        "ITM: Weapon, armor, and consumable item definition parser",
+        "SPL: Spell headers, casting time, and projectile trajectory decoder",
+        "DLG: Dialogue state graph, response condition, and action trigger parser",
+        "BCS: BioWare Compiled Script bytecode and operand parser",
+        "IDS: Identifier dictionary symbol mapper",
+        "EFF / VVC / PRO: Direct effect definitions, visual vector controls, and projectile arcs",
+        "GAM / SAV: Savegame state and global variable table serializer"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:rtwp-game-loop",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Real-Time with Pause (RTwP) 100-Tick Game Loop Coordinator",
+      "dcterms:description": "Quantizes continuous real-time execution into synchronized rounds and combat turns. Regulates actor initiative, action recovery periods, casting phase intervals, and automated pause arbitration.",
+      "robos:sourceModule": "gemrb/core/GameControl.cpp",
+      "robos:timingSpecifications": {
+        "roundDurationSeconds": 6,
+        "ticksPerRound": 100,
+        "tickDurationMilliseconds": 60,
+        "phasesPerRound": 10,
+        "ticksPerPhase": 10
+      },
+      "robos:coreResponsibilities": [
+        "Regulating 100-tick round counter; resets actor round action counters upon tick 100",
+        "Action speed factor and weapon delay calculation: delays action execution by (SpeedFactor * 10) ticks within round",
+        "Spell casting timing: spells require (CastingTime * 10) uninterrupted ticks; actor takes damage during casting triggers disruption",
+        "Auto-pause event triggers: Enemy Sighted, Character Injured, Weapon Ineffective, Spell Cast, Target Destroyed, Trap Found",
+        "Modal pause state handling: distinguishes between user pause, inventory pause, dialogue pause, and cutscene pause"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "BioWare Compiled Script (BCS) Virtual Machine",
+      "dcterms:description": "Event-driven bytecode interpreter executing AI scripts for actors, areas, and cutscenes. Evaluates condition triggers against the world state and dispatches action queues according to TRIGGER.IDS and ACTION.IDS registries.",
+      "robos:sourceModule": "gemrb/core/ScriptEngine.cpp",
+      "robos:executionModel": "Condition-Action Block Loop: IF [Triggers] THEN RESPONSE #weight [Actions] END",
+      "robos:coreResponsibilities": [
+        "Trigger evaluator: queries world state using TRIGGER.IDS opcodes (See, Range, HPPercentLT, Global, HasItem, Dead)",
+        "Object resolution: resolves symbolic object specifiers using OBJECT.IDS (Myself, LeaderOf, NearestEnemyOf, LastAttackerOf)",
+        "Action queue dispatcher: queues commands into actor ActionQueue using ACTION.IDS (Attack, Spell, MoveToObject, Dialog, Wait)",
+        "Script priority hierarchy: Override Script -> Class Script -> Race Script -> General Script -> Default Script",
+        "Cutscene execution: blocks player inputs and executes deterministic scripted choreographies"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Dialogue State Machine & Conversation Runner",
+      "dcterms:description": "Processes interactive DLG state trees. Evaluates transition condition triggers, presents filtered dialogue choices to the player, executes script actions on selection, and logs entries into the quest journal.",
+      "robos:sourceModule": "gemrb/core/DialogHandler.cpp",
+      "robos:coreResponsibilities": [
+        "State tree traversal: starts at initial State matching highest-priority trigger condition",
+        "Transition filtering: evaluates trigger expressions on each transition to hide unavailable dialogue options",
+        "Response presentation: formats text, speaker portraits, and player choice numbers in GUI",
+        "Action execution: executes attached BCS action blocks upon transition selection (TakePartyItem, GiveGoldForce, Enemy)",
+        "Journal & Quest synchronization: appends narrative entries to Quest Journal referenced from DIALOG.TLK"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:rules-combat-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "AD&D 2nd Edition / D&D Rules & Combat Resolution Engine",
+      "dcterms:description": "Faithfully calculates Tabletop AD&D 2e and 3e mechanics: D20 attack rolls against THAC0 and Armor Class, damage rolls with type mitigation, saving throws across 5 classic categories, and weapon proficiency bonuses.",
+      "robos:sourceModule": "gemrb/core/RulesEngine.cpp, gemrb/core/Combat.cpp",
+      "robos:coreFormulas": [
+        "Attack Hit Resolution: Roll d20. If Roll == 20: Critical Hit (Auto-hit, 2x damage). If Roll == 1: Critical Miss (Auto-miss). Hit Condition: Roll + AttackBonuses >= AttackerTHAC0 - TargetAC",
+        "Armor Class Calculation: Base AC 10 - ArmorBonus - ShieldBonus - DexBonus - MagicBuffs (lower AC is better in 2e)",
+        "Damage Resolution: Base Dice Roll + StrDamageMod + WeaponEnchantmentMod. Mitigated by Target Resistance percentage for specific damage type (Slashing, Piercing, Crushing, Missile, Fire, Cold, Acid, Electricity, Magic)",
+        "Saving Throw Resolution: Roll d20 + SaveMods >= TargetCategorySave (5 Categories: Poison/Death, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell)",
+        "Magic Resistance Check: Roll d100. If Roll <= TargetMagicResistancePercent: Spell Completely Negated"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:effect-opcode-queue",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Effect Opcode Queue & Dynamic Modifier Pipeline",
+      "dcterms:description": "The central entity modifier pipeline handling over 350 standard Infinity Engine opcodes. Every spell buff, potion effect, poison damage over time, or curse is represented as an Effect node attached to an Actor.",
+      "robos:sourceModule": "gemrb/core/EffectQueue.cpp, gemrb/plugins/Effect*",
+      "robos:coreResponsibilities": [
+        "Opcode dispatch: applies opcode handlers (Opcode 0: AC Bonus, Opcode 12: Damage, Opcode 20: Invisibility, Opcode 39: Sleep, Opcode 58: Dispel)",
+        "Duration countdown: decrements duration ticks per heartbeat; auto-purges expired effects",
+        "Modifier stacking rules: manages modifier modes (cumulative addition, absolute value override, percentage modifier)",
+        "Dispel Magic resolution: rolls Dispel check based on caster level vs effect creator level",
+        "Saving throw attachments: executes saving throw on application; negates or halves effect on successful save",
+        "Stat recomputation trigger: notifies Actor to recalculate derived stats (max HP, current AC, saving throws, THAC0)"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:pathfinding-spatial-grid",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Dual-Tier Pathfinding & Spatial Collision Grid",
+      "dcterms:description": "Dual-layer spatial navigation engine combining global waypoint A* search across expansive pre-rendered maps with high-resolution 16x12 pixel search map bitmasks and circular actor collision bounds.",
+      "robos:sourceModule": "gemrb/core/Pathfinder.cpp, gemrb/core/SearchMap.cpp",
+      "robos:coreResponsibilities": [
+        "Global Tier: A* waypoint graph traversal across area sectors for long-distance path planning",
+        "Local Tier: 16x12 pixel cell passability bitmask extracted from ARE/WED (Passable, Impassable, Water, Flying-Only)",
+        "Dynamic Collision Avoidance: circular personal space radius per Actor; checks overlap with moving entities",
+        "Bumping and formation nudging: allows party members to soft-push adjacent allies when walking in formations",
+        "Doorway dynamic updates: flips passability bits on search grid when doors open or close"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:isometric-compositor",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Pre-Rendered Isometric Compositor & WED Occlusion Pipeline",
+      "dcterms:description": "Composites 2D pre-rendered background tiles (TIS/MOS) with animated sprite sheets (BAM), 2.5D Y-sorting, palette color remapping (PLT), 3-tier Fog of War, and WED wall polygon depth clipping.",
+      "robos:sourceModule": "gemrb/core/Video.cpp, gemrb/core/TileRenderer.cpp",
+      "robos:coreResponsibilities": [
+        "Background tile blitting: streams 64x64 pixel tiles from TIS archives into viewport buffers",
+        "WED Wall & Elevation Occlusion: clips actor sprite fragments behind wall polygons so characters walk behind pillars and archways without 3D geometry",
+        "Y-Sorting: dynamically sorts actors, projectiles, and visual effects by Y-coordinate for authentic 2.5D depth",
+        "PLT Palette Translation: remaps grayscale clothing, skin, and hair pixels into customizable player RGB palettes",
+        "3-Tier Fog of War: maintains bitmask grid representing Unexplored (Black), Explored (Fogged), and Visible (Fully Lit)"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:spatial-audio-engine",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Spatial Audio & Interactive Dynamic Music Subsystem",
+      "dcterms:description": "Positional 2D/3D audio pipeline supporting ambient environment emitters, footstep surface acoustic response, character voice barks, and interactive music with peace/battle crossfading.",
+      "robos:sourceModule": "gemrb/core/Audio.cpp, gemrb/plugins/OpenALAudioDriver/",
+      "robos:coreResponsibilities": [
+        "Spatial ambient emitters: volume attenuation based on listener party distance to coordinates in ARE file",
+        "Surface acoustic response: maps terrain tile codes to footstep sounds (stone, dirt, grass, wood, shallow water)",
+        "Voice selection barks: plays randomized WAV/ACM voice lines upon actor selection, move orders, and battle cries",
+        "Dynamic interactive music: crossfades between exploratory ambient music and high-tempo combat music upon enemy encounter"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:gui-window-system",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "GUI, Paperdoll Inventory & Windowing Subsystem",
+      "dcterms:description": "Parses CHU binary window layouts to construct the Baldur's Gate user interface: drag-and-drop paperdoll equipment slots, spell memorization grids, party portrait sidebars, and dialogue selection boxes.",
+      "robos:sourceModule": "gemrb/core/GUI/Window.cpp, gemrb/GUIScripts/",
+      "robos:coreResponsibilities": [
+        "CHU window layout parsing: loads window coordinates, buttons, sliders, text areas, and scrollbars",
+        "Paperdoll inventory management: enforces equipment slot types (helmet, armor, shield, gloves, 2 rings, boots, cloak, 4 weapon slots, 3 quick item slots, 16 backpack slots)",
+        "Spell memorization interface: manages spell slot grids by spell level, memorization queues, and rest recovery",
+        "Party sidebar: renders portrait icons with health progress bars and affliction status icons",
+        "Floating combat text: renders rolls, damage numbers, and critical hit alerts above actor heads"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:subsystem:save-load-serializer",
+      "@type": [
+        "oslc_am:Resource",
+        "c4:Component",
+        "robos:EngineSubsystem"
+      ],
+      "dcterms:title": "Game State & Save/Load Serialization Subsystem",
+      "dcterms:description": "Serializes the complete runtime state into SAV and GAM archive bundles: party attributes, inventories, global variable dictionary, local area variables, fog-of-war masks, and dead creature persistence.",
+      "robos:sourceModule": "gemrb/core/SaveGame.cpp",
+      "robos:coreResponsibilities": [
+        "Serialization of world variables: stores Global, Area, and Local variable scopes",
+        "Creature delta serialization: persists current HP, active effects, equipment modifications, and inventory state",
+        "Dead actor tracking: persists dead creature lists to prevent re-spawning upon area reload",
+        "Fog of War mask serialization: preserves explored area visibility maps",
+        "Save archive bundling: packages SAV and GAM structures into compressed archive files"
+      ],
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:chitin-key",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "CHITIN.KEY Master Resource Index Contract",
+      "robos:specFile": "schemas/iesdp/CHITIN_KEY.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "KEY V1  ",
+      "robos:binaryLayout": {
+        "headerBytes": 24,
+        "fields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "signature",
+            "expected": "KEY "
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "version",
+            "expected": "V1  "
+          },
+          {
+            "offset": 8,
+            "size": 4,
+            "name": "bif_entry_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "size": 4,
+            "name": "resource_entry_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "size": 4,
+            "name": "bif_entries_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 20,
+            "size": 4,
+            "name": "resource_entries_offset",
+            "type": "uint32"
+          }
+        ],
+        "resourceEntrySize": 14,
+        "resourceEntryFields": [
+          {
+            "offset": 0,
+            "size": 8,
+            "name": "resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 8,
+            "size": 2,
+            "name": "resource_type",
+            "type": "uint16"
+          },
+          {
+            "offset": 10,
+            "size": 4,
+            "name": "resource_locator",
+            "type": "uint32 (bits 31-20: bif_index, bits 13-0: bif_resource_index)"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:bif",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "BIF (BioWare Archive File) Contract",
+      "robos:specFile": "schemas/iesdp/BIF.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "BIFFV1  ",
+      "robos:binaryLayout": {
+        "headerBytes": 20,
+        "fields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "signature",
+            "expected": "BIFF"
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "version",
+            "expected": "V1  "
+          },
+          {
+            "offset": 8,
+            "size": 4,
+            "name": "file_entry_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "size": 4,
+            "name": "tileset_entry_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "size": 4,
+            "name": "file_entries_offset",
+            "type": "uint32"
+          }
+        ],
+        "fileEntrySize": 16,
+        "fileEntryFields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "resource_locator",
+            "type": "uint32"
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "data_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 8,
+            "size": 4,
+            "name": "file_size",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "size": 2,
+            "name": "resource_type",
+            "type": "uint16"
+          },
+          {
+            "offset": 14,
+            "size": 2,
+            "name": "unknown",
+            "type": "uint16"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:2da",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "2DA (Two-Dimensional Array Rule Matrix) Contract",
+      "robos:specFile": "schemas/iesdp/2DA.md",
+      "robos:protocol": "ASCII/IESDP",
+      "robos:magicHeader": "2DA V1.0",
+      "robos:formatSpecification": "Whitespace-separated tabular ASCII matrix. Line 1: '2DA V1.0'. Line 2: default value for missing cells (e.g., '*'). Line 3: Column headers. Subsequent lines: Row header followed by cell values. Used for THAC0 progressions, saving throws, class kits, and experience tables.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:are",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "ARE (Area / Map Structure) Contract",
+      "robos:specFile": "schemas/iesdp/ARE.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "AREA V1.0",
+      "robos:binaryLayout": {
+        "headerBytes": 284,
+        "keyOffsets": [
+          {
+            "offset": 8,
+            "name": "wed_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 84,
+            "name": "actors_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 88,
+            "name": "actors_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 90,
+            "name": "triggers_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 94,
+            "name": "triggers_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 96,
+            "name": "spawns_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 100,
+            "name": "spawns_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 108,
+            "name": "ambient_sound_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 112,
+            "name": "ambient_sound_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 116,
+            "name": "variable_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 120,
+            "name": "variable_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 164,
+            "name": "doors_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 168,
+            "name": "doors_count",
+            "type": "uint16"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:wed",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "WED (Wall & Elevation Definition) Contract",
+      "robos:specFile": "schemas/iesdp/WED.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "WED V1.3",
+      "robos:binaryLayout": {
+        "headerBytes": 32,
+        "fields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "signature",
+            "expected": "WED "
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "version",
+            "expected": "V1.3"
+          },
+          {
+            "offset": 8,
+            "size": 4,
+            "name": "overlay_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "size": 4,
+            "name": "second_header_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "size": 4,
+            "name": "overlay_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 20,
+            "size": 4,
+            "name": "second_header_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 24,
+            "size": 4,
+            "name": "doors_offset",
+            "type": "uint32"
+          }
+        ],
+        "polygonDefinitions": "Defines 2D wall polygons with height coordinates. Pixels behind the polygon bounding box are clipped against the sprite buffer, providing depth occlusion without a 3D geometry pipeline."
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:bam",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "BAM (BioWare Animation Manager) Contract",
+      "robos:specFile": "schemas/iesdp/BAM.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "BAM V1  ",
+      "robos:binaryLayout": {
+        "headerBytes": 24,
+        "fields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "signature",
+            "expected": "BAM "
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "version",
+            "expected": "V1  "
+          },
+          {
+            "offset": 8,
+            "size": 2,
+            "name": "frame_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 10,
+            "size": 1,
+            "name": "cycle_count",
+            "type": "uint8"
+          },
+          {
+            "offset": 11,
+            "size": 1,
+            "name": "rle_color_index",
+            "type": "uint8"
+          },
+          {
+            "offset": 12,
+            "size": 4,
+            "name": "frame_entries_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "size": 4,
+            "name": "palette_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 20,
+            "size": 4,
+            "name": "cycle_entries_offset",
+            "type": "uint32"
+          }
+        ],
+        "rleCompression": "Supports transparent pixel run-length encoding. Color index byte represents transparent keying; RLE bytes compress runs of transparent pixels."
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:cre",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "CRE (Creature / Actor Definition) Contract",
+      "robos:specFile": "schemas/iesdp/CRE.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "CRE V1.0",
+      "robos:binaryLayout": {
+        "headerBytes": 732,
+        "keyOffsets": [
+          {
+            "offset": 8,
+            "name": "long_name_strref",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "name": "short_name_strref",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "name": "flags",
+            "type": "uint32"
+          },
+          {
+            "offset": 20,
+            "name": "xp_value",
+            "type": "uint32"
+          },
+          {
+            "offset": 28,
+            "name": "current_hp",
+            "type": "uint16"
+          },
+          {
+            "offset": 30,
+            "name": "max_hp",
+            "type": "uint16"
+          },
+          {
+            "offset": 32,
+            "name": "animation_id",
+            "type": "uint32"
+          },
+          {
+            "offset": 44,
+            "name": "armor_class_natural",
+            "type": "int16"
+          },
+          {
+            "offset": 46,
+            "name": "armor_class_effective",
+            "type": "int16"
+          },
+          {
+            "offset": 52,
+            "name": "thac0",
+            "type": "int16"
+          },
+          {
+            "offset": 53,
+            "name": "attacks_per_round",
+            "type": "uint8"
+          },
+          {
+            "offset": 54,
+            "name": "save_death",
+            "type": "uint8"
+          },
+          {
+            "offset": 55,
+            "name": "save_wands",
+            "type": "uint8"
+          },
+          {
+            "offset": 56,
+            "name": "save_polymorph",
+            "type": "uint8"
+          },
+          {
+            "offset": 57,
+            "name": "save_breath",
+            "type": "uint8"
+          },
+          {
+            "offset": 58,
+            "name": "save_spell",
+            "type": "uint8"
+          },
+          {
+            "offset": 59,
+            "name": "resist_fire",
+            "type": "uint8"
+          },
+          {
+            "offset": 60,
+            "name": "resist_cold",
+            "type": "uint8"
+          },
+          {
+            "offset": 61,
+            "name": "resist_electricity",
+            "type": "uint8"
+          },
+          {
+            "offset": 62,
+            "name": "resist_acid",
+            "type": "uint8"
+          },
+          {
+            "offset": 63,
+            "name": "resist_magic",
+            "type": "uint8"
+          },
+          {
+            "offset": 68,
+            "name": "strength",
+            "type": "uint8"
+          },
+          {
+            "offset": 69,
+            "name": "intelligence",
+            "type": "uint8"
+          },
+          {
+            "offset": 70,
+            "name": "wisdom",
+            "type": "uint8"
+          },
+          {
+            "offset": 71,
+            "name": "dexterity",
+            "type": "uint8"
+          },
+          {
+            "offset": 72,
+            "name": "constitution",
+            "type": "uint8"
+          },
+          {
+            "offset": 73,
+            "name": "charisma",
+            "type": "uint8"
+          },
+          {
+            "offset": 600,
+            "name": "script_override_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 608,
+            "name": "script_class_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 616,
+            "name": "script_race_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 624,
+            "name": "script_general_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 632,
+            "name": "script_default_resref",
+            "type": "char[8]"
+          },
+          {
+            "offset": 648,
+            "name": "dialogue_resref",
+            "type": "char[8]"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:itm",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "ITM (Item & Equipment Definition) Contract",
+      "robos:specFile": "schemas/iesdp/ITM.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "ITM V1.0",
+      "robos:binaryLayout": {
+        "headerBytes": 114,
+        "keyOffsets": [
+          {
+            "offset": 8,
+            "name": "unidentified_name_strref",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "name": "identified_name_strref",
+            "type": "uint32"
+          },
+          {
+            "offset": 24,
+            "name": "price",
+            "type": "uint32"
+          },
+          {
+            "offset": 28,
+            "name": "stack_amount",
+            "type": "uint16"
+          },
+          {
+            "offset": 30,
+            "name": "item_type",
+            "type": "uint16"
+          },
+          {
+            "offset": 34,
+            "name": "weight",
+            "type": "uint32"
+          },
+          {
+            "offset": 86,
+            "name": "extended_headers_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 90,
+            "name": "extended_headers_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 94,
+            "name": "equipping_effects_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 98,
+            "name": "equipping_effects_count",
+            "type": "uint16"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:spl",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "SPL (Spell & Magic Ability Definition) Contract",
+      "robos:specFile": "schemas/iesdp/SPL.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "SPL V1.0",
+      "robos:binaryLayout": {
+        "headerBytes": 114,
+        "keyOffsets": [
+          {
+            "offset": 8,
+            "name": "spell_name_strref",
+            "type": "uint32"
+          },
+          {
+            "offset": 28,
+            "name": "spell_type",
+            "type": "uint16 (Priest, Wizard, Innate)"
+          },
+          {
+            "offset": 34,
+            "name": "spell_level",
+            "type": "uint32"
+          },
+          {
+            "offset": 38,
+            "name": "casting_animation",
+            "type": "uint16"
+          },
+          {
+            "offset": 100,
+            "name": "extended_headers_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 104,
+            "name": "extended_headers_count",
+            "type": "uint16"
+          },
+          {
+            "offset": 106,
+            "name": "casting_effects_offset",
+            "type": "uint32"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:dlg",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "DLG (Dialogue Tree State Graph) Contract",
+      "robos:specFile": "schemas/iesdp/DLG.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:magicHeader": "DLG V1.0",
+      "robos:binaryLayout": {
+        "headerBytes": 52,
+        "fields": [
+          {
+            "offset": 0,
+            "size": 4,
+            "name": "signature",
+            "expected": "DLG "
+          },
+          {
+            "offset": 4,
+            "size": 4,
+            "name": "version",
+            "expected": "V1.0"
+          },
+          {
+            "offset": 8,
+            "size": 4,
+            "name": "state_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 12,
+            "size": 4,
+            "name": "state_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 16,
+            "size": 4,
+            "name": "transition_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 20,
+            "size": 4,
+            "name": "transition_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 24,
+            "size": 4,
+            "name": "state_trigger_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 28,
+            "size": 4,
+            "name": "state_trigger_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 32,
+            "size": 4,
+            "name": "transition_trigger_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 36,
+            "size": 4,
+            "name": "transition_trigger_offset",
+            "type": "uint32"
+          },
+          {
+            "offset": 40,
+            "size": 4,
+            "name": "action_count",
+            "type": "uint32"
+          },
+          {
+            "offset": 44,
+            "size": 4,
+            "name": "action_offset",
+            "type": "uint32"
+          }
+        ]
+      },
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:bcs",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "BCS (BioWare Compiled Script Bytecode) Contract",
+      "robos:specFile": "schemas/iesdp/BCS.md",
+      "robos:protocol": "Binary/IESDP",
+      "robos:formatSpecification": "Hierarchical block structure representing Condition-Response rules. Each block contains: 1) Trigger count and Trigger evaluation tuples (opcode, integer arg, string arg, object target specifier); 2) Action list and Action execution tuples (opcode, target coordinates, integer param, resref string, object target). Compiled from human-readable BAF source files.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:contract:ids",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Contract"
+      ],
+      "dcterms:title": "IDS (Identifier Symbol Mapping Table) Contract",
+      "robos:specFile": "schemas/iesdp/IDS.md",
+      "robos:protocol": "ASCII/IESDP",
+      "robos:formatSpecification": "Text dictionary mapping symbolic strings to 16-bit or 32-bit numeric values. Includes ACTION.IDS (engine actions), TRIGGER.IDS (script conditions), OBJECT.IDS (target selectors), SPELL.IDS (spell names to ResRefs), and ANIMATE.IDS (animation indices).",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:adr:001-pre-rendered-wed-occlusion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord"
+      ],
+      "dcterms:title": "ADR-001: Pre-Rendered Isometric Projection with WED Wall Polygon Depth Masks",
+      "robos:status": "accepted",
+      "robos:context": "Infinity Engine games use pre-rendered 2D backgrounds created in 3D modeling packages (Softimage/3ds Max), rendered to flat 2D tilemaps. To create the illusion of depth without real-time 3D geometry, sprites must be dynamically occluded when passing behind walls, arches, and pillars.",
+      "robos:decision": "Store 2D convex wall polygons in the WED (Wall & Elevation Description) format. During the rendering pass, compute the intersection of moving sprites with active wall polygons. Pixels within the polygon boundary are clipped against the background buffer using hardware stencil/scissor tests or software rasterization, allowing 2.5D visual occlusion with negligible computational overhead.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:adr:002-rtwp-100-tick-round-cycle",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord"
+      ],
+      "dcterms:title": "ADR-002: RTwP 100-Tick Round Cycle with Action Speed Quanta",
+      "robos:status": "accepted",
+      "robos:context": "Tabletop AD&D 2nd Edition uses discrete 1-minute combat rounds. A real-time computer RPG requires fast, tactile feedback while faithfully preserving tabletop turn mechanics and spell casting times.",
+      "robos:decision": "Establish a fixed 6.0-second round divided into exactly 100 engine ticks (1 tick = 60ms). Each actor executes up to their allotted attacks per round within those 100 ticks, with attack timing distributed according to weapon speed factors. Spells require a discrete casting time (CastingTime * 10 ticks); any damage sustained before the tick countdown finishes results in spell disruption and lost spell slot.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:adr:003-opcode-driven-modifier-pipeline",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord"
+      ],
+      "dcterms:title": "ADR-003: Opcode-Driven Modifier Stacking & Dispel System",
+      "robos:status": "accepted",
+      "robos:context": "Infinity Engine games feature hundreds of overlapping spells, magical items, curses, and environmental conditions. Hardcoding special cases into character attributes leads to exponential complexity and bugs.",
+      "robos:decision": "Implement a generalized Effect Opcode Queue attached to each Actor. All modifications (AC bonuses, stat drains, invisibility, haste, poison ticks) are decoupled into discrete Effect instances containing Opcode number, duration, target parameter, and source caster level. When an effect is added, removed, or dispelled, the engine re-evaluates the queue to recompute net derived statistics dynamically.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:adr:004-dual-tier-pathfinding",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ArchitectureDecisionRecord"
+      ],
+      "dcterms:title": "ADR-004: Dual-Tier A* Waypoint and 16x12 Search Bitmask Navigation",
+      "robos:status": "accepted",
+      "robos:context": "Infinity Engine areas can measure up to 5,000x5,000 pixels with up to 6 party members and dozens of monsters pathfinding simultaneously. Running per-pixel A* across such vast maps causes severe CPU bottlenecking.",
+      "robos:decision": "Employ a dual-tier navigation system: 1) High-level waypoint graph A* for planning coarse paths across area sectors; 2) Low-level 16x12 pixel search map bitmask for fine-grained obstacle and wall avoidance. Actors possess circular collision hulls at their feet and perform dynamic local avoidance when encountering allies or moving monsters.",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
+    },
+    {
+      "@id": "urn:robos:infinity:blueprint:cplusplus-interfaces",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CodeSnippet"
+      ],
+      "dcterms:title": "Core Subsystem C++ Interfaces for Autonomous AI Engine Generation",
+      "robos:language": "cpp",
+      "robos:codeContent": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
+      "robos:package": "infinity-engine",
+      "robos:namespace": "robos.infinity"
     }
   ]
 }

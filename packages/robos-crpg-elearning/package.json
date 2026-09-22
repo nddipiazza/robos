@@ -1,0 +1,9 @@
+{
+  "name": "robos-crpg-elearning",
+  "version": "1.0.0",
+  "description": "Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

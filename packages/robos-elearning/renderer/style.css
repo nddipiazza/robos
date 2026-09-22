@@ -31,6 +31,145 @@ body { background: var(--bg-primary); color: var(--text); height: 100vh; display
 .progress-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
 .progress-bar-bg { width: 100%; height: 8px; background: #21262d; border-radius: 4px; overflow: hidden; }
 .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #00bcd4, #2ea043); transition: width 0.3s ease; }
+
+/* Voice Assistant Toolbar */
+.voice-assistant-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(33, 38, 45, 0.7);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.btn-voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+}
+
+.btn-voice-toggle.idle {
+  background: var(--bg-surface);
+  color: var(--text);
+}
+
+.btn-voice-toggle.idle:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--accent);
+}
+
+.btn-voice-toggle.active {
+  background: rgba(218, 54, 51, 0.2);
+  color: #ff7b72;
+  border-color: #da3633;
+  box-shadow: 0 0 10px rgba(218, 54, 51, 0.4);
+}
+
+.btn-voice-toggle .mic-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.btn-voice-toggle.active .mic-dot {
+  background: #f85149;
+  box-shadow: 0 0 8px #f85149;
+  animation: pulse-dot 1s infinite alternate;
+}
+
+@keyframes pulse-dot {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+.agent-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.agent-selector-group .agent-select {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  outline: none;
+}
+
+.agent-selector-group .agent-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voice-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 188, 212, 0.1);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  border-radius: 12px;
+  font-size: 11px;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-ticker.hidden { display: none; }
+
+.ticker-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00bcd4;
+  box-shadow: 0 0 6px #00bcd4;
+  animation: pulse-dot 0.8s infinite alternate;
+}
+
+.ticker-speech {
+  color: #38bdf8;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Real-Time Mutation Feedback Banner */
+.voice-feedback-banner {
+  background: rgba(35, 134, 54, 0.15);
+  border: 1px solid rgba(35, 134, 54, 0.4);
+  color: #4ade80;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: slide-down 0.3s ease-out;
+}
+
+.voice-feedback-banner.hidden { display: none; }
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .app-body { display: flex; flex: 1; overflow: hidden; }
 .sidebar { width: 320px; background: #111620; border-right: 1px solid var(--border); padding: 18px; overflow-y: auto; display: flex; flex-direction: column; }
 .sidebar h3 { font-size: 13px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 12px; }

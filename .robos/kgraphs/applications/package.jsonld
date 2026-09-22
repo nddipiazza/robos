@@ -208,7 +208,8 @@
       ],
       "robos:dependsOn": {
         "@id": "urn:robos:source:workspace-review"
-      }
+      },
+      "robos:namespace": "robos.applications"
     },
     {
       "@id": "urn:robos:source:schema-group-view",
@@ -256,6 +257,31 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
+      ],
+      "robos:namespace": "robos.applications"
+    },
+    {
+      "@id": "urn:robos:app:customer-portal",
+      "@type": [
+        "robos:FrontEndApp",
+        "schema:WebApplication",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Customer Portal SPA",
+      "dcterms:description": "React & Vite single-page application for client checkout.",
+      "robos:repository": "github.com/acme/customer-portal",
+      "robos:technology": "TypeScript / React",
+      "robos:frontendFramework": "React",
+      "robos:buildTool": "Vite",
+      "robos:devServerPort": 3000,
+      "robos:ownerTeam": "urn:robos:team:frontend-guild",
+      "robos:package": "applications",
+      "robos:namespace": "robos.apps",
+      "robos:hasELearning": [
+        "urn:robos:elearning:app:customer-portal"
+      ],
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
       ]
     }
   ],
@@ -276,6 +302,30 @@
       "robos:frontendFramework": "React",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
       "robos:domainStandard": "https://schema.org/WebApplication"
+    },
+    {
+      "@id": "urn:robos:app:voice-prompt",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Voice Prompt Agent",
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
+      "robos:desktopFramework": "Electron",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:apiPort": 19188,
+      "robos:globalHotkey": "Super+V",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
     },
     {
       "@id": "urn:robos:console-app:rest-client",
@@ -332,7 +382,34 @@
       "robos:package": "applications",
       "robos:namespace": "robos.applications",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:command": "rest-client",
+      "robos:commandName": "inspect"
+    },
+    {
+      "@id": "urn:robos:source:workspace-explorer",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Explorer import and refinement panel",
+      "robos:package": "applications",
+      "robos:sourcePath": "packages/robos-graph/renderer/workspace-review.js",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/renderer/workspace-review.js",
+          "line": 1
+        }
+      ],
+      "robos:dependsOn": {
+        "@id": "urn:robos:source:workspace-review"
+      },
+      "robos:namespace": "robos.applications"
     },
     {
       "@id": "urn:robos:source:schema-group-view",
@@ -380,6 +457,31 @@
           ],
           "note": "Implementation uses this module, or test exercises its rendered behavior."
         }
+      ],
+      "robos:namespace": "robos.applications"
+    },
+    {
+      "@id": "urn:robos:app:customer-portal",
+      "@type": [
+        "robos:FrontEndApp",
+        "schema:WebApplication",
+        "oslc:Resource"
+      ],
+      "dcterms:title": "Customer Portal SPA",
+      "dcterms:description": "React & Vite single-page application for client checkout.",
+      "robos:repository": "github.com/acme/customer-portal",
+      "robos:technology": "TypeScript / React",
+      "robos:frontendFramework": "React",
+      "robos:buildTool": "Vite",
+      "robos:devServerPort": 3000,
+      "robos:ownerTeam": "urn:robos:team:frontend-guild",
+      "robos:package": "applications",
+      "robos:namespace": "robos.apps",
+      "robos:hasELearning": [
+        "urn:robos:elearning:app:customer-portal"
+      ],
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:customer-portal-frontend-lead-mucvnesw"
       ]
     }
   ]

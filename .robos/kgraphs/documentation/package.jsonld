@@ -416,7 +416,8 @@
           "path": "packages/robos-graph/WORKSPACES.md",
           "line": 1
         }
-      ]
+      ],
+      "robos:namespace": "robos.docs"
     }
   ],
   "@graph": [
@@ -502,7 +503,8 @@
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
       "robos:schemaOrgType": "https://schema.org/Guide",
-      "robos:domainStandard": "https://schema.org/Guide"
+      "robos:domainStandard": "https://schema.org/Guide",
+      "robos:tooltip": "Interactive Guided Tour for Remote Execution Studio"
     },
     {
       "@id": "urn:robos:snippet:shacl-custom-validation",
@@ -728,6 +730,28 @@
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",
+      "robos:namespace": "robos.docs"
+    },
+    {
+      "@id": "urn:robos:source:workspace-docs",
+      "@type": [
+        "robos:SourceArtifact",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Source-backed workspace guide",
+      "robos:package": "documentation",
+      "robos:sourcePath": "packages/robos-graph/WORKSPACES.md",
+      "robos:sourceKind": "implementation",
+      "robos:inRepository": {
+        "@id": "urn:robos:source:workspace"
+      },
+      "robos:evidence": [
+        {
+          "repository": "robos",
+          "path": "packages/robos-graph/WORKSPACES.md",
+          "line": 1
+        }
+      ],
       "robos:namespace": "robos.docs"
     }
   ]

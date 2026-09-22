@@ -42,8 +42,814 @@
       "robos:assetPackage": "flareteam/flare-game",
       "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
       "robos:maxPartySize": 4,
+      "robos:hasELearning": [
+        "urn:robos:elearning:course:robos-crpg"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:class:fighter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Fighter",
+      "robos:hitDie": "d10",
+      "robos:primaryAbility": "STR",
+      "robos:savingThrows": [
+        "STR",
+        "CON"
+      ],
+      "robos:baseHpAtLevel1": 12,
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:class:wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Wizard",
+      "robos:hitDie": "d6",
+      "robos:primaryAbility": "INT",
+      "robos:savingThrows": [
+        "INT",
+        "WIS"
+      ],
+      "robos:baseHpAtLevel1": 7,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:class:rogue",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Rogue",
+      "robos:hitDie": "d8",
+      "robos:primaryAbility": "DEX",
+      "robos:savingThrows": [
+        "DEX",
+        "INT"
+      ],
+      "robos:baseHpAtLevel1": 9,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:class:cleric",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Cleric",
+      "robos:hitDie": "d8",
+      "robos:primaryAbility": "WIS",
+      "robos:savingThrows": [
+        "WIS",
+        "CHA"
+      ],
+      "robos:baseHpAtLevel1": 9,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:npc:elora",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGNPC",
+        "schema:Person"
+      ],
+      "dcterms:title": "Elora (Partner)",
+      "robos:dialogueTree": "urn:robos:crpg:dialogue:partner-confrontation",
+      "robos:location": "urn:robos:crpg:zone:homestead",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:npc:blacksmith-brand",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGNPC",
+        "schema:Person"
+      ],
+      "dcterms:title": "Blacksmith Brand",
+      "robos:dialogueTree": "urn:robos:crpg:dialogue:blacksmith-inquiry",
+      "robos:location": "urn:robos:crpg:zone:village-square",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:monster:corrupted-hound",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Corrupted Shadow Hound",
+      "robos:challengeRating": "1/4",
+      "robos:armorClass": 12,
+      "robos:hitPoints": 11,
+      "robos:speed": 40,
+      "robos:abilities": {
+        "STR": 12,
+        "DEX": 15,
+        "CON": 12,
+        "INT": 3,
+        "WIS": 12,
+        "CHA": 6
+      },
+      "robos:spriteAssetRef": "flare:creature:wolf",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:monster:corrupted-guard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Feral Guard Skirmisher",
+      "robos:challengeRating": "1/2",
+      "robos:armorClass": 14,
+      "robos:hitPoints": 16,
+      "robos:speed": 30,
+      "robos:abilities": {
+        "STR": 14,
+        "DEX": 12,
+        "CON": 14,
+        "INT": 8,
+        "WIS": 10,
+        "CHA": 8
+      },
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:monster:captain-malakor-boss",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Captain Malakor (Corrupted Commander)",
+      "robos:challengeRating": "3",
+      "robos:armorClass": 16,
+      "robos:hitPoints": 58,
+      "robos:speed": 30,
+      "robos:abilities": {
+        "STR": 18,
+        "DEX": 12,
+        "CON": 16,
+        "INT": 12,
+        "WIS": 14,
+        "CHA": 14
+      },
+      "robos:spriteAssetRef": "flare:creature:minotaur",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:monster:skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton Warrior",
+      "robos:challengeRating": "1/4",
+      "robos:armorClass": 13,
+      "robos:hitPoints": 13,
+      "robos:speed": 30,
+      "robos:abilities": {
+        "STR": 10,
+        "DEX": 14,
+        "CON": 15,
+        "INT": 6,
+        "WIS": 8,
+        "CHA": 5
+      },
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:monster:zombie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Shambling Zombie",
+      "robos:challengeRating": "1/4",
+      "robos:armorClass": 8,
+      "robos:hitPoints": 22,
+      "robos:speed": 20,
+      "robos:abilities": {
+        "STR": 13,
+        "DEX": 6,
+        "CON": 16,
+        "INT": 3,
+        "WIS": 6,
+        "CHA": 5
+      },
+      "robos:spriteAssetRef": "flare:creature:zombie",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:magic-missile",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Magic Missile",
+      "robos:spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "3d4+3",
+      "robos:damageType": "force",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:cure-wounds",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Cure Wounds",
+      "robos:spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "robos:range": "Touch",
+      "robos:damageFormula": "1d8+WIS",
+      "robos:damageType": "healing",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:fireball",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fireball",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "robos:range": "150 feet",
+      "robos:damageFormula": "8d6",
+      "robos:damageType": "fire",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:service-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Royal Guard Service Sword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:damageDice": "1d8",
+      "robos:cost": 20,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:garrison-key",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Garrison Side-Gate Key",
+      "robos:itemCategory": "quest",
+      "robos:equipSlot": null,
+      "robos:cost": 0,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:guard-journal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Blood-Stained Watch Journal",
+      "robos:itemCategory": "quest",
+      "robos:equipSlot": null,
+      "robos:cost": 0,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:malakor-signet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Commander's Void Signet",
+      "robos:itemCategory": "accessory",
+      "robos:equipSlot": "ring",
+      "robos:acBonus": 1,
+      "robos:cost": 250,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:chain-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Guard Chain Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:acBonus": 16,
+      "robos:cost": 75,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:potion-healing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Potion of Healing",
+      "robos:itemCategory": "consumable",
+      "robos:equipSlot": "belt",
+      "robos:cost": 50,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:zone:homestead",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMapZone",
+        "schema:Place"
+      ],
+      "dcterms:title": "Guard's Homestead",
+      "robos:zoneType": "interior",
+      "robos:scenePath": "scenes/Homestead.tscn",
+      "robos:ambientAudio": "assets/audio/homestead_ambience.ogg",
+      "robos:tilesetRef": "flare:tileset:dungeon_stone",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:zone:village-square",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMapZone",
+        "schema:Place"
+      ],
+      "dcterms:title": "Oakhaven Village Square",
+      "robos:zoneType": "wilderness",
+      "robos:scenePath": "scenes/VillageSquare.tscn",
+      "robos:ambientAudio": "assets/audio/village_ambience.ogg",
+      "robos:tilesetRef": "flare:tileset:wilderness_grass",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:zone:garrison-keep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGMapZone",
+        "schema:Place"
+      ],
+      "dcterms:title": "Royal Garrison Keep & War Room",
+      "robos:zoneType": "dungeon",
+      "robos:scenePath": "scenes/GarrisonKeep.tscn",
+      "robos:ambientAudio": "assets/audio/dungeon_ambience.ogg",
+      "robos:tilesetRef": "flare:tileset:dungeon_stone",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:encounter:village-hounds",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGEncounterTable",
+        "schema:DataFeed"
+      ],
+      "dcterms:title": "Village Outskirts Shadow Hounds",
+      "robos:minLevel": 1,
+      "robos:maxLevel": 2,
+      "robos:encounterEntries": [
+        {
+          "monsterId": "corrupted-hound",
+          "weight": 100,
+          "minCount": 1,
+          "maxCount": 2
+        }
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:encounter:garrison-skirmishers",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGEncounterTable",
+        "schema:DataFeed"
+      ],
+      "dcterms:title": "Garrison Barracks Corrupted Guards",
+      "robos:minLevel": 1,
+      "robos:maxLevel": 3,
+      "robos:encounterEntries": [
+        {
+          "monsterId": "corrupted-guard",
+          "weight": 70,
+          "minCount": 1,
+          "maxCount": 2
+        },
+        {
+          "monsterId": "skeleton",
+          "weight": 30,
+          "minCount": 1,
+          "maxCount": 2
+        }
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:night-without-memory",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "A Night Without Memory",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Awake at home. Questioned by your partner Elora about last night's secret call to the keep."
+        },
+        {
+          "stage": 2,
+          "description": "Retrieve your service blade from the footlocker and step out into Oakhaven Village."
+        },
+        {
+          "stage": 3,
+          "description": "Investigate the village disturbance and speak with Blacksmith Brand to obtain the Garrison Side Key."
+        },
+        {
+          "stage": 4,
+          "description": "Breach the Royal Garrison Keep and defeat the corrupted skirmishers in the lower barracks."
+        },
+        {
+          "stage": 5,
+          "description": "Confront Captain Malakor in the War Room, defeat his corrupted form, and seal the Azrath vault breach."
+        }
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:dialogue:partner-confrontation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGDialogueTree",
+        "schema:Conversation"
+      ],
+      "dcterms:title": "Partner Confrontation at Homestead",
+      "robos:rootNode": "node_wake",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:dialogue:blacksmith-inquiry",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGDialogueTree",
+        "schema:Conversation"
+      ],
+      "dcterms:title": "Blacksmith Brand Village Report",
+      "robos:rootNode": "node_blacksmith_start",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:dialogue:malakor-showdown",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGDialogueTree",
+        "schema:Conversation"
+      ],
+      "dcterms:title": "Captain Malakor Showdown",
+      "robos:rootNode": "node_malakor_start",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:faction:royal-guard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGFaction",
+        "schema:Organization"
+      ],
+      "dcterms:title": "Oakhaven Royal Guard",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:faction:corrupted-cult",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGFaction",
+        "schema:Organization"
+      ],
+      "dcterms:title": "Azrath Void Thralls",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:testsuite:e2e-playthrough",
+      "@type": [
+        "oslc_qm:TestSuite",
+        "robos:TestSuite"
+      ],
+      "dcterms:title": "cRPG Early Access Playthrough Cucumber E2E Test Suite",
+      "dcterms:description": "Automated Cucumber/Behave E2E test suite running in headless Xvfb with Godot 4 and FFmpeg video recording.",
+      "robos:targetProject": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:testFramework": "behave",
+      "robos:features": [
+        "urn:robos:crpg:feature:character-creation",
+        "urn:robos:crpg:feature:homestead-amnesia",
+        "urn:robos:crpg:feature:village-investigation",
+        "urn:robos:crpg:feature:garrison-boss-victory"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:testplan:early-access-slice",
+      "@type": [
+        "oslc_qm:TestPlan",
+        "robos:TestPlan"
+      ],
+      "dcterms:title": "cRPG Early Access Vertical Slice Test Plan",
+      "dcterms:description": "Quality assurance test plan verifying character creation, amnesia narrative hook, village investigation, and boss showdown.",
+      "robos:hasTestSuite": [
+        "urn:robos:crpg:testsuite:e2e-playthrough"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:feature:character-creation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:title": "Character Creation and Class Archetype Selection",
+      "dcterms:description": "Player selects hero class and name to awaken with proper D&D 5e starting stats.",
+      "robos:featureFile": "games/crpg-realm/tests/e2e/features/01_character_creation.feature",
+      "robos:testsGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:hasScenario": [
+        "urn:robos:crpg:scenario:create-fighter-vance"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:scenario:create-fighter-vance",
+      "@type": [
+        "robos:Scenario",
+        "schema:Action"
+      ],
+      "dcterms:title": "Creating Fighter Lieutenant Vance",
+      "robos:inFeature": "urn:robos:crpg:feature:character-creation",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:feature:homestead-amnesia",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:title": "Homestead Awakening and Partner Confrontation Hook",
+      "dcterms:description": "Lieutenant Vance awakens with amnesia, is confronted by Elora, and loots the service blade.",
+      "robos:featureFile": "games/crpg-realm/tests/e2e/features/02_homestead_amnesia_hook.feature",
+      "robos:testsGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:hasScenario": [
+        "urn:robos:crpg:scenario:homestead-elora-confrontation"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:scenario:homestead-elora-confrontation",
+      "@type": [
+        "robos:Scenario",
+        "schema:Action"
+      ],
+      "dcterms:title": "Confronting Elora and looting the guard footlocker",
+      "robos:inFeature": "urn:robos:crpg:feature:homestead-amnesia",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:feature:village-investigation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:title": "Oakhaven Village Square Investigation and Hound Combat",
+      "dcterms:description": "Investigate village disturbance, speak with Blacksmith Brand, and defeat shadow hounds.",
+      "robos:featureFile": "games/crpg-realm/tests/e2e/features/03_village_square_investigation.feature",
+      "robos:testsGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:hasScenario": [
+        "urn:robos:crpg:scenario:village-brand-and-hounds"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:scenario:village-brand-and-hounds",
+      "@type": [
+        "robos:Scenario",
+        "schema:Action"
+      ],
+      "dcterms:title": "Speaking with Blacksmith Brand and defeating corrupted hounds",
+      "robos:inFeature": "urn:robos:crpg:feature:village-investigation",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:feature:garrison-boss-victory",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:title": "Royal Garrison Keep Infiltration and Terminal Boss Showdown",
+      "dcterms:description": "Infiltrate keep, confront corrupted Captain Malakor, and seal breach for terminal victory.",
+      "robos:featureFile": "games/crpg-realm/tests/e2e/features/04_garrison_keep_boss_victory.feature",
+      "robos:testsGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:hasScenario": [
+        "urn:robos:crpg:scenario:keep-malakor-boss-victory"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:scenario:keep-malakor-boss-victory",
+      "@type": [
+        "robos:Scenario",
+        "schema:Action"
+      ],
+      "dcterms:title": "Infiltrating the keep, defeating Captain Malakor, and achieving victory",
+      "robos:inFeature": "urn:robos:crpg:feature:garrison-boss-victory",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:agent-session:xvfb-e2e-runner",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:AgentSession"
+      ],
+      "dcterms:title": "cRPG Headless Xvfb Video Proof-of-Work & Cucumber Test Runner Session",
+      "dcterms:description": "Autonomous RobOS agent execution harness running Godot 4 in Xvfb virtual display :99 with GameControlServer HTTP REST telemetry and FFmpeg 1080p video recording.",
+      "robos:virtualDisplay": ":99",
+      "robos:captureVideo": true,
+      "robos:videoResolution": "1280x720",
+      "robos:videoFramerate": 30,
+      "robos:targetGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:executesSuite": "urn:robos:crpg:testsuite:e2e-playthrough",
+      "robos:gameControlServerPort": 18090,
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:qa-player:virtual-tester",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:QAPlayer",
+        "robos:AutonomousVirtualTester",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Video Game QA Player (Virtual User Tester)",
+      "dcterms:description": "Autonomous virtual human user simulation engine that plays the cRPG game via screen perception and simulated user inputs (mouse clicks, typing, UI button selections) with zero backend cheats.",
+      "robos:zeroCheatsEnforced": true,
+      "robos:supportsScenarios": [
+        "urn:robos:crpg:qa-scenario:character-creation-and-first-scene"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:feature:qa-player-user-simulation",
+      "@type": [
+        "robos:GherkinFeature",
+        "robos:BDDFeature",
+        "oslc_rm:Requirement",
+        "schema:DigitalDocument"
+      ],
+      "dcterms:title": "Autonomous QA Player User Simulation",
+      "dcterms:description": "Simulates real player inputs with zero backend cheats across character creation and the first homestead scene.",
+      "robos:featureFile": "games/crpg-realm/tests/e2e/features/05_qa_player_user_simulation.feature",
+      "robos:testsGame": "urn:robos:crpg:game:realm-of-heroes",
+      "robos:hasScenario": [
+        "urn:robos:crpg:qa-scenario:character-creation-and-first-scene"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:qa-scenario:character-creation-and-first-scene",
+      "@type": [
+        "robos:Scenario",
+        "robos:QAScenario",
+        "schema:Action"
+      ],
+      "dcterms:title": "QA User Simulation: Character Creation and First Scene (Homestead)",
+      "dcterms:description": "Simulates a user selecting Fighter Lieutenant Vance, embarking into the Homestead, talking with partner Elora, looting the footlocker, and exiting into Oakhaven Village.",
+      "robos:inFeature": "urn:robos:crpg:feature:qa-player-user-simulation",
+      "robos:evidenceVideo": "games/crpg-realm/tests/e2e/reports/videos/qa_evidence_character_creation_and_homestead.mp4",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:crpg:game:realm-of-heroes",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGame",
+        "robos:PCGame",
+        "schema:VideoGame"
+      ],
+      "dcterms:title": "Realm of Heroes: A Night Without Memory",
+      "robos:repository": "github.com/nddipiazza/realm-of-heroes",
+      "robos:technology": "Godot 4 / GDScript",
+      "robos:gameEngine": "Godot 4",
+      "robos:targetPlatform": "Linux, Windows, macOS",
+      "robos:ruleset": "dnd5e",
+      "robos:combatModel": "real-time-with-pause",
+      "robos:startingZone": "urn:robos:crpg:zone:homestead",
+      "robos:assetPackage": "flareteam/flare-game",
+      "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
+      "robos:maxPartySize": 4,
+      "robos:hasELearning": [
+        "urn:robos:elearning:course:robos-crpg"
+      ],
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:hasCertificate": [
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp"
+      ]
     },
     {
       "@id": "urn:robos:crpg:class:fighter",
