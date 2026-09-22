@@ -21,7 +21,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
   });
 
   it('1. Generates standalone interactive website for robos-crpg with Jekyll frontmatter for GitHub Pages', () => {
-    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning.html');
+    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
 
     const result = store.generateELearningWebsite({
       courseId: 'robos-crpg',
@@ -35,12 +35,12 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(result.course, 'Must return course node');
     assert.ok(result.application, 'Must return target application node');
 
-    // Verify main HTML file exists
-    assert.ok(fs.existsSync(targetHtmlPath), 'docs/projects/crpg-realm/elearning.html must exist on disk');
+    // Verify main HTML file exists at /projects/crpg-realm/elearning/index.html
+    assert.ok(fs.existsSync(targetHtmlPath), 'docs/projects/crpg-realm/elearning/index.html must exist on disk');
 
-    // Verify directory index file exists for /projects/crpg-realm/elearning/ routing
-    const indexFilePath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
-    assert.ok(fs.existsSync(indexFilePath), 'Directory index.html must exist for clean URL resolution');
+    // Verify NO stray sibling elearning.html exists that would cause Jekyll menu duplication
+    const straySibling = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning.html');
+    assert.ok(!fs.existsSync(straySibling), 'Must NOT create duplicate elearning.html sibling file');
 
     const content = fs.readFileSync(targetHtmlPath, 'utf8');
 
@@ -59,9 +59,22 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('Tactical cRPG Realm'), 'Must include breadcrumb link to project');
     assert.ok(content.includes('Interactive Masterclass'), 'Must include breadcrumb title');
 
-    // 3. Verify all 5 curriculum modules are parsed without leaking template literals in sidebar
+    // 3. Verify Accessibility (WCAG 2.1 AA) Structure
+    assert.ok(content.includes('class="skip-link"'), 'Must include accessible skip link');
+    assert.ok(content.includes('id="a11y-announcer"'), 'Must include live screen reader announcer');
+    assert.ok(content.includes('aria-live="polite"'), 'Announcer must have aria-live="polite"');
+    assert.ok(content.includes('role="tablist"'), 'Sidebar navigation must have role="tablist"');
+    assert.ok(content.includes('role="tab"'), 'Module items must have role="tab"');
+    assert.ok(content.includes('aria-selected='), 'Module items must track aria-selected');
+    assert.ok(content.includes('handleModuleKeyDown'), 'Must support keyboard arrow navigation');
+    assert.ok(content.includes('fieldset class="quiz-card"'), 'Quizzes must use semantic fieldset');
+    assert.ok(content.includes('legend class="quiz-q"'), 'Quizzes must use semantic legend');
+    assert.ok(content.includes('role="dialog"'), 'Modals must declare role="dialog"');
+    assert.ok(content.includes('aria-modal="true"'), 'Modals must declare aria-modal="true"');
+
+    // 4. Verify all 5 curriculum modules are parsed without leaking template literals in sidebar
     assert.ok(!content.includes('${idx + 1}'), 'Must not leak unparsed template literals');
-    const sidebarSection = content.split('<aside class="sidebar">')[1].split('</aside>')[0];
+    const sidebarSection = content.split('<aside class="sidebar"')[1].split('</aside>')[0];
     assert.ok(!sidebarSection.includes('${'), 'Sidebar must not contain unparsed template expressions');
     assert.ok(content.includes('id="nav-mod-0"'), 'Module 0 nav id must be rendered');
     assert.ok(content.includes('onclick="selectModule(0)"'), 'Module 0 click handler must be rendered');
@@ -71,29 +84,39 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.includes('4. Autonomous Infinity AI Agent'), 'Module 4 must be present');
     assert.ok(content.includes('5. Knowledge Graph-First Game Development') || content.includes('Knowledge Graph-First Game Architecture'), 'Module 5 must be present');
 
-    // 4. Verify Interactive Labs & Checkbox handlers
+    // 5. Verify Comprehensive Lesson Content & Architecture Walkthrough for all 5 modules
+    assert.ok(content.includes('Lesson Material &amp; Architecture Walkthrough'), 'Must render Lesson Material header');
+    assert.ok(content.includes('Real-Time with Pause (RTwP) &amp; 6.0-Second Combat Round') || content.includes('Real-Time with Pause (RTwP) & 6.0-Second Combat Round'), 'Module 1 RTwP lesson must be present');
+    assert.ok(content.includes('Ability Score - 10'), 'Must include Ability Modifier formula');
+    assert.ok(content.includes('max(d20, d20)'), 'Must include Advantage probability curve');
+    assert.ok(content.includes('Why Godot 4.3 GL Compatibility Profile?'), 'Module 2 GL Compatibility lesson must be present');
+    assert.ok(content.includes('Camera2D Boundary Clamping in Godot 4'), 'Module 2 Camera2D clamping code must be present');
+    assert.ok(content.includes('Layer 1 Physical Building Collision Geometry'), 'Module 2 Building collision table must be present');
+    assert.ok(content.includes('HouseInn') && content.includes('The Rusty Dragon Inn'), 'Building collision table must list houses');
+    assert.ok(content.includes('Genuine Open-Source Asset Harvesting Pipeline'), 'Module 3 Asset pipeline lesson must be present');
+    assert.ok(content.includes('Three-Mode Expandable Activity Log'), 'Module 3 Activity Log lesson must be present');
+    assert.ok(content.includes('Autonomous Infinity AI Agent Architecture'), 'Module 4 Agent architecture lesson must be present');
+    assert.ok(content.includes('140px proximity trigger'), 'Module 4 Threat radar formula must be present');
+    assert.ok(content.includes('Knowledge Graph-First Game Architecture'), 'Module 5 KGraph architecture lesson must be present');
+    assert.ok(content.includes('Auto-generated statically-typed DataStoreV1.gd'), 'Module 5 DataStoreV1.gd code snippet must be present');
+
+    // 6. Verify Interactive Labs & Checkbox handlers
     assert.ok(content.includes('toggleLab('), 'Must provide toggleLab interactive handler');
     assert.ok(content.includes('completeAllLabs('), 'Must provide completeAllLabs helper');
     assert.ok(content.includes('localStorage.getItem'), 'Must store progress in localStorage');
 
-    // 5. Verify Knowledge Check Quizzes
+    // 7. Verify Knowledge Check Quizzes
     assert.ok(content.includes('answerQuiz('), 'Must provide answerQuiz interactive handler');
     assert.ok(content.includes('Spell Save DC'), 'Must include Module 1 Spell Save DC question');
     assert.ok(content.includes('GL Compatibility'), 'Must include Module 2 GL Compatibility question');
 
-    // 6. Verify Technical Deep Dive theory & Formulas
-    assert.ok(content.includes('Ability Score - 10'), 'Must include Ability Modifier formula');
-    assert.ok(content.includes('Camera Viewport Clamping'), 'Must include camera clamping formulas');
-    assert.ok(content.includes('Activity Log Expansion Tiers'), 'Must include activity log formula breakdown');
-    assert.ok(content.includes('140px proximity trigger'), 'Must include threat radar trigger specs');
-
-    // 7. Verify Verifiable Certificate & Cryptographic SHA-256 Hash
+    // 8. Verify Verifiable Certificate & Cryptographic SHA-256 Hash
     assert.ok(content.includes('ROBOS-CERT-'), 'Must include ROBOS-CERT- verification prefix');
     assert.ok(content.includes('crypto.subtle.digest'), 'Must compute client-side SHA-256 cryptographic hash');
     assert.ok(content.includes('schema:EducationalOccupationalCredential'), 'Must conform to W3C schema standard');
     assert.ok(content.includes('showJsonLdModal'), 'Must provide JSON-LD credential inspector');
 
-    // 8. Verify Mermaid diagrams & Lightbox
+    // 9. Verify Mermaid diagrams & Lightbox
     assert.ok(content.includes('class="mermaid"'), 'Must contain Mermaid diagram elements');
     assert.ok(content.includes('openLightbox'), 'Must support screenshot lightbox zoom');
   });

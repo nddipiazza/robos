@@ -1,9 +1,9 @@
 ---
-title: Tactical cRPG Architecture & Masterclass
+title: Tactical cRPG Architecture & Masterclass Specification
 layout: default
 parent: Tactical cRPG & Infinity AI Engine
 grand_parent: RobOS Projects
-nav_order: 4
+nav_exclude: true
 ---
 
 # Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass

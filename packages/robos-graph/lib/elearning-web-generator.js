@@ -56,9 +56,9 @@ function generateELearningWebsite(store, options = {}) {
   const isCrpg = courseSlug.includes('crpg') || (course['dcterms:title'] || '').toLowerCase().includes('crpg');
 
   const permalink = options.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : `/elearning/${courseSlug}`);
-  const outputFileName = isCrpg ? 'elearning.html' : `${courseSlug}.html`;
+  const outputFileName = isCrpg ? 'index.html' : `${courseSlug}.html`;
   const defaultOutputPath = isCrpg
-    ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', outputFileName)
+    ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html')
     : path.join(process.cwd(), 'docs', 'elearning', outputFileName);
   const outputPath = options.outputFilePath || defaultOutputPath;
 
@@ -109,9 +109,19 @@ function generateELearningWebsite(store, options = {}) {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, htmlContent, 'utf8');
 
+  // If this is crpg, clean up any stray elearning.html that would create a duplicate Jekyll navbar entry
+  if (isCrpg) {
+    const straySibling = path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning.html');
+    if (fs.existsSync(straySibling) && straySibling !== outputPath) {
+      try { fs.unlinkSync(straySibling); } catch {}
+    }
+  }
+
   // Also write directory index if requested or auto-publishing to docs
   let indexFilePath = null;
-  if (options.autoPublishPages !== false) {
+  if (path.basename(outputPath) === 'index.html') {
+    indexFilePath = outputPath;
+  } else if (options.autoPublishPages !== false && !isCrpg) {
     const dirPath = path.join(path.dirname(outputPath), path.basename(outputPath, '.html'));
     indexFilePath = path.join(dirPath, 'index.html');
     fs.mkdirSync(dirPath, { recursive: true });
@@ -180,10 +190,10 @@ function buildStandaloneHtml(params) {
 
   return `---
 layout: null
-title: "RobOS eLearning — ${courseTitle.replace(/"/g, '\\"')}"
+title: "${isCrpg ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"'))}"
 ${isCrpg ? `parent: Tactical cRPG & Infinity AI Engine
 grand_parent: RobOS Projects
-nav_order: 5
+nav_order: 4
 ` : ''}permalink: ${permalink}
 redirect_from:
 ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
@@ -246,6 +256,36 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+    }
+
+    /* Accessibility: Skip Link & Screen Reader Helpers */
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 16px;
+      background: var(--accent);
+      color: #0d1117;
+      padding: 10px 18px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      z-index: 9999;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(0, 188, 212, 0.4);
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     /* Top Brand Bar */
@@ -433,6 +473,9 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       gap: 6px;
     }
     .module-item {
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
       padding: 12px 14px;
       border-radius: var(--radius-md);
       cursor: pointer;
@@ -444,6 +487,11 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     .module-item:hover {
       background: var(--bg-surface-hover);
       border-color: var(--border);
+    }
+    .module-item:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-color: var(--accent);
     }
     .module-item.active {
       background: rgba(0, 188, 212, 0.12);
@@ -582,6 +630,75 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       line-height: 1.6;
     }
 
+    /* Intra-Module Section Navigation Pills */
+    .module-nav-pills {
+      display: flex;
+      gap: 10px;
+      margin: 16px 0 24px;
+      flex-wrap: wrap;
+    }
+    .nav-pill {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .nav-pill:hover, .nav-pill:focus-visible {
+      color: var(--text-bright);
+      border-color: var(--accent);
+      background: rgba(0, 188, 212, 0.1);
+      outline: none;
+    }
+
+    /* Lesson Content within Module */
+    .module-lesson-body {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+    .lesson-section {
+      margin-bottom: 24px;
+    }
+    .lesson-section:last-child {
+      margin-bottom: 0;
+    }
+    .lesson-subtitle {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin: 16px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lesson-text {
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .code-snippet {
+      background: #090d13;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #79c0ff;
+      overflow-x: auto;
+      margin: 14px 0;
+    }
+
     /* Technical Deep Dive within Module */
     .tech-deepdive {
       background: var(--bg-primary);
@@ -660,15 +777,20 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       gap: 20px;
     }
     .quiz-card {
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      background: var(--bg-surface);
     }
-    .quiz-card:last-child { border-bottom: none; padding-bottom: 0; }
-    .quiz-q {
+    .quiz-card:last-child { margin-bottom: 0; }
+    legend.quiz-q {
       font-size: 14px;
       font-weight: 600;
       color: var(--text-bright);
+      padding: 0 8px;
       margin-bottom: 12px;
+      width: auto;
     }
     .quiz-options {
       display: flex;
@@ -997,8 +1119,11 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 </head>
 <body>
 
+  <!-- Accessible Skip to Content Link -->
+  <a href="#module-display" class="skip-link">Skip to course content</a>
+
   <!-- Top Universal Brand Nav -->
-  <nav class="top-nav">
+  <nav class="top-nav" aria-label="Global Brand Navigation">
     <div class="top-nav-left">
       <a href="https://rowbose.com/" class="brand-link">
         <span>⬡</span>
@@ -1024,7 +1149,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   <!-- App Header -->
   <header class="app-header">
     <div class="header-left">
-      <div class="app-icon">🎓</div>
+      <div class="app-icon" aria-hidden="true">🎓</div>
       <div>
         <h1 id="course-title">${courseTitle}</h1>
         <div class="course-meta">
@@ -1038,14 +1163,14 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     </div>
     <div class="header-right">
       <!-- Mode View Tabs -->
-      <div class="mode-tabs">
-        <button class="tab-btn active" id="btn-tab-course" onclick="switchView('course')">
+      <div class="mode-tabs" role="tablist" aria-label="View Mode">
+        <button class="tab-btn active" id="btn-tab-course" role="tab" aria-selected="true" aria-controls="view-course" onclick="switchView('course')">
           <span>🎓</span> Course & Labs
         </button>
-        <button class="tab-btn" id="btn-tab-doc" onclick="switchView('doc')">
+        <button class="tab-btn" id="btn-tab-doc" role="tab" aria-selected="false" aria-controls="view-doc" onclick="switchView('doc')">
           <span>📖</span> Full Specification
         </button>
-        <button class="tab-btn" id="btn-tab-cert" onclick="openCertificateModal()">
+        <button class="tab-btn" id="btn-tab-cert" role="button" onclick="openCertificateModal()">
           <span>🏆</span> Credential
         </button>
       </div>
@@ -1056,7 +1181,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
           <span>Progress</span>
           <strong id="progress-percent">0%</strong>
         </div>
-        <div class="progress-bar-bg">
+        <div class="progress-bar-bg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-container">
           <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
         </div>
       </div>
@@ -1066,21 +1191,35 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   <!-- App Body Layout -->
   <div class="app-body">
     <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <h3>Curriculum Modules</h3>
-      <ul class="module-list" id="module-nav-list">
-        ${modules.map((m, idx) => `
-          <li class="module-item ${idx === 0 ? 'active' : ''}" id="nav-mod-${idx}" onclick="selectModule(${idx})">
-            <div class="module-item-title">
-              <span>${idx + 1}. ${m.title ? m.title.replace(/^Module \d+:\s*/i, '') : 'Module ' + (idx + 1)}</span>
-            </div>
-            <div class="module-item-meta">
-              <span>⏱️ ${m.durationMinutes || 15} mins</span>
-              <span>🧪 ${(m.labSteps || []).length} labs</span>
-              <span>📝 ${(m.quiz || []).length} quiz</span>
-            </div>
+    <aside class="sidebar" aria-label="Curriculum Navigation">
+      <h3 id="sidebar-curriculum-heading">Curriculum Modules</h3>
+      <ul class="module-list" id="module-nav-list" role="tablist" aria-labelledby="sidebar-curriculum-heading">
+        ${modules.map((m, idx) => {
+          const rawTitle = m.title ? m.title.replace(/^Module \d+:\s*/i, '') : 'Module ' + (idx + 1);
+          const safeTitle = rawTitle.replace(/"/g, '&quot;');
+          return `
+          <li role="presentation">
+            <button class="module-item ${idx === 0 ? 'active' : ''}"
+                    id="nav-mod-${idx}"
+                    role="tab"
+                    aria-selected="${idx === 0 ? 'true' : 'false'}"
+                    aria-controls="module-display"
+                    tabindex="${idx === 0 ? '0' : '-1'}"
+                    onclick="selectModule(${idx})"
+                    onkeydown="handleModuleKeyDown(event, ${idx})"
+                    aria-label="${safeTitle}, ${m.durationMinutes || 15} minutes, ${(m.labSteps || []).length} labs, ${(m.quiz || []).length} quiz questions">
+              <div class="module-item-title">
+                <span>${idx + 1}. ${rawTitle}</span>
+              </div>
+              <div class="module-item-meta">
+                <span>⏱️ ${m.durationMinutes || 15} mins</span>
+                <span>🧪 ${(m.labSteps || []).length} labs</span>
+                <span>📝 ${(m.quiz || []).length} quiz</span>
+              </div>
+            </button>
           </li>
-        `).join('')}
+          `;
+        }).join('')}
       </ul>
 
       <!-- Completion Certificate Summary Box -->
@@ -1100,15 +1239,18 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     <!-- Main Content Area -->
     <main class="content-panel">
 
+      <!-- Live Screen Reader Announcer -->
+      <div id="a11y-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
       <!-- VIEW 1: Interactive Course & Labs -->
-      <section id="view-course">
+      <section id="view-course" role="tabpanel" aria-labelledby="btn-tab-course">
         <div id="module-display">
           <!-- Dynamically populated by JS -->
         </div>
       </section>
 
       <!-- VIEW 2: Full Architecture Specification (Living Docs) -->
-      <section id="view-doc" style="display: none;">
+      <section id="view-doc" role="tabpanel" aria-labelledby="btn-tab-doc" style="display: none;">
         <article class="doc-article">
           ${docHtml}
         </article>
@@ -1118,16 +1260,16 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   </div>
 
   <!-- Certificate Modal -->
-  <div class="modal-overlay" id="cert-modal">
+  <div class="modal-overlay" id="cert-modal" role="dialog" aria-modal="true" aria-labelledby="cert-title">
     <div class="modal-card">
-      <button class="modal-close" onclick="closeCertificateModal()">&times;</button>
+      <button class="modal-close" aria-label="Close Certificate Modal" onclick="closeCertificateModal()">&times;</button>
       <div class="cert-frame">
         <div class="cert-badge">RobOS Verified Credential</div>
-        <h2>CERTIFICATE OF COMPLETION</h2>
+        <h2 id="cert-title">CERTIFICATE OF COMPLETION</h2>
         <div class="cert-sub">Formal W3C SHACL Verified Credential registered in the RobOS Knowledge Graph</div>
 
         <div style="margin: 16px 0;">
-          <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Awarded To:</label><br>
+          <label for="cert-user-input" style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Awarded To:</label><br>
           <input type="text" id="cert-user-input" value="Lead System Architect" oninput="updateRecipient(this.value)"
                  style="background: #0d1117; border: 1px solid var(--accent); color: #fff; font-size: 20px; font-weight: 700; text-align: center; padding: 6px 16px; border-radius: 6px; margin-top: 4px; max-width: 380px;">
         </div>
@@ -1161,10 +1303,10 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   </div>
 
   <!-- JSON-LD Inspector Modal -->
-  <div class="modal-overlay" id="jsonld-modal">
+  <div class="modal-overlay" id="jsonld-modal" role="dialog" aria-modal="true" aria-labelledby="jsonld-title">
     <div class="modal-card" style="max-width: 680px; padding: 24px;">
-      <button class="modal-close" onclick="closeJsonLdModal()">&times;</button>
-      <h3 style="color: var(--accent-cyan); margin-bottom: 12px;">W3C Linked Data JSON-LD Credential</h3>
+      <button class="modal-close" aria-label="Close JSON-LD Modal" onclick="closeJsonLdModal()">&times;</button>
+      <h3 id="jsonld-title" style="color: var(--accent-cyan); margin-bottom: 12px;">W3C Linked Data JSON-LD Credential</h3>
       <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
         Conforming strictly to <code>schema:EducationalOccupationalCredential</code> and RobOS <code>CertificateOfCompletionShape</code>.
       </p>
@@ -1176,7 +1318,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   </div>
 
   <!-- Screenshot Lightbox Modal -->
-  <div class="modal-overlay" id="lightbox-modal" onclick="closeLightbox()">
+  <div class="modal-overlay" id="lightbox-modal" role="dialog" aria-modal="true" aria-label="Image Lightbox Preview" onclick="closeLightbox()">
     <div class="lightbox-content">
       <img id="lightbox-img" class="lightbox-img" src="" alt="Screenshot Zoom">
       <div id="lightbox-caption" class="lightbox-caption"></div>
@@ -1311,16 +1453,66 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       MODULES_DATA.forEach((_, i) => {
         const el = document.getElementById('nav-mod-' + i);
         if (el) {
-          if (i === idx) el.classList.add('active');
-          else el.classList.remove('active');
+          if (i === idx) {
+            el.classList.add('active');
+            el.setAttribute('aria-selected', 'true');
+            el.setAttribute('tabindex', '0');
+          } else {
+            el.classList.remove('active');
+            el.setAttribute('aria-selected', 'false');
+            el.setAttribute('tabindex', '-1');
+          }
         }
       });
       renderActiveModule();
+      const heading = document.getElementById('module-content-heading');
+      if (heading) {
+        heading.focus();
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      announceA11y('Now viewing ' + (MODULES_DATA[idx].title || 'Module ' + (idx + 1)));
+    }
+
+    function handleModuleKeyDown(event, idx) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIdx = (idx + 1) % MODULES_DATA.length;
+        selectModule(nextIdx);
+        const nextBtn = document.getElementById('nav-mod-' + nextIdx);
+        if (nextBtn) nextBtn.focus();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevIdx = (idx - 1 + MODULES_DATA.length) % MODULES_DATA.length;
+        selectModule(prevIdx);
+        const prevBtn = document.getElementById('nav-mod-' + prevIdx);
+        if (prevBtn) prevBtn.focus();
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        selectModule(0);
+        const firstBtn = document.getElementById('nav-mod-0');
+        if (firstBtn) firstBtn.focus();
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        const lastIdx = MODULES_DATA.length - 1;
+        selectModule(lastIdx);
+        const lastBtn = document.getElementById('nav-mod-' + lastIdx);
+        if (lastBtn) lastBtn.focus();
+      }
+    }
+
+    function announceA11y(message) {
+      const el = document.getElementById('a11y-announcer');
+      if (el) {
+        el.textContent = '';
+        setTimeout(() => { el.textContent = message; }, 50);
+      }
     }
 
     function toggleLab(mIdx, sIdx) {
       const key = mIdx + '-' + sIdx;
       progress.completedLabs[key] = !progress.completedLabs[key];
+      const isDone = progress.completedLabs[key];
+      announceA11y('Lab step ' + (sIdx + 1) + (isDone ? ' marked completed' : ' unmarked'));
       saveProgress();
     }
 
@@ -1333,9 +1525,11 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
         if (isCorrect) {
           fb.className = 'quiz-feedback pass';
           fb.innerHTML = '✅ <strong>Correct!</strong> ' + (explanation || 'Great job.');
+          announceA11y('Question ' + (qIdx + 1) + ': Correct! ' + (explanation || ''));
         } else {
           fb.className = 'quiz-feedback fail';
-          fb.innerHTML = '❌ <strong>Incorrect.</strong> Review the architecture specification and try again.';
+          fb.innerHTML = '❌ <strong>Incorrect.</strong> Review the lesson materials above and try again.';
+          announceA11y('Question ' + (qIdx + 1) + ': Incorrect. Review the lesson materials above and try again.');
         }
       }
       saveProgress();
@@ -1352,6 +1546,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       });
       saveProgress();
       renderActiveModule();
+      announceA11y('All labs and quizzes across the curriculum have been marked completed.');
     }
 
     function resetProgress() {
@@ -1361,6 +1556,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
         progress.isCertified = false;
         saveProgress();
         renderActiveModule();
+        announceA11y('Course progress has been reset.');
       }
     }
 
@@ -1374,13 +1570,18 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
         courseView.style.display = 'block';
         docView.style.display = 'none';
         btnCourse.classList.add('active');
+        btnCourse.setAttribute('aria-selected', 'true');
         btnDoc.classList.remove('active');
+        btnDoc.setAttribute('aria-selected', 'false');
+        announceA11y('Switched to Course & Labs view.');
       } else if (viewName === 'doc') {
         courseView.style.display = 'none';
         docView.style.display = 'block';
         btnCourse.classList.remove('active');
+        btnCourse.setAttribute('aria-selected', 'false');
         btnDoc.classList.add('active');
-        // Render mermaid diagrams in doc
+        btnDoc.setAttribute('aria-selected', 'true');
+        announceA11y('Switched to Full Living Architecture Specification view.');
         if (window.mermaid) {
           try { window.mermaid.init(undefined, document.querySelectorAll('.mermaid')); } catch {}
         }
@@ -1390,6 +1591,8 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     function openCertificateModal() {
       computeCertHash();
       document.getElementById('cert-modal').classList.add('active');
+      const closeBtn = document.querySelector('#cert-modal .modal-close');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeCertificateModal() {
@@ -1417,6 +1620,8 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       };
       document.getElementById('jsonld-code').textContent = JSON.stringify(jsonld, null, 2);
       document.getElementById('jsonld-modal').classList.add('active');
+      const closeBtn = document.querySelector('#jsonld-modal .modal-close');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeJsonLdModal() {
@@ -1430,49 +1635,153 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       img.src = src;
       cap.textContent = caption || '';
       modal.classList.add('active');
+      announceA11y('Image preview opened: ' + (caption || ''));
     }
 
     function closeLightbox() {
       document.getElementById('lightbox-modal').classList.remove('active');
     }
 
-    // Specific Theory Highlights for each module
-    function getModuleTheoryHtml(idx) {
+    // Rich Lesson Material for Each Module
+    function getModuleLessonHtml(idx) {
       if (${isCrpg ? 'true' : 'false'}) {
         if (idx === 0) {
           return \`
-            <div class="tech-deepdive">
-              <h4>📐 Module 1 Technical Foundations: D&D 5e Combat Formulas</h4>
-              <p>Combat adheres strictly to the <strong>D&D 5th Edition System Reference Document (SRD 5.1)</strong> with mathematical action economy:</p>
-              <div class="formula-box">
-                Modifier = floor((Ability Score - 10) / 2)<br>
-                Attack Roll = 1d20 + Proficiency Bonus + STR/DEX Modifier &ge; Target AC<br>
-                Spell Save DC = 8 + Proficiency Bonus + Spellcasting Ability Modifier<br>
-                Advantage Shift = max(d20, d20) &rarr; Expected Value increases from 10.50 to 13.825 (+3.325 bonus)
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">⚔️ 1. Real-Time with Pause (RTwP) & 6.0-Second Combat Round</h4>
+              <p class="lesson-text">
+                RobOS cRPG executes an authentic Infinity Engine combat simulation adhering strictly to the <strong>D&D 5th Edition System Reference Document (SRD 5.1)</strong>. Combat is governed by a strict <strong>6.0-second round timer</strong>. Within each round, every character receives a structured mathematical action economy budget:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>1 Standard Action</strong>: Attack with equipped weapon, Cast a Spell (1 action casting time), Dash (double movement), Disengage, Dodge, Help, or Hide.</li>
+                <li><strong>1 Bonus Action</strong>: Off-hand attack when dual-wielding, casting bonus action spells (e.g., <em>Healing Word</em>), or Rogue's <em>Cunning Action</em> (Bonus Dash/Disengage/Hide).</li>
+                <li><strong>1 Reaction</strong>: Triggered out-of-turn (e.g., Opportunity Attacks when an enemy flees melee range without disengaging, or casting <em>Shield</em>).</li>
+                <li><strong>30ft Movement Allowance</strong>: Can be seamlessly split before and after taking actions.</li>
+              </ul>
+              <div class="mermaid">
+flowchart TD
+    StartRound["Round Start (6.0s Timer)"] --> ActionBudget["Budget: 1 Action, 1 Bonus Action, 1 Reaction, 30ft Move"]
+    ActionBudget --> ActionChoice{"Action Type?"}
+    ActionChoice -- "Melee/Ranged Attack" --> AdvCheck{"Advantage?"}
+    AdvCheck -- "Advantage" --> RollAdv["Roll 2d20: Keep Highest"]
+    AdvCheck -- "Disadvantage" --> RollDis["Roll 2d20: Keep Lowest"]
+    AdvCheck -- "Normal" --> RollNorm["Roll 1d20"]
+    RollAdv --> AttackFormula["To-Hit = Roll + Prof + Ability Mod"]
+    RollDis --> AttackFormula
+    RollNorm --> AttackFormula
+    AttackFormula --> ACCompare{"To-Hit >= Target AC?"}
+    ACCompare -- "Nat 20 Critical Hit" --> CritDmg["Double Damage Dice + Modifiers"]
+    ACCompare -- "Hit" --> NormalDmg["Roll Damage Dice + Modifiers"]
+    ACCompare -- "Miss or Nat 1" --> Miss["0 Damage Recorded"]
+    CritDmg --> ApplyHP["Deduct HP & Update State"]
+    NormalDmg --> ApplyHP
+    Miss --> EndRound["Advance Round Timer"]
+    ApplyHP --> EndRound
               </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px;">
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📐 2. Mathematical Combat Formulas</h4>
+              <p class="lesson-text">
+                All combat checks in <code>CombatEngine.gd</code> evaluate deterministic mathematical formulas:
+              </p>
+              <div class="formula-box">
+                Ability Modifier = floor((Ability Score - 10) / 2)<br>
+                Unarmored AC = 10 + DEX Modifier<br>
+                Light Armor AC = Base Armor AC + DEX Modifier<br>
+                Medium Armor AC = Base Armor AC + min(DEX Modifier, 2)<br>
+                Heavy Armor AC = Base Armor AC (DEX bonus ignored)<br>
+                Shield Bonus = +2 AC<br>
+                Attack Roll = 1d20 + Proficiency Bonus + STR/DEX Modifier &ge; Target AC<br>
+                Natural 20 (Critical Hit) = Double ALL damage dice rolled before adding ability modifiers<br>
+                Natural 1 (Critical Miss) = Automatic miss regardless of attack bonus<br>
+                Spell Save DC = 8 + Proficiency Bonus + Spellcasting Ability Modifier<br>
+                Spell Attack Modifier = Proficiency Bonus + Spellcasting Ability Modifier
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🎲 3. Advantage & Disadvantage Probability Shift</h4>
+              <p class="lesson-text">
+                When rolling with <strong>Advantage</strong> (such as attacking an unalerted target or flanking), the engine rolls two 20-sided dice and takes the maximum: <code>max(d20, d20)</code>. This non-linear probability curve dramatically skews rolls upward:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>Expected Roll Value</strong>: Rises from <strong>10.50</strong> on standard 1d20 to <strong>13.825</strong> (+3.325 equivalent bonus).</li>
+                <li><strong>Critical Hit Chance (Nat 20)</strong>: Nearly doubles from 5.0% to <strong>9.75%</strong> (<code>1 - (19/20)^2</code>).</li>
+                <li><strong>Critical Miss Chance (Nat 1)</strong>: Drops from 5.0% to a negligible <strong>0.25%</strong> (<code>(1/20)^2</code>).</li>
+                <li><strong>Disadvantage</strong> (<code>min(d20, d20)</code>) inverts this curve: expected value drops to <strong>7.175</strong> (-3.325 penalty), and Nat 20 chance drops to 0.25%.</li>
+              </ul>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
                   <img src="/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
-                  <div class="doc-caption">Figure 1.1: Complete D&D 5e Character Sheet tracking modifiers, AC, and saving throws.</div>
+                  <div class="doc-caption">Figure 1.1: Complete D&D 5e Character Sheet tracking ability scores, modifiers, AC, saving throws, and status conditions.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
                   <img src="/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
-                  <div class="doc-caption">Figure 1.2: RTwP battlefield with 6.0s round timer and threat indicators.</div>
+                  <div class="doc-caption">Figure 1.2: RTwP battlefield with 6.0s round timer, threat indicators, and spell targeting.</div>
                 </div>
               </div>
             </div>
           \`;
         } else if (idx === 1) {
           return \`
-            <div class="tech-deepdive">
-              <h4>🏛️ Module 2 Technical Foundations: Godot 4 GL Compatibility & Collision</h4>
-              <p>The engine renders 2560&times;1440 pre-rendered background plates with a clamped 1920&times;1080 Camera2D viewport and Layer 1 StaticBody2D physical obstacle footprints:</p>
-              <div class="formula-box">
-                Camera Viewport Clamping:<br>
-                position.x = clamp(target_hero.x, 960, 2560 - 960)<br>
-                position.y = clamp(target_hero.y, 540, 1440 - 540)
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px;">
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🏛️ 1. Why Godot 4.3 GL Compatibility Profile?</h4>
+              <p class="lesson-text">
+                Rather than using Vulkan Forward+, RobOS cRPG deliberately targets Godot 4's <strong>GL Compatibility profile (OpenGL 3.3 / ES 3.0 / WebGL 2.0)</strong> for critical architectural reasons:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>Zero Shader Compilation Stutter</strong>: Modern Vulkan Forward+ pipelines compile shaders asynchronously at runtime, causing jarring frame drops and freezes on first encounter. OpenGL compiles shaders predictably upfront.</li>
+                <li><strong>Headless Virtual Framebuffer Stability</strong>: Runs with 100% stability inside Docker containers and headless Xvfb displays (<code>:99</code>) without requiring proprietary host GPU drivers or hardware passthrough.</li>
+                <li><strong>Cross-Platform Parity</strong>: Pixel-perfect, identical rasterization across Linux, macOS, and Windows.</li>
+              </ul>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📐 2. 2560&times;1440 Pre-Rendered Plates & Viewport Clamping</h4>
+              <p class="lesson-text">
+                Maps are built using ultra-detailed 2560&times;1440 pre-rendered background plates (<code>village_open_world_2560.png</code>). The player Camera2D viewport is 1920&times;1080 native resolution and smoothly tracks heroes while strictly clamping to background boundaries so the void is never exposed:
+              </p>
+              <pre class="code-snippet"><code># Camera2D Boundary Clamping in Godot 4
+func _process(delta: float) -> void:
+    if target_hero:
+        var target_pos = target_hero.global_position
+        global_position = global_position.lerp(target_pos, delta * 5.0)
+        global_position.x = clamp(global_position.x, 960, 2560 - 960)
+        global_position.y = clamp(global_position.y, 540, 1440 - 540)</code></pre>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🧱 3. Layer 1 Physical Building Collision Geometry</h4>
+              <p class="lesson-text">
+                Every building in Oakhaven is a true physical obstacle with a <code>StaticBody2D</code> collider on <strong>Physics Layer 1</strong>, preventing characters and enemies from clipping through walls:
+              </p>
+              <table style="width:100%; border-collapse:collapse; font-size:12px; margin:12px 0;">
+                <thead>
+                  <tr style="background:#21262d; color:#f0f6fc;">
+                    <th style="padding:6px 10px; border:1px solid #30363d;">Building</th>
+                    <th style="padding:6px 10px; border:1px solid #30363d;">Node Name</th>
+                    <th style="padding:6px 10px; border:1px solid #30363d;">Footprint</th>
+                    <th style="padding:6px 10px; border:1px solid #30363d;">Coordinates</th>
+                    <th style="padding:6px 10px; border:1px solid #30363d;">Door ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td style="padding:6px 10px; border:1px solid #30363d;"><strong>The Rusty Dragon Inn</strong></td><td style="padding:6px 10px; border:1px solid #30363d;"><code>HouseInn</code></td><td style="padding:6px 10px; border:1px solid #30363d;">360&times;180 px</td><td style="padding:6px 10px; border:1px solid #30363d;">(410, 640)</td><td style="padding:6px 10px; border:1px solid #30363d;"><code>door-id-inn</code></td></tr>
+                  <tr><td style="padding:6px 10px; border:1px solid #30363d;"><strong>Town Hall & Guildhouse</strong></td><td style="padding:6px 10px; border:1px solid #30363d;"><code>HouseTownHall</code></td><td style="padding:6px 10px; border:1px solid #30363d;">320&times;260 px</td><td style="padding:6px 10px; border:1px solid #30363d;">(1090, 330)</td><td style="padding:6px 10px; border:1px solid #30363d;"><code>door-id-townhall</code></td></tr>
+                  <tr><td style="padding:6px 10px; border:1px solid #30363d;"><strong>Brand's Forge & Armory</strong></td><td style="padding:6px 10px; border:1px solid #30363d;"><code>HouseBlacksmith</code></td><td style="padding:6px 10px; border:1px solid #30363d;">220&times;140 px</td><td style="padding:6px 10px; border:1px solid #30363d;">(1520, 460)</td><td style="padding:6px 10px; border:1px solid #30363d;"><code>door-id-blacksmith</code></td></tr>
+                  <tr><td style="padding:6px 10px; border:1px solid #30363d;"><strong>Maybelle's Remedies</strong></td><td style="padding:6px 10px; border:1px solid #30363d;"><code>HouseApothecary</code></td><td style="padding:6px 10px; border:1px solid #30363d;">280&times;140 px</td><td style="padding:6px 10px; border:1px solid #30363d;">(1810, 600)</td><td style="padding:6px 10px; border:1px solid #30363d;"><code>door-id-apothecary</code></td></tr>
+                  <tr><td style="padding:6px 10px; border:1px solid #30363d;"><strong>Royal Guard Barracks</strong></td><td style="padding:6px 10px; border:1px solid #30363d;"><code>HouseBarracks</code></td><td style="padding:6px 10px; border:1px solid #30363d;">340&times;220 px</td><td style="padding:6px 10px; border:1px solid #30363d;">(1620, 1250)</td><td style="padding:6px 10px; border:1px solid #30363d;"><code>door-id-barracks</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🧭 4. Two-Tier Pathfinder.gd & Dynamic Fog of War</h4>
+              <p class="lesson-text">
+                When a user or AI agent clicks a waypoint, <code>Pathfinder.gd</code> performs a direct <code>RayCast2D</code> line-of-sight test against Layer 1. If clear, the character moves in a direct line. If the raycast intersects a building, the pathfinder switches to an A* corridor visibility graph, routing around building corners seamlessly. Simultaneously, <code>FogOfWar.gdshader</code> reveals shrouded terrain dynamically using hero light occluders.
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
                   <img src="/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.1: Physical house footprints blocking movement; party routes through safe street corridors.</div>
@@ -1486,16 +1795,42 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
           \`;
         } else if (idx === 2) {
           return \`
-            <div class="tech-deepdive">
-              <h4>🎨 Module 3 Technical Foundations: Flare RPG & 3-Mode Activity Log</h4>
-              <p>Replicates the iconic Infinity Engine console with three reactive expansion tiers and in-log numbered dialogue:</p>
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🎨 1. Genuine Open-Source Asset Harvesting Pipeline</h4>
+              <p class="lesson-text">
+                RobOS enforces a strict 100% genuine open-source asset rule with zero proprietary copyright liabilities:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>Flare RPG (<code>flareteam/flare-game</code>)</strong>: CC-BY-SA 3.0 animated 8-directional character spritesheets (walking, attacking, taking damage, dying) and modular paperdoll gear (chainmail, plate armor, robes, longswords, shields, bows).</li>
+                <li><strong>Game-Icons.net</strong>: Over 4,000 CC-BY 3.0 vector SVG icons for abilities, spellbooks, inventory, and status buffs.</li>
+                <li><strong>OpenGameArt.org</strong>: CC0/CC-BY sound effects for sword impacts, spell chanting, and UI clicks.</li>
+              </ul>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📜 2. Three-Mode Expandable Activity Log</h4>
+              <p class="lesson-text">
+                The game replicates the iconic Infinity Engine console at the bottom of the screen with three reactive expansion tiers:
+              </p>
+              <div class="mermaid">
+graph LR
+    ModeSmall["Small Mode (124px)<br/><i>Compact Combat & Telemetry Log</i>"] -->|Click Expand / Talk NPC| ModeMed["Medium Mode (240px)<br/><i>In-Log Numbered Dialogue Trees</i>"]
+    ModeMed -->|Click History| ModeLarge["Large Mode (420px)<br/><i>Full d20 Roll Breakdown & Quest Journal</i>"]
+    ModeLarge -->|Click Minimize| ModeSmall
+              </div>
               <div class="formula-box">
-                Activity Log Expansion Tiers:<br>
                 • Small (124px): Compact combat rolls, telemetry, and loot feeds.<br>
                 • Medium (240px): In-log numbered NPC dialogue trees (keys 1-9 or click).<br>
                 • Large (420px): Full mathematical roll breakdowns and quest chronicles.
               </div>
-              <div class="doc-figure" style="margin: 12px 0 0;">
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">💬 3. In-Log Numbered NPC Dialogue & HUD Controls</h4>
+              <p class="lesson-text">
+                Dialogue choices are displayed directly inside the 240px Activity Log console rather than intrusive full-screen popups. Players can select choices via numeric keys <code>1</code>–<code>9</code> or mouse click, maintaining visual connection to the surrounding world. HUD controls include Spacebar tactical RTwP pause, Shift-click waypoint queuing, and circle selection rings.
+              </p>
+              <div class="doc-figure" style="margin: 14px 0 0;">
                 <img src="/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 3.1: Multi-branch dialogue with Blacksmith Brand inside the 240px Activity Log.</div>
               </div>
@@ -1503,15 +1838,51 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
           \`;
         } else if (idx === 3) {
           return \`
-            <div class="tech-deepdive">
-              <h4>🤖 Module 4 Technical Foundations: Autonomous Infinity AI Agent</h4>
-              <p>Autonomous decision-making agent playing through the entire campaign slice via REST telemetry (<code>GET /api/v1/state</code>):</p>
-              <div class="formula-box">
-                Combined-Arms Tactics:<br>
-                • 140px proximity trigger &rarr; 200px pack alerting radius.<br>
-                • Fighter rushes to peel hostiles; Rogue maintains 180px bow standoff; Cleric heals when ally HP &lt; 40%.
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🤖 1. Autonomous Infinity AI Agent Architecture</h4>
+              <p class="lesson-text">
+                Instead of brittle recorded clicks, RobOS features an autonomous decision-making AI agent (<code>qa_player/infinity_ai_agent.py</code>) that plays through the entire game slice via REST telemetry (<code>GET /api/v1/state</code>) and input commands (<code>POST /api/v1/input</code>).
+              </p>
+              <div class="mermaid">
+flowchart TD
+    Scan["Perception Scan: Query /api/v1/state"] --> CheckThreat{"Enemy within 140px Proximity?"}
+    CheckThreat -- Yes --> AlertPack["Trigger 200px Pack Alerting Radius"]
+    AlertPack --> PauseGame["Spacebar: Enter Tactical RTwP Pause"]
+    PauseGame --> RoleTactics{"Assign Role-Based Orders"}
+    RoleTactics -- Fighter --> Intercept["Move to Intercept Nearest Hostile & Peel"]
+    RoleTactics -- Rogue --> Standoff["Maintain 180px Standoff Bow Range"]
+    RoleTactics -- Wizard --> CastSpell["Cast Magic Missile / Fireball at Priority Target"]
+    RoleTactics -- Cleric --> CheckHP{"Any Companion HP < 40%?"}
+    CheckHP -- Yes --> Heal["Cast Cure Wounds on Critical Ally"]
+    CheckHP -- No --> Smite["Cast Sacred Flame on Frontline Enemy"]
+    Intercept --> Unpause["Spacebar: Resume Combat Simulation"]
+    Standoff --> Unpause
+    CastSpell --> Unpause
+    Heal --> Unpause
+    Smite --> Unpause
               </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px;">
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🎯 2. Spatial Threat Radar & Combined-Arms Tactics</h4>
+              <p class="lesson-text">
+                The agent evaluates a spatial threat radar around the party:
+              </p>
+              <div class="formula-box">
+                • 140px proximity trigger: Detects hostile targets in visual range.<br>
+                • 200px pack alerting radius: Alerts adjacent monsters in the pack to prevent split pulling.<br>
+                • Fighter: Rushes frontline to peel enemies from squishy casters.<br>
+                • Rogue: Kites at 180px standoff range with shortbow sneak attack.<br>
+                • Cleric: Casts Cure Wounds when companion drops below 40% HP (otherwise casts Sacred Flame).
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📹 3. Headless Xvfb & 1080p Video Proof-of-Work</h4>
+              <p class="lesson-text">
+                The entire campaign verification runs headlessly inside Docker containers using virtual X11 displays (Xvfb <code>:99</code>) and FFmpeg, outputting complete 1080p MP4 video proof-of-work with synchronized Piper TTS narration.
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
                   <img src="/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.1: BDD scenario verifying enemy pack aggro alerting and fighter peeling.</div>
@@ -1525,17 +1896,53 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
           \`;
         } else if (idx === 4) {
           return \`
-            <div class="tech-deepdive">
-              <h4>🧠 Module 5 Technical Foundations: Knowledge Graph-First Game Generation</h4>
-              <p>Strict Zero-Hardcoding rule: stats, classes, monsters, and dialogue are defined in <code>.robos/kgraphs/crpg/package.jsonld</code> and compiled to typed GDScript singletons (<code>DataStoreV1.gd</code>):</p>
-              <div class="formula-box">
-                4-Phase Generation Pipeline:<br>
-                Phase 1: Ontological Modeling & W3C SHACL Shapes (.robos/kgraphs/crpg)<br>
-                Phase 2: Schema & Data Store Layer (schemas/v1/*.json & data/v1/*.json)<br>
-                Phase 3: Open-Source Asset Harvesting (Flare RPG & Game-Icons.net)<br>
-                Phase 4: Scene & Systems Composition (Godot 4.3 GL Compatibility)
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🧠 1. Knowledge Graph-First Game Architecture</h4>
+              <p class="lesson-text">
+                All game definitions are modeled formally as linked data inside the RobOS Knowledge Graph (<code>.robos/kgraphs/crpg/package.jsonld</code>) conforming to W3C SHACL shapes (<code>CRPGGameShape</code>, <code>CRPGMonsterShape</code>, <code>CRPGSpellShape</code>).
+              </p>
+              <div class="mermaid">
+graph TD
+    Phase1["Phase 1: Ontological Modeling<br/><i>.robos/kgraphs/crpg/package.jsonld & W3C SHACL Shapes</i>"] --> Phase2["Phase 2: Schema & Data Store Layer<br/><i>schemas/v1/*.json & games/crpg-realm/data/v1/*.json</i>"]
+    Phase2 --> Phase3["Phase 3: Open-Source Asset Harvesting<br/><i>Flare RPG CC-BY-SA Sprites & Game-Icons.net SVGs</i>"]
+    Phase3 --> Phase4["Phase 4: Scene & Systems Composition<br/><i>Godot 4.3 GL Compatibility & DataStoreV1.gd Singletons</i>"]
               </div>
-              <div class="doc-figure" style="margin: 12px 0 0;">
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🔒 2. Strict Zero-Hardcoding Rule & DataStoreV1.gd</h4>
+              <p class="lesson-text">
+                No monster stats, ability modifiers, spell formulas, or dialogue trees may be hardcoded into Godot GDScript files. All data is compiled from JSON schemas into typed GDScript singletons (<code>DataStoreV1.gd</code>), providing static autocompletion and eliminating runtime KeyError crashes:
+              </p>
+              <pre class="code-snippet"><code># Auto-generated statically-typed DataStoreV1.gd
+class_name DataStoreV1
+extends Node
+
+static func get_class_data(class_id: String) -> Dictionary:
+    match class_id:
+        "fighter":
+            return {
+                "hit_die": 10,
+                "primary_ability": "STR",
+                "saving_throws": ["STR", "CON"],
+                "base_hp": 12
+            }
+        "wizard":
+            return {
+                "hit_die": 6,
+                "primary_ability": "INT",
+                "saving_throws": ["INT", "WIS"],
+                "base_hp": 7
+            }
+    return {}</code></pre>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛡️ 3. W3C SHACL Validation Gate & Dual-State Diffing</h4>
+              <p class="lesson-text">
+                Before any pull request or deployment is approved, <code>kgraph validate</code> validates all shapes, and <code>kgraph diff main</code> checks for broken dialogue references, orphaned asset bindings, or stat imbalances across game revisions.
+              </p>
+              <div class="doc-figure" style="margin: 14px 0 0;">
                 <img src="/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 5.1: The 4-Phase RobOS Knowledge Graph-First Game Generation Paradigm.</div>
               </div>
@@ -1543,7 +1950,13 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
           \`;
         }
       }
-      return '';
+      const m = MODULES_DATA[idx];
+      return \`
+        <div class="lesson-section">
+          <h4 class="lesson-subtitle">📖 Module Overview & Core Architecture</h4>
+          <p class="lesson-text">\${m.overview || 'Review the attached living architecture documentation and complete the hands-on lab exercises below.'}</p>
+        </div>
+      \`;
     }
 
     function renderActiveModule() {
@@ -1555,7 +1968,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
         <div class="module-card">
           <div class="module-header">
             <div>
-              <h2>\${m.title || 'Module ' + (currentModIdx + 1)}</h2>
+              <h2 id="module-content-heading" tabindex="-1">\${m.title || 'Module ' + (currentModIdx + 1)}</h2>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
                 Module \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
               </div>
@@ -1567,16 +1980,28 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
             \${m.overview || ''}
           </div>
 
-          \${getModuleTheoryHtml(currentModIdx)}
+          <nav class="module-nav-pills" aria-label="Module Content Sections">
+            <a href="#section-lesson" class="nav-pill"><span>📖</span> Lesson Material</a>
+            <a href="#section-labs" class="nav-pill"><span>🧪</span> Hands-On Labs (\${(m.labSteps || []).length})</a>
+            \${(m.quiz || []).length ? \`<a href="#section-quiz" class="nav-pill"><span>📝</span> Knowledge Check (\${(m.quiz || []).length})</a>\` : ''}
+          </nav>
+
+          <!-- Lesson Material & Architecture Walkthrough -->
+          <h3 id="section-lesson" class="section-title">📖 Lesson Material &amp; Architecture Walkthrough</h3>
+          <div class="module-lesson-body">
+            \${getModuleLessonHtml(currentModIdx)}
+          </div>
 
           <!-- Lab Steps -->
-          <div class="section-title">🧪 Hands-On Lab Exercises</div>
+          <h3 id="section-labs" class="section-title">🧪 Hands-On Lab Exercises</h3>
           <div class="lab-steps">
             \${(m.labSteps || []).map((step, sIdx) => {
               const isChecked = !!progress.completedLabs[currentModIdx + '-' + sIdx];
               return \`
                 <div class="lab-step">
-                  <input type="checkbox" class="lab-checkbox" id="lab-\${currentModIdx}-\${sIdx}" \${isChecked ? 'checked' : ''} onchange="toggleLab(\${currentModIdx}, \${sIdx})">
+                  <input type="checkbox" class="lab-checkbox" id="lab-\${currentModIdx}-\${sIdx}" \${isChecked ? 'checked' : ''}
+                         onchange="toggleLab(\${currentModIdx}, \${sIdx})"
+                         aria-label="Mark lab step \${sIdx + 1} as completed">
                   <label for="lab-\${currentModIdx}-\${sIdx}" class="lab-step-text">
                     <strong>Step \${sIdx + 1}:</strong> \${formatStepText(step)}
                   </label>
@@ -1587,14 +2012,14 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 
           <!-- Quizzes -->
           \${m.quiz && m.quiz.length ? \`
-            <div class="section-title">📝 Module Knowledge Check</div>
+            <h3 id="section-quiz" class="section-title">📝 Module Knowledge Check</h3>
             <div class="quiz-section">
               \${m.quiz.map((q, qIdx) => {
                 const passed = !!progress.passedQuizzes[currentModIdx + '-' + qIdx];
                 return \`
-                  <div class="quiz-card">
-                    <div class="quiz-q">Question \${qIdx + 1}: \${q.question}</div>
-                    <div class="quiz-options">
+                  <fieldset class="quiz-card" role="group" aria-labelledby="quiz-q-\${currentModIdx}-\${qIdx}">
+                    <legend class="quiz-q" id="quiz-q-\${currentModIdx}-\${qIdx}">Question \${qIdx + 1}: \${q.question}</legend>
+                    <div class="quiz-options" role="radiogroup" aria-labelledby="quiz-q-\${currentModIdx}-\${qIdx}">
                       \${(q.options || [q.answer, 'Alternative A', 'Alternative B']).map((opt, oIdx) => {
                         const escapedOpt = opt.replace(/"/g, '&quot;');
                         const escapedAns = (q.answer || '').replace(/"/g, '&quot;');
@@ -1602,16 +2027,17 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
                         return \`
                           <label class="quiz-opt">
                             <input type="radio" name="quiz-\${currentModIdx}-\${qIdx}" value="\${escapedOpt}"
-                                   onchange="answerQuiz(\${currentModIdx}, \${qIdx}, '\${escapedOpt}', '\${escapedAns}', '\${escapedExp}')">
+                                   onchange="answerQuiz(\${currentModIdx}, \${qIdx}, '\${escapedOpt}', '\${escapedAns}', '\${escapedExp}')"
+                                   aria-describedby="quiz-feedback-\${currentModIdx}-\${qIdx}">
                             <span>\${opt}</span>
                           </label>
                         \`;
                       }).join('')}
                     </div>
-                    <div class="quiz-feedback \${passed ? 'pass' : ''}" id="quiz-feedback-\${currentModIdx}-\${qIdx}">
+                    <div class="quiz-feedback \${passed ? 'pass' : ''}" id="quiz-feedback-\${currentModIdx}-\${qIdx}" role="status" aria-live="polite">
                       \${passed ? '✅ <strong>Correct!</strong> ' + (q.explanation || '') : ''}
                     </div>
-                  </div>
+                  </fieldset>
                 \`;
               }).join('')}
             </div>
@@ -1637,6 +2063,15 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       \`;
 
       container.innerHTML = html;
+
+      // Re-initialize dynamic Mermaid diagrams in newly rendered module content
+      if (window.mermaid) {
+        try {
+          window.mermaid.run({ nodes: container.querySelectorAll('.mermaid') });
+        } catch (e) {
+          try { window.mermaid.init(undefined, container.querySelectorAll('.mermaid')); } catch {}
+        }
+      }
     }
 
     function formatStepText(text) {
@@ -1651,7 +2086,17 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       });
       saveProgress();
       renderActiveModule();
+      announceA11y('All labs in Module ' + (mIdx + 1) + ' marked completed.');
     }
+
+    // Global Escape Key Listener for Accessible Modals
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCertificateModal();
+        closeJsonLdModal();
+        closeLightbox();
+      }
+    });
 
     // Initialize application on load
     window.addEventListener('DOMContentLoaded', () => {
