@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+ROBOS_ROOT="${ROBOS_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+VOICE_PROMPT_DIR="$ROBOS_ROOT/packages/voice-prompt"
+
+# Locate electron binary
+if [ -x "$VOICE_PROMPT_DIR/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$VOICE_PROMPT_DIR/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron"
+elif command -v electron >/dev/null 2>&1; then
+  ELECTRON_BIN="$(command -v electron)"
+elif [ -x "/usr/bin/electron" ]; then
+  ELECTRON_BIN="/usr/bin/electron"
+else
+  echo "Error: Electron binary not found." >&2
+  exit 1
+fi
+
+exec "$ELECTRON_BIN" "$VOICE_PROMPT_DIR" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"

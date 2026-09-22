@@ -1,20 +1,21 @@
-let app, BrowserWindow, ipcMain, globalShortcut, dialog;
+let electronPkg;
 try {
-  ({ app, BrowserWindow, ipcMain, globalShortcut, dialog } = require('electron'));
-} catch {
-  app = {
-    setName: () => {},
-    commandLine: { appendSwitch: () => {} },
-    requestSingleInstanceLock: () => true,
-    whenReady: () => new Promise(() => {}),
-    on: () => {},
-    quit: () => {},
-  };
-  BrowserWindow = class {};
-  ipcMain = { handle: () => {}, on: () => {} };
-  globalShortcut = { register: () => {}, unregisterAll: () => {} };
-  dialog = { showErrorBox: () => {} };
-}
+  electronPkg = require('electron');
+} catch {}
+
+const isElectronRuntime = electronPkg && typeof electronPkg === 'object' && typeof electronPkg.app === 'object';
+const app = isElectronRuntime ? electronPkg.app : {
+  setName: () => {},
+  commandLine: { appendSwitch: () => {} },
+  requestSingleInstanceLock: () => true,
+  whenReady: () => new Promise(() => {}),
+  on: () => {},
+  quit: () => {},
+};
+const BrowserWindow = isElectronRuntime ? electronPkg.BrowserWindow : class {};
+const ipcMain = isElectronRuntime ? electronPkg.ipcMain : { handle: () => {}, on: () => {} };
+const globalShortcut = isElectronRuntime ? electronPkg.globalShortcut : { register: () => {}, unregisterAll: () => {} };
+const dialog = isElectronRuntime ? electronPkg.dialog : { showErrorBox: () => {} };
 const path = require('path');
 const http = require('http');
 const promptStore = require('./lib/prompt-store');
@@ -286,6 +287,7 @@ function startApiServer() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     title: 'RobOS Voice Prompt',
+    icon: path.join(__dirname, 'icon.svg'),
     width: 1060,
     height: 720,
     minWidth: 780,
