@@ -228,6 +228,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 ## Conventions
 
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`)
+- **Git Commit & Push After Tasks**: Always create a Conventional Commit and push to `origin <branch>` after completing tasks, unless there is a specific, sound reason not to (e.g., purely investigatory tasks with no code changes, work in progress explicitly requested to be uncommitted, or failing tests). Always stage only task-relevant files and never touch unrelated working tree changes.
 - **No root package.json**: Each package has independent `node_modules`
 - **IPC**: All Electron apps use `contextBridge` in `preload.js` + `ipcRenderer.invoke()` / `ipcMain.handle()` (never `nodeIntegration: true`)
 - **Config storage**: All persistent data in `~/.config/robos/`
