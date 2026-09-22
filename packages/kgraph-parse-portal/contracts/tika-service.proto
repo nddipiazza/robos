@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package robos.tika.v1;
+
+option java_package = "com.robos.tika.v1";
+option go_package = "robos/tika/v1;tikav1";
+
+// High-performance streaming document parser service
+service TikaGrpcService {
+  rpc ParseDocumentStream (stream ParseChunkRequest) returns (ParseResultResponse);
+  rpc ExtractSymbols (SymbolRequest) returns (SymbolListResponse);
+}
+
+message ParseChunkRequest {
+  string file_name = 1;
+  string mime_type = 2;
+  bytes chunk_data = 3;
+}
+
+message ParseResultResponse {
+  string text_content = 1;
+  map<string, string> metadata = 2;
+  repeated string ast_symbols = 3;
+}
+
+message SymbolRequest {
+  string content = 1;
+  string language = 2;
+}
+
+message SymbolListResponse {
+  repeated string symbols = 1;
+}

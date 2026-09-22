@@ -107,6 +107,7 @@ const PORT_REGISTRY = {
   'agent-chat':        19186,
   'dev-discussions':   19187,
   'voice-prompt':      19188,
+  'kgraph-parse-portal': 19192,
 };
 
 

@@ -351,4 +351,126 @@
 
   // Initial load
   refreshStatus();
+
+  // ==========================================================================
+  // QA E2E & Cucumber Overlay Controller (window.qaOverlay)
+  // ==========================================================================
+  const qaSplash = document.getElementById('qa-scenario-splash');
+  const qaSplashTitle = document.getElementById('qa-splash-title');
+  const qaSplashDesc = document.getElementById('qa-splash-desc');
+  const qaStepHud = document.getElementById('qa-step-hud');
+  const qaHudBadge = document.getElementById('qa-hud-badge');
+  const qaHudTitle = document.getElementById('qa-hud-title');
+  const qaHudDesc = document.getElementById('qa-hud-desc');
+  const qaCursor = document.getElementById('qa-virtual-cursor');
+  const qaRoot = document.getElementById('qa-overlay-root');
+
+  const qaOverlay = {
+    showScenarioSplash({ title, description, tags, pills, durationMs = 0 } = {}) {
+      if (title && qaSplashTitle) qaSplashTitle.textContent = title;
+      if (description && qaSplashDesc) qaSplashDesc.textContent = description;
+      if (qaSplash) {
+        qaSplash.classList.remove('hidden');
+        qaSplash.style.display = 'flex';
+        qaSplash.style.opacity = '1';
+      }
+      if (durationMs > 0) {
+        setTimeout(() => qaOverlay.hideScenarioSplash(), durationMs);
+      }
+    },
+
+    hideScenarioSplash() {
+      if (qaSplash) {
+        qaSplash.style.opacity = '0';
+        setTimeout(() => {
+          qaSplash.classList.add('hidden');
+          qaSplash.style.display = 'none';
+        }, 350);
+      }
+    },
+
+    setStep({ stepType = 'GIVEN', title = '', description = '' } = {}) {
+      if (qaHudBadge) {
+        qaHudBadge.textContent = stepType;
+        qaStepHud.setAttribute('data-step', stepType);
+        if (stepType === 'GIVEN') qaHudBadge.style.backgroundColor = '#38bdf8';
+        else if (stepType === 'WHEN') qaHudBadge.style.backgroundColor = '#facc15';
+        else if (stepType === 'THEN') qaHudBadge.style.backgroundColor = '#10b981';
+        else qaHudBadge.style.backgroundColor = '#a855f7';
+      }
+      if (qaHudTitle) qaHudTitle.textContent = title;
+      if (qaHudDesc) qaHudDesc.textContent = description;
+      if (qaStepHud) qaStepHud.classList.remove('hidden');
+    },
+
+    hideStep() {
+      if (qaStepHud) qaStepHud.classList.add('hidden');
+    },
+
+    async animateCursorTo(target, durationMs = 350) {
+      if (!qaCursor) return;
+      qaCursor.classList.remove('hidden');
+
+      let x = 0;
+      let y = 0;
+      if (typeof target === 'string') {
+        const el = document.querySelector(target);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          x = rect.left + rect.width / 2;
+          y = rect.top + rect.height / 2;
+        }
+      } else if (target && typeof target.x === 'number') {
+        x = target.x;
+        y = target.y;
+      }
+
+      qaCursor.style.left = `${x}px`;
+      qaCursor.style.top = `${y}px`;
+      await new Promise((r) => setTimeout(r, durationMs));
+      return { x, y };
+    },
+
+    async triggerClickWithRipple(target) {
+      const coords = await qaOverlay.animateCursorTo(target, 300);
+      if (!coords) return;
+
+      const ripple = document.createElement('div');
+      ripple.className = 'qa-ripple';
+      ripple.style.left = `${coords.x}px`;
+      ripple.style.top = `${coords.y}px`;
+      qaRoot.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+
+      if (typeof target === 'string') {
+        const el = document.querySelector(target);
+        if (el) el.click();
+      }
+      await new Promise((r) => setTimeout(r, 200));
+    },
+
+    async simulateTyping(target, text, speedMs = 35) {
+      await qaOverlay.animateCursorTo(target, 250);
+      const el = typeof target === 'string' ? document.querySelector(target) : target;
+      if (!el) return;
+      el.focus();
+      el.value = '';
+      for (let i = 0; i < text.length; i++) {
+        el.value += text[i];
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise((r) => setTimeout(r, speedMs));
+      }
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 100));
+    },
+
+    async switchTab(tabId) {
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      if (btn) {
+        await qaOverlay.triggerClickWithRipple(`.tab-btn[data-tab="${tabId}"]`);
+      }
+    },
+  };
+
+  window.qaOverlay = qaOverlay;
 })();

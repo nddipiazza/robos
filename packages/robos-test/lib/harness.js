@@ -101,6 +101,7 @@ const PORT_MAP = {
   'remote-execution-studio': 19184,
   'robos-elearning': 19185,
   'voice-prompt': 19188,
+  'kgraph-parse-portal': 19192,
 };
 
 

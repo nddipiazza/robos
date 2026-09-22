@@ -531,3 +531,237 @@ body {
 .mt-4 {
   margin-top: 16px;
 }
+
+/* ==========================================================================
+   QA E2E Cucumber Splash Card, Step HUD & Virtual Cursor Overlay
+   ========================================================================== */
+
+#qa-overlay-root {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+}
+
+/* Centered Cucumber Scenario Splash Card */
+.qa-splash-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 7, 14, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000;
+  transition: opacity 0.35s ease;
+  pointer-events: auto;
+}
+
+.qa-splash-card {
+  max-width: 960px;
+  width: 88%;
+  background: linear-gradient(145deg, rgba(13, 22, 38, 0.97), rgba(6, 11, 20, 0.99));
+  border: 2px solid rgba(0, 188, 212, 0.6);
+  box-shadow: 0 0 50px rgba(0, 188, 212, 0.3), 0 20px 40px rgba(0, 0, 0, 0.8);
+  border-radius: 14px;
+  padding: 36px 44px;
+  animation: qaCardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes qaCardPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.qa-splash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.qa-splash-category {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qa-splash-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.qa-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0, 188, 212, 0.15);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  font-family: var(--font-mono);
+}
+
+.qa-splash-title {
+  font-size: 23px;
+  font-weight: 800;
+  color: #facc15;
+  margin: 0 0 12px 0;
+  line-height: 1.35;
+  text-shadow: 0 2px 10px rgba(250, 204, 21, 0.25);
+}
+
+.qa-splash-divider {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #00bcd4 0%, rgba(0, 188, 212, 0.4) 60%, transparent 100%);
+  margin: 12px 0 18px 0;
+}
+
+.qa-splash-desc {
+  font-size: 14px;
+  color: #cbd5e1;
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+.qa-splash-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.qa-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cyan-pill {
+  background: rgba(0, 188, 212, 0.12);
+  border: 1px solid #00bcd4;
+  color: #38bdf8;
+}
+
+.green-pill {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid #10b981;
+  color: #34d399;
+}
+
+.orange-pill {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+}
+
+.purple-pill {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid #a855f7;
+  color: #c084fc;
+}
+
+/* Step HUD Banner */
+.qa-step-hud {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(8, 15, 28, 0.96);
+  border: 1.5px solid #00bcd4;
+  box-shadow: 0 6px 24px rgba(0, 188, 212, 0.35), 0 2px 8px rgba(0, 0, 0, 0.8);
+  border-radius: 32px;
+  padding: 8px 24px;
+  z-index: 100000;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+}
+
+.qa-hud-badge {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  background: #00bcd4;
+  color: #000;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.qa-hud-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qa-hud-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.qa-hud-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* Virtual Cursor & Click Ripples */
+.qa-virtual-cursor {
+  position: fixed;
+  z-index: 100001;
+  pointer-events: none;
+  transform: translate(-2px, -2px);
+  transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: drop-shadow(0 2px 8px rgba(0, 188, 212, 0.8));
+}
+
+.qa-ripple {
+  position: fixed;
+  border-radius: 50%;
+  border: 2px solid #00bcd4;
+  background: rgba(0, 188, 212, 0.35);
+  pointer-events: none;
+  z-index: 100000;
+  transform: translate(-50%, -50%) scale(0);
+  animation: qaRippleAnim 0.55s ease-out forwards;
+}
+
+@keyframes qaRippleAnim {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    width: 60px;
+    height: 60px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+

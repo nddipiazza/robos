@@ -1,0 +1,37 @@
+openapi: 3.1.0
+info:
+  title: RobOS Kgraph Parse Portal API
+  version: 1.0.0
+  description: High-throughput ingestion portal mapping Linux filesystems into the RobOS Knowledge Graph.
+paths:
+  /api/v1/crawl:
+    post:
+      summary: Crawl filesystem directory and extract semantic KGraph nodes
+      operationId: crawlDirectory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                directoryPath: { type: string }
+                maxDepth: { type: integer }
+                package: { type: string }
+      responses:
+        '200':
+          description: Extracted graph nodes and archetype metadata
+  /api/v1/search:
+    get:
+      summary: Luxir C++ Hybrid Search Index Query
+      operationId: searchLuxir
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Search results from Luxir index

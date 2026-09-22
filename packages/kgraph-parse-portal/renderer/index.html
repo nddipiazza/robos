@@ -257,6 +257,50 @@
         </div>
       </section>
     </main>
+
+    <!-- QA E2E & Cucumber Splash / Step HUD Overlay System -->
+    <div id="qa-overlay-root">
+      <!-- 1. Centered Cucumber Scenario Splash Card -->
+      <div id="qa-scenario-splash" class="qa-splash-backdrop hidden">
+        <div class="qa-splash-card">
+          <div class="qa-splash-header">
+            <span class="qa-splash-category">⚔️ ROBOS SDLC KNOWLEDGE GRAPH — BDD CUCUMBER E2E</span>
+            <div class="qa-splash-tags">
+              <span class="qa-tag">@e2e</span>
+              <span class="qa-tag">@sdlc-graph</span>
+              <span class="qa-tag">@luxir</span>
+              <span class="qa-tag">@tika-grpc</span>
+              <span class="qa-tag">@buildbarn</span>
+            </div>
+          </div>
+          <h1 id="qa-splash-title" class="qa-splash-title">Scenario: Ingest Linux Filesystem, Stream Tika gRPC AST, and Query Luxir C++ Search Index</h1>
+          <hr class="qa-splash-divider">
+          <p id="qa-splash-desc" class="qa-splash-desc">Verifies end-to-end Linux filesystem crawling, MIME-to-meaning disambiguation, real-time Luxir search indexing, and REAPI v2 Hermetiq Buildbarn Helm deployment.</p>
+          <div id="qa-splash-pills" class="qa-splash-pills">
+            <span class="qa-pill cyan-pill">🌐 Gateway: http://localhost:19192 • Apache Tika 4.0 gRPC (:50051)</span>
+            <span class="qa-pill green-pill">🔍 Search Engine: Luxir C++ Hybrid Search (:8983)</span>
+            <span class="qa-pill orange-pill">🏗️ RBE: oci://ghcr.io/hermetiq/buildbarn</span>
+            <span class="qa-pill purple-pill">🛡️ Gate: W3C SHACL Shape Conformance</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Step HUD Banner -->
+      <div id="qa-step-hud" class="qa-step-hud hidden">
+        <div class="qa-hud-badge" id="qa-hud-badge">GIVEN</div>
+        <div class="qa-hud-content">
+          <div class="qa-hud-title" id="qa-hud-title">The RobOS Kgraph Parse Portal is connected to Apache Tika 4.0 gRPC and Luxir Search Engine</div>
+          <div class="qa-hud-desc" id="qa-hud-desc">Initializing gateway and testing background socket connections...</div>
+        </div>
+      </div>
+
+      <!-- 3. Virtual Pointer Cursor -->
+      <div id="qa-virtual-cursor" class="qa-virtual-cursor hidden">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.86a.5.5 0 0 0-.85.35z" fill="#00bcd4" stroke="#060a12" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

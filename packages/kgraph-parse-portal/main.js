@@ -22,6 +22,19 @@ const { ParsePortalServer } = require('./server');
 const { detectDirectoryArchetype, classifyFile, scanPathToGraphNodes } = require('./lib/fs-mime-classifier');
 const { generateBuildbarnHelmValues, generateHelmInstallCommand, checkRbeClusterStatus, generateKgraphClusterNode } = require('./lib/buildbarn-rbe');
 
+// Debug server for E2E testing and snapshot captures
+let _debugServer = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
+    path.resolve(__dirname, '..', 'robos-lib', 'dom-snapshot'),
+    '/usr/local/share/robos/robos-lib/dom-snapshot',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { _debugServer = require(p); break; } catch {}
+  }
+} catch {}
+
 app.setName('kgraph-parse-portal');
 if (app.commandLine && app.commandLine.appendSwitch) {
   app.commandLine.appendSwitch('no-sandbox');
@@ -31,7 +44,7 @@ if (app.commandLine && app.commandLine.appendSwitch) {
 
 let mainWindow = null;
 const portalServer = new ParsePortalServer({
-  port: parseInt(process.env.ROBOS_PARSE_PORT || '19192', 10),
+  port: parseInt(process.env.ROBOS_PARSE_PORT || '19193', 10),
 });
 
 // Setup IPC handlers
@@ -138,6 +151,15 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  if (_debugServer) {
+    try {
+      if (_debugServer.registerSnapshotIPC) _debugServer.registerSnapshotIPC(mainWindow);
+      _debugServer.startDebugServer(mainWindow, 19192, 'kgraph-parse-portal');
+    } catch (err) {
+      console.warn('Debug server error:', err.message);
+    }
+  }
 }
 
 if (isElectronRuntime) {
