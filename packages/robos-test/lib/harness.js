@@ -100,6 +100,7 @@ const PORT_MAP = {
   'app-wizard': 19183,
   'remote-execution-studio': 19184,
   'robos-elearning': 19185,
+  'voice-prompt': 19188,
 };
 
 

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Voice Prompt Agent</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="app-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+            <line x1="8" x2="16" y1="22" y2="22"/>
+          </svg>
+        </div>
+        <div class="title-group">
+          <h1>RobOS Voice Prompt Agent</h1>
+          <span class="subtitle">Speech-to-Text Dictation with Real-Time App Context</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="device-selector-wrapper">
+          <label for="select-device">Microphone:</label>
+          <select id="select-device" class="device-select" title="Configured Microphone Device">
+            <option value="default">Default System Microphone</option>
+          </select>
+        </div>
+        <div id="status-pill" class="status-pill idle">
+          <span class="status-dot"></span>
+          <span id="status-text">STANDBY</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-content">
+      <!-- Left Panel: Dictation & App Context -->
+      <section class="left-panel">
+        <!-- Microphone & Dictation Controller -->
+        <div class="card controller-card">
+          <div class="controller-header">
+            <h3>Voice Input Dictation</h3>
+            <span class="hotkey-badge">Hotkey: Super+V</span>
+          </div>
+
+          <div class="mic-action-area">
+            <button id="btn-toggle-mic" class="btn-mic-toggle idle">
+              <svg class="mic-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" x2="12" y1="19" y2="22"/>
+                <line x1="8" x2="16" y1="22" y2="22"/>
+              </svg>
+              <span id="btn-mic-label">Activate Microphone</span>
+            </button>
+            <div id="recording-waveform" class="waveform-container hidden">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+          </div>
+
+          <!-- Dictation Stream Area -->
+          <div class="dictation-input-wrapper">
+            <label for="dictation-input">Recognized Speech Text:</label>
+            <textarea id="dictation-input" placeholder="Speak into your configured microphone or type here to dictate..."></textarea>
+            <div class="dictation-actions">
+              <button id="btn-save-dictation" class="btn-primary">Save Voice Prompt</button>
+              <button id="btn-clear-dictation" class="btn-secondary">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active RobOS App Context Card -->
+        <div class="card context-card">
+          <div class="card-header">
+            <h3>Active RobOS App Context (Queryable API)</h3>
+            <button id="btn-refresh-context" class="btn-icon" title="Refresh Context">🔄</button>
+          </div>
+          <div class="context-body">
+            <div class="context-row">
+              <span class="context-label">Focused App:</span>
+              <span id="ctx-active-app" class="context-badge active-app-badge">Detecting...</span>
+            </div>
+            <div class="context-row">
+              <span class="context-label">Window Title:</span>
+              <span id="ctx-window-title" class="context-value">None</span>
+            </div>
+            <div class="context-row">
+              <span class="context-label">Running Apps:</span>
+              <div id="ctx-running-apps" class="chips-container">
+                <span class="chip">desktop</span>
+              </div>
+            </div>
+            <div class="context-row">
+              <span class="context-label">Active Workspace:</span>
+              <span id="ctx-workspace" class="context-value">robos (branch: main)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Voice Prompts History -->
+      <section class="right-panel">
+        <div class="card history-card">
+          <div class="history-header">
+            <div class="header-title-count">
+              <h3>Recorded Voice Prompts</h3>
+              <span id="prompts-count" class="count-badge">0</span>
+            </div>
+            <div class="history-actions">
+              <input type="text" id="input-search" class="search-input" placeholder="Search prompts or apps...">
+              <button id="btn-clear-all" class="btn-danger-outline" title="Clear all recorded voice prompts">Clear All</button>
+            </div>
+          </div>
+
+          <!-- Prompts Feed -->
+          <div id="prompts-list" class="prompts-list">
+            <div class="empty-state">
+              <p>No voice prompts recorded yet.</p>
+              <p class="empty-sub">Activate microphone or type text to record your first prompt.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="status-bar">
+      <div class="status-item">
+        <span class="status-key">API Server:</span>
+        <span id="stat-api-url" class="status-val">http://localhost:19188</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Active Device:</span>
+        <span id="stat-device" class="status-val">Default System Microphone</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Context State:</span>
+        <span id="stat-context" class="status-val">Synced</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

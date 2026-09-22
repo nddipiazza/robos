@@ -106,6 +106,7 @@ const PORT_REGISTRY = {
   'robos-elearning':   19185,
   'agent-chat':        19186,
   'dev-discussions':   19187,
+  'voice-prompt':      19188,
 };
 
 

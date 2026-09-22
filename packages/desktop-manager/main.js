@@ -109,6 +109,7 @@ const APPS = [
   { id: 'claude-console',          label: 'Claude Console',         icon: '🧬', desc: 'Enhanced Claude Code GUI',        category: 'RobOS AI' },
   { id: 'skills-manager',          label: 'Skills Manager',         icon: '🔮', desc: 'Browse & manage OS skills',       category: 'RobOS AI' },
   { id: 'ai-prompt',               label: 'AI Prompt',              icon: '✨', desc: 'AI-powered OS prompt',            category: 'RobOS AI' },
+  { id: 'voice-prompt',            label: 'Voice Prompt',           icon: '🎙️', desc: 'Voice prompt agent & STT dictation', category: 'RobOS AI' },
   // System / Tools
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },
@@ -163,6 +164,7 @@ const APP_BINS = {
   'claude-console':          mkBin('claude-console'),
   'skills-manager':          mkBin('skills-manager'),
   'ai-prompt':               mkBin('ai-prompt'),
+  'voice-prompt':            mkBin('voice-prompt'),
   // People
   'people-directory':        mkBin('people-directory'),
   // System tools
@@ -552,6 +554,24 @@ function startSocketServer() {
         else if (msg.listDesktops)    res = { desktops: listDesktops() };
         else if (msg.pauseKeepAlive)  { pausedKeepAlive.add(msg.pauseKeepAlive); res = { ok: true, paused: msg.pauseKeepAlive }; }
         else if (msg.resumeKeepAlive) { pausedKeepAlive.delete(msg.resumeKeepAlive); res = { ok: true, resumed: msg.resumeKeepAlive }; }
+        else if (msg.getVoicePrompts) {
+          try { res = { prompts: require('../voice-prompt/lib/prompt-store').loadPrompts() }; } catch (err) { res = { error: err.message }; }
+        }
+        else if (msg.getAppContext) {
+          try { res = { context: await require('../voice-prompt/lib/context-provider').getAggregatedContext() }; } catch (err) { res = { error: err.message }; }
+        }
+        else if (msg.voiceDictate) {
+          try {
+            const ctx = await require('../voice-prompt/lib/context-provider').getAggregatedContext();
+            const text = typeof msg.voiceDictate === 'string' ? msg.voiceDictate : (msg.voiceDictate.text || '');
+            const prompt = require('../voice-prompt/lib/prompt-store').savePrompt({
+              text,
+              metadata: { ...ctx, source: 'socket' },
+              device: msg.voiceDictate.device || 'socket',
+            });
+            res = { ok: true, prompt };
+          } catch (err) { res = { error: err.message }; }
+        }
 
         if (res && !sock.destroyed && sock.writable) {
           sock.write(JSON.stringify(res));

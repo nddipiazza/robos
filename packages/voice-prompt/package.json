@@ -1,0 +1,12 @@
+{
+  "name": "robos-voice-prompt",
+  "version": "0.1.0",
+  "description": "RobOS Voice Prompt Agent — Speech-to-Text dictation with real-time app context metadata",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
