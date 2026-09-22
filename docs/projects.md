@@ -44,7 +44,7 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Core Innovations** | **Buddy Gig Geolocation Escrow** & **Venue Stay-To-Play Reciprocal Booking** |
 | **Testing Harness** | Native Node.js Test Runner, Haversine Geofence Verification, Escrow State Engine |
 | **Verification Score** | **3 Suites, 6 Tests (100% Passed)** |
-| **Live Production** | [https://getemgigs.com](https://getemgigs.com) · [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fgetemgigs) |
+| **Live Production** | [https://getemgigs.com](https://getemgigs.com) ([thegigbandit.vercel.app](https://thegigbandit.vercel.app)) · [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit) · [GitHub](https://github.com/nddipiazza/thegigbandit) |
 
 ```mermaid
 flowchart LR

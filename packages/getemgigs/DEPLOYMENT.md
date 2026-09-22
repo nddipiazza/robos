@@ -20,9 +20,9 @@ vercel --prod
 
 ## 2. Deploy from GitHub
 
-1. Push this repository to GitHub at `https://github.com/nddipiazza/getemgigs`.
+1. Push this repository to GitHub at `https://github.com/nddipiazza/thegigbandit`.
 2. Go to your [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New..."** &rarr; **"Project"**.
-3. Import the `getemgigs` repository.
+3. Import the `thegigbandit` repository.
 4. Select **Next.js** framework preset (auto-detected).
 5. Click **Deploy**.
 

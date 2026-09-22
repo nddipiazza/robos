@@ -32,9 +32,9 @@ The **Gig Bandit** (`getemgigs.com`) is a production-grade RobOS web application
 <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0;">
   <h3 style="margin-top: 0; color: #58a6ff;">🚀 Live Production Deployment</h3>
   <p style="color: #c9d1d9; font-size: 0.95rem;">
-    <strong>Production Domain:</strong> <a href="https://getemgigs.com" target="_blank" rel="noopener noreferrer">https://getemgigs.com</a><br/>
-    <strong>Vercel 1-Click Template:</strong> <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fgetemgigs" target="_blank" rel="noopener noreferrer">Deploy with Vercel</a><br/>
-    <strong>GitHub Repository:</strong> <a href="https://github.com/nddipiazza/getemgigs" target="_blank" rel="noopener noreferrer">github.com/nddipiazza/getemgigs</a><br/>
+    <strong>Production Domain:</strong> <a href="https://getemgigs.com" target="_blank" rel="noopener noreferrer">https://getemgigs.com</a> (or <a href="https://thegigbandit.vercel.app" target="_blank" rel="noopener noreferrer">thegigbandit.vercel.app</a>)<br/>
+    <strong>Vercel 1-Click Template:</strong> <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit" target="_blank" rel="noopener noreferrer">Deploy with Vercel</a><br/>
+    <strong>GitHub Repository:</strong> <a href="https://github.com/nddipiazza/thegigbandit" target="_blank" rel="noopener noreferrer">github.com/nddipiazza/thegigbandit</a><br/>
     <strong>SDLC Knowledge Graph Node:</strong> <code>urn:robos:app:getemgigs</code> conforming to <code>schema:WebApplication</code> &amp; <code>robos:FrontEndApp</code>
   </p>
 </div>

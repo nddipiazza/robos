@@ -263,5 +263,5 @@ packages:
   - id: "urn:robos:frontend-app:getemgigs"
     title: "The Gig Bandit (getemgigs.com)"
     type: "robos:FrontEndApp"
-    repository: "github.com/nddipiazza/getemgigs"
+    repository: "github.com/nddipiazza/thegigbandit"
     technology: "Next.js 15 / React 19 / TailwindCSS (Vercel + GitHub)"

@@ -209,7 +209,7 @@ Win-Win Achieved: Velvet Riot did not attend, but The Neon Vipers received $50 c
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="#buddy-gig" className="btn btn-pink">Try Buddy Gig Simulator 🤝</a>
             <a href="#stay-to-play" className="btn btn-secondary">Explore Stay-To-Play 🎟️</a>
-            <a href="https://github.com/nddipiazza/getemgigs" target="_blank" rel="noopener noreferrer" className="btn btn-primary">View GitHub Repo ↗</a>
+            <a href="https://github.com/nddipiazza/thegigbandit" target="_blank" rel="noopener noreferrer" className="btn btn-primary">View GitHub Repo ↗</a>
           </div>
 
           <div className="hero-stats">

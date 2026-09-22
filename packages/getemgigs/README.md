@@ -1,7 +1,7 @@
 # The Gig Bandit — Get 'Em Gigs (`getemgigs.com`)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fgetemgigs)
-[![CI & Vercel Deployment](https://github.com/nddipiazza/getemgigs/actions/workflows/ci.yml/badge.svg)](https://github.com/nddipiazza/getemgigs/actions/workflows/ci.yml)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit)
+[![CI & Vercel Deployment](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml/badge.svg)](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml)
 [![RobOS Project](https://img.shields.io/badge/RobOS-Project-00bcd4)](https://rowbose.com/projects/getemgigs/)
 
 > **A game changer for the local music scene.**  
@@ -55,8 +55,8 @@ Local bands constantly struggle to get people to attend their shows:
 
 ```bash
 # Clone and enter repo
-git clone https://github.com/nddipiazza/getemgigs.git
-cd getemgigs
+git clone https://github.com/nddipiazza/thegigbandit.git
+cd thegigbandit
 
 # Automated dev setup
 ./dev-setup.sh

@@ -5,8 +5,8 @@ metadata:
   title: "The Gig Bandit (getemgigs.com)"
   description: "Revolutionary platform for the local music scene with Buddy Gig geolocation escrow and Venue Stay-To-Play reciprocal ticket economics."
   annotations:
-    github.com/project-slug: "nddipiazza/getemgigs"
-    vercel.com/project-name: "getemgigs"
+    github.com/project-slug: "nddipiazza/thegigbandit"
+    vercel.com/project-name: "thegigbandit"
     robos.dev/domain: "getemgigs.com"
   tags: [frontend, nextjs, react, vercel, github, edge, music-scene, geolocation-escrow]
 spec:

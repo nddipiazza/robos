@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
               <a href="#gigs-explorer" className="nav-link">Explore Gigs</a>
               <a href="#architecture" className="nav-link">Vercel & KGraph</a>
               <a href="https://rowbose.com/projects/getemgigs/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">RobOS Showcase</a>
-              <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fgetemgigs" target="_blank" rel="noopener noreferrer" className="btn btn-primary">Deploy to Vercel ⚡</a>
+              <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit" target="_blank" rel="noopener noreferrer" className="btn btn-primary">Deploy to Vercel ⚡</a>
             </nav>
           </div>
         </header>
