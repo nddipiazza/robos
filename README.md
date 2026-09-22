@@ -216,6 +216,7 @@ RobOS includes a complete suite of lightweight, high-performance developer tools
 | | **Issue Manager** | GitHub Issues client with Kanban views and AI issue breakdown. |
 | | **Git Projects** | Repository manager with Monaco editor, terminal runners, and AI dev-setup generation. |
 | | **Agents Manager** | Multi-agent orchestrator for Claude Code, Antigravity, Copilot, and Gemini CLI sessions. |
+| | **Voice Prompt Agent** | Offline neural Whisper speech-to-text dictation with real-time streaming, active window context, and REST API. |
 | | **App Launcher** | Searchable system grid for all RobOS developer tools and workflows. |
 | **Architecture** | **Topology Manager** | C4 Level 1–3 interactive architecture canvas; auto-syncs Spotify Backstage catalogs. |
 | | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser with SHACL shape validation. |

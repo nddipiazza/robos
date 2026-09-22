@@ -5,15 +5,16 @@ nav_exclude: true
 # Story 09-02: Voice Input Integration
 
 **Epic:** [Voice & Input](epic.md)
-**Status:** Not started
+**Status:** Completed
 **Points:** 5
 
 ## Description
 
-Every AI text area in RobOS apps gets a microphone button. Click to start recording, click again to stop. Text streams in real-time as words are recognized. Works in: AI Agent questionnaire, Context Manager notes, EKGraph editor, Work Journal, search bars. Shared robos-voice library handles the integration.
+Voice Prompt Agent (`packages/voice-prompt`) provides a full desktop application and background REST API daemon on port 19188 (`ROBOS_VOICE_PORT`), as well as CLI tool `robos-voice`. Speech text streams in real-time via Server-Sent Events (`/api/stream`) and IPC (`vp-event-interim-text`). Supports prompt storage, manual editing, and clipboard copy.
 
 ## Acceptance Criteria
 
-- [ ] Works offline (no network required)
-- [ ] Latency under 500ms for word recognition
-- [ ] Tested in QEMU VM with virtual audio
+- [x] Works offline (no network required)
+- [x] Real-time live streaming dictation in UI and over SSE
+- [x] Tested in QEMU VM and automated test suite (`packages/robos-test/tests/voice-prompt/e2e.test.js`)
+

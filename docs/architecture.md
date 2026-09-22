@@ -79,6 +79,8 @@ RobOS applications are built using lightweight vanilla JavaScript and Electron, 
 ### Core Architectural Applications
 - **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across 9 multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
 - **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
+- **RobOS Voice Prompt Agent (`packages/voice-prompt`)**: Offline neural Whisper speech-to-text dictation with real-time streaming, active window context detection (`xdotool`, `wmctrl`), global push-to-talk (`Super+V`), and headless REST API (`:19188`).
+
 ### Universal Knowledge Graph Data Backing (Zero Unbacked Data)
 Every application in the RobOS 30+ suite is backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`):
 - **Databases & Caches**: `db-manager`, `nosql-manager`, and `data-sources` persist relational and NoSQL datastores as `robos:Database` and `robos:NoSQLDatabase` nodes in the `core-platform` package with W3C SHACL shape enforcement.

@@ -45,6 +45,7 @@ Instead of forcing developers to manually decipher thousands of lines of unconte
 [🎭 PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [🧬 SDLC Knowledge Graph]({{ site.baseurl }}{% link knowledge-graph.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [📱 Browse 30+ Apps]({{ site.baseurl }}{% link apps.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
+[🎙️ Voice Prompt Agent]({{ site.baseurl }}{% link voice-prompt.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [🏆 RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [🤖 Agent Governance & Review]({{ site.baseurl }}{% link agent-review-development.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [📐 KGraph Schemas]({{ site.baseurl }}{% link schemas.md %}){: .btn .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -56,6 +57,7 @@ Instead of forcing developers to manually decipher thousands of lines of unconte
   <a href="{{ site.baseurl }}{% link pr-review-theater.md %}" class="btn fs-3" style="border-color: #8b5cf6; color: #c4b5fd;">🎭 PR Review Theater</a>
   <a href="{{ site.baseurl }}{% link knowledge-graph.md %}" class="btn fs-3" style="border-color: #00bcd4; color: #38bdf8;">🌐 SDLC Knowledge Graph</a>
   <a href="{{ site.baseurl }}{% link apps.md %}" class="btn fs-3" style="border-color: #06b6d4; color: #67e8f9;">📱 30+ Native App Suite</a>
+  <a href="{{ site.baseurl }}{% link voice-prompt.md %}" class="btn fs-3" style="border-color: #00bcd4; color: #67e8f9;">🎙️ Voice Prompt Agent</a>
   <a href="{{ site.baseurl }}{% link pr-review-theater.md %}#standalone-robos-elearning-player-hub" class="btn fs-3" style="border-color: #38bdf8; color: #7dd3fc;">🎓 RobOS eLearning</a>
   <a href="{{ site.baseurl }}{% link big-wins.md %}" class="btn fs-3">🏆 RobOS Main Wins</a>
   <a href="{{ site.baseurl }}{% link agent-review-development.md %}" class="btn fs-3">🤖 Agent Review Workflow</a>

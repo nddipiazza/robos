@@ -7,7 +7,7 @@ nav_order: 10
 # RobOS App Suite
 {: .no_toc }
 
-The complete suite of 51 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
+The complete suite of 52 native developer desktop applications covering the entire software delivery lifecycle with zero framework overhead. Every application is built with vanilla JavaScript, optimized for instant cold-starts, and deeply integrated with the RobOS SDLC Knowledge Graph.
 {: .fs-6 .fw-300 }
 
 ## Official Application Directory
@@ -16,7 +16,7 @@ The complete suite of 51 native developer desktop applications covering the enti
 <div class="robos-app-directory-wrap">
   <div class="robos-app-nav-pills">
     <a href="#core-desktop" class="robos-app-nav-pill">Core Desktop & Command Center <span class="pill-count">16</span></a>
-    <a href="#ai-agents" class="robos-app-nav-pill">Autonomous AI & Agent Workflows <span class="pill-count">8</span></a>
+    <a href="#ai-agents" class="robos-app-nav-pill">Autonomous AI & Agent Workflows <span class="pill-count">9</span></a>
     <a href="#arch-planning" class="robos-app-nav-pill">Software Architecture & Planning <span class="pill-count">9</span></a>
     <a href="#code-review" class="robos-app-nav-pill">Code, Repositories & Review <span class="pill-count">3</span></a>
     <a href="#databases-streams" class="robos-app-nav-pill">Databases & Event Streams <span class="pill-count">3</span></a>
@@ -207,7 +207,7 @@ The complete suite of 51 native developer desktop applications covering the enti
   <div id="ai-agents" class="robos-cat-group">
     <div class="robos-cat-header">
       <h3 class="robos-cat-title">Autonomous AI & Agent Workflows</h3>
-      <span class="robos-cat-badge">8 Apps</span>
+      <span class="robos-cat-badge">9 Apps</span>
     </div>
     <div class="robos-apps-grid">
       <a href="#agent-chat--vs-code-style-conversational-assistant" class="robos-app-card">
@@ -292,6 +292,17 @@ The complete suite of 51 native developer desktop applications covering the enti
           <div class="robos-app-name">Skills Manager</div>
           <span class="robos-app-pkg">robos:skills-manager</span>
           <p class="robos-app-desc">Cross-agent AI skills marketplace and catalog supporting Claude, Codex, Antigravity, and Gemini.</p>
+          <span class="robos-app-link-badge">Explore Guide ↗</span>
+        </div>
+      </a>
+      <a href="#voice-prompt-agent--speech-to-text-dictation" class="robos-app-card">
+        <div class="robos-app-icon-wrap">
+          <img src="{{ '/assets/images/icons/voice-prompt.svg' | relative_url }}" width="38" height="38" alt="Voice Prompt icon" loading="lazy">
+        </div>
+        <div class="robos-app-body">
+          <div class="robos-app-name">Voice Prompt Agent</div>
+          <span class="robos-app-pkg">robos:voice-prompt</span>
+          <p class="robos-app-desc">Offline neural Whisper speech-to-text dictation with real-time streaming and active desktop window context capture.</p>
           <span class="robos-app-link-badge">Explore Guide ↗</span>
         </div>
       </a>
@@ -845,6 +856,15 @@ The semantic command center and ontology explorer bridging Schema.org, OASIS OSL
 ### Skills Manager & Cross-Agent AI Skills Library
 Access 74+ parameterized system, Git, and Docker diagnostic commands alongside standardized cross-agent AI skills for Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. Read the full [RobOS Skills Guide]({{ site.baseurl }}{% link robos-skills.md %}) and [Skills Manager Desktop App Guide]({{ site.baseurl }}{% link skills/skills-manager.md %}).
 ![Skills Manager]({{ '/assets/images/screenshots/skills-manager-overview.png' | relative_url }})
+
+### Voice Prompt Agent & Speech-to-Text Dictation
+An offline neural speech-to-text dictation agent engineered for hands-free AI prompt authoring with real-time streaming and automated desktop context enrichment:
+- **100% On-Device Neural Whisper STT**: Uses on-device ONNX runtime models via `@xenova/transformers` (`whisper-tiny.en`). Transcribes speech completely offline with zero SaaS dependencies and zero cloud data leaks.
+- **Real-Time Live Streaming Dictation**: Continuous audio chunking transcribes speech every ~2 seconds. Words stream live into the UI and via Server-Sent Events (`GET /api/stream`).
+- **Automated Desktop Context Injection**: Silently captures focused X11/Wayland window titles, application class (`vscode`, `idea`, `browser`, `terminal`), active PID, current working directory, and Git branch—attaching high-signal developer context to every voice prompt.
+- **Global Push-to-Talk Hotkey (`Super+V`)**: Summon dictation globally from any running RobOS app or terminal without losing focus or context.
+- **Audio Waveform Feedback**: Real-time microphone input visualization with animated volume amplitude bars via Web Audio API `AnalyserNode`.
+- **Universal REST API (`:19188`) & CLI (`robos-voice`)**: Control microphone listening, query active context, stream transcripts, and manage saved prompts programmatically. Read the full [Voice Prompt Dictation Guide]({{ site.baseurl }}{% link voice-prompt.md %}).
 
 ---
 

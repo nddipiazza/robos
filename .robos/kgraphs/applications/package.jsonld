@@ -104,6 +104,30 @@
       "robos:domainStandard": "https://schema.org/WebApplication"
     },
     {
+      "@id": "urn:robos:app:voice-prompt",
+      "@type": [
+        "robos:DesktopApp",
+        "schema:SoftwareApplication",
+        "oslc_am:Resource",
+        "c4:Container"
+      ],
+      "dcterms:title": "Voice Prompt Agent",
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
+      "robos:desktopFramework": "Electron",
+      "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+      "robos:apiPort": 19188,
+      "robos:globalHotkey": "Super+V",
+      "robos:ownerTeam": "urn:robos:team:core-platform",
+      "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication"
+    },
+    {
       "@id": "urn:robos:console-app:rest-client",
       "@type": [
         "robos:ConsoleApp",
