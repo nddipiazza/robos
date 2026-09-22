@@ -118,9 +118,22 @@ Conforms to `urn:robos:shape:MobileGameShape`:
 
 ---
 
+## Flagship Game Showcase
+
+Explore our fully realized, production-grade video game project built, verified, and governed end-to-end within RobOS:
+
+- **[⚔️ Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }})**: A party-based tactical isometric cRPG built in Godot 4.3 inspired by classic Infinity Engine titles (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, a 5-Act Epic Campaign, physical building collisions with A* pathfinding corridors, 18 unique NPCs with branching dialogue, and autonomous AI agents capable of questing through the entire game.
+  - [Game Creation & Architecture Deep-Dive]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})
+  - [Infinity AI Agent & E2E Verification Harness]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})
+  - [World Systems, Physical Buildings & Pathfinding]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})
+
+---
+
 ## Next Steps
 
+- **[RobOS Projects Showcase]({{ '/projects/' | relative_url }})**: Browse all real-world applications and games built with RobOS.
 - **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all 9 multi-app archetypes.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+
 

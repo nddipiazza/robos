@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS CRPG Race Schema",
+  "type": "object",
+  "required": ["id", "title", "abilityBonuses", "speed", "traits", "description"],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "abilityBonuses": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "speed": { "type": "integer" },
+    "traits": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "description": { "type": "string" }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RobOS CRPG Master Data Schema",
+  "type": "object",
+  "required": [
+    "game",
+    "classes",
+    "monsters",
+    "spells",
+    "items",
+    "zones"
+  ],
+  "properties": {
+    "game": {
+      "$ref": "game.schema.json"
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "$ref": "classes.schema.json"
+      }
+    },
+    "npcs": {
+      "type": "array",
+      "items": {
+        "$ref": "npcs.schema.json"
+      }
+    },
+    "monsters": {
+      "type": "array",
+      "items": {
+        "$ref": "monsters.schema.json"
+      }
+    },
+    "spells": {
+      "type": "array",
+      "items": {
+        "$ref": "spells.schema.json"
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "items.schema.json"
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "zones.schema.json"
+      }
+    }
+  }
+}

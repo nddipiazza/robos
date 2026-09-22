@@ -1,0 +1,306 @@
+[
+  {
+    "id": "corrupted-hound",
+    "title": "Corrupted Shadow Hound",
+    "challengeRating": "1/4",
+    "armorClass": 12,
+    "hitPoints": 11,
+    "speed": 40,
+    "abilities": {
+      "STR": 12,
+      "DEX": 15,
+      "CON": 12,
+      "INT": 3,
+      "WIS": 12,
+      "CHA": 6
+    },
+    "attacks": [
+      {
+        "name": "Bite",
+        "attackBonus": 4,
+        "damage": "1d6+2",
+        "damageType": "piercing",
+        "range": 5
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:wolf",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.15
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 8,
+          "frameDuration": 0.1
+        },
+        "attack": {
+          "startFrame": 96,
+          "frameCount": 6,
+          "frameDuration": 0.09
+        },
+        "hurt": {
+          "startFrame": 144,
+          "frameCount": 3,
+          "frameDuration": 0.08
+        },
+        "die": {
+          "startFrame": 168,
+          "frameCount": 6,
+          "frameDuration": 0.14
+        }
+      }
+    }
+  },
+  {
+    "id": "corrupted-guard",
+    "title": "Feral Guard Skirmisher",
+    "challengeRating": "1/2",
+    "armorClass": 14,
+    "hitPoints": 16,
+    "speed": 30,
+    "abilities": {
+      "STR": 14,
+      "DEX": 12,
+      "CON": 14,
+      "INT": 8,
+      "WIS": 10,
+      "CHA": 8
+    },
+    "attacks": [
+      {
+        "name": "Spear",
+        "attackBonus": 4,
+        "damage": "1d6+2",
+        "damageType": "piercing",
+        "range": 5
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:skeleton",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.15
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 8,
+          "frameDuration": 0.12
+        },
+        "attack": {
+          "startFrame": 96,
+          "frameCount": 6,
+          "frameDuration": 0.1
+        },
+        "hurt": {
+          "startFrame": 144,
+          "frameCount": 3,
+          "frameDuration": 0.08
+        },
+        "die": {
+          "startFrame": 168,
+          "frameCount": 6,
+          "frameDuration": 0.14
+        }
+      }
+    }
+  },
+  {
+    "id": "captain-malakor-boss",
+    "title": "Captain Malakor (Corrupted Commander)",
+    "challengeRating": "3",
+    "armorClass": 16,
+    "hitPoints": 58,
+    "speed": 30,
+    "abilities": {
+      "STR": 18,
+      "DEX": 12,
+      "CON": 16,
+      "INT": 12,
+      "WIS": 14,
+      "CHA": 14
+    },
+    "attacks": [
+      {
+        "name": "Void Halberd",
+        "attackBonus": 6,
+        "damage": "1d10+4",
+        "damageType": "slashing",
+        "range": 5
+      },
+      {
+        "name": "Void Blast",
+        "attackBonus": 5,
+        "damage": "2d6+2",
+        "damageType": "necrotic",
+        "range": 30
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:minotaur",
+      "frameWidth": 192,
+      "frameHeight": 192,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.15
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 8,
+          "frameDuration": 0.14
+        },
+        "attack": {
+          "startFrame": 96,
+          "frameCount": 8,
+          "frameDuration": 0.12
+        },
+        "hurt": {
+          "startFrame": 160,
+          "frameCount": 3,
+          "frameDuration": 0.09
+        },
+        "die": {
+          "startFrame": 184,
+          "frameCount": 7,
+          "frameDuration": 0.15
+        }
+      }
+    }
+  },
+  {
+    "id": "skeleton",
+    "title": "Skeleton Warrior",
+    "challengeRating": "1/4",
+    "armorClass": 13,
+    "hitPoints": 13,
+    "speed": 30,
+    "abilities": {
+      "STR": 10,
+      "DEX": 14,
+      "CON": 15,
+      "INT": 6,
+      "WIS": 8,
+      "CHA": 5
+    },
+    "attacks": [
+      {
+        "name": "Shortsword",
+        "attackBonus": 4,
+        "damage": "1d6+2",
+        "damageType": "piercing",
+        "range": 5
+      },
+      {
+        "name": "Shortbow",
+        "attackBonus": 4,
+        "damage": "1d6+2",
+        "damageType": "piercing",
+        "range": 80
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:skeleton",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.15
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 8,
+          "frameDuration": 0.12
+        },
+        "attack": {
+          "startFrame": 96,
+          "frameCount": 6,
+          "frameDuration": 0.1
+        },
+        "hurt": {
+          "startFrame": 144,
+          "frameCount": 3,
+          "frameDuration": 0.08
+        },
+        "die": {
+          "startFrame": 168,
+          "frameCount": 6,
+          "frameDuration": 0.14
+        }
+      }
+    }
+  },
+  {
+    "id": "zombie",
+    "title": "Shambling Zombie",
+    "challengeRating": "1/4",
+    "armorClass": 8,
+    "hitPoints": 22,
+    "speed": 20,
+    "abilities": {
+      "STR": 13,
+      "DEX": 6,
+      "CON": 16,
+      "INT": 3,
+      "WIS": 6,
+      "CHA": 5
+    },
+    "attacks": [
+      {
+        "name": "Slam",
+        "attackBonus": 3,
+        "damage": "1d6+1",
+        "damageType": "bludgeoning",
+        "range": 5
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:zombie",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.2
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 6,
+          "frameDuration": 0.18
+        },
+        "attack": {
+          "startFrame": 80,
+          "frameCount": 6,
+          "frameDuration": 0.14
+        },
+        "hurt": {
+          "startFrame": 128,
+          "frameCount": 3,
+          "frameDuration": 0.1
+        },
+        "die": {
+          "startFrame": 152,
+          "frameCount": 6,
+          "frameDuration": 0.18
+        }
+      }
+    }
+  }
+]

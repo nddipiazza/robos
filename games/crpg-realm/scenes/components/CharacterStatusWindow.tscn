@@ -1,0 +1,298 @@
+[gd_scene load_steps=3 format=3 uid="uid://charstatuswin01"]
+
+[ext_resource type="Script" path="res://scripts/CharacterStatusWindow.gd" id="1_csw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.11, 0.15, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.70, 0.25, 0.90)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+shadow_color = Color(0, 0, 0, 0.65)
+shadow_size = 12
+
+[node name="CharacterStatusWindow" type="Panel"]
+custom_minimum_size = Vector2(960, 640)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -320.0
+offset_right = 480.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_csw")
+
+[node name="HeaderHBox" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 940.0
+offset_bottom = 44.0
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="HeaderHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 16
+text = "[ CHARACTER RECORD & STATUS ]"
+
+[node name="VSeparator" type="VSeparator" parent="HeaderHBox"]
+layout_mode = 2
+
+[node name="TabsContainer" type="HBoxContainer" parent="HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BtnPrev" type="Button" parent="HeaderHBox"]
+custom_minimum_size = Vector2(36, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "◀"
+
+[node name="BtnNext" type="Button" parent="HeaderHBox"]
+custom_minimum_size = Vector2(36, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "▶"
+
+[node name="BtnClose" type="Button" parent="HeaderHBox"]
+custom_minimum_size = Vector2(36, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "✖"
+
+[node name="HSeparator1" type="HSeparator" parent="."]
+layout_mode = 0
+offset_top = 50.0
+offset_right = 960.0
+offset_bottom = 56.0
+
+[node name="MainHBox" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 62.0
+offset_right = 942.0
+offset_bottom = 625.0
+theme_override_constants/separation = 16
+
+[node name="LeftColumn" type="VBoxContainer" parent="MainHBox"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PortraitCenter" type="CenterContainer" parent="MainHBox/LeftColumn"]
+custom_minimum_size = Vector2(0, 105)
+layout_mode = 2
+
+[node name="PortraitRect" type="TextureRect" parent="MainHBox/LeftColumn/PortraitCenter"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CharNameLabel" type="Label" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 15
+text = "Lieutenant Vance"
+horizontal_alignment = 1
+
+[node name="RaceClassLabel" type="Label" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 12
+text = "Human Fighter (Level 1)"
+horizontal_alignment = 1
+
+[node name="XPLabel" type="Label" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.75, 1)
+theme_override_font_sizes/font_size = 10
+text = "XP: 0 / 300 | Lawful Good"
+horizontal_alignment = 1
+
+[node name="HSeparatorL1" type="HSeparator" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+
+[node name="DefensesGrid" type="GridContainer" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="HPLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Hit Points:"
+
+[node name="HPValLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.95, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "HP: 12 / 12"
+
+[node name="ACLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Armor Class:"
+
+[node name="ACValLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 12
+text = "AC: 16"
+
+[node name="ProfLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Proficiency:"
+
+[node name="ProfValLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "+2"
+
+[node name="InitLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Initiative:"
+
+[node name="InitValLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "+2"
+
+[node name="SpeedLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Speed:"
+
+[node name="SpeedValLabel" type="Label" parent="MainHBox/LeftColumn/DefensesGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "30 ft"
+
+[node name="HSeparatorL2" type="HSeparator" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+
+[node name="SavesHeader" type="Label" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "SAVING THROWS:"
+
+[node name="SavesContainer" type="VBoxContainer" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CenterColumn" type="VBoxContainer" parent="MainHBox"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="StatsHeader" type="Label" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "ABILITY SCORES (4d6 DROP LOWEST):"
+
+[node name="StatsGrid" type="GridContainer" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+columns = 3
+
+[node name="HSeparatorC1" type="HSeparator" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+
+[node name="OffenseHeader" type="Label" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "EQUIPMENT & COMBAT OFFENSE:"
+
+[node name="WeaponTitleLabel" type="Label" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "Primary Weapon: Service Sword"
+
+[node name="WeaponStatsLabel" type="Label" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "Attack: +5 | Damage: 1d8+3 slashing | Versatile"
+autowrap_mode = 2
+
+[node name="ArmorStatsLabel" type="Label" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "Equipped Armor: Chain Mail (Base AC 16)"
+
+[node name="SpellcastingContainer" type="VBoxContainer" parent="MainHBox/CenterColumn"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="RightColumn" type="VBoxContainer" parent="MainHBox"]
+custom_minimum_size = Vector2(290, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConditionsHeader" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "ACTIVE CONDITIONS:"
+
+[node name="ConditionsContainer" type="VBoxContainer" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HSeparatorR1" type="HSeparator" parent="MainHBox/RightColumn"]
+layout_mode = 2
+
+[node name="SkillsHeader" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "PROFICIENCIES & SKILLS:"
+
+[node name="SkillsLabel" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "Proficiencies text..."
+autowrap_mode = 2
+
+[node name="HSeparatorR2" type="HSeparator" parent="MainHBox/RightColumn"]
+layout_mode = 2
+
+[node name="FeaturesHeader" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "CLASS & RACIAL FEATURES:"
+
+[node name="FeaturesLabel" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "Features text..."
+autowrap_mode = 2

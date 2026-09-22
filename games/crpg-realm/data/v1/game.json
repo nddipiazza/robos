@@ -1,0 +1,8 @@
+{
+  "title": "Realm of Heroes: A Night Without Memory",
+  "ruleset": "dnd5e",
+  "combatModel": "real-time-with-pause",
+  "startingZone": "urn:robos:crpg:zone:homestead",
+  "maxPartySize": 4,
+  "assetPackage": "flareteam/flare-game"
+}

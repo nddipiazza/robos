@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3 uid="uid://defeatscreen01"]
+
+[ext_resource type="Script" path="res://scripts/DefeatScreen.gd" id="1_ds"]
+
+[node name="DefeatScreen" type="Control"]
+z_index = 120
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_ds")
+
+[node name="ColorRectDim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.02, 0.02, 0.72)
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -210.0
+offset_right = 360.0
+offset_bottom = 210.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 28
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 28
+text = "💀 YOUR PARTY HAS FALLEN 💀"
+horizontal_alignment = 1
+
+[node name="DescLabel" type="Label" parent="PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 15
+text = "All companions have succumbed to their injuries in battle."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StatsLabel" type="Label" parent="PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "Enemies Vanquished: 0   |   Gold Carried: 150 GP"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="BtnBox" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="BtnRetry" type="Button" parent="PanelContainer/MarginContainer/VBox/BtnBox"]
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "⚔️ Retry Encounter"
+
+[node name="BtnReturnTown" type="Button" parent="PanelContainer/MarginContainer/VBox/BtnBox"]
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "🏰 Return to Town"

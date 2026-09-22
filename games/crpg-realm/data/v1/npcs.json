@@ -1,0 +1,128 @@
+[
+  {
+    "id": "elora",
+    "urn": "urn:robos:crpg:npc:elora",
+    "title": "Elora (Partner)",
+    "dialogueTree": "partner-confrontation",
+    "location": "homestead"
+  },
+  {
+    "id": "blacksmith-brand",
+    "urn": "urn:robos:crpg:npc:blacksmith-brand",
+    "title": "Blacksmith Brand",
+    "dialogueTree": "blacksmith-inquiry",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-1",
+    "urn": "urn:robos:crpg:npc:npc-id-1",
+    "title": "Blacksmith Brand",
+    "dialogueTree": "blacksmith-inquiry",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-innkeeper",
+    "urn": "urn:robos:crpg:npc:corwin",
+    "title": "Barkeep Corwin",
+    "dialogueTree": "dialogue-innkeeper",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-guildmaster",
+    "urn": "urn:robos:crpg:npc:aldous",
+    "title": "Guildmaster Aldous",
+    "dialogueTree": "dialogue-guildmaster",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-herbalist",
+    "urn": "urn:robos:crpg:npc:maybelle",
+    "title": "Maybelle the Apothecary",
+    "dialogueTree": "dialogue-herbalist",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-guard",
+    "urn": "urn:robos:crpg:npc:garrick",
+    "title": "Gate Guard Garrick",
+    "dialogueTree": "dialogue-guard",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-farmer",
+    "urn": "urn:robos:crpg:npc:giles",
+    "title": "Farmer Giles",
+    "dialogueTree": "dialogue-farmer",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-priestess",
+    "urn": "urn:robos:crpg:npc:althea",
+    "title": "Sister Althea",
+    "dialogueTree": "dialogue-priestess",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-miller",
+    "urn": "urn:robos:crpg:npc:hob",
+    "title": "Miller Hob",
+    "dialogueTree": "dialogue-miller",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-hunter",
+    "urn": "urn:robos:crpg:npc:kaelen",
+    "title": "Ranger Kaelen",
+    "dialogueTree": "dialogue-hunter",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-bard",
+    "urn": "urn:robos:crpg:npc:lyra",
+    "title": "Lyra the Minstrel",
+    "dialogueTree": "dialogue-bard",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-merchant",
+    "urn": "urn:robos:crpg:npc:borin",
+    "title": "Trader Borin",
+    "dialogueTree": "dialogue-merchant",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-elder",
+    "urn": "urn:robos:crpg:npc:martha",
+    "title": "Elder Martha",
+    "dialogueTree": "dialogue-elder",
+    "location": "village-square"
+  },
+  {
+    "id": "npc-id-peddler",
+    "urn": "urn:robos:crpg:npc:griknok",
+    "title": "Goblin Peddler Griknok",
+    "dialogueTree": "dialogue-peddler",
+    "location": "whispering-forest"
+  },
+  {
+    "id": "npc-id-fallen",
+    "urn": "urn:robos:crpg:npc:rickard",
+    "title": "Fallen Adventurer Rickard",
+    "dialogueTree": "dialogue-fallen",
+    "location": "whispering-forest"
+  },
+  {
+    "id": "npc-id-hermit",
+    "urn": "urn:robos:crpg:npc:varis",
+    "title": "Hermit Varis",
+    "dialogueTree": "dialogue-hermit",
+    "location": "whispering-forest"
+  },
+  {
+    "id": "npc-id-crypt-ghost",
+    "urn": "urn:robos:crpg:npc:sir-justin",
+    "title": "Spirit of Sir Justin",
+    "dialogueTree": "dialogue-crypt-ghost",
+    "location": "ancient-catacombs"
+  }
+]

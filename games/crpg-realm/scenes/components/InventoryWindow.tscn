@@ -1,0 +1,208 @@
+[gd_scene load_steps=2 format=3 uid="uid://inventorywin01"]
+
+[ext_resource type="Script" path="res://scripts/InventoryWindow.gd" id="1_inv"]
+
+[node name="InventoryWindow" type="Panel"]
+custom_minimum_size = Vector2(740, 480)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -370.0
+offset_top = -240.0
+offset_right = 370.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_inv")
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 450.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 17
+text = "🎒 CHARACTER INVENTORY & EQUIPMENT"
+
+[node name="BtnClose" type="Button" parent="."]
+layout_mode = 0
+offset_left = 695.0
+offset_top = 8.0
+offset_right = 727.0
+offset_bottom = 40.0
+text = "✖"
+
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 0
+offset_top = 40.0
+offset_right = 740.0
+offset_bottom = 46.0
+
+[node name="MainHBox" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 50.0
+offset_right = 724.0
+offset_bottom = 465.0
+theme_override_constants/separation = 16
+
+[node name="LeftColumn" type="VBoxContainer" parent="MainHBox"]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PaperdollPanel" type="Panel" parent="MainHBox/LeftColumn"]
+custom_minimum_size = Vector2(270, 240)
+layout_mode = 2
+
+[node name="HeroPortrait" type="TextureRect" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 74.0
+offset_bottom = 74.0
+expand_mode = 1
+stretch_mode = 6
+
+[node name="HeroNameLabel" type="Label" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 12.0
+offset_right = 260.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Lieutenant Vance"
+
+[node name="HeroStatsLabel" type="Label" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 38.0
+offset_right = 260.0
+offset_bottom = 65.0
+theme_override_colors/font_color = Color(0.8, 0.88, 0.95, 1)
+theme_override_font_sizes/font_size = 12
+text = "Level 1  |  HP: 12/12  |  AC: 16"
+
+[node name="WeaponLabel" type="Label" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 85.0
+offset_right = 260.0
+offset_bottom = 105.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "MAIN HAND (WEAPON):"
+
+[node name="BtnWeaponSlot" type="Button" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 105.0
+offset_right = 260.0
+offset_bottom = 148.0
+theme_override_font_sizes/font_size = 12
+text = "Service Sword (1d8)"
+alignment = 0
+expand_icon = true
+
+[node name="ArmorLabel" type="Label" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 158.0
+offset_right = 260.0
+offset_bottom = 178.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "CHEST (ARMOR):"
+
+[node name="BtnArmorSlot" type="Button" parent="MainHBox/LeftColumn/PaperdollPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 178.0
+offset_right = 260.0
+offset_bottom = 221.0
+theme_override_font_sizes/font_size = 12
+text = "Chain Mail (AC: 16)"
+alignment = 0
+expand_icon = true
+
+[node name="GoldLabel" type="Label" parent="MainHBox/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "💰 Gold: 25 GP"
+
+[node name="RightColumn" type="VBoxContainer" parent="MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BackpackHeader" type="Label" parent="MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "BACKPACK STORAGE (16 SLOTS)"
+
+[node name="ItemGrid" type="GridContainer" parent="MainHBox/RightColumn"]
+custom_minimum_size = Vector2(0, 205)
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="ItemDetailsPanel" type="Panel" parent="MainHBox/RightColumn"]
+custom_minimum_size = Vector2(0, 135)
+layout_mode = 2
+
+[node name="SelectedItemTitle" type="Label" parent="MainHBox/RightColumn/ItemDetailsPanel"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 410.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 14
+text = "Select an Item"
+
+[node name="SelectedItemDesc" type="Label" parent="MainHBox/RightColumn/ItemDetailsPanel"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 32.0
+offset_right = 410.0
+offset_bottom = 85.0
+theme_override_colors/font_color = Color(0.85, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 12
+text = "Click any item in your backpack to view details and actions."
+autowrap_mode = 2
+
+[node name="ActionHBox" type="HBoxContainer" parent="MainHBox/RightColumn/ItemDetailsPanel"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 90.0
+offset_right = 410.0
+offset_bottom = 124.0
+theme_override_constants/separation = 10
+
+[node name="BtnUseItem" type="Button" parent="MainHBox/RightColumn/ItemDetailsPanel/ActionHBox"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "🧪 DRINK POTION"
+
+[node name="BtnEquipItem" type="Button" parent="MainHBox/RightColumn/ItemDetailsPanel/ActionHBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "⚔️ EQUIP"
+
+[node name="BtnDropItem" type="Button" parent="MainHBox/RightColumn/ItemDetailsPanel/ActionHBox"]
+custom_minimum_size = Vector2(80, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "DROP"

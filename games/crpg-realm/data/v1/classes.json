@@ -1,0 +1,122 @@
+[
+  {
+    "id": "barbarian",
+    "title": "Barbarian",
+    "hitDie": "d12",
+    "primaryAbility": "STR",
+    "savingThrows": ["STR", "CON"],
+    "baseHpAtLevel1": 14,
+    "proficiencies": ["light_armor", "medium_armor", "shields", "simple_weapons", "martial_weapons"],
+    "description": "A fierce warrior of primitive background who can enter a battle rage to withstand devastating damage."
+  },
+  {
+    "id": "bard",
+    "title": "Bard",
+    "hitDie": "d8",
+    "primaryAbility": "CHA",
+    "savingThrows": ["DEX", "CHA"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["light_armor", "simple_weapons", "hand_crossbows", "longswords", "rapiers", "shortswords"],
+    "description": "An inspiring magician whose power echoes the music of creation, bolstering allies with restorative tunes."
+  },
+  {
+    "id": "cleric",
+    "title": "Cleric",
+    "hitDie": "d8",
+    "primaryAbility": "WIS",
+    "savingThrows": ["WIS", "CHA"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["light_armor", "medium_armor", "shields", "simple_weapons"],
+    "description": "A priestly champion who wields divine magic in service of a higher power, smiting foes and healing allies."
+  },
+  {
+    "id": "druid",
+    "title": "Druid",
+    "hitDie": "d8",
+    "primaryAbility": "WIS",
+    "savingThrows": ["INT", "WIS"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["light_armor", "medium_armor", "shields", "clubs", "daggers", "darts", "javelins", "maces", "quarterstaffs", "scimitars", "sickles", "slings", "spears"],
+    "description": "A priest of the Old Faith, wielding elemental powers of nature and adopting animal forms."
+  },
+  {
+    "id": "fighter",
+    "title": "Fighter",
+    "hitDie": "d10",
+    "primaryAbility": "STR",
+    "savingThrows": ["STR", "CON"],
+    "baseHpAtLevel1": 12,
+    "proficiencies": ["all_armor", "shields", "simple_weapons", "martial_weapons"],
+    "description": "A master of martial combat, skilled with a variety of weapons and armor, renowned for Second Wind endurance."
+  },
+  {
+    "id": "monk",
+    "title": "Monk",
+    "hitDie": "d8",
+    "primaryAbility": "DEX",
+    "savingThrows": ["STR", "DEX"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["simple_weapons", "shortswords"],
+    "description": "A master of martial arts, harnessing the energy of the body in pursuit of physical and spiritual perfection."
+  },
+  {
+    "id": "paladin",
+    "title": "Paladin",
+    "hitDie": "d10",
+    "primaryAbility": "STR",
+    "savingThrows": ["WIS", "CHA"],
+    "baseHpAtLevel1": 12,
+    "proficiencies": ["all_armor", "shields", "simple_weapons", "martial_weapons"],
+    "description": "A holy warrior bound to a sacred oath, channeling radiant smites and laying hands to heal."
+  },
+  {
+    "id": "ranger",
+    "title": "Ranger",
+    "hitDie": "d10",
+    "primaryAbility": "DEX",
+    "savingThrows": ["STR", "DEX"],
+    "baseHpAtLevel1": 11,
+    "proficiencies": ["light_armor", "medium_armor", "shields", "simple_weapons", "martial_weapons"],
+    "description": "A warrior of the wilderness who combats threats on the edges of civilization with bows and blades."
+  },
+  {
+    "id": "rogue",
+    "title": "Rogue",
+    "hitDie": "d8",
+    "primaryAbility": "DEX",
+    "savingThrows": ["DEX", "INT"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["light_armor", "simple_weapons", "hand_crossbows", "longswords", "rapiers", "shortswords"],
+    "description": "A scoundrel who uses stealth and trickery to overcome obstacles and deliver lethal sneak attacks."
+  },
+  {
+    "id": "sorcerer",
+    "title": "Sorcerer",
+    "hitDie": "d6",
+    "primaryAbility": "CHA",
+    "savingThrows": ["CON", "CHA"],
+    "baseHpAtLevel1": 7,
+    "proficiencies": ["daggers", "darts", "slings", "quarterstaffs", "light_crossbows"],
+    "description": "A spellcaster who draws on inherent magic from a gift or bloodline, shaping spells through Metamagic."
+  },
+  {
+    "id": "warlock",
+    "title": "Warlock",
+    "hitDie": "d8",
+    "primaryAbility": "CHA",
+    "savingThrows": ["WIS", "CHA"],
+    "baseHpAtLevel1": 9,
+    "proficiencies": ["light_armor", "simple_weapons"],
+    "description": "A wielder of magic derived from a bargain with an otherworldly patron, blasting foes with eldritch energy."
+  },
+  {
+    "id": "wizard",
+    "title": "Wizard",
+    "hitDie": "d6",
+    "primaryAbility": "INT",
+    "savingThrows": ["INT", "WIS"],
+    "baseHpAtLevel1": 7,
+    "proficiencies": ["daggers", "darts", "slings", "quarterstaffs", "light_crossbows"],
+    "description": "A scholarly magic-user capable of manipulating reality through rigorous study, grimoires, and arcane formulae."
+  }
+]

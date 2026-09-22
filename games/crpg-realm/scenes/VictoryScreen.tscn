@@ -1,0 +1,127 @@
+[gd_scene load_steps=3 format=3 uid="uid://victory01"]
+
+[ext_resource type="Script" path="res://scripts/VictoryScreen.gd" id="1_vic"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/arrival_victory.jpg" id="2_bg"]
+
+[node name="VictoryScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vic")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.06, 0.1, 0.65)
+
+[node name="FramePanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -300.0
+offset_right = 440.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -270.0
+offset_right = 400.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 30
+text = "★ CHAPTER 1 COMPLETE ★"
+horizontal_alignment = 1
+
+[node name="SubTitle" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "A Night Without Memory — Early Access Vertical Slice"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Epilogue" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 95)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 15
+text = "With Captain Malakor defeated, you strike the iron alarm bell, rallying the surviving guards and sealing the ancient vault entrance before the darkness can spread. But the mystery deepens: who ordered Malakor to unearth the relic, and what did you whisper before you collapsed?"
+autowrap_mode = 2
+
+[node name="StatsBox" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeroLabel" type="Label" parent="VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+text = "Hero: Vance"
+
+[node name="KillsLabel" type="Label" parent="VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+text = "Enemies Defeated: 2"
+
+[node name="ChestsLabel" type="Label" parent="VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+text = "Chests Discovered: 1"
+
+[node name="GoldLabel" type="Label" parent="VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+text = "Gold Acquired: 25"
+
+[node name="BtnReplay" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(260, 45)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 15
+text = "PLAY AGAIN (NEW HERO)"
+
+[node name="BtnQuit" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(260, 45)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 15
+text = "QUIT TO DESKTOP"

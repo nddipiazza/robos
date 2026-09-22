@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://grounditem01"]
+
+[ext_resource type="Script" path="res://scripts/GroundItem.gd" id="1_gi"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_item"]
+radius = 24.0
+
+[node name="GroundItem" type="Area2D"]
+script = ExtResource("1_gi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_item")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+
+[node name="Label" type="Label" parent="."]
+offset_left = -60.0
+offset_top = -32.0
+offset_right = 60.0
+offset_bottom = -12.0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1

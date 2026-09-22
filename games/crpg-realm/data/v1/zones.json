@@ -1,0 +1,29 @@
+[
+  {
+    "id": "homestead",
+    "urn": "urn:robos:crpg:zone:homestead",
+    "title": "Guard's Homestead",
+    "zoneType": "interior",
+    "scenePath": "scenes/Homestead.tscn",
+    "ambientAudio": "assets/audio/homestead_ambience.ogg",
+    "tilesetRef": "flare:tileset:dungeon_stone"
+  },
+  {
+    "id": "village-square",
+    "urn": "urn:robos:crpg:zone:village-square",
+    "title": "Oakhaven Village Square",
+    "zoneType": "wilderness",
+    "scenePath": "scenes/VillageSquare.tscn",
+    "ambientAudio": "assets/audio/village_ambience.ogg",
+    "tilesetRef": "flare:tileset:wilderness_grass"
+  },
+  {
+    "id": "garrison-keep",
+    "urn": "urn:robos:crpg:zone:garrison-keep",
+    "title": "Royal Garrison Keep & War Room",
+    "zoneType": "dungeon",
+    "scenePath": "scenes/GarrisonKeep.tscn",
+    "ambientAudio": "assets/audio/dungeon_ambience.ogg",
+    "tilesetRef": "flare:tileset:dungeon_stone"
+  }
+]

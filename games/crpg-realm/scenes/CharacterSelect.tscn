@@ -1,0 +1,331 @@
+[gd_scene load_steps=7 format=3 uid="uid://charselect01"]
+
+[ext_resource type="Script" path="res://scripts/CharacterSelect.gd" id="1_cs"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/city_citadel.jpg" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/portraits/portrait_fighter.png" id="3_fig"]
+[ext_resource type="Texture2D" path="res://assets/portraits/portrait_rogue.png" id="4_rog"]
+[ext_resource type="Texture2D" path="res://assets/portraits/portrait_wizard.png" id="5_wiz"]
+[ext_resource type="Texture2D" path="res://assets/portraits/portrait_cleric.png" id="6_cle"]
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cs")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.07, 0.1, 0.76)
+
+[node name="PanelFrame" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -580.0
+offset_top = -370.0
+offset_right = 580.0
+offset_bottom = 370.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -550.0
+offset_top = -350.0
+offset_right = 550.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "REALM OF HEROES: A NIGHT WITHOUT MEMORY"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.88, 0.95, 1)
+theme_override_font_sizes/font_size = 14
+text = "Early Access Vertical Slice — Choose Your Hero & Roll Ability Scores"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="MainContent" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="LeftColumn" type="VBoxContainer" parent="VBoxContainer/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="NameHeader" type="Label" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "HERO NAME"
+
+[node name="NameEdit" type="LineEdit" parent="VBoxContainer/MainContent/LeftColumn"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Lieutenant Vance"
+placeholder_text = "Enter Hero Name (e.g. Lieutenant Vance)"
+
+[node name="RaceHeader" type="Label" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "SELECT CHARACTER RACE"
+
+[node name="RaceGrid" type="GridContainer" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 5
+
+[node name="BtnRaceHuman" type="Button" parent="VBoxContainer/MainContent/LeftColumn/RaceGrid"]
+custom_minimum_size = Vector2(105, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Human"
+
+[node name="BtnRaceElf" type="Button" parent="VBoxContainer/MainContent/LeftColumn/RaceGrid"]
+custom_minimum_size = Vector2(105, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Elf"
+
+[node name="BtnRaceDwarf" type="Button" parent="VBoxContainer/MainContent/LeftColumn/RaceGrid"]
+custom_minimum_size = Vector2(105, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Dwarf"
+
+[node name="BtnRaceHalfling" type="Button" parent="VBoxContainer/MainContent/LeftColumn/RaceGrid"]
+custom_minimum_size = Vector2(105, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Halfling"
+
+[node name="ClassHeader" type="Label" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "SELECT CLASS ARCHETYPE"
+
+[node name="ClassGrid" type="GridContainer" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="BtnFighter" type="Button" parent="VBoxContainer/MainContent/LeftColumn/ClassGrid"]
+custom_minimum_size = Vector2(135, 38)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Fighter"
+icon = ExtResource("3_fig")
+expand_icon = true
+
+[node name="BtnRogue" type="Button" parent="VBoxContainer/MainContent/LeftColumn/ClassGrid"]
+custom_minimum_size = Vector2(135, 38)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Rogue"
+icon = ExtResource("4_rog")
+expand_icon = true
+
+[node name="BtnWizard" type="Button" parent="VBoxContainer/MainContent/LeftColumn/ClassGrid"]
+custom_minimum_size = Vector2(135, 38)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Wizard"
+icon = ExtResource("5_wiz")
+expand_icon = true
+
+[node name="BtnCleric" type="Button" parent="VBoxContainer/MainContent/LeftColumn/ClassGrid"]
+custom_minimum_size = Vector2(135, 38)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Cleric"
+icon = ExtResource("6_cle")
+expand_icon = true
+
+[node name="SpellHeader" type="Label" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "PREPARE SPELLS"
+
+[node name="SpellGrid" type="HBoxContainer" parent="VBoxContainer/MainContent/LeftColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnSpellMagicMissile" type="Button" parent="VBoxContainer/MainContent/LeftColumn/SpellGrid"]
+custom_minimum_size = Vector2(175, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "✨ Magic Missile"
+
+[node name="BtnSpellCureWounds" type="Button" parent="VBoxContainer/MainContent/LeftColumn/SpellGrid"]
+custom_minimum_size = Vector2(175, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "🌿 Cure Wounds"
+
+[node name="BtnSpellFireball" type="Button" parent="VBoxContainer/MainContent/LeftColumn/SpellGrid"]
+custom_minimum_size = Vector2(175, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "🔥 Fireball"
+
+[node name="DescLabel" type="Label" parent="VBoxContainer/MainContent/LeftColumn"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.65, 1)
+theme_override_font_sizes/font_size = 12
+text = "Class description..."
+autowrap_mode = 2
+
+[node name="RightColumn" type="VBoxContainer" parent="VBoxContainer/MainContent"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StatHeader" type="Label" parent="VBoxContainer/MainContent/RightColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 13
+text = "D&D 5e ABILITY SCORES (4d6 DROP LOWEST)"
+
+[node name="StatsPanel" type="Panel" parent="VBoxContainer/MainContent/RightColumn"]
+custom_minimum_size = Vector2(0, 195)
+layout_mode = 2
+
+[node name="StatsInner" type="VBoxContainer" parent="VBoxContainer/MainContent/RightColumn/StatsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Grid" type="GridContainer" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="LabelSTR" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "STR: 16 (+3)"
+
+[node name="LabelDEX" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "DEX: 14 (+2)"
+
+[node name="LabelCON" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "CON: 15 (+2)"
+
+[node name="LabelINT" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "INT: 10 (+0)"
+
+[node name="LabelWIS" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "WIS: 12 (+1)"
+
+[node name="LabelCHA" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner/Grid"]
+custom_minimum_size = Vector2(140, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "CHA: 11 (+0)"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner"]
+layout_mode = 2
+
+[node name="TotalScoreLabel" type="Label" parent="VBoxContainer/MainContent/RightColumn/StatsPanel/StatsInner"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.95, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "TOTAL ABILITY SCORE: 78"
+horizontal_alignment = 1
+
+[node name="BtnReroll" type="Button" parent="VBoxContainer/MainContent/RightColumn"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+text = "🎲 RE-ROLL STATS"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="EmbarkBtn" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "EMBARK INTO OAKHAVEN ➔"

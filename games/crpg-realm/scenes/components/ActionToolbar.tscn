@@ -1,0 +1,93 @@
+[gd_scene load_steps=3 format=3 uid="uid://action_toolbar_01"]
+
+[ext_resource type="Script" path="res://scripts/ActionToolbar.gd" id="1_at"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.07, 0.11, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.4, 0.2, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[node name="ActionToolbar" type="PanelContainer"]
+custom_minimum_size = Vector2(660, 32)
+offset_left = 20.0
+offset_top = 24.0
+offset_right = 680.0
+offset_bottom = 58.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_at")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 0
+
+[node name="BtnAttack" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(76, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "⚔️ Attack"
+
+[node name="BtnMove" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(68, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "👣 Move"
+
+[node name="BtnGuard" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(70, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🛡️ Guard"
+
+[node name="BtnSpell" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(86, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "✨ Spell"
+
+[node name="BtnSpecial" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(82, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "⚡ Special"
+
+[node name="VSeparator1" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="BtnPotion" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(82, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🧪 Heal (0)"
+
+[node name="BtnAntidote" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(82, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "🧪 Anti (0)"
+
+[node name="VSeparator2" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="BtnPause" type="Button" parent="MarginContainer/HBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(100, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+text = "PAUSE"

@@ -1,0 +1,43 @@
+; Engine configuration file.
+; RobOS cRPG Generator - Godot 4 GL Compatibility Project
+
+config_version=5
+
+[application]
+
+config/name="Realm of Heroes: A Night Without Memory"
+config/description="Early Access Vertical Slice cRPG powered by RobOS Dual-State KGraph"
+run/main_scene="res://scenes/CharacterSelect.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://assets/icons/weapons/longsword.png"
+
+[autoload]
+
+DataStore="*res://src/generated/v1/DataStoreV1.gd"
+GameState="*res://scripts/GameState.gd"
+GameControlServer="*res://scripts/GameControlServer.gd"
+AudioManager="*res://scripts/AudioManager.gd"
+QAOverlay="*res://scripts/QAOverlay.gd"
+FloatingTextManager="*res://scripts/FloatingTextManager.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[input]
+
+toggle_pause={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":32,"echo":false,"script":null)
+]
+}
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

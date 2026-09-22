@@ -1,0 +1,143 @@
+[
+  {
+    "id": "human",
+    "title": "Human",
+    "abilityBonuses": {
+      "STR": 1,
+      "DEX": 1,
+      "CON": 1,
+      "INT": 1,
+      "WIS": 1,
+      "CHA": 1
+    },
+    "speed": 30,
+    "traits": [
+      "versatile",
+      "ambitious"
+    ],
+    "description": "Humans are the most adaptable and ambitious people among the common races, gaining +1 to all six ability scores."
+  },
+  {
+    "id": "elf",
+    "title": "Elf",
+    "abilityBonuses": {
+      "DEX": 2,
+      "INT": 1
+    },
+    "speed": 30,
+    "traits": [
+      "darkvision",
+      "keen_senses",
+      "fey_ancestry",
+      "arcane_affinity"
+    ],
+    "description": "Elves possess otherworldly grace and sharp intellect (+2 DEX, +1 INT), naturally attuned to magic and archery."
+  },
+  {
+    "id": "dwarf",
+    "title": "Dwarf",
+    "abilityBonuses": {
+      "CON": 2,
+      "STR": 1
+    },
+    "speed": 25,
+    "traits": [
+      "darkvision",
+      "dwarven_resilience",
+      "dwarven_toughness"
+    ],
+    "description": "Dwarves are stout and stalwart defenders (+2 CON, +1 STR) with legendary fortitude, poison resistance, and bonus HP."
+  },
+  {
+    "id": "halfling",
+    "title": "Halfling",
+    "abilityBonuses": {
+      "DEX": 2,
+      "CHA": 1
+    },
+    "speed": 25,
+    "traits": [
+      "lucky",
+      "brave",
+      "halfling_nimbleness"
+    ],
+    "description": "Halflings are nimble and cheerful folk (+2 DEX, +1 CHA) gifted with uncanny luck and agility (+1 AC bonus)."
+  },
+  {
+    "id": "dragonborn",
+    "title": "Dragonborn",
+    "abilityBonuses": {
+      "STR": 2,
+      "CHA": 1
+    },
+    "speed": 30,
+    "traits": [
+      "draconic_ancestry",
+      "breath_weapon",
+      "damage_resistance"
+    ],
+    "description": "Dragonborn look very much like dragons standing erect in humanoid form (+2 STR, +1 CHA), bearing elemental breath weapons."
+  },
+  {
+    "id": "gnome",
+    "title": "Gnome",
+    "abilityBonuses": {
+      "INT": 2,
+      "CON": 1
+    },
+    "speed": 25,
+    "traits": [
+      "darkvision",
+      "gnome_cunning",
+      "artificers_lore"
+    ],
+    "description": "Gnomes take delight in life and invention (+2 INT, +1 CON), possessing keen intellect and resistance to magical effects."
+  },
+  {
+    "id": "half-elf",
+    "title": "Half-Elf",
+    "abilityBonuses": {
+      "CHA": 2,
+      "DEX": 1,
+      "CON": 1
+    },
+    "speed": 30,
+    "traits": [
+      "darkvision",
+      "fey_ancestry",
+      "skill_versatility"
+    ],
+    "description": "Walking in two worlds, half-elves combine human ambition with elven grace (+2 CHA, +1 DEX, +1 CON)."
+  },
+  {
+    "id": "half-orc",
+    "title": "Half-Orc",
+    "abilityBonuses": {
+      "STR": 2,
+      "CON": 1
+    },
+    "speed": 30,
+    "traits": [
+      "darkvision",
+      "menacing",
+      "relentless_endurance",
+      "savage_attacks"
+    ],
+    "description": "Half-orcs exhibit savage strength and relentless endurance (+2 STR, +1 CON), defying death when others would collapse."
+  },
+  {
+    "id": "tiefling",
+    "title": "Tiefling",
+    "abilityBonuses": {
+      "CHA": 2,
+      "INT": 1
+    },
+    "speed": 30,
+    "traits": [
+      "darkvision",
+      "hellish_resistance",
+      "infernal_legacy"
+    ],
+    "description": "Tieflings carry the infernal heritage of the Lower Planes (+2 CHA, +1 INT), wielding darkvision and fire resistance."
+  }
+]

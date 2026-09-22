@@ -1,0 +1,36 @@
+[
+  {
+    "id": "village-hounds",
+    "title": "Village Outskirts Shadow Hounds",
+    "minLevel": 1,
+    "maxLevel": 2,
+    "entries": [
+      {
+        "monsterId": "corrupted-hound",
+        "weight": 100,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ]
+  },
+  {
+    "id": "garrison-skirmishers",
+    "title": "Garrison Barracks Corrupted Guards",
+    "minLevel": 1,
+    "maxLevel": 3,
+    "entries": [
+      {
+        "monsterId": "corrupted-guard",
+        "weight": 70,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "monsterId": "skeleton",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ]
+  }
+]

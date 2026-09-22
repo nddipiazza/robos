@@ -1,0 +1,156 @@
+[gd_scene load_steps=13 format=3 uid="uid://tacticalbattle01"]
+
+[ext_resource type="Script" path="res://scripts/TacticalBattle.gd" id="1_tb"]
+[ext_resource type="Script" path="res://scripts/CombatManager.gd" id="2_cm"]
+[ext_resource type="PackedScene" path="res://scenes/HeroPlayer.tscn" id="3_hp"]
+[ext_resource type="PackedScene" path="res://scenes/PartyCompanion.tscn" id="4_pc"]
+[ext_resource type="PackedScene" path="res://scenes/components/TacticalEnemy.tscn" id="5_te"]
+[ext_resource type="Script" path="res://scripts/PartyHUD.gd" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/components/ActionLog.tscn" id="7_al"]
+[ext_resource type="PackedScene" path="res://scenes/components/ActionToolbar.tscn" id="8_at"]
+[ext_resource type="PackedScene" path="res://scenes/components/PortraitToolbar.tscn" id="9_pt"]
+[ext_resource type="PackedScene" path="res://scenes/components/CharacterStatusWindow.tscn" id="10_csw"]
+[ext_resource type="PackedScene" path="res://scenes/components/InventoryWindow.tscn" id="11_inv"]
+[ext_resource type="PackedScene" path="res://scenes/components/DefeatScreen.tscn" id="12_ds"]
+
+[node name="TacticalBattle" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_tb")
+
+[node name="BattlefieldBackground" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0.1, 0.12, 0.15, 1)
+
+[node name="ArenaFloor" type="ColorRect" parent="."]
+offset_left = 120.0
+offset_top = 80.0
+offset_right = 1800.0
+offset_bottom = 1000.0
+mouse_filter = 2
+color = Color(0.14, 0.16, 0.2, 1)
+
+[node name="CombatManager" type="Node" parent="."]
+script = ExtResource("2_cm")
+
+[node name="HeroPlayer" parent="." instance=ExtResource("3_hp")]
+position = Vector2(480, 540)
+
+[node name="CompanionElora" parent="." instance=ExtResource("4_pc")]
+position = Vector2(380, 440)
+companion_id = "elora"
+companion_name = "Elora"
+
+[node name="CompanionThrumbar" parent="." instance=ExtResource("4_pc")]
+position = Vector2(380, 640)
+companion_id = "thrumbar"
+companion_name = "Thrumbar"
+
+[node name="EnemyWolfAlpha" parent="." instance=ExtResource("5_te")]
+position = Vector2(1280, 540)
+enemy_id = "wolf_alpha"
+enemy_name = "Corrupted Wolf Alpha"
+max_hp = 90
+armor_class = 13
+attack_bonus = 4
+damage_min = 4
+damage_max = 10
+move_speed = 140.0
+sprite_texture_path = "res://assets/sprites/enemies/wolf.png"
+loot_gold = 30
+loot_items = ["potion-healing"]
+
+[node name="EnemySkeletonArcher" parent="." instance=ExtResource("5_te")]
+position = Vector2(1460, 420)
+enemy_id = "skeleton_archer"
+enemy_name = "Crypt Skeleton Archer"
+max_hp = 18
+armor_class = 12
+attack_bonus = 4
+damage_min = 3
+damage_max = 8
+move_speed = 120.0
+is_ranged = true
+ranged_standoff_distance = 280.0
+sprite_texture_path = "res://assets/sprites/enemies/skeleton.png"
+loot_gold = 20
+loot_items = ["dagger"]
+
+[node name="EnemyShadowStalker" parent="." instance=ExtResource("5_te")]
+position = Vector2(1380, 680)
+enemy_id = "shadow_stalker"
+enemy_name = "Shadow Stalker"
+max_hp = 22
+armor_class = 14
+attack_bonus = 5
+damage_min = 5
+damage_max = 12
+move_speed = 150.0
+sprite_texture_path = "res://assets/sprites/enemies/orc.png"
+loot_gold = 25
+loot_items = ["potion-healing"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="PartyHUD" type="Panel" parent="CanvasLayer"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -60.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("6_hud")
+
+[node name="Panel" type="Panel" parent="CanvasLayer/PartyHUD"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="QuestLabel" type="Label" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 4.0
+offset_right = 720.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 12
+text = "Tactical Skirmish: Engage enemy pack & protect the party"
+
+[node name="ActionLog" parent="CanvasLayer" instance=ExtResource("7_al")]
+offset_left = 20.0
+offset_top = 780.0
+offset_right = 780.0
+offset_bottom = 1040.0
+
+[node name="NoticeLabel" type="Label" parent="CanvasLayer"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -450.0
+offset_top = 64.0
+offset_right = 450.0
+offset_bottom = 98.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 16
+text = "Tactical Battle"
+horizontal_alignment = 1
+
+[node name="CharacterStatusWindow" parent="CanvasLayer" instance=ExtResource("10_csw")]
+visible = false
+
+[node name="InventoryWindow" parent="CanvasLayer" instance=ExtResource("11_inv")]
+visible = false
+
+[node name="DefeatScreen" parent="CanvasLayer" instance=ExtResource("12_ds")]
+visible = false

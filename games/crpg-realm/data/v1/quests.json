@@ -1,0 +1,28 @@
+[
+  {
+    "id": "night-without-memory",
+    "title": "A Night Without Memory",
+    "stages": [
+      {
+        "stage": 1,
+        "description": "Awake at home. Questioned by your partner Elora about last night's secret call to the keep."
+      },
+      {
+        "stage": 2,
+        "description": "Retrieve your service blade from the footlocker and step out into Oakhaven Village."
+      },
+      {
+        "stage": 3,
+        "description": "Investigate the village disturbance and speak with Blacksmith Brand to obtain the Garrison Side Key."
+      },
+      {
+        "stage": 4,
+        "description": "Breach the Royal Garrison Keep and defeat the corrupted skirmishers in the lower barracks."
+      },
+      {
+        "stage": 5,
+        "description": "Confront Captain Malakor in the War Room, defeat his corrupted form, and seal the Azrath vault breach."
+      }
+    ]
+  }
+]

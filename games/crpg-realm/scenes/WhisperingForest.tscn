@@ -1,0 +1,234 @@
+[gd_scene load_steps=22 format=3 uid="uid://whisperingforest01"]
+
+[ext_resource type="Script" path="res://scripts/WhisperingForest.gd" id="1_wf"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/forest_wilderness_2560.png" id="2_bg"]
+[ext_resource type="Script" path="res://scripts/CombatManager.gd" id="3_cm"]
+[ext_resource type="PackedScene" path="res://scenes/HeroPlayer.tscn" id="4_hp"]
+[ext_resource type="PackedScene" path="res://scenes/ShadowHound.tscn" id="5_hnd"]
+[ext_resource type="PackedScene" path="res://scenes/components/DoorPortal.tscn" id="6_dp"]
+[ext_resource type="PackedScene" path="res://scenes/components/NPCCharacter.tscn" id="7_npc"]
+[ext_resource type="PackedScene" path="res://scenes/components/GroundItem.tscn" id="8_itm"]
+[ext_resource type="PackedScene" path="res://scenes/components/ActionLog.tscn" id="9_al"]
+[ext_resource type="PackedScene" path="res://scenes/components/InventoryWindow.tscn" id="10_inv"]
+[ext_resource type="PackedScene" path="res://scenes/components/SettingsModal.tscn" id="11_sm"]
+[ext_resource type="PackedScene" path="res://scenes/components/CharacterStatusWindow.tscn" id="12_csw"]
+[ext_resource type="PackedScene" path="res://scenes/components/FogOfWar.tscn" id="13_fow"]
+[ext_resource type="Script" path="res://scripts/PartyHUD.gd" id="14_hud"]
+[ext_resource type="Texture2D" path="res://assets/structures/stone_arch_gate.png" id="15_gat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/npcs/prop_obelisk.png" id="16_obe"]
+[ext_resource type="Texture2D" path="res://assets/icons/potions/potion_healing.png" id="17_pot"]
+[ext_resource type="Texture2D" path="res://assets/icons/scrolls/scroll_magic_missile.png" id="18_scr"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_border_v"]
+size = Vector2(60, 1440)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_border_h"]
+size = Vector2(2560, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ruins"]
+size = Vector2(480, 320)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_river"]
+size = Vector2(120, 500)
+
+[node name="WhisperingForest" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_wf")
+
+[node name="CombatManager" type="Node" parent="."]
+script = ExtResource("3_cm")
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 2560.0
+offset_bottom = 1440.0
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="ForestBoundaries" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="WestBorder" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(30, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="EastBorder" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(2530, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="NorthBorder" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(1280, 50)
+shape = SubResource("RectangleShape2D_border_h")
+
+[node name="SouthBorder" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(1280, 1390)
+shape = SubResource("RectangleShape2D_border_h")
+
+[node name="RuinsCollider" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(400, 440)
+shape = SubResource("RectangleShape2D_ruins")
+
+[node name="RiverTopCollider" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(1340, 320)
+shape = SubResource("RectangleShape2D_river")
+
+[node name="RiverBottomCollider" type="CollisionShape2D" parent="ForestBoundaries"]
+position = Vector2(1360, 1150)
+shape = SubResource("RectangleShape2D_river")
+
+; ── Props ────────────────────────────────────────────────────────────────
+
+[node name="AncientObelisk" type="StaticBody2D" parent="."]
+position = Vector2(430, 780)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="AncientObelisk"]
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("16_obe")
+offset = Vector2(0, -30)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AncientObelisk"]
+position = Vector2(0, 10)
+shape = SubResource("RectangleShape2D_border_v")
+
+; ── Portals & Gates ──────────────────────────────────────────────────────
+
+[node name="VillageGate" parent="." instance=ExtResource("6_dp")]
+position = Vector2(140, 720)
+door_id = "door-id-village"
+door_name = "Village Square Road"
+target_scene = "res://scenes/VillageSquare.tscn"
+target_spawn = Vector2(2300, 780)
+
+[node name="CryptEntrance" parent="." instance=ExtResource("6_dp")]
+position = Vector2(2380, 380)
+door_id = "door-id-crypt"
+door_name = "Ancient Catacombs Arch"
+target_scene = "res://scenes/AncientCatacombs.tscn"
+target_spawn = Vector2(240, 680)
+
+; ── Ground Items ─────────────────────────────────────────────────────────
+
+[node name="GroundItem_Scroll" parent="." instance=ExtResource("8_itm")]
+position = Vector2(880, 680)
+item_id = "item-id-scroll"
+item_name = "Scroll of Arcane Blast"
+icon_texture = ExtResource("18_scr")
+
+[node name="GroundItem_Potion" parent="." instance=ExtResource("8_itm")]
+position = Vector2(560, 500)
+item_id = "item-id-potion"
+item_name = "Lesser Healing Draught"
+icon_texture = ExtResource("17_pot")
+
+; ── Hero Player ──────────────────────────────────────────────────────────
+
+[node name="HeroPlayer" parent="." instance=ExtResource("4_hp")]
+position = Vector2(200, 720)
+
+; ── NPCs ─────────────────────────────────────────────────────────────────
+
+[node name="NPC_Peddler" parent="." instance=ExtResource("7_npc")]
+position = Vector2(850, 640)
+npc_id = "npc-id-peddler"
+npc_name = "Goblin Peddler Griknok"
+custom_sprite_path = "res://assets/sprites/npcs/npc_goblin_peddler.png"
+portrait_path = "res://assets/portraits/portrait_male13.png"
+
+[node name="NPC_Fallen" parent="." instance=ExtResource("7_npc")]
+position = Vector2(520, 560)
+npc_id = "npc-id-fallen"
+npc_name = "Fallen Adventurer Rickard"
+custom_sprite_path = "res://assets/sprites/npcs/npc_dead_adventurer.png"
+portrait_path = "res://assets/portraits/portrait_male14.png"
+
+[node name="NPC_Hermit" parent="." instance=ExtResource("7_npc")]
+position = Vector2(1950, 480)
+npc_id = "npc-id-hermit"
+npc_name = "Hermit Varis"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant1.png"
+portrait_path = "res://assets/portraits/portrait_druid.png"
+
+; ── Enemies ──────────────────────────────────────────────────────────────
+
+[node name="DireWolf" parent="." instance=ExtResource("5_hnd")]
+position = Vector2(1050, 740)
+
+[node name="ForestStalker" parent="." instance=ExtResource("5_hnd")]
+position = Vector2(1750, 680)
+
+; ── HUD & Overlay ────────────────────────────────────────────────────────
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="NoticeLabel" type="Label" parent="CanvasLayer"]
+visible = false
+offset_left = 340.0
+offset_top = 40.0
+offset_right = 940.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="PartyHUD" type="Panel" parent="CanvasLayer"]
+offset_top = 612.0
+offset_right = 1280.0
+offset_bottom = 666.0
+script = ExtResource("14_hud")
+
+[node name="QuestLabel" type="Label" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 4.0
+offset_right = 720.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 12
+text = "Active Quest: Cross Whispering Forest & Breach Ancient Catacombs"
+
+[node name="BtnOptions" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 890.0
+offset_top = 10.0
+offset_right = 1000.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "⚙️ OPTIONS"
+
+[node name="BtnInventory" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1015.0
+offset_top = 10.0
+offset_right = 1125.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "🎒 ITEMS"
+
+[node name="BtnPause" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1140.0
+offset_top = 10.0
+offset_right = 1250.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "PAUSE"
+
+[node name="ActionLog" parent="CanvasLayer" instance=ExtResource("9_al")]
+offset_left = 20.0
+offset_top = 480.0
+offset_right = 780.0
+offset_bottom = 604.0
+
+[node name="InventoryWindow" parent="CanvasLayer" instance=ExtResource("10_inv")]
+visible = false
+
+[node name="SettingsModal" parent="CanvasLayer" instance=ExtResource("11_sm")]
+visible = false
+
+[node name="CharacterStatusWindow" parent="CanvasLayer" instance=ExtResource("12_csw")]
+visible = false
+
+[node name="FogOfWar" parent="." instance=ExtResource("13_fow")]

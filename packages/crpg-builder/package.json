@@ -1,0 +1,26 @@
+{
+  "name": "robos-crpg-builder",
+  "version": "1.0.0",
+  "description": "RobOS Dual-State Knowledge Graph cRPG Game Generator for Godot 4 & D&D Rules",
+  "main": "lib/builder.js",
+  "bin": {
+    "crpg-builder": "./bin/crpg-builder.js"
+  },
+  "scripts": {
+    "generate": "node bin/crpg-builder.js generate",
+    "validate": "node bin/crpg-builder.js validate",
+    "diff": "node bin/crpg-builder.js diff",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "robos",
+    "crpg",
+    "kgraph",
+    "godot4",
+    "dnd5e",
+    "generator",
+    "flare-rpg"
+  ],
+  "author": "RobOS AI Pair Programmer",
+  "license": "Apache-2.0"
+}

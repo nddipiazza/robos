@@ -1,0 +1,102 @@
+[gd_scene load_steps=3 format=3 uid="uid://settingsmodal01"]
+
+[ext_resource type="Script" path="res://scripts/SettingsModal.gd" id="1_set"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.05, 0.07, 0.11, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.65, 0.52, 0.25, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+
+[node name="SettingsModal" type="Panel"]
+custom_minimum_size = Vector2(480, 400)
+offset_left = 400.0
+offset_top = 140.0
+offset_right = 880.0
+offset_bottom = 540.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+script = ExtResource("1_set")
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 460.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(1, 0.88, 0.4, 1)
+theme_override_font_sizes/font_size = 15
+text = "⚙️ GAMEPLAY & FEEDBACK OPTIONS"
+horizontal_alignment = 1
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 56.0
+offset_right = 444.0
+offset_bottom = 296.0
+theme_override_constants/separation = 14
+
+[node name="LblFeedback" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "--- VISUAL COMBAT FEEDBACK ---"
+
+[node name="HBoxHB" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LblHB" type="Label" parent="VBox/HBoxHB"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Overhead Health Bars:"
+
+[node name="OptHealthBars" type="OptionButton" parent="VBox/HBoxHB"]
+custom_minimum_size = Vector2(160, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="ChkFloatingText" type="CheckBox" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+button_pressed = true
+text = "Show Floating Damage & Roll Numbers"
+
+[node name="ChkFogOfWar" type="CheckBox" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+button_pressed = true
+text = "Enable Infinity Engine Fog of War"
+
+[node name="LblPause" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "--- AUTO-PAUSE TRIGGERS (RTwP) ---"
+
+[node name="ChkAutoPauseCombat" type="CheckBox" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Auto-Pause on Hostile Target Sighted"
+
+[node name="ChkAutoPauseInjured" type="CheckBox" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Auto-Pause on Character Critically Injured (<25% HP)"
+
+[node name="BtnClose" type="Button" parent="."]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 348.0
+offset_right = 320.0
+offset_bottom = 382.0
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "APPLY & CLOSE"

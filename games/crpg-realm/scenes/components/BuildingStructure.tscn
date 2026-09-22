@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://buildingstructure01"]
+
+[ext_resource type="Script" path="res://scripts/BuildingStructure.gd" id="1_bs"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_footprint"]
+size = Vector2(360, 160)
+
+[node name="BuildingStructure" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_bs")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+offset = Vector2(0, -60)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, 40)
+shape = SubResource("RectangleShape2D_footprint")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -180.0
+offset_right = 120.0
+offset_bottom = -155.0
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Building"
+horizontal_alignment = 1

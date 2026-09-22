@@ -1,0 +1,621 @@
+[gd_scene load_steps=29 format=3 uid="uid://village01"]
+
+[ext_resource type="Script" path="res://scripts/VillageSquare.gd" id="1_vs"]
+[ext_resource type="Script" path="res://scripts/ClickableObject.gd" id="2_co"]
+[ext_resource type="Script" path="res://scripts/DoorPortal.gd" id="3_dp"]
+[ext_resource type="Script" path="res://scripts/CombatManager.gd" id="4_cm"]
+[ext_resource type="Script" path="res://scripts/PartyHUD.gd" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/HeroPlayer.tscn" id="7_hp"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/village_open_world_2560.png" id="8_bg"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/blacksmith_brand_0.png" id="9_bra"]
+[ext_resource type="Texture2D" path="res://assets/structures/stone_arch_gate.png" id="10_gat"]
+[ext_resource type="PackedScene" path="res://scenes/components/InventoryWindow.tscn" id="12_inv"]
+[ext_resource type="Texture2D" path="res://assets/props/selection_circle_blue.png" id="13_sc"]
+[ext_resource type="PackedScene" path="res://scenes/ShadowHound.tscn" id="14_hnd_scene"]
+[ext_resource type="PackedScene" path="res://scenes/components/ActionLog.tscn" id="15_al"]
+[ext_resource type="PackedScene" path="res://scenes/components/SettingsModal.tscn" id="16_sm"]
+[ext_resource type="PackedScene" path="res://scenes/components/FogOfWar.tscn" id="17_fow"]
+[ext_resource type="PackedScene" path="res://scenes/components/CharacterStatusWindow.tscn" id="18_csw"]
+[ext_resource type="Texture2D" path="res://assets/structures/building_inn.png" id="19_inn"]
+[ext_resource type="Texture2D" path="res://assets/structures/building_blacksmith.png" id="20_bsm"]
+[ext_resource type="Texture2D" path="res://assets/structures/building_apothecary.png" id="21_apo"]
+[ext_resource type="Texture2D" path="res://assets/structures/building_townhall.png" id="22_twh"]
+[ext_resource type="Texture2D" path="res://assets/structures/building_cottage1.png" id="23_cot"]
+[ext_resource type="Texture2D" path="res://assets/structures/stone_wall_section.png" id="24_wal"]
+[ext_resource type="PackedScene" path="res://scenes/components/NPCCharacter.tscn" id="25_npc"]
+[ext_resource type="PackedScene" path="res://scenes/components/GroundItem.tscn" id="26_itm"]
+[ext_resource type="Texture2D" path="res://assets/icons/potions/potion_healing.png" id="27_pot"]
+[ext_resource type="Texture2D" path="res://assets/icons/scrolls/scroll_magic_missile.png" id="28_scr"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_box"]
+size = Vector2(90, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_border_v"]
+size = Vector2(60, 1440)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_wall"]
+size = Vector2(1000, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_south_wall"]
+size = Vector2(1000, 80)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tree"]
+radius = 42.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_anvil"]
+radius = 22.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_inn"]
+size = Vector2(400, 160)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_smith"]
+size = Vector2(420, 150)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_apo"]
+size = Vector2(300, 180)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_town"]
+size = Vector2(360, 180)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_cot"]
+size = Vector2(380, 150)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stone_wall"]
+size = Vector2(380, 80)
+
+[node name="VillageSquare" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_vs")
+
+[node name="CombatManager" type="Node" parent="."]
+script = ExtResource("4_cm")
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 2560.0
+offset_bottom = 1440.0
+mouse_filter = 2
+texture = ExtResource("8_bg")
+expand_mode = 1
+
+[node name="VillageBoundaries" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="WestBorder" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(30, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="EastBorder" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(2530, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="NorthWallLeft" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(550, 50)
+shape = SubResource("RectangleShape2D_north_wall")
+
+[node name="NorthWallRight" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(2010, 50)
+shape = SubResource("RectangleShape2D_north_wall")
+
+[node name="SouthBorderLeft" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(500, 1400)
+shape = SubResource("RectangleShape2D_south_wall")
+
+[node name="SouthBorderRight" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(2060, 1400)
+shape = SubResource("RectangleShape2D_south_wall")
+
+[node name="TreeLeft" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(320, 960)
+shape = SubResource("CircleShape2D_tree")
+
+[node name="TreeRight1" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1600, 980)
+shape = SubResource("CircleShape2D_tree")
+
+[node name="TreeRight2" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(2100, 1100)
+shape = SubResource("CircleShape2D_tree")
+
+[node name="BlacksmithAnvil" type="CollisionShape2D" parent="VillageBoundaries"]
+position = Vector2(1140, 890)
+shape = SubResource("CircleShape2D_anvil")
+
+; ── Buildings & Physical Houses ──────────────────────────────────────────
+
+[node name="HouseInn" type="StaticBody2D" parent="."]
+position = Vector2(700, 480)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="HouseInn"]
+scale = Vector2(0.9, 0.9)
+texture = ExtResource("19_inn")
+offset = Vector2(0, -40)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseInn"]
+position = Vector2(0, 30)
+shape = SubResource("RectangleShape2D_house_inn")
+
+[node name="Label" type="Label" parent="HouseInn"]
+offset_left = -140.0
+offset_top = -170.0
+offset_right = 140.0
+offset_bottom = -145.0
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "The Rusty Dragon Inn"
+horizontal_alignment = 1
+
+[node name="HouseBlacksmith" type="StaticBody2D" parent="."]
+position = Vector2(1180, 660)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="HouseBlacksmith"]
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("20_bsm")
+offset = Vector2(0, -30)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseBlacksmith"]
+position = Vector2(0, 35)
+shape = SubResource("RectangleShape2D_house_smith")
+
+[node name="Label" type="Label" parent="HouseBlacksmith"]
+offset_left = -140.0
+offset_top = -150.0
+offset_right = 140.0
+offset_bottom = -125.0
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Brand's Forge & Armory"
+horizontal_alignment = 1
+
+[node name="HouseApothecary" type="StaticBody2D" parent="."]
+position = Vector2(380, 500)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="HouseApothecary"]
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("21_apo")
+offset = Vector2(0, -50)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseApothecary"]
+position = Vector2(0, 50)
+shape = SubResource("RectangleShape2D_house_apo")
+
+[node name="Label" type="Label" parent="HouseApothecary"]
+offset_left = -120.0
+offset_top = -190.0
+offset_right = 120.0
+offset_bottom = -165.0
+theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Maybelle's Remedies"
+horizontal_alignment = 1
+
+[node name="HouseTownHall" type="StaticBody2D" parent="."]
+position = Vector2(1650, 460)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="HouseTownHall"]
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("22_twh")
+offset = Vector2(0, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseTownHall"]
+position = Vector2(0, 60)
+shape = SubResource("RectangleShape2D_house_town")
+
+[node name="Label" type="Label" parent="HouseTownHall"]
+offset_left = -140.0
+offset_top = -210.0
+offset_right = 140.0
+offset_bottom = -185.0
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Oakhaven Town Hall"
+horizontal_alignment = 1
+
+[node name="HouseCottage" type="StaticBody2D" parent="."]
+position = Vector2(720, 960)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="HouseCottage"]
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("23_cot")
+offset = Vector2(0, -30)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseCottage"]
+position = Vector2(0, 35)
+shape = SubResource("RectangleShape2D_house_cot")
+
+[node name="Label" type="Label" parent="HouseCottage"]
+offset_left = -130.0
+offset_top = -150.0
+offset_right = 130.0
+offset_bottom = -125.0
+theme_override_colors/font_color = Color(0.95, 0.95, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Farmer Giles' Cottage"
+horizontal_alignment = 1
+
+; ── Stone Walls & Ramparts ──────────────────────────────────────────────
+
+[node name="WallNorthLeft" type="StaticBody2D" parent="."]
+position = Vector2(880, 200)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="WallNorthLeft"]
+scale = Vector2(0.8, 0.7)
+texture = ExtResource("24_wal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallNorthLeft"]
+shape = SubResource("RectangleShape2D_stone_wall")
+
+[node name="WallNorthRight" type="StaticBody2D" parent="."]
+position = Vector2(1680, 200)
+collision_layer = 1
+collision_mask = 1
+
+[node name="Sprite" type="Sprite2D" parent="WallNorthRight"]
+scale = Vector2(0.8, 0.7)
+texture = ExtResource("24_wal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallNorthRight"]
+shape = SubResource("RectangleShape2D_stone_wall")
+
+; ── Doors & Portals ──────────────────────────────────────────────────────
+
+[node name="GarrisonGate" type="Area2D" parent="."]
+position = Vector2(1280, 200)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-1"
+door_name = "Royal Garrison Gate"
+target_scene = "res://scenes/GarrisonKeep.tscn"
+is_locked = true
+required_key = "garrison-key"
+opens_quest_stage = 4
+
+[node name="Sprite" type="Sprite2D" parent="GarrisonGate"]
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("10_gat")
+offset = Vector2(0, -15)
+
+[node name="Label" type="Label" parent="GarrisonGate"]
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = -55.0
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Garrison Gate [Locked]"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GarrisonGate"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="ForestGate" type="Area2D" parent="."]
+position = Vector2(2380, 780)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-forest"
+door_name = "Whispering Forest Road"
+target_scene = "res://scenes/WhisperingForest.tscn"
+target_spawn = Vector2(180, 720)
+
+[node name="Sprite" type="Sprite2D" parent="ForestGate"]
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("10_gat")
+offset = Vector2(0, -15)
+
+[node name="Label" type="Label" parent="ForestGate"]
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = -55.0
+theme_override_colors/font_color = Color(0.6, 1, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Forest Arch [Enter]"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ForestGate"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="DoorInn" type="Area2D" parent="."]
+position = Vector2(700, 550)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-inn"
+door_name = "Tavern Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorInn"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="DoorBlacksmith" type="Area2D" parent="."]
+position = Vector2(1180, 740)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-blacksmith"
+door_name = "Forge Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBlacksmith"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="DoorApothecary" type="Area2D" parent="."]
+position = Vector2(380, 620)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-apothecary"
+door_name = "Apothecary Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorApothecary"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="DoorTownHall" type="Area2D" parent="."]
+position = Vector2(1650, 580)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-townhall"
+door_name = "Town Hall Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorTownHall"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="DoorCottage" type="Area2D" parent="."]
+position = Vector2(720, 1030)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("3_dp")
+door_id = "door-id-farmhouse"
+door_name = "Farmhouse Door"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorCottage"]
+shape = SubResource("RectangleShape2D_box")
+
+; ── Ground Items ─────────────────────────────────────────────────────────
+
+[node name="GroundItem_Potion" parent="." instance=ExtResource("26_itm")]
+position = Vector2(520, 1150)
+item_id = "item-id-1"
+item_name = "Lesser Healing Draught"
+icon_texture = ExtResource("27_pot")
+
+[node name="GroundItem_Scroll" parent="." instance=ExtResource("26_itm")]
+position = Vector2(1380, 820)
+item_id = "item-id-scroll"
+item_name = "Scroll of Arcane Blast"
+icon_texture = ExtResource("28_scr")
+
+[node name="GroundItem_Sword" parent="." instance=ExtResource("26_itm")]
+position = Vector2(1240, 890)
+item_id = "item-id-iron-sword"
+item_name = "Militia Shortsword"
+
+; ── Hero & Companions ────────────────────────────────────────────────────
+
+[node name="HeroPlayer" parent="." instance=ExtResource("7_hp")]
+position = Vector2(460, 1180)
+
+; ── NPCs Across Oakhaven Village ─────────────────────────────────────────
+
+[node name="BlacksmithBrand" type="Area2D" parent="."]
+position = Vector2(1180, 860)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("2_co")
+npc_id = "npc-id-1"
+
+[node name="SelectionCircle" type="Sprite2D" parent="BlacksmithBrand"]
+position = Vector2(0, 16)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("13_sc")
+
+[node name="Sprite" type="Sprite2D" parent="BlacksmithBrand"]
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("9_bra")
+offset = Vector2(0, -10)
+
+[node name="Label" type="Label" parent="BlacksmithBrand"]
+offset_left = -90.0
+offset_top = -55.0
+offset_right = 90.0
+offset_bottom = -32.0
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Blacksmith Brand [Talk]"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BlacksmithBrand"]
+shape = SubResource("RectangleShape2D_box")
+
+[node name="NPC_Innkeeper" parent="." instance=ExtResource("25_npc")]
+position = Vector2(650, 580)
+npc_id = "npc-id-innkeeper"
+npc_name = "Barkeep Corwin"
+custom_sprite_path = "res://assets/sprites/npcs/npc_trader.png"
+portrait_path = "res://assets/portraits/portrait_male01.png"
+
+[node name="NPC_Guildmaster" parent="." instance=ExtResource("25_npc")]
+position = Vector2(1600, 630)
+npc_id = "npc-id-guildmaster"
+npc_name = "Guildmaster Aldous"
+custom_sprite_path = "res://assets/sprites/npcs/npc_guildmaster.png"
+portrait_path = "res://assets/portraits/portrait_male03.png"
+
+[node name="NPC_Herbalist" parent="." instance=ExtResource("25_npc")]
+position = Vector2(430, 660)
+npc_id = "npc-id-herbalist"
+npc_name = "Maybelle the Apothecary"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman1.png"
+portrait_path = "res://assets/portraits/portrait_female01.png"
+
+[node name="NPC_Guard" parent="." instance=ExtResource("25_npc")]
+position = Vector2(1220, 230)
+npc_id = "npc-id-guard"
+npc_name = "Gate Guard Garrick"
+custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"
+portrait_path = "res://assets/portraits/portrait_male05.png"
+
+[node name="NPC_Farmer" parent="." instance=ExtResource("25_npc")]
+position = Vector2(660, 1060)
+npc_id = "npc-id-farmer"
+npc_name = "Farmer Giles"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant1.png"
+portrait_path = "res://assets/portraits/portrait_male07.png"
+
+[node name="NPC_Priestess" parent="." instance=ExtResource("25_npc")]
+position = Vector2(960, 850)
+npc_id = "npc-id-priestess"
+npc_name = "Sister Althea"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman2.png"
+portrait_path = "res://assets/portraits/portrait_female03.png"
+
+[node name="NPC_Miller" parent="." instance=ExtResource("25_npc")]
+position = Vector2(450, 1050)
+npc_id = "npc-id-miller"
+npc_name = "Miller Hob"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant2.png"
+portrait_path = "res://assets/portraits/portrait_male09.png"
+
+[node name="NPC_Hunter" parent="." instance=ExtResource("25_npc")]
+position = Vector2(2300, 810)
+npc_id = "npc-id-hunter"
+npc_name = "Ranger Kaelen"
+custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"
+portrait_path = "res://assets/portraits/portrait_ranger.png"
+
+[node name="NPC_Bard" parent="." instance=ExtResource("25_npc")]
+position = Vector2(750, 580)
+npc_id = "npc-id-bard"
+npc_name = "Lyra the Minstrel"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman1.png"
+portrait_path = "res://assets/portraits/portrait_bard.png"
+
+[node name="NPC_Merchant" parent="." instance=ExtResource("25_npc")]
+position = Vector2(1420, 850)
+npc_id = "npc-id-merchant"
+npc_name = "Trader Borin"
+custom_sprite_path = "res://assets/sprites/npcs/npc_trader.png"
+portrait_path = "res://assets/portraits/portrait_male11.png"
+
+[node name="NPC_Elder" parent="." instance=ExtResource("25_npc")]
+position = Vector2(1050, 1020)
+npc_id = "npc-id-elder"
+npc_name = "Elder Martha"
+custom_sprite_path = "res://assets/sprites/npcs/npc_peasant_woman2.png"
+portrait_path = "res://assets/portraits/portrait_female05.png"
+
+; ── Monsters ─────────────────────────────────────────────────────────────
+
+[node name="ShadowHound" parent="." instance=ExtResource("14_hnd_scene")]
+position = Vector2(1850, 820)
+
+; ── HUD & Overlay ────────────────────────────────────────────────────────
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="NoticeLabel" type="Label" parent="CanvasLayer"]
+visible = false
+offset_left = 340.0
+offset_top = 40.0
+offset_right = 940.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="PartyHUD" type="Panel" parent="CanvasLayer"]
+offset_top = 612.0
+offset_right = 1280.0
+offset_bottom = 666.0
+script = ExtResource("6_hud")
+
+[node name="QuestLabel" type="Label" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 4.0
+offset_right = 720.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 12
+text = "Active Quest: A Night Without Memory"
+
+[node name="BtnOptions" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 890.0
+offset_top = 10.0
+offset_right = 1000.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "⚙️ OPTIONS"
+
+[node name="BtnInventory" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1015.0
+offset_top = 10.0
+offset_right = 1125.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "🎒 ITEMS"
+
+[node name="BtnPause" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1140.0
+offset_top = 10.0
+offset_right = 1250.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "PAUSE"
+
+[node name="ActionLog" parent="CanvasLayer" instance=ExtResource("15_al")]
+offset_left = 20.0
+offset_top = 480.0
+offset_right = 780.0
+offset_bottom = 604.0
+
+[node name="InventoryWindow" parent="CanvasLayer" instance=ExtResource("12_inv")]
+visible = false
+
+[node name="SettingsModal" parent="CanvasLayer" instance=ExtResource("16_sm")]
+visible = false
+
+[node name="CharacterStatusWindow" parent="CanvasLayer" instance=ExtResource("18_csw")]
+visible = false
+
+[node name="FogOfWar" parent="." instance=ExtResource("17_fow")]

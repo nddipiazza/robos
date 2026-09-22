@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://doorportal01"]
+
+[ext_resource type="Script" path="res://scripts/DoorPortal.gd" id="1_dp"]
+[ext_resource type="Texture2D" path="res://assets/props/door_arch.png" id="2_da"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
+size = Vector2(90, 90)
+
+[node name="DoorPortal" type="Area2D"]
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("1_dp")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("2_da")
+offset = Vector2(0, -15)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -110.0
+offset_top = -75.0
+offset_right = 110.0
+offset_bottom = -50.0
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Door [Enter]"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_portal")

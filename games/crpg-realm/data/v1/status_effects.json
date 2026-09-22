@@ -1,0 +1,171 @@
+[
+  {
+    "id": "blinded",
+    "title": "Blinded",
+    "category": "condition",
+    "description": "A blinded creature can't see and automatically fails any ability check that requires sight. Attack rolls against the creature have advantage, and the creature's attack rolls have disadvantage.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/blinded.png",
+    "badgeColor": "#e74c3c"
+  },
+  {
+    "id": "charmed",
+    "title": "Charmed",
+    "category": "condition",
+    "description": "A charmed creature can't attack the charmer or target the charmer with harmful abilities or magical effects. The charmer has advantage on any ability check to interact socially with the creature.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/charmed.png",
+    "badgeColor": "#e84393"
+  },
+  {
+    "id": "deafened",
+    "title": "Deafened",
+    "category": "condition",
+    "description": "A deafened creature can't hear and automatically fails any ability check that requires hearing.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/deafened.png",
+    "badgeColor": "#7f8c8d"
+  },
+  {
+    "id": "exhaustion",
+    "title": "Exhaustion",
+    "category": "condition",
+    "description": "Exhaustion is measured in six levels. Level 1: Disadvantage on ability checks. Level 2: Speed halved. Level 3: Disadvantage on attack rolls and saving throws.",
+    "attackDisadvantage": true,
+    "grantAdvantage": false,
+    "speedModifier": 0.5,
+    "icon": "assets/icons/status_effects/exhaustion.png",
+    "badgeColor": "#d35400"
+  },
+  {
+    "id": "frightened",
+    "title": "Frightened",
+    "category": "condition",
+    "description": "A frightened creature has disadvantage on ability checks and attack rolls while the source of its fear is within line of sight. The creature can't willingly move closer to the source of its fear.",
+    "attackDisadvantage": true,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/frightened.png",
+    "badgeColor": "#9b59b6"
+  },
+  {
+    "id": "grappled",
+    "title": "Grappled",
+    "category": "condition",
+    "description": "A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/grappled.png",
+    "badgeColor": "#f39c12"
+  },
+  {
+    "id": "incapacitated",
+    "title": "Incapacitated",
+    "category": "condition",
+    "description": "An incapacitated creature can't take actions or reactions.",
+    "attackDisadvantage": true,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/incapacitated.png",
+    "badgeColor": "#c0392b"
+  },
+  {
+    "id": "invisible",
+    "title": "Invisible",
+    "category": "condition",
+    "description": "An invisible creature is impossible to see without the aid of magic or a special sense. Attack rolls against the creature have disadvantage, and the creature's attack rolls have advantage.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "grantSelfAdvantage": true,
+    "defendDisadvantage": true,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/invisible.png",
+    "badgeColor": "#3498db"
+  },
+  {
+    "id": "paralyzed",
+    "title": "Paralyzed",
+    "category": "condition",
+    "description": "A paralyzed creature is incapacitated and can't move or speak. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage. Any attack that hits the creature is a critical hit if the attacker is within 5 feet.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "autoCritWithin5Ft": true,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/paralyzed.png",
+    "badgeColor": "#f1c40f"
+  },
+  {
+    "id": "petrified",
+    "title": "Petrified",
+    "category": "condition",
+    "description": "A petrified creature is transformed into a solid inanimate substance (usually stone). Its weight increases tenfold, and it ceases aging. The creature is incapacitated, can't move or speak, and is unaware of its surroundings.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/petrified.png",
+    "badgeColor": "#95a5a6"
+  },
+  {
+    "id": "poisoned",
+    "title": "Poisoned",
+    "category": "condition",
+    "description": "A poisoned creature has disadvantage on attack rolls and ability checks.",
+    "attackDisadvantage": true,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/poisoned.png",
+    "badgeColor": "#27ae60"
+  },
+  {
+    "id": "prone",
+    "title": "Prone",
+    "category": "condition",
+    "description": "A prone creature's only movement option is to crawl. The creature has disadvantage on attack rolls. An attack roll against the creature has advantage if the attacker is within 5 feet; otherwise, the attack roll has disadvantage.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "speedModifier": 0.5,
+    "icon": "assets/icons/status_effects/prone.png",
+    "badgeColor": "#e67e22"
+  },
+  {
+    "id": "restrained",
+    "title": "Restrained",
+    "category": "condition",
+    "description": "A restrained creature's speed becomes 0, and it can't benefit from any bonus to its speed. Attack rolls against the creature have advantage, and the creature's attack rolls have disadvantage. The creature has disadvantage on Dexterity saving throws.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/restrained.png",
+    "badgeColor": "#16a085"
+  },
+  {
+    "id": "stunned",
+    "title": "Stunned",
+    "category": "condition",
+    "description": "A stunned creature is incapacitated, can't move, and can speak only falteringly. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/stunned.png",
+    "badgeColor": "#f39c12"
+  },
+  {
+    "id": "unconscious",
+    "title": "Unconscious",
+    "category": "condition",
+    "description": "An unconscious creature is incapacitated, can't move or speak, and is unaware of its surroundings. The creature drops whatever it's holding and falls prone. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage. Any attack that hits the creature is a critical hit if the attacker is within 5 feet.",
+    "attackDisadvantage": true,
+    "grantAdvantage": true,
+    "autoCritWithin5Ft": true,
+    "speedModifier": 0.0,
+    "icon": "assets/icons/status_effects/unconscious.png",
+    "badgeColor": "#2c3e50"
+  }
+]

@@ -1,0 +1,61 @@
+[gd_scene load_steps=5 format=3 uid="uid://c6u4crpgmain01"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/CombatManager.gd" id="2_combat"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
+bg_color = Color(0.05, 0.07, 0.11, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.74, 0.83, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+bg_color = Color(0.08, 0.11, 0.16, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.65, 0.2, 1)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="CombatManager" type="Node" parent="."]
+script = ExtResource("2_combat")
+
+[node name="World2D" type="Node2D" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="PartyHUD" type="Panel" parent="CanvasLayer"]
+offset_left = 16.0
+offset_top = 580.0
+offset_right = 1264.0
+offset_bottom = 704.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="PauseLabel" type="Label" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 240.0
+offset_bottom = 36.0
+text = "PAUSED (Spacebar to Resume)"
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+
+[node name="PartyList" type="HBoxContainer" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 40.0
+offset_right = 1220.0
+offset_bottom = 110.0
+theme_override_constants/separation = 20

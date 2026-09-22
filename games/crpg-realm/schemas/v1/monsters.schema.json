@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MonsterData",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "challengeRating",
+    "armorClass",
+    "hitPoints",
+    "abilities",
+    "attacks"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "challengeRating": {
+      "type": "string"
+    },
+    "armorClass": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hitPoints": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "speed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "abilities": {
+      "type": "object",
+      "required": [
+        "STR",
+        "DEX",
+        "CON",
+        "INT",
+        "WIS",
+        "CHA"
+      ],
+      "properties": {
+        "STR": {
+          "type": "integer"
+        },
+        "DEX": {
+          "type": "integer"
+        },
+        "CON": {
+          "type": "integer"
+        },
+        "INT": {
+          "type": "integer"
+        },
+        "WIS": {
+          "type": "integer"
+        },
+        "CHA": {
+          "type": "integer"
+        }
+      }
+    },
+    "attacks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "attackBonus",
+          "damage"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "attackBonus": {
+            "type": "integer"
+          },
+          "damage": {
+            "type": "string"
+          },
+          "damageType": {
+            "type": "string"
+          },
+          "range": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

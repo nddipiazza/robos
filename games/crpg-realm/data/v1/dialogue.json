@@ -1,0 +1,493 @@
+[
+  {
+    "id": "partner-confrontation",
+    "title": "Partner Confrontation at Homestead",
+    "rootNode": "node_wake",
+    "nodes": {
+      "node_wake": {
+        "speaker": "Elora",
+        "text": "You're finally awake! Where in the gods' names were you last night? You were called to the keep at midnight, and stumbled in before dawn covered in ash and blood! What happened?!",
+        "choices": [
+          {
+            "text": "I... I honestly don't remember anything after midnight.",
+            "nextNode": "node_amnesia"
+          },
+          {
+            "text": "Ash and blood?! Is anyone harmed in the village?",
+            "nextNode": "node_danger"
+          },
+          {
+            "text": "Calm down. Let me grab my service blade from the footlocker.",
+            "nextNode": "node_arm_up"
+          }
+        ]
+      },
+      "node_amnesia": {
+        "speaker": "Elora",
+        "text": "Amnesia?! You looked like a ghost when you staggered through the door! Grab your sword from the footlocker and check on Captain Malakor at the garrison!",
+        "choices": [
+          {
+            "text": "I will. Stay inside and bolt the door.",
+            "nextNode": "node_exit"
+          }
+        ]
+      },
+      "node_danger": {
+        "speaker": "Elora",
+        "text": "The village was silent, but strange howling echoed from the woods. Please, take your blade and be careful.",
+        "choices": [
+          {
+            "text": "I'm heading out now.",
+            "nextNode": "node_exit"
+          }
+        ]
+      },
+      "node_arm_up": {
+        "speaker": "Elora",
+        "text": "Your blade is in your footlocker, along with a healing draught. Find out what madness gripped the keep last night.",
+        "choices": [
+          {
+            "text": "Understood.",
+            "nextNode": "node_exit"
+          }
+        ]
+      },
+      "node_exit": {
+        "speaker": "Elora",
+        "text": "May the light watch over you, Lieutenant.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "blacksmith-inquiry",
+    "title": "Blacksmith Brand Village Report",
+    "rootNode": "node_blacksmith_start",
+    "nodes": {
+      "node_blacksmith_start": {
+        "speaker": "Blacksmith Brand",
+        "text": "Lieutenant! By the forge, you're alive! What in the Hells occurred at the garrison last night?!",
+        "choices": [
+          {
+            "text": "Tell me what you saw, Brand.",
+            "nextNode": "node_tell_me"
+          },
+          {
+            "text": "The garrison gates are barred. Can you help me enter?",
+            "nextNode": "node_give_key"
+          }
+        ]
+      },
+      "node_tell_me": {
+        "speaker": "Blacksmith Brand",
+        "text": "Captain Malakor's unit hauled a warded sarcophagus from the crypts past midnight. You were with them, Lieutenant! But your eyes were glazed over with violet light! Then screams came from the keep...",
+        "choices": [
+          {
+            "text": "Give me the side-gate key. I need to get inside.",
+            "nextNode": "node_give_key"
+          }
+        ]
+      },
+      "node_give_key": {
+        "speaker": "Blacksmith Brand",
+        "text": "Here! Take my side-gate maintenance key. The main portcullis is deadlocked. Be careful in there... the guards didn't sound human anymore.",
+        "choices": [
+          {
+            "text": "Thank you, Brand. Stay inside.",
+            "nextNode": "node_farewell"
+          }
+        ]
+      },
+      "node_farewell": {
+        "speaker": "Blacksmith Brand",
+        "text": "Drive the darkness back, Lieutenant!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "malakor-showdown",
+    "title": "Captain Malakor Showdown",
+    "rootNode": "node_malakor_start",
+    "nodes": {
+      "node_malakor_start": {
+        "speaker": "Captain Malakor",
+        "text": "Ah... my faithful Lieutenant returns. Do you remember now? The Azrath relic has opened my eyes! Together we shall shatter the old order!",
+        "choices": [
+          {
+            "text": "You've been corrupted by the vault, Captain. Stand down!",
+            "nextNode": "node_defiance"
+          },
+          {
+            "text": "What was inside that sarcophagus?!",
+            "nextNode": "node_lore"
+          }
+        ]
+      },
+      "node_lore": {
+        "speaker": "Captain Malakor",
+        "text": "The primordial slumber of ancient gods! It chose me as its vessel—and you were the one who broke the first seal!",
+        "choices": [
+          {
+            "text": "Then I will be the one who ends this madness!",
+            "nextNode": "node_fight"
+          }
+        ]
+      },
+      "node_defiance": {
+        "speaker": "Captain Malakor",
+        "text": "Disobedience is treason in the Royal Guard, Lieutenant. Perish with the weak!",
+        "choices": [
+          {
+            "text": "[Draw Weapon] To arms!",
+            "nextNode": "node_fight"
+          }
+        ]
+      },
+      "node_fight": {
+        "speaker": "Captain Malakor",
+        "text": "Death to all who defy the Void!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-innkeeper",
+    "title": "Barkeep Corwin at the Rusty Dragon",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Barkeep Corwin",
+        "text": "Welcome to The Rusty Dragon Inn, Lieutenant! The hearth is warm, but rumors are grim. Howlers are creeping out from the Whispering Forest to the east.",
+        "choices": [
+          { "text": "Tell me about the Whispering Forest.", "nextNode": "node_forest" },
+          { "text": "Have you seen Captain Malakor today?", "nextNode": "node_malakor" },
+          { "text": "Just passing through.", "nextNode": "node_end" }
+        ]
+      },
+      "node_forest": {
+        "speaker": "Barkeep Corwin",
+        "text": "The eastern path crosses an ancient stone bridge into the woods. Beyond the ruins lies the entrance to the Catacombs. Travelers haven't returned.",
+        "choices": [
+          { "text": "I will proceed with caution.", "nextNode": "node_end" }
+        ]
+      },
+      "node_malakor": {
+        "speaker": "Barkeep Corwin",
+        "text": "The Captain hasn't been seen since the midnight bell. He ordered the portcullis bolted and barred. It isn't like him.",
+        "choices": [
+          { "text": "I'll find out what happened.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Barkeep Corwin",
+        "text": "Stay safe, Lieutenant. The village is counting on you.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-guildmaster",
+    "title": "Guildmaster Aldous at Town Hall",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Guildmaster Aldous",
+        "text": "Lieutenant Vance! Thank the heavens. The merchant guild is panicked—the royal keep was shuttered at midnight, and foul shadows stalk the periphery.",
+        "choices": [
+          { "text": "I intend to breach the keep and investigate.", "nextNode": "node_duty" },
+          { "text": "Are the village trade routes secure?", "nextNode": "node_trade" }
+        ]
+      },
+      "node_duty": {
+        "speaker": "Guildmaster Aldous",
+        "text": "Speak to Blacksmith Brand across the square. He forged the backup garrison key. Take it and unlock the gate!",
+        "choices": [
+          { "text": "On my way, Guildmaster.", "nextNode": "node_end" }
+        ]
+      },
+      "node_trade": {
+        "speaker": "Guildmaster Aldous",
+        "text": "The northern passes are blocked, and eastern forest trade is halted by dire wolves. Clear the road if you can!",
+        "choices": [
+          { "text": "Understood.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Guildmaster Aldous",
+        "text": "For Oakhaven!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-herbalist",
+    "title": "Maybelle the Apothecary",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Maybelle the Apothecary",
+        "text": "Careful out there, soldier! I've been brewing soothing poultices all night. The darkness that fell over the keep isn't natural.",
+        "choices": [
+          { "text": "Do you have healing draughts in stock?", "nextNode": "node_potions" },
+          { "text": "What did you observe last night?", "nextNode": "node_shadows" }
+        ]
+      },
+      "node_potions": {
+        "speaker": "Maybelle the Apothecary",
+        "text": "Take this flask of red draught. It will close wounds in the heat of battle.",
+        "choices": [
+          { "text": "Thank you, Maybelle.", "nextNode": "node_end" }
+        ]
+      },
+      "node_shadows": {
+        "speaker": "Maybelle the Apothecary",
+        "text": "Purple lightning struck the keep's tower at the stroke of twelve. Then came the wailing...",
+        "choices": [
+          { "text": "We will put an end to it.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Maybelle the Apothecary",
+        "text": "May the herbs keep you whole.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-guard",
+    "title": "Gate Guard Garrick",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Gate Guard Garrick",
+        "text": "Halt! The Royal Garrison Keep is locked by decree of Captain Malakor. None may pass without the garrison key!",
+        "choices": [
+          { "text": "I serve the crown, Garrick. What happened inside?", "nextNode": "node_info" },
+          { "text": "I have the garrison key.", "nextNode": "node_pass" }
+        ]
+      },
+      "node_info": {
+        "speaker": "Gate Guard Garrick",
+        "text": "Captain Malakor took a detachment down into the lower crypts and sealed the doors from within. When he returned, his eyes glowed with shadow.",
+        "choices": [
+          { "text": "I'll get to the bottom of this.", "nextNode": "node_pass" }
+        ]
+      },
+      "node_pass": {
+        "speaker": "Gate Guard Garrick",
+        "text": "If you hold the key, unlock the portcullis and tread carefully, Lieutenant.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-farmer",
+    "title": "Farmer Giles",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Farmer Giles",
+        "text": "My barley fields are trampled, and two sheep were butchered in the dark! Shadows with fangs, I swear it!",
+        "choices": [
+          { "text": "Stay inside, Giles. We will purge the beasts.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Farmer Giles",
+        "text": "Thank the gods for the Royal Guard. Drive 'em back into the woods!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-priestess",
+    "title": "Sister Althea at the Shrine",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Sister Althea",
+        "text": "May divine grace shelter you from the shadow. An ancient seal has broken deep in the catacombs.",
+        "choices": [
+          { "text": "Grant us your blessing, Sister.", "nextNode": "node_bless" }
+        ]
+      },
+      "node_bless": {
+        "speaker": "Sister Althea",
+        "text": "Go with the light, brave heroes. Let no darkness consume your courage.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-miller",
+    "title": "Miller Hob",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Miller Hob",
+        "text": "The mill stream is running dark and brackish, straight from the eastern ridge. Something wicked is poisoning the water.",
+        "choices": [
+          { "text": "We will find the source.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Miller Hob",
+        "text": "Keep your wits sharp, Lieutenant.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-hunter",
+    "title": "Ranger Kaelen",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Ranger Kaelen",
+        "text": "Watch yourself beyond the eastern arch. The Whispering Forest is crawling with blighted wolves and goblin scouts.",
+        "choices": [
+          { "text": "Where does the forest path lead?", "nextNode": "node_path" }
+        ]
+      },
+      "node_path": {
+        "speaker": "Ranger Kaelen",
+        "text": "Follow the stone bridge across the stream. Up the mossy slope sits the entrance to the Ancient Catacombs.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-bard",
+    "title": "Lyra the Minstrel",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Lyra the Minstrel",
+        "text": "♪ Shadows rise upon the keep, while the ancient guardians sleep... ♪ A thrilling and terrible ballad, is it not?",
+        "choices": [
+          { "text": "Sing of our victory, Lyra, not our doom.", "nextNode": "node_ballad" }
+        ]
+      },
+      "node_ballad": {
+        "speaker": "Lyra the Minstrel",
+        "text": "♪ Then strike the foe with sword and spell, and send the darkness back to hell! ♪ Bring us glory, Lieutenant!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-merchant",
+    "title": "Trader Borin",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Trader Borin",
+        "text": "Finest supplies in Oakhaven! Potions, arrows, torches, and enchanted parchment.",
+        "choices": [
+          { "text": "Keep your goods safe until the keep is secured.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Trader Borin",
+        "text": "Fair travels and fat purses, friend!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-elder",
+    "title": "Elder Martha",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Elder Martha",
+        "text": "I was a girl when the ancient crypts were sealed. The royal founders buried a void relic beneath the garrison. If it stirs, the realm falls.",
+        "choices": [
+          { "text": "We will seal it once more, Elder.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Elder Martha",
+        "text": "May the ancestors guide your blade, Vance.",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-peddler",
+    "title": "Goblin Peddler Griknok",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Goblin Peddler Griknok",
+        "text": "Hehehe! Shinies, trinkets, magic scrolls found in ancient moss! Friendly goblin, no bite, only trade!",
+        "choices": [
+          { "text": "What are you doing so close to the ruins?", "nextNode": "node_scavenge" }
+        ]
+      },
+      "node_scavenge": {
+        "speaker": "Goblin Peddler Griknok",
+        "text": "Big wolves scared Griknok up a tree! Take magic scroll, kill nasty alpha wolf for Griknok!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-fallen",
+    "title": "Fallen Adventurer Rickard",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Fallen Adventurer Rickard",
+        "text": "Cough... beware... the catacombs beneath the forest... the skeleton archers guard the crypt key...",
+        "choices": [
+          { "text": "Rest easy, soldier. We will reclaim the crypt.", "nextNode": "node_end" }
+        ]
+      },
+      "node_end": {
+        "speaker": "Fallen Adventurer Rickard",
+        "text": "Take my spare draught from the grass... avenge us...",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-hermit",
+    "title": "Hermit Varis",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Hermit Varis",
+        "text": "The roots groan... ancient stone cries out. The catacombs below bleed shadow into the forest soil.",
+        "choices": [
+          { "text": "How do we purge the corruption?", "nextNode": "node_purge" }
+        ]
+      },
+      "node_purge": {
+        "speaker": "Hermit Varis",
+        "text": "Slay the corruption at its heart in the keep. Let the light pierce the dark!",
+        "choices": []
+      }
+    }
+  },
+  {
+    "id": "dialogue-crypt-ghost",
+    "title": "Spirit of Sir Justin",
+    "rootNode": "node_welcome",
+    "nodes": {
+      "node_welcome": {
+        "speaker": "Spirit of Sir Justin",
+        "text": "Who awakens the resting dead? If you bear the blood of the righteous, claim the sacred relic and cleanse the citadel above!",
+        "choices": [
+          { "text": "We will honor your legacy, Sir Justin.", "nextNode": "node_honor" }
+        ]
+      },
+      "node_honor": {
+        "speaker": "Spirit of Sir Justin",
+        "text": "Take the royal signet from the grand sarcophagus. Let justice be delivered!",
+        "choices": []
+      }
+    }
+  }
+]

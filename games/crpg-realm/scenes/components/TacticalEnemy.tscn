@@ -1,0 +1,95 @@
+[gd_scene load_steps=5 format=3 uid="uid://tacticalenemy01"]
+
+[ext_resource type="Script" path="res://scripts/TacticalEnemy.gd" id="1_te"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/wolf.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/props/selection_circle_red.png" id="3_cir"]
+[ext_resource type="Texture2D" path="res://assets/props/click_reticle.png" id="4_loot"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 20.0
+
+[node name="TacticalEnemy" type="CharacterBody2D"]
+y_sort_enabled = true
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("1_te")
+
+[node name="SelectionCircle" type="Sprite2D" parent="."]
+position = Vector2(0, 16)
+scale = Vector2(0.52, 0.52)
+texture = ExtResource("3_cir")
+
+[node name="LootIndicator" type="Sprite2D" parent="."]
+visible = false
+modulate = Color(1, 0.85, 0.2, 0.85)
+position = Vector2(0, -6)
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("4_loot")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 8)
+shape = SubResource("CircleShape2D_body")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("2_tex")
+offset = Vector2(0, -10)
+
+[node name="OverheadUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_top = -54.0
+offset_bottom = -54.0
+
+[node name="NameLabel" type="Label" parent="OverheadUI"]
+layout_mode = 0
+offset_left = -100.0
+offset_top = -18.0
+offset_right = 100.0
+offset_bottom = 2.0
+theme_override_colors/font_color = Color(1, 0.45, 0.45, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 11
+text = "Corrupted Wolf Alpha"
+horizontal_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="OverheadUI"]
+layout_mode = 0
+offset_left = -40.0
+offset_top = 4.0
+offset_right = 14.0
+offset_bottom = 12.0
+max_value = 28.0
+value = 28.0
+show_percentage = false
+
+[node name="HPText" type="Label" parent="OverheadUI"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 1.0
+offset_right = 65.0
+offset_bottom = 15.0
+theme_override_colors/font_color = Color(1, 0.8, 0.8, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 9
+text = "28/28"
+vertical_alignment = 1
+
+[node name="TargetLabel" type="Label" parent="OverheadUI"]
+layout_mode = 0
+offset_left = -110.0
+offset_top = 16.0
+offset_right = 110.0
+offset_bottom = 32.0
+theme_override_colors/font_color = Color(1, 0.75, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 1

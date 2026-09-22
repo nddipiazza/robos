@@ -1,0 +1,234 @@
+[gd_scene load_steps=22 format=3 uid="uid://ancientcatacombs01"]
+
+[ext_resource type="Script" path="res://scripts/AncientCatacombs.gd" id="1_ac"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/ancient_catacombs_2560.png" id="2_bg"]
+[ext_resource type="Script" path="res://scripts/CombatManager.gd" id="3_cm"]
+[ext_resource type="PackedScene" path="res://scenes/HeroPlayer.tscn" id="4_hp"]
+[ext_resource type="PackedScene" path="res://scenes/ShadowHound.tscn" id="5_hnd"]
+[ext_resource type="PackedScene" path="res://scenes/components/DoorPortal.tscn" id="6_dp"]
+[ext_resource type="PackedScene" path="res://scenes/components/NPCCharacter.tscn" id="7_npc"]
+[ext_resource type="PackedScene" path="res://scenes/components/GroundItem.tscn" id="8_itm"]
+[ext_resource type="PackedScene" path="res://scenes/components/ActionLog.tscn" id="9_al"]
+[ext_resource type="PackedScene" path="res://scenes/components/InventoryWindow.tscn" id="10_inv"]
+[ext_resource type="PackedScene" path="res://scenes/components/SettingsModal.tscn" id="11_sm"]
+[ext_resource type="PackedScene" path="res://scenes/components/CharacterStatusWindow.tscn" id="12_csw"]
+[ext_resource type="PackedScene" path="res://scenes/components/FogOfWar.tscn" id="13_fow"]
+[ext_resource type="Script" path="res://scripts/PartyHUD.gd" id="14_hud"]
+[ext_resource type="Script" path="res://scripts/TreasureChest.gd" id="15_tc"]
+[ext_resource type="Texture2D" path="res://assets/props/chest_closed.png" id="16_chc"]
+[ext_resource type="Texture2D" path="res://assets/icons/potions/potion_healing.png" id="17_pot"]
+[ext_resource type="Texture2D" path="res://assets/icons/weapons/dagger.png" id="18_key"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_border_v"]
+size = Vector2(60, 1440)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_border_h"]
+size = Vector2(2560, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crypt_wall"]
+size = Vector2(400, 240)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chest"]
+size = Vector2(80, 80)
+
+[node name="AncientCatacombs" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_ac")
+
+[node name="CombatManager" type="Node" parent="."]
+script = ExtResource("3_cm")
+
+[node name="Ground" type="TextureRect" parent="."]
+offset_right = 2560.0
+offset_bottom = 1440.0
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="CatacombBoundaries" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="WestBorder" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(30, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="EastBorder" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(2530, 720)
+shape = SubResource("RectangleShape2D_border_v")
+
+[node name="NorthBorder" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(1280, 60)
+shape = SubResource("RectangleShape2D_border_h")
+
+[node name="SouthBorder" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(1280, 1380)
+shape = SubResource("RectangleShape2D_border_h")
+
+[node name="WallLeftVault" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(480, 380)
+shape = SubResource("RectangleShape2D_crypt_wall")
+
+[node name="WallRightVault" type="CollisionShape2D" parent="CatacombBoundaries"]
+position = Vector2(2080, 380)
+shape = SubResource("RectangleShape2D_crypt_wall")
+
+; ── Portals & Doors ──────────────────────────────────────────────────────
+
+[node name="ForestExit" parent="." instance=ExtResource("6_dp")]
+position = Vector2(180, 680)
+door_id = "door-id-forest"
+door_name = "Forest Archway"
+target_scene = "res://scenes/WhisperingForest.tscn"
+target_spawn = Vector2(2300, 420)
+
+[node name="KeepSecretPassage" parent="." instance=ExtResource("6_dp")]
+position = Vector2(2350, 420)
+door_id = "door-id-keep-secret"
+door_name = "Garrison Keep Vault Passage"
+target_scene = "res://scenes/GarrisonKeep.tscn"
+target_spawn = Vector2(450, 950)
+is_locked = true
+required_key = "garrison-key"
+opens_quest_stage = 4
+
+; ── Chests & Relics ──────────────────────────────────────────────────────
+
+[node name="GrandSarcophagus" type="Area2D" parent="."]
+position = Vector2(1280, 420)
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("15_tc")
+chest_id = "grand-sarcophagus"
+chest_name = "Royal Sarcophagus"
+contains_item = "garrison-key"
+contains_gold = 100
+
+[node name="Sprite" type="Sprite2D" parent="GrandSarcophagus"]
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("16_chc")
+offset = Vector2(0, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrandSarcophagus"]
+shape = SubResource("RectangleShape2D_chest")
+
+[node name="Label" type="Label" parent="GrandSarcophagus"]
+offset_left = -110.0
+offset_top = -65.0
+offset_right = 110.0
+offset_bottom = -40.0
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 13
+text = "Royal Sarcophagus [Search]"
+horizontal_alignment = 1
+
+; ── Ground Items ─────────────────────────────────────────────────────────
+
+[node name="GroundItem_CryptKey" parent="." instance=ExtResource("8_itm")]
+position = Vector2(1360, 450)
+item_id = "item-id-crypt-key"
+item_name = "Ancient Crypt Key"
+icon_texture = ExtResource("18_key")
+
+[node name="GroundItem_CryptPotion" parent="." instance=ExtResource("8_itm")]
+position = Vector2(650, 720)
+item_id = "item-id-potion"
+item_name = "Lesser Healing Draught"
+icon_texture = ExtResource("17_pot")
+
+; ── Hero Player ──────────────────────────────────────────────────────────
+
+[node name="HeroPlayer" parent="." instance=ExtResource("4_hp")]
+position = Vector2(260, 680)
+
+; ── NPCs ─────────────────────────────────────────────────────────────────
+
+[node name="SirJustinGhost" parent="." instance=ExtResource("7_npc")]
+position = Vector2(1280, 520)
+npc_id = "npc-id-crypt-ghost"
+npc_name = "Spirit of Sir Justin"
+custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"
+portrait_path = "res://assets/portraits/portrait_paladin.png"
+
+; ── Enemies ──────────────────────────────────────────────────────────────
+
+[node name="SkeletonArcher" parent="." instance=ExtResource("5_hnd")]
+position = Vector2(1150, 640)
+
+[node name="CryptGuardian" parent="." instance=ExtResource("5_hnd")]
+position = Vector2(1780, 600)
+
+; ── HUD & Overlay ────────────────────────────────────────────────────────
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="NoticeLabel" type="Label" parent="CanvasLayer"]
+visible = false
+offset_left = 340.0
+offset_top = 40.0
+offset_right = 940.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="PartyHUD" type="Panel" parent="CanvasLayer"]
+offset_top = 612.0
+offset_right = 1280.0
+offset_bottom = 666.0
+script = ExtResource("14_hud")
+
+[node name="QuestLabel" type="Label" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 4.0
+offset_right = 720.0
+offset_bottom = 22.0
+theme_override_font_sizes/font_size = 12
+text = "Active Quest: Recover Key from Royal Sarcophagus & Enter Keep"
+
+[node name="BtnOptions" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 890.0
+offset_top = 10.0
+offset_right = 1000.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "⚙️ OPTIONS"
+
+[node name="BtnInventory" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1015.0
+offset_top = 10.0
+offset_right = 1125.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "🎒 ITEMS"
+
+[node name="BtnPause" type="Button" parent="CanvasLayer/PartyHUD"]
+layout_mode = 0
+offset_left = 1140.0
+offset_top = 10.0
+offset_right = 1250.0
+offset_bottom = 46.0
+theme_override_font_sizes/font_size = 13
+text = "PAUSE"
+
+[node name="ActionLog" parent="CanvasLayer" instance=ExtResource("9_al")]
+offset_left = 20.0
+offset_top = 480.0
+offset_right = 780.0
+offset_bottom = 604.0
+
+[node name="InventoryWindow" parent="CanvasLayer" instance=ExtResource("10_inv")]
+visible = false
+
+[node name="SettingsModal" parent="CanvasLayer" instance=ExtResource("11_sm")]
+visible = false
+
+[node name="CharacterStatusWindow" parent="CanvasLayer" instance=ExtResource("12_csw")]
+visible = false
+
+[node name="FogOfWar" parent="." instance=ExtResource("13_fow")]

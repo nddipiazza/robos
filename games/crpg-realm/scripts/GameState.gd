@@ -1,0 +1,731 @@
+class_name GameStateSingleton
+extends Node
+
+signal quest_advanced(stage: int)
+signal inventory_changed
+signal hero_damaged(current_hp: int, max_hp: int)
+signal settings_changed
+signal message_logged(category: String, message: String)
+signal party_changed
+signal party_selection_changed(indices: Array)
+signal status_effects_changed(target_name: String)
+signal pause_toggled(is_paused: bool)
+signal gold_changed(current_gold: int)
+signal party_defeated
+
+var settings: Dictionary = {
+	"health_bar_mode": "always", # "always", "injured_only", "none"
+	"floating_text": true,
+	"auto_pause_combat": false,
+	"auto_pause_injured": false,
+	"fog_of_war": true
+}
+
+var is_game_paused: bool = false
+var is_party_defeated: bool = false
+var party_members: Array[Dictionary] = []
+var selected_party_indices: Array[int] = [0]
+var status_effects: Dictionary = {}
+var status_durations: Dictionary = {}
+var status_tick_accumulator: float = 0.0
+var activity_log_history: Array[Dictionary] = []
+var spawn_position: Vector2 = Vector2.ZERO
+
+var hero_name: String = "Vance"
+var hero_race: String = "human"
+var hero_class: String = "fighter"
+var selected_spells: Array = []
+var hero_hp: int = 12
+var hero_max_hp: int = 12
+var hero_ac: int = 16
+var hero_level: int = 1
+var gold: int = 150
+
+var inventory: Array = ["potion-healing"]
+var equipped_weapon: String = "service-sword"
+var equipped_armor: String = "chain-mail"
+
+var quest_stage: int = 1
+var flags: Dictionary = {
+	"partner_conversed": false,
+	"footlocker_looted": false,
+	"village_hounds_slain": false,
+	"blacksmith_conversed": false,
+	"garrison_unlocked": false,
+	"garrison_skirmishers_slain": false,
+	"malakor_slain": false
+}
+
+var stats: Dictionary = {
+	"kills": 0,
+	"chests": 0,
+	"damage_dealt": 0
+}
+
+var ability_scores: Dictionary = {
+	"STR": 16,
+	"DEX": 14,
+	"CON": 15,
+	"INT": 10,
+	"WIS": 12,
+	"CHA": 11
+}
+
+func roll_dnd_stat() -> int:
+	var rolls: Array[int] = []
+	for i in range(4):
+		rolls.append(randi_range(1, 6))
+	rolls.sort()
+	return rolls[1] + rolls[2] + rolls[3]
+
+func roll_all_stats() -> Dictionary:
+	ability_scores = {
+		"STR": roll_dnd_stat(),
+		"DEX": roll_dnd_stat(),
+		"CON": roll_dnd_stat(),
+		"INT": roll_dnd_stat(),
+		"WIS": roll_dnd_stat(),
+		"CHA": roll_dnd_stat()
+	}
+	return ability_scores
+
+func get_stat_modifier(val: int) -> int:
+	return int(floor((val - 10) / 2.0))
+
+func reset_flags() -> void:
+	flags = {
+		"partner_conversed": false,
+		"footlocker_looted": false,
+		"village_hounds_slain": false,
+		"blacksmith_conversed": false,
+		"garrison_unlocked": false,
+		"garrison_skirmishers_slain": false,
+		"malakor_slain": false
+	}
+
+func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race: String = "human", p_spells: Array = []) -> void:
+	hero_name = p_name if p_name.strip_edges() != "" else "Lieutenant Vance"
+	hero_class = p_class
+	hero_race = p_race if p_race.strip_edges() != "" else "human"
+	selected_spells = p_spells.duplicate()
+	
+	if p_stats.size() > 0:
+		ability_scores = p_stats.duplicate()
+	else:
+		ability_scores = roll_all_stats()
+
+	# Apply racial ability score modifiers
+	match hero_race:
+		"human":
+			for s in ["STR", "DEX", "CON", "INT", "WIS", "CHA"]:
+				ability_scores[s] = int(ability_scores.get(s, 10)) + 1
+		"elf":
+			ability_scores["DEX"] = int(ability_scores.get("DEX", 10)) + 2
+			ability_scores["INT"] = int(ability_scores.get("INT", 10)) + 1
+		"dwarf":
+			ability_scores["CON"] = int(ability_scores.get("CON", 10)) + 2
+			ability_scores["STR"] = int(ability_scores.get("STR", 10)) + 1
+		"halfling":
+			ability_scores["DEX"] = int(ability_scores.get("DEX", 10)) + 2
+			ability_scores["CHA"] = int(ability_scores.get("CHA", 10)) + 1
+		"dragonborn":
+			ability_scores["STR"] = int(ability_scores.get("STR", 10)) + 2
+			ability_scores["CHA"] = int(ability_scores.get("CHA", 10)) + 1
+		"gnome":
+			ability_scores["INT"] = int(ability_scores.get("INT", 10)) + 2
+			ability_scores["DEX"] = int(ability_scores.get("DEX", 10)) + 1
+		"half-elf":
+			ability_scores["CHA"] = int(ability_scores.get("CHA", 10)) + 2
+			ability_scores["DEX"] = int(ability_scores.get("DEX", 10)) + 1
+			ability_scores["CON"] = int(ability_scores.get("CON", 10)) + 1
+		"half-orc":
+			ability_scores["STR"] = int(ability_scores.get("STR", 10)) + 2
+			ability_scores["CON"] = int(ability_scores.get("CON", 10)) + 1
+		"tiefling":
+			ability_scores["CHA"] = int(ability_scores.get("CHA", 10)) + 2
+			ability_scores["INT"] = int(ability_scores.get("INT", 10)) + 1
+
+	var con_mod = get_stat_modifier(int(ability_scores.get("CON", 10)))
+	var dex_mod = get_stat_modifier(int(ability_scores.get("DEX", 10)))
+
+	match p_class:
+		"barbarian":
+			hero_max_hp = 12 + con_mod
+			hero_ac = 10 + dex_mod + con_mod
+			equipped_weapon = "greatsword"
+			equipped_armor = "leather-armor"
+		"bard":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 11 + dex_mod
+			equipped_weapon = "rapier"
+			equipped_armor = "leather-armor"
+			if selected_spells.is_empty():
+				selected_spells = ["cure-wounds"]
+		"cleric":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 14 + min(2, dex_mod)
+			equipped_weapon = "mace"
+			equipped_armor = "chain-mail"
+			if selected_spells.is_empty():
+				selected_spells = ["cure-wounds"]
+		"druid":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 12 + min(2, dex_mod)
+			equipped_weapon = "quarterstaff"
+			equipped_armor = "leather-armor"
+			if selected_spells.is_empty():
+				selected_spells = ["cure-wounds"]
+		"fighter":
+			hero_max_hp = 10 + con_mod
+			hero_ac = 16
+			equipped_weapon = "service-sword"
+			equipped_armor = "chain-mail"
+		"monk":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 10 + dex_mod + get_stat_modifier(int(ability_scores.get("WIS", 10)))
+			equipped_weapon = "quarterstaff"
+			equipped_armor = "robe"
+		"paladin":
+			hero_max_hp = 10 + con_mod
+			hero_ac = 16
+			equipped_weapon = "service-sword"
+			equipped_armor = "chain-mail"
+			if selected_spells.is_empty():
+				selected_spells = ["cure-wounds"]
+		"ranger":
+			hero_max_hp = 10 + con_mod
+			hero_ac = 12 + dex_mod
+			equipped_weapon = "hunting-bow"
+			equipped_armor = "leather-armor"
+		"rogue":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 11 + dex_mod
+			equipped_armor = "leather-armor"
+			if hero_race in ["halfling", "elf"]:
+				equipped_weapon = "hunting-bow"
+			else:
+				equipped_weapon = "service-sword"
+		"sorcerer":
+			hero_max_hp = 6 + con_mod
+			hero_ac = 10 + dex_mod
+			equipped_weapon = "dagger"
+			equipped_armor = "robe"
+			if selected_spells.is_empty():
+				selected_spells = ["fireball"]
+		"warlock":
+			hero_max_hp = 8 + con_mod
+			hero_ac = 11 + dex_mod
+			equipped_weapon = "dagger"
+			equipped_armor = "leather-armor"
+			if selected_spells.is_empty():
+				selected_spells = ["magic-missile"]
+		"wizard":
+			hero_max_hp = 6 + con_mod
+			hero_ac = 10 + dex_mod
+			equipped_weapon = "quarterstaff"
+			equipped_armor = "robe"
+			if selected_spells.is_empty():
+				selected_spells = ["magic-missile", "fireball"]
+		_:
+			hero_max_hp = 10 + con_mod
+			hero_ac = 10 + dex_mod
+			equipped_weapon = "service-sword"
+			equipped_armor = "chain-mail"
+
+	# Racial traits adjustments
+	if hero_race in ["dwarf", "half-orc"]:
+		hero_max_hp += 1 # Dwarven Toughness / Relentless Endurance
+	elif hero_race in ["halfling", "gnome"]:
+		hero_ac += 1 # Halfling Nimbleness dodge bonus
+
+	hero_max_hp = max(6, hero_max_hp)
+	hero_hp = hero_max_hp
+	quest_stage = 1
+	reset_flags()
+	settings["fog_of_war"] = true
+	if has_meta("fog_cache"):
+		set_meta("fog_cache", {})
+	stats.kills = 0
+	stats.chests = 0
+	stats.damage_dealt = 0
+	inventory = ["potion-healing"]
+	if equipped_weapon == "hunting-bow":
+		inventory.append("service-sword")
+	
+	var portrait_path = "res://assets/portraits/portrait_%s.png" % hero_class
+	if not ResourceLoader.exists(portrait_path):
+		portrait_path = "res://assets/portraits/portrait_fighter.png"
+	
+	party_members = [
+		{
+			"id": "hero",
+			"name": hero_name,
+			"race": hero_race,
+			"class": hero_class,
+			"hp": hero_hp,
+			"max_hp": hero_max_hp,
+			"ac": hero_ac,
+			"level": 1,
+			"portrait": portrait_path,
+			"weapon": equipped_weapon,
+			"armor": equipped_armor,
+			"spells": selected_spells.duplicate(),
+			"status_effects": []
+		}
+	]
+	selected_party_indices = [0]
+	status_effects = {hero_name: []}
+	activity_log_history.clear()
+	gold = 150
+	is_game_paused = false
+	party_changed.emit()
+	party_selection_changed.emit(selected_party_indices)
+	print("GameState: Hero initialized -> ", hero_name, " (", hero_race, " ", hero_class, ") HP=", hero_hp, " AC=", hero_ac, " Spells=", selected_spells, " Stats=", ability_scores)
+
+func has_item(item_id: String) -> bool:
+	return inventory.has(item_id) or equipped_weapon == item_id or equipped_armor == item_id
+
+func add_item(item_id: String) -> void:
+	inventory.append(item_id)
+	inventory_changed.emit()
+	var it = get_item_data(item_id)
+	var title = it.title if it else item_id
+	log_message("item", "Acquired item: %s" % title)
+
+func remove_item(item_id: String) -> void:
+	inventory.erase(item_id)
+	inventory_changed.emit()
+
+func add_kill() -> void:
+	stats.kills += 1
+
+func add_chest() -> void:
+	stats.chests += 1
+
+func log_message(category: String, msg: String) -> void:
+	activity_log_history.append({
+		"category": category,
+		"message": msg,
+		"timestamp": Time.get_ticks_msec()
+	})
+	if activity_log_history.size() > 500:
+		activity_log_history.pop_front()
+	message_logged.emit(category, msg)
+
+func update_setting(key: String, val) -> void:
+	settings[key] = val
+	settings_changed.emit()
+
+func advance_quest(p_stage: int) -> void:
+	if p_stage > quest_stage:
+		quest_stage = p_stage
+		quest_advanced.emit(p_stage)
+		log_message("quest", "Journal updated (Stage %d)" % p_stage)
+		print("Quest Advanced to Stage ", p_stage)
+
+func take_damage(amount: int) -> void:
+	hero_hp = max(0, hero_hp - amount)
+	for m in party_members:
+		if m.get("id") == "hero" or m.get("name") == hero_name:
+			m["hp"] = hero_hp
+			break
+	hero_damaged.emit(hero_hp, hero_max_hp)
+	party_changed.emit()
+	log_message("damage", "%s suffers %d damage! (HP: %d/%d)" % [hero_name, amount, hero_hp, hero_max_hp])
+	if hero_hp <= 0:
+		apply_status_effect(hero_name, "unconscious")
+		check_party_defeat()
+
+func heal(amount: int) -> void:
+	hero_hp = min(hero_max_hp, hero_hp + amount)
+	hero_damaged.emit(hero_hp, hero_max_hp)
+	log_message("item", "%s recovered %d HP! (HP: %d/%d)" % [hero_name, amount, hero_hp, hero_max_hp])
+
+func get_item_data(item_id: String) -> ItemData:
+	if DataStore.items.has(item_id):
+		return DataStore.items[item_id]
+	return null
+
+func use_item(item_id: String) -> Dictionary:
+	if not inventory.has(item_id):
+		return {"success": false, "error": "Item not in inventory: %s" % item_id}
+	
+	var item = get_item_data(item_id)
+	if item and item.category == "consumable":
+		if item_id == "antidote" or item_id == "potion-antidote":
+			remove_status_effect(hero_name, "poisoned")
+			remove_item(item_id)
+			if AudioManager:
+				AudioManager.play_sfx("wood_open")
+			log_message("item", "%s drank Antidote! Cured poison condition." % hero_name)
+			return {
+				"success": true,
+				"item": item_id,
+				"title": item.title,
+				"action": "cured_poison"
+			}
+		
+		# Healing Potions
+		var healed = randi_range(1, 4) + randi_range(1, 4) + 2 # Potion of Healing: 2d4 + 2
+		if item_id == "potion-greater-healing":
+			healed = randi_range(1, 4) + randi_range(1, 4) + randi_range(1, 4) + randi_range(1, 4) + 4 # 4d4 + 4
+		var prev_hp = hero_hp
+		heal(healed)
+		remove_item(item_id)
+		if AudioManager:
+			AudioManager.play_sfx("wood_open")
+		print("GameState: Used %s! Restored %d HP (%d -> %d/%d)" % [item.title, hero_hp - prev_hp, prev_hp, hero_hp, hero_max_hp])
+		return {
+			"success": true,
+			"item": item_id,
+			"title": item.title,
+			"action": "consumed",
+			"hp_restored": hero_hp - prev_hp,
+			"current_hp": hero_hp,
+			"max_hp": hero_max_hp
+		}
+	elif item and (item.category == "weapon" or item.category == "armor"):
+		return equip_item(item_id)
+	
+	return {"success": false, "error": "Item cannot be consumed directly"}
+
+func equip_item(item_id: String) -> Dictionary:
+	if not inventory.has(item_id):
+		return {"success": false, "error": "Item not in inventory: %s" % item_id}
+	
+	var item = get_item_data(item_id)
+	if not item:
+		return {"success": false, "error": "Item data not found for %s" % item_id}
+	
+	if item.category == "weapon":
+		var old_weap = equipped_weapon
+		inventory.erase(item_id)
+		equipped_weapon = item_id
+		if old_weap != "":
+			inventory.append(old_weap)
+		inventory_changed.emit()
+		if AudioManager:
+			AudioManager.play_sfx("melee_attack")
+		print("GameState: Equipped weapon %s (Swapped out %s)" % [item.title, old_weap])
+		return {"success": true, "slot": "weapon", "equipped": item_id, "swapped": old_weap}
+	elif item.category == "armor":
+		var old_arm = equipped_armor
+		inventory.erase(item_id)
+		equipped_armor = item_id
+		hero_ac = item.ac_bonus if item.ac_bonus > 0 else (12 + get_stat_modifier(ability_scores.get("DEX", 10)))
+		if old_arm != "":
+			inventory.append(old_arm)
+		inventory_changed.emit()
+		print("GameState: Equipped armor %s (Swapped out %s, AC=%d)" % [item.title, old_arm, hero_ac])
+		return {"success": true, "slot": "armor", "equipped": item_id, "swapped": old_arm, "ac": hero_ac}
+
+	return {"success": false, "error": "Item is not equippable"}
+
+func unequip_item(slot: String) -> Dictionary:
+	if slot == "weapon" and equipped_weapon != "":
+		var old = equipped_weapon
+		inventory.append(old)
+		equipped_weapon = ""
+		inventory_changed.emit()
+		return {"success": true, "slot": "weapon", "unequipped": old}
+	elif slot == "armor" and equipped_armor != "":
+		var old = equipped_armor
+		inventory.append(old)
+		equipped_armor = ""
+		hero_ac = 10 + get_stat_modifier(ability_scores.get("DEX", 10))
+		inventory_changed.emit()
+		return {"success": true, "slot": "armor", "unequipped": old, "ac": hero_ac}
+	return {"success": false, "error": "Slot is already empty"}
+	return {"success": false, "error": "Slot is already empty"}
+
+# ── Party Management ──────────────────────────────────────────────────────────
+
+func add_party_member(member: Dictionary) -> void:
+	for m in party_members:
+		if m.get("id") == member.get("id"):
+			return
+	party_members.append(member)
+	if not status_effects.has(member.get("name", "")):
+		status_effects[member.get("name", "")] = []
+	party_changed.emit()
+	log_message("system", "%s has joined your party!" % member.get("name", "Companion"))
+
+func remove_party_member(member_id: String) -> void:
+	for i in range(party_members.size() - 1, -1, -1):
+		if party_members[i].get("id") == member_id:
+			party_members.remove_at(i)
+			break
+	party_changed.emit()
+
+func select_party_member(idx: int) -> void:
+	if idx >= 0 and idx < party_members.size():
+		selected_party_indices = [idx]
+		party_selection_changed.emit(selected_party_indices)
+
+func toggle_party_member_selection(idx: int) -> void:
+	if idx >= 0 and idx < party_members.size():
+		if selected_party_indices.has(idx):
+			if selected_party_indices.size() > 1:
+				selected_party_indices.erase(idx)
+		else:
+			selected_party_indices.append(idx)
+		party_selection_changed.emit(selected_party_indices)
+
+func select_all_party_members() -> void:
+	selected_party_indices = []
+	for i in range(party_members.size()):
+		selected_party_indices.append(i)
+	party_selection_changed.emit(selected_party_indices)
+
+func get_selected_party_members() -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	for idx in selected_party_indices:
+		if idx >= 0 and idx < party_members.size():
+			res.append(party_members[idx])
+	return res
+
+# ── Status Effects ────────────────────────────────────────────────────────────
+
+func apply_status_effect(target_name: String, effect_id: String, duration_rounds: int = 3) -> void:
+	if not status_effects.has(target_name):
+		status_effects[target_name] = []
+	if not status_effects[target_name].has(effect_id):
+		status_effects[target_name].append(effect_id)
+		for m in party_members:
+			if m.get("name") == target_name:
+				if not m.get("status_effects", []).has(effect_id):
+					m["status_effects"].append(effect_id)
+		status_effects_changed.emit(target_name)
+		party_changed.emit()
+		log_message("combat", "%s is now afflicted with [%s]!" % [target_name, effect_id.to_upper()])
+
+func remove_status_effect(target_name: String, effect_id: String) -> void:
+	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
+		status_effects[target_name].erase(effect_id)
+		for m in party_members:
+			if m.get("name") == target_name and m.has("status_effects"):
+				m["status_effects"].erase(effect_id)
+		status_effects_changed.emit(target_name)
+		party_changed.emit()
+		log_message("combat", "%s is no longer afflicted with [%s]." % [target_name, effect_id])
+
+func has_status_effect(target_name: String, effect_id: String) -> bool:
+	return status_effects.has(target_name) and status_effects[target_name].has(effect_id)
+
+func get_status_effects(target_name: String) -> Array:
+	return status_effects.get(target_name, [])
+
+# ── RTwP Pause Control ────────────────────────────────────────────────────────
+
+func toggle_pause() -> void:
+	set_paused(!is_game_paused)
+
+func set_paused(val: bool) -> void:
+	is_game_paused = val
+	pause_toggled.emit(is_game_paused)
+	log_message("system", "Game Paused (Spacebar RTwP)" if is_game_paused else "Game Resumed")
+
+# ── Gold & Shop Economy ───────────────────────────────────────────────────────
+
+func add_gold(amount: int) -> void:
+	gold += amount
+	gold_changed.emit(gold)
+
+func spend_gold(amount: int) -> bool:
+	if gold >= amount:
+		gold -= amount
+		gold_changed.emit(gold)
+		return true
+	return false
+
+func buy_item(item_id: String) -> bool:
+	var it = get_item_data(item_id)
+	if not it:
+		return false
+	var cost = it.cost if it.cost > 0 else 10
+	if spend_gold(cost):
+		add_item(item_id)
+		if AudioManager:
+			AudioManager.play_sfx("wood_open")
+		log_message("item", "Purchased %s for %d GP." % [it.title, cost])
+		return true
+	return false
+
+func sell_item(item_id: String) -> bool:
+	if not inventory.has(item_id):
+		return false
+	var it = get_item_data(item_id)
+	var price = int(floor(float(it.cost if it and it.cost > 0 else 10) * 0.5))
+	remove_item(item_id)
+	add_gold(price)
+	if AudioManager:
+		AudioManager.play_sfx("wood_open")
+	log_message("item", "Sold %s for %d GP." % [it.title if it else item_id, price])
+	return true
+
+
+
+func _process(delta: float) -> void:
+	if is_game_paused:
+		return
+	status_tick_accumulator += delta
+	if status_tick_accumulator >= 3.0:
+		status_tick_accumulator = 0.0
+		_tick_status_effects()
+
+func _tick_status_effects() -> void:
+	var keys = status_durations.keys().duplicate()
+	for key in keys:
+		var parts = key.split(":")
+		if parts.size() < 2:
+			continue
+		var target_name = parts[0]
+		var effect_id = parts[1]
+		if effect_id == "poisoned":
+			var dmg = randi_range(1, 4)
+			var victim_pos = Vector2.ZERO
+			var cur_sc = get_tree().current_scene if get_tree() else null
+			if target_name == hero_name:
+				take_damage(dmg)
+				if cur_sc:
+					var h_node = cur_sc.find_child("HeroPlayer", true, false)
+					if h_node:
+						victim_pos = h_node.global_position
+			else:
+				damage_party_member(target_name, dmg)
+				if cur_sc:
+					var comp = cur_sc.find_child("PartyCompanion", true, false)
+					if comp:
+						victim_pos = comp.global_position
+			if victim_pos != Vector2.ZERO and FloatingTextManager:
+				FloatingTextManager.spawn_damage(victim_pos, dmg, false, "poison")
+		status_durations[key] = int(status_durations[key]) - 1
+		if status_durations[key] <= 0:
+			remove_status_effect(target_name, effect_id)
+
+func is_incapacitated(target_name: String) -> bool:
+	return has_status_effect(target_name, "paralyzed") or has_status_effect(target_name, "petrified") or has_status_effect(target_name, "stunned") or has_status_effect(target_name, "unconscious")
+
+func is_invisible(target_name: String) -> bool:
+	return has_status_effect(target_name, "invisible")
+
+func damage_party_member(target_id_or_name: String, amount: int) -> void:
+	if target_id_or_name == hero_name or target_id_or_name == "hero":
+		take_damage(amount)
+		return
+	for m in party_members:
+		if m.get("id") == target_id_or_name or m.get("name") == target_id_or_name:
+			var prev_hp = m.get("hp", 10)
+			m["hp"] = max(0, prev_hp - amount)
+			party_changed.emit()
+			log_message("damage", "%s suffers %d damage! (HP: %d/%d)" % [m.get("name"), amount, m["hp"], m.get("max_hp", 10)])
+			if m["hp"] <= 0:
+				apply_status_effect(m.get("name"), "unconscious")
+				check_party_defeat()
+			break
+
+func heal_party_member(target_id_or_name: String, amount: int) -> void:
+	if target_id_or_name == hero_name or target_id_or_name == "hero":
+		heal(amount)
+		return
+	for m in party_members:
+		if m.get("id") == target_id_or_name or m.get("name") == target_id_or_name:
+			var prev_hp = m.get("hp", 10)
+			var max_hp = m.get("max_hp", 10)
+			m["hp"] = min(max_hp, prev_hp + amount)
+			party_changed.emit()
+			log_message("item", "%s recovered %d HP! (HP: %d/%d)" % [m.get("name"), amount, m["hp"], max_hp])
+			break
+
+func check_party_defeat() -> bool:
+	var all_fallen = true
+	for m in party_members:
+		if int(m.get("hp", 0)) > 0:
+			all_fallen = false
+			break
+	if all_fallen and not is_party_defeated:
+		trigger_party_defeat()
+		return true
+	return false
+
+func trigger_party_defeat() -> void:
+	is_party_defeated = true
+	log_message("system", "💀 ALL PARTY MEMBERS HAVE FALLEN! Your party has been wiped out.")
+	party_defeated.emit()
+
+func retry_encounter() -> void:
+	is_party_defeated = false
+	hero_hp = hero_max_hp
+	remove_status_effect(hero_name, "unconscious")
+	for m in party_members:
+		m["hp"] = m.get("max_hp", 10)
+		var comp_name = m.get("name", "")
+		if comp_name != "":
+			remove_status_effect(comp_name, "unconscious")
+	hero_damaged.emit(hero_hp, hero_max_hp)
+	party_changed.emit()
+	log_message("system", "⚔️ Party revived and restored! Encounter ready to resume.")
+
+func setup_tactical_party() -> void:
+	is_party_defeated = false
+	hero_hp = hero_max_hp
+	remove_status_effect(hero_name, "unconscious")
+	for m in party_members:
+		if m.get("id") == "hero" or m.get("name") == hero_name:
+			m["hp"] = hero_hp
+			m["max_hp"] = hero_max_hp
+			break
+	
+	var has_elora = false
+	var has_thrumbar = false
+	for m in party_members:
+		if m.get("id") == "elora": has_elora = true
+		if m.get("id") == "thrumbar": has_thrumbar = true
+	
+	if not has_elora:
+		add_party_member({
+			"id": "elora",
+			"name": "Elora",
+			"race": "half-elf",
+			"class": "rogue",
+			"hp": 16,
+			"max_hp": 16,
+			"ac": 14,
+			"level": 2,
+			"portrait": "res://assets/portraits/portrait_elora.png",
+			"weapon": "hunting-bow",
+			"armor": "leather-armor",
+			"spells": [],
+			"status_effects": []
+		})
+	else:
+		for m in party_members:
+			if m.get("id") == "elora":
+				m["hp"] = m.get("max_hp", 16)
+				remove_status_effect("Elora", "unconscious")
+
+	if not has_thrumbar:
+		add_party_member({
+			"id": "thrumbar",
+			"name": "Thrumbar",
+			"race": "dwarf",
+			"class": "cleric",
+			"hp": 20,
+			"max_hp": 20,
+			"ac": 16,
+			"level": 2,
+			"portrait": "res://assets/portraits/portrait_cleric.png",
+			"weapon": "mace",
+			"armor": "chain-mail",
+			"spells": ["cure-wounds"],
+			"status_effects": []
+		})
+	else:
+		for m in party_members:
+			if m.get("id") == "thrumbar":
+				m["hp"] = m.get("max_hp", 20)
+				remove_status_effect("Thrumbar", "unconscious")
+
+	selected_party_indices = [0]
+	party_changed.emit()
+	party_selection_changed.emit(selected_party_indices)
