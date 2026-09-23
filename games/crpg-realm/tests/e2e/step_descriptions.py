@@ -276,6 +276,22 @@ STEP_PATTERNS = [
      'Combat round timer: waiting {0}s for the prone knockdown turn duration to elapse in real time.'),
     (r'enemy "([^"]+)" stands back up from prone',
      'Recovery: enemy "{0}" spends movement effort and stands back upright, clearing the prone condition.'),
+    (r'a slippery ice patch exists on the ground at \(([^,]+), ([^)]+)\)',
+     'Blizzard hazard: verifying slippery ice patch formed on the arena floor at ({0}, {1}).'),
+    (r'the hero receives item "([^"]+)"',
+     'Inventory acquisition: adding {0} to hero inventory.'),
+    (r'the hero drinks "([^"]+)"',
+     'Consumable elixir: hero drinks {0}, triggering magical draught effects.'),
+    (r'the hero is invisible with translucent shimmer',
+     'Verifying invisibility: hero gains [INVISIBLE] status condition and 35% translucent visual shimmer.'),
+    (r'the hero moves to \(([^,]+), ([^)]+)\) onto the ice',
+     'Movement: hero traverses across the tactical arena floor towards ({0}, {1}) onto the slippery ice patch.'),
+    (r'the hero slips on the ice and is knocked prone',
+     'Hazard trigger: hero loses footing on the slick ice, triggering [SLIPPED ON ICE] and [KNOCKED PRONE].'),
+    (r'the hero is flat on the ground with sprite rotation of (\d+) degrees',
+     'Verifying prone state: hero is collapsed flat on the ice with sprite rotated {0} degrees.'),
+    (r'the hero stands back up from prone upright',
+     'Turn recovery: hero turn duration elapses, spending effort to stand back upright and clear prone.'),
 ]
 
 def get_step_description(step_type: str, step_name: str, step_docstring: str = None) -> str:

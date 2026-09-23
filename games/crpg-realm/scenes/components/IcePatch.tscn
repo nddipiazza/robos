@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://icepatch001"]
+
+[ext_resource type="Script" path="res://scripts/IcePatch.gd" id="1_ice"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ice"]
+radius = 140.0
+
+[node name="IcePatch" type="Area2D"]
+collision_layer = 1
+collision_mask = 1
+input_pickable = false
+script = ExtResource("1_ice")
+
+[node name="HazardVisual" type="Polygon2D" parent="."]
+color = Color(0.6, 0.85, 1, 0.42)
+
+[node name="Outline" type="Line2D" parent="."]
+width = 3.0
+default_color = Color(0.85, 0.95, 1, 0.8)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -162.0
+offset_right = 120.0
+offset_bottom = -142.0
+theme_override_colors/font_color = Color(0.65, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "❄️ [ICE] Slippery Ice Patch"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ice")
+
+[node name="FrostParticles" type="CPUParticles2D" parent="."]
+amount = 16
+lifetime = 1.8
+emission_shape = 1
+emission_sphere_radius = 120.0
+gravity = Vector2(0, -8)
+scale_amount_min = 1.5
+scale_amount_max = 3.0
+color = Color(0.8, 0.95, 1, 0.7)

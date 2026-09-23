@@ -449,6 +449,17 @@
     "description": "Grants the effect of Haste (+2 AC, doubled movement speed) for 1 minute."
   },
   {
+    "id": "potion-invisibility",
+    "title": "Potion of Invisibility",
+    "category": "consumable",
+    "equipSlot": "belt",
+    "damageDice": null,
+    "acBonus": 0,
+    "cost": 180,
+    "icon": "assets/icons/potions/potion_invisibility.png",
+    "description": "An ethereal shimmering draught that cloaks the drinker in complete invisibility for 1 minute or until an attack is made."
+  },
+  {
     "id": "antidote",
     "title": "Antidote",
     "category": "consumable",

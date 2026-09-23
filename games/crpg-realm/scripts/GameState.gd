@@ -427,6 +427,20 @@ func use_item(item_id: String) -> Dictionary:
 				"title": item.title,
 				"action": "cured_poison"
 			}
+
+		if item_id == "potion-invisibility" or item_id == "potion_invisibility":
+			apply_status_effect(hero_name, "invisible", 10)
+			override_status_timeout(hero_name, "invisible", 60.0)
+			remove_item(item_id)
+			if AudioManager:
+				AudioManager.play_sfx("spell_cast")
+			log_message("item", "✨ %s drank Potion of Invisibility! Cloaked in translucent shimmer." % hero_name)
+			return {
+				"success": true,
+				"item": item_id,
+				"title": item.title,
+				"action": "cloaked_invisible"
+			}
 		
 		# Healing Potions
 		var healed = randi_range(1, 4) + randi_range(1, 4) + 2 # Potion of Healing: 2d4 + 2
@@ -739,7 +753,7 @@ func apply_status_effect(target_name: String, effect_id: String, duration_rounds
 	if effect_id == "invisible" and not status_realtime_timeouts.has(target_name + ":invisible"):
 		status_realtime_timeouts[target_name + ":invisible"] = 60.0
 	elif effect_id == "prone" and not status_realtime_timeouts.has(target_name + ":prone"):
-		status_realtime_timeouts[target_name + ":prone"] = max(4.0, float(duration_rounds) * 4.0)
+		status_realtime_timeouts[target_name + ":prone"] = max(3.5, float(duration_rounds) * 3.5)
 
 func remove_status_effect(target_name: String, effect_id: String) -> void:
 	var key = target_name + ":" + effect_id

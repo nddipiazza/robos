@@ -256,5 +256,18 @@
     "acBonus": 2,
     "icon": "assets/icons/armor/shield.png",
     "description": "An inspiring battle cry and defensive ground stomp restoring 2d6 + Con HP to party allies and granting a +2 AC defensive resolve bonus."
+  },
+  {
+    "id": "blizzard",
+    "title": "Blizzard",
+    "level": 3,
+    "school": "Evocation",
+    "castingTime": "1 action",
+    "range": "150 feet",
+    "damageFormula": "6d6",
+    "damageType": "cold",
+    "hazard": "ice",
+    "icon": "assets/icons/spells/blizzard.png",
+    "description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice."
   }
 ]

@@ -178,6 +178,9 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			if has_node("/root/QAOverlay"):
 				get_node("/root/QAOverlay").set_step(step, subtitle, description)
 			_send_http_response(client, 200, {"success": true, "step": step, "subtitle": subtitle, "description": description})
+		["POST", "/qa/give_item"], ["POST", "/api/v1/qa/give_item"]:
+			var res = _handle_give_item(body_dict)
+			_send_http_response(client, 200, res)
 		["POST", "/setup_state"], ["POST", "/api/v1/setup_state"]:
 			var res = await _setup_initial_state(body_dict)
 			_send_http_response(client, 200, res)
@@ -731,6 +734,15 @@ func _handle_inventory_equip(payload: Dictionary) -> Dictionary:
 
 	return res
 
+func _handle_give_item(payload: Dictionary) -> Dictionary:
+	var item_id = str(payload.get("item", payload.get("item_id", "")))
+	if item_id == "":
+		return {"success": false, "error": "Missing item or item_id"}
+	GameState.add_item(item_id)
+	if has_node("/root/QAOverlay"):
+		get_node("/root/QAOverlay").log_event("[GIVE ITEM] %s" % item_id)
+	return {"success": true, "item": item_id, "inventory": GameState.inventory}
+
 func _handle_select_option(payload: Dictionary) -> Dictionary:
 	var target = str(payload.get("target", "OptHealthBars"))
 	var index = int(payload.get("index", 0))
@@ -1087,7 +1099,14 @@ func _get_full_game_state() -> Dictionary:
 	var hero_node: Node2D = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
 	var hero_pos = [hero_node.global_position.x, hero_node.global_position.y] if hero_node else [0.0, 0.0]
 
+	var scene_ice_patches: Array[Dictionary] = []
+	if cur_scene:
+		for child in cur_scene.get_children():
+			if child.has_method("get_ice_patch_info"):
+				scene_ice_patches.append(child.get_ice_patch_info())
+
 	return {
+		"ice_patches": scene_ice_patches,
 		"traps": scene_traps,
 		"appearing_traps": appearing_traps,
 		"active_map_traps": appearing_traps,
@@ -1118,6 +1137,9 @@ func _get_full_game_state() -> Dictionary:
 			"armor": GameState.equipped_armor,
 			"ability_scores": GameState.ability_scores,
 			"is_invisible": GameState.is_invisible(GameState.hero_name),
+			"is_prone": ((hero_node.has_method("is_prone") and hero_node.is_prone()) or bool(hero_node.get("is_down_prone"))) if hero_node else false,
+			"is_down_prone": bool(hero_node.get("is_down_prone")) if hero_node else false,
+			"sprite_rotation": (float(hero_node.get_node("Sprite").rotation_degrees) if (hero_node and hero_node.has_node("Sprite")) else 0.0),
 			"status_effects": GameState.get_status_effects(GameState.hero_name),
 			"sprite_opacity": (hero_node.get_node("Sprite").modulate.a if (hero_node and hero_node.has_node("Sprite")) else 1.0)
 		},
@@ -1243,8 +1265,13 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 	var cur_scene = get_tree().current_scene
 
 	match action:
-		"move_to_target", "move_to":
+		"move_to_target":
 			return await _handle_move_to_target(args)
+
+		"move_to", "move":
+			if args.has("target_id") or args.has("target") or args.has("name"):
+				return await _handle_move_to_target(args)
+			return await _handle_move_to(args)
 
 		"interact_target", "click_object":
 			return await _handle_interact_target(args)

@@ -1021,12 +1021,14 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 			t_wait -= get_process_delta_time()
 
 	var res = {}
-	if spell_id in ["fireball", "burning-hands", "thunderwave", "lightning-bolt", "sleep"]:
+	if spell_id in ["fireball", "burning-hands", "thunderwave", "lightning-bolt", "sleep", "blizzard"]:
 		var dc = 14
 		var stat = "DEX"
 		var rad = 180.0
 		if spell_id == "burning-hands":
 			rad = 150.0
+		elif spell_id == "blizzard":
+			rad = 140.0
 		elif spell_id == "thunderwave":
 			stat = "CON"
 			rad = 150.0
@@ -1044,5 +1046,16 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 
 	_check_victory()
 	return res
+
+func spawn_ice_patch(pos: Vector2, rad: float = 140.0) -> Node2D:
+	var ice_scene = load("res://scenes/components/IcePatch.tscn")
+	if ice_scene:
+		var ice = ice_scene.instantiate()
+		ice.global_position = pos
+		ice.radius = rad
+		add_child(ice)
+		GameState.log_message("combat", "❄️ A freezing ice patch forms across the arena floor at (%d, %d)!" % [int(pos.x), int(pos.y)])
+		return ice
+	return null
 
 

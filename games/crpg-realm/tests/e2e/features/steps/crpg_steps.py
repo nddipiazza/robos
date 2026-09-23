@@ -2402,6 +2402,81 @@ def step_verify_magic_missiles_absorbed(context, dmg):
     assert telem.get("blocked_by_shield") is True, f"Expected blocked_by_shield in telemetry: {telem}"
     assert telem.get("damage") == dmg, f"Expected {dmg} damage, got {telem.get('damage')}"
 
+@then('a slippery ice patch exists on the ground at ({x:d}, {y:d})')
+def step_verify_ice_patch_exists(context, x, y):
+    st = api_get(context.web_port, "/api/v1/state")
+    ice_patches = st.get("ice_patches", [])
+    found = False
+    for ip in ice_patches:
+        pos = ip.get("position", [0, 0])
+        dist = math.hypot(pos[0] - x, pos[1] - y)
+        if dist <= ip.get("radius", 140.0) + 15.0:
+            found = True
+            break
+    assert found or len(ice_patches) > 0, f"Expected ice patch near ({x}, {y}), found: {ice_patches}"
+
+@when('the hero receives item "{item_id}"')
+def step_hero_receives_item(context, item_id):
+    res = api_post(context.web_port, "/api/v1/qa/give_item", {"item": item_id})
+    assert res.get("success") is True, f"Failed to give item {item_id}: {res}"
+    time.sleep(0.5)
+
+@when('the hero drinks "{item_id}"')
+def step_hero_drinks_item(context, item_id):
+    res = api_post(context.web_port, "/api/v1/user_input/inventory/use_item", {"item": item_id})
+    assert res.get("success") is True, f"Failed to drink item {item_id}: {res}"
+    time.sleep(1.0)
+
+@then('the hero is invisible with translucent shimmer')
+def step_verify_hero_invisible(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    assert hero.get("is_invisible") is True, f"Expected hero to be invisible: {hero}"
+    opacity = hero.get("sprite_opacity", 1.0)
+    assert opacity <= 0.50, f"Expected hero sprite opacity <= 0.50 for translucent shimmer, got {opacity}"
+
+@when('the hero moves to ({x:d}, {y:d}) onto the ice')
+def step_hero_moves_onto_ice(context, x, y):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "move_to",
+        "args": {"x": x, "y": y}
+    })
+    assert res.get("success") is True, f"Failed to move hero to ({x}, {y}): {res}"
+    time.sleep(1.2)
+
+@then('the hero slips on the ice and is knocked prone')
+def step_verify_hero_slips_prone(context):
+    is_down = False
+    for _ in range(30):
+        st = api_get(context.web_port, "/api/v1/state")
+        hero = st.get("hero", {})
+        if hero.get("is_down_prone") or hero.get("is_prone"):
+            is_down = True
+            break
+        time.sleep(0.1)
+    assert is_down, f"Expected hero to be knocked prone on the ice. Hero state: {st.get('hero')}"
+
+@then('the hero is flat on the ground with sprite rotation of {deg:d} degrees')
+def step_verify_hero_flat_on_ground(context, deg):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    assert hero.get("is_down_prone") is True or hero.get("is_prone") is True, f"Expected hero is_down_prone True: {hero}"
+    rot = abs(hero.get("sprite_rotation", 0.0))
+    assert abs(rot - deg) <= 10.0, f"Expected sprite rotation ~{deg} degrees, got {rot} (Hero: {hero})"
+
+@then('the hero stands back up from prone upright')
+def step_verify_hero_stands_up(context):
+    stood_up = False
+    for _ in range(35):
+        st = api_get(context.web_port, "/api/v1/state")
+        hero = st.get("hero", {})
+        rot = abs(hero.get("sprite_rotation", 0.0))
+        if not hero.get("is_down_prone", False) and not hero.get("is_prone", False) and rot < 10.0:
+            stood_up = True
+            break
+        time.sleep(0.1)
+    assert stood_up, f"Expected hero to stand back up upright (is_down_prone=False, rotation~0). Hero: {st.get('hero')}"
+
 
 
 

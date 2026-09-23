@@ -510,6 +510,8 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		await _spawn_crushing_cleave_vfx(target_pos, on_cast_callback)
 	elif spell_id == "rallying-stomp":
 		await _spawn_rallying_stomp_vfx(global_position, on_cast_callback)
+	elif spell_id == "blizzard":
+		await _spawn_blizzard_vfx(target_pos, on_cast_callback)
 	elif spell_id == "magic-missile":
 		for dart_idx in range(3):
 			_spawn_magic_missile_dart(target_pos, dart_idx, func():
@@ -1226,6 +1228,51 @@ func _spawn_rallying_stomp_vfx(center_pos: Vector2, on_impact: Callable) -> void
 	tw.tween_callback(vfx.queue_free)
 	if AudioManager:
 		AudioManager.play_sfx("heal_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_blizzard_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = target_pos
+
+	var ring = Line2D.new()
+	ring.width = 4.0
+	ring.default_color = Color(0.65, 0.9, 1.4, 0.9)
+	var pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		pts.append(Vector2(cos(a), sin(a)) * 140.0)
+	pts.append(pts[0])
+	ring.points = pts
+	vfx.add_child(ring)
+
+	for k in range(12):
+		var shard = Polygon2D.new()
+		shard.color = Color(0.8, 0.95, 1.5, 0.9)
+		shard.polygon = PackedVector2Array([Vector2(-4, -14), Vector2(4, -14), Vector2(0, 14)])
+		var rand_offset = Vector2(randf_range(-120, 120), randf_range(-80, 80))
+		shard.position = rand_offset + Vector2(0, -180)
+		vfx.add_child(shard)
+		var s_tw = create_tween()
+		s_tw.tween_property(shard, "position", rand_offset, 0.35 + (k * 0.03)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		s_tw.parallel().tween_property(shard, "rotation_degrees", randf_range(-180, 180), 0.4)
+		s_tw.tween_property(shard, "modulate:a", 0.0, 0.25)
+
+	get_parent().add_child(vfx)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(ring, "scale", Vector2(1.15, 1.15), 0.7)
+	tw.parallel().tween_property(ring, "rotation_degrees", 90.0, 0.7)
+	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.7)
+	tw.tween_callback(vfx.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	await get_tree().create_timer(0.35).timeout
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
 	await get_tree().create_timer(0.4).timeout

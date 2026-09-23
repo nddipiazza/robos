@@ -195,6 +195,12 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
+	if current_target and (GameState.is_invisible(current_target_name) or (current_target_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name))):
+		current_target = null
+		current_target_name = ""
+		current_state = State.PATROL
+		_update_ui()
+
 	target_eval_timer -= delta
 	if target_eval_timer <= 0.0:
 		target_eval_timer = 0.45
@@ -279,6 +285,10 @@ func force_taunt(source: Node2D, taunt_threat: int = 50) -> void:
 	GameState.log_message("combat", "🛡️ %s taunted %s! Aggro forcefully diverted!" % [s_name, enemy_name])
 
 func _set_aggro_target(new_target: Node2D, threat_val: int, reason: String) -> void:
+	var t_name = _get_actor_name(new_target)
+	if GameState.is_invisible(t_name) or (t_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name)):
+		return
+
 	var old_target_name = current_target_name
 	current_target = new_target
 	current_target_name = _get_actor_name(new_target)
@@ -371,8 +381,11 @@ func _process_attack(delta: float) -> void:
 	velocity = Vector2.ZERO
 	if _is_round_based_mode() or is_prone() or is_down_prone:
 		return
-	if not current_target or not is_instance_valid(current_target):
+	if not current_target or not is_instance_valid(current_target) or GameState.is_invisible(current_target_name) or (current_target_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name)):
 		current_state = State.PATROL
+		current_target = null
+		current_target_name = ""
+		_update_ui()
 		return
 
 	var dist = global_position.distance_to(current_target.global_position)
@@ -387,7 +400,7 @@ func _process_attack(delta: float) -> void:
 		_strike_target()
 
 func _strike_target() -> void:
-	if current_state == State.DEAD or not current_target or GameState.is_game_paused or is_prone() or is_down_prone:
+	if current_state == State.DEAD or not current_target or GameState.is_game_paused or is_prone() or is_down_prone or GameState.is_invisible(current_target_name) or (current_target_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name)):
 		return
 
 	var t_name = current_target_name
