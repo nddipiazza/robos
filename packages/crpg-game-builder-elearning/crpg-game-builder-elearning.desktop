@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=cRPG Game Builder Academy
+Comment=Interactive training module for building tactical cRPGs in Godot 4
+Exec=electron /home/ndipiazza/source/robos/packages/crpg-game-builder-elearning
+Icon=robos-elearning
+Terminal=false
+Type=Application
+Categories=Development;Education;

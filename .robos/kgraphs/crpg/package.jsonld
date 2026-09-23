@@ -43,7 +43,8 @@
       "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
       "robos:maxPartySize": 4,
       "robos:hasELearning": [
-        "urn:robos:elearning:course:robos-crpg"
+        "urn:robos:elearning:course:robos-crpg",
+        "urn:robos:elearning:course:crpg-game-builder"
       ],
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg",
