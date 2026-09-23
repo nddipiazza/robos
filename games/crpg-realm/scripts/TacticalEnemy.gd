@@ -23,6 +23,7 @@ signal aggravated_by_proximity(enemy: TacticalEnemy, intruder: Node2D, distance:
 @export var aggro_radius: float = 280.0
 @export var pack_friend_radius: float = 480.0
 @export var pack_alert_radius: float = 950.0
+@export var friends: Array[String] = []
 @export var sprite_texture_path: String = "res://assets/sprites/enemies/wolf.png"
 @export var sprite_scale: Vector2 = Vector2(0.38, 0.38)
 @export var is_ranged: bool = false
@@ -39,6 +40,7 @@ var is_looted: bool = false
 
 # Infinity Engine Threat Table
 var threat_table: Dictionary = {} # ActorName -> int
+var direct_damage_table: Dictionary = {} # ActorName -> int
 var current_target: Node2D = null
 var current_target_name: String = ""
 
@@ -47,6 +49,12 @@ var current_wp_idx: int = 0
 var wait_timer: float = 0.0
 var attack_cooldown: float = 0.0
 var target_eval_timer: float = 0.0
+
+func _is_round_based_mode() -> bool:
+	var cur_sc = get_tree().current_scene if get_tree() else null
+	if cur_sc and "combat_mode" in cur_sc and cur_sc.combat_mode == 1:
+		return true
+	return false
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var hp_bar: ProgressBar = find_child("HPBar", true, false)
@@ -169,7 +177,11 @@ func add_threat(source: Node2D, amount: int, reason: String = "Damage") -> void:
 	if current_target == null or not is_instance_valid(current_target):
 		should_switch = true
 	elif source != current_target:
-		if new_threat > int(cur_threat * 1.15) + 3:
+		var cur_direct = int(direct_damage_table.get(current_target_name, 0))
+		var new_direct = int(direct_damage_table.get(s_name, 0))
+		if cur_direct == 0 and new_direct > 0:
+			should_switch = true
+		elif new_threat > int(cur_threat * 1.15) + 3:
 			should_switch = true
 
 	if should_switch:
@@ -227,6 +239,9 @@ func _get_actor_name(actor: Node2D) -> String:
 # ── Movement & Combat Logic ───────────────────────────────────────────────────
 
 func _process_patrol(delta: float) -> void:
+	if _is_round_based_mode():
+		velocity = Vector2.ZERO
+		return
 	if waypoints.size() == 0:
 		velocity = Vector2.ZERO
 		return
@@ -246,6 +261,9 @@ func _process_patrol(delta: float) -> void:
 		current_wp_idx = (current_wp_idx + 1) % waypoints.size()
 
 func _process_chase(_delta: float) -> void:
+	if _is_round_based_mode():
+		velocity = Vector2.ZERO
+		return
 	if not current_target or not is_instance_valid(current_target):
 		current_state = State.PATROL
 		current_target = null
@@ -266,6 +284,8 @@ func _process_chase(_delta: float) -> void:
 
 func _process_attack(delta: float) -> void:
 	velocity = Vector2.ZERO
+	if _is_round_based_mode():
+		return
 	if not current_target or not is_instance_valid(current_target):
 		current_state = State.PATROL
 		return
@@ -341,7 +361,9 @@ func take_damage(amount: int, attacker: Node2D = null) -> void:
 	tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.18)
 
 	if attacker:
-		add_threat(attacker, amount * 2 + 5, "Attack Damage")
+		var a_name = _get_actor_name(attacker)
+		direct_damage_table[a_name] = int(direct_damage_table.get(a_name, 0)) + amount
+		add_threat(attacker, amount * 2 + 10, "Attack Damage")
 		_alert_friends(attacker, amount)
 
 	if current_hp <= 0:
@@ -356,7 +378,8 @@ func _alert_friends(attacker: Node2D, damage: int) -> void:
 		if child is TacticalEnemy and child != self and is_instance_valid(child):
 			if child.current_state != State.DEAD and child.is_hostile:
 				var dist = global_position.distance_to(child.global_position)
-				if dist <= pack_alert_radius:
+				var is_linked_friend = friends.has(child.enemy_id) or child.friends.has(enemy_id)
+				if is_linked_friend or dist <= pack_alert_radius:
 					child.aggravate_on_friend_attack(self, attacker, damage)
 
 func aggravate_on_friend_attack(friend: TacticalEnemy, attacker: Node2D, damage: int) -> void:
@@ -364,7 +387,8 @@ func aggravate_on_friend_attack(friend: TacticalEnemy, attacker: Node2D, damage:
 		return
 
 	var a_name = _get_actor_name(attacker)
-	var friend_threat = int(damage * 0.75) + 20
+	var is_explicit_friend = friends.has(friend.enemy_id) or friend.friends.has(enemy_id)
+	var friend_threat = int(damage * 0.75) + (35 if is_explicit_friend else 20)
 
 	var prev_threat = int(threat_table.get(a_name, 0))
 	var new_threat = prev_threat + friend_threat
@@ -400,7 +424,8 @@ func _alert_friends_proximity(intruder: Node2D, _dist_to_intruder: float) -> voi
 		if child is TacticalEnemy and child != self and is_instance_valid(child):
 			if child.current_state != State.DEAD and child.is_hostile:
 				var friend_dist = global_position.distance_to(child.global_position)
-				if friend_dist <= pack_friend_radius:
+				var is_linked_friend = friends.has(child.enemy_id) or child.friends.has(enemy_id)
+				if is_linked_friend or friend_dist <= pack_friend_radius:
 					child.aggravate_on_friend_proximity(self, intruder, friend_dist)
 
 func aggravate_on_friend_proximity(friend: TacticalEnemy, intruder: Node2D, friend_dist: float) -> void:

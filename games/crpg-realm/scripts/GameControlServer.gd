@@ -110,6 +110,10 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			_send_http_response(client, 200, _get_full_game_state())
 		["GET", "/screen_state"], ["GET", "/api/v1/screen_state"]:
 			_send_http_response(client, 200, _get_screen_state())
+		["GET", "/combat/round_stats"], ["GET", "/api/v1/combat/round_stats"]:
+			var cur_sc = get_tree().current_scene
+			var telemetry = cur_sc.get_combat_telemetry() if (cur_sc and cur_sc.has_method("get_combat_telemetry")) else {"current_round": 0, "rounds": [], "latest_round": {}}
+			_send_http_response(client, 200, telemetry)
 		["POST", "/user_input/click_button"], ["POST", "/api/v1/user_input/click_button"]:
 			var res = await _handle_click_button(body_dict)
 			_send_http_response(client, 200, res)
@@ -1055,6 +1059,7 @@ func _get_full_game_state() -> Dictionary:
 					"is_hostile": bool(child.get("is_hostile")) if "is_hostile" in child else true,
 					"aggro_radius": float(child.get("aggro_radius")) if "aggro_radius" in child else 280.0,
 					"pack_friend_radius": float(child.get("pack_friend_radius")) if "pack_friend_radius" in child else 480.0,
+					"friends": child.get("friends") if "friends" in child else [],
 					"position": [child.global_position.x, child.global_position.y]
 				})
 
@@ -1139,6 +1144,7 @@ func _get_full_game_state() -> Dictionary:
 			"enemy_count": battle_enemies.size(),
 			"all_enemies_dead": (battle_enemies.size() > 0 and battle_enemies.all(func(e): return e.hp <= 0))
 		},
+		"combat_telemetry": (cur_scene.get_combat_telemetry() if (cur_scene and cur_scene.has_method("get_combat_telemetry")) else {}),
 		"defeat_screen": {
 			"open": is_def_open,
 			"visible": is_def_open
@@ -1173,11 +1179,22 @@ func _check_has_dead_hero_toolbar(cur_scene: Node) -> bool:
 
 func _serialize_party_with_hud_status() -> Array:
 	var list: Array = []
+	var cur_sc = get_tree().current_scene
 	for m in GameState.party_members:
 		var m_copy = m.duplicate(true)
 		var is_dead = int(m.get("hp", 0)) <= 0 or GameState.has_status_effect(m.get("name", ""), "unconscious")
 		m_copy["is_dead"] = is_dead
 		m_copy["hud_red"] = is_dead
+		m_copy["position"] = [0.0, 0.0]
+		if cur_sc:
+			if m.get("id") == "hero" or m.get("name") == GameState.hero_name:
+				var h = cur_sc.find_child("HeroPlayer", true, false)
+				if h: m_copy["position"] = [h.global_position.x, h.global_position.y]
+			else:
+				for child in cur_sc.get_children():
+					if "companion_id" in child and (child.get("companion_id") == m.get("id") or child.companion_name == m.get("name")):
+						m_copy["position"] = [child.global_position.x, child.global_position.y]
+						break
 		list.append(m_copy)
 	return list
 
@@ -1787,13 +1804,30 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			var ability = str(args.get("ability", "tremor-stomp"))
 			var target = str(args.get("target", "golem_alpha"))
 			if cur_scene and cur_scene.has_method("execute_fighter_maneuver"):
-				return cur_scene.execute_fighter_maneuver(fighter, ability, target)
+				var res = await cur_scene.execute_fighter_maneuver(fighter, ability, target)
+				return res
 			return {"success": false, "error": "execute_fighter_maneuver not available"}
 
+		"execute_combat_round", "combat_round":
+			if cur_scene and cur_scene.has_method("execute_combat_round"):
+				var res = await cur_scene.execute_combat_round()
+				return {"success": true, "round": res}
+			return {"success": false, "error": "execute_combat_round not available"}
+
+		"get_round_stats", "combat_round_stats":
+			var r_num = int(args.get("round", -1))
+			if cur_scene and cur_scene.has_method("get_round_stats"):
+				return {"success": true, "round_stats": cur_scene.get_round_stats(r_num)}
+			return {"success": false, "error": "get_round_stats not available"}
+
 		"simulate_golem_assault", "golems_assault", "golem_attack_round":
-			if cur_scene and cur_scene.has_method("execute_golems_assault_round"):
-				return cur_scene.execute_golems_assault_round()
-			return {"success": false, "error": "execute_golems_assault_round not available"}
+			if cur_scene and cur_scene.has_method("execute_combat_round"):
+				var res = await cur_scene.execute_combat_round()
+				return {"success": true, "round": res}
+			elif cur_scene and cur_scene.has_method("execute_golems_assault_round"):
+				var res = await cur_scene.execute_golems_assault_round()
+				return {"success": true, "round": res}
+			return {"success": false, "error": "execute_combat_round not available"}
 
 		"trigger_auto_heal", "execute_party_auto_heal", "auto_heal":
 			var threshold = int(args.get("threshold", 55))
@@ -1803,11 +1837,11 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			var attacker = str(args.get("attacker", "hero")).to_lower()
 			var enemy_id = str(args.get("enemy", "wolf_alpha"))
 			
-			# 1. Determine attacker index: Vance/Hero = 0, Elora = 1, Thrumbar = 2
+			# 1. Determine attacker index: Vance/Hero = 0, Garrick = 1, Brutus = 2
 			var target_idx = 0
-			if attacker in ["elora", "rogue", "archer"]:
+			if attacker in ["elora", "rogue", "archer", "garrick", "sergeant garrick"]:
 				target_idx = 1
-			elif attacker in ["thrumbar", "cleric", "dwarf"]:
+			elif attacker in ["thrumbar", "cleric", "dwarf", "brutus", "corporal brutus"]:
 				target_idx = 2
 			else:
 				for i in range(GameState.party_members.size()):
@@ -1838,11 +1872,11 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 
 			# 4. Dispatch attack
 			if cur_scene:
-				if attacker in ["hero", "vance"] and cur_scene.has_method("execute_hero_attack_on_enemy"):
-					var res = cur_scene.execute_hero_attack_on_enemy(enemy_id)
+				if attacker in ["hero", "vance", "commander vance"] and cur_scene.has_method("execute_hero_attack_on_enemy"):
+					var res = await cur_scene.execute_hero_attack_on_enemy(enemy_id)
 					return {"success": true, "result": res}
 				elif cur_scene.has_method("execute_companion_attack_on_enemy"):
-					var res = cur_scene.execute_companion_attack_on_enemy(attacker, enemy_id)
+					var res = await cur_scene.execute_companion_attack_on_enemy(attacker, enemy_id)
 					return {"success": true, "result": res}
 			return {"success": false, "error": "Battle or attack method not found"}
 

@@ -224,9 +224,23 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": spell_id}
 
-func execute_fighter_ability(fighter_name: String, ability_id: String, target_name: String = "", target_node: Node = null) -> Dictionary:
+func execute_fighter_ability(fighter_name: String, ability_id: String, target_name: String = "", target_node: Node = null, attacker_node: Node = null) -> Dictionary:
 	var am = _get_audio_manager()
 	var gs = _get_game_state()
+
+	if not attacker_node:
+		var tree = Engine.get_main_loop() as SceneTree
+		var cur_sc = tree.current_scene if tree else null
+		if cur_sc:
+			var f_lower = fighter_name.to_lower()
+			if f_lower in ["commander vance", "lieutenant vance", "vance", "hero"]:
+				attacker_node = cur_sc.find_child("HeroPlayer", true, false)
+			else:
+				for child in cur_sc.get_children():
+					if child is PartyCompanion:
+						if child.companion_name.to_lower() == f_lower or f_lower in child.companion_name.to_lower():
+							attacker_node = child
+							break
 
 	match ability_id:
 		"tremor-stomp":
@@ -244,7 +258,7 @@ func execute_fighter_ability(fighter_name: String, ability_id: String, target_na
 					FloatingTextManager.spawn_damage(target_node.global_position, dmg)
 					FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -25), "KNOCKED PRONE!", Color(1.0, 0.8, 0.2))
 				if target_node.has_method("take_damage"):
-					target_node.take_damage(dmg)
+					target_node.take_damage(dmg, attacker_node)
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("melee_crit")
 			return {"success": true, "ability": "tremor-stomp", "damage": dmg, "condition": "prone", "advantage": true}
@@ -261,7 +275,7 @@ func execute_fighter_ability(fighter_name: String, ability_id: String, target_na
 				if "global_position" in target_node and FloatingTextManager:
 					FloatingTextManager.spawn_damage(target_node.global_position, dmg, true)
 				if target_node.has_method("take_damage"):
-					target_node.take_damage(dmg)
+					target_node.take_damage(dmg, attacker_node)
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("melee_crit")
 			return {"success": true, "ability": "crushing-cleave", "damage": dmg}

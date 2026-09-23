@@ -340,8 +340,6 @@ func take_damage(amount: int) -> void:
 	if hero_hp <= 0:
 		apply_status_effect(hero_name, "unconscious")
 		check_party_defeat()
-	elif hero_hp <= 55 and inventory.has("potion-healing"):
-		execute_party_auto_heal(55)
 
 func heal(amount: int) -> void:
 	hero_hp = min(hero_max_hp, hero_hp + amount)
@@ -635,8 +633,6 @@ func damage_party_member(target_id_or_name: String, amount: int) -> void:
 			if m["hp"] <= 0:
 				apply_status_effect(m.get("name"), "unconscious")
 				check_party_defeat()
-			elif m["hp"] <= 55 and inventory.has("potion-healing"):
-				execute_party_auto_heal(55)
 			break
 
 func heal_party_member(target_id_or_name: String, amount: int) -> void:
@@ -820,13 +816,20 @@ func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) ->
 	hero_damaged.emit(hero_hp, hero_max_hp)
 	log_message("system", "⚔️ [TRIO DEPLOYED] 3 Hero Fighters (100 HP each, 50 Potions each in toolbelts) enter the fray!")
 
-func execute_party_auto_heal(threshold_hp: int = 55) -> Dictionary:
+func execute_party_auto_heal(threshold_hp: int = 55, preferred_target: String = "") -> Dictionary:
 	var injured_member: Dictionary = {}
-	for m in party_members:
-		var cur_hp = int(m.get("hp", 0))
-		if cur_hp > 0 and cur_hp <= threshold_hp:
-			injured_member = m
-			break
+	if preferred_target != "":
+		for m in party_members:
+			if (m.get("id") == preferred_target or m.get("name") == preferred_target) and int(m.get("hp", 0)) > 0 and int(m.get("hp", 0)) <= threshold_hp:
+				injured_member = m
+				break
+
+	if injured_member.is_empty():
+		for m in party_members:
+			var cur_hp = int(m.get("hp", 0))
+			if cur_hp > 0 and cur_hp <= threshold_hp:
+				injured_member = m
+				break
 
 	if injured_member.is_empty():
 		return {"healed": false, "reason": "No party member below HP threshold"}
@@ -875,6 +878,8 @@ func execute_party_auto_heal(threshold_hp: int = 55) -> Dictionary:
 		"healed": true,
 		"target": t_name,
 		"healed_amount": heal_roll,
+		"target_hp_before": prev_hp,
+		"target_hp_after": new_hp,
 		"current_hp": new_hp,
 		"max_hp": max_hp,
 		"potions_remaining": potions_left

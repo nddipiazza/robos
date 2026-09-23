@@ -3,6 +3,8 @@ class_name HeroPlayer
 
 const Pathfinder = preload("res://scripts/Pathfinder.gd")
 
+signal attack_finished(target_node: Node2D)
+
 @export var move_speed: float = 220.0
 
 @onready var sprite: Sprite2D = $Sprite
@@ -159,7 +161,7 @@ func play_hit_reaction() -> void:
 	tw.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
 	tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
 
-func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable()) -> void:
+func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking:
 		return
 	is_attacking = true
@@ -172,6 +174,7 @@ func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable()) ->
 		is_attacking = false
 		if on_hit_callback.is_valid():
 			on_hit_callback.call()
+		attack_finished.emit(target_node)
 		return
 
 	# Dynamic lunge toward target during swing (2x deliberate pacing)
@@ -201,6 +204,7 @@ func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable()) ->
 		sprite.texture = idle_textures[0]
 	sprite.position = orig_pos
 	is_attacking = false
+	attack_finished.emit(target_node)
 
 func _spawn_slash_vfx(hit_pos: Vector2) -> void:
 	var slash_tex = load("res://assets/props/slash_effect.png")
@@ -219,7 +223,20 @@ func _spawn_slash_vfx(hit_pos: Vector2) -> void:
 	tw.parallel().tween_property(slash_node, "modulate:a", 0.0, 0.38)
 	tw.tween_callback(slash_node.queue_free)
 
-func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callable()) -> void:
+func attack_target(target_node: Node2D, on_hit_callback: Callable = Callable()) -> void:
+	if not target_node or not is_instance_valid(target_node):
+		return
+	var weapon = GameState.equipped_weapon
+	var is_ranged = (weapon == "hunting-bow" or weapon == "shortbow" or weapon == "longbow" or weapon == "light-crossbow" or weapon == "heavy-crossbow")
+
+	if is_ranged:
+		play_ranged_attack(target_node.global_position, on_hit_callback, target_node)
+	else:
+		approach_and_interact(target_node.global_position, 65.0, func():
+			play_attack(target_node.global_position, on_hit_callback, target_node)
+		)
+
+func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking:
 		return
 	is_attacking = true
@@ -266,6 +283,7 @@ func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callabl
 	if idle_textures.size() > 0:
 		sprite.texture = idle_textures[0]
 	is_attacking = false
+	attack_finished.emit(target_node)
 
 func _spawn_ranged_impact_vfx(hit_pos: Vector2) -> void:
 	var spark = Node2D.new()
@@ -521,7 +539,8 @@ func approach_and_interact(target_pos: Vector2, interact_range: float, on_reache
 			on_reached.call()
 	else:
 		var dir = (global_position - target_pos).normalized()
-		var dest = target_pos + dir * max(10.0, interact_range - 15.0)
+		if dir == Vector2.ZERO: dir = Vector2(-1, 0)
+		var dest = target_pos + dir * max(45.0, interact_range - 10.0)
 		move_to_point(dest, func():
 			_update_facing(target_pos)
 			if on_reached.is_valid():
@@ -677,14 +696,14 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 	elif target_position != Vector2.ZERO:
 		var dist = global_position.distance_to(target_position)
-		if dist > 14.0:
+		if dist > 18.0:
 			velocity = global_position.direction_to(target_position) * move_speed
 			move_and_slide()
 
 			if get_slide_collision_count() > 0:
-				if get_real_velocity().length() < 15.0 and dist > 24.0:
+				if get_real_velocity().length() < 15.0:
 					stuck_timer += delta
-					if stuck_timer > 0.4:
+					if stuck_timer > 0.3:
 						if waypoint_queue.size() > 0:
 							if path_visualizer and path_visualizer.has_method("spawn_arrival_burst"):
 								path_visualizer.spawn_arrival_burst(target_position, Color(0.2, 0.9, 1.0, 0.9))

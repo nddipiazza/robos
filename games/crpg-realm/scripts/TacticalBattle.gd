@@ -13,7 +13,15 @@ const DefeatScreen = preload("res://scripts/DefeatScreen.gd")
 @onready var elora: PartyCompanion = get_node_or_null("CompanionElora")
 @onready var thrumbar: PartyCompanion = get_node_or_null("CompanionThrumbar")
 
+enum CombatMode { REAL_TIME, ROUND_BASED }
+@export var combat_mode: CombatMode = CombatMode.REAL_TIME
+
 var enemies: Dictionary = {} # id -> TacticalEnemy
+var combat_round_index: int = 0
+var round_history: Array[Dictionary] = []
+
+signal combat_round_started(round_number: int)
+signal combat_round_completed(round_number: int, summary: Dictionary)
 
 func _ready() -> void:
 	print("[TacticalBattle] Battlefield loaded (1920x1080 Arena).")
@@ -101,16 +109,24 @@ func execute_hero_attack_on_enemy(enemy_id: String) -> Dictionary:
 	if not target_enemy or not is_instance_valid(target_enemy) or target_enemy.current_state == TacticalEnemy.State.DEAD:
 		return {"success": false, "error": "Invalid target enemy"}
 
-	_show_notice("⚔️ Hero Vance strikes %s!" % target_enemy.enemy_name)
-	var ac = target_enemy.armor_class
-	var atk_bonus = 10
-	var dmg_min = 30
-	var dmg_max = 32
-	var res = combat_mgr.execute_attack(GameState.hero_name, atk_bonus, dmg_min, dmg_max, target_enemy.enemy_name, ac, target_enemy.global_position)
+	_show_notice("⚔️ Hero Vance approaches and strikes %s!" % target_enemy.enemy_name)
+	var attack_result = {"hit": true, "damage": 0}
 
-	var damage_dealt = clamp(res.damage if (res.hit and res.damage > 0) else randi_range(30, 32), 30, 32)
-	target_enemy.take_damage(damage_dealt, hero)
-	return res
+	var on_strike = func():
+		var ac = target_enemy.armor_class
+		var atk_bonus = 10
+		var dmg_min = 16
+		var dmg_max = 24
+		var res = combat_mgr.execute_attack(GameState.hero_name, atk_bonus, dmg_min, dmg_max, target_enemy.enemy_name, ac, target_enemy.global_position)
+		var damage_dealt = res.damage if (res.hit and res.damage > 0) else randi_range(16, 24)
+		attack_result = res
+		attack_result["damage"] = damage_dealt
+		target_enemy.take_damage(damage_dealt, hero)
+		return res
+
+	hero.attack_target(target_enemy, on_strike)
+	await hero.attack_finished
+	return attack_result
 
 func execute_companion_attack_on_enemy(companion_id: String, enemy_id: String) -> Dictionary:
 	var target_enemy = enemies.get(enemy_id)
@@ -119,18 +135,20 @@ func execute_companion_attack_on_enemy(companion_id: String, enemy_id: String) -
 
 	var comp_node: PartyCompanion = null
 	var comp_name = "Companion"
-	if companion_id == "elora" and elora:
+	var lower_id = companion_id.to_lower()
+	if (lower_id in ["elora", "garrick", "sergeant garrick"]) and elora:
 		comp_node = elora
-		comp_name = "Elora"
-	elif companion_id == "thrumbar" and thrumbar:
+		comp_name = elora.companion_name
+	elif (lower_id in ["thrumbar", "brutus", "corporal brutus"]) and thrumbar:
 		comp_node = thrumbar
-		comp_name = "Thrumbar"
+		comp_name = thrumbar.companion_name
 
 	if not comp_node:
 		return {"success": false, "error": "Companion not found"}
 
-	_show_notice("🏹 %s attacks %s!" % [comp_name, target_enemy.enemy_name])
+	_show_notice("⚔️ %s approaches and strikes %s!" % [comp_name, target_enemy.enemy_name])
 	comp_node.attack_target(target_enemy)
+	await comp_node.attack_finished
 	return {"success": true, "companion": comp_name, "target": enemy_id}
 
 func execute_taunt_on_enemy(source_name: String, enemy_id: String) -> Dictionary:
@@ -317,11 +335,13 @@ func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, poti
 	if elora and is_instance_valid(elora):
 		elora.companion_id = "garrick"
 		elora.companion_name = "Sergeant Garrick"
+		elora.follow_target = null
 		elora._update_overhead_ui()
 
 	if thrumbar and is_instance_valid(thrumbar):
 		thrumbar.companion_id = "brutus"
 		thrumbar.companion_name = "Corporal Brutus"
+		thrumbar.follow_target = null
 		thrumbar._update_overhead_ui()
 
 	var golem_configs = [
@@ -362,6 +382,7 @@ func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, poti
 			e.move_speed = 70.0
 			e.is_ranged = false
 			e.current_state = TacticalEnemy.State.PATROL
+			e.waypoints.clear()
 			e.global_position = cfg.pos
 			e.sprite_scale = Vector2(0.55, 0.55)
 			e.sprite_texture_path = "res://assets/sprites/enemies/minotaur.png"
@@ -370,6 +391,27 @@ func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, poti
 			new_enemies[cfg.new_id] = e
 
 	enemies = new_enemies
+	combat_mode = CombatMode.ROUND_BASED
+
+	# Link pack friends across all golems for coordinated Infinity Engine social aggro
+	for eid in new_enemies:
+		var g_node = new_enemies[eid]
+		var f_list: Array[String] = []
+		for other_id in new_enemies:
+			if other_id != eid:
+				f_list.append(other_id)
+		g_node.friends = f_list
+
+	if hero and is_instance_valid(hero):
+		if elora and is_instance_valid(elora):
+			hero.add_collision_exception_with(elora)
+			elora.add_collision_exception_with(hero)
+		if thrumbar and is_instance_valid(thrumbar):
+			hero.add_collision_exception_with(thrumbar)
+			thrumbar.add_collision_exception_with(hero)
+	if elora and is_instance_valid(elora) and thrumbar and is_instance_valid(thrumbar):
+		elora.add_collision_exception_with(thrumbar)
+		thrumbar.add_collision_exception_with(elora)
 
 	if hud:
 		hud.update_display("Golem Attrition Battle: 3 Fighters vs 3 Ancient Stone Golems")
@@ -393,67 +435,254 @@ func execute_fighter_maneuver(fighter_name: String, maneuver_id: String, target_
 		if target_node:
 			target_name = target_node.enemy_name
 
-	var res = combat_mgr.execute_fighter_ability(fighter_name, maneuver_id, target_name, target_node)
+	if maneuver_id == "tremor-stomp" and target_node and hero:
+		var reached = false
+		hero.approach_and_interact(target_node.global_position, 65.0, func():
+			reached = true
+		)
+		var t_left = 3.5
+		while not reached and hero.global_position.distance_to(target_node.global_position) > 65.0 and t_left > 0.0:
+			await get_tree().process_frame
+			t_left -= get_process_delta_time()
+		hero._update_facing(target_node.global_position)
+		hero.play_attack(target_node.global_position, func(): pass, target_node)
+		await get_tree().create_timer(0.35).timeout
+	elif maneuver_id == "crushing-cleave" and target_node and elora:
+		elora.is_performing_action = true
+		var d = elora.global_position.distance_to(target_node.global_position)
+		if d > 60.0:
+			var dir = (target_node.global_position - elora.global_position).normalized()
+			var approach_dest = target_node.global_position - dir * 55.0
+			elora.sprite.flip_h = (dir.x < 0)
+			var tw_move = create_tween()
+			var move_dur = clamp(elora.global_position.distance_to(approach_dest) / elora.move_speed, 0.35, 1.4)
+			tw_move.tween_property(elora, "global_position", approach_dest, move_dur)
+			await tw_move.finished
+		elora.sprite.flip_h = (target_node.global_position.x < elora.global_position.x)
+		var orig_pos = elora.sprite.position
+		var lunge_dir = elora.global_position.direction_to(target_node.global_position)
+		var tw = create_tween()
+		tw.tween_property(elora.sprite, "position", orig_pos + lunge_dir * 18.0, 0.16)
+		tw.tween_property(elora.sprite, "position", orig_pos, 0.20)
+		if AudioManager:
+			AudioManager.play_sfx("melee_swing")
+		await tw.finished
+		elora.is_performing_action = false
+	elif maneuver_id == "rallying-stomp" and thrumbar:
+		var orig_pos = thrumbar.sprite.position
+		var tw = create_tween()
+		tw.tween_property(thrumbar.sprite, "position", orig_pos + Vector2(0, -14), 0.14)
+		tw.tween_property(thrumbar.sprite, "position", orig_pos, 0.18)
+		if AudioManager:
+			AudioManager.play_sfx("melee_hit")
+		await tw.finished
+
+	var attacker_node: Node2D = null
+	var f_lower = fighter_name.to_lower()
+	if f_lower in ["commander vance", "lieutenant vance", "vance", "hero"]:
+		attacker_node = hero
+	elif f_lower in ["sergeant garrick", "garrick", "elora"]:
+		attacker_node = elora
+	elif f_lower in ["corporal brutus", "brutus", "thrumbar"]:
+		attacker_node = thrumbar
+
+	var res = combat_mgr.execute_fighter_ability(fighter_name, maneuver_id, target_name, target_node, attacker_node)
 	_show_notice("⚡ %s unleashes %s!" % [fighter_name, maneuver_id.capitalize().replace("-", " ")])
 	return res
 
-func execute_golems_assault_round() -> Dictionary:
-	var round_hits: Array[Dictionary] = []
+func execute_combat_round() -> Dictionary:
+	combat_round_index += 1
+	combat_round_started.emit(combat_round_index)
+	_show_notice("⚔️ [ROUND %d] Ancient Stone Golems advance and strike!" % combat_round_index)
+	GameState.log_message("combat", "⚔️ [b]COMBAT ROUND %d INITIATED[/b]" % combat_round_index)
+
+	var initial_hp = {}
+	for m in GameState.party_members:
+		initial_hp[str(m.get("name", "Fighter"))] = int(m.get("hp", 0))
+
+	var attacks: Array[Dictionary] = []
+	var heals: Array[Dictionary] = []
+
 	var targets = [
 		{"node": hero, "name": GameState.hero_name, "id": "hero"},
 		{"node": elora, "name": "Sergeant Garrick", "id": "garrick"},
 		{"node": thrumbar, "name": "Corporal Brutus", "id": "brutus"}
 	]
 
-	var idx = 0
-	for eid in enemies:
-		var e: TacticalEnemy = enemies[eid]
-		if not is_instance_valid(e) or e.current_state == TacticalEnemy.State.DEAD:
+	var g_keys = ["golem_alpha", "golem_beta", "golem_gamma"]
+	for i in range(g_keys.size()):
+		var eid = g_keys[i]
+		var golem: TacticalEnemy = enemies.get(eid)
+		if not golem or not is_instance_valid(golem) or golem.current_state == TacticalEnemy.State.DEAD:
 			continue
 
-		var tgt = targets[idx % targets.size()]
-		idx += 1
+		var tgt_node: Node2D = null
+		var tgt_name: String = ""
+		var tgt_id: String = ""
 
-		# Golem attacks target with balanced attack roll
+		# Dynamic target selection: if golem has an active aggro target from threat/friends, engage it
+		if golem.current_target and is_instance_valid(golem.current_target):
+			tgt_node = golem.current_target
+			tgt_name = golem.current_target_name
+			if tgt_node == hero:
+				tgt_id = "hero"
+			elif tgt_node == elora:
+				tgt_id = "garrick"
+			elif tgt_node == thrumbar:
+				tgt_id = "brutus"
+			else:
+				tgt_id = tgt_node.name
+		else:
+			var default_tgt = targets[i % targets.size()]
+			tgt_node = default_tgt.node
+			tgt_name = default_tgt.name
+			tgt_id = default_tgt.id
+
+		if not tgt_node or not is_instance_valid(tgt_node):
+			continue
+
+		# 1. Golem approaches target if not within 70px
+		var d = golem.global_position.distance_to(tgt_node.global_position)
+		if d > 70.0:
+			var dir = (tgt_node.global_position - golem.global_position).normalized()
+			var approach_dest = tgt_node.global_position - dir * 55.0
+			var tw_move = create_tween()
+			var move_dur = clamp(golem.global_position.distance_to(approach_dest) / golem.move_speed, 0.35, 1.1)
+			tw_move.tween_property(golem, "global_position", approach_dest, move_dur)
+			await tw_move.finished
+
+		# 2. Golem faces target
+		golem.sprite.flip_h = (tgt_node.global_position.x < golem.global_position.x)
+
+		# 3. Golem strikes with deliberate lunge animation
+		var orig_pos = golem.sprite.position
+		var lunge_dir = golem.global_position.direction_to(tgt_node.global_position)
+		var tw_strike = create_tween()
+		tw_strike.tween_property(golem.sprite, "position", orig_pos + lunge_dir * 16.0, 0.16)
+		tw_strike.tween_property(golem.sprite, "position", orig_pos, 0.20)
+
+		if AudioManager:
+			AudioManager.play_sfx("melee_swing")
+
+		await tw_strike.finished
+
+		# 4. Attack roll & damage
 		var d20 = randi_range(14, 19)
-		var total_atk = d20 + e.attack_bonus
+		var total_atk = d20 + golem.attack_bonus
 		var target_ac = 18
 		var hit = total_atk >= target_ac
 		var dmg = 0
 
+		var hp_before = 0
+		if tgt_id == "hero":
+			hp_before = GameState.hero_hp
+		else:
+			for m in GameState.party_members:
+				if m.get("name") == tgt_name:
+					hp_before = int(m.get("hp", 0))
+					break
+
 		if hit:
-			dmg = randi_range(e.damage_min, e.damage_max) # 4 to 8 damage
-			GameState.log_message("combat", "%s strikes %s with heavy stone slam! [d20: %d + %d = %d vs AC %d] HIT for %d damage!" % [
-				e.enemy_name, tgt.name, d20, e.attack_bonus, total_atk, target_ac, dmg
+			dmg = randi_range(golem.damage_min, golem.damage_max) # 4 to 8 damage
+			if AudioManager:
+				AudioManager.play_sfx("melee_hit")
+
+			GameState.log_message("combat", "💥 %s strikes %s! [d20: %d + %d = %d vs AC %d] HIT for %d damage!" % [
+				golem.enemy_name, tgt_name, d20, golem.attack_bonus, total_atk, target_ac, dmg
 			])
-			if tgt.id == "hero":
+
+			if tgt_id == "hero":
 				GameState.take_damage(dmg)
 			else:
-				GameState.damage_party_member(tgt.name, dmg)
+				GameState.damage_party_member(tgt_name, dmg)
 
-			if FloatingTextManager and tgt.node and is_instance_valid(tgt.node):
-				FloatingTextManager.spawn_damage(tgt.node.global_position, dmg)
-			if tgt.node and tgt.node.has_method("play_hit_reaction"):
-				tgt.node.play_hit_reaction()
+			if FloatingTextManager and is_instance_valid(tgt_node):
+				FloatingTextManager.spawn_damage(tgt_node.global_position, dmg)
+			if tgt_node.has_method("play_hit_reaction"):
+				tgt_node.play_hit_reaction()
 		else:
-			GameState.log_message("combat", "%s swings heavy stone fist at %s [d20: %d + %d = %d vs AC %d] - DEFLECTED!" % [
-				e.enemy_name, tgt.name, d20, e.attack_bonus, total_atk, target_ac
+			GameState.log_message("combat", "🛡️ %s swings heavy stone fist at %s [d20: %d + %d = %d vs AC %d] - DEFLECTED!" % [
+				golem.enemy_name, tgt_name, d20, golem.attack_bonus, total_atk, target_ac
 			])
-			if FloatingTextManager and tgt.node and is_instance_valid(tgt.node):
-				FloatingTextManager.spawn_miss(tgt.node.global_position)
+			if FloatingTextManager and is_instance_valid(tgt_node):
+				FloatingTextManager.spawn_miss(tgt_node.global_position)
 
-		round_hits.append({
-			"golem": e.enemy_name,
-			"target": tgt.name,
+		var hp_after = 0
+		if tgt_id == "hero":
+			hp_after = GameState.hero_hp
+		else:
+			for m in GameState.party_members:
+				if m.get("name") == tgt_name:
+					hp_after = int(m.get("hp", 0))
+					break
+
+		var atk_record = {
+			"round": combat_round_index,
+			"attacker": golem.enemy_name,
+			"attacker_id": golem.enemy_id,
+			"target": tgt_name,
+			"target_id": tgt_id,
+			"d20": d20,
+			"attack_bonus": golem.attack_bonus,
+			"total_attack": total_atk,
+			"target_ac": target_ac,
 			"hit": hit,
-			"damage": dmg
-		})
+			"damage": dmg,
+			"target_hp_before": hp_before,
+			"target_hp_after": hp_after
+		}
+		attacks.append(atk_record)
 
-	return {
-		"success": true,
-		"assault_results": round_hits,
-		"party_members": GameState.party_members,
+		# Deliberate pause between golem strikes (0.6s) so each attack is visible and clean
+		await get_tree().create_timer(0.6).timeout
+
+	# 5. Check autonomous AI healing for party members <= 55 HP
+	for m in GameState.party_members:
+		var cur_hp = int(m.get("hp", 0))
+		if cur_hp > 0 and cur_hp <= 55 and GameState.inventory.has("potion-healing"):
+			var heal_res = GameState.execute_party_auto_heal(55, str(m.get("name", "")))
+			if heal_res.get("healed", false):
+				heals.append(heal_res)
+				await get_tree().create_timer(0.4).timeout
+
+	var final_hp = {}
+	for m in GameState.party_members:
+		final_hp[str(m.get("name", "Fighter"))] = int(m.get("hp", 0))
+
+	var total_dmg = 0
+	for a in attacks:
+		total_dmg += a.get("damage", 0)
+
+	var summary = {
+		"round_number": combat_round_index,
+		"attacks": attacks,
+		"heals": heals,
+		"initial_party_hp": initial_hp,
+		"final_party_hp": final_hp,
+		"total_damage_taken": total_dmg,
+		"potions_used": heals.size(),
 		"potions_remaining": GameState.inventory.count("potion-healing"),
 		"party_wiped": GameState.is_party_defeated
+	}
+	round_history.append(summary)
+	combat_round_completed.emit(combat_round_index, summary)
+	return summary
+
+func execute_golems_assault_round() -> Dictionary:
+	return await execute_combat_round()
+
+func get_round_stats(round_num: int = -1) -> Dictionary:
+	if round_history.is_empty():
+		return {}
+	if round_num <= 0 or round_num > round_history.size():
+		return round_history.back()
+	return round_history[round_num - 1]
+
+func get_combat_telemetry() -> Dictionary:
+	return {
+		"current_round": combat_round_index,
+		"total_rounds": round_history.size(),
+		"latest_round": round_history.back() if not round_history.is_empty() else {},
+		"rounds": round_history
 	}
 

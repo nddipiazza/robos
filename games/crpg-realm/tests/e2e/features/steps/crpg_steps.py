@@ -860,10 +860,17 @@ def step_check_enemy_hp(context, enemy_id, hp):
     assert found.get("hp", 0) == hp, f"Expected enemy '{enemy_id}' HP == {hp}, got {found.get('hp')}"
 
 @then('the enemy "{enemy_id}" target is "{target_name}"')
+@then('enemy "{enemy_id}" target is "{target_name}"')
 def step_check_enemy_target(context, enemy_id, target_name):
-    state = api_get(context.web_port, "/api/v1/state")
-    enemies = state.get("battle", {}).get("enemies", [])
-    found = next((e for e in enemies if e.get("id") == enemy_id), None)
+    start_t = time.time()
+    found = None
+    while time.time() - start_t < 3.0:
+        state = api_get(context.web_port, "/api/v1/state")
+        enemies = state.get("battle", {}).get("enemies", [])
+        found = next((e for e in enemies if e.get("id") == enemy_id), None)
+        if found and found.get("current_target", "").lower() == target_name.lower():
+            break
+        time.sleep(0.15)
     assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
     actual_target = found.get("current_target", "")
     assert actual_target.lower() == target_name.lower(), (
@@ -1107,6 +1114,7 @@ def step_check_enemy_aggravated(context, enemy_id, target_name):
         f"Expected enemy '{enemy_id}' to be aggravated (CHASE/ATTACK), got {actual_state}"
     )
 
+@then('linked pack friend "{friend_id}" also auto-aggravates on "{target_name}"')
 @then('close pack friend "{friend_id}" also aggros on "{target_name}"')
 def step_check_close_friend_aggros(context, friend_id, target_name):
     start_t = time.time()
@@ -1360,8 +1368,10 @@ def step_check_fighters_hp_potions(context, count, hp, potions):
     total_potions = state.get("inventory", []).count("potion-healing")
     assert total_potions >= count * potions, f"Expected total potions >= {count * potions}, got {total_potions}"
 
+@when('hero "{hero_name}" approaches and unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
 @when('hero "{hero_name}" unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
 def step_hero_unleashes_ability_on_enemy(context, hero_name, ability_id, enemy_id):
+    context.last_attack_target = enemy_id
     res = api_post(context.web_port, "/api/v1/action", {
         "action": "use_fighter_ability",
         "args": {
@@ -1371,7 +1381,19 @@ def step_hero_unleashes_ability_on_enemy(context, hero_name, ability_id, enemy_i
         }
     })
     assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
-    time.sleep(0.8)
+    time.sleep(0.5)
+
+@then('the hero physically moves into melee range before striking')
+def step_hero_in_melee_range(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    hero_pos = state.get("hero", {}).get("position", [0.0, 0.0])
+    target_id = getattr(context, "last_attack_target", "golem_alpha")
+    enemies = state.get("battle", {}).get("enemies", [])
+    target_enemy = next((e for e in enemies if e.get("id") == target_id), None)
+    assert target_enemy is not None, f"Enemy '{target_id}' not found in {enemies}"
+    enemy_pos = target_enemy.get("position", [0.0, 0.0])
+    dist = math.dist(hero_pos, enemy_pos)
+    assert dist <= 75.0, f"Expected hero to be in melee range (<= 75px), but distance is {dist:.1f}px (hero: {hero_pos}, enemy: {enemy_pos})"
 
 @then('enemy "{enemy_id}" is knocked prone granting advantage')
 def step_check_enemy_prone(context, enemy_id):
@@ -1388,8 +1410,11 @@ def step_check_enemy_prone(context, enemy_id):
     has_log_prone = "prone" in log_text.lower() or any("prone" in m.lower() for m in history)
     assert found_prone or has_log_prone, f"Expected enemy '{enemy_id}' to be prone. Status: {status_effects}"
 
+@when('companion "{comp_name}" approaches and unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
 @when('companion "{comp_name}" unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
 def step_companion_unleashes_ability_on_enemy(context, comp_name, ability_id, enemy_id):
+    context.last_comp_attack_target = enemy_id
+    context.last_comp_name = comp_name
     res = api_post(context.web_port, "/api/v1/action", {
         "action": "use_fighter_ability",
         "args": {
@@ -1399,7 +1424,22 @@ def step_companion_unleashes_ability_on_enemy(context, comp_name, ability_id, en
         }
     })
     assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
-    time.sleep(0.8)
+    time.sleep(0.5)
+
+@then('companion "{comp_name}" physically moves into melee range before striking')
+def step_companion_in_melee_range(context, comp_name):
+    state = api_get(context.web_port, "/api/v1/state")
+    party = state.get("party_members", [])
+    comp = next((m for m in party if m.get("name") == comp_name or comp_name.lower() in m.get("id", "").lower()), None)
+    assert comp is not None, f"Companion '{comp_name}' not found in party {party}"
+    comp_pos = comp.get("position", [0.0, 0.0])
+    target_id = getattr(context, "last_comp_attack_target", "golem_beta")
+    enemies = state.get("battle", {}).get("enemies", [])
+    target_enemy = next((e for e in enemies if e.get("id") == target_id), None)
+    assert target_enemy is not None, f"Enemy '{target_id}' not found in {enemies}"
+    enemy_pos = target_enemy.get("position", [0.0, 0.0])
+    dist = math.dist(comp_pos, enemy_pos)
+    assert dist <= 75.0, f"Expected companion '{comp_name}' to be in melee range (<= 75px), but distance is {dist:.1f}px (comp: {comp_pos}, enemy: {enemy_pos})"
 
 @when('companion "{comp_name}" unleashes fighter ability "{ability_id}"')
 def step_companion_unleashes_ability_self(context, comp_name, ability_id):
@@ -1411,39 +1451,114 @@ def step_companion_unleashes_ability_self(context, comp_name, ability_id):
         }
     })
     assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
-    time.sleep(0.8)
-
-@when('the 3 golems attack the fighter party across multiple combat rounds')
-def step_golems_attack_party(context):
-    for round_num in range(8):
-        api_post(context.web_port, "/api/v1/action", {
-            "action": "simulate_golem_assault",
-            "args": {}
-        })
-        time.sleep(0.3)
     time.sleep(0.5)
 
-@then('the party fighters suffer damage from the golems')
-def step_party_suffers_damage(context):
-    state = api_get(context.web_port, "/api/v1/state")
-    history = [e.get("message", "") for e in state.get("activity_log", [])]
-    damage_logged = any("damage" in m.lower() or "hit" in m.lower() for m in history)
-    assert damage_logged, f"Expected damage logs from golems. Recent history: {history[-10:]}"
-
-@when('the autonomous party AI monitors party member health')
-def step_party_ai_monitors_health(context):
+@when('combat round {round_num:d} is fought between the golems and the fighters')
+def step_fight_combat_round(context, round_num):
     res = api_post(context.web_port, "/api/v1/action", {
-        "action": "trigger_auto_heal",
-        "args": {"threshold": 95}
+        "action": "execute_combat_round",
+        "args": {"round": round_num}
     })
+    assert res.get("success") is True, f"Failed to execute combat round {round_num}: {res}"
+    context.last_combat_round = res.get("round", {})
     time.sleep(0.5)
+
+@then('the combat telemetry records hooked round {round_num:d} events')
+def step_verify_telemetry_round(context, round_num):
+    stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+    rounds = stats.get("rounds", [])
+    found = next((r for r in rounds if r.get("round_number") == round_num), None)
+    if not found and getattr(context, "last_combat_round", None):
+        if context.last_combat_round.get("round_number") == round_num:
+            found = context.last_combat_round
+    assert found is not None, f"Round {round_num} telemetry not found in {stats}"
+    assert len(found.get("attacks", [])) >= 3, f"Expected at least 3 golem attacks in round {round_num}, got {found.get('attacks')}"
+    context.active_round_summary = found
+
+@then('each golem strike deals between {min_dmg:d} and {max_dmg:d} damage on hit')
+def step_verify_golem_damage_range(context, min_dmg, max_dmg):
+    summary = getattr(context, "active_round_summary", None)
+    assert summary is not None, "No active round summary found in context"
+    attacks = summary.get("attacks", [])
+    for a in attacks:
+        if a.get("hit", False):
+            dmg = a.get("damage", 0)
+            assert min_dmg <= dmg <= max_dmg, f"Damage {dmg} not in range [{min_dmg}, {max_dmg}] for attack {a}"
+
+@then('the hero fighters lose the exact amount of health matching the recorded damage')
+def step_verify_exact_hp_loss(context):
+    summary = getattr(context, "active_round_summary", None)
+    assert summary is not None, "No active round summary found in context"
+    attacks = summary.get("attacks", [])
+    for a in attacks:
+        hp_before = a.get("target_hp_before", 0)
+        hp_after = a.get("target_hp_after", 0)
+        dmg = a.get("damage", 0)
+        assert hp_after == hp_before - dmg, f"Math mismatch: {hp_after} != {hp_before} - {dmg} in {a}"
+
+    initial_hp = summary.get("initial_party_hp", {})
+    final_hp = summary.get("final_party_hp", {})
+    dmg_per_target = {}
+    for a in attacks:
+        t_name = a.get("target")
+        dmg_per_target[t_name] = dmg_per_target.get(t_name, 0) + a.get("damage", 0)
+
+    for t_name, total_dmg in dmg_per_target.items():
+        init_val = initial_hp.get(t_name, 100)
+        final_val = final_hp.get(t_name, init_val)
+        assert final_val == init_val - total_dmg, (
+            f"Cumulative damage mismatch for {t_name}: {final_val} != {init_val} - {total_dmg}"
+        )
+
+    state = api_get(context.web_port, "/api/v1/state")
+    current_party_hp = {m.get("name"): m.get("hp") for m in state.get("party_members", [])}
+    for m_name, f_hp in final_hp.items():
+        if m_name in current_party_hp:
+            assert current_party_hp[m_name] == f_hp, (
+                f"Party member {m_name} HP {current_party_hp[m_name]} does not match final round telemetry {f_hp}"
+            )
+
+@when('combat rounds are fought until party health drops below {threshold:d} HP')
+def step_fight_rounds_until_low_hp(context, threshold):
+    max_rounds = 10
+    rounds_executed = 0
+    while rounds_executed < max_rounds:
+        stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+        has_heals = any(len(r.get("heals", [])) > 0 for r in stats.get("rounds", []))
+        if has_heals:
+            break
+        state = api_get(context.web_port, "/api/v1/state")
+        party = state.get("party_members", [])
+        any_low = any(0 < int(m.get("hp", 0)) <= threshold for m in party[:3])
+        if any_low:
+            break
+        api_post(context.web_port, "/api/v1/action", {"action": "execute_combat_round"})
+        rounds_executed += 1
+        time.sleep(0.4)
 
 @then('the autonomous party AI automatically administers healing potions from their toolbelts')
 def step_check_auto_heal_administered(context):
     state = api_get(context.web_port, "/api/v1/state")
     history = [e.get("message", "") for e in state.get("activity_log", [])]
-    heal_logged = any("ai heal" in m.lower() or "drinks healing potion" in m.lower() for m in history)
-    assert heal_logged, f"Expected AI HEAL in history: {history[-15:]}"
+    heal_logged = any("ai heal" in m.lower() or "healing potion" in m.lower() for m in history)
+    stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+    has_heals = any(len(r.get("heals", [])) > 0 for r in stats.get("rounds", []))
+    assert heal_logged or has_heals, f"Expected AI heal in activity log or round telemetry. History: {history[-10:]}"
+
+@then('the hooked round events verify the health restoration and potion consumption')
+def step_verify_heals_telemetry(context):
+    stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+    all_heals = []
+    for r in stats.get("rounds", []):
+        all_heals.extend(r.get("heals", []))
+    assert len(all_heals) > 0, f"Expected hooked heal events in telemetry: {stats}"
+    for h in all_heals:
+        assert h.get("healed", False) is True
+        assert h.get("target_hp_after", 0) > h.get("target_hp_before", 0), f"Expected HP to increase after heal: {h}"
+    state = api_get(context.web_port, "/api/v1/state")
+    current_potions = state.get("inventory", []).count("potion-healing")
+    expected_potions = 150 - len(all_heals)
+    assert current_potions == expected_potions, f"Expected {expected_potions} potions left, got {current_potions}"
 
 @then('all 3 hero fighters are still alive and healthy')
 def step_all_fighters_alive(context):
