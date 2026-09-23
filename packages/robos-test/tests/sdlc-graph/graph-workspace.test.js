@@ -380,3 +380,30 @@ test('package context upgrades retain local terms and do not leave stale RDF sem
   assert.ok(saved['@context']['robos:relationshipEvidence']);
   assert.equal(ws.apply(ws.propose({ document: doc(ws, [node()]) })).changed, false);
 });
+
+test('edited evidence scope allows course updates beside unchanged legacy records', t => {
+  const { ws } = fixture(t);
+  const legacy = node('urn:example:project:legacy');
+  const course = node('urn:example:course:one', 'Course');
+  ws.apply(ws.propose({ document: doc(ws, [legacy, course]) }));
+  const evidence = [{ repository: 'https://github.com/example/course', path: 'course.json', revision: 'abc123', sha256: 'a'.repeat(64), line: 1 }];
+  const edits = [{ op: 'update', id: course['@id'], set: { 'dcterms:title': 'Revised course', 'robos:evidence': evidence } }];
+  const strict = ws.propose({ mode: 'refine', edits, requireEvidence: true });
+  assert.equal(strict.validation.conforms, false);
+  const proposal = ws.propose({ mode: 'refine', edits, requireEvidence: true, evidenceScope: 'edited' });
+  assert.deepEqual(proposal.validation.errors, []);
+  ws.apply(proposal, { expectedProposalId: proposal.id });
+  assert.equal(ws.read()['robos:nodes'].find(n => n['@id'] === course['@id'])['dcterms:title'], 'Revised course');
+  assert.deepEqual(ws.read()['robos:nodes'].find(n => n['@id'] === legacy['@id']), legacy);
+  for (const badEdits of [
+    [{ op: 'update', id: course['@id'], unset: ['robos:evidence'] }],
+    [{ op: 'add', node: node('urn:example:course:new') }],
+    [{ op: 'update', id: course['@id'], set: { 'robos:evidence': [{}] } }],
+    [{ op: 'update', id: course['@id'], set: { 'robos:related': { '@id': 'urn:example:missing' } } }],
+  ]) {
+    const bad = ws.propose({ mode: 'refine', edits: badEdits, requireEvidence: true, evidenceScope: 'edited' });
+    assert.equal(bad.validation.conforms, false);
+    assert.throws(() => ws.apply(bad), /Invalid graph/);
+  }
+  assert.throws(() => ws.propose({ document: doc(ws, []), evidenceScope: 'edited' }), /Evidence scope/);
+});
