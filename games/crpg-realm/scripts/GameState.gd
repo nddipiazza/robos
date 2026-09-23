@@ -8,6 +8,8 @@ signal settings_changed
 signal message_logged(category: String, message: String)
 signal party_changed
 signal party_selection_changed(indices: Array)
+signal party_leader_changed(leader_index: int, leader_data: Dictionary)
+signal party_formation_changed(formation_id: String)
 signal status_effects_changed(target_name: String)
 signal pause_toggled(is_paused: bool)
 signal gold_changed(current_gold: int)
@@ -30,6 +32,59 @@ var is_detecting_traps: bool = false
 var trap_pulse_accumulator: float = 0.0
 var party_members: Array[Dictionary] = []
 var selected_party_indices: Array[int] = [0]
+var party_leader_index: int = 0
+var current_formation: String = "rank"
+
+const FORMATIONS: Dictionary = {
+	"rank": [
+		Vector2(0, 0),
+		Vector2(48, 0),
+		Vector2(0, 48),
+		Vector2(48, 48),
+		Vector2(0, 96),
+		Vector2(48, 96)
+	],
+	"wedge": [
+		Vector2(0, 0),
+		Vector2(-48, 44),
+		Vector2(48, 44),
+		Vector2(-96, 88),
+		Vector2(96, 88),
+		Vector2(0, 75)
+	],
+	"line": [
+		Vector2(0, 0),
+		Vector2(48, 0),
+		Vector2(-48, 0),
+		Vector2(96, 0),
+		Vector2(-96, 0),
+		Vector2(144, 0)
+	],
+	"column": [
+		Vector2(0, 0),
+		Vector2(0, 48),
+		Vector2(0, 96),
+		Vector2(0, 144),
+		Vector2(0, 192),
+		Vector2(0, 240)
+	],
+	"square": [
+		Vector2(-35, 0),
+		Vector2(35, 0),
+		Vector2(-35, 70),
+		Vector2(35, 70),
+		Vector2(0, 35),
+		Vector2(0, 100)
+	],
+	"scatter": [
+		Vector2(0, 0),
+		Vector2(-70, 35),
+		Vector2(65, 50),
+		Vector2(-40, 85),
+		Vector2(80, 100),
+		Vector2(0, 120)
+	]
+}
 var status_effects: Dictionary = {}
 var status_durations: Dictionary = {}
 var status_tick_accumulator: float = 0.0
@@ -489,6 +544,180 @@ func get_selected_party_members() -> Array[Dictionary]:
 			res.append(party_members[idx])
 	return res
 
+func set_party_leader(idx: int) -> void:
+	if idx >= 0 and idx < party_members.size():
+		party_leader_index = idx
+		var leader_data = party_members[idx]
+		party_leader_changed.emit(party_leader_index, leader_data)
+		party_changed.emit()
+		log_message("system", "%s is now the party leader." % leader_data.get("name", "Companion"))
+
+func get_party_leader() -> Dictionary:
+	if party_leader_index >= 0 and party_leader_index < party_members.size():
+		return party_members[party_leader_index]
+	elif party_members.size() > 0:
+		return party_members[0]
+	return {}
+
+func set_party_formation(formation_id: String) -> void:
+	if FORMATIONS.has(formation_id):
+		current_formation = formation_id
+		party_formation_changed.emit(current_formation)
+		var form_title = formation_id.capitalize()
+		match formation_id:
+			"rank": form_title = "Rank & File"
+			"wedge": form_title = "Wedge (V-Formation)"
+			"line": form_title = "Shield Wall (Abreast)"
+			"column": form_title = "Marching Column"
+			"square": form_title = "Defensive Square"
+			"scatter": form_title = "Skirmish (Scatter)"
+		log_message("system", "Tactical Formation ordered: [%s]" % form_title)
+
+func get_party_formation() -> String:
+	return current_formation
+
+func get_formation_offsets(formation_id: String, count: int, travel_vector: Vector2) -> Array[Vector2]:
+	var base_list: Array = FORMATIONS.get(formation_id, FORMATIONS["rank"])
+	var delta_theta: float = 0.0
+	if travel_vector.length() > 0.001:
+		delta_theta = travel_vector.angle() + (PI / 2.0)
+	
+	var res: Array[Vector2] = []
+	for i in range(count):
+		var base_off = base_list[i] if i < base_list.size() else Vector2(0, 48 * i)
+		var rot_off = base_off.rotated(delta_theta)
+		res.append(rot_off)
+	return res
+
+func get_scene_party_nodes() -> Array[Node2D]:
+	var res: Array[Node2D] = []
+	var cur_sc = get_tree().current_scene
+	if not cur_sc:
+		return res
+
+	# Node 0 corresponds to HeroPlayer
+	var hero = cur_sc.get_node_or_null("HeroPlayer")
+	if not hero:
+		hero = cur_sc.find_child("HeroPlayer", true, false)
+	if hero and hero is Node2D:
+		res.append(hero)
+
+	# Companions matching party_members[1..n]
+	for idx in range(1, party_members.size()):
+		var m = party_members[idx]
+		var m_id = m.get("id", "").to_lower()
+		var m_name = m.get("name", "").to_lower()
+		var comp_node: Node2D = null
+
+		# 1) Search children for PartyCompanion matching companion_id or companion_name
+		for child in cur_sc.get_children():
+			if child is CharacterBody2D and not res.has(child):
+				var c_id = str(child.get("companion_id")).to_lower()
+				var c_name = str(child.get("companion_name")).to_lower()
+				if (c_id != "" and c_id == m_id) or (c_name != "" and c_name == m_name) or child.name.to_lower().contains(m_id) or child.name.to_lower().contains(m_name):
+					comp_node = child
+					break
+
+		# 2) Fallback name search
+		if not comp_node:
+			var candidates = [
+				m.get("id", ""),
+				m.get("name", ""),
+				"Companion" + m.get("name", ""),
+				"Companion" + m.get("id", "").capitalize(),
+				"PartyCompanion"
+			]
+			for c_name in candidates:
+				var found = cur_sc.find_child(c_name, true, false)
+				if found and found is Node2D and not res.has(found):
+					comp_node = found
+					break
+
+		# 3) Fallback: any unused companion node
+		if not comp_node:
+			for child in cur_sc.get_children():
+				if (child is PartyCompanion or (child.get_script() != null and "PartyCompanion" in str(child.get_script().resource_path))) and not res.has(child):
+					comp_node = child
+					break
+
+		if comp_node:
+			res.append(comp_node)
+
+	return res
+
+func get_leader_node() -> Node2D:
+	var nodes = get_scene_party_nodes()
+	if party_leader_index >= 0 and party_leader_index < nodes.size():
+		return nodes[party_leader_index]
+	elif nodes.size() > 0:
+		return nodes[0]
+	return null
+
+func move_party_formation(target_pos: Vector2, queue: bool = false) -> Dictionary:
+	var nodes = get_scene_party_nodes()
+	if nodes.is_empty():
+		return {"success": false, "error": "No party nodes found in scene"}
+
+	var leader = get_leader_node()
+	var leader_pos = leader.global_position if (leader and is_instance_valid(leader)) else Vector2.ZERO
+	var travel_vec = (target_pos - leader_pos).normalized()
+	if travel_vec.length() < 0.001:
+		travel_vec = Vector2(0, -1)
+
+	var offsets = get_formation_offsets(current_formation, max(nodes.size(), party_members.size()), travel_vec)
+	var rank_slot = 1
+	var dispatched: Array[Dictionary] = []
+
+	for idx in range(nodes.size()):
+		var node = nodes[idx]
+		if not is_instance_valid(node):
+			continue
+
+		var slot = 0
+		if idx == party_leader_index:
+			slot = 0
+		else:
+			slot = rank_slot
+			rank_slot += 1
+
+		var slot_offset = offsets[slot] if slot < offsets.size() else Vector2.ZERO
+		var slot_dest = target_pos + slot_offset
+
+		if queue:
+			if node.has_method("queue_move_point"):
+				node.queue_move_point(slot_dest)
+			elif node.has_method("move_to"):
+				node.move_to(slot_dest)
+		else:
+			if node.has_method("move_to_point"):
+				node.move_to_point(slot_dest)
+			elif node.has_method("move_to"):
+				node.move_to(slot_dest)
+
+		dispatched.append({
+			"index": idx,
+			"slot": slot,
+			"node": node.name,
+			"target": [slot_dest.x, slot_dest.y],
+			"offset": [slot_offset.x, slot_offset.y]
+		})
+
+	# Show movement reticle if hero is in scene
+	var cur_sc = get_tree().current_scene
+	var hero = cur_sc.find_child("HeroPlayer", true, false) if cur_sc else null
+	if hero and hero.get("reticle"):
+		var ret = hero.get("reticle")
+		ret.global_position = target_pos
+		ret.visible = true
+
+	return {
+		"success": true,
+		"formation": current_formation,
+		"leader_index": party_leader_index,
+		"target": [target_pos.x, target_pos.y],
+		"dispatched": dispatched
+	}
+
 # ── Status Effects ────────────────────────────────────────────────────────────
 
 func apply_status_effect(target_name: String, effect_id: String, duration_rounds: int = 3) -> void:
@@ -737,8 +966,13 @@ func setup_tactical_party() -> void:
 				m["hp"] = m.get("max_hp", 20)
 				remove_status_effect("Thrumbar", "unconscious")
 
+	party_leader_index = 0
+	current_formation = "rank"
 	selected_party_indices = [0]
 	party_changed.emit()
+	if party_members.size() > 0:
+		party_leader_changed.emit(party_leader_index, party_members[0])
+	party_formation_changed.emit(current_formation)
 	party_selection_changed.emit(selected_party_indices)
 
 func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) -> void:

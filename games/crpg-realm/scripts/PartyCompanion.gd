@@ -107,8 +107,21 @@ func _on_selection_changed(indices: Array) -> void:
 	if selection_circle:
 		selection_circle.visible = is_selected
 
-func is_companion_selected() -> bool:
-	return GameState.selected_party_indices.has(get_party_index())
+func is_party_leader() -> bool:
+	return GameState.party_leader_index == get_party_index()
+
+func get_formation_rank_slot() -> int:
+	if is_party_leader():
+		return 0
+	var p_idx = get_party_index()
+	var slot = 1
+	for i in range(GameState.party_members.size()):
+		if i == GameState.party_leader_index:
+			continue
+		if i == p_idx:
+			return slot
+		slot += 1
+	return 1
 
 func _physics_process(delta: float) -> void:
 	if GameState.is_game_paused:
@@ -159,16 +172,24 @@ func _physics_process(delta: float) -> void:
 				var cb = pending_interact_callback
 				pending_interact_callback = Callable()
 				cb.call()
-	elif follow_target and is_instance_valid(follow_target) and not (get_tree().current_scene is TacticalBattle):
-		# Follow Hero in formation if companion is part of the party
-		var desired_pos = follow_target.global_position + formation_offset
-		var dist = global_position.distance_to(desired_pos)
-		if dist > 65.0:
-			var dir = (desired_pos - global_position).normalized()
-			velocity = dir * move_speed
-			sprite.flip_h = (dir.x < 0)
-			move_and_slide()
-			_animate_walk(delta)
+	elif not is_party_leader() and not (get_tree().current_scene is TacticalBattle):
+		var leader = GameState.get_leader_node()
+		if leader and is_instance_valid(leader) and leader != self:
+			var leader_dir = leader.velocity.normalized() if leader.get("velocity") != null and leader.velocity.length() > 5.0 else Vector2(0, -1)
+			var offsets = GameState.get_formation_offsets(GameState.current_formation, GameState.party_members.size(), leader_dir)
+			var slot = get_formation_rank_slot()
+			var slot_off = offsets[slot] if slot < offsets.size() else formation_offset
+			var desired_pos = leader.global_position + slot_off
+			var dist = global_position.distance_to(desired_pos)
+			if dist > 65.0:
+				var dir = (desired_pos - global_position).normalized()
+				velocity = dir * move_speed
+				sprite.flip_h = (dir.x < 0)
+				move_and_slide()
+				_animate_walk(delta)
+			else:
+				velocity = Vector2.ZERO
+				_animate_idle(delta)
 		else:
 			velocity = Vector2.ZERO
 			_animate_idle(delta)
@@ -179,6 +200,24 @@ func _physics_process(delta: float) -> void:
 func move_to(dest: Vector2) -> void:
 	target_position = dest
 	is_moving = true
+
+func move_to_point(dest: Vector2, on_reached: Callable = Callable(), queue: bool = false) -> void:
+	if queue:
+		queue_move_point(dest, on_reached)
+		return
+	target_position = dest
+	is_moving = true
+	pending_interact_callback = on_reached
+
+func queue_move_point(dest: Vector2, on_reached: Callable = Callable()) -> void:
+	if not is_moving or target_position == Vector2.ZERO:
+		move_to_point(dest, on_reached)
+	else:
+		var prev_cb = pending_interact_callback
+		pending_interact_callback = func():
+			if prev_cb.is_valid():
+				prev_cb.call()
+			move_to_point(dest, on_reached)
 
 func _stop_movement() -> void:
 	is_moving = false

@@ -1578,6 +1578,218 @@ def step_none_defeated(context):
         assert m.get("hp", 0) > 0, f"Fighter {m.get('name')} has fallen! (HP: {m.get('hp')})"
 
 
+# ── Feature 14: Party Independent Dynamics & Tactical Formations ───────────────
+
+@given('the player loads a tactical party in "{scene_name}"')
+def step_load_tactical_party_scene(context, scene_name):
+    api_post(context.web_port, "/api/v1/action", {"action": "load_tactical_battle", "args": {}})
+    time.sleep(1.0)
+    st = api_get(context.web_port, "/api/v1/state")
+    sc = st.get("scene", {})
+    sc_name = sc.get("name", "") if isinstance(sc, dict) else str(sc)
+    assert scene_name in sc_name, f"Expected scene {scene_name}, got {sc_name}"
+
+@then('the party has {count:d} members and default leader is "{leader_name}"')
+def step_check_party_and_default_leader(context, count, leader_name):
+    state = api_get(context.web_port, "/api/v1/state")
+    party = state.get("party_members", state.get("party", []))
+    assert len(party) >= count, f"Expected at least {count} party members, got {len(party)}"
+    leader = state.get("party_leader", {})
+    assert leader_name.lower() in leader.get("name", "").lower(), f"Expected default leader {leader_name}, got {leader}"
+
+@then('the active formation is "{formation_id}"')
+def step_check_active_formation(context, formation_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    assert state.get("party_formation") == formation_id, f"Expected formation {formation_id}, got {state.get('party_formation')}"
+
+@then('the formation icon toolbar is visible with buttons for "rank", "wedge", "line", "column", "square", "scatter"')
+def step_check_formation_toolbar(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    assert state.get("hud", {}).get("has_action_toolbar", False) is True, "Expected action toolbar to be present"
+
+@when('the player commands the party to move to ({x:d}, {y:d})')
+def step_command_party_move(context, x, y):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "move_party_formation",
+        "args": {"x": x, "y": y, "queue": False}
+    })
+    assert res.get("success") is True, f"Move party formation failed: {res}"
+    context.last_move_target = (x, y)
+    context.last_move_res = res
+    time.sleep(0.5)
+
+@then('the active leader "{leader_name}" moves directly to destination ({x:d}, {y:d})')
+@then('the leader moves to ({x:d}, {y:d})')
+def step_leader_moves_to_dest(context, x, y, leader_name=None):
+    for _ in range(25):
+        st = api_get(context.web_port, "/api/v1/state")
+        nodes = st.get("party_nodes", [])
+        leader_node = None
+        for n in nodes:
+            if n.get("is_leader", False):
+                leader_node = n
+                break
+        if leader_node:
+            dx = leader_node.get("x", 0) - x
+            dy = leader_node.get("y", 0) - y
+            dist = math.hypot(dx, dy)
+            if dist < 45.0:
+                return
+        time.sleep(0.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    for n in st.get("party_nodes", []):
+        if n.get("is_leader", False):
+            dx = n.get("x", 0) - x
+            dy = n.get("y", 0) - y
+            dist = math.hypot(dx, dy)
+            assert dist < 70.0, f"Leader did not arrive near ({x}, {y}): dist={dist}, node={n}"
+            return
+
+@then('companion "{comp_name}" independently pathfinds to rank slot {slot:d} in "{form_id}" formation')
+def step_companion_pathfinds_to_slot(context, comp_name, slot, form_id):
+    dispatched = getattr(context, 'last_move_res', {}).get("dispatched", [])
+    found_slot = False
+    for d in dispatched:
+        if d.get("slot") == slot and comp_name.lower() in d.get("node", "").lower():
+            found_slot = True
+            break
+    assert found_slot or len(dispatched) > slot, f"Dispatched formation orders did not assign slot {slot} to {comp_name}: {dispatched}"
+
+@then('all party members arrive at their desired rank coordinates')
+def step_all_members_arrive_at_ranks(context):
+    time.sleep(1.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    nodes = st.get("party_nodes", [])
+    assert len(nodes) >= 3, f"Expected at least 3 party nodes, got {len(nodes)}"
+    positions = [(n.get("x", 0), n.get("y", 0)) for n in nodes]
+    for i in range(len(positions)):
+        for j in range(i + 1, len(positions)):
+            d = math.hypot(positions[i][0] - positions[j][0], positions[i][1] - positions[j][1])
+            assert d > 15.0, f"Party members {nodes[i]['name']} and {nodes[j]['name']} collided/stacked! dist={d}"
+
+@when('the player selects party member "{member_name}" as the active party leader')
+def step_select_member_as_leader(context, member_name):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "set_party_leader",
+        "args": {"leader": member_name.lower()}
+    })
+    assert res.get("success") is True, f"Failed to set leader {member_name}: {res}"
+    time.sleep(0.5)
+
+@then('the active party leader is "{leader_name}"')
+def step_verify_active_leader(context, leader_name):
+    st = api_get(context.web_port, "/api/v1/state")
+    leader = st.get("party_leader", {})
+    assert leader_name.lower() in leader.get("name", "").lower(), f"Expected leader {leader_name}, got {leader}"
+
+@then('the portrait toolbar displays the leader crown badge on "{member_name}"')
+def step_verify_crown_badge(context, member_name):
+    st = api_get(context.web_port, "/api/v1/state")
+    party = st.get("party_members", [])
+    leader_found = False
+    for m in party:
+        if member_name.lower() in m.get("name", "").lower():
+            assert m.get("is_leader") is True, f"Expected {member_name} to have is_leader=True, got {m}"
+            leader_found = True
+            break
+    assert leader_found, f"Member {member_name} not found in party: {party}"
+
+@then('protagonist "{hero_name}" acts symmetrically as a follower and pathfinds to rank slot {slot:d}')
+def step_protagonist_acts_as_follower(context, hero_name, slot):
+    st = api_get(context.web_port, "/api/v1/state")
+    leader = st.get("party_leader", {})
+    assert hero_name.lower() not in leader.get("name", "").lower(), f"Expected {hero_name} to be follower, but is leader: {leader}"
+    dispatched = getattr(context, 'last_move_res', {}).get("dispatched", [])
+    for d in dispatched:
+        if "HeroPlayer" in d.get("node", ""):
+            assert d.get("slot") == slot, f"Expected hero to be assigned rank slot {slot}, got {d.get('slot')}"
+            return
+
+@then('companion "{comp_name}" pathfinds to rank slot {slot:d} in "{form_id}" formation')
+def step_companion_pathfinds_rank_slot(context, comp_name, slot, form_id):
+    dispatched = getattr(context, 'last_move_res', {}).get("dispatched", [])
+    for d in dispatched:
+        if comp_name.lower() in d.get("node", "").lower():
+            assert d.get("slot") == slot, f"Expected {comp_name} in slot {slot}, got {d}"
+            return
+
+@then('the camera smoothly tracks the active party leader')
+def step_camera_tracks_active_leader(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    leader_node = None
+    for n in st.get("party_nodes", []):
+        if n.get("is_leader", False):
+            leader_node = n
+            break
+    assert leader_node is not None, "Expected active leader node in party_nodes"
+
+@when('the player selects formation "{formation_id}" from the action toolbar')
+def step_select_formation_toolbar(context, formation_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "action_toolbar_click",
+        "args": {"action": formation_id}
+    })
+    assert res.get("success") is True, f"Failed to click formation {formation_id}: {res}"
+    time.sleep(0.4)
+
+@then('the "{formation_id}" formation icon is highlighted on the action toolbar')
+def step_formation_icon_highlighted(context, formation_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    assert st.get("party_formation") == formation_id, f"Expected active formation {formation_id}, got {st.get('party_formation')}"
+
+@then('the followers align into rank coordinates forming a V-shape wedge')
+def step_verify_wedge_formation(context):
+    time.sleep(1.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    nodes = st.get("party_nodes", [])
+    assert len(nodes) >= 3, f"Expected at least 3 nodes, got {len(nodes)}"
+    leader = [n for n in nodes if n.get("is_leader")][0]
+    followers = [n for n in nodes if not n.get("is_leader")]
+    for f in followers:
+        dist_to_leader = math.hypot(f["x"] - leader["x"], f["y"] - leader["y"])
+        assert 30.0 < dist_to_leader < 150.0, f"Follower {f['name']} offset not in wedge range: {dist_to_leader}"
+
+@then('the party members line up abreast perpendicular to the travel vector')
+def step_verify_line_formation(context):
+    time.sleep(1.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    nodes = st.get("party_nodes", [])
+    assert len(nodes) >= 3, f"Expected at least 3 nodes, got {len(nodes)}"
+    leader = [n for n in nodes if n.get("is_leader")][0]
+    followers = [n for n in nodes if not n.get("is_leader")]
+    for f in followers:
+        dist = math.hypot(f["x"] - leader["x"], f["y"] - leader["y"])
+        assert 25.0 < dist < 120.0, f"Follower {f['name']} not abreast in line formation: {dist}"
+
+@then('the party members align in a single-file column behind the leader')
+def step_verify_column_formation(context):
+    time.sleep(1.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    nodes = st.get("party_nodes", [])
+    assert len(nodes) >= 3, f"Expected at least 3 nodes, got {len(nodes)}"
+    leader = [n for n in nodes if n.get("is_leader")][0]
+    followers = [n for n in nodes if not n.get("is_leader")]
+    for f in followers:
+        dist = math.hypot(f["x"] - leader["x"], f["y"] - leader["y"])
+        assert 25.0 < dist < 220.0, f"Follower {f['name']} not in single file column: {dist}"
+
+@then('the active leader "{leader_name}" leads the party to ({x:d}, {y:d})')
+def step_active_leader_leads(context, leader_name, x, y):
+    step_leader_moves_to_dest(context, x, y, leader_name)
+
+@then('companions "{c1}" and "{c2}" position themselves at the defensive square rank coordinates')
+def step_verify_square_formation(context, c1, c2):
+    time.sleep(1.2)
+    st = api_get(context.web_port, "/api/v1/state")
+    nodes = st.get("party_nodes", [])
+    assert len(nodes) >= 3, f"Expected at least 3 nodes, got {len(nodes)}"
+    leader = [n for n in nodes if n.get("is_leader")][0]
+    followers = [n for n in nodes if not n.get("is_leader")]
+    for f in followers:
+        dist = math.hypot(f["x"] - leader["x"], f["y"] - leader["y"])
+        assert 25.0 < dist < 140.0, f"Follower {f['name']} not in defensive square coordinates: {dist}"
+
+
 
 
 

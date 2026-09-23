@@ -677,35 +677,11 @@ func _handle_move_to(payload: Dictionary) -> Dictionary:
 		qa.log_event(label)
 		await qa.human_move_and_click(screen_pos, ping_color, tag)
 
-	if hero:
-		if queue and hero.has_method("queue_move_point"):
-			hero.queue_move_point(pos)
-			var q_size = hero.waypoint_queue.size() if "waypoint_queue" in hero else 0
-			return {
-				"success": true,
-				"queued": true,
-				"target": [x, y],
-				"queue_size": q_size,
-				"hero_pos": [hero.global_position.x, hero.global_position.y]
-			}
-		elif hero.has_method("move_to_point"):
-			hero.move_to_point(pos)
-			return {
-				"success": true,
-				"queued": false,
-				"target": [x, y],
-				"hero_pos": [hero.global_position.x, hero.global_position.y]
-			}
-		elif hero.has_method("move_to"):
-			hero.move_to(pos)
-			return {
-				"success": true,
-				"queued": false,
-				"target": [x, y],
-				"hero_pos": [hero.global_position.x, hero.global_position.y]
-			}
-
-	return await _handle_mouse_click({"x": x, "y": y, "shift": queue})
+	var move_res = GameState.move_party_formation(pos, queue)
+	var hero_pos = [hero.global_position.x, hero.global_position.y] if hero else [x, y]
+	move_res["hero_pos"] = hero_pos
+	move_res["queued"] = queue
+	return move_res
 
 func _handle_inventory_toggle(_payload: Dictionary) -> Dictionary:
 	var cur_scene = get_tree().current_scene
@@ -1127,6 +1103,10 @@ func _get_full_game_state() -> Dictionary:
 		"party_members": _serialize_party_with_hud_status(),
 		"companion_present": (cur_scene.find_child("PartyCompanion", true, false) != null if cur_scene else false),
 		"selected_party_indices": GameState.selected_party_indices,
+		"party_leader_index": GameState.party_leader_index,
+		"party_leader": GameState.get_party_leader(),
+		"party_formation": GameState.current_formation,
+		"party_nodes": _serialize_party_nodes(cur_scene),
 		"status_effects": GameState.status_effects,
 		"gold": GameState.gold,
 		"pause_banner_visible": (cur_scene.find_child("PauseBanner", true, false).visible if (cur_scene and cur_scene.find_child("PauseBanner", true, false) != null) else GameState.is_game_paused),
@@ -1180,11 +1160,13 @@ func _check_has_dead_hero_toolbar(cur_scene: Node) -> bool:
 func _serialize_party_with_hud_status() -> Array:
 	var list: Array = []
 	var cur_sc = get_tree().current_scene
-	for m in GameState.party_members:
+	for i in range(GameState.party_members.size()):
+		var m = GameState.party_members[i]
 		var m_copy = m.duplicate(true)
 		var is_dead = int(m.get("hp", 0)) <= 0 or GameState.has_status_effect(m.get("name", ""), "unconscious")
 		m_copy["is_dead"] = is_dead
 		m_copy["hud_red"] = is_dead
+		m_copy["is_leader"] = (i == GameState.party_leader_index)
 		m_copy["position"] = [0.0, 0.0]
 		if cur_sc:
 			if m.get("id") == "hero" or m.get("name") == GameState.hero_name:
@@ -1197,6 +1179,24 @@ func _serialize_party_with_hud_status() -> Array:
 						break
 		list.append(m_copy)
 	return list
+
+func _serialize_party_nodes(cur_scene: Node) -> Array:
+	var res: Array = []
+	if not cur_scene:
+		return res
+	var nodes = GameState.get_scene_party_nodes()
+	var leader = GameState.get_leader_node()
+	for idx in range(nodes.size()):
+		var n = nodes[idx]
+		if is_instance_valid(n):
+			res.append({
+				"index": idx,
+				"name": n.name,
+				"x": n.global_position.x,
+				"y": n.global_position.y,
+				"is_leader": (n == leader)
+			})
+	return res
 
 func _is_character_status_open(cur_scene: Node) -> bool:
 	var csw = cur_scene.find_child("CharacterStatusWindow", true, false) if cur_scene else null
@@ -1732,7 +1732,58 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 						p_name = GameState.party_members[idx].get("name", "HERO").to_upper()
 					await _simulate_mouse_to_node_or_pos(card, Color(0.25, 0.65, 1.0, 0.95), "SELECT " + p_name)
 			GameState.select_party_member(idx)
-			return {"success": true, "selected_indices": GameState.selected_party_indices}
+			GameState.set_party_leader(idx)
+			return {"success": true, "selected_indices": GameState.selected_party_indices, "leader_index": GameState.party_leader_index}
+
+		"set_party_leader":
+			var raw_lead = args.get("leader", args.get("index", 0))
+			var idx = 0
+			if typeof(raw_lead) == TYPE_STRING:
+				var s_lead = str(raw_lead).to_lower()
+				for i in range(GameState.party_members.size()):
+					var m = GameState.party_members[i]
+					if m.get("id", "").to_lower() == s_lead or m.get("name", "").to_lower() == s_lead or m.get("name", "").to_lower().contains(s_lead):
+						idx = i
+						break
+			else:
+				idx = int(raw_lead)
+
+			var pt = cur_scene.find_child("PortraitToolbar", true, false) if cur_scene else null
+			if pt and has_node("/root/QAOverlay"):
+				var container = pt.find_child("VBoxContainer", true, false)
+				if container and idx < container.get_child_count():
+					var card = container.get_child(idx)
+					var p_name = "HERO"
+					if idx < GameState.party_members.size():
+						p_name = GameState.party_members[idx].get("name", "HERO").to_upper()
+					await _simulate_mouse_to_node_or_pos(card, Color(1.0, 0.85, 0.2, 0.95), "LEADER " + p_name)
+
+			GameState.select_party_member(idx)
+			GameState.set_party_leader(idx)
+			return {"success": true, "leader_index": GameState.party_leader_index, "leader": GameState.get_party_leader()}
+
+		"get_party_leader":
+			return {"success": true, "leader_index": GameState.party_leader_index, "leader": GameState.get_party_leader()}
+
+		"set_party_formation":
+			var form = str(args.get("formation", "rank")).to_lower()
+			var at = cur_scene.find_child("ActionToolbar", true, false) if cur_scene else null
+			if at and has_node("/root/QAOverlay"):
+				var btn_name = "BtnForm" + form.capitalize()
+				var btn = at.find_child(btn_name, true, false)
+				if btn:
+					await _simulate_mouse_to_node_or_pos(btn, Color(0.2, 0.9, 1.0, 0.95), "FORMATION " + form.to_upper())
+			GameState.set_party_formation(form)
+			return {"success": true, "formation": GameState.current_formation}
+
+		"get_party_formation":
+			return {"success": true, "formation": GameState.current_formation, "available_formations": GameState.FORMATIONS.keys()}
+
+		"move_party_formation":
+			var x = float(args.get("x", 0))
+			var y = float(args.get("y", 0))
+			var queue = bool(args.get("queue", false))
+			return await _handle_move_to({"x": x, "y": y, "queue": queue})
 
 		"select_all_party":
 			GameState.select_all_party_members()
@@ -1765,7 +1816,19 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 					"heal": "BtnPotion",
 					"potion": "BtnPotion",
 					"antidote": "BtnAntidote",
-					"pause": "BtnPause"
+					"pause": "BtnPause",
+					"formation_rank": "BtnFormRank",
+					"formation_wedge": "BtnFormWedge",
+					"formation_line": "BtnFormLine",
+					"formation_column": "BtnFormColumn",
+					"formation_square": "BtnFormSquare",
+					"formation_scatter": "BtnFormScatter",
+					"rank": "BtnFormRank",
+					"wedge": "BtnFormWedge",
+					"line": "BtnFormLine",
+					"column": "BtnFormColumn",
+					"square": "BtnFormSquare",
+					"scatter": "BtnFormScatter"
 				}
 				var b_name = btn_map.get(act, "")
 				var b_node: Button = at.find_child(b_name, true, false) if b_name != "" else null
@@ -1774,7 +1837,11 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 					var qa = get_node("/root/QAOverlay")
 					qa.log_event("[TOOLBELT] %s" % act.capitalize())
 					await qa.human_move_and_click(btn_pos, Color(0.95, 0.75, 0.2, 0.95), "")
-				if at.has_method("_on_action_clicked"):
+				if act in ["rank", "wedge", "line", "column", "square", "scatter"]:
+					GameState.set_party_formation(act)
+				elif act.begins_with("formation_"):
+					GameState.set_party_formation(act.replace("formation_", ""))
+				elif at.has_method("_on_action_clicked"):
 					at._on_action_clicked(act)
 			return {"success": true, "action": act}
 

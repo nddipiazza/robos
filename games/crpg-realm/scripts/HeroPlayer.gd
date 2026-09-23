@@ -453,21 +453,6 @@ func move_to_point(target_pos: Vector2, on_reached: Callable = Callable(), queue
 		queue_move_point(target_pos, on_reached)
 		return
 
-	if GameState.selected_party_indices.size() == 1 and GameState.selected_party_indices[0] == 1:
-		var cur_sc = get_tree().current_scene
-		if cur_sc:
-			var comp = cur_sc.find_child("PartyCompanion", true, false)
-			if comp and comp.has_method("move_to"):
-				comp.move_to(target_pos)
-				return
-
-	if GameState.selected_party_indices.has(1):
-		var cur_sc = get_tree().current_scene
-		if cur_sc:
-			var comp = cur_sc.find_child("PartyCompanion", true, false)
-			if comp and comp.has_method("move_to"):
-				comp.move_to(target_pos + Vector2(-48, 24))
-
 	clear_waypoints()
 	var cur_scene = get_tree().current_scene
 	var path = Pathfinder.get_nav_path(get_world_2d(), global_position, target_pos, cur_scene, [get_rid()])
@@ -608,12 +593,20 @@ func _handle_camera_pan(delta: float) -> void:
 		camera_target_offset += pan_dir.normalized() * (camera_pan_speed * delta)
 		_clamp_camera_offset()
 
-	# Hotkey 'Home' to recenter camera on hero
+	# Hotkey 'Home' to recenter camera on hero / active leader
 	if Input.is_key_pressed(KEY_HOME):
 		center_camera_on_hero()
 
-	camera_current_offset = camera_current_offset.lerp(camera_target_offset, min(1.0, 10.0 * delta))
+	var leader = GameState.get_leader_node()
+	var leader_rel = Vector2.ZERO
+	if leader and is_instance_valid(leader) and leader != self:
+		leader_rel = leader.global_position - global_position
+
+	camera_current_offset = camera_current_offset.lerp(camera_target_offset + leader_rel, min(1.0, 10.0 * delta))
 	camera.offset = camera_current_offset
+
+func is_party_leader() -> bool:
+	return GameState.party_leader_index == 0
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey:
@@ -658,10 +651,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.pressed:
 			var click_pos = get_global_mouse_position()
 			var is_shift = event.shift_pressed or Input.is_key_pressed(KEY_SHIFT)
-			if is_shift:
-				queue_move_point(click_pos)
-			else:
-				move_to_point(click_pos)
+			GameState.move_party_formation(click_pos, is_shift)
 
 func _physics_process(delta: float) -> void:
 	_handle_camera_pan(delta)
@@ -743,6 +733,22 @@ func _physics_process(delta: float) -> void:
 					reticle.global_position = target_position if waypoint_queue.is_empty() else waypoint_queue.back()
 			else:
 				_stop_movement()
+	elif not is_party_leader() and not (get_tree().current_scene is TacticalBattle):
+		var leader = GameState.get_leader_node()
+		if leader and is_instance_valid(leader) and leader != self:
+			var leader_dir = leader.velocity.normalized() if leader.get("velocity") != null and leader.velocity.length() > 5.0 else Vector2(0, -1)
+			var offsets = GameState.get_formation_offsets(GameState.current_formation, GameState.party_members.size(), leader_dir)
+			var slot = 1
+			var desired_pos = leader.global_position + (offsets[slot] if slot < offsets.size() else Vector2(-48, 24))
+			var dist = global_position.distance_to(desired_pos)
+			if dist > 65.0:
+				var dir = (desired_pos - global_position).normalized()
+				velocity = dir * move_speed
+				move_and_slide()
+			else:
+				velocity = Vector2.ZERO
+		else:
+			velocity = Vector2.ZERO
 	else:
 		velocity = Vector2.ZERO
 

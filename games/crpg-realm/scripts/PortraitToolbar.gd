@@ -20,6 +20,7 @@ func _ready() -> void:
 
 	GameState.party_changed.connect(refresh_party)
 	GameState.party_selection_changed.connect(_on_selection_changed)
+	GameState.party_leader_changed.connect(func(_idx, _data): refresh_party())
 	GameState.status_effects_changed.connect(func(_name): refresh_party())
 	GameState.hero_damaged.connect(func(_cur, _max): refresh_party())
 
@@ -46,6 +47,7 @@ func refresh_party() -> void:
 
 func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 	var is_selected = GameState.selected_party_indices.has(idx)
+	var is_leader = (idx == GameState.party_leader_index)
 	var card = PanelContainer.new()
 	card.custom_minimum_size = Vector2(120, 130)
 
@@ -63,10 +65,19 @@ func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 		sb.border_width_bottom = 3
 		sb.shadow_color = Color(1.0, 0.1, 0.1, 0.6)
 		sb.shadow_size = 6
+	elif is_leader:
+		sb.bg_color = Color(0.14, 0.16, 0.22, 0.95)
+		sb.border_color = Color(1.0, 0.85, 0.2, 1.0) # Golden leader glow
+		sb.shadow_color = Color(1.0, 0.8, 0.15, 0.5)
+		sb.shadow_size = 6
+		sb.border_width_left = 3
+		sb.border_width_top = 3
+		sb.border_width_right = 3
+		sb.border_width_bottom = 3
 	elif is_selected:
 		sb.bg_color = Color(0.12, 0.14, 0.18, 0.90)
-		sb.border_color = Color(1.0, 0.85, 0.25, 1.0) # Golden selection glow
-		sb.shadow_color = Color(1.0, 0.8, 0.2, 0.4)
+		sb.border_color = Color(0.2, 0.85, 1.0, 1.0) # Cyan selection glow
+		sb.shadow_color = Color(0.2, 0.8, 1.0, 0.4)
 		sb.shadow_size = 4
 		sb.border_width_left = 2
 		sb.border_width_top = 2
@@ -86,6 +97,7 @@ func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 	sb.corner_radius_bottom_right = 4
 	card.add_theme_stylebox_override("panel", sb)
 	card.set_meta("is_dead_hud_red", is_dead)
+	card.set_meta("is_leader", is_leader)
 
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 6)
@@ -101,11 +113,16 @@ func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 	# Header: Hotkey badge & name
 	var header_hbox = HBoxContainer.new()
 	var key_lbl = Label.new()
-	key_lbl.text = "[%d]" % (idx + 1)
+	if is_leader:
+		key_lbl.text = "👑 [%d]" % (idx + 1)
+	else:
+		key_lbl.text = "[%d]" % (idx + 1)
 	if is_dead:
 		key_lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+	elif is_leader:
+		key_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25, 1.0))
 	elif is_selected:
-		key_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+		key_lbl.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0, 1.0))
 	else:
 		key_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1.0))
 	key_lbl.add_theme_font_size_override("font_size", 11)
@@ -116,6 +133,9 @@ func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 	if is_dead:
 		name_lbl.text = "💀 " + m_name
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+	elif is_leader:
+		name_lbl.text = m_name + " [LEADER]"
+		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25, 1.0))
 	else:
 		name_lbl.text = m_name
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
@@ -228,6 +248,7 @@ func _create_member_card(idx: int, member: Dictionary) -> PanelContainer:
 					GameState.toggle_party_member_selection(idx)
 				else:
 					GameState.select_party_member(idx)
+					GameState.set_party_leader(idx)
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				var canvas = get_parent()
 				if canvas:

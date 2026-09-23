@@ -11,6 +11,12 @@ signal action_triggered(action_id: String)
 @onready var btn_potion: Button = find_child("BtnPotion", true, false)
 @onready var btn_antidote: Button = find_child("BtnAntidote", true, false)
 @onready var btn_pause: Button = find_child("BtnPause", true, false)
+@onready var btn_form_rank: Button = find_child("BtnFormRank", true, false)
+@onready var btn_form_wedge: Button = find_child("BtnFormWedge", true, false)
+@onready var btn_form_line: Button = find_child("BtnFormLine", true, false)
+@onready var btn_form_column: Button = find_child("BtnFormColumn", true, false)
+@onready var btn_form_square: Button = find_child("BtnFormSquare", true, false)
+@onready var btn_form_scatter: Button = find_child("BtnFormScatter", true, false)
 @onready var pause_banner: PanelContainer = null
 
 var current_action_mode: String = "move"
@@ -24,7 +30,7 @@ func _ready() -> void:
 		anchor_bottom = 0.0
 		offset_left = 20.0
 		offset_top = 24.0
-		offset_right = 680.0
+		offset_right = 900.0
 		offset_bottom = 58.0
 		grow_horizontal = Control.GROW_DIRECTION_END
 		grow_vertical = Control.GROW_DIRECTION_END
@@ -34,8 +40,8 @@ func _ready() -> void:
 		anchor_bottom = 1.0
 		anchor_left = 0.5
 		anchor_right = 0.5
-		offset_left = -340.0
-		offset_right = 340.0
+		offset_left = -440.0
+		offset_right = 440.0
 		offset_top = -62.0
 		offset_bottom = -12.0
 		grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -58,10 +64,25 @@ func _ready() -> void:
 	if btn_pause:
 		btn_pause.pressed.connect(_on_pause_clicked)
 
+	if btn_form_rank:
+		btn_form_rank.pressed.connect(func(): GameState.set_party_formation("rank"))
+	if btn_form_wedge:
+		btn_form_wedge.pressed.connect(func(): GameState.set_party_formation("wedge"))
+	if btn_form_line:
+		btn_form_line.pressed.connect(func(): GameState.set_party_formation("line"))
+	if btn_form_column:
+		btn_form_column.pressed.connect(func(): GameState.set_party_formation("column"))
+	if btn_form_square:
+		btn_form_square.pressed.connect(func(): GameState.set_party_formation("square"))
+	if btn_form_scatter:
+		btn_form_scatter.pressed.connect(func(): GameState.set_party_formation("scatter"))
+
 	GameState.pause_toggled.connect(_on_pause_toggled)
 	GameState.inventory_changed.connect(_update_item_slots)
+	GameState.party_formation_changed.connect(_update_formation_buttons)
 	_update_pause_button(GameState.is_game_paused)
 	_update_item_slots()
+	_update_formation_buttons(GameState.current_formation)
 
 func _on_action_clicked(action_id: String) -> void:
 	current_action_mode = action_id
@@ -235,3 +256,33 @@ func _update_item_slots() -> void:
 				btn_special.text = "⚡ Recovery"
 			_:
 				btn_special.text = "⚡ Special"
+
+func _update_formation_buttons(active_id: String) -> void:
+	var buttons = {
+		"rank": btn_form_rank,
+		"wedge": btn_form_wedge,
+		"line": btn_form_line,
+		"column": btn_form_column,
+		"square": btn_form_square,
+		"scatter": btn_form_scatter
+	}
+	for id in buttons:
+		var btn: Button = buttons[id]
+		if btn:
+			if id == active_id:
+				btn.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25, 1.0))
+				var sb = StyleBoxFlat.new()
+				sb.bg_color = Color(0.18, 0.28, 0.38, 0.95)
+				sb.border_color = Color(0.2, 0.9, 1.0, 1.0)
+				sb.border_width_left = 2
+				sb.border_width_top = 2
+				sb.border_width_right = 2
+				sb.border_width_bottom = 2
+				sb.corner_radius_top_left = 3
+				sb.corner_radius_top_right = 3
+				sb.corner_radius_bottom_left = 3
+				sb.corner_radius_bottom_right = 3
+				btn.add_theme_stylebox_override("normal", sb)
+			else:
+				btn.remove_theme_color_override("font_color")
+				btn.remove_theme_stylebox_override("normal")
