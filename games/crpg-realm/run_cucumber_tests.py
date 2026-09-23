@@ -90,9 +90,13 @@ def main() -> int:
             target_dir = FEATURES_DIR / "full_playthroughs"
             suite_name = "Full Campaign Playthroughs"
             suite_selected = True
+        elif arg in ("--spells", "--spell", "--magic"):
+            target_dir = FEATURES_DIR / "spells"
+            suite_name = "Spells & Tactical Magic Arsenal"
+            suite_selected = True
         elif arg in ("--all", "--both"):
             target_dir = FEATURES_DIR
-            suite_name = "All Suites (Normal + Full Playthroughs)"
+            suite_name = "All Suites (Normal + Full Playthroughs + Spells)"
             suite_selected = True
         else:
             forward_args.append(arg)

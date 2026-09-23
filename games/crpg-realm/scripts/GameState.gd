@@ -729,7 +729,7 @@ func apply_status_effect(target_name: String, effect_id: String, duration_rounds
 	if not status_effects[target_name].has(effect_id):
 		status_effects[target_name].append(effect_id)
 		for m in party_members:
-			if m.get("name") == target_name:
+			if m.get("name") == target_name or (m.get("id") == "hero" and (target_name == "hero" or target_name.to_lower() == hero_name.to_lower())):
 				if not m.get("status_effects", []).has(effect_id):
 					m["status_effects"].append(effect_id)
 		status_effects_changed.emit(target_name)
@@ -746,7 +746,7 @@ func remove_status_effect(target_name: String, effect_id: String) -> void:
 	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
 		status_effects[target_name].erase(effect_id)
 		for m in party_members:
-			if m.get("name") == target_name and m.has("status_effects"):
+			if (m.get("name") == target_name or (m.get("id") == "hero" and (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()))) and m.has("status_effects"):
 				m["status_effects"].erase(effect_id)
 		status_effects_changed.emit(target_name)
 		party_changed.emit()
@@ -758,10 +758,21 @@ func override_status_timeout(target_name: String, effect_id: String, duration_se
 	log_message("system", "🛠️ [TEST HACK] Invisibility timeout for %s overridden to %.2f seconds for automated test scenario!" % [target_name, duration_seconds])
 
 func has_status_effect(target_name: String, effect_id: String) -> bool:
-	return status_effects.has(target_name) and status_effects[target_name].has(effect_id)
+	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
+		return true
+	if (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()) and status_effects.has(hero_name):
+		return status_effects[hero_name].has(effect_id)
+	return false
 
 func get_status_effects(target_name: String) -> Array:
-	return status_effects.get(target_name, [])
+	if status_effects.has(target_name):
+		return status_effects[target_name]
+	if (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()) and status_effects.has(hero_name):
+		return status_effects[hero_name]
+	for m in party_members:
+		if m.get("name", "").to_lower() == target_name.to_lower() or (target_name == "hero" and m.get("id") == "hero"):
+			return m.get("status_effects", [])
+	return []
 
 # ── RTwP Pause Control ────────────────────────────────────────────────────────
 
@@ -905,6 +916,35 @@ func heal_party_member(target_id_or_name: String, amount: int) -> void:
 			party_changed.emit()
 			log_message("item", "%s recovered %d HP! (HP: %d/%d)" % [m.get("name"), amount, m["hp"], max_hp])
 			break
+
+func get_party_member(target_id_or_name: String) -> Dictionary:
+	var t_lower = target_id_or_name.to_lower()
+	for m in party_members:
+		if m.get("id", "").to_lower() == t_lower or m.get("name", "").to_lower() == t_lower or t_lower in m.get("name", "").to_lower():
+			return m
+	if t_lower in ["hero", "vance", hero_name.to_lower()]:
+		for m in party_members:
+			if m.get("id") == "hero":
+				return m
+	return {}
+
+func set_party_member_hp(target_id_or_name: String, hp: int) -> void:
+	var t_lower = target_id_or_name.to_lower()
+	for m in party_members:
+		if m.get("id", "").to_lower() == t_lower or m.get("name", "").to_lower() == t_lower or t_lower in m.get("name", "").to_lower():
+			m["hp"] = hp
+			if hp <= 0:
+				apply_status_effect(m.get("name"), "unconscious")
+			else:
+				remove_status_effect(m.get("name"), "unconscious")
+			party_changed.emit()
+			return
+	if t_lower in ["hero", "vance", hero_name.to_lower()]:
+		hero_hp = hp
+		if hp <= 0:
+			apply_status_effect(hero_name, "unconscious")
+		else:
+			remove_status_effect(hero_name, "unconscious")
 
 func check_party_defeat() -> bool:
 	var all_fallen = true

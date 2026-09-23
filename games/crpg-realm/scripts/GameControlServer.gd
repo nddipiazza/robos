@@ -1115,6 +1115,7 @@ func _get_full_game_state() -> Dictionary:
 			"armor": GameState.equipped_armor,
 			"ability_scores": GameState.ability_scores,
 			"is_invisible": GameState.is_invisible(GameState.hero_name),
+			"status_effects": GameState.get_status_effects(GameState.hero_name),
 			"sprite_opacity": (hero_node.get_node("Sprite").modulate.a if (hero_node and hero_node.has_node("Sprite")) else 1.0)
 		},
 		"inventory": GameState.inventory,
@@ -1152,6 +1153,7 @@ func _get_full_game_state() -> Dictionary:
 		},
 		"combat_telemetry": (cur_scene.get_combat_telemetry() if (cur_scene and cur_scene.has_method("get_combat_telemetry")) else {}),
 		"last_aoe_telemetry": (cur_scene.last_aoe_telemetry if (cur_scene and "last_aoe_telemetry" in cur_scene) else {}),
+		"last_spell_telemetry": (cur_scene.last_spell_telemetry if (cur_scene and "last_spell_telemetry" in cur_scene) else (cur_scene.last_aoe_telemetry if (cur_scene and "last_aoe_telemetry" in cur_scene) else {})),
 		"defeat_screen": {
 			"open": is_def_open,
 			"visible": is_def_open
@@ -1468,6 +1470,12 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 		"cast_spell":
 			var spell_id = str(args.get("spell", "magic-missile"))
 			var caster = str(args.get("caster", GameState.hero_name))
+			var target_actor = str(args.get("target", ""))
+			var target_pos = Vector2(float(args.get("x", 0)), float(args.get("y", 0)))
+			if cur_scene and cur_scene.has_method("execute_spell_cast"):
+				var res = await cur_scene.execute_spell_cast(spell_id, target_actor, target_pos)
+				return {"success": true, "spell": spell_id, "telemetry": res}
+
 			if spell_id == "cure-wounds":
 				var hero = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
 				if hero and has_node("/root/QAOverlay"):
@@ -1497,7 +1505,7 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 					res = {"success": true, "spell": "find-traps", "revealed_count": rev}
 				return res
 			elif spell_id == "invisibility":
-				var target_actor = str(args.get("target", caster))
+				target_actor = str(args.get("target", caster))
 				var override_sec = float(args.get("override_duration_seconds", args.get("duration", 0.0)))
 				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
 				if not cm and Engine.get_main_loop() is SceneTree:
@@ -1514,7 +1522,7 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 					GameState.override_status_timeout(target_actor, "invisible", override_sec)
 				return res
 			elif spell_id in ["dispel", "dispel-magic", "dispel_magic"]:
-				var target_actor = str(args.get("target", caster))
+				target_actor = str(args.get("target", caster))
 				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
 				if not cm and Engine.get_main_loop() is SceneTree:
 					var root = (Engine.get_main_loop() as SceneTree).root
@@ -1941,6 +1949,18 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				return new_sc.configure_goblin_crowd_encounter(g_count, g_hp)
 			return {"success": true, "scene": "TacticalBattle"}
 
+		"setup_spell_encounter", "configure_spell_encounter":
+			if cur_scene and cur_scene.name == "TacticalBattle" and cur_scene.has_method("setup_spell_encounter"):
+				return cur_scene.setup_spell_encounter(args)
+			get_tree().change_scene_to_file("res://scenes/TacticalBattle.tscn")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var new_sc = get_tree().current_scene
+			if new_sc and new_sc.has_method("setup_spell_encounter"):
+				return new_sc.setup_spell_encounter(args)
+			return {"success": true, "scene": "TacticalBattle"}
+
 		"cast_fireball", "cast_fireball_at_point":
 			var x = float(args.get("x", 1150.0))
 			var y = float(args.get("y", 520.0))
@@ -1978,6 +1998,12 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				var res = await cur_scene.execute_fighter_maneuver(fighter, ability, target)
 				return res
 			return {"success": false, "error": "execute_fighter_maneuver not available"}
+
+		"set_party_member_hp":
+			var t_name = str(args.get("name", args.get("target", "Elora")))
+			var hp = int(args.get("hp", 0))
+			GameState.set_party_member_hp(t_name, hp)
+			return {"success": true, "name": t_name, "hp": hp}
 
 		"execute_combat_round", "combat_round":
 			if cur_scene and cur_scene.has_method("execute_combat_round"):

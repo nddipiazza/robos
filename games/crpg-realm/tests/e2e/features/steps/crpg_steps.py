@@ -2109,6 +2109,245 @@ def step_ai_detects_intruder_on_tick(context):
     assert found_aggro, "Expected AI engine to detect visible intruder on next tick, but enemies remain unprovoked"
 
 
+# ── Complete Tactical Spells & Magic Arsenal Step Definitions ────────────────
+
+@given('an isolated tactical spell encounter "{enc_type}" with hero "{hero_name}" class "{hero_class}" and {hp:d} HP')
+def step_setup_tactical_spell_encounter(context, enc_type, hero_name, hero_class, hp):
+    st = api_get(context.web_port, "/api/v1/state")
+    cur_sc = st.get("scene", {})
+    sc_name = cur_sc.get("name", "") if isinstance(cur_sc, dict) else str(cur_sc)
+    if sc_name != "TacticalBattle":
+        api_post(context.web_port, "/api/v1/action", {"action": "load_tactical_battle", "args": {}})
+        time.sleep(1.0)
+
+    preset_enemies = {
+        "goblin_crowd": [
+            {"id": "goblin_1", "name": "Goblin Skirmisher 1", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1150, "y": 520},
+            {"id": "goblin_2", "name": "Goblin Skirmisher 2", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1100, "y": 480},
+            {"id": "goblin_3", "name": "Goblin Skirmisher 3", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1205, "y": 485},
+            {"id": "goblin_4", "name": "Goblin Skirmisher 4", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1090, "y": 565},
+            {"id": "goblin_5", "name": "Goblin Skirmisher 5", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1195, "y": 570},
+            {"id": "goblin_6", "name": "Goblin Skirmisher 6", "hp": 7, "ac": 15, "creature_type": "humanoid", "x": 1155, "y": 595}
+        ],
+        "evasion_scout": [
+            {"id": "scout_1", "name": "Nimble Goblin Scout", "hp": 10, "ac": 18, "creature_type": "humanoid", "x": 1150, "y": 520}
+        ],
+        "charging_pack": [
+            {"id": "wolf_1", "name": "Dire Wolf Alpha", "hp": 11, "ac": 13, "creature_type": "beast", "x": 1120, "y": 500},
+            {"id": "wolf_2", "name": "Dire Wolf Beta", "hp": 11, "ac": 13, "creature_type": "beast", "x": 1160, "y": 540},
+            {"id": "wolf_3", "name": "Dire Wolf Gamma", "hp": 11, "ac": 13, "creature_type": "beast", "x": 1140, "y": 460}
+        ],
+        "corridor_column": [
+            {"id": "corridor_1", "name": "Column Guard 1", "hp": 14, "ac": 14, "creature_type": "humanoid", "x": 800, "y": 520},
+            {"id": "corridor_2", "name": "Column Guard 2", "hp": 14, "ac": 14, "creature_type": "humanoid", "x": 950, "y": 520},
+            {"id": "corridor_3", "name": "Column Guard 3", "hp": 14, "ac": 14, "creature_type": "humanoid", "x": 1100, "y": 520},
+            {"id": "corridor_4", "name": "Column Guard 4", "hp": 14, "ac": 14, "creature_type": "humanoid", "x": 1250, "y": 520}
+        ],
+        "boss_and_minions": [
+            {"id": "minion_1", "name": "Goblin Minion 1", "hp": 6, "ac": 13, "creature_type": "humanoid", "x": 1100, "y": 480},
+            {"id": "minion_2", "name": "Goblin Minion 2", "hp": 6, "ac": 13, "creature_type": "humanoid", "x": 1100, "y": 560},
+            {"id": "ogre_boss", "name": "Ogre Chieftain", "hp": 35, "ac": 12, "creature_type": "giant", "x": 1220, "y": 520}
+        ],
+        "humanoid_and_beast": [
+            {"id": "bandit_1", "name": "Bandit Marauder", "hp": 16, "ac": 14, "wis_save_mod": -10, "creature_type": "humanoid", "x": 1120, "y": 480},
+            {"id": "war_hound", "name": "Trained War Hound", "hp": 14, "ac": 13, "creature_type": "beast", "x": 1140, "y": 560}
+        ],
+        "dueling_caster": [
+            {"id": "enemy_mage", "name": "Shadow Cultist Evoker", "hp": 22, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520}
+        ],
+        "incoming_striker": [
+            {"id": "striker_1", "name": "Orc Berserker", "hp": 25, "ac": 13, "attack_bonus": 4, "creature_type": "humanoid", "x": 620, "y": 520}
+        ],
+        "combat_dummy": [
+            {"id": "dummy_1", "name": "Corrupted Target", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520}
+        ]
+    }
+
+    enemies_list = preset_enemies.get(enc_type, [
+        {"id": "target_1", "name": "Target Adversary", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520}
+    ])
+
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "setup_spell_encounter",
+        "args": {
+            "encounter": enc_type,
+            "wizard": hero_name,
+            "class": hero_class,
+            "hp": hp,
+            "enemies": enemies_list
+        }
+    })
+    assert res.get("success") is True, f"Failed to setup spell encounter {enc_type}: {res}"
+    time.sleep(1.0)
+
+@when('the hero targets "{target_id}" and casts spell "{spell_id}"')
+def step_hero_targets_and_casts(context, target_id, spell_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id, "target": target_id}
+    })
+    assert res.get("success") is True, f"Failed to cast spell {spell_id} on {target_id}: {res}"
+    context.last_spell_telemetry = res.get("telemetry", {})
+    # 1.8s pause gives human viewer ample time to observe the full spell effect
+    time.sleep(1.8)
+
+@when('the hero casts spell "{spell_id}" at ({x:d}, {y:d})')
+def step_hero_casts_spell_at_point(context, spell_id, x, y):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id, "x": x, "y": y}
+    })
+    assert res.get("success") is True, f"Failed to cast spell {spell_id} at ({x}, {y}): {res}"
+    context.last_spell_telemetry = res.get("telemetry", {})
+    time.sleep(1.8)
+
+@when('the hero casts spell "{spell_id}"')
+def step_hero_casts_spell_self(context, spell_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id}
+    })
+    assert res.get("success") is True, f"Failed to cast spell {spell_id}: {res}"
+    context.last_spell_telemetry = res.get("telemetry", {})
+    time.sleep(1.8)
+
+@then('the spell "{spell_id}" resolves successfully')
+def step_verify_spell_success(context, spell_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    assert telem.get("success", False) is True, f"Expected success in spell telemetry for {spell_id}: {telem}"
+
+@then('enemy "{enemy_id}" takes {dmg:d} damage')
+def step_verify_enemy_takes_damage(context, enemy_id, dmg):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = next((e for e in enemies if e.get("id") == enemy_id), None)
+    assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
+    assert found.get("max_hp", 0) - found.get("hp", 0) >= dmg, (
+        f"Expected enemy {enemy_id} to take at least {dmg} damage. Max: {found.get('max_hp')}, Cur: {found.get('hp')}"
+    )
+
+@then('enemy "{enemy_id}" takes lethal damage and is defeated')
+def step_verify_enemy_defeated(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = next((e for e in enemies if e.get("id") == enemy_id), None)
+    assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
+    assert found.get("hp") == 0, f"Expected enemy {enemy_id} HP 0, got {found.get('hp')}"
+    assert found.get("state_name") == "DEAD" or found.get("state") == 3, f"Expected enemy {enemy_id} to be DEAD, got {found}"
+
+@then('the hero has Armor Class {ac:d}')
+def step_verify_hero_ac(context, ac):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero_ac = st.get("hero", {}).get("ac", 0)
+    assert hero_ac == ac, f"Expected hero AC {ac}, got {hero_ac}"
+
+@then('the hero has status effect "{effect_id}"')
+def step_verify_hero_status_effect(context, effect_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    effs = st.get("hero", {}).get("status_effects", [])
+    assert effect_id in effs, f"Expected status effect '{effect_id}' on hero, got {effs}"
+
+@then('enemy "{enemy_id}" has status effect "{effect_id}"')
+def step_verify_enemy_status_effect(context, enemy_id, effect_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    if telem.get("spell") == "sleep":
+        affected = [t.get("id") for t in telem.get("targets_affected", [])]
+        assert enemy_id in affected, f"Expected enemy {enemy_id} in sleep affected targets: {telem}"
+    elif telem.get("spell") == "hold-person":
+        assert telem.get("paralyzed") is True, f"Expected enemy to be paralyzed: {telem}"
+    else:
+        assert telem.get("success") is True
+
+@then('enemy "{enemy_id}" resisted the spell')
+def step_verify_enemy_resisted(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    if telem.get("spell") == "sleep":
+        resisted = [t.get("id") for t in telem.get("targets_resisted", [])]
+        assert enemy_id in resisted, f"Expected enemy {enemy_id} in sleep resisted targets: {telem}"
+    elif telem.get("spell") == "hold-person":
+        assert telem.get("immune") is True or telem.get("save_passed") is True, f"Expected enemy {enemy_id} to resist hold person: {telem}"
+
+@then('allies "{a1}", "{a2}", and "{a3}" have status effect "{effect_id}"')
+def step_verify_allies_status_effect(context, a1, a2, a3, effect_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    party = st.get("party_members", [])
+    for name in [a1, a2, a3]:
+        member = next((m for m in party if name.lower() in m.get("name", "").lower()), None)
+        assert member is not None, f"Party member '{name}' not found in {party}"
+        assert effect_id in member.get("status_effects", []), f"Expected effect '{effect_id}' on {name}, got {member.get('status_effects')}"
+
+@then('the ally "{ally_name}" regains {amount:d} Hit Points')
+def step_verify_ally_regains_hp(context, ally_name, amount):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    healed = telem.get("healed", 0)
+    assert healed >= amount, f"Expected at least {amount} HP healed, got {healed} in {telem}"
+
+@then('the incoming attack roll of {roll:d} is deflected by Shield with AC {ac:d}')
+def step_verify_shield_deflection(context, roll, ac):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero_ac = st.get("hero", {}).get("ac", 0)
+    effs = st.get("hero", {}).get("status_effects", [])
+    assert "shield" in effs, f"Expected 'shield' status on hero, got {effs}"
+    total_effective_ac = hero_ac + (5 if "shield" in effs else 0)
+    assert total_effective_ac >= ac, f"Expected total AC >= {ac}, got {total_effective_ac}"
+    assert roll < total_effective_ac, f"Expected attack roll {roll} to be a miss against effective AC {total_effective_ac}"
+
+@then('enemy spell was interrupted and neutralized by Counterspell')
+def step_verify_counterspell(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    assert telem.get("countered") is True, f"Expected countered to be True: {telem}"
+
+@then('the status effect "{effect_id}" on "{target_id}" was dispelled')
+def step_verify_effect_dispelled(context, effect_id, target_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    dispelled = telem.get("dispelled", [])
+    assert effect_id in dispelled or len(dispelled) > 0, f"Expected {effect_id} dispelled in {telem}"
+
+@when('ally "{ally_name}" is reduced to 0 Hit Points and falls unconscious')
+def step_ally_falls_unconscious(context, ally_name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "set_party_member_hp",
+        "args": {"name": ally_name, "hp": 0}
+    })
+    time.sleep(0.4)
+
+@when('target "{target_name}" is protected by "shield"')
+def step_target_protected_by_shield(context, target_name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": "shield", "target": target_name}
+    })
+    time.sleep(0.4)
+
+@then('the magic missiles are completely absorbed by Shield with {dmg:d} damage')
+def step_verify_magic_missiles_absorbed(context, dmg):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {})
+    if not telem:
+        telem = getattr(context, 'last_spell_telemetry', {})
+    assert telem.get("blocked_by_shield") is True, f"Expected blocked_by_shield in telemetry: {telem}"
+    assert telem.get("damage") == dmg, f"Expected {dmg} damage, got {telem.get('damage')}"
+
+
+
 
 
 

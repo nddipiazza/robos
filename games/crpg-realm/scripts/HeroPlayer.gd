@@ -411,6 +411,44 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 			AudioManager.play_sfx("heal_cast")
 		if on_cast_callback.is_valid():
 			on_cast_callback.call()
+	elif spell_id == "healing-word":
+		await _spawn_healing_word_vfx(target_pos, on_cast_callback)
+	elif spell_id == "shield":
+		await _spawn_shield_vfx(global_position, on_cast_callback)
+	elif spell_id == "mage-armor":
+		await _spawn_mage_armor_vfx(target_pos, on_cast_callback)
+	elif spell_id == "bless":
+		await _spawn_bless_vfx(target_pos, on_cast_callback)
+	elif spell_id == "sleep":
+		await _spawn_sleep_vfx(target_pos, on_cast_callback)
+	elif spell_id == "hold-person":
+		await _spawn_hold_person_vfx(target_pos, on_cast_callback)
+	elif spell_id == "spiritual-weapon":
+		await _spawn_spiritual_weapon_vfx(target_pos, on_cast_callback)
+	elif spell_id == "burning-hands":
+		await _spawn_burning_hands_vfx(target_pos, on_cast_callback)
+	elif spell_id == "thunderwave":
+		await _spawn_thunderwave_vfx(target_pos, on_cast_callback)
+	elif spell_id == "lightning-bolt":
+		await _spawn_lightning_bolt_vfx(target_pos, on_cast_callback)
+	elif spell_id == "haste":
+		await _spawn_haste_vfx(target_pos, on_cast_callback)
+	elif spell_id == "counterspell":
+		await _spawn_counterspell_vfx(target_pos, on_cast_callback)
+	elif spell_id in ["dispel", "dispel-magic", "dispel_magic"]:
+		await _spawn_dispel_magic_vfx(target_pos, on_cast_callback)
+	elif spell_id == "find-traps":
+		await _spawn_find_traps_vfx(global_position, on_cast_callback)
+	elif spell_id == "knock":
+		await _spawn_knock_vfx(target_pos, on_cast_callback)
+	elif spell_id == "invisibility":
+		await _spawn_invisibility_vfx(global_position, on_cast_callback)
+	elif spell_id == "tremor-stomp":
+		await _spawn_tremor_stomp_vfx(target_pos, on_cast_callback)
+	elif spell_id == "crushing-cleave":
+		await _spawn_crushing_cleave_vfx(target_pos, on_cast_callback)
+	elif spell_id == "rallying-stomp":
+		await _spawn_rallying_stomp_vfx(global_position, on_cast_callback)
 	elif spell_id == "magic-missile":
 		for dart_idx in range(3):
 			_spawn_magic_missile_dart(target_pos, dart_idx, func():
@@ -538,6 +576,598 @@ func _spawn_spell_blast_vfx(hit_pos: Vector2, blast_color: Color) -> void:
 	tw.parallel().tween_property(blast, "scale", Vector2(2.2, 2.2), 0.22)
 	tw.parallel().tween_property(blast, "modulate:a", 0.0, 0.22)
 	tw.tween_callback(blast.queue_free)
+
+func _spawn_healing_word_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var ray = Line2D.new()
+	ray.width = 3.5
+	ray.default_color = Color(0.4, 1.2, 0.7, 0.9)
+	ray.points = PackedVector2Array([global_position + Vector2(0, -10), target_pos])
+	ray.top_level = true
+	get_parent().add_child(ray)
+
+	var ray_tw = create_tween()
+	ray_tw.tween_property(ray, "modulate:a", 0.0, 0.35)
+	ray_tw.tween_callback(ray.queue_free)
+
+	var heal_fx = Node2D.new()
+	heal_fx.top_level = true
+	heal_fx.global_position = target_pos
+	for k in range(6):
+		var spark = Polygon2D.new()
+		spark.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
+		spark.color = Color(0.6, 1.4, 0.8, 1.0)
+		spark.position = Vector2(randf_range(-16, 16), randf_range(-12, 12))
+		heal_fx.add_child(spark)
+	get_parent().add_child(heal_fx)
+
+	var h_tw = create_tween()
+	h_tw.parallel().tween_property(heal_fx, "position:y", target_pos.y - 40.0, 0.6)
+	h_tw.parallel().tween_property(heal_fx, "modulate:a", 0.0, 0.6)
+	h_tw.tween_callback(heal_fx.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("heal_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_shield_vfx(center_pos: Vector2, on_impact: Callable) -> void:
+	var shield_node = Node2D.new()
+	shield_node.top_level = true
+	shield_node.global_position = center_pos
+	var hex = Line2D.new()
+	hex.width = 4.0
+	hex.default_color = Color(0.3, 0.9, 1.6, 0.95)
+	var pts: PackedVector2Array = []
+	for i in range(6):
+		var a = i * (PI * 2.0 / 6.0)
+		pts.append(Vector2(cos(a), sin(a)) * 38.0)
+	pts.append(pts[0])
+	hex.points = pts
+	shield_node.add_child(hex)
+
+	var fill = Polygon2D.new()
+	fill.polygon = pts
+	fill.color = Color(0.2, 0.7, 1.4, 0.25)
+	shield_node.add_child(fill)
+	get_parent().add_child(shield_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(shield_node, "scale", Vector2(1.15, 1.15), 0.25).from(Vector2(0.5, 0.5))
+	tw.parallel().tween_property(shield_node, "modulate:a", 0.0, 0.75).from(1.0)
+	tw.tween_callback(shield_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_mage_armor_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var armor_node = Node2D.new()
+	armor_node.top_level = true
+	armor_node.global_position = target_pos
+	var diamond = Line2D.new()
+	diamond.width = 3.5
+	diamond.default_color = Color(0.5, 1.2, 1.8, 0.95)
+	diamond.points = PackedVector2Array([Vector2(0, -42), Vector2(30, 0), Vector2(0, 42), Vector2(-30, 0), Vector2(0, -42)])
+	armor_node.add_child(diamond)
+
+	var ring = Line2D.new()
+	ring.width = 2.0
+	ring.default_color = Color(0.8, 1.4, 2.0, 0.8)
+	var pts: PackedVector2Array = []
+	for i in range(16):
+		var a = i * (PI * 2.0 / 16.0)
+		pts.append(Vector2(cos(a), sin(a)) * 26.0)
+	pts.append(pts[0])
+	ring.points = pts
+	armor_node.add_child(ring)
+	get_parent().add_child(armor_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(armor_node, "scale", Vector2(1.2, 1.2), 0.30).from(Vector2(0.3, 0.3))
+	tw.parallel().tween_property(armor_node, "modulate:a", 0.0, 0.80).from(1.0)
+	tw.tween_callback(armor_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_bless_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var bless_node = Node2D.new()
+	bless_node.top_level = true
+	bless_node.global_position = target_pos
+
+	for k in range(3):
+		var ray = Line2D.new()
+		ray.width = 4.0
+		ray.default_color = Color(1.8, 1.6, 0.4, 0.9)
+		var x_off = (k - 1) * 35.0
+		ray.points = PackedVector2Array([Vector2(x_off, -120), Vector2(x_off, 20)])
+		bless_node.add_child(ray)
+
+	for s in range(5):
+		var star = Polygon2D.new()
+		star.polygon = PackedVector2Array([Vector2(0, -8), Vector2(2, -2), Vector2(8, 0), Vector2(2, 2), Vector2(0, 8), Vector2(-2, 2), Vector2(-8, 0), Vector2(-2, -2)])
+		star.color = Color(2.0, 1.8, 0.5, 1.0)
+		star.position = Vector2(randf_range(-40, 40), randf_range(-30, 20))
+		bless_node.add_child(star)
+
+	get_parent().add_child(bless_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(bless_node, "position:y", target_pos.y - 30.0, 0.70)
+	tw.parallel().tween_property(bless_node, "modulate:a", 0.0, 0.70)
+	tw.tween_callback(bless_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("heal_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_sleep_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var sleep_node = Node2D.new()
+	sleep_node.top_level = true
+	sleep_node.global_position = target_pos
+
+	var ring = Line2D.new()
+	ring.width = 3.0
+	ring.default_color = Color(0.8, 0.5, 1.4, 0.85)
+	var pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		pts.append(Vector2(cos(a), sin(a)) * 140.0)
+	pts.append(pts[0])
+	sleep_node.add_child(ring)
+
+	for k in range(12):
+		var mote = Polygon2D.new()
+		mote.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
+		mote.color = Color(0.9, 0.6, 1.8, 0.9)
+		mote.position = Vector2(randf_range(-120, 120), randf_range(-60, 60))
+		sleep_node.add_child(mote)
+
+	get_parent().add_child(sleep_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(sleep_node, "scale", Vector2(1.1, 1.1), 0.80).from(Vector2(0.4, 0.4))
+	tw.parallel().tween_property(sleep_node, "modulate:a", 0.0, 0.85).from(1.0)
+	tw.tween_callback(sleep_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.5).timeout
+
+func _spawn_hold_person_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var chain_node = Node2D.new()
+	chain_node.top_level = true
+	chain_node.global_position = target_pos
+
+	for k in range(3):
+		var ring = Line2D.new()
+		ring.width = 4.0
+		ring.default_color = Color(1.8, 1.4, 0.2, 0.95)
+		var pts: PackedVector2Array = []
+		var r_y = -20.0 + k * 18.0
+		for i in range(16):
+			var a = i * (PI * 2.0 / 16.0)
+			pts.append(Vector2(cos(a) * 22.0, sin(a) * 10.0 + r_y))
+		pts.append(pts[0])
+		ring.points = pts
+		chain_node.add_child(ring)
+
+	get_parent().add_child(chain_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(chain_node, "scale", Vector2(1.0, 1.0), 0.30).from(Vector2(1.6, 1.6))
+	tw.parallel().tween_property(chain_node, "modulate:a", 0.0, 0.85).from(1.0)
+	tw.tween_callback(chain_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_spiritual_weapon_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var weapon_node = Node2D.new()
+	weapon_node.top_level = true
+	weapon_node.global_position = target_pos + Vector2(0, -65)
+
+	var hammer = Polygon2D.new()
+	hammer.polygon = PackedVector2Array([
+		Vector2(-14, -10), Vector2(14, -10), Vector2(14, 10), Vector2(-14, 10),
+		Vector2(-3, 10), Vector2(-3, 35), Vector2(3, 35), Vector2(3, 10)
+	])
+	hammer.color = Color(0.6, 1.4, 2.2, 0.95)
+	weapon_node.add_child(hammer)
+	get_parent().add_child(weapon_node)
+
+	var tw = create_tween()
+	tw.tween_property(weapon_node, "rotation_degrees", 45.0, 0.22).from(-30.0)
+	tw.parallel().tween_property(weapon_node, "global_position", target_pos, 0.22)
+	await tw.finished
+
+	weapon_node.queue_free()
+	_spawn_spell_blast_vfx(target_pos, Color(0.6, 1.4, 2.2, 1.0))
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.3).timeout
+
+func _spawn_burning_hands_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var cone_node = Node2D.new()
+	cone_node.top_level = true
+	cone_node.global_position = global_position
+
+	var dir = global_position.direction_to(target_pos)
+	if dir == Vector2.ZERO: dir = Vector2.RIGHT
+	var base_angle = dir.angle()
+
+	var fan = Polygon2D.new()
+	var fan_pts: PackedVector2Array = [Vector2.ZERO]
+	var count = 12
+	var half_fov = deg_to_rad(30.0)
+	for i in range(count + 1):
+		var a = base_angle - half_fov + (float(i) / count) * (half_fov * 2.0)
+		fan_pts.append(Vector2(cos(a), sin(a)) * 150.0)
+	fan.polygon = fan_pts
+	fan.color = Color(2.0, 0.6, 0.1, 0.8)
+	cone_node.add_child(fan)
+
+	for k in range(8):
+		var ember = Polygon2D.new()
+		ember.polygon = PackedVector2Array([Vector2(-3, -3), Vector2(3, -3), Vector2(3, 3), Vector2(-3, 3)])
+		ember.color = Color(2.2, 0.9, 0.2, 1.0)
+		var rand_a = base_angle + randf_range(-half_fov, half_fov)
+		var rand_d = randf_range(30.0, 140.0)
+		ember.position = Vector2(cos(rand_a), sin(rand_d)) * rand_d
+		cone_node.add_child(ember)
+
+	get_parent().add_child(cone_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(cone_node, "scale", Vector2(1.15, 1.15), 0.35).from(Vector2(0.2, 0.2))
+	tw.parallel().tween_property(cone_node, "modulate:a", 0.0, 0.50).from(1.0)
+	tw.tween_callback(cone_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_thunderwave_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var wave_node = Node2D.new()
+	wave_node.top_level = true
+	wave_node.global_position = global_position
+
+	var cube = Line2D.new()
+	cube.width = 6.0
+	cube.default_color = Color(0.4, 1.2, 2.0, 0.95)
+	cube.points = PackedVector2Array([
+		Vector2(-75, -75), Vector2(75, -75), Vector2(75, 75), Vector2(-75, 75), Vector2(-75, -75)
+	])
+	wave_node.add_child(cube)
+	get_parent().add_child(wave_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(wave_node, "scale", Vector2(1.3, 1.3), 0.30).from(Vector2(0.2, 0.2))
+	tw.parallel().tween_property(wave_node, "modulate:a", 0.0, 0.45).from(1.0)
+	tw.tween_callback(wave_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.35).timeout
+
+func _spawn_lightning_bolt_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var bolt_node = Node2D.new()
+	bolt_node.top_level = true
+	bolt_node.global_position = Vector2.ZERO
+
+	var bolt_line = Line2D.new()
+	bolt_line.width = 7.0
+	bolt_line.default_color = Color(1.5, 1.8, 3.0, 1.0)
+	var p_start = global_position
+	var p_end = target_pos
+	var vec = p_end - p_start
+	var segs = 14
+	var pts: PackedVector2Array = [p_start]
+	for i in range(1, segs):
+		var frac = float(i) / segs
+		var mid = p_start.lerp(p_end, frac)
+		var perp = Vector2(-vec.y, vec.x).normalized() * randf_range(-18.0, 18.0)
+		pts.append(mid + perp)
+	pts.append(p_end)
+	bolt_line.points = pts
+	bolt_node.add_child(bolt_line)
+	get_parent().add_child(bolt_node)
+
+	var tw = create_tween()
+	tw.tween_property(bolt_node, "modulate:a", 0.0, 0.38).from(1.0)
+	tw.tween_callback(bolt_node.queue_free)
+
+	_spawn_spell_blast_vfx(target_pos, Color(1.2, 1.6, 2.5, 1.0))
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_haste_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var haste_node = Node2D.new()
+	haste_node.top_level = true
+	haste_node.global_position = target_pos
+
+	for k in range(3):
+		var streak = Line2D.new()
+		streak.width = 3.0
+		streak.default_color = Color(1.8, 1.5, 0.2, 0.9)
+		var pts: PackedVector2Array = []
+		var base_r = 24.0 + k * 8.0
+		for i in range(12):
+			var a = i * (PI * 1.5 / 12.0)
+			pts.append(Vector2(cos(a), sin(a)) * base_r)
+		streak.points = pts
+		haste_node.add_child(streak)
+
+	get_parent().add_child(haste_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(haste_node, "rotation_degrees", 360.0, 0.50).from(0.0)
+	tw.parallel().tween_property(haste_node, "modulate:a", 0.0, 0.55).from(1.0)
+	tw.tween_callback(haste_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.35).timeout
+
+func _spawn_counterspell_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var cs_node = Node2D.new()
+	cs_node.top_level = true
+	cs_node.global_position = target_pos
+
+	for k in range(8):
+		var shard = Line2D.new()
+		shard.width = 4.0
+		shard.default_color = Color(0.2, 0.8, 2.2, 1.0)
+		var a = k * (PI * 2.0 / 8.0)
+		shard.points = PackedVector2Array([Vector2.ZERO, Vector2(cos(a), sin(a)) * randf_range(25.0, 50.0)])
+		cs_node.add_child(shard)
+
+	get_parent().add_child(cs_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(cs_node, "scale", Vector2(1.5, 1.5), 0.25).from(Vector2(0.5, 0.5))
+	tw.parallel().tween_property(cs_node, "modulate:a", 0.0, 0.35).from(1.0)
+	tw.tween_callback(cs_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.35).timeout
+
+func _spawn_dispel_magic_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var dispel_node = Node2D.new()
+	dispel_node.top_level = true
+	dispel_node.global_position = target_pos
+
+	var colors = [Color(0.3, 0.9, 1.5, 0.9), Color(1.5, 0.4, 1.2, 0.9), Color(1.5, 1.4, 0.3, 0.9)]
+	for k in range(3):
+		var ring = Line2D.new()
+		ring.width = 3.5
+		ring.default_color = colors[k]
+		var pts: PackedVector2Array = []
+		for i in range(16):
+			var a = i * (PI * 2.0 / 16.0)
+			pts.append(Vector2(cos(a), sin(a)) * (18.0 + k * 12.0))
+		pts.append(pts[0])
+		ring.points = pts
+		dispel_node.add_child(ring)
+
+	get_parent().add_child(dispel_node)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(dispel_node, "scale", Vector2(1.8, 1.8), 0.45).from(Vector2(0.4, 0.4))
+	tw.parallel().tween_property(dispel_node, "modulate:a", 0.0, 0.55).from(1.0)
+	tw.tween_callback(dispel_node.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_find_traps_vfx(center_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = center_pos
+	for r_idx in range(3):
+		var ring = Line2D.new()
+		ring.width = 3.0
+		ring.default_color = Color(1.2, 0.9, 0.2, 0.85)
+		var pts: PackedVector2Array = []
+		for i in range(24):
+			var a = i * (PI * 2.0 / 24.0)
+			pts.append(Vector2(cos(a), sin(a)) * 25.0)
+		pts.append(pts[0])
+		ring.points = pts
+		vfx.add_child(ring)
+		var r_tw = create_tween()
+		r_tw.tween_property(ring, "scale", Vector2(7.0 + r_idx * 3.0, 7.0 + r_idx * 3.0), 0.70).set_delay(r_idx * 0.15)
+		r_tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.70).set_delay(r_idx * 0.15)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.tween_interval(0.9)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_knock_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = target_pos
+	for i in range(2):
+		var ring = Line2D.new()
+		ring.width = 4.0
+		ring.default_color = Color(0.4, 0.9, 1.4, 0.9)
+		var pts: PackedVector2Array = []
+		for k in range(20):
+			var a = k * (PI * 2.0 / 20.0)
+			pts.append(Vector2(cos(a), sin(a)) * 20.0)
+		pts.append(pts[0])
+		ring.points = pts
+		vfx.add_child(ring)
+		var r_tw = create_tween()
+		r_tw.tween_property(ring, "scale", Vector2(3.5, 3.5), 0.45).set_delay(i * 0.12)
+		r_tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.45).set_delay(i * 0.12)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.tween_interval(0.6)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.3).timeout
+
+func _spawn_invisibility_vfx(center_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = center_pos
+	for k in range(12):
+		var spark = Polygon2D.new()
+		spark.polygon = PackedVector2Array([Vector2(0, -6), Vector2(4, 0), Vector2(0, 6), Vector2(-4, 0)])
+		spark.color = Color(0.6, 0.8, 1.4, 0.8)
+		spark.position = Vector2(randf_range(-20, 20), randf_range(-30, 20))
+		vfx.add_child(spark)
+		var s_tw = create_tween()
+		s_tw.parallel().tween_property(spark, "position:y", spark.position.y - 35.0, 0.6)
+		s_tw.parallel().tween_property(spark, "modulate:a", 0.0, 0.6)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.tween_interval(0.7)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.3).timeout
+
+func _spawn_tremor_stomp_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = target_pos
+	var ring = Line2D.new()
+	ring.width = 5.0
+	ring.default_color = Color(1.2, 0.8, 0.3, 0.9)
+	var pts: PackedVector2Array = []
+	for i in range(18):
+		var a = i * (PI * 2.0 / 18.0)
+		pts.append(Vector2(cos(a), sin(a)) * 25.0)
+	pts.append(pts[0])
+	ring.points = pts
+	vfx.add_child(ring)
+	for d in range(8):
+		var debris = Polygon2D.new()
+		debris.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
+		debris.color = Color(0.8, 0.6, 0.3, 0.9)
+		debris.position = Vector2(randf_range(-15, 15), randf_range(-15, 15))
+		vfx.add_child(debris)
+		var d_tw = create_tween()
+		var out_dir = (debris.position).normalized() * randf_range(30, 60)
+		d_tw.parallel().tween_property(debris, "position", debris.position + out_dir, 0.5)
+		d_tw.parallel().tween_property(debris, "modulate:a", 0.0, 0.5)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.parallel().tween_property(ring, "scale", Vector2(3.0, 2.0), 0.5)
+	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("melee_crit")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.3).timeout
+
+func _spawn_crushing_cleave_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = target_pos
+	var arc = Line2D.new()
+	arc.width = 6.0
+	arc.default_color = Color(1.5, 0.3, 0.3, 0.95)
+	var pts: PackedVector2Array = []
+	for i in range(12):
+		var a = -PI * 0.5 + i * (PI * 1.0 / 11.0)
+		pts.append(Vector2(cos(a), sin(a)) * 45.0)
+	arc.points = pts
+	vfx.add_child(arc)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.parallel().tween_property(arc, "scale", Vector2(1.6, 1.6), 0.35)
+	tw.parallel().tween_property(arc, "modulate:a", 0.0, 0.35)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("melee_crit")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.3).timeout
+
+func _spawn_rallying_stomp_vfx(center_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = center_pos
+	var ring = Line2D.new()
+	ring.width = 4.0
+	ring.default_color = Color(1.4, 1.1, 0.3, 0.9)
+	var pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		pts.append(Vector2(cos(a), sin(a)) * 30.0)
+	pts.append(pts[0])
+	ring.points = pts
+	vfx.add_child(ring)
+	for k in range(6):
+		var cross = Line2D.new()
+		cross.width = 3.0
+		cross.default_color = Color(1.5, 1.3, 0.4, 0.9)
+		cross.points = PackedVector2Array([Vector2(-6, 0), Vector2(6, 0)])
+		var v_line = Line2D.new()
+		v_line.width = 3.0
+		v_line.default_color = Color(1.5, 1.3, 0.4, 0.9)
+		v_line.points = PackedVector2Array([Vector2(0, -6), Vector2(0, 6)])
+		cross.add_child(v_line)
+		cross.position = Vector2(randf_range(-30, 30), randf_range(-20, 20))
+		vfx.add_child(cross)
+		var c_tw = create_tween()
+		c_tw.parallel().tween_property(cross, "position:y", cross.position.y - 40.0, 0.6)
+		c_tw.parallel().tween_property(cross, "modulate:a", 0.0, 0.6)
+	get_parent().add_child(vfx)
+	var tw = create_tween()
+	tw.parallel().tween_property(ring, "scale", Vector2(3.5, 2.2), 0.6)
+	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(vfx.queue_free)
+	if AudioManager:
+		AudioManager.play_sfx("heal_cast")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
 
 func move_to(target_pos: Vector2) -> void:
 	move_to_point(target_pos)

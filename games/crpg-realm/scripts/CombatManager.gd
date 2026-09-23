@@ -21,6 +21,14 @@ func execute_attack(attacker_name: String, attack_bonus: int, damage_dice_min: i
 			has_disadv = true
 		if gs.has_status_effect(target_name, "blinded") or gs.has_status_effect(target_name, "paralyzed") or gs.has_status_effect(target_name, "prone") or gs.has_status_effect(target_name, "stunned") or gs.has_status_effect(target_name, "unconscious"):
 			has_adv = true
+		if gs.has_status_effect(attacker_name, "blessed"):
+			var b = randi_range(1, 4)
+			attack_bonus += b
+			_log_combat("magic", "✨ [BLESS] %s adds +%d (1d4) to attack roll!" % [attacker_name, b])
+		if gs.has_status_effect(target_name, "shield"):
+			target_ac += 5
+		if gs.has_status_effect(target_name, "hasted"):
+			target_ac += 2
 
 	var r1 = roll_d20()
 	var r2 = roll_d20()
@@ -82,8 +90,16 @@ func execute_ranged_attack(attacker_name: String, attack_bonus: int, damage_dice
 	if gs and gs.has_method("has_status_effect"):
 		if gs.has_status_effect(attacker_name, "blinded") or gs.has_status_effect(attacker_name, "poisoned") or gs.has_status_effect(attacker_name, "frightened"):
 			has_disadv = true
-		if gs.has_status_effect(target_name, "blinded") or gs.has_status_effect(target_name, "restrained") or gs.has_status_effect(target_name, "stunned"):
+		if gs.has_status_effect(target_name, "blinded") or gs.has_status_effect(target_name, "restrained") or gs.has_status_effect(target_name, "stunned") or gs.has_status_effect(target_name, "paralyzed") or gs.has_status_effect(target_name, "unconscious"):
 			has_adv = true
+		if gs.has_status_effect(attacker_name, "blessed"):
+			var b = randi_range(1, 4)
+			attack_bonus += b
+			_log_combat("magic", "✨ [BLESS] %s adds +%d (1d4) to attack roll!" % [attacker_name, b])
+		if gs.has_status_effect(target_name, "shield"):
+			target_ac += 5
+		if gs.has_status_effect(target_name, "hasted"):
+			target_ac += 2
 
 	var r1 = roll_d20()
 	var r2 = roll_d20()
@@ -141,47 +157,255 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 
 	match spell_id:
 		"magic-missile":
+			var tgt = target_name if target_name != "" else "target"
+			if gs and gs.has_method("has_status_effect") and gs.has_status_effect(tgt, "shield"):
+				_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, tgt])
+				_log_combat("magic", "🛡️ [SHIELD] The invisible barrier of magical force completely blocks and absorbs the Magic Missiles! (0 damage)")
+				if FloatingTextManager and target_node and "global_position" in target_node:
+					FloatingTextManager.spawn_text(target_node.global_position, "BLOCKED BY SHIELD!", Color(0.3, 0.8, 1.0))
+				return {"success": true, "spell": "magic-missile", "damage": 0, "blocked_by_shield": true, "hit": false}
+
 			var d1 = randi_range(1, 4) + 1
 			var d2 = randi_range(1, 4) + 1
 			var d3 = randi_range(1, 4) + 1
 			var total_dmg = d1 + d2 + d3
-			_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, target_name if target_name != "" else "target"])
-			_log_combat("damage", "Arcane energy darts strike %s for %d force damage (%d + %d + %d)!" % [target_name if target_name != "" else "target", total_dmg, d1, d2, d3])
+			_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, tgt])
+			_log_combat("damage", "Arcane energy darts strike %s for %d force damage (%d + %d + %d)!" % [tgt, total_dmg, d1, d2, d3])
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 				am.play_sfx("spell_impact")
 			if target_node:
-				if "global_position" in target_node:
+				if "global_position" in target_node and FloatingTextManager:
 					FloatingTextManager.spawn_damage(target_node.global_position, total_dmg)
 				if target_node.has_method("take_damage"):
 					target_node.take_damage(total_dmg)
-			return {"success": true, "spell": "magic-missile", "damage": total_dmg, "hit": true}
+			return {"success": true, "spell": "magic-missile", "damage": total_dmg, "hit": true, "darts": [d1, d2, d3]}
 
 		"cure-wounds":
 			var wis_mod = 2
 			if gs and "ability_scores" in gs:
 				wis_mod = gs.get_stat_modifier(int(gs.ability_scores.get("WIS", 12)))
 			var heal_amount = randi_range(1, 8) + max(1, wis_mod)
-			var prev_hp = gs.hero_hp if gs else 10
-			if gs and gs.has_method("heal"):
-				gs.heal(heal_amount)
-			elif gs:
-				gs.hero_hp = min(gs.hero_max_hp, gs.hero_hp + heal_amount)
-			var cur_hp = gs.hero_hp if gs else 12
-			var max_hp = gs.hero_max_hp if gs else 12
-			_log_combat("combat", "✨ %s casts [b]Cure Wounds[/b]!" % caster_name)
-			_log_combat("damage", "Radiant holy vitality restores %d Hit Points to %s (%d -> %d/%d)!" % [heal_amount, caster_name, prev_hp, cur_hp, max_hp])
-			if target_node and "global_position" in target_node:
+			var tgt = target_name if target_name != "" else caster_name
+			var prev_hp = 10
+			var cur_hp = 12
+			var max_hp = 12
+			if tgt == caster_name or tgt == gs.hero_name or tgt == "hero":
+				prev_hp = gs.hero_hp
+				if gs.hero_hp <= 0:
+					gs.remove_status_effect(gs.hero_name, "unconscious")
+				if gs.has_method("heal"):
+					gs.heal(heal_amount)
+				else:
+					gs.hero_hp = min(gs.hero_max_hp, gs.hero_hp + heal_amount)
+				cur_hp = gs.hero_hp
+				max_hp = gs.hero_max_hp
+			else:
+				var m = gs.get_party_member(tgt) if gs.has_method("get_party_member") else null
+				if m:
+					prev_hp = m.get("hp", 0)
+					if prev_hp <= 0:
+						gs.remove_status_effect(tgt, "unconscious")
+					gs.heal_party_member(tgt, heal_amount)
+					cur_hp = m.get("hp", 0)
+					max_hp = m.get("max_hp", 12)
+			_log_combat("combat", "✨ %s casts [b]Cure Wounds[/b] on %s!" % [caster_name, tgt])
+			_log_combat("damage", "Radiant holy vitality restores %d Hit Points to %s (%d -> %d/%d)!" % [heal_amount, tgt, prev_hp, cur_hp, max_hp])
+			if target_node and "global_position" in target_node and FloatingTextManager:
 				FloatingTextManager.spawn_heal(target_node.global_position, heal_amount)
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("heal_cast")
-			return {"success": true, "spell": "cure-wounds", "healed": heal_amount, "current_hp": cur_hp, "max_hp": max_hp}
+			return {"success": true, "spell": "cure-wounds", "target": tgt, "healed": heal_amount, "current_hp": cur_hp, "max_hp": max_hp}
+
+		"healing-word":
+			var wis_mod = 2
+			if gs and "ability_scores" in gs:
+				wis_mod = gs.get_stat_modifier(int(gs.ability_scores.get("WIS", 12)))
+			var heal_amount = randi_range(1, 4) + max(1, wis_mod)
+			var tgt = target_name if target_name != "" else caster_name
+			var prev_hp = 10
+			var cur_hp = 12
+			var max_hp = 12
+			if tgt == caster_name or tgt == gs.hero_name or tgt == "hero":
+				prev_hp = gs.hero_hp
+				if gs.hero_hp <= 0:
+					gs.remove_status_effect(gs.hero_name, "unconscious")
+				if gs.has_method("heal"):
+					gs.heal(heal_amount)
+				else:
+					gs.hero_hp = min(gs.hero_max_hp, gs.hero_hp + heal_amount)
+				cur_hp = gs.hero_hp
+				max_hp = gs.hero_max_hp
+			else:
+				var m = gs.get_party_member(tgt) if gs.has_method("get_party_member") else null
+				if m:
+					prev_hp = m.get("hp", 0)
+					if prev_hp <= 0:
+						gs.remove_status_effect(tgt, "unconscious")
+					gs.heal_party_member(tgt, heal_amount)
+					cur_hp = m.get("hp", 0)
+					max_hp = m.get("max_hp", 12)
+			_log_combat("combat", "✨ %s casts [b]Healing Word[/b] on %s as a bonus action (Range 60ft)!" % [caster_name, tgt])
+			_log_combat("damage", "Swift verbal prayer restores %d Hit Points to %s (%d -> %d/%d)!" % [heal_amount, tgt, prev_hp, cur_hp, max_hp])
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_heal(target_node.global_position, heal_amount)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("heal_cast")
+			return {"success": true, "spell": "healing-word", "target": tgt, "healed": heal_amount, "current_hp": cur_hp, "max_hp": max_hp}
+
+		"shield":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "shield", 5)
+			_log_combat("combat", "🛡️ %s casts [b]Shield[/b] as a reaction!" % caster_name)
+			_log_combat("magic", "An invisible barrier of magical force appears, granting a +5 bonus to AC and negating Magic Missile until next turn!")
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -20), "+5 AC SHIELD!", Color(0.3, 0.8, 1.0))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "shield", "target": tgt, "ac_bonus": 5}
+
+		"sleep":
+			var target_pos = Vector2.ZERO
+			if target_node and "global_position" in target_node:
+				target_pos = target_node.global_position
+			return execute_aoe_spell(caster_name, "sleep", target_pos, 160.0, 0, "", null)
+
+		"mage-armor":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "mage_armor", 10)
+			var dex_mod = 2
+			if gs and "ability_scores" in gs:
+				dex_mod = gs.get_stat_modifier(int(gs.ability_scores.get("DEX", 14)))
+			var new_ac = 13 + dex_mod
+			if tgt == caster_name or tgt == gs.hero_name or tgt == "hero":
+				gs.hero_ac = new_ac
+			_log_combat("combat", "✨ %s casts [b]Mage Armor[/b] on %s!" % [caster_name, tgt])
+			_log_combat("magic", "A protective magical force surrounds %s. Base Armor Class becomes 13 + DEX (%d AC)!" % [tgt, new_ac])
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -20), "MAGE ARMOR (AC %d)" % new_ac, Color(0.4, 0.9, 1.0))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "mage-armor", "target": tgt, "new_ac": new_ac, "ac_bonus": 3}
+
+		"burning-hands":
+			var target_pos = Vector2.ZERO
+			if target_node and "global_position" in target_node:
+				target_pos = target_node.global_position
+			return execute_aoe_spell(caster_name, "burning-hands", target_pos, 150.0, 14, "DEX", null)
+
+		"thunderwave":
+			var target_pos = Vector2.ZERO
+			if target_node and "global_position" in target_node:
+				target_pos = target_node.global_position
+			return execute_aoe_spell(caster_name, "thunderwave", target_pos, 150.0, 14, "CON", null)
+
+		"bless":
+			_log_combat("combat", "✨ %s casts [b]Bless[/b] on party allies!" % caster_name)
+			_log_combat("magic", "A divine blessing descends upon the party! Each blessed target adds +1d4 to all attack rolls and saving throws.")
+			var blessed_targets: Array[String] = []
+			if gs and "party_members" in gs:
+				for m in gs.party_members:
+					var m_name = str(m.get("name", ""))
+					gs.apply_status_effect(m_name, "blessed", 10)
+					blessed_targets.append(m_name)
+			elif gs:
+				gs.apply_status_effect(caster_name, "blessed", 10)
+				blessed_targets.append(caster_name)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("heal_cast")
+			return {"success": true, "spell": "bless", "targets": blessed_targets, "bonus": "1d4"}
+
+		"hold-person":
+			var tgt = target_name if target_name != "" else "target"
+			var is_humanoid = true
+			if target_node and "creature_type" in target_node:
+				is_humanoid = (target_node.creature_type == "humanoid")
+			elif "wolf" in tgt.to_lower() or "hound" in tgt.to_lower() or "golem" in tgt.to_lower() or "beast" in tgt.to_lower():
+				is_humanoid = false
+
+			_log_combat("combat", "✨ %s casts [b]Hold Person[/b] on %s!" % [caster_name, tgt])
+			if not is_humanoid:
+				_log_combat("system", "❌ Spell Fails: %s is not a humanoid (Immune to Hold Person)!" % tgt)
+				if target_node and "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_text(target_node.global_position, "IMMUNE (NOT HUMANOID)!", Color(1.0, 0.4, 0.4))
+				return {"success": false, "spell": "hold-person", "target": tgt, "immune": true, "reason": "not_humanoid"}
+
+			var d20 = roll_d20()
+			var wis_save_mod = 1
+			if target_node and "wis_save_mod" in target_node:
+				wis_save_mod = target_node.wis_save_mod
+			var total_save = d20 + wis_save_mod
+			var save_passed = (total_save >= 14)
+
+			if save_passed:
+				_log_combat("combat", "🛡️ %s resists Hold Person! [Wisdom save: %d + %d = %d vs DC 14]" % [tgt, d20, wis_save_mod, total_save])
+				if target_node and "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_text(target_node.global_position, "SAVED (DC 14)!", Color(0.4, 1.0, 0.5))
+				return {"success": true, "spell": "hold-person", "target": tgt, "save_passed": true, "d20": d20, "paralyzed": false}
+			else:
+				_log_combat("combat", "⛓️ %s FAILS Wisdom save [d20: %d + %d = %d vs DC 14] and is PARALYZED!" % [tgt, d20, wis_save_mod, total_save])
+				_log_combat("magic", "%s is paralyzed in glowing golden chains! Incapacitated; attacks have advantage, melee hits auto-crit!" % tgt)
+				if gs and gs.has_method("apply_status_effect"):
+					gs.apply_status_effect(tgt, "paralyzed", 3)
+				if target_node and "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_text(target_node.global_position, "PARALYZED!", Color(1.0, 0.8, 0.1))
+				if am and am.has_method("play_sfx"):
+					am.play_sfx("spell_cast")
+				return {"success": true, "spell": "hold-person", "target": tgt, "save_passed": false, "d20": d20, "paralyzed": true}
+
+		"spiritual-weapon":
+			var tgt = target_name if target_name != "" else "target"
+			var wis_mod = 3
+			if gs and "ability_scores" in gs:
+				wis_mod = gs.get_stat_modifier(int(gs.ability_scores.get("WIS", 16)))
+			var roll = randi_range(1, 8)
+			var dmg = roll + max(1, wis_mod)
+			_log_combat("combat", "✨ %s summons a [b]Spiritual Weapon[/b] striking %s as a bonus action!" % [caster_name, tgt])
+			_log_combat("damage", "The luminous spectral warhammer smites %s for %d force damage (1d8 [%d] + %d)!" % [tgt, dmg, roll, wis_mod])
+			if target_node:
+				if "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_damage(target_node.global_position, dmg)
+				if target_node.has_method("take_damage"):
+					target_node.take_damage(dmg)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_impact")
+			return {"success": true, "spell": "spiritual-weapon", "target": tgt, "damage": dmg}
 
 		"fireball":
 			var target_pos = Vector2.ZERO
 			if target_node and "global_position" in target_node:
 				target_pos = target_node.global_position
 			return execute_aoe_spell(caster_name, "fireball", target_pos, 180.0, 14, "DEX", null)
+
+		"lightning-bolt":
+			var target_pos = Vector2.ZERO
+			if target_node and "global_position" in target_node:
+				target_pos = target_node.global_position
+			return execute_aoe_spell(caster_name, "lightning-bolt", target_pos, 450.0, 14, "DEX", null)
+
+		"haste":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "hasted", 10)
+			_log_combat("combat", "✨ %s casts [b]Haste[/b] on %s!" % [caster_name, tgt])
+			_log_combat("magic", "%s surges with blinding speed! Movement velocity doubled, +2 bonus to AC, and gains an extra action each turn!" % tgt)
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -20), "HASTED (+2 AC, 2x SPEED)!", Color(1.0, 0.9, 0.2))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "haste", "target": tgt, "speed_mult": 2.0, "ac_bonus": 2}
+
+		"counterspell":
+			var tgt = target_name if target_name != "" else "enemy spellcaster"
+			_log_combat("combat", "⚡ [REACTION] %s casts [b]Counterspell[/b] targeting %s!" % [caster_name, tgt])
+			_log_combat("magic", "A burst of anti-magic disrupts the weave! %s's spell fizzles and collapses harmlessly into dissipating arcane sparks!" % tgt)
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position, "COUNTERSPELLED!", Color(0.2, 0.6, 1.0))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_impact")
+			return {"success": true, "spell": "counterspell", "target": tgt, "countered": true}
 
 		"find-traps":
 			_log_combat("magic", "✨ %s casts [b]Find Traps[/b]! Divine divination radiates across the area." % caster_name)
@@ -216,12 +440,20 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 
 		"dispel-magic", "dispel", "dispel_magic":
 			var tgt = target_name if target_name != "" else caster_name
-			if gs and gs.has_method("remove_status_effect"):
-				gs.remove_status_effect(tgt, "invisible")
-			_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! Arcane illusions unravel and dissipate." % [caster_name, tgt])
+			var dispelled_effects: Array[String] = []
+			if gs and gs.has_method("get_status_effects"):
+				var effs = gs.get_status_effects(tgt).duplicate()
+				for eff in effs:
+					gs.remove_status_effect(tgt, eff)
+					dispelled_effects.append(eff)
+			if dispelled_effects.has("mage_armor") and (tgt == caster_name or tgt == gs.hero_name or tgt == "hero"):
+				gs.hero_ac = 10 + gs.get_stat_modifier(int(gs.ability_scores.get("DEX", 14)))
+			_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! Dispelled magical effects: %s." % [caster_name, tgt, str(dispelled_effects) if dispelled_effects.size() > 0 else "None"])
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position, "DISPELLED!", Color(0.8, 0.4, 1.0))
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
-			return {"success": true, "spell": "dispel-magic", "target": tgt}
+			return {"success": true, "spell": "dispel-magic", "target": tgt, "dispelled": dispelled_effects}
 
 		"tremor-stomp", "crushing-cleave", "rallying-stomp":
 			return execute_fighter_ability(caster_name, spell_id, target_name, target_node)
@@ -263,7 +495,6 @@ func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vec
 			var cur_sc = tree.current_scene if tree else null
 			if cur_sc:
 				var candidate_nodes: Array[Node] = []
-				# Check TacticalBattle enemies or children
 				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
 					for eid in cur_sc.enemies:
 						var e_node = cur_sc.enemies[eid]
@@ -280,7 +511,7 @@ func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vec
 					var dist = target_center.distance_to(target.global_position)
 					if dist <= radius:
 						var d20 = roll_d20()
-						var dex_save_mod = 2 # D&D 5e standard Goblin has DEX 14 (+2)
+						var dex_save_mod = 2
 						if "dex_save_mod" in target:
 							dex_save_mod = target.dex_save_mod
 						elif "dex_mod" in target:
@@ -334,6 +565,296 @@ func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vec
 				"targets_hit_count": targets_hit.size(),
 				"slain_count": slain_count,
 				"all_slain": (targets_hit.size() > 0 and slain_count == targets_hit.size())
+			}
+
+		"burning-hands":
+			var dice_rolls: Array[int] = []
+			var total_dmg: int = 0
+			for _k in range(3):
+				var r = randi_range(1, 6)
+				dice_rolls.append(r)
+				total_dmg += r
+
+			_log_combat("combat", "🔥 %s casts [b]Burning Hands[/b] (15ft cone)!" % caster_name)
+			_log_combat("damage", "A sheet of roaring flames erupts for %d fire damage! Rolled 3d6: %s (Save DC %d %s)." % [
+				total_dmg, str(dice_rolls), save_dc, save_stat
+			])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+				am.play_sfx("spell_impact")
+
+			var targets_hit: Array[Dictionary] = []
+			var slain_count = 0
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						var e_node = cur_sc.enemies[eid]
+						if e_node and is_instance_valid(e_node): candidate_nodes.append(e_node)
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child): candidate_nodes.append(child)
+
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+					var dist = target_center.distance_to(target.global_position)
+					if dist <= radius:
+						var d20 = roll_d20()
+						var dex_save_mod = target.get("dex_save_mod") if "dex_save_mod" in target else 2
+						var total_save = d20 + dex_save_mod
+						var save_passed = (total_save >= save_dc)
+						var dmg_taken = total_dmg if not save_passed else int(ceil(total_dmg / 2.0))
+						var hp_before = target.current_hp
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_damage(target.global_position, dmg_taken)
+						target.take_damage(dmg_taken, caster_node)
+						var was_slain = (target.current_state == TacticalEnemy.State.DEAD or target.current_hp <= 0)
+						if was_slain: slain_count += 1
+						targets_hit.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"distance": dist,
+							"d20": d20,
+							"save_passed": save_passed,
+							"damage_taken": dmg_taken,
+							"hp_before": hp_before,
+							"hp_after": target.current_hp,
+							"slain": was_slain
+						})
+
+			return {
+				"success": true,
+				"spell": "burning-hands",
+				"damage_dice": dice_rolls,
+				"total_damage": total_dmg,
+				"save_dc": save_dc,
+				"targets_hit": targets_hit,
+				"targets_hit_count": targets_hit.size(),
+				"slain_count": slain_count
+			}
+
+		"thunderwave":
+			var dice_rolls: Array[int] = []
+			var total_dmg: int = 0
+			for _k in range(2):
+				var r = randi_range(1, 8)
+				dice_rolls.append(r)
+				total_dmg += r
+
+			_log_combat("combat", "⚡ %s casts [b]Thunderwave[/b] (15-foot cube)!" % caster_name)
+			_log_combat("damage", "Thunderous force sweeps out for %d thunder damage! Rolled 2d8: %s (Save DC %d %s)." % [
+				total_dmg, str(dice_rolls), save_dc, save_stat
+			])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+				am.play_sfx("spell_impact")
+
+			var targets_hit: Array[Dictionary] = []
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						var e_node = cur_sc.enemies[eid]
+						if e_node and is_instance_valid(e_node): candidate_nodes.append(e_node)
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child): candidate_nodes.append(child)
+
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+					var dist = target_center.distance_to(target.global_position)
+					if dist <= radius:
+						var d20 = roll_d20()
+						var con_save_mod = 1
+						if "con_save_mod" in target: con_save_mod = target.con_save_mod
+						var total_save = d20 + con_save_mod
+						var save_passed = (total_save >= save_dc)
+						var dmg_taken = total_dmg if not save_passed else int(ceil(total_dmg / 2.0))
+						var pushed = false
+						if not save_passed:
+							var push_dir = (target.global_position - target_center).normalized()
+							if push_dir == Vector2.ZERO: push_dir = Vector2.RIGHT
+							target.global_position += push_dir * 70.0
+							pushed = true
+							_log_combat("combat", "💨 %s is pushed back 10 feet by the shockwave!" % target.enemy_name)
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_damage(target.global_position, dmg_taken)
+							if pushed:
+								FloatingTextManager.spawn_text(target.global_position + Vector2(0, -25), "PUSHED 10FT!", Color(0.4, 0.9, 1.0))
+						target.take_damage(dmg_taken, caster_node)
+						targets_hit.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"d20": d20,
+							"save_passed": save_passed,
+							"damage_taken": dmg_taken,
+							"pushed": pushed
+						})
+
+			return {
+				"success": true,
+				"spell": "thunderwave",
+				"damage_dice": dice_rolls,
+				"total_damage": total_dmg,
+				"targets_hit": targets_hit,
+				"targets_hit_count": targets_hit.size()
+			}
+
+		"lightning-bolt":
+			var dice_rolls: Array[int] = []
+			var total_dmg: int = 0
+			for _k in range(8):
+				var r = randi_range(1, 6)
+				dice_rolls.append(r)
+				total_dmg += r
+
+			_log_combat("combat", "⚡ %s casts [b]Lightning Bolt[/b] in a 100-foot piercing line!" % caster_name)
+			_log_combat("damage", "Crackling electrical plasma blazes for %d lightning damage! Rolled 8d6: %s (Save DC %d %s)." % [
+				total_dmg, str(dice_rolls), save_dc, save_stat
+			])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+				am.play_sfx("spell_impact")
+
+			var targets_hit: Array[Dictionary] = []
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						var e_node = cur_sc.enemies[eid]
+						if e_node and is_instance_valid(e_node): candidate_nodes.append(e_node)
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child): candidate_nodes.append(child)
+
+				var p1 = caster_node.global_position if (caster_node and "global_position" in caster_node) else Vector2(520, 520)
+				var p2 = target_center
+				var line_vec = p2 - p1
+				var line_len = line_vec.length()
+				if line_len < 1.0:
+					line_vec = Vector2.RIGHT * 450.0
+					line_len = 450.0
+
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+					var t_pos = target.global_position
+					var proj = (t_pos - p1).dot(line_vec.normalized())
+					var line_dist = 9999.0
+					if proj >= 0.0 and proj <= line_len + 50.0:
+						var closest_pt = p1 + line_vec.normalized() * proj
+						line_dist = t_pos.distance_to(closest_pt)
+
+					if line_dist <= 65.0:
+						var d20 = roll_d20()
+						var dex_save_mod = target.get("dex_save_mod") if "dex_save_mod" in target else 2
+						var total_save = d20 + dex_save_mod
+						var save_passed = (total_save >= save_dc)
+						var dmg_taken = total_dmg if not save_passed else int(ceil(total_dmg / 2.0))
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_damage(target.global_position, dmg_taken)
+						target.take_damage(dmg_taken, caster_node)
+						targets_hit.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"d20": d20,
+							"save_passed": save_passed,
+							"damage_taken": dmg_taken,
+							"hp_after": target.current_hp
+						})
+
+			return {
+				"success": true,
+				"spell": "lightning-bolt",
+				"damage_dice": dice_rolls,
+				"total_damage": total_dmg,
+				"targets_hit": targets_hit,
+				"targets_hit_count": targets_hit.size()
+			}
+
+		"sleep":
+			var dice_rolls: Array[int] = []
+			var hp_pool: int = 0
+			for _k in range(5):
+				var r = randi_range(1, 8)
+				dice_rolls.append(r)
+				hp_pool += r
+
+			_log_combat("combat", "💤 %s casts [b]Sleep[/b] (20ft radius)!" % caster_name)
+			_log_combat("damage", "Magical slumber rolls across the battlefield with a %d HP pool! Rolled 5d8: %s." % [
+				hp_pool, str(dice_rolls)
+			])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+
+			var remaining_pool = hp_pool
+			var targets_affected: Array[Dictionary] = []
+			var targets_resisted: Array[Dictionary] = []
+
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						var e_node = cur_sc.enemies[eid]
+						if e_node and is_instance_valid(e_node): candidate_nodes.append(e_node)
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child): candidate_nodes.append(child)
+
+				var in_range: Array[TacticalEnemy] = []
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+					var dist = target_center.distance_to(target.global_position)
+					if dist <= radius:
+						in_range.append(target)
+
+				in_range.sort_custom(func(a, b): return a.current_hp < b.current_hp)
+
+				for target in in_range:
+					if target.current_hp <= remaining_pool:
+						remaining_pool -= target.current_hp
+						if gs and gs.has_method("apply_status_effect"):
+							gs.apply_status_effect(target.enemy_name, "asleep", 10)
+						_log_combat("magic", "💤 %s falls into a deep magical slumber! (%d HP deducted, %d HP pool remaining)" % [
+							target.enemy_name, target.current_hp, remaining_pool
+						])
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_text(target.global_position + Vector2(0, -25), "ASLEEP (ZZZ)!", Color(0.7, 0.5, 1.0))
+						targets_affected.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"hp": target.current_hp,
+							"asleep": true
+						})
+					else:
+						_log_combat("combat", "🛡️ %s resists Sleep! (Current HP %d exceeds remaining pool %d)" % [
+							target.enemy_name, target.current_hp, remaining_pool
+						])
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_text(target.global_position + Vector2(0, -25), "RESISTED SLEEP!", Color(0.9, 0.7, 0.4))
+						targets_resisted.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"hp": target.current_hp,
+							"asleep": false
+						})
+
+			return {
+				"success": true,
+				"spell": "sleep",
+				"damage_dice": dice_rolls,
+				"hp_pool": hp_pool,
+				"remaining_pool": remaining_pool,
+				"targets_affected": targets_affected,
+				"targets_resisted": targets_resisted,
+				"affected_count": targets_affected.size()
 			}
 
 		_:

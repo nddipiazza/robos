@@ -21,6 +21,7 @@ var enemies: Dictionary = {} # id -> TacticalEnemy
 var combat_round_index: int = 0
 var round_history: Array[Dictionary] = []
 var last_aoe_telemetry: Dictionary = {}
+var last_spell_telemetry: Dictionary = {}
 
 signal combat_round_started(round_number: int)
 signal combat_round_completed(round_number: int, summary: Dictionary)
@@ -820,6 +821,217 @@ func execute_fireball_spell_cast(target_pos: Vector2 = Vector2(1150, 520)) -> Di
 			t_wait -= get_process_delta_time()
 
 	var res = combat_mgr.execute_aoe_spell("Ignis the Evoker", "fireball", target_pos, 180.0, 14, "DEX", hero)
+	last_aoe_telemetry = res
+
+	_check_victory()
+	return res
+
+func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
+	var enc_type = str(config.get("encounter", "custom"))
+	var wizard_name = str(config.get("wizard", "Ignis the Evoker"))
+	var hero_class = str(config.get("class", "wizard"))
+	var hero_hp = int(config.get("hp", 35))
+
+	GameState.hero_name = wizard_name
+	GameState.hero_class = hero_class
+	GameState.hero_hp = hero_hp
+	GameState.hero_max_hp = hero_hp
+	if hero_class == "wizard":
+		GameState.ability_scores = {"STR": 10, "DEX": 14, "CON": 14, "INT": 16, "WIS": 12, "CHA": 10}
+		GameState.hero_ac = 12
+	elif hero_class == "cleric":
+		GameState.ability_scores = {"STR": 14, "DEX": 10, "CON": 14, "INT": 10, "WIS": 16, "CHA": 12}
+		GameState.hero_ac = 14
+	elif hero_class == "fighter":
+		GameState.ability_scores = {"STR": 16, "DEX": 12, "CON": 14, "INT": 10, "WIS": 10, "CHA": 10}
+		GameState.hero_ac = 16
+	else:
+		GameState.ability_scores = {"STR": 12, "DEX": 14, "CON": 12, "INT": 12, "WIS": 12, "CHA": 10}
+		GameState.hero_ac = 12
+	GameState.party_members = [
+		{
+			"id": "hero",
+			"name": wizard_name,
+			"class": hero_class,
+			"hp": hero_hp,
+			"max_hp": hero_hp,
+			"ac": GameState.hero_ac,
+			"portrait": "portrait_%s" % hero_class,
+			"is_leader": true,
+			"status_effects": []
+		},
+		{
+			"id": "companion_1",
+			"name": "Elora",
+			"class": "cleric",
+			"hp": 22,
+			"max_hp": 22,
+			"ac": 14,
+			"portrait": "portrait_cleric",
+			"is_leader": false,
+			"status_effects": []
+		},
+		{
+			"id": "companion_2",
+			"name": "Thrumbar",
+			"class": "fighter",
+			"hp": 28,
+			"max_hp": 28,
+			"ac": 16,
+			"portrait": "portrait_fighter",
+			"is_leader": false,
+			"status_effects": []
+		}
+	]
+
+	if hero and is_instance_valid(hero):
+		if hero.has_method("set_hero_visual_appearance"):
+			hero.set_hero_visual_appearance(hero_class)
+		hero.global_position = Vector2(520, 520)
+
+	# Clean up any existing enemies
+	for eid in enemies:
+		var e_node = enemies[eid]
+		if is_instance_valid(e_node):
+			e_node.queue_free()
+	enemies.clear()
+
+	for child in get_children():
+		if child is TacticalEnemy and not child.is_queued_for_deletion():
+			child.queue_free()
+
+	if elora and is_instance_valid(elora):
+		elora.global_position = Vector2(380, 420)
+	if thrumbar and is_instance_valid(thrumbar):
+		thrumbar.global_position = Vector2(380, 620)
+
+	var enemy_defs = config.get("enemies", [])
+	var new_enemies: Dictionary = {}
+
+	if enemy_defs.size() == 0:
+		return configure_goblin_crowd_encounter(int(config.get("count", 6)), int(config.get("goblin_hp", 7)))
+
+	for i in range(enemy_defs.size()):
+		var edef = enemy_defs[i]
+		var eid = str(edef.get("id", "enemy_%d" % (i + 1)))
+		var g: TacticalEnemy = TacticalEnemyScene.instantiate()
+		g.enemy_id = eid
+		g.enemy_name = str(edef.get("name", "Enemy %d" % (i + 1)))
+		var e_hp = int(edef.get("hp", 15))
+		g.max_hp = e_hp
+		g.current_hp = e_hp
+		g.armor_class = int(edef.get("ac", 13))
+		g.attack_bonus = int(edef.get("attack_bonus", 4))
+		g.damage_min = int(edef.get("damage_min", 3))
+		g.damage_max = int(edef.get("damage_max", 8))
+		g.dex_save_mod = int(edef.get("dex_save_mod", 2))
+		g.wis_save_mod = int(edef.get("wis_save_mod", 1))
+		g.con_save_mod = int(edef.get("con_save_mod", 1))
+		g.creature_type = str(edef.get("creature_type", "humanoid"))
+		g.move_speed = float(edef.get("speed", 130.0))
+		g.is_hostile = bool(edef.get("hostile", true))
+
+		var pos_x = float(edef.get("x", 1150.0))
+		var pos_y = float(edef.get("y", 520.0 + (i - (enemy_defs.size() - 1) / 2.0) * 80.0))
+		g.position = Vector2(pos_x, pos_y)
+
+		var tex_path = str(edef.get("sprite", "res://assets/sprites/enemies/goblin.png"))
+		if "wolf" in g.creature_type or "beast" in g.creature_type:
+			tex_path = "res://assets/sprites/enemies/wolf.png"
+		elif "golem" in eid or "golem" in g.enemy_name.to_lower():
+			tex_path = "res://assets/sprites/enemies/golem.png"
+		g.sprite_texture_path = tex_path
+
+		add_child(g)
+		g.enemy_slain.connect(_on_enemy_slain)
+		g.corpse_looted.connect(_on_corpse_looted)
+		g.target_changed.connect(_on_target_changed)
+		g.friend_aggravated.connect(_on_friend_aggravated)
+		g.aggravated_by_proximity.connect(_on_enemy_proximity_aggro)
+		g.body_clicked.connect(_on_enemy_clicked)
+
+		new_enemies[eid] = g
+
+	enemies = new_enemies
+
+	for eid in new_enemies:
+		var g_node = new_enemies[eid]
+		var f_list: Array[String] = []
+		for other_id in new_enemies:
+			if other_id != eid:
+				f_list.append(other_id)
+		g_node.friends = f_list
+
+	if hud:
+		hud.update_display("Tactical Spell Encounter: %s (%d Enemies)" % [enc_type.capitalize(), new_enemies.size()])
+
+	_show_notice("✨ Tactical Encounter: %s" % enc_type.capitalize())
+	GameState.log_message("combat", "✨ [b]TACTICAL SPELL ENCOUNTER:[/b] %s (%d hostiles initialized)" % [enc_type, new_enemies.size()])
+
+	return {
+		"success": true,
+		"encounter": enc_type,
+		"wizard": GameState.hero_name,
+		"enemies_count": new_enemies.size()
+	}
+
+func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Vector2 = Vector2.ZERO) -> Dictionary:
+	_show_notice("✨ %s channels spell: %s!" % [GameState.hero_name, spell_id.to_upper()])
+	GameState.log_message("combat", "✨ %s channels %s..." % [GameState.hero_name, spell_id])
+
+	var target_node: Node = null
+	var target_name = target_id
+	if target_id != "":
+		if enemies.has(target_id):
+			target_node = enemies[target_id]
+			target_name = target_node.enemy_name
+		elif target_id.to_lower() in ["hero", "vance", GameState.hero_name.to_lower()]:
+			target_node = hero
+			target_name = GameState.hero_name
+		elif elora and target_id.to_lower() in ["elora", "companion_1"]:
+			target_node = elora
+			target_name = elora.companion_name
+		elif thrumbar and target_id.to_lower() in ["thrumbar", "companion_2"]:
+			target_node = thrumbar
+			target_name = thrumbar.companion_name
+
+	if target_pos == Vector2.ZERO:
+		if target_node and "global_position" in target_node:
+			target_pos = target_node.global_position
+		else:
+			target_pos = Vector2(1150, 520)
+
+	if hero and is_instance_valid(hero):
+		hero._update_facing(target_pos)
+		var cast_done = false
+		hero.play_cast_spell(spell_id, target_pos, func():
+			cast_done = true
+		)
+		var t_wait = 2.5
+		while not cast_done and t_wait > 0.0:
+			await get_tree().process_frame
+			t_wait -= get_process_delta_time()
+
+	var res = {}
+	if spell_id in ["fireball", "burning-hands", "thunderwave", "lightning-bolt", "sleep"]:
+		var dc = 14
+		var stat = "DEX"
+		var rad = 180.0
+		if spell_id == "burning-hands":
+			rad = 150.0
+		elif spell_id == "thunderwave":
+			stat = "CON"
+			rad = 150.0
+		elif spell_id == "lightning-bolt":
+			rad = 450.0
+		elif spell_id == "sleep":
+			rad = 160.0
+		res = combat_mgr.execute_aoe_spell(GameState.hero_name, spell_id, target_pos, rad, dc, stat, hero)
+		last_aoe_telemetry = res
+	else:
+		res = combat_mgr.execute_cast_spell(GameState.hero_name, spell_id, target_name, target_node)
+
+	last_spell_telemetry = res
 	last_aoe_telemetry = res
 
 	_check_victory()

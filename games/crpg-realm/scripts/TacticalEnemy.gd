@@ -10,6 +10,7 @@ signal aggravated_by_proximity(enemy: TacticalEnemy, intruder: Node2D, distance:
 
 @export var enemy_id: String = "enemy_1"
 @export var enemy_name: String = "Corrupted Wolf Alpha"
+@export var creature_type: String = "humanoid" # "humanoid", "beast", "construct", "undead"
 @export var is_hostile: bool = true:
 	set(val):
 		is_hostile = val
@@ -19,6 +20,9 @@ signal aggravated_by_proximity(enemy: TacticalEnemy, intruder: Node2D, distance:
 @export var attack_bonus: int = 4
 @export var damage_min: int = 4
 @export var damage_max: int = 10
+@export var dex_save_mod: int = 2
+@export var wis_save_mod: int = 1
+@export var con_save_mod: int = 1
 @export var move_speed: float = 140.0
 @export var aggro_radius: float = 280.0
 @export var pack_friend_radius: float = 480.0
@@ -109,6 +113,10 @@ func _update_ui() -> void:
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.DEAD or GameState.is_game_paused:
+		velocity = Vector2.ZERO
+		return
+
+	if GameState.has_status_effect(enemy_name, "paralyzed") or GameState.has_status_effect(enemy_name, "unconscious") or GameState.has_status_effect(enemy_name, "asleep"):
 		velocity = Vector2.ZERO
 		return
 
@@ -351,6 +359,11 @@ func _strike_target() -> void:
 func take_damage(amount: int, attacker: Node2D = null) -> void:
 	if current_state == State.DEAD:
 		return
+
+	if GameState.has_status_effect(enemy_name, "asleep"):
+		GameState.remove_status_effect(enemy_name, "asleep")
+		if FloatingTextManager:
+			FloatingTextManager.spawn_text(global_position + Vector2(0, -25), "AWAKENED!", Color(1.0, 0.8, 0.2))
 
 	current_hp = max(0, current_hp - amount)
 	_update_ui()
