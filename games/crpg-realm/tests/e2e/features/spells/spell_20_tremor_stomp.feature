@@ -9,3 +9,7 @@ Feature: Spell 20 - Tremor Stomp (1st Level Martial Technique)
     When the hero targets "dummy_1" and casts spell "tremor-stomp"
     Then the spell "tremor-stomp" resolves successfully
     And enemy "dummy_1" takes 6 damage
+    And enemy "dummy_1" is knocked down flat on the ground
+    And enemy "dummy_1" is unable to attack or move while down
+    When the prone turn duration of 3.5 seconds expires
+    Then enemy "dummy_1" stands back up from prone

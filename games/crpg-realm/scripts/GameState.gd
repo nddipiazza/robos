@@ -738,30 +738,50 @@ func apply_status_effect(target_name: String, effect_id: String, duration_rounds
 	status_durations[target_name + ":" + effect_id] = duration_rounds
 	if effect_id == "invisible" and not status_realtime_timeouts.has(target_name + ":invisible"):
 		status_realtime_timeouts[target_name + ":invisible"] = 60.0
+	elif effect_id == "prone" and not status_realtime_timeouts.has(target_name + ":prone"):
+		status_realtime_timeouts[target_name + ":prone"] = max(4.0, float(duration_rounds) * 4.0)
 
 func remove_status_effect(target_name: String, effect_id: String) -> void:
 	var key = target_name + ":" + effect_id
 	status_durations.erase(key)
 	status_realtime_timeouts.erase(key)
+	var removed_any = false
 	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
 		status_effects[target_name].erase(effect_id)
-		for m in party_members:
-			if (m.get("name") == target_name or (m.get("id") == "hero" and (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()))) and m.has("status_effects"):
-				m["status_effects"].erase(effect_id)
-		status_effects_changed.emit(target_name)
-		party_changed.emit()
+		removed_any = true
+	var t_lower = target_name.to_lower()
+	for k in status_effects.keys():
+		var k_str = str(k).to_lower()
+		if k_str == t_lower or (t_lower.length() >= 4 and (t_lower in k_str or k_str in t_lower)):
+			if status_effects[k].has(effect_id):
+				status_effects[k].erase(effect_id)
+				removed_any = true
+				status_durations.erase(str(k) + ":" + effect_id)
+				status_realtime_timeouts.erase(str(k) + ":" + effect_id)
+	for m in party_members:
+		if (m.get("name") == target_name or (m.get("id") == "hero" and (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()))) and m.has("status_effects"):
+			m["status_effects"].erase(effect_id)
+	status_effects_changed.emit(target_name)
+	party_changed.emit()
+	if removed_any:
 		log_message("combat", "%s is no longer afflicted with [%s]." % [target_name, effect_id])
 
 func override_status_timeout(target_name: String, effect_id: String, duration_seconds: float) -> void:
 	var key = target_name + ":" + effect_id
 	status_realtime_timeouts[key] = duration_seconds
-	log_message("system", "🛠️ [TEST HACK] Invisibility timeout for %s overridden to %.2f seconds for automated test scenario!" % [target_name, duration_seconds])
+	log_message("system", "🛠️ [TEST HACK] %s timeout for %s overridden to %.2f seconds for automated test scenario!" % [effect_id.capitalize(), target_name, duration_seconds])
 
 func has_status_effect(target_name: String, effect_id: String) -> bool:
 	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
 		return true
 	if (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()) and status_effects.has(hero_name):
 		return status_effects[hero_name].has(effect_id)
+	var t_lower = target_name.to_lower()
+	for k in status_effects.keys():
+		var k_str = str(k).to_lower()
+		if k_str == t_lower or (t_lower.length() >= 4 and (t_lower in k_str or k_str in t_lower)):
+			if status_effects[k].has(effect_id):
+				return true
 	return false
 
 func get_status_effects(target_name: String) -> Array:
@@ -879,6 +899,11 @@ func _tick_status_effects() -> void:
 						victim_pos = comp.global_position
 			if victim_pos != Vector2.ZERO and FloatingTextManager:
 				FloatingTextManager.spawn_damage(victim_pos, dmg, false, "poison")
+		
+		# If this effect has a real-time timeout, let status_realtime_timeouts manage expiration
+		if status_realtime_timeouts.has(key):
+			continue
+			
 		status_durations[key] = int(status_durations[key]) - 1
 		if status_durations[key] <= 0:
 			remove_status_effect(target_name, effect_id)

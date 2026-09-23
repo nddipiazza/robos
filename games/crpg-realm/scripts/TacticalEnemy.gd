@@ -68,11 +68,74 @@ func _is_round_based_mode() -> bool:
 @onready var selection_circle: Sprite2D = find_child("SelectionCircle", true, false)
 @onready var loot_indicator: Sprite2D = find_child("LootIndicator", true, false)
 
+var is_down_prone: bool = false
+var orig_sprite_pos: Vector2 = Vector2.ZERO
+var _was_prone: bool = false
+
 func _ready() -> void:
 	current_hp = max_hp
 	_setup_sprite()
 	_update_ui()
 	GameState.settings_changed.connect(_update_ui)
+	GameState.status_effects_changed.connect(_on_status_effects_changed)
+	_update_prone_state()
+
+func _on_status_effects_changed(_target: String) -> void:
+	_update_prone_state()
+
+func is_prone() -> bool:
+	return GameState.has_status_effect(enemy_name, "prone") or GameState.has_status_effect(enemy_id, "prone")
+
+func _update_prone_state() -> void:
+	if current_state == State.DEAD:
+		return
+	var should_be_prone = is_prone()
+	if should_be_prone and not is_down_prone:
+		knock_down_prone()
+	elif not should_be_prone and is_down_prone:
+		stand_up_from_prone()
+
+func knock_down_prone() -> void:
+	if is_down_prone or current_state == State.DEAD:
+		return
+	is_down_prone = true
+	_was_prone = true
+	velocity = Vector2.ZERO
+	if target_label:
+		target_label.text = "[PRONE - Down for Turn]"
+		target_label.modulate = Color(1.0, 0.75, 0.2)
+	
+	if sprite:
+		if orig_sprite_pos == Vector2.ZERO:
+			orig_sprite_pos = sprite.position
+		var tw = create_tween()
+		var target_rot = -85.0 if sprite.flip_h else 85.0
+		tw.parallel().tween_property(sprite, "rotation_degrees", target_rot, 0.25)
+		tw.parallel().tween_property(sprite, "position", orig_sprite_pos + Vector2(0, 10.0), 0.25)
+		tw.parallel().tween_property(sprite, "modulate", Color(0.9, 0.85, 0.75, 0.95), 0.25)
+	
+	if FloatingTextManager:
+		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "KNOCKED DOWN!", Color(1.0, 0.8, 0.2))
+	GameState.log_message("combat", "💥 %s was knocked down flat on the ground! (Prone - unable to attack or sprint for 1 turn)" % enemy_name)
+
+func stand_up_from_prone() -> void:
+	if not is_down_prone or current_state == State.DEAD:
+		return
+	is_down_prone = false
+	_was_prone = false
+	if target_label:
+		target_label.text = ("Target: %s" % current_target_name) if current_target_name != "" else ""
+		target_label.modulate = Color(1.0, 0.35, 0.35)
+	
+	if sprite:
+		var tw = create_tween()
+		tw.parallel().tween_property(sprite, "rotation_degrees", 0.0, 0.30)
+		tw.parallel().tween_property(sprite, "position", orig_sprite_pos if orig_sprite_pos != Vector2.ZERO else Vector2.ZERO, 0.30)
+		tw.parallel().tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.30)
+	
+	if FloatingTextManager:
+		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "STANDS UP!", Color(0.4, 0.9, 1.0))
+	GameState.log_message("combat", "🧍 %s spends effort and stands back up from prone." % enemy_name)
 
 func _setup_sprite() -> void:
 	if sprite and ResourceLoader.exists(sprite_texture_path):
@@ -96,6 +159,9 @@ func _update_ui() -> void:
 		if current_state == State.DEAD:
 			target_label.text = "[Lootable Corpse]" if not is_looted else "[Empty Corpse]"
 			target_label.modulate = Color(1.0, 0.85, 0.2) if not is_looted else Color(0.6, 0.6, 0.6)
+		elif is_down_prone:
+			target_label.text = "[PRONE - Down for Turn]"
+			target_label.modulate = Color(1.0, 0.75, 0.2)
 		elif current_target_name != "":
 			target_label.text = "Target: %s" % current_target_name
 			target_label.modulate = Color(1.0, 0.35, 0.35)
@@ -115,6 +181,15 @@ func _physics_process(delta: float) -> void:
 	if current_state == State.DEAD or GameState.is_game_paused:
 		velocity = Vector2.ZERO
 		return
+
+	if is_prone() or is_down_prone:
+		if not is_down_prone:
+			knock_down_prone()
+		velocity = Vector2.ZERO
+		return
+
+	if not is_prone() and is_down_prone:
+		stand_up_from_prone()
 
 	if GameState.has_status_effect(enemy_name, "paralyzed") or GameState.has_status_effect(enemy_name, "unconscious") or GameState.has_status_effect(enemy_name, "asleep"):
 		velocity = Vector2.ZERO
@@ -294,7 +369,7 @@ func _process_chase(_delta: float) -> void:
 
 func _process_attack(delta: float) -> void:
 	velocity = Vector2.ZERO
-	if _is_round_based_mode():
+	if _is_round_based_mode() or is_prone() or is_down_prone:
 		return
 	if not current_target or not is_instance_valid(current_target):
 		current_state = State.PATROL
@@ -312,7 +387,7 @@ func _process_attack(delta: float) -> void:
 		_strike_target()
 
 func _strike_target() -> void:
-	if current_state == State.DEAD or not current_target or GameState.is_game_paused:
+	if current_state == State.DEAD or not current_target or GameState.is_game_paused or is_prone() or is_down_prone:
 		return
 
 	var t_name = current_target_name
@@ -468,6 +543,7 @@ func aggravate_on_friend_proximity(friend: TacticalEnemy, intruder: Node2D, frie
 
 func die() -> void:
 	current_state = State.DEAD
+	is_down_prone = false
 	velocity = Vector2.ZERO
 	GameState.log_message("damage", "☠ %s was slain! Its corpse can be looted." % enemy_name)
 	GameState.add_kill()

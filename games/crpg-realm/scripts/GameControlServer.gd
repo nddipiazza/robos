@@ -1052,6 +1052,9 @@ func _get_full_game_state() -> Dictionary:
 					"aggro_radius": float(child.get("aggro_radius")) if "aggro_radius" in child else 280.0,
 					"pack_friend_radius": float(child.get("pack_friend_radius")) if "pack_friend_radius" in child else 480.0,
 					"friends": child.get("friends") if "friends" in child else [],
+					"is_prone": (child.has_method("is_prone") and child.is_prone()) or bool(child.get("is_down_prone")),
+					"is_down_prone": bool(child.get("is_down_prone")),
+					"sprite_rotation": float(child.sprite.rotation_degrees) if ("sprite" in child and child.sprite) else 0.0,
 					"position": [child.global_position.x, child.global_position.y]
 				})
 

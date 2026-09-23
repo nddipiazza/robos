@@ -60,6 +60,10 @@ func set_camera_limits(left: int, top: int, right: int, bottom: int) -> void:
 		camera.position_smoothing_enabled = false
 		camera.offset = camera_current_offset
 
+var is_down_prone: bool = false
+var orig_sprite_pos: Vector2 = Vector2.ZERO
+var _was_prone: bool = false
+
 func _ready() -> void:
 	if GameState.spawn_position != Vector2.ZERO:
 		global_position = GameState.spawn_position
@@ -71,7 +75,8 @@ func _ready() -> void:
 	_update_invisibility_visual()
 	GameState.hero_damaged.connect(_on_hero_damaged)
 	GameState.settings_changed.connect(_update_overhead_ui)
-	GameState.status_effects_changed.connect(func(_tgt): _update_invisibility_visual())
+	GameState.status_effects_changed.connect(_on_status_effects_changed)
+	_update_prone_state()
 	if reticle:
 		reticle.visible = false
 		reticle.top_level = true
@@ -157,9 +162,59 @@ func _on_hero_damaged(current_hp: int, max_hp: int) -> void:
 	if current_hp <= 0:
 		sprite.rotation_degrees = 90.0
 		sprite.modulate = Color(0.7, 0.2, 0.2, 0.85)
+	elif is_down_prone or is_prone():
+		sprite.rotation_degrees = 90.0
 	else:
 		sprite.rotation_degrees = 0.0
 		_update_invisibility_visual()
+
+func _on_status_effects_changed(_target: String) -> void:
+	_update_invisibility_visual()
+	_update_prone_state()
+
+func is_prone() -> bool:
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	return GameState.has_status_effect(h_name, "prone") or GameState.has_status_effect("hero", "prone") or GameState.has_status_effect(GameState.hero_name, "prone")
+
+func _update_prone_state() -> void:
+	if GameState.hero_hp <= 0:
+		return
+	var should_be_prone = is_prone()
+	if should_be_prone and not is_down_prone:
+		knock_down_prone()
+	elif not should_be_prone and is_down_prone:
+		stand_up_from_prone()
+
+func knock_down_prone() -> void:
+	if is_down_prone or GameState.hero_hp <= 0:
+		return
+	is_down_prone = true
+	_was_prone = true
+	_stop_movement()
+	if sprite:
+		if orig_sprite_pos == Vector2.ZERO:
+			orig_sprite_pos = sprite.position
+		var tw = create_tween()
+		tw.parallel().tween_property(sprite, "rotation_degrees", 90.0, 0.25)
+		tw.parallel().tween_property(sprite, "position", orig_sprite_pos + Vector2(0, 8.0), 0.25)
+	if FloatingTextManager:
+		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "KNOCKED PRONE!", Color(1.0, 0.8, 0.2))
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	GameState.log_message("combat", "💥 %s was knocked down flat on the ground! (Prone - unable to act or sprint for 1 turn)" % h_name)
+
+func stand_up_from_prone() -> void:
+	if not is_down_prone or GameState.hero_hp <= 0:
+		return
+	is_down_prone = false
+	_was_prone = false
+	if sprite:
+		var tw = create_tween()
+		tw.parallel().tween_property(sprite, "rotation_degrees", 0.0, 0.30)
+		tw.parallel().tween_property(sprite, "position", orig_sprite_pos if orig_sprite_pos != Vector2.ZERO else Vector2.ZERO, 0.30)
+	if FloatingTextManager:
+		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "STANDS UP!", Color(0.4, 0.9, 1.0))
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	GameState.log_message("combat", "🧍 %s spends effort and stands back up from prone." % h_name)
 
 func _update_invisibility_visual() -> void:
 	if not sprite:
@@ -187,7 +242,10 @@ func set_hero_visual_appearance(h_class: String) -> void:
 			attack_textures = [tex]
 
 func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
-	if is_attacking:
+	if is_attacking or is_down_prone or is_prone():
+		if is_down_prone or is_prone():
+			var h_name_p = character_name if character_name != "" else GameState.hero_name
+			GameState.log_message("combat", "⚠️ %s is down prone on the ground and cannot attack until standing up!" % h_name_p)
 		return
 
 	# Invisibility breaks on physical attack action
@@ -347,7 +405,10 @@ func _spawn_ranged_impact_vfx(hit_pos: Vector2) -> void:
 	tw.tween_callback(spark.queue_free)
 
 func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Callable = Callable()) -> void:
-	if is_attacking:
+	if is_attacking or is_down_prone or is_prone():
+		if is_down_prone or is_prone():
+			var h_name_p = character_name if character_name != "" else GameState.hero_name
+			GameState.log_message("combat", "⚠️ %s is down prone on the ground and cannot cast spells until standing up!" % h_name_p)
 		return
 
 	# Invisibility breaks on casting non-invisibility spells
@@ -1385,6 +1446,15 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		is_moving = false
 		return
+
+	if is_down_prone or is_prone():
+		if not is_down_prone:
+			knock_down_prone()
+		velocity = Vector2.ZERO
+		is_moving = false
+		return
+	elif not is_prone() and is_down_prone:
+		stand_up_from_prone()
 
 	if is_attacking:
 		velocity = Vector2.ZERO

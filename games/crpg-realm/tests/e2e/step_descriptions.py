@@ -268,6 +268,14 @@ STEP_PATTERNS = [
      'Target "{0}" activates defensive Shield, raising an invisible force barrier.'),
     (r'the magic missiles are completely absorbed by Shield with (\d+) damage',
      'Verifying Shield force barrier completely absorbed all incoming Magic Missiles ({0} damage taken).'),
+    (r'enemy "([^"]+)" is knocked down flat on the ground',
+     'Martial knockdown impact: enemy "{0}" is knocked flat onto the ground with sprite rotated 85 degrees.'),
+    (r'enemy "([^"]+)" is unable to attack or move while down',
+     'Verifying prone condition: enemy "{0}" is down on the floor, unable to attack or sprint for its turn.'),
+    (r'the prone turn duration of ([^ ]+) seconds expires',
+     'Combat round timer: waiting {0}s for the prone knockdown turn duration to elapse in real time.'),
+    (r'enemy "([^"]+)" stands back up from prone',
+     'Recovery: enemy "{0}" spends movement effort and stands back upright, clearing the prone condition.'),
 ]
 
 def get_step_description(step_type: str, step_name: str, step_docstring: str = None) -> str:

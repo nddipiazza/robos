@@ -519,6 +519,14 @@ func execute_combat_round() -> Dictionary:
 		if not golem or not is_instance_valid(golem) or golem.current_state == TacticalEnemy.State.DEAD:
 			continue
 
+		# If golem was knocked down prone, it spends its effort standing up from prone during this combat round
+		if golem.is_down_prone or golem.is_prone():
+			GameState.log_message("combat", "🧍 %s spends half movement to stand up from prone before acting." % golem.enemy_name)
+			golem.stand_up_from_prone()
+			GameState.remove_status_effect(golem.enemy_name, "prone")
+			GameState.remove_status_effect(eid, "prone")
+			await get_tree().create_timer(0.2).timeout
+
 		var tgt_node: Node2D = null
 		var tgt_name: String = ""
 		var tgt_id: String = ""

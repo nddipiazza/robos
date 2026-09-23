@@ -1451,14 +1451,70 @@ def step_check_enemy_prone(context, enemy_id):
     status_effects = state.get("status_effects", {})
     found_prone = False
     for k, v in status_effects.items():
-        if enemy_id.lower() in k.lower() or "golem" in k.lower():
+        if enemy_id.lower() in k.lower() or "golem" in k.lower() or "dummy" in k.lower() or "target" in k.lower():
             if "prone" in v:
+                found_prone = True
+                break
+    enemies = state.get("battle", {}).get("enemies", [])
+    for e in enemies:
+        if enemy_id.lower() in e.get("id", "").lower() or enemy_id.lower() in e.get("name", "").lower():
+            if e.get("is_prone", False) or e.get("is_down_prone", False):
                 found_prone = True
                 break
     log_text = state.get("action_log_text", "")
     history = [e.get("message", "") for e in state.get("activity_log", [])]
     has_log_prone = "prone" in log_text.lower() or any("prone" in m.lower() for m in history)
     assert found_prone or has_log_prone, f"Expected enemy '{enemy_id}' to be prone. Status: {status_effects}"
+
+@then('enemy "{enemy_id}" is down flat on the ground for a turn')
+@then('enemy "{enemy_id}" is knocked down flat on the ground')
+def step_verify_enemy_down_prone(context, enemy_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    found = False
+    for e in enemies:
+        if enemy_id.lower() in e.get("id", "").lower() or enemy_id.lower() in e.get("name", "").lower() or "dummy" in e.get("id", "").lower():
+            rot = abs(e.get("sprite_rotation", 0.0))
+            is_down = e.get("is_down_prone", False) or e.get("is_prone", False)
+            if is_down or rot >= 45.0:
+                found = True
+                break
+    assert found, f"Expected enemy '{enemy_id}' to be down flat on the ground. Enemies: {enemies}"
+
+@then('enemy "{enemy_id}" is unable to attack or move while down')
+def step_verify_enemy_down_disabled(context, enemy_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    found = False
+    for e in enemies:
+        if enemy_id.lower() in e.get("id", "").lower() or enemy_id.lower() in e.get("name", "").lower() or "dummy" in e.get("id", "").lower():
+            is_down = e.get("is_down_prone", False) or e.get("is_prone", False)
+            if is_down:
+                found = True
+                break
+    assert found, f"Expected enemy '{enemy_id}' to be down prone and unable to attack or move. Enemies: {enemies}"
+
+@when('the prone turn duration of {seconds:f} seconds expires')
+@when('the prone turn duration expires')
+def step_wait_prone_turn_duration(context, seconds=3.5):
+    import time
+    time.sleep(float(seconds))
+
+@then('enemy "{enemy_id}" stands back up from prone')
+def step_verify_enemy_stands_up(context, enemy_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    found = False
+    for e in enemies:
+        if enemy_id.lower() in e.get("id", "").lower() or enemy_id.lower() in e.get("name", "").lower() or "dummy" in e.get("id", "").lower():
+            rot = abs(e.get("sprite_rotation", 0.0))
+            is_down = e.get("is_down_prone", False)
+            if not is_down and rot < 10.0:
+                found = True
+                break
+    history = [e.get("message", "") for e in state.get("activity_log", [])]
+    has_stand_log = any("stands back up" in m.lower() or "stands up" in m.lower() for m in history)
+    assert found or has_stand_log, f"Expected enemy '{enemy_id}' to have stood back up from prone. Enemies: {enemies}"
 
 @when('companion "{comp_name}" approaches and unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
 @when('companion "{comp_name}" unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')

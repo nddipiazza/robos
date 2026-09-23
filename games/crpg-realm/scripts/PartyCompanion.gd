@@ -98,9 +98,12 @@ func _update_invisibility_visual() -> void:
 	if cur_hp <= 0 or GameState.has_status_effect(companion_name, "unconscious"):
 		sprite.rotation_degrees = 90.0
 		sprite.modulate = Color(0.7, 0.2, 0.2, 0.85)
+	elif GameState.has_status_effect(companion_name, "prone"):
+		sprite.rotation_degrees = 90.0
 	else:
 		sprite.rotation_degrees = 0.0
-		sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if sprite.modulate.a >= 0.9:
+			sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func play_hit_reaction() -> void:
 	var tw = create_tween()
@@ -139,7 +142,8 @@ func _physics_process(delta: float) -> void:
 	if GameState.is_game_paused:
 		return
 
-	if GameState.is_incapacitated(companion_name):
+	if GameState.is_incapacitated(companion_name) or GameState.has_status_effect(companion_name, "prone"):
+		velocity = Vector2.ZERO
 		return
 
 	if is_performing_action or is_attacking:

@@ -888,11 +888,17 @@ func execute_fighter_ability(fighter_name: String, ability_id: String, target_na
 				dmg, target_name if target_name != "" else "target"
 			])
 			if gs and gs.has_method("apply_status_effect") and target_name != "":
-				gs.apply_status_effect(target_name, "prone", 3)
+				gs.apply_status_effect(target_name, "prone", 1)
+				if target_node and "enemy_id" in target_node and target_node.enemy_id != target_name:
+					gs.apply_status_effect(target_node.enemy_id, "prone", 1)
+				if target_node and "enemy_name" in target_node and target_node.enemy_name != target_name:
+					gs.apply_status_effect(target_node.enemy_name, "prone", 1)
 			if target_node:
 				if "global_position" in target_node and FloatingTextManager:
 					FloatingTextManager.spawn_damage(target_node.global_position, dmg)
 					FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -25), "KNOCKED PRONE!", Color(1.0, 0.8, 0.2))
+				if target_node.has_method("knock_down_prone"):
+					target_node.knock_down_prone()
 				if target_node.has_method("take_damage"):
 					target_node.take_damage(dmg, attacker_node)
 			if am and am.has_method("play_sfx"):
