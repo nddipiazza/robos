@@ -9,7 +9,7 @@ nav_order: 1
 # Buddy Gig Geolocation & Escrow Engine
 {: .no_toc }
 
-A technical guide detailing the escrow state machine, Haversine distance calculations, anti-spoofing heuristics, and next-morning automated payout settlement for The Gig Bandit (`getemgigs.com`).
+How getemgigs.com locks deposits, verifies attendance with GPS, and settles no-shows the next morning.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -20,50 +20,49 @@ A technical guide detailing the escrow state machine, Haversine distance calcula
 
 ---
 
-## 1. Escrow State Machine
-
-The security deposit escrow operates as a deterministic finite state machine (FSM) governing financial locks between two participating groups:
+## 1. Agreement state machine
 
 <div style="margin: 2rem 0;">
-  <img src="{{ '/assets/images/getemgigs/escrow-state-machine.jpg' | relative_url }}" alt="Buddy Gig Escrow Lifecycle State Machine" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: Escrow state machine transitions &mdash; locking $50 deposits, 150m GPS verification, and next-morning automated forfeiture resolution.</em></p>
+  <img src="{{ '/assets/images/getemgigs/escrow-state-machine.jpg' | relative_url }}" alt="Buddy Gig escrow lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
 </div>
 
----
+| From | Event | To | Ledger effect |
+|:---|:---|:---|:---|
+| — | Band A offers a trade (`POST /api/agreements`) | `PROPOSED` | none (A must hold enough credits) |
+| `PROPOSED` | B accepts | `ACTIVE` | `DEPOSIT_HOLD` −deposit for **both** bands; two `attendance` rows created |
+| `PROPOSED` | B declines / A withdraws | `DECLINED` / `CANCELLED` | none |
+| `ACTIVE` | attendee checks in within 150 m | attendance `VERIFIED` | `DEPOSIT_REFUND` +deposit to attendee, reputation +1 |
+| `ACTIVE` | both attendees verified | `SETTLED` | — |
+| `ACTIVE` | settlement after both windows close | `SETTLED` | each `PENDING` attendee → `FORFEITED`, `FORFEIT_PAYOUT` +deposit to the **host** band, bailer reputation −10 |
 
-## 2. Geofencing Algorithm (Haversine Formula)
+The deposit is the higher of the two gigs’ deposits. Accepting uses a conditional `UPDATE … WHERE status='PROPOSED'` as the lock, so a double-tap or race can only lock deposits once.
 
-To ensure tamper-resistant check-ins without requiring hardware beacons, the mobile client issues a cryptographic geolocation payload to `/api/checkin`:
+## 2. Geofence
+
+`src/lib/geo.js`:
 
 ```javascript
-export function verifyVenueCheckIn(attendeeLat, attendeeLon, venueLat, venueLon, maxDistanceMeters = 150) {
-  const R = 6371e3; // Earth radius in meters
-  const phi1 = (attendeeLat * Math.PI) / 180;
-  const phi2 = (venueLat * Math.PI) / 180;
-  const deltaPhi = ((venueLat - attendeeLat) * Math.PI) / 180;
-  const deltaLambda = ((venueLon - attendeeLon) * Math.PI) / 180;
-
-  const a =
-    Math.sin(deltaPhi / 2) ** 2 +
-    Math.cos(phi1) * Math.cos(phi2) * (Math.sin(deltaLambda / 2) ** 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = Math.round(R * c);
-
-  return {
-    isVerified: distance <= maxDistanceMeters,
-    distanceMeters: distance,
-    maxRadiusMeters: maxDistanceMeters,
-  };
+export function verifyCheckIn({ lat, lon, accuracy, venueLat, venueLon, startsAt, now = new Date() }) {
+  if (!isValidCoord(lat, lon)) return { ok: false, reason: 'Invalid GPS coordinates.' };
+  const { opensAt, closesAt } = checkInWindow(startsAt);       // doors (−1h) … +5h
+  if (now < opensAt || now > closesAt) return { ok: false, reason: 'Outside the check-in window.' };
+  if (accuracy > MAX_GPS_ACCURACY_M) return { ok: false, reason: 'GPS accuracy too low.' };   // 100 m
+  const d = distanceMeters(lat, lon, venueLat, venueLon);      // Haversine
+  return d <= CHECKIN_RADIUS_M ? { ok: true, distanceM: d } : { ok: false, distanceM: d };   // 150 m
 }
 ```
 
-### Radius Selection (150m)
-A 150-meter radius covers typical urban and suburban music venues, including main rooms, merch tables, outdoor smoking patios, and adjacent green rooms, while strictly rejecting check-ins attempted from home or across town.
+The browser sends one `navigator.geolocation` fix (high accuracy, no cached position) when the user taps **Check in**. Only the distance in meters is stored.
 
----
+$$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}\right),\quad R = 6{,}371{,}000\text{ m}$$
 
-## 3. Anti-Spoofing & Fraud Heuristics
+**Honest limits.** Browser GPS can be spoofed by a determined user. The beta mitigates this with accuracy thresholds, per-user check-in rate limits, audit logging and reputation, and deposits are credits rather than cash. Stronger options later: venue QR codes rotated per night, or the host band confirming arrivals.
 
-1. **Temporal Fencing**: Check-ins are only valid from 30 minutes before doors open until 60 minutes after scheduled set completion.
-2. **Device Hardware Entropy**: GPS fixes must include accuracy thresholds (`coords.accuracy <= 50m`). Mock locations or browser developer overrides are flagged via WebGL and User-Agent telemetry.
-3. **Escrow Forfeiture Automation**: A scheduled cron worker (`/api/escrow` triggered at 06:00 local time) evaluates all pending check-ins from the previous evening. Any missing check-ins forfeit the deposit immediately to the host act's balance.
+## 3. Next-morning settlement
+
+`vercel.json` schedules `GET /api/cron/settle` at `0 11 * * *` (06:00 CT). Vercel sends `Authorization: Bearer $CRON_SECRET`. The job finds `ACTIVE` agreements whose two check-in windows have both closed, forfeits every `PENDING` attendance to its host band, and marks the agreement `SETTLED`. Operators can `POST {agreementId, asOf}` with the same secret to settle a single deal at a given time; the live E2E suite uses this to demonstrate the “morning after”.
+
+## 4. Verified by
+
+- `tests/unit/services.test.js` — full lifecycle against real Postgres (PGlite): propose, accept, far/near check-in, double check-in rejection, early settlement no-op, forfeiture payout and reputation
+- Live E2E scenario 2 on the [project page]({{ '/projects/getemgigs/' | relative_url }}) — two phones, real production database

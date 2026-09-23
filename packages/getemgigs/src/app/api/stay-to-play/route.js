@@ -1,26 +1,15 @@
-import { store } from '../../../lib/storage.js';
+import { route, requireBand, readJson } from '@/lib/session';
+import { rateLimit } from '@/lib/security';
+import { stayCommit, stayCommitmentsForBand } from '@/lib/services';
 
-export async function GET() {
-  const pools = store.getStayToPlayPools();
-  return Response.json({
-    success: true,
-    pools,
-  });
-}
+export const GET = route(async () => {
+  const user = await requireBand();
+  return Response.json({ ok: true, commitments: await stayCommitmentsForBand(user.band.id) });
+});
 
-export async function POST(request) {
-  try {
-    const { poolId, bandId, ticketCount } = await request.json();
-    if (!poolId || !bandId) {
-      return Response.json({ success: false, error: 'poolId and bandId are required' }, { status: 400 });
-    }
-    const updated = store.joinStayToPlay(poolId, bandId, ticketCount);
-    return Response.json({
-      success: true,
-      message: 'Successfully enrolled in Stay-to-Play reciprocal ticket pool!',
-      pool: updated,
-    });
-  } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
-  }
-}
+export const POST = route(async (request) => {
+  const user = await requireBand();
+  await rateLimit(`stay:${user.id}`, 20, 3600, request);
+  const commitment = await stayCommit(user, await readJson(request));
+  return Response.json({ ok: true, commitment }, { status: 201 });
+});

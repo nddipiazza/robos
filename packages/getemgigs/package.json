@@ -1,24 +1,32 @@
 {
   "name": "getemgigs",
-  "version": "1.0.0-beta",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
-  "description": "The Gig Bandit (getemgigs.com) — Revolutionary platform for the local music scene with Buddy Gig geolocation escrow and Venue Stay-To-Play reciprocal ticket economics.",
+  "description": "Get 'Em Gigs (getemgigs.com) — The Gig Bandit. Buddy Gig attendance contracts with geolocation-verified deposits and Venue Stay-To-Play for local bands.",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/unit/*.test.js",
+    "e2e": "cucumber-js --config tests/e2e/cucumber.cjs",
+    "e2e:live": "BASE_URL=https://www.getemgigs.com cucumber-js --config tests/e2e/cucumber.cjs",
+    "evidence": "node scripts/build-evidence.mjs",
+    "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
-    "next": "^15.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@neondatabase/serverless": "^1.0.1",
+    "bcryptjs": "^3.0.2",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@cucumber/cucumber": "^12.2.0",
+    "@electric-sql/pglite": "^0.3.8",
+    "playwright": "^1.55.1"
   }
 }

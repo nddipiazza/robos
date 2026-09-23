@@ -1,71 +1,61 @@
-# The Gig Bandit — Get 'Em Gigs (`getemgigs.com`)
+# Get ’Em Gigs — The Gig Bandit (`getemgigs.com`)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnddipiazza%2Fthegigbandit)
-[![CI & Vercel Deployment](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml/badge.svg)](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml)
+[![CI](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml/badge.svg)](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml)
 [![RobOS Project](https://img.shields.io/badge/RobOS-Project-00bcd4)](https://rowbose.com/projects/getemgigs/)
 
-> **A game changer for the local music scene.**  
-> Transforming local music economics through reciprocal attendance contracts, geolocation-verified escrow, and fair venue booking.
+Local bands trade attendance: **“I’ll come to your gig if you come to mine.”** Both bands lock a small deposit.
+Check in at the venue (GPS, within 150 m) and you get it back. Bail, and the next-morning settlement pays your
+deposit to the band you stood up. Plus **Venue Stay-To-Play**: commit tickets to another band at the same venue
+instead of paying to play your own show.
 
----
+Live: **https://www.getemgigs.com**
 
-## 🎸 Motivation & Core Problems
+## Features
 
-Local bands constantly struggle to get people to attend their shows:
-- They don't have massive social followings yet.
-- They are works-in-progress building an audience.
-- Traditional "pay-to-play" models exploit bands by forcing them to pre-purchase tickets to their own gigs.
-- Friends and fellow bands frequently promise to attend, only to bail at the last minute.
+- Email + password accounts (bcrypt, opaque server-side sessions, HttpOnly/SameSite cookies)
+- Band profiles, venues (6 seeded + user-added with “use my location”), gigs
+- Buddy Gig offers → accept → deposit escrow ledger → GPS check-in → refund
+- Daily settlement cron (`/api/cron/settle`, 06:00 CT) forfeits no-show deposits to the host band
+- Stay-To-Play ticket commitments at partner venues
+- Mobile-first UI with bottom tab bar, works as a home-screen web app
+- Beta economics: every band starts with $100 in **gig credits** (no real card payments yet)
 
-**The Gig Bandit (`getemgigs.com`) solves both problems through game-theory incentives.**
+## Abuse controls (signup is open)
 
----
+- Postgres-backed rate limits: signup 5/h & 20/day per IP, login 10/15 min per email & 30/15 min per IP,
+  per-user limits on gigs, venues, offers, check-ins
+- Honeypot field + minimum form-fill time, disposable-email blocklist, password strength rules
+- Same-origin check on every mutation (CSRF), strict CSP & security headers, request size limits
+- Audit log of sign-ups, logins, failed logins and check-ins
+- **reCAPTCHA v3 is wired in but disabled** — set `RECAPTCHA_ENABLED=true`, `RECAPTCHA_SECRET_KEY`,
+  `NEXT_PUBLIC_RECAPTCHA_ENABLED=true`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` to turn it on
 
-## ⚡ Key Features
+## Stack
 
-### 1. The Buddy Gig Feature (Beta)
-- **"You scratch my back, I'll scratch yours."**
-- Two groups link their gigs together in a mutual attendance contract: *"I will attend your gig if you attend my gig."*
-- **Security Deposit Escrow**: Each group puts down a refundable deposit (e.g. $25–$100).
-- **Geolocation Proof-of-Attendance**:
-  - When the gig occurs, attendee presence is verified via GPS coordinates within a 150-meter radius of the venue.
-  - **If Verified**: The security deposit is immediately unlocked and reimbursed.
-  - **If No-Show (Bailed)**: Next morning, the escrow forfeits the deposit and transfers it directly to the host band whose show was bailed on!
-- **Result**: A guaranteed win-win. Either you get attendees at your gig, or you get paid!
+Next.js 15 (App Router) · React 19 · Neon serverless Postgres (Vercel Marketplace) · embedded PGlite for
+local dev/tests · Vercel Cron · Cucumber + Playwright E2E with RobOS video evidence.
 
-### 2. The Venue Stay-To-Play Feature (Beta)
-- Replaces predatory pay-to-play.
-- Instead of forcing bands to buy tickets to their own gig and beg friends to buy them, bands purchase a small ticket block to **another gig at the same venue** and attend!
-- Bands support fellow local acts, venues guarantee attendance and bar revenue, and scene camaraderie flourishes.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework**: Next.js 15 (App Router, Server Actions, Edge / Serverless)
-- **UI & Styling**: React 19, TailwindCSS, Dark Neon Aesthetic
-- **Deployment**: Vercel (Edge Network, Serverless Functions)
-- **Domain**: `getemgigs.com`
-- **Storage Layer**: Zero-Config Embedded Store + Pluggable MongoDB Atlas / Vercel Postgres / KV
-- **Verification Engine**: Haversine Geolocation Distance Calculator (150m venue fence)
-
----
-
-## 🚀 Quick Start
+## Develop
 
 ```bash
-# Clone and enter repo
-git clone https://github.com/nddipiazza/thegigbandit.git
-cd thegigbandit
-
-# Automated dev setup
-./dev-setup.sh
-
-# Run development server
-npm run dev
-
-# Run automated tests
-npm test
+npm install
+npm run dev          # no DATABASE_URL needed — uses embedded PGlite
+npm test             # unit + domain tests against real Postgres (PGlite)
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the application.
+## E2E + RobOS evidence videos
+
+```bash
+# against local
+E2E_BYPASS_KEY=... CRON_SECRET=... npm run e2e
+# against production
+BASE_URL=https://www.getemgigs.com E2E_BYPASS_KEY=... CRON_SECRET=... npm run e2e
+npm run evidence     # splash intro + step HUD + multi-phone timeline → evidence/*.mp4 + reel
+```
+
+Every actor (band) gets its own recorded phone session; `scripts/build-evidence.mjs` aligns them on one wall
+clock with a Cucumber splash card, step HUD, step list and moving playhead. Test accounts delete themselves.
+
+## Environment
+
+See `.env.example`. Production needs `DATABASE_URL` (Neon), `CRON_SECRET`, optionally `E2E_BYPASS_KEY`.

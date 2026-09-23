@@ -1,60 +1,67 @@
-/**
- * Haversine formula for calculating great-circle distance between two GPS coordinates
- * @param {number} lat1 Latitude of point 1 in degrees
- * @param {number} lon1 Longitude of point 1 in degrees
- * @param {number} lat2 Latitude of point 2 in degrees
- * @param {number} lon2 Longitude of point 2 in degrees
- * @returns {number} Distance in meters
- */
-export function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth radius in meters
-  const phi1 = (lat1 * Math.PI) / 180;
-  const phi2 = (lat2 * Math.PI) / 180;
-  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
-  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+// Haversine great-circle distance and venue geofence verification.
 
+export const CHECKIN_RADIUS_M = 150;
+export const MAX_GPS_ACCURACY_M = 100;
+// Check-in window relative to the gig start time.
+export const WINDOW_OPENS_BEFORE_MS = 60 * 60 * 1000; // doors: 1h before start
+export const WINDOW_CLOSES_AFTER_MS = 5 * 60 * 60 * 1000; // 5h after start
+
+export function distanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dPhi = toRad(lat2 - lat1);
+  const dLambda = toRad(lon2 - lon1);
   const a =
-    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-    Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    Math.sin(dPhi / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLambda / 2) ** 2;
+  return Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
 
-  return Math.round(R * c);
+export function isValidCoord(lat, lon) {
+  return (
+    typeof lat === 'number' &&
+    typeof lon === 'number' &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  );
+}
+
+export function checkInWindow(startsAt) {
+  const start = new Date(startsAt).getTime();
+  return {
+    opensAt: new Date(start - WINDOW_OPENS_BEFORE_MS),
+    closesAt: new Date(start + WINDOW_CLOSES_AFTER_MS),
+  };
 }
 
 /**
- * Verifies if an attendee GPS fix is within the venue's geofenced perimeter.
- * Default radius is 150 meters (typical venue boundary).
- * @param {number} attendeeLat
- * @param {number} attendeeLon
- * @param {number} venueLat
- * @param {number} venueLon
- * @param {number} [maxDistanceMeters=150]
- * @returns {{ isVerified: boolean, distanceMeters: number, maxRadiusMeters: number, message: string }}
+ * Decide whether a GPS fix counts as attendance.
+ * @returns {{ ok: boolean, distanceM: number|null, reason: string }}
  */
-export function verifyVenueCheckIn(attendeeLat, attendeeLon, venueLat, venueLon, maxDistanceMeters = 150) {
-  if (
-    typeof attendeeLat !== 'number' ||
-    typeof attendeeLon !== 'number' ||
-    typeof venueLat !== 'number' ||
-    typeof venueLon !== 'number'
-  ) {
+export function verifyCheckIn({ lat, lon, accuracy, venueLat, venueLon, startsAt, now = new Date() }) {
+  if (!isValidCoord(lat, lon)) {
+    return { ok: false, distanceM: null, reason: 'Invalid GPS coordinates.' };
+  }
+  const { opensAt, closesAt } = checkInWindow(startsAt);
+  if (now < opensAt) {
+    return { ok: false, distanceM: null, reason: `Check-in opens at doors (${opensAt.toISOString()}).` };
+  }
+  if (now > closesAt) {
+    return { ok: false, distanceM: null, reason: 'The check-in window for this gig has closed.' };
+  }
+  if (typeof accuracy === 'number' && accuracy > MAX_GPS_ACCURACY_M) {
     return {
-      isVerified: false,
-      distanceMeters: Infinity,
-      maxRadiusMeters: maxDistanceMeters,
-      message: 'Invalid coordinate payload provided for geolocation verification.',
+      ok: false,
+      distanceM: null,
+      reason: `GPS accuracy too low (±${Math.round(accuracy)}m). Step outside or enable precise location and try again.`,
     };
   }
-
-  const distance = calculateDistanceMeters(attendeeLat, attendeeLon, venueLat, venueLon);
-  const isVerified = distance <= maxDistanceMeters;
-
-  return {
-    isVerified,
-    distanceMeters: distance,
-    maxRadiusMeters: maxDistanceMeters,
-    message: isVerified
-      ? `Geolocation Verified! You are within ${distance}m of the venue (Radius: ${maxDistanceMeters}m).`
-      : `Check-in Failed: You are ${distance}m away from the venue (Maximum allowed radius: ${maxDistanceMeters}m).`,
-  };
+  const d = distanceMeters(lat, lon, venueLat, venueLon);
+  if (d > CHECKIN_RADIUS_M) {
+    return { ok: false, distanceM: d, reason: `You are ${d}m from the venue. You must be within ${CHECKIN_RADIUS_M}m.` };
+  }
+  return { ok: true, distanceM: d, reason: `Verified ${d}m from the venue.` };
 }
