@@ -54,12 +54,15 @@ function generateELearningWebsite(store, options = {}) {
 
   const courseSlug = (course['@id'] || courseId).replace(/.*:/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const isCrpg = courseSlug.includes('crpg') || (course['dcterms:title'] || '').toLowerCase().includes('crpg');
+  const isParsePortal = courseSlug.includes('parse-portal') || (course['dcterms:title'] || '').toLowerCase().includes('parse portal');
 
-  const permalink = options.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : `/elearning/${courseSlug}`);
-  const outputFileName = isCrpg ? 'index.html' : `${courseSlug}.html`;
+  const permalink = options.permalink || (isCrpg ? '/projects/crpg-realm/elearning/' : (isParsePortal ? '/projects/kgraph-parse-portal/elearning/' : `/elearning/${courseSlug}`));
+  const outputFileName = (isCrpg || isParsePortal) ? 'index.html' : `${courseSlug}.html`;
   const defaultOutputPath = isCrpg
     ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html')
-    : path.join(process.cwd(), 'docs', 'elearning', outputFileName);
+    : (isParsePortal
+      ? path.join(process.cwd(), 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html')
+      : path.join(process.cwd(), 'docs', 'elearning', outputFileName));
   const outputPath = options.outputFilePath || defaultOutputPath;
 
   // Resolve living documentation markdown file
@@ -67,6 +70,7 @@ function generateELearningWebsite(store, options = {}) {
   const candidateDocPaths = [
     options.docFilePath,
     isCrpg ? path.join(process.cwd(), 'docs', 'projects', 'crpg-realm', 'elearning-masterclass.md') : null,
+    isParsePortal ? path.join(process.cwd(), 'docs', 'kgraph-parse-portal.md') : null,
     appNode && appNode['robos:hasDocumentationPage'] ? (store.getNode(appNode['robos:hasDocumentationPage']) || {})['robos:docPath'] : null,
     path.join(process.cwd(), 'docs', 'applications', `${courseSlug}.md`),
   ].filter(Boolean);
@@ -103,6 +107,7 @@ function generateELearningWebsite(store, options = {}) {
     permalink,
     docMarkdown,
     isCrpg,
+    isParsePortal,
   });
 
   // Ensure target directories exist
@@ -157,6 +162,7 @@ function buildStandaloneHtml(params) {
     permalink,
     docMarkdown,
     isCrpg,
+    isParsePortal,
   } = params;
 
   const appTitle = appNode ? (appNode['dcterms:title'] || 'Application') : 'Tactical cRPG Realm of Heroes';
@@ -1945,6 +1951,434 @@ static func get_class_data(class_id: String) -> Dictionary:
               <div class="doc-figure" style="margin: 14px 0 0;">
                 <img src="/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 5.1: The 4-Phase RobOS Knowledge Graph-First Game Generation Paradigm.</div>
+              </div>
+            </div>
+          \`;
+        }
+      }
+      if (${isParsePortal ? 'true' : 'false'}) {
+        if (idx === 0) {
+          return \`
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🐧 1. The Linux Operating System as a First-Class Knowledge Graph Entity</h4>
+              <p class="lesson-text">
+                In RobOS, an operating system is not merely an unmanaged execution substrate. Instead, <strong>every file, directory, and system primitive on a Linux system is extracted into the Knowledge Graph with verifiable linked data provenance</strong>.
+              </p>
+              <p class="lesson-text">
+                The ingestion engine in <code>packages/kgraph-parse-portal/lib/fs-mime-classifier.js</code> traverses filesystems recursively using non-blocking directory streams. It enforces a strict exclusion policy (<code>DEFAULT_EXCLUDES</code>) over unmanaged caches (<code>.git</code>, <code>node_modules</code>, <code>target</code>, <code>dist</code>, <code>__pycache__</code>), while inspecting filesystem inodes via <code>fs.lstatSync</code> to safely classify files without following recursive symlink loops or blocking on FIFOs.
+              </p>
+
+              <div class="mermaid">
+flowchart TD
+    Scan["Filesystem Inode Scanner<br/><i>fs-mime-classifier.js</i>"] --> Filter{"In DEFAULT_EXCLUDES?<br/><i>.git, node_modules</i>"}
+    Filter -- Yes --> Ignore["Skip Path"]
+    Filter -- No --> InodeType{"Inode Type?"}
+    InodeType -- "isSocket()" --> SocketNode["robos:LinuxSocket<br/><i>inode/socket</i>"]
+    InodeType -- "isFIFO()" --> FifoNode["robos:LinuxNamedPipe<br/><i>inode/fifo</i>"]
+    InodeType -- "isSymbolicLink()" --> SymlinkNode["robos:LinuxSymlink<br/><i>inode/symlink</i>"]
+    InodeType -- "isFile()" --> ContentCheck{"Magic Header / Ext?"}
+    ContentCheck -- "\\\\x7fELF" --> ElfNode["robos:BinaryExecutable<br/><i>application/x-executable</i>"]
+    ContentCheck -- "systemd/*.service" --> SystemdNode["robos:SystemdService<br/><i>text/plain</i>"]
+    ContentCheck -- "Standard Source" --> MimeClassify["Forward to Contextual Disambiguation"]
+    SocketNode --> EvidenceGen["Compute SHA-256 & Attach robos:evidence"]
+    FifoNode --> EvidenceGen
+    SymlinkNode --> EvidenceGen
+    ElfNode --> EvidenceGen
+    SystemdNode --> EvidenceGen
+    MimeClassify --> EvidenceGen
+    EvidenceGen --> KGraphEmit["Emit Validated KGraph JSON-LD Node"]
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🔒 2. Cryptographic Provenance: The robos:evidence Schema</h4>
+              <p class="lesson-text">
+                Blind trust in AI diffs or unverified code updates is eliminated in RobOS. Every extracted node is stamped with a canonical, tamper-evident <code>robos:evidence</code> block:
+              </p>
+              <div class="formula-box">
+"robos:evidence": {<br>
+&nbsp;&nbsp;"repository": "github.com/nddipiazza/robos",<br>
+&nbsp;&nbsp;"path": "packages/kgraph-parse-portal/contracts/openapi.yaml",<br>
+&nbsp;&nbsp;"line": 1,<br>
+&nbsp;&nbsp;"workingTreeRevision": "clean",<br>
+&nbsp;&nbsp;"sha256": "4a72d3f9b8c105e1975e2f694e2a1b94e09834bfac8950293847e62a1100e381"<br>
+}
+              </div>
+              <p class="lesson-text">
+                The <code>sha256</code> hash is computed synchronously from the raw file buffer using Node's <code>crypto.createHash('sha256')</code>. When an agent or developer opens a Pull Request, the <code>kgraph diff</code> command re-computes hashes against <code>origin/main</code> to determine exact semantic blast radius and prevent undetected drift.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">⚙️ 3. Linux Virtual Filesystem Primitives & Special Inode Detection</h4>
+              <p class="lesson-text">
+                Unlike generic file tree indexers, the KGraph Parse Portal provides deep classification of Linux operating system primitives:
+              </p>
+              <table class="spec-table">
+                <thead>
+                  <tr>
+                    <th>Filesystem Inode / Marker</th>
+                    <th>Detection Mechanism</th>
+                    <th>RobOS Semantic Type</th>
+                    <th>MIME Classification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>ELF Executables & Shared Libs</strong></td>
+                    <td>Magic header: <code>0x7F 'E' 'L' 'F'</code></td>
+                    <td><code>robos:BinaryExecutable</code> / <code>SharedLibrary</code></td>
+                    <td><code>application/x-executable</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Unix Domain Sockets</strong></td>
+                    <td><code>stats.isSocket() === true</code></td>
+                    <td><code>robos:LinuxSocket</code></td>
+                    <td><code>inode/socket</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Named Pipes (FIFO)</strong></td>
+                    <td><code>stats.isFIFO() === true</code></td>
+                    <td><code>robos:LinuxNamedPipe</code></td>
+                    <td><code>inode/fifo</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Systemd Service Units</strong></td>
+                    <td>Path: <code>/etc/systemd/system/*.service</code></td>
+                    <td><code>robos:SystemdService</code></td>
+                    <td><code>text/plain</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Linux Device Nodes</strong></td>
+                    <td><code>stats.isBlockDevice()</code> / <code>isCharacterDevice()</code></td>
+                    <td><code>robos:LinuxDeviceNode</code></td>
+                    <td><code>inode/blockdevice</code></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="doc-figure">
+                <img src="/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <div class="doc-caption">Figure 1.1: Stage 1 of the Ingestion Pipeline extracting Linux filesystem entities into the RobOS Knowledge Graph.</div>
+              </div>
+            </div>
+          \`;
+        } else if (idx === 1) {
+          return \`
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🧠 1. Moving Beyond Raw HTTP/2 MIME Headers</h4>
+              <p class="lesson-text">
+                A standard MIME type such as <code>application/json</code> or <code>text/yaml</code> carries zero architectural intent on its own. For example, a <code>package.json</code> file, an OpenAPI 3.1 contract, a <code>tsconfig.json</code>, and a test fixture all evaluate to <code>application/json</code>, yet each represents a completely distinct software lifecycle concern.
+              </p>
+              <p class="lesson-text">
+                The Kgraph Parse Portal introduces a multi-stage <strong>contextual disambiguation engine</strong> (<code>classifyFile()</code> in <code>fs-mime-classifier.js</code>) that parses beyond surface headers to assign definitive <strong>W3C SHACL targetClass shapes</strong>.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📋 2. The Semantic Disambiguation Matrix</h4>
+              <table class="spec-table">
+                <thead>
+                  <tr>
+                    <th>File Pattern / Path</th>
+                    <th>Raw MIME</th>
+                    <th>Disambiguated Semantic Meaning</th>
+                    <th>Target RobOS SHACL Shape</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>package.json</code></td>
+                    <td><code>application/json</code></td>
+                    <td>Node.js Manifest, Scripts & Dependencies</td>
+                    <td><code>robos:SourceArtifact</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>tsconfig.json</code></td>
+                    <td><code>application/json</code></td>
+                    <td>TypeScript Compiler Configuration</td>
+                    <td><code>robos:SourceArtifact</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>openapi.yaml</code> / <code>.json</code></td>
+                    <td><code>text/yaml</code></td>
+                    <td>REST API Contract (OpenAPI 3.1)</td>
+                    <td><code>robos:Contract</code> (protocol: OpenAPI)</td>
+                  </tr>
+                  <tr>
+                    <td><code>*.proto</code></td>
+                    <td><code>text/x-protobuf</code></td>
+                    <td>gRPC Microservice RPC Protocol</td>
+                    <td><code>robos:ProtobufContract</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.graphql</code> / <code>*.gql</code></td>
+                    <td><code>application/graphql</code></td>
+                    <td>GraphQL Schema Contract</td>
+                    <td><code>robos:GraphQLContract</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>Chart.yaml</code> / <code>values.yaml</code></td>
+                    <td><code>application/x-yaml</code></td>
+                    <td>Kubernetes Helm Chart Definition</td>
+                    <td><code>robos:GitOpsDeployment</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.service</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Linux Systemd Daemon Unit</td>
+                    <td><code>robos:SystemdService</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>*.feature</code></td>
+                    <td><code>text/x-gherkin</code></td>
+                    <td>Cucumber / BDD Feature Specification</td>
+                    <td><code>robos:GherkinFeature</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>MODULE.bazel</code> / <code>WORKSPACE</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Bazel Monorepo Workspace</td>
+                    <td><code>robos:BuildSystem</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>project.godot</code></td>
+                    <td><code>text/plain</code></td>
+                    <td>Godot 4 Game Engine Project</td>
+                    <td><code>robos:PCGame</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📁 3. Directory Archetype Detection Across 11+ Ecosystems</h4>
+              <p class="lesson-text">
+                When pointed at any directory, <code>detectDirectoryArchetype()</code> scans root marker files to establish ecosystem context:
+              </p>
+
+              <div class="mermaid">
+graph TD
+    DirScan["Directory Ingestion Scan"] --> MarkerCheck{"Inspect Marker Files"}
+    MarkerCheck -- "MODULE.bazel / WORKSPACE" --> BazelMonorepo["robos:BuildSystem<br/><i>Bazel Monorepo (RBE Ready)</i>"]
+    MarkerCheck -- ".buckconfig" --> Buck2Monorepo["robos:BuildSystem<br/><i>Buck2 Monorepo (RBE Ready)</i>"]
+    MarkerCheck -- "pom.xml / build.gradle" --> JvmApp["robos:Microservice<br/><i>Java/Kotlin JVM Ecosystem</i>"]
+    MarkerCheck -- "Cargo.toml" --> RustApp["robos:Microservice<br/><i>Cargo Rust Crate</i>"]
+    MarkerCheck -- "go.mod" --> GoApp["robos:Microservice<br/><i>Go Modules Service</i>"]
+    MarkerCheck -- "package.json" --> PkgCheck{"Dependencies Check"}
+    PkgCheck -- "electron" --> ElectronApp["robos:DesktopApp<br/><i>Electron Desktop Framework</i>"]
+    PkgCheck -- "next / react" --> ReactApp["robos:FrontEndApp<br/><i>React / Next.js Web App</i>"]
+    PkgCheck -- "express / fastify" --> ExpressApp["robos:Microservice<br/><i>Node.js REST Service</i>"]
+    MarkerCheck -- "project.godot" --> GodotApp["robos:PCGame<br/><i>Godot 4 2.5D Isometric Engine</i>"]
+    MarkerCheck -- "Chart.yaml" --> HelmApp["robos:GitOpsDeployment<br/><i>Kubernetes Helm Chart</i>"]
+              </div>
+            </div>
+          \`;
+        } else if (idx === 2) {
+          return \`
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">⚡ 1. High-Throughput HTTP/2 gRPC Streaming Architecture</h4>
+              <p class="lesson-text">
+                Parsing multi-megabyte API contracts, database schemas, and hundreds of source code files inside the Node.js event loop causes severe memory spikes, event loop starvation, and potential process crashes. The Kgraph Parse Portal connects to an <strong>Apache Tika 4.0 streaming daemon</strong> listening on <code>localhost:50051</code>.
+              </p>
+              <p class="lesson-text">
+                Documents are streamed in non-blocking chunks over HTTP/2 gRPC frames with zero-copy buffer transfers. This isolates the heavy compilation and text extraction runtime in a separate process space, preventing V8 garbage collection latency.
+              </p>
+
+              <div class="mermaid">
+sequenceDiagram
+    participant App as Portal / REST API
+    participant Conn as TikaGrpcConnector
+    participant Daemon as Tika 4.0 gRPC (:50051)
+    participant Fallback as Embedded AST Engine
+
+    App->>Conn: parseDocument(filePath, content)
+    Conn->>Conn: isAvailable() TCP probe
+    alt Tika Daemon Online
+        Conn->>Daemon: Stream document over gRPC HTTP/2
+        Daemon-->>Conn: Stream parsed text & AST tokens
+    else Tika Daemon Offline / Cold
+        Conn->>Fallback: Dispatch to embedded polyglot AST extractor
+        Fallback-->>Conn: Return AST symbols & tokens
+    end
+    Conn-->>App: Extracted AST Symbols (classes, methods, RPCs)
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🌳 2. Polyglot AST Symbol Extraction Engine</h4>
+              <p class="lesson-text">
+                The portal's <code>TikaGrpcConnector</code> (<code>packages/kgraph-parse-portal/lib/tika-grpc-connector.js</code>) parses polyglot source trees into fine-grained AST symbols:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong>TypeScript & JavaScript</strong>: Extracts <code>class</code> hierarchies with superclasses, <code>interface</code> definitions, exported types, and named/async arrow functions.</li>
+                <li><strong>Python</strong>: Extracts <code>class</code> definitions with multiple inheritance bases, method signatures, and functions.</li>
+                <li><strong>Java & Kotlin</strong>: Extracts <code>class</code>, <code>interface</code>, <code>record</code>, and <code>enum</code> declarations, along with public/private methods.</li>
+                <li><strong>Protocol Buffers (Protobuf v3)</strong>: Extracts <code>service</code> declarations, <code>rpc</code> endpoints with parameter/return types, and <code>message</code> schemas.</li>
+              </ul>
+
+              <pre class="code-snippet"><code>// Example AST Symbol Extraction from contracts/tika-service.proto
+const symbols = tikaConnector.extractAstSymbols(protoContent, '.proto');
+// Output:
+// [
+//   { type: 'service', name: 'TikaStreamingService' },
+//   { type: 'rpc', name: 'ParseDocumentStream', request: 'DocumentChunk', response: 'ParsedTokenStream' },
+//   { type: 'message', name: 'DocumentChunk' }
+// ]</code></pre>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛡️ 3. Resilient Zero-Downtime Offline Fallback Handling</h4>
+              <p class="lesson-text">
+                In test environments, containerized Docker builds, or air-gapped developer laptops where the external Tika daemon is not running, the portal never throws an error or aborts crawling.
+              </p>
+              <p class="lesson-text">
+                <code>TikaGrpcConnector.isAvailable()</code> conducts a rapid 500ms socket connection test against port 50051. If the daemon is unreachable, the connector seamlessly routes documents to its embedded regular expression and lexical AST engine, ensuring 100% operational resilience.
+              </p>
+            </div>
+          \`;
+        } else if (idx === 3) {
+          return \`
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🏗️ 1. Scaling Ingestion: Why Remote Execution API (REAPI v2)?</h4>
+              <p class="lesson-text">
+                For enterprise monorepos (tens of thousands of source files, Protobuf schemas, and Bazel/Buck2 compilation units), local developer workstations quickly run out of RAM and CPU threads.
+              </p>
+              <p class="lesson-text">
+                RobOS incorporates the industry-standard <strong>Remote Execution API v2 (REAPI v2)</strong>, enabling Bazel/Buck2 builds and massive parallel parsing jobs to be offloaded to an elastic remote cluster.
+              </p>
+
+              <div class="mermaid">
+flowchart TD
+    subgraph Client["Developer Workstations & CI Runners"]
+        Bazel["Bazel / Buck2 Build"]
+        Portal["KGraph Parse Portal"]
+    end
+
+    subgraph RBEGrid["Hermetiq Buildbarn RBE Cluster (oci://ghcr.io/hermetiq/buildbarn)"]
+        Frontend["bb-frontend (:8980)<br/><i>Unified REAPI v2 Endpoint</i>"]
+        Scheduler["bb-scheduler (:8982)<br/><i>Priority Queue & Resource Matching</i>"]
+        Storage["bb-storage (:8981)<br/><i>CAS / Action Cache (100Gi+ PVC)</i>"]
+
+        subgraph WorkerPool["bb-worker Cluster"]
+            W1["bb-worker #1<br/><i>Docker Runner</i>"]
+            W2["bb-worker #2<br/><i>Docker Runner</i>"]
+            W3["bb-worker #N<br/><i>Docker Runner</i>"]
+        end
+    end
+
+    Bazel -->|gRPC REAPI v2| Frontend
+    Portal -->|Distributed Parse| Frontend
+    Frontend --> Scheduler
+    Frontend --> Storage
+    Scheduler -->|Dispatch Action| W1
+    Scheduler -->|Dispatch Action| W2
+    Scheduler -->|Dispatch Action| W3
+    W1 <-->|Read / Write Blobs| Storage
+    W2 <-->|Read / Write Blobs| Storage
+    W3 <-->|Read / Write Blobs| Storage
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">📦 2. Hermetiq Buildbarn OCI Helm Chart Architecture</h4>
+              <p class="lesson-text">
+                RobOS standardizes on Hermetiq's official OCI Helm distribution (<code>oci://ghcr.io/hermetiq/buildbarn</code>). The grid consists of four decoupled microservices:
+              </p>
+              <ul style="margin-left: 20px; margin-bottom: 14px; font-size: 13px;">
+                <li><strong><code>bb-storage</code></strong>: Content Addressable Storage (CAS) for immutable input/output files and Action Cache (AC) for storing previous compilation results. Configured with 100Gi+ storage.</li>
+                <li><strong><code>bb-scheduler</code></strong>: High-throughput task scheduling queue that matches action digest requirements to available worker pools based on platform criteria (Linux, x86_64).</li>
+                <li><strong><code>bb-worker</code></strong>: Sandboxed execution runners that pull action inputs from CAS and run builds inside isolated Docker containers via the host Docker daemon socket.</li>
+                <li><strong><code>bb-frontend</code></strong>: Unified gRPC frontend gateway exposing the standard REAPI v2 endpoint on port 8980.</li>
+              </ul>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛠️ 3. Automated Helm Values Generation & Cluster Lifecycle</h4>
+              <p class="lesson-text">
+                The module in <code>packages/kgraph-parse-portal/lib/buildbarn-rbe.js</code> provides automated Helm values generation and CLI deployment helpers:
+              </p>
+              <pre class="code-snippet"><code># Deploy Hermetiq Buildbarn RBE to Kubernetes cluster
+helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn \\
+  --namespace buildbarn \\
+  --create-namespace \\
+  -f buildbarn-values.yaml</code></pre>
+              <p class="lesson-text">
+                The portal conducts periodic health checks on port 8980 (REAPI frontend) and port 8981 (CAS storage) to verify remote execution cluster health before queuing heavy monorepo parsing jobs.
+              </p>
+            </div>
+          \`;
+        } else if (idx === 4) {
+          return \`
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🔍 1. Sub-Millisecond Search via the Luxir C++ Engine</h4>
+              <p class="lesson-text">
+                Once files are crawled, disambiguated, and parsed into AST symbols, they are indexed into <strong>Luxir</strong>, RobOS's high-speed embedded C++ search engine running on port 8983.
+              </p>
+              <p class="lesson-text">
+                <code>LuxirSearchBridge</code> (<code>packages/kgraph-parse-portal/lib/luxir-search-bridge.js</code>) transforms raw KGraph nodes into unified search documents with multi-field inverted indexing:
+              </p>
+              <div class="formula-box">
+Index Document = {<br>
+&nbsp;&nbsp;id: "urn:robos:contract:openapi-v1",<br>
+&nbsp;&nbsp;title: "Petstore OpenAPI 3.1 Specification",<br>
+&nbsp;&nbsp;textCorpus: "petstore openapi contract pet findbyid get delete post",<br>
+&nbsp;&nbsp;types: ["robos:Contract", "schema:DigitalDocument"],<br>
+&nbsp;&nbsp;package: "services",<br>
+&nbsp;&nbsp;protocol: "OpenAPI 3.1"<br>
+}
+              </div>
+              <p class="lesson-text">
+                The bridge utilizes a dual-write pattern: writing to the live C++ engine and continuously maintaining an in-memory resilient fallback cache for instant sub-millisecond query evaluation.
+              </p>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🖥️ 2. Direct CLI Access via luxir-portal-cli.js</h4>
+              <p class="lesson-text">
+                The portal includes a standalone CLI tool and in-app Tilix console tab:
+              </p>
+              <pre class="code-snippet"><code># Check Luxir C++ engine state (:8983) and indexed document distribution
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
+
+# Query the Luxir index directly from the terminal
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract"
+
+# Search with faceted SHACL type filter
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract" --type robos:Contract
+
+# Inspect raw Luxir index JSON document by path or ID
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</code></pre>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
+                <div class="doc-figure" style="margin: 0;">
+                  <img src="/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <div class="doc-caption">Figure 5.1: Direct Luxir CLI search returning indexed OpenAPI and Protobuf contracts.</div>
+                </div>
+                <div class="doc-figure" style="margin: 0;">
+                  <img src="/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <div class="doc-caption">Figure 5.2: Luxir engine status report showing READY state, :8983 endpoint, and type counts.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lesson-section">
+              <h4 class="lesson-subtitle">🛡️ 3. W3C SHACL Validation Gates: Guaranteeing Zero Graph Corruption</h4>
+              <p class="lesson-text">
+                Autonomous agents and high-throughput crawlers must never mutate the canonical Knowledge Graph without strict schema enforcement.
+              </p>
+              <p class="lesson-text">
+                The portal's <code>POST /api/v1/ingest</code> endpoint subjects every node to RobOS's <strong>98 W3C SHACL constraint shapes</strong>. If an incoming node lacks a required property (e.g., <code>dcterms:title</code>, <code>robos:evidence</code>), violates cardinality, or specifies an invalid datatype, the transaction is rejected before any state changes occur.
+              </p>
+
+              <div class="mermaid">
+flowchart LR
+    NodeExtracted["Extracted Node<br/><i>from Filesystem / Tika</i>"] --> SHACLGate{"W3C SHACL<br/>Validation Gate"}
+    SHACLGate -- "Violates Constraints" --> Reject["Ingestion Rejected<br/><i>Error Logged to ~/.config/robos/</i>"]
+    SHACLGate -- "Valid Shape Conformance" --> DualCommit["Atomic Dual Commit"]
+    DualCommit --> KGraphStore["Modular KGraph Packages<br/><i>.robos/kgraphs/ & knowledge-graph.jsonld</i>"]
+    DualCommit --> LuxirIndex["Luxir C++ Index (:8983)<br/><i>Faceted Sub-Millisecond Search</i>"]
+    LuxirIndex --> CLI["Luxir CLI & REST Gateway<br/><i>luxir-portal-cli.js</i>"]
               </div>
             </div>
           \`;

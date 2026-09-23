@@ -23,12 +23,15 @@ Heavy-scale connectors web application and headless parsing portal fronting a hi
 
 The **RobOS Kgraph Parse Portal** (`packages/kgraph-parse-portal`) is the industrial-strength resource ingestion gateway and connectors engine for the RobOS Dual-State SDLC Knowledge Graph. It allows developers, platform architects, and autonomous AI agents to point at **any web resource or Linux filesystem location** and extract a validated, SHACL-compliant Knowledge Graph package in W3C RDF JSON-LD 1.1 format.
 
+{: .note }
+> **Interactive Masterclass Available**: Take the hands-on 5-module [RobOS Kgraph Parse Portal Masterclass](/projects/kgraph-parse-portal/elearning/) with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!
+
 It supersedes preliminary crawler drafts by fusing three cutting-edge infrastructure layers:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/kgraph-parse-portal-architecture.jpg' | relative_url }}" alt="RobOS KGraph Parse Portal Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/kgraph-parse-portal-pipeline.jpg' | relative_url }}" alt="RobOS KGraph Parse Portal 5-Stage Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS KGraph Parse Portal Architecture</strong>: Three-phase ingestion pipeline featuring universal Linux filesystem ingestion, contextual MIME disambiguation, Apache Tika 4.0 streaming gRPC, and Luxir C++ search indexing into the Dual-State Knowledge Graph. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS KGraph Parse Portal 5-Stage Ingestion Pipeline</strong>: From Linux Inodes &amp; Cryptographic Evidence through Contextual MIME, Apache Tika 4.0 gRPC, Hermetiq Buildbarn RBE, and Luxir C++ Search Index with W3C SHACL Validation Gates. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 

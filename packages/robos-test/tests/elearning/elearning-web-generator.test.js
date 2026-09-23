@@ -162,4 +162,50 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     const realmContent = fs.readFileSync(realmDoc, 'utf8');
     assert.ok(realmContent.includes('/projects/crpg-realm/elearning/'), 'crpg-realm.md must link to web edition in projects area');
   });
+
+  it('5. Generates standalone interactive website for kgraph-parse-portal with 5 comprehensive modules', () => {
+    const targetHtmlPath = path.join(rootRepo, 'docs', 'projects', 'kgraph-parse-portal', 'elearning', 'index.html');
+
+    const result = store.generateELearningWebsite({
+      courseId: 'urn:robos:elearning:course:kgraph-parse-portal',
+      outputFilePath: targetHtmlPath,
+      permalink: '/projects/kgraph-parse-portal/elearning/',
+    });
+
+    assert.strictEqual(result.ok, true, 'Result ok must be true');
+    assert.strictEqual(result.filePath, targetHtmlPath);
+    assert.strictEqual(result.permalink, '/projects/kgraph-parse-portal/elearning/');
+    assert.ok(result.course, 'Must return course node');
+    assert.strictEqual(result.course['robos:modules'].length, 5, 'Must have 5 modules in course');
+
+    assert.ok(fs.existsSync(targetHtmlPath), 'docs/projects/kgraph-parse-portal/elearning/index.html must exist on disk');
+
+    const content = fs.readFileSync(targetHtmlPath, 'utf8');
+
+    // 1. Verify Jekyll Front Matter
+    assert.ok(content.startsWith('---'), 'Must start with Jekyll YAML frontmatter');
+    assert.ok(content.includes('permalink: /projects/kgraph-parse-portal/elearning/'), 'Must specify exact GitHub Pages permalink');
+
+    // 2. Verify all 5 curriculum modules are present in sidebar & content
+    assert.ok(content.includes('Universal Linux Filesystem Ingestion'), 'Module 1 title must be present');
+    assert.ok(content.includes('Contextual MIME') && content.includes('Directory Archetype Disambiguation'), 'Module 2 title must be present');
+    assert.ok(content.includes('Apache Tika 4.0 Streaming tika-grpc Architecture'), 'Module 3 title must be present');
+    assert.ok(content.includes('Distributed Remote Build Execution (RBE) via Hermetiq Buildbarn Helm Charts'), 'Module 4 title must be present');
+    assert.ok(content.includes('Luxir C++ Hybrid Search Index Bridge'), 'Module 5 title must be present');
+
+    // 3. Verify Rich Technical Architecture & Formulas
+    assert.ok(content.includes('fs-mime-classifier.js'), 'Module 1 FS scanner code must be present');
+    assert.ok(content.includes('robos:evidence'), 'Module 1 SHA-256 evidence structure must be present');
+    assert.ok(content.includes('Semantic Disambiguation Matrix'), 'Module 2 disambiguation matrix table must be present');
+    assert.ok(content.includes('tika-grpc'), 'Module 3 Tika gRPC architecture must be present');
+    assert.ok(content.includes('bb-storage (CAS/AC)'), 'Module 4 Buildbarn storage must be present');
+    assert.ok(content.includes('kgraph-parse-portal-pipeline.jpg'), 'Architecture pipeline diagram must be referenced');
+
+    // 4. Verify quizzes and labs exist
+    assert.ok(content.includes('toggleLab('), 'Must provide toggleLab interactive handler');
+    assert.ok(content.includes('answerQuiz('), 'Must provide answerQuiz interactive handler');
+    assert.ok(content.includes('ROBOS-CERT-'), 'Must include ROBOS-CERT- verification prefix');
+    assert.ok(content.includes('showJsonLdModal'), 'Must provide JSON-LD credential inspector');
+  });
 });
+
