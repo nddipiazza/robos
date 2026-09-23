@@ -178,20 +178,10 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			return {"success": true, "spell": "cure-wounds", "healed": heal_amount, "current_hp": cur_hp, "max_hp": max_hp}
 
 		"fireball":
-			var total_dmg = 0
-			for k in range(8):
-				total_dmg += randi_range(1, 6)
-			_log_combat("combat", "🔥 %s casts [b]Fireball[/b] at %s!" % [caster_name, target_name if target_name != "" else "the battlefield"])
-			_log_combat("damage", "An explosive fiery detonation erupts, dealing %d fire damage!" % total_dmg)
-			if am and am.has_method("play_sfx"):
-				am.play_sfx("spell_cast")
-				am.play_sfx("spell_impact")
-			if target_node:
-				if "global_position" in target_node:
-					FloatingTextManager.spawn_damage(target_node.global_position, total_dmg)
-				if target_node.has_method("take_damage"):
-					target_node.take_damage(total_dmg)
-			return {"success": true, "spell": "fireball", "damage": total_dmg, "hit": true}
+			var target_pos = Vector2.ZERO
+			if target_node and "global_position" in target_node:
+				target_pos = target_node.global_position
+			return execute_aoe_spell(caster_name, "fireball", target_pos, 180.0, 14, "DEX", null)
 
 		"find-traps":
 			_log_combat("magic", "✨ %s casts [b]Find Traps[/b]! Divine divination radiates across the area." % caster_name)
@@ -223,6 +213,113 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": spell_id}
+
+func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vector2, radius: float = 180.0, save_dc: int = 14, save_stat: String = "DEX", caster_node: Node = null) -> Dictionary:
+	var am = _get_audio_manager()
+	var gs = _get_game_state()
+
+	match spell_id:
+		"fireball":
+			var dice_rolls: Array[int] = []
+			var total_dmg: int = 0
+			for _k in range(8):
+				var r = randi_range(1, 6)
+				dice_rolls.append(r)
+				total_dmg += r
+
+			_log_combat("combat", "🔥 %s casts [b]Fireball[/b] at coordinates (%d, %d)!" % [
+				caster_name, int(target_center.x), int(target_center.y)
+			])
+			_log_combat("damage", "💥 A 20ft radius fiery sphere erupts for %d fire damage! Rolled 8d6: %s (Save DC %d %s)." % [
+				total_dmg, str(dice_rolls), save_dc, save_stat
+			])
+
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+				am.play_sfx("spell_impact")
+
+			var targets_hit: Array[Dictionary] = []
+			var slain_count = 0
+
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				# Check TacticalBattle enemies or children
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						var e_node = cur_sc.enemies[eid]
+						if e_node and is_instance_valid(e_node):
+							candidate_nodes.append(e_node)
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child):
+						candidate_nodes.append(child)
+
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+
+					var dist = target_center.distance_to(target.global_position)
+					if dist <= radius:
+						var d20 = roll_d20()
+						var dex_save_mod = 2 # D&D 5e standard Goblin has DEX 14 (+2)
+						if "dex_save_mod" in target:
+							dex_save_mod = target.dex_save_mod
+						elif "dex_mod" in target:
+							dex_save_mod = target.dex_mod
+
+						var total_save = d20 + dex_save_mod
+						var save_passed = (total_save >= save_dc)
+						var dmg_taken = total_dmg
+						if save_passed:
+							dmg_taken = int(ceil(total_dmg / 2.0))
+							_log_combat("combat", "🛡️ %s succeeds on %s save [d20: %d + %d = %d vs DC %d]! Takes half damage: %d fire damage." % [
+								target.enemy_name, save_stat, d20, dex_save_mod, total_save, save_dc, dmg_taken
+							])
+						else:
+							_log_combat("combat", "💥 %s FAILS %s save [d20: %d + %d = %d vs DC %d]! Engulfed for %d fire damage!" % [
+								target.enemy_name, save_stat, d20, dex_save_mod, total_save, save_dc, dmg_taken
+							])
+
+						var hp_before = target.current_hp
+						if FloatingTextManager and "global_position" in target:
+							FloatingTextManager.spawn_damage(target.global_position, dmg_taken)
+
+						target.take_damage(dmg_taken, caster_node)
+						var was_slain = (target.current_state == TacticalEnemy.State.DEAD or target.current_hp <= 0)
+						if was_slain:
+							slain_count += 1
+
+						targets_hit.append({
+							"id": target.enemy_id if "enemy_id" in target else target.name,
+							"name": target.enemy_name if "enemy_name" in target else target.name,
+							"distance": dist,
+							"d20": d20,
+							"save_mod": dex_save_mod,
+							"total_save": total_save,
+							"save_passed": save_passed,
+							"damage_taken": dmg_taken,
+							"hp_before": hp_before,
+							"hp_after": target.current_hp,
+							"slain": was_slain
+						})
+
+			return {
+				"success": true,
+				"spell": "fireball",
+				"center": {"x": target_center.x, "y": target_center.y},
+				"radius": radius,
+				"damage_dice": dice_rolls,
+				"total_damage": total_dmg,
+				"save_dc": save_dc,
+				"targets_hit": targets_hit,
+				"targets_hit_count": targets_hit.size(),
+				"slain_count": slain_count,
+				"all_slain": (targets_hit.size() > 0 and slain_count == targets_hit.size())
+			}
+
+		_:
+			return {"success": false, "error": "Unknown AoE spell: %s" % spell_id}
 
 func execute_fighter_ability(fighter_name: String, ability_id: String, target_name: String = "", target_node: Node = null, attacker_node: Node = null) -> Dictionary:
 	var am = _get_audio_manager()

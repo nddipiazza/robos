@@ -110,6 +110,19 @@ def main() -> int:
         print("   (Tip: Use --playthrough for full playthroughs, --all for both)")
     print("=================================================================")
 
+    resolved_args = []
+    for a in forward_args:
+        if a.endswith(".feature") and not a.startswith("-"):
+            p = Path(a)
+            if not p.is_absolute():
+                if p.exists():
+                    p = p.resolve()
+                elif (PROJECT_DIR / a).exists():
+                    p = (PROJECT_DIR / a).resolve()
+            resolved_args.append(str(p))
+        else:
+            resolved_args.append(a)
+
     behave_cmd = [
         sys.executable, "-m", "behave",
     ]
@@ -118,7 +131,7 @@ def main() -> int:
     behave_cmd.extend([
         "-f", "behave_html_formatter:HTMLFormatter",
         "-o", str(HTML_REPORT),
-        *forward_args
+        *resolved_args
     ])
 
     env = os.environ.copy()

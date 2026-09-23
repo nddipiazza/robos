@@ -161,6 +161,16 @@ func play_hit_reaction() -> void:
 	tw.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
 	tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
 
+func set_hero_visual_appearance(h_class: String) -> void:
+	if h_class == "wizard" or h_class == "mage":
+		var p_mage = "res://assets/sprites/characters/hero_mage.png"
+		if ResourceLoader.exists(p_mage):
+			var tex = load(p_mage)
+			sprite.texture = tex
+			idle_textures = [tex]
+			walk_textures = [tex]
+			attack_textures = [tex]
+
 func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking:
 		return
@@ -387,7 +397,10 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		tw.tween_property(orb, "global_position", target_pos, 0.52)
 		await tw.finished
 		orb.queue_free()
-		_spawn_spell_blast_vfx(target_pos, orb_col)
+		if spell_id == "fireball":
+			_spawn_fireball_explosion_vfx(target_pos, 180.0)
+		else:
+			_spawn_spell_blast_vfx(target_pos, orb_col)
 		if AudioManager:
 			AudioManager.play_sfx("spell_impact")
 		if on_cast_callback.is_valid():
@@ -422,6 +435,48 @@ func _spawn_magic_missile_dart(target_pos: Vector2, index: int, on_impact: Calla
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
+
+func _spawn_fireball_explosion_vfx(hit_pos: Vector2, radius: float = 180.0) -> void:
+	var blast = Node2D.new()
+	blast.top_level = true
+	blast.global_position = hit_pos
+
+	var ring = Line2D.new()
+	ring.width = 6.0
+	ring.default_color = Color(1.8, 0.6, 0.1, 0.95)
+	var pts: PackedVector2Array = []
+	for i in range(32):
+		var a = i * (PI * 2.0 / 32.0)
+		pts.append(Vector2(cos(a), sin(a)) * radius)
+	pts.append(pts[0])
+	ring.points = pts
+	blast.add_child(ring)
+
+	var core = Polygon2D.new()
+	var c_pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		var r = (radius * 0.7) * (0.85 + randf() * 0.3)
+		c_pts.append(Vector2(cos(a), sin(a)) * r)
+	core.polygon = c_pts
+	core.color = Color(2.0, 0.75, 0.2, 0.75)
+	blast.add_child(core)
+
+	for k in range(12):
+		var spark = Polygon2D.new()
+		spark.polygon = PackedVector2Array([Vector2(-4, -4), Vector2(4, -4), Vector2(4, 4), Vector2(-4, 4)])
+		spark.color = Color(2.2, 0.4, 0.1, 1.0)
+		var angle = randf() * PI * 2.0
+		var dist = randf_range(30.0, radius * 0.95)
+		spark.position = Vector2(cos(angle), sin(angle)) * dist
+		blast.add_child(spark)
+
+	get_parent().add_child(blast)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(blast, "scale", Vector2(1.0, 1.0), 0.35).from(Vector2(0.15, 0.15))
+	tw.parallel().tween_property(blast, "modulate:a", 0.0, 0.55).from(1.0)
+	tw.tween_callback(blast.queue_free)
 
 func _spawn_spell_blast_vfx(hit_pos: Vector2, blast_color: Color) -> void:
 	var blast = Node2D.new()

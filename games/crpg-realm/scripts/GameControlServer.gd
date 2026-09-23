@@ -852,9 +852,12 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 		if not scene_to_load.begins_with("res://"):
 			scene_to_load = "res://scenes/%s.tscn" % scene_to_load
 		var is_golem_battle = (payload.get("encounter") == "golems" or payload.get("golems", false) or str(payload.get("state_spec", "")).to_lower().contains("golem"))
+		var is_goblin_crowd = (payload.get("encounter") in ["goblins", "goblin_crowd"] or payload.get("goblins", false) or str(payload.get("state_spec", "")).to_lower().contains("goblin"))
 		if scene_to_load.contains("TacticalBattle"):
 			if is_golem_battle:
 				GameState.setup_fighter_trio(100, 50)
+			elif is_goblin_crowd:
+				pass
 			else:
 				GameState.setup_tactical_party()
 		if get_tree().current_scene and get_tree().current_scene.scene_file_path == scene_to_load:
@@ -869,6 +872,12 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 			var sc = get_tree().current_scene
 			if sc and sc.has_method("configure_golem_encounter"):
 				sc.configure_golem_encounter(100, 500, 50)
+			await get_tree().process_frame
+			await get_tree().process_frame
+		elif is_goblin_crowd:
+			var sc = get_tree().current_scene
+			if sc and sc.has_method("configure_goblin_crowd_encounter"):
+				sc.configure_goblin_crowd_encounter(6, 7)
 			await get_tree().process_frame
 			await get_tree().process_frame
 
@@ -1125,6 +1134,7 @@ func _get_full_game_state() -> Dictionary:
 			"all_enemies_dead": (battle_enemies.size() > 0 and battle_enemies.all(func(e): return e.hp <= 0))
 		},
 		"combat_telemetry": (cur_scene.get_combat_telemetry() if (cur_scene and cur_scene.has_method("get_combat_telemetry")) else {}),
+		"last_aoe_telemetry": (cur_scene.last_aoe_telemetry if (cur_scene and "last_aoe_telemetry" in cur_scene) else {}),
 		"defeat_screen": {
 			"open": is_def_open,
 			"visible": is_def_open
@@ -1849,6 +1859,33 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			GameState.setup_tactical_party()
 			get_tree().change_scene_to_file("res://scenes/TacticalBattle.tscn")
 			return {"success": true, "target_scene": "TacticalBattle.tscn"}
+
+		"setup_goblin_crowd", "setup_goblin_encounter", "load_goblin_battle":
+			var g_count = int(args.get("count", 6))
+			var g_hp = int(args.get("hp", 7))
+			if cur_scene and cur_scene.name == "TacticalBattle" and cur_scene.has_method("configure_goblin_crowd_encounter"):
+				return cur_scene.configure_goblin_crowd_encounter(g_count, g_hp)
+			get_tree().change_scene_to_file("res://scenes/TacticalBattle.tscn")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var new_sc = get_tree().current_scene
+			if new_sc and new_sc.has_method("configure_goblin_crowd_encounter"):
+				return new_sc.configure_goblin_crowd_encounter(g_count, g_hp)
+			return {"success": true, "scene": "TacticalBattle"}
+
+		"cast_fireball", "cast_fireball_at_point":
+			var x = float(args.get("x", 1150.0))
+			var y = float(args.get("y", 520.0))
+			var target_pos = Vector2(x, y)
+
+			if has_node("/root/QAOverlay"):
+				await _simulate_mouse_to_node_or_pos(target_pos, Color(1.8, 0.5, 0.1, 0.95), "CAST FIREBALL")
+
+			if cur_scene and cur_scene.has_method("execute_fireball_spell_cast"):
+				var res = await cur_scene.execute_fireball_spell_cast(target_pos)
+				return {"success": true, "telemetry": res}
+			return {"success": false, "error": "execute_fireball_spell_cast not available"}
 
 		"start_golem_battle", "setup_golem_battle", "load_golem_battle":
 			var f_hp = int(args.get("fighters_hp", 100))

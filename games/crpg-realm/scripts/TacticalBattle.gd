@@ -2,6 +2,7 @@ extends Node2D
 class_name TacticalBattle
 
 const TacticalEnemy = preload("res://scripts/TacticalEnemy.gd")
+const TacticalEnemyScene = preload("res://scenes/components/TacticalEnemy.tscn")
 const DefeatScreen = preload("res://scripts/DefeatScreen.gd")
 
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog
@@ -19,6 +20,7 @@ enum CombatMode { REAL_TIME, ROUND_BASED }
 var enemies: Dictionary = {} # id -> TacticalEnemy
 var combat_round_index: int = 0
 var round_history: Array[Dictionary] = []
+var last_aoe_telemetry: Dictionary = {}
 
 signal combat_round_started(round_number: int)
 signal combat_round_completed(round_number: int, summary: Dictionary)
@@ -685,4 +687,142 @@ func get_combat_telemetry() -> Dictionary:
 		"latest_round": round_history.back() if not round_history.is_empty() else {},
 		"rounds": round_history
 	}
+
+func configure_goblin_crowd_encounter(count: int = 6, goblin_hp: int = 7) -> Dictionary:
+	GameState.hero_class = "wizard"
+	GameState.hero_name = "Ignis the Evoker"
+	GameState.hero_hp = 35
+	GameState.hero_max_hp = 35
+	GameState.hero_ac = 12
+	GameState.selected_spells = ["fireball", "magic-missile"]
+	GameState.party_members = [
+		{
+			"id": "hero",
+			"name": "Ignis the Evoker",
+			"class": "wizard",
+			"hp": 35,
+			"max_hp": 35,
+			"ac": 12,
+			"portrait": "portrait_wizard",
+			"is_leader": true,
+			"spells": ["fireball", "magic-missile"]
+		}
+	]
+
+	if hero and is_instance_valid(hero):
+		if hero.find_child("NameLabel", true, false):
+			hero.find_child("NameLabel", true, false).text = "Ignis the Evoker (Wizard)"
+		if hero.find_child("HPBar", true, false):
+			hero.find_child("HPBar", true, false).max_value = 35
+			hero.find_child("HPBar", true, false).value = 35
+		if hero.find_child("HPText", true, false):
+			hero.find_child("HPText", true, false).text = "35/35"
+		if hero.has_method("set_hero_visual_appearance"):
+			hero.set_hero_visual_appearance("wizard")
+		hero.global_position = Vector2(520, 520)
+
+	# Clean up any existing enemies
+	for eid in enemies:
+		var e_node = enemies[eid]
+		if is_instance_valid(e_node):
+			e_node.queue_free()
+	enemies.clear()
+
+	for child in get_children():
+		if child is TacticalEnemy and not child.is_queued_for_deletion():
+			child.queue_free()
+
+	if elora and is_instance_valid(elora):
+		elora.global_position = Vector2(380, 420)
+	if thrumbar and is_instance_valid(thrumbar):
+		thrumbar.global_position = Vector2(380, 620)
+
+	var center = Vector2(1150, 520)
+	var offsets = [
+		Vector2(0, 0),
+		Vector2(-50, -40),
+		Vector2(55, -35),
+		Vector2(-60, 45),
+		Vector2(45, 50),
+		Vector2(5, 75),
+		Vector2(-40, 80),
+		Vector2(65, 10)
+	]
+
+	var new_enemies: Dictionary = {}
+	for i in range(count):
+		var g: TacticalEnemy = TacticalEnemyScene.instantiate()
+		var eid = "goblin_%d" % (i + 1)
+		g.enemy_id = eid
+		g.enemy_name = "Goblin Skirmisher %d" % (i + 1)
+		g.max_hp = goblin_hp
+		g.current_hp = goblin_hp
+		g.armor_class = 15
+		g.attack_bonus = 4
+		g.damage_min = 3
+		g.damage_max = 7
+		g.move_speed = 130.0
+		g.is_hostile = true
+		g.loot_gold = randi_range(2, 6)
+		g.loot_items = ["dagger"]
+		g.sprite_texture_path = "res://assets/sprites/enemies/goblin.png"
+		g.sprite_scale = Vector2(0.40, 0.40)
+		g.position = center + offsets[i % offsets.size()]
+
+		add_child(g)
+		g.enemy_slain.connect(_on_enemy_slain)
+		g.corpse_looted.connect(_on_corpse_looted)
+		g.target_changed.connect(_on_target_changed)
+		g.friend_aggravated.connect(_on_friend_aggravated)
+		g.aggravated_by_proximity.connect(_on_enemy_proximity_aggro)
+		g.body_clicked.connect(_on_enemy_clicked)
+
+		new_enemies[eid] = g
+
+	enemies = new_enemies
+
+	# Link pack friends across all goblins
+	for eid in new_enemies:
+		var g_node = new_enemies[eid]
+		var f_list: Array[String] = []
+		for other_id in new_enemies:
+			if other_id != eid:
+				f_list.append(other_id)
+		g_node.friends = f_list
+
+	if hud:
+		hud.update_display("Fireball Mastery: Incinerate the Goblin Horde (6 Goblins, 7 HP each)")
+
+	_show_notice("🔥 Fireball AoE Encounter: Target the goblin cluster at (1150, 520)!")
+	GameState.log_message("combat", "🔥 [b]GOBLIN HORDE ENCOUNTER:[/b] A pack of %d Goblins (7 HP each) gathers around their campfire!" % count)
+
+	return {
+		"success": true,
+		"wizard": GameState.hero_name,
+		"goblins_count": count,
+		"goblin_hp": goblin_hp,
+		"center": {"x": center.x, "y": center.y}
+	}
+
+func execute_fireball_spell_cast(target_pos: Vector2 = Vector2(1150, 520)) -> Dictionary:
+	_show_notice("🔥 Ignis begins chanting an incantation: FIREBALL!")
+	GameState.log_message("combat", "✨ Ignis points toward (%d, %d) and channels 3rd-level evocation magic..." % [int(target_pos.x), int(target_pos.y)])
+
+	if hero and is_instance_valid(hero):
+		hero._update_facing(target_pos)
+		var cast_done = false
+		hero.play_cast_spell("fireball", target_pos, func():
+			cast_done = true
+		)
+		var t_wait = 2.0
+		while not cast_done and t_wait > 0.0:
+			await get_tree().process_frame
+			t_wait -= get_process_delta_time()
+
+	var res = combat_mgr.execute_aoe_spell("Ignis the Evoker", "fireball", target_pos, 180.0, 14, "DEX", hero)
+	last_aoe_telemetry = res
+
+	_check_victory()
+	return res
+
 

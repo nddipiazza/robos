@@ -1789,6 +1789,137 @@ def step_verify_square_formation(context, c1, c2):
         dist = math.hypot(f["x"] - leader["x"], f["y"] - leader["y"])
         assert 25.0 < dist < 140.0, f"Follower {f['name']} not in defensive square coordinates: {dist}"
 
+# ── Feature 15: Classic 8d6 Fireball AoE Spell & Goblin Crowd Decimation ───────
+
+@given('an isolated goblin crowd encounter with wizard "{wizard_name}" and {count:d} goblins of {hp:d} HP each')
+def step_isolated_goblin_crowd(context, wizard_name, count, hp):
+    st = api_get(context.web_port, "/api/v1/state")
+    cur_sc = st.get("scene", {})
+    sc_name = cur_sc.get("name", "") if isinstance(cur_sc, dict) else str(cur_sc)
+    if sc_name != "TacticalBattle":
+        api_post(context.web_port, "/api/v1/setup_state", {
+            "name": wizard_name,
+            "class": "wizard",
+            "scene": "TacticalBattle",
+            "encounter": "goblin_crowd"
+        })
+        time.sleep(0.5)
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "setup_goblin_crowd",
+        "args": {"count": count, "hp": hp}
+    })
+    assert res.get("success") is True, f"Failed to setup goblin crowd: {res}"
+    time.sleep(0.5)
+
+@then('the wizard hero has class "{hero_class}" and {hp:d} HP')
+def step_verify_wizard_hero(context, hero_class, hp):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    assert hero.get("class") == hero_class, f"Expected hero class {hero_class}, got {hero.get('class')}"
+    assert hero.get("hp") == hp, f"Expected hero hp {hp}, got {hero.get('hp')}"
+
+@then('the tactical battle contains {count:d} goblins with {hp:d} HP each')
+def step_verify_tactical_goblins(context, count, hp):
+    st = api_get(context.web_port, "/api/v1/state")
+    battle = st.get("battle", {})
+    enemies = battle.get("enemies", [])
+    assert len(enemies) == count, f"Expected {count} enemies, got {len(enemies)}"
+    for e in enemies:
+        assert "Goblin" in e.get("name", ""), f"Expected Goblin name, got {e.get('name')}"
+        assert e.get("hp") == hp, f"Expected goblin HP {hp}, got {e.get('hp')}"
+        assert e.get("max_hp") == hp, f"Expected goblin max HP {hp}, got {e.get('max_hp')}"
+
+@when('the wizard targets the goblin crowd at ({x:d}, {y:d}) and casts "{spell_id}"')
+def step_wizard_casts_fireball(context, x, y, spell_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_fireball",
+        "args": {"x": x, "y": y}
+    })
+    assert res.get("success") is True, f"Failed to cast fireball: {res}"
+    context.last_fireball_res = res.get("telemetry", {})
+    time.sleep(1.0)
+
+@then('a fiery projectile streaks to the target point and detonates in a 20ft radius explosion')
+def step_verify_fireball_projectile_detonation(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    aoe = st.get("last_aoe_telemetry", {})
+    if not aoe:
+        aoe = getattr(context, 'last_fireball_res', {})
+    assert aoe.get("success") is True, f"Expected success in AoE telemetry: {aoe}"
+    assert aoe.get("spell") == "fireball", f"Expected spell fireball, got {aoe.get('spell')}"
+    assert aoe.get("radius") >= 180.0, f"Expected at least 180px radius (20ft sphere), got {aoe.get('radius')}"
+
+@then('the spell rolls authentic 8d6 fire damage with minimum 8 damage')
+def step_verify_8d6_damage(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    aoe = st.get("last_aoe_telemetry", {})
+    if not aoe:
+        aoe = getattr(context, 'last_fireball_res', {})
+    dice = aoe.get("damage_dice", [])
+    assert len(dice) == 8, f"Expected exactly 8 damage dice rolled, got {len(dice)}: {dice}"
+    for d in dice:
+        assert 1 <= d <= 6, f"Each die roll must be between 1 and 6, got {d}"
+    total = aoe.get("total_damage", 0)
+    assert total == sum(dice), f"Total damage {total} does not match sum of dice {sum(dice)}"
+    assert total >= 8, f"Expected at least minimum 8 damage, got {total}"
+
+@then('each goblin within the 180px blast radius rolls a Dexterity saving throw vs DC {dc:d}')
+def step_verify_goblin_saving_throws(context, dc):
+    st = api_get(context.web_port, "/api/v1/state")
+    aoe = st.get("last_aoe_telemetry", {})
+    if not aoe:
+        aoe = getattr(context, 'last_fireball_res', {})
+    targets = aoe.get("targets_hit", [])
+    assert len(targets) >= 6, f"Expected at least 6 targets hit, got {len(targets)}"
+    assert aoe.get("save_dc") == dc, f"Expected save DC {dc}, got {aoe.get('save_dc')}"
+    for t in targets:
+        d20 = t.get("d20")
+        assert 1 <= d20 <= 20, f"Expected d20 roll between 1 and 20, got {d20}"
+        save_mod = t.get("save_mod")
+        assert save_mod == 2, f"Expected D&D 5e Goblin Dex save mod +2, got {save_mod}"
+        total_save = t.get("total_save")
+        assert total_save == d20 + save_mod, f"Expected total save {d20 + save_mod}, got {total_save}"
+        save_passed = t.get("save_passed")
+        assert save_passed == (total_save >= dc), f"Save passed boolean mismatch: {t}"
+
+@then('all {count:d} goblins take lethal fire damage exceeding their {hp:d} HP')
+def step_verify_lethal_damage(context, count, hp):
+    st = api_get(context.web_port, "/api/v1/state")
+    aoe = st.get("last_aoe_telemetry", {})
+    if not aoe:
+        aoe = getattr(context, 'last_fireball_res', {})
+    targets = aoe.get("targets_hit", [])
+    assert len(targets) == count, f"Expected {count} targets, got {len(targets)}"
+    for t in targets:
+        dmg = t.get("damage_taken", 0)
+        assert dmg >= hp, f"Expected fire damage >= {hp}, got {dmg} for {t.get('name')}"
+
+@then('all {count:d} goblins are slain simultaneously by the fire blast')
+def step_verify_goblins_slain(context, count):
+    st = api_get(context.web_port, "/api/v1/state")
+    battle = st.get("battle", {})
+    enemies = battle.get("enemies", [])
+    assert len(enemies) == count, f"Expected {count} enemies, got {len(enemies)}"
+    for e in enemies:
+        assert e.get("hp") == 0, f"Expected enemy {e.get('name')} HP 0, got {e.get('hp')}"
+        assert e.get("state_name") == "DEAD" or e.get("state") == 3, f"Expected enemy state DEAD, got {e}"
+    assert battle.get("all_enemies_dead") is True, f"Expected all_enemies_dead to be True: {battle}"
+
+@then('the activity log records the fiery explosion and goblin deaths')
+def step_verify_fireball_activity_log(context):
+    time.sleep(0.5)
+    st = api_get(context.web_port, "/api/v1/state")
+    stats = st.get("stats", {})
+    assert stats.get("kills", 0) >= 6, f"Expected at least 6 kills recorded, got {stats.get('kills')}"
+
+@then('the tactical battle signals total victory over the goblin horde')
+def step_verify_total_victory(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    battle = st.get("battle", {})
+    assert battle.get("all_enemies_dead") is True, f"Expected all enemies dead for victory: {battle}"
+    assert st.get("defeat_screen", {}).get("open") is False, "Defeat screen should not be open on victory"
+
+
 
 
 

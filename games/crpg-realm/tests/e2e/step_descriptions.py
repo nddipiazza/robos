@@ -168,6 +168,30 @@ STEP_PATTERNS = [
      'Leader "{0}" leads party to destination ({1}, {2}).'),
     (r'companions "([^"]+)" and "([^"]+)" position themselves at the defensive square rank coordinates',
      'Verifying Defensive Square: "{0}" and "{1}" hold perimeter corners in box formation.'),
+
+    # Feature 15: Classic 8d6 Fireball AoE Spell & Goblin Crowd Decimation
+    (r'an isolated goblin crowd encounter with wizard "([^"]+)" and (\d+) goblins of (\d+) HP each',
+     'Setting up classic encounter: Wizard "{0}" confronts a tightly packed horde of {1} Goblins ({2} HP each).'),
+    (r'the wizard hero has class "([^"]+)" and (\d+) HP',
+     'Verifying wizard hero class archetype "{0}" and base vitality {1} HP.'),
+    (r'the tactical battle contains (\d+) goblins with (\d+) HP each',
+     'Verifying battlefield populated with {0} hostile Goblins ({1} HP each) clustered around campsite.'),
+    (r'the wizard targets the goblin crowd at \((\d+),\s*(\d+)\) and casts "([^"]+)"',
+     'Wizard targets goblin crowd coordinates ({0}, {1}) and channels 3rd-level evocation spell "{2}".'),
+    (r'a fiery projectile streaks to the target point and detonates in a 20ft radius explosion',
+     'Fiery projectile streaks 150ft across the arena and detonates in a 20ft (180px) radius blast sphere.'),
+    (r'the spell rolls authentic 8d6 fire damage with minimum 8 damage',
+     'Resolving authentic 8d6 fire damage dice roll (min 8, avg 28, max 48) without mocked stats.'),
+    (r'each goblin within the 180px blast radius rolls a Dexterity saving throw vs DC (\d+)',
+     'Each goblin caught in 180px blast sphere rolls D&D 5e Dexterity saving throw (d20 + 2) vs Spell Save DC {0}.'),
+    (r'all (\d+) goblins take lethal fire damage exceeding their (\d+) HP',
+     'Fire blast inflicts lethal fire damage on all {0} goblins, exceeding their {1} HP threshold.'),
+    (r'all (\d+) goblins are slain simultaneously by the fire blast',
+     'All {0} goblins fall simultaneously, transitioning to State.DEAD and leaving lootable corpses.'),
+    (r'the activity log records the fiery explosion and goblin deaths',
+     'Verifying activity log entries documenting Fireball detonation, saving throw checks, and goblin demise.'),
+    (r'the tactical battle signals total victory over the goblin horde',
+     'Combat manager verifies all hostile enemies eliminated, triggering total victory state.'),
 ]
 
 def get_step_description(step_type: str, step_name: str, step_docstring: str = None) -> str:
