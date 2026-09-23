@@ -14,7 +14,7 @@
     "test": "node --test tests/unit/*.test.js",
     "e2e": "cucumber-js --config tests/e2e/cucumber.cjs",
     "e2e:live": "BASE_URL=https://www.getemgigs.com cucumber-js --config tests/e2e/cucumber.cjs",
-    "evidence": "node scripts/build-evidence.mjs",
+    "evidence": "node scripts/encode-frames.mjs && node scripts/build-evidence.mjs",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
