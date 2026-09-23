@@ -26,6 +26,7 @@ var anim_frame: int = 0
 
 # Queued action during pause
 var queued_action: Dictionary = {}
+var pending_interact_callback: Callable = Callable()
 
 func _ready() -> void:
 	_load_textures()
@@ -111,6 +112,10 @@ func _physics_process(delta: float) -> void:
 			is_moving = false
 			velocity = Vector2.ZERO
 			_animate_idle(delta)
+			if pending_interact_callback.is_valid():
+				var cb = pending_interact_callback
+				pending_interact_callback = Callable()
+				cb.call()
 	elif follow_target and is_instance_valid(follow_target):
 		# Follow Hero in formation if companion is part of the party
 		var desired_pos = follow_target.global_position + formation_offset
@@ -131,6 +136,30 @@ func _physics_process(delta: float) -> void:
 func move_to(dest: Vector2) -> void:
 	target_position = dest
 	is_moving = true
+
+func _stop_movement() -> void:
+	is_moving = false
+	velocity = Vector2.ZERO
+	target_position = Vector2.ZERO
+	pending_interact_callback = Callable()
+
+func approach_and_interact(target_pos: Vector2, interact_range: float, on_reached: Callable) -> void:
+	var dist = global_position.distance_to(target_pos)
+	if dist <= interact_range:
+		is_moving = false
+		velocity = Vector2.ZERO
+		sprite.flip_h = (target_pos.x < global_position.x)
+		if on_reached.is_valid():
+			on_reached.call()
+	else:
+		var dir = (global_position - target_pos).normalized()
+		if dir == Vector2.ZERO: dir = Vector2(0, 1)
+		var dest = target_pos + dir * max(10.0, interact_range - 15.0)
+		pending_interact_callback = func():
+			sprite.flip_h = (target_pos.x < global_position.x)
+			if on_reached.is_valid():
+				on_reached.call()
+		move_to(dest)
 
 func _animate_walk(delta: float) -> void:
 	if walk_textures.size() == 0:

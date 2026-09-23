@@ -1068,6 +1068,9 @@ func _get_full_game_state() -> Dictionary:
 				if t_info.get("is_disarmed", false): disarmed_traps_count += 1
 				if t_info.get("is_triggered", false): triggered_traps_count += 1
 
+	var hero_node: Node2D = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
+	var hero_pos = [hero_node.global_position.x, hero_node.global_position.y] if hero_node else [0.0, 0.0]
+
 	return {
 		"traps": scene_traps,
 		"detect_traps_mode": GameState.is_detecting_traps,
@@ -1083,6 +1086,7 @@ func _get_full_game_state() -> Dictionary:
 		},
 		"hero": {
 			"name": GameState.hero_name,
+			"position": hero_pos,
 			"race": GameState.hero_race,
 			"class": GameState.hero_class,
 			"selected_spells": GameState.selected_spells,
@@ -1454,15 +1458,64 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 		"disarm_trap":
 			var t_id = str(args.get("trap_id", args.get("target", "")))
 			var actor = str(args.get("actor", args.get("disarmer", "")))
+			if actor == "":
+				actor = GameState.get_thief_member_name()
 			var fumble = bool(args.get("fumble", args.get("critical_fumble", false)))
+			var no_walk = bool(args.get("no_walk", args.get("direct_only", false)))
 			if cur_scene:
 				var t_node = cur_scene.find_child(t_id, true, false)
 				if not t_node:
-					for child in cur_scene.get_children():
-						if child.get("trap_id") == t_id:
+					for child in cur_scene.find_children("*", "Area2D", true, false):
+						var c_name = String(child.name).to_snake_case().replace("_", "-")
+						if child.get("trap_id") == t_id or String(child.name) == t_id or c_name == t_id:
 							t_node = child
 							break
-				if t_node and has_node("/root/QAOverlay"):
+				if not t_node:
+					for child in cur_scene.get_children():
+						if child.get("trap_id") == t_id or child.name == t_id:
+							t_node = child
+							break
+				if t_node:
+					var disarmer_node: CharacterBody2D = null
+					var hero = cur_scene.find_child("HeroPlayer", true, false)
+					if actor == "" or actor == GameState.hero_name or actor.to_lower() == "hero" or (hero and hero.name.to_lower().contains(actor.to_lower())):
+						disarmer_node = hero
+					else:
+						for child in cur_scene.get_children():
+							if child is CharacterBody2D and (child.name.to_lower().contains(actor.to_lower()) or child.get("companion_name") == actor):
+								disarmer_node = child
+								break
+						if not disarmer_node:
+							disarmer_node = hero
+
+					if disarmer_node and not no_walk:
+						var reach = float(t_node.get("disarm_reach")) if "disarm_reach" in t_node else 72.0
+						var dist = disarmer_node.global_position.distance_to(t_node.global_position)
+						if dist > reach:
+							var dir = (disarmer_node.global_position - t_node.global_position).normalized()
+							if dir == Vector2.ZERO: dir = Vector2(-1, 0)
+							var adjacent_pos = t_node.global_position + dir * 55.0
+							if has_node("/root/QAOverlay"):
+								await _simulate_mouse_to_node_or_pos(t_node, Color(0.2, 0.95, 0.4, 0.95), "WALK NEXT TO TRAP")
+							if disarmer_node.has_method("move_to_point"):
+								disarmer_node.move_to_point(adjacent_pos)
+							elif disarmer_node.has_method("move_to"):
+								disarmer_node.move_to(adjacent_pos)
+
+							var wait_ticks = 0
+							while wait_ticks < 160:
+								await get_tree().create_timer(0.05).timeout
+								wait_ticks += 1
+								if disarmer_node.global_position.distance_to(t_node.global_position) <= reach - 10.0 or disarmer_node.global_position.distance_to(adjacent_pos) <= 24.0:
+									break
+								if wait_ticks > 15 and not disarmer_node.get("is_moving"):
+									break
+
+							if disarmer_node.has_method("_update_facing"):
+								disarmer_node._update_facing(t_node.global_position)
+							elif "sprite" in disarmer_node and disarmer_node.sprite:
+								disarmer_node.sprite.flip_h = (t_node.global_position.x < disarmer_node.global_position.x)
+				elif has_node("/root/QAOverlay"):
 					await _simulate_mouse_to_node_or_pos(t_node, Color(0.2, 0.95, 0.4, 0.95), "DISARM TRAP")
 			return GameState.disarm_trap_by_id(t_id, actor, fumble)
 
@@ -1470,14 +1523,50 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			var t_id = str(args.get("trap_id", args.get("target", "")))
 			var victim = str(args.get("victim", ""))
 			var fail_save = bool(args.get("fail_save", args.get("force_fail_save", false)))
+			var no_walk = bool(args.get("no_walk", args.get("direct_only", false)))
 			if cur_scene:
 				var t_node = cur_scene.find_child(t_id, true, false)
 				if not t_node:
 					for child in cur_scene.get_children():
-						if child.get("trap_id") == t_id:
+						if child.get("trap_id") == t_id or child.name == t_id:
 							t_node = child
 							break
-				if t_node and has_node("/root/QAOverlay"):
+				if t_node:
+					var victim_node: CharacterBody2D = null
+					var hero = cur_scene.find_child("HeroPlayer", true, false)
+					if victim == "" or victim == GameState.hero_name or victim.to_lower() == "hero" or (hero and hero.name.to_lower().contains(victim.to_lower())):
+						victim_node = hero
+					else:
+						for child in cur_scene.get_children():
+							if child is CharacterBody2D and (child.name.to_lower().contains(victim.to_lower()) or child.get("companion_name") == victim):
+								victim_node = child
+								break
+						if not victim_node:
+							victim_node = hero
+
+					if victim_node and not no_walk:
+						var dist = victim_node.global_position.distance_to(t_node.global_position)
+						if dist > 36.0 and not t_node.get("is_triggered"):
+							if has_node("/root/QAOverlay"):
+								await _simulate_mouse_to_node_or_pos(t_node, Color(1.0, 0.2, 0.2, 0.95), "WALK OVER TRAP")
+							if "next_trigger_force_fail_save" in t_node:
+								t_node.next_trigger_force_fail_save = fail_save
+							if victim_node.has_method("move_to_point"):
+								victim_node.move_to_point(t_node.global_position)
+							elif victim_node.has_method("move_to"):
+								victim_node.move_to(t_node.global_position)
+
+							var wait_ticks = 0
+							while wait_ticks < 80 and not t_node.get("is_triggered"):
+								await get_tree().create_timer(0.05).timeout
+								wait_ticks += 1
+								if victim_node.global_position.distance_to(t_node.global_position) <= 40.0:
+									break
+
+							if not t_node.get("is_triggered"):
+								return t_node.force_trigger(victim if victim != "" else GameState.hero_name, fail_save)
+							return {"success": true, "triggered": true, "trap_id": t_id, "walked_over": true}
+				elif has_node("/root/QAOverlay"):
 					await _simulate_mouse_to_node_or_pos(t_node, Color(1.0, 0.2, 0.2, 0.95), "TRIGGER TRAP")
 			return GameState.trigger_trap_by_id(t_id, victim, fail_save)
 

@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import sys
 import time
@@ -29,7 +30,7 @@ def api_post(port, endpoint, payload):
     for attempt in range(10):
         try:
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
-            with urllib.request.urlopen(req, timeout=8.0) as resp:
+            with urllib.request.urlopen(req, timeout=18.0) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except Exception:
             time.sleep(0.3)
@@ -61,25 +62,21 @@ def step_isolated_tactical_battle_simple(context, hero_name):
 
 @given('an isolated test starting in scene "{scene_name}" with party "{hero_name}" the "{hero_class}"')
 def step_isolated_scene_start(context, scene_name, hero_name, hero_class):
-    st = api_get(context.web_port, "/api/v1/state")
-    cur_sc = st.get("scene", {})
-    sc_name = cur_sc.get("name", "") if isinstance(cur_sc, dict) else str(cur_sc)
-    if sc_name != scene_name:
-        comps = ["elora"] if scene_name == "VillageSquare" else []
-        inv = ["service-sword", "potion-healing", "potion-healing"] if scene_name == "VillageSquare" else ["potion-healing"]
-        q_stage = 2 if scene_name == "VillageSquare" else 1
-        flags = {"partner_conversed": True, "footlocker_looted": True} if scene_name == "VillageSquare" else {}
-        api_post(context.web_port, "/api/v1/setup_state", {
-            "name": hero_name,
-            "class": hero_class.lower(),
-            "scene": scene_name,
-            "companions": comps,
-            "gold": 150,
-            "inventory": inv,
-            "quest_stage": q_stage,
-            "flags": flags
-        })
-        time.sleep(0.5)
+    comps = ["elora"] if scene_name == "VillageSquare" else []
+    inv = ["service-sword", "potion-healing", "potion-healing"] if scene_name == "VillageSquare" else ["potion-healing"]
+    q_stage = 2 if scene_name == "VillageSquare" else 1
+    flags = {"partner_conversed": True, "footlocker_looted": True} if scene_name == "VillageSquare" else {}
+    api_post(context.web_port, "/api/v1/setup_state", {
+        "name": hero_name,
+        "class": hero_class.lower(),
+        "scene": scene_name,
+        "companions": comps,
+        "gold": 150,
+        "inventory": inv,
+        "quest_stage": q_stage,
+        "flags": flags
+    })
+    time.sleep(0.5)
 
 @given('an isolated scenario starting in scene "{scene_name}"')
 def step_isolated_scene_generic(context, scene_name):
@@ -1277,12 +1274,60 @@ def step_player_suffers_status_effect(context, effect):
 
 @when('the disarm attempt on trap "{trap_id}" critically fumbles')
 def step_disarm_trap_fumbles(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    hero_name = state.get("hero", {}).get("name", "Bramble")
     res = api_post(context.web_port, "/api/v1/action", {
         "action": "disarm_trap",
-        "args": {"trap_id": trap_id, "critical_fumble": True}
+        "args": {"trap_id": trap_id, "critical_fumble": True, "actor": hero_name}
     })
     context.last_fumble_res = res
     time.sleep(0.5)
+
+@then('the party member is standing next to trap "{trap_id}"')
+def step_party_standing_next_to_trap(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    hero_pos = state.get("hero", {}).get("position", [0, 0])
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
+    trap_pos = found.get("position", [0, 0])
+    reach = float(found.get("disarm_reach", 72.0))
+    dist = math.hypot(hero_pos[0] - trap_pos[0], hero_pos[1] - trap_pos[1])
+    assert dist <= reach + 10.0, f"Expected actor to be standing next to trap (reach <= {reach}), but distance is {dist:.1f} px"
+
+@then('the party member walked over trap "{trap_id}"')
+def step_party_walked_over_trap(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    hero_pos = state.get("hero", {}).get("position", [0, 0])
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
+    trap_pos = found.get("position", [0, 0])
+    dist = math.hypot(hero_pos[0] - trap_pos[0], hero_pos[1] - trap_pos[1])
+    assert dist <= 48.0, f"Expected actor to have walked over trap (dist <= 48.0), but distance is {dist:.1f} px"
+
+@then('a direct disarm on trap "{trap_id}" from afar without walking is rejected')
+def step_direct_disarm_from_afar_rejected(context, trap_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "disarm_trap",
+        "args": {"trap_id": trap_id, "direct_only": True}
+    })
+    assert res.get("success") is False, f"Expected remote direct disarm to fail, got: {res}"
+    assert res.get("too_far") is True or "walk next to trap first" in res.get("error", "").lower(), (
+        f"Expected 'too_far' error requiring walking next to trap, got: {res}"
+    )
+
+@then('a remote trigger on trap "{trap_id}" without walking over it is rejected')
+def step_remote_trigger_rejected(context, trap_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "trigger_trap",
+        "args": {"trap_id": trap_id, "direct_only": True}
+    })
+    assert res.get("triggered") is False or res.get("success") is False, f"Expected remote trigger to fail, got: {res}"
+    assert res.get("too_far") is True or "walk over trap" in res.get("error", "").lower(), (
+        f"Expected 'too_far' error requiring walking over trap, got: {res}"
+    )
+
 
 
 

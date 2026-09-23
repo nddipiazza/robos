@@ -46,14 +46,16 @@ flowchart TD
         PulseOutline["Pulsing Red Hazard Highlight (Line2D)<br/>Danger label: ⚠️ [TRAP DETECTED]"]
     end
 
-    subgraph Disarm["3. Disarm Phase"]
+    subgraph Disarm["3. Disarm Phase (Proximity Required)"]
+        ApproachTrap["Approach Trap: Walk adjacent (~55 px)<br/>Must be within disarm_reach (80 px)"]
         ToolsCheck["Thieves' Tools Check<br/>d20 + DEX mod + Prof vs disarmDC"]
         SuccessDisarm["Success: Trap Safely Disarmed<br/>Mechanisms wedged harmlessly (Green highlight)"]
         FumbleDetonation["Critical Fumble (Nat 1 or force_fumble)<br/>💥 Accidental detonation in disarmer's face!"]
     end
 
-    subgraph Trigger["4. Step Trigger Phase"]
-        StepTrigger["Victim steps onto Area2D trigger"]
+    subgraph Trigger["4. Step Trigger Phase (Physical Walk-Over)"]
+        WalkOver["Physical Step: Victim walks over trigger<br/>(Body enters collision area <= 54 px)"]
+        HaltMotion["Halt Movement: Character stops instantly"]
         SavingThrow["Saving Throw: d20 + save_bonus vs save_dc"]
         HalfDmg["Save Passed: Half Damage"]
         FullDmg["Save Failed: Full Damage + Condition<br/>(Poisoned, Stunned, Blinded)"]
@@ -63,12 +65,14 @@ flowchart TD
     Hidden --> ClericSpell
     ThiefMode --> PulseOutline
     ClericSpell --> PulseOutline
-    PulseOutline --> ToolsCheck
+    PulseOutline --> ApproachTrap
+    ApproachTrap --> ToolsCheck
     ToolsCheck --> SuccessDisarm
     ToolsCheck --> FumbleDetonation
-    FumbleDetonation --> StepTrigger
-    Hidden --> StepTrigger
-    StepTrigger --> SavingThrow
+    FumbleDetonation --> HaltMotion
+    Hidden --> WalkOver
+    WalkOver --> HaltMotion
+    HaltMotion --> SavingThrow
     SavingThrow --> HalfDmg
     SavingThrow --> FullDmg
 ```
@@ -162,9 +166,13 @@ func _start_pulse() -> void:
 
 ---
 
-## Disarm Checks & Critical Fumble Detonation
+## Proximity Requirements & Physical Walk-Over Triggers
 
-When a Rogue uses Thieves' Tools to neutralize a revealed trap:
+Infinity Engine traps require physical proximity to interact with: characters cannot disarm mechanisms from across the dungeon, and floor hazards only detonate when an actor physically walks over them.
+
+### 1. Disarming Requires Walking Adjacent (`disarm_reach = 80.0 px`)
+
+When an actor is commanded to disarm a detected trap, the engine verifies that the actor is standing adjacent to the hazard (within `disarm_reach: float = 80.0`, typically ~55 px away). If an actor attempts to disarm from afar without approaching first, the action is rejected:
 
 ```gdscript
 func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionary:
@@ -173,10 +181,23 @@ func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionar
     if is_triggered:
         return {"success": false, "already_triggered": true}
 
+    # Proximity check: Must walk next to the trap first
+    var actor = _get_actor_node(disarmer_name)
+    if actor != null:
+        var dist = global_position.distance_to(actor.global_position)
+        if dist > disarm_reach:
+            push_warning("Actor '%s' is too far (%.1f px) to disarm trap (reach: %.1f px)" % [disarmer_name, dist, disarm_reach])
+            return {"success": false, "error": "Too far from trap to disarm (must walk next to it first)", "too_far": true, "distance": dist}
+
     var cm = _get_combat_manager()
-    var tools_bonus = 5 # +3 DEX mod, +2 Thieves' Tools proficiency
+    var tools_bonus = 5
     if disarmer_name == GameState.hero_name:
-        tools_bonus = GameState.get_stat_modifier(int(GameState.ability_scores.get("DEX", 14))) + 2
+        var dex_mod = GameState.get_stat_modifier(int(GameState.ability_scores.get("DEX", 14)))
+        var prof = 4 if GameState.character_class.to_lower() == "rogue" else 2
+        tools_bonus = max(5, dex_mod + prof)
+    elif disarmer_name == "Bramble Ironheart":
+        var dex_mod = GameState.get_stat_modifier(int(GameState.companion_stats.get("Bramble Ironheart", {}).get("DEX", 16)))
+        tools_bonus = max(5, dex_mod + 4) # Rogue Expertise
 
     var res = cm.resolve_trap_disarm(disarmer_name, tools_bonus, disarm_dc, trap_name, force_fumble)
 
@@ -188,11 +209,28 @@ func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionar
         FloatingTextManager.spawn_status(global_position, "TRAP DISARMED")
         return {"success": true, "disarmed": true}
     elif res.get("fumble", false):
-        # Detonate in disarmer's face!
-        var trig_res = force_trigger(disarmer_name)
+        # Detonates in disarmer's face because they are standing right next to it!
+        var trig_res = force_trigger(disarmer_name, false, true)
         return {"success": false, "fumble": true, "triggered": true, "trigger_result": trig_res}
 ```
+
+### 2. Triggering Requires Walking Over the Trap
+
+Floor traps and concealed glyphs only detonate when an actor physically walks into the collision shape (`_on_body_entered`) or steps directly over the bounding box (`dist <= 54.0 px`):
+
+- **Movement Halting**: Upon stepping onto the trap, the victim's velocity and pathfinding are immediately terminated (`is_moving = false`, `velocity = Vector2.ZERO`).
+- **Saving Throw Resolution**: The victim immediately rolls a d20 saving throw matching the trap's `saveStat` (e.g., CON for poison darts, DEX for explosive fire glyphs).
+- **Damage & Status Effects**: A successful save halves incoming damage; a failed save inflicts full damage and applies debilitating conditions (such as `poisoned` or `stunned`).
+- **Remote Rejection**: Any attempt to trigger the hazard remotely without an actor stepping over it is strictly rejected by the engine.
+
+### 3. Mouse Interaction & Navigation Flow
+
+In Godot, player input on the trap's `CollisionShape2D` automatically routes through `_input_event`:
+
+- **Clicking a Detected Trap**: Commands the party's rogue or selected hero to pathfind to an adjacent position (`global_position + direction * 55.0 px`), await arrival, turn to face the mechanism, and begin disarming.
+- **Clicking an Undetected Trap**: Registers as standard terrain movement. The party member moves directly toward the clicked position, and if their movement path crosses the concealed hazard's trigger radius, the trap immediately trips!
 
 ---
 
 [← 4. Items & Equipment System](/projects/crpg-realm/create-your-own-game/04-items-loot-and-inventory.html) | [Next: 6. Custom Boss Encounters →](/projects/crpg-realm/create-your-own-game/06-boss-fights-and-encounters.html)
+

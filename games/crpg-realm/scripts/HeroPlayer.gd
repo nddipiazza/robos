@@ -457,6 +457,7 @@ func move_to_point(target_pos: Vector2, on_reached: Callable = Callable(), queue
 		path = PackedVector2Array([target_pos])
 
 	target_position = path[0]
+	is_moving = true
 	for k in range(1, path.size()):
 		waypoint_queue.append(path[k])
 		waypoint_callbacks.append(Callable())

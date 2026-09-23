@@ -35,7 +35,8 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
     When the trap "poison-dart-trap" is revealed
     And the player orders "Bramble" to disarm trap "poison-dart-trap"
-    Then the trap "poison-dart-trap" is disarmed
+    Then the party member is standing next to trap "poison-dart-trap"
+    And the trap "poison-dart-trap" is disarmed
     And the activity log contains message "safely disarmed Concealed Poison Dart Trap with Thieves' Tools"
 
   Scenario: Stepping onto an armed trap triggers saving throws, damage, and poison condition
@@ -44,7 +45,8 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     The victim rolls a Constitution saving throw vs DC 13, taking damage and contracting the poisoned status.
     Given an isolated test starting in scene "AncientCatacombs" with party "Lieutenant Vance" the "fighter"
     When the party member steps onto trap "poison-dart-trap"
-    Then the trap "poison-dart-trap" is triggered
+    Then the party member walked over trap "poison-dart-trap"
+    And the trap "poison-dart-trap" is triggered
     And the party member suffers trap damage
     And the player suffers status effect "poisoned"
     And the activity log contains message "TRAP TRIGGERED"
@@ -56,5 +58,20 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
     When the trap "glyph-of-warding" is revealed
     And the disarm attempt on trap "glyph-of-warding" critically fumbles
-    Then the trap "glyph-of-warding" is triggered
+    Then the party member is standing next to trap "glyph-of-warding"
+    And the trap "glyph-of-warding" is triggered
     And the activity log contains message "TRAP ACCIDENTAL TRIGGER"
+
+  Scenario: Disarming from afar requires walking next to trap while direct remote disarm fails
+    Adventurers cannot dismantle mechanical trigger plates or diffuse mystical runes from across the room.
+    Attempting to disarm without closing the distance to adjacent range is rejected by the engine.
+    Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
+    When the trap "spike-pit-trap" is revealed
+    Then a direct disarm on trap "spike-pit-trap" from afar without walking is rejected
+
+  Scenario: Traps do not trigger remotely without walking over the hazard
+    Pressure plates and runes require physical contact to spring.
+    An adventurer standing across the hall cannot accidentally spring the trap without walking over it.
+    Given an isolated test starting in scene "AncientCatacombs" with party "Lieutenant Vance" the "fighter"
+    Then a remote trigger on trap "spike-pit-trap" without walking over it is rejected
+

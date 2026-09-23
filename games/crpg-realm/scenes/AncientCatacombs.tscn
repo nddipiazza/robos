@@ -141,7 +141,7 @@ icon_texture = ExtResource("17_pot")
 ; ── Dungeon Traps ────────────────────────────────────────────────────────
 
 [node name="PoisonDartTrap" parent="." instance=ExtResource("19_trap")]
-position = Vector2(540, 700)
+position = Vector2(540, 720)
 trap_id = "poison-dart-trap"
 trap_name = "Concealed Poison Dart Trap"
 trap_type = "floor"

@@ -31,6 +31,8 @@ signal trap_triggered(trap_node: Node2D, victim_name: String)
 @export var is_disarmed: bool = false
 @export var is_triggered: bool = false
 @export var detection_radius: float = 650.0
+@export var disarm_reach: float = 80.0
+var next_trigger_force_fail_save: bool = false
 
 @onready var visual_poly: Polygon2D = get_node_or_null("HazardVisual")
 @onready var outline_line: Line2D = get_node_or_null("Outline")
@@ -139,13 +141,29 @@ func attempt_detection(detector_name: String) -> bool:
 	var cm = _get_combat_manager()
 	var perception_bonus = 4 # Default rogue / high perception bonus (+2 WIS + 2 Prof)
 	if detector_name == GameState.hero_name:
-		perception_bonus = GameState.get_stat_modifier(int(GameState.ability_scores.get("WIS", 12))) + 2
+		var wis_mod = GameState.get_stat_modifier(int(GameState.ability_scores.get("WIS", 12)))
+		var prof = 4 if GameState.hero_class.to_lower() == "rogue" else 2
+		perception_bonus = max(4, wis_mod + prof)
+	elif detector_name == "Bramble Ironheart" or detector_name == "Bramble":
+		perception_bonus = 5
 
 	var res = cm.resolve_trap_detection(detector_name, perception_bonus, detect_dc, trap_name)
 	if res.get("success", false):
 		reveal_trap(detector_name)
 		return true
 	return false
+
+func _get_actor_node(actor_name: String) -> CharacterBody2D:
+	var cur_sc = get_tree().current_scene if get_tree() else null
+	if not cur_sc: return null
+	var hero = cur_sc.find_child("HeroPlayer", true, false)
+	if hero and (actor_name == "" or actor_name == GameState.hero_name or actor_name.to_lower() == "hero" or hero.name.to_lower().contains(actor_name.to_lower())):
+		return hero
+	for child in cur_sc.get_children():
+		if child is CharacterBody2D:
+			if child.name.to_lower().contains(actor_name.to_lower()) or child.get("companion_name") == actor_name:
+				return child
+	return hero
 
 # ── Disarm Methods ────────────────────────────────────────────────────────────
 
@@ -155,10 +173,25 @@ func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionar
 	if is_triggered:
 		return {"success": false, "already_triggered": true}
 
+	var actor_node = _get_actor_node(disarmer_name)
+	if actor_node:
+		var dist = global_position.distance_to(actor_node.global_position)
+		if dist > disarm_reach:
+			GameState.log_message("combat", "⚠️ [TOO FAR] %s must walk next to %s to disarm it! (Distance: %d px, max reach: %d px)" % [disarmer_name, trap_name, int(dist), int(disarm_reach)])
+			return {
+				"success": false,
+				"error": "Must walk next to trap first! %s is too far (%.1f px away; max reach is %.1f px)." % [disarmer_name, dist, disarm_reach],
+				"too_far": true,
+				"distance": dist,
+				"disarm_reach": disarm_reach
+			}
+
 	var cm = _get_combat_manager()
 	var tools_bonus = 5 # Standard thief sleight of hand (+3 DEX + 2 Prof)
 	if disarmer_name == GameState.hero_name:
-		tools_bonus = GameState.get_stat_modifier(int(GameState.ability_scores.get("DEX", 14))) + 2
+		var dex_mod = GameState.get_stat_modifier(int(GameState.ability_scores.get("DEX", 14)))
+		var prof = 4 if GameState.hero_class == "rogue" else 2 # Expertise with Thieves' Tools for Rogues
+		tools_bonus = max(5, dex_mod + prof)
 
 	var res = cm.resolve_trap_disarm(disarmer_name, tools_bonus, disarm_dc, trap_name, force_fumble)
 
@@ -171,21 +204,72 @@ func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionar
 			FloatingTextManager.spawn_status(global_position, "TRAP DISARMED")
 		return {"success": true, "disarmed": true, "d20": res.get("d20"), "total": res.get("total")}
 	elif res.get("fumble", false):
-		# Detonate in disarmer's face!
-		var trig_res = force_trigger(disarmer_name)
+		# Detonate directly in disarmer's face because they are standing right next to it!
+		var trig_res = force_trigger(disarmer_name, false, true)
 		return {"success": false, "fumble": true, "triggered": true, "trigger_result": trig_res}
 	else:
 		return {"success": false, "fumble": false, "d20": res.get("d20"), "total": res.get("total")}
 
+func approach_and_disarm(actor_name: String = "", force_fumble: bool = false, on_complete: Callable = Callable()) -> void:
+	var actor = _get_actor_node(actor_name)
+	if not actor:
+		if on_complete.is_valid():
+			on_complete.call({"success": false, "error": "Actor not found"})
+		return
+
+	var a_name = actor_name if actor_name != "" else (GameState.hero_name if actor.name == "HeroPlayer" else actor.name)
+	var dir = (actor.global_position - global_position).normalized()
+	if dir == Vector2.ZERO: dir = Vector2(-1, 0)
+	var adjacent_pos = global_position + dir * 55.0
+
+	var execute_disarm = func():
+		if actor.has_method("_update_facing"):
+			actor._update_facing(global_position)
+		elif "sprite" in actor and actor.sprite:
+			actor.sprite.flip_h = (global_position.x < actor.global_position.x)
+		var res = disarm_trap(a_name, force_fumble)
+		if on_complete.is_valid():
+			on_complete.call(res)
+
+	if actor.global_position.distance_to(global_position) <= disarm_reach:
+		execute_disarm.call()
+	elif actor.has_method("approach_and_interact"):
+		actor.approach_and_interact(global_position, 55.0, execute_disarm)
+	elif actor.has_method("move_to_point"):
+		actor.move_to_point(adjacent_pos, execute_disarm)
+	elif actor.has_method("move_to"):
+		actor.move_to(adjacent_pos)
+		get_tree().create_timer(adjacent_pos.distance_to(actor.global_position) / 200.0).timeout.connect(execute_disarm)
+
 # ── Trigger Resolution ────────────────────────────────────────────────────────
 
-func force_trigger(victim_name: String, force_fail_save: bool = false) -> Dictionary:
+func force_trigger(victim_name: String, force_fail_save: bool = false, is_fumble: bool = false, is_physical_step: bool = false) -> Dictionary:
 	if is_disarmed or is_triggered:
 		return {"triggered": false, "reason": "Already neutralized"}
+
+	var vic_node = _get_actor_node(victim_name)
+	if vic_node and not is_fumble:
+		var dist = global_position.distance_to(vic_node.global_position)
+		var max_dist = 78.0 if is_physical_step else 54.0
+		if dist > max_dist:
+			GameState.log_message("combat", "⚠️ [TOO FAR] Cannot trigger %s from afar! %s must walk over the trap to trigger it (distance: %d px)." % [trap_name, victim_name, int(dist)])
+			return {
+				"triggered": false,
+				"error": "Must walk over trap to trigger it! %s is too far (%.1f px away)." % [victim_name, dist],
+				"too_far": true,
+				"distance": dist
+			}
 
 	is_triggered = true
 	is_detected = true
 	_update_visual_state()
+
+	if vic_node:
+		if vic_node.has_method("_stop_movement"):
+			vic_node._stop_movement()
+		elif "is_moving" in vic_node:
+			vic_node.is_moving = false
+			vic_node.velocity = Vector2.ZERO
 
 	var cm = _get_combat_manager()
 	var save_bonus = 2
@@ -205,6 +289,34 @@ func force_trigger(victim_name: String, force_fail_save: bool = false) -> Dictio
 
 	return trig_res
 
+func walk_over_and_trigger(victim_name: String = "", force_fail_save: bool = false, on_complete: Callable = Callable()) -> void:
+	var actor = _get_actor_node(victim_name)
+	if not actor:
+		if on_complete.is_valid():
+			on_complete.call({"success": false, "error": "Actor not found"})
+		return
+
+	var v_name = victim_name if victim_name != "" else GameState.hero_name
+	next_trigger_force_fail_save = force_fail_save
+
+	if global_position.distance_to(actor.global_position) <= 45.0:
+		var res = force_trigger(v_name, force_fail_save)
+		if on_complete.is_valid():
+			on_complete.call(res)
+		return
+
+	if actor.has_method("move_to_point"):
+		actor.move_to_point(global_position, func():
+			if not is_triggered:
+				var res = force_trigger(v_name, force_fail_save)
+				if on_complete.is_valid():
+					on_complete.call(res)
+			elif on_complete.is_valid():
+				on_complete.call({"success": true, "triggered": true})
+		)
+	elif actor.has_method("move_to"):
+		actor.move_to(global_position)
+
 func _on_body_entered(body: Node2D) -> void:
 	if is_disarmed or is_triggered:
 		return
@@ -216,7 +328,27 @@ func _on_body_entered(body: Node2D) -> void:
 			v_name = str(body.get("companion_name"))
 		elif body.name != "HeroPlayer" and "name" in body:
 			v_name = str(body.name)
-		force_trigger(v_name)
+		var fail_save = next_trigger_force_fail_save
+		next_trigger_force_fail_save = false
+		force_trigger(v_name, fail_save, false, true)
+
+func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var cur_sc = get_tree().current_scene if get_tree() else null
+		var hero = cur_sc.find_child("HeroPlayer", true, false) if cur_sc else null
+		if is_disarmed:
+			GameState.log_message("system", "* %s has already been disarmed." % trap_name)
+			return
+		if is_triggered:
+			GameState.log_message("system", "* %s has already been sprung." % trap_name)
+			return
+		if is_detected:
+			var disarmer = GameState.get_thief_member_name()
+			GameState.log_message("system", "* %s approaches to disarm %s..." % [disarmer, trap_name])
+			approach_and_disarm(disarmer)
+		else:
+			if hero and hero.has_method("move_to_point"):
+				hero.move_to_point(get_global_mouse_position())
 
 func get_trap_info() -> Dictionary:
 	return {
@@ -228,6 +360,7 @@ func get_trap_info() -> Dictionary:
 		"is_triggered": is_triggered,
 		"detect_dc": detect_dc,
 		"disarm_dc": disarm_dc,
+		"disarm_reach": disarm_reach,
 		"save_stat": save_stat,
 		"save_dc": save_dc,
 		"position": [global_position.x, global_position.y]
