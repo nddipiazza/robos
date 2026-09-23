@@ -193,11 +193,107 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 					target_node.take_damage(total_dmg)
 			return {"success": true, "spell": "fireball", "damage": total_dmg, "hit": true}
 
+		"find-traps":
+			_log_combat("magic", "✨ %s casts [b]Find Traps[/b]! Divine divination radiates across the area." % caster_name)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			var revealed_count = 0
+			if Engine.get_main_loop() is SceneTree:
+				var tree = Engine.get_main_loop() as SceneTree
+				var cur_sc = tree.current_scene
+				if cur_sc:
+					for child in cur_sc.get_children():
+						if child.has_method("reveal_trap") and not child.get("is_disarmed"):
+							child.reveal_trap(caster_name)
+							revealed_count += 1
+			_log_combat("system", "✨ Find Traps illuminated %d concealed hazards in red runic light!" % revealed_count)
+			return {"success": true, "spell": "find-traps", "revealed_count": revealed_count}
+
+		"knock":
+			_log_combat("magic", "✨ %s casts [b]Knock[/b]! Resonant arcane vibrations bypass locks and traps." % caster_name)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "knock"}
+
 		_:
 			_log_combat("combat", "%s casts %s!" % [caster_name, spell_id])
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": spell_id}
+
+func resolve_trap_detection(detector_name: String, perception_bonus: int, trap_dc: int, trap_name: String = "Concealed Trap") -> Dictionary:
+	var d20 = max(10, roll_d20()) # D&D 5e Passive Perception floor (10 + bonus) for active search
+	var total = d20 + perception_bonus
+	var is_success = (total >= trap_dc)
+	if is_success:
+		_log_combat("system", "⚠️ [TRAP DETECTED] %s spotted %s! [Perception d20: %d + %d = %d vs DC %d]" % [detector_name, trap_name, d20, perception_bonus, total, trap_dc])
+	else:
+		_log_combat("system", "%s searched the area but failed to notice any hidden hazards. [d20: %d + %d = %d vs DC %d]" % [detector_name, d20, perception_bonus, total, trap_dc])
+	return {
+		"d20": d20,
+		"total": total,
+		"success": is_success,
+		"dc": trap_dc
+	}
+
+func resolve_trap_disarm(disarmer_name: String, tools_bonus: int, disarm_dc: int, trap_name: String = "Concealed Trap", force_fumble: bool = false) -> Dictionary:
+	var d20 = 1 if force_fumble else max(10, roll_d20()) # Reliable Talent / Take 10 for stationary trap disarming
+	var total = d20 + tools_bonus
+	var is_success = false if force_fumble else (total >= disarm_dc)
+	var is_fumble = force_fumble or (d20 == 1)
+
+	if is_success:
+		_log_combat("system", "🔧 [TRAP DISARMED] %s safely disarmed %s with Thieves' Tools! [d20: %d + %d = %d vs DC %d]" % [disarmer_name, trap_name, d20, tools_bonus, total, disarm_dc])
+	elif is_fumble:
+		_log_combat("combat", "💥 [TRAP ACCIDENTAL TRIGGER] %s fumbled the disarm mechanism! %s springs! [d20: %d + %d = %d vs DC %d]" % [disarmer_name, trap_name, d20, tools_bonus, total, disarm_dc])
+	else:
+		_log_combat("system", "%s failed to disarm %s, but avoided triggering the mechanism. [d20: %d + %d = %d vs DC %d]" % [disarmer_name, trap_name, d20, tools_bonus, total, disarm_dc])
+
+	return {
+		"d20": d20,
+		"total": total,
+		"success": is_success,
+		"fumble": is_fumble,
+		"dc": disarm_dc
+	}
+
+func resolve_trap_trigger(victim_name: String, save_stat: String, save_bonus: int, save_dc: int, damage_min: int, damage_max: int, damage_type: String, status_effect: String = "", trap_name: String = "Trap", force_fail_save: bool = false) -> Dictionary:
+	var d20 = 2 if force_fail_save else roll_d20()
+	var total_save = d20 + save_bonus
+	var save_passed = false if force_fail_save else (total_save >= save_dc)
+	var raw_damage = randi_range(damage_min, damage_max)
+	var final_damage = raw_damage
+
+	if save_passed:
+		final_damage = int(ceil(raw_damage / 2.0))
+		_log_combat("combat", "💥 [TRAP TRIGGERED] %s stepped on %s! 🛡️ Succeeds on %s save [d20: %d + %d = %d vs DC %d] (Half damage: %d %s)" % [victim_name, trap_name, save_stat, d20, save_bonus, total_save, save_dc, final_damage, damage_type])
+	else:
+		_log_combat("combat", "💥 [TRAP TRIGGERED] %s stepped on %s! Failed %s save [d20: %d + %d = %d vs DC %d]. Takes %d %s damage!" % [victim_name, trap_name, save_stat, d20, save_bonus, total_save, save_dc, final_damage, damage_type])
+
+	var gs = _get_game_state()
+	if gs:
+		if victim_name == gs.hero_name:
+			gs.take_damage(final_damage)
+		else:
+			for m in gs.party_members:
+				if m.get("name") == victim_name or m.get("id") == victim_name.to_lower():
+					m["hp"] = max(0, int(m.get("hp", 10)) - final_damage)
+					gs.party_changed.emit()
+					break
+
+		if not save_passed and status_effect != "":
+			if gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(victim_name, status_effect, 3)
+				_log_combat("damage", "%s is afflicted with condition: [%s]!" % [victim_name, status_effect.to_upper()])
+
+	return {
+		"d20": d20,
+		"total_save": total_save,
+		"save_passed": save_passed,
+		"damage": final_damage,
+		"damage_type": damage_type,
+		"status_applied": (not save_passed and status_effect != "")
+	}
 
 func _play_combat_sfx(is_hit: bool, is_crit: bool) -> void:
 	var am = _get_audio_manager()

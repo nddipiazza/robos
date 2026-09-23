@@ -45,9 +45,10 @@ Rather than being a static demo, the entire campaign slice is governed by an **a
 | **Activity Log** | 3-mode expandable Activity Log (Small 124px, Medium 240px, Large 420px) with numbered in-log dialogue |
 | **Assets & Art** | 100% genuine open-source assets from Flare RPG / OpenGameArt (CC-BY-SA, CC0) |
 | **Testing Harness** | Headless Xvfb virtual framebuffer execution, 1080p FFmpeg video proof-of-work, behave BDD |
+| **Modding & Traps Engine** | Dynamic mod loader (`res://mods/`, `user://mods/`), Infinity Engine concealed traps, Thief Find Traps mode, Thieves' Tools disarm, and Divination spells |
 | **Verification Metrics** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
 | **Tactical cRPG Codex & Academy** | [www.rowbose.com/projects/crpg-realm/elearning/](/projects/crpg-realm/elearning/) (5 interactive modules, labs, quizzes, verified certificate) |
-| **Game Creator Guide** | [Creating Your Own Game with robos-crpg](/projects/crpg-realm/create-your-own-game.html) (Scenes, maps, items, BDD tests, boss fights) |
+| **Game Creator Guide** | [Creating Your Own Game with robos-crpg](/projects/crpg-realm/create-your-own-game.html) (Scenes, maps, items, BDD tests, boss fights, custom mods) |
 
 ---
 
@@ -59,7 +60,7 @@ The game features an expanded 5-Act campaign journey taking adventurers from sol
 graph TD
     Act1["Act 1: Homestead Manor<br/><i>Interior awakening, Elora confrontation, chest looting</i>"] -->|Portal Arch| Act2["Act 2: Oakhaven Village Square<br/><i>5 physical buildings, 12 NPCs, gate key quest</i>"]
     Act2 -->|Forest Road| Act3["Act 3: Whispering Forest<br/><i>Wilderness river, stone bridge, dire wolves, hermit</i>"]
-    Act3 -->|Crypt Descent| Act4["Act 4: Ancient Catacombs<br/><i>Sarcophagus relic, Sir Justin's ghost, undead archers</i>"]
+    Act3 -->|Crypt Descent| Act4["Act 4: Ancient Catacombs<br/><i>Lethal traps, sarcophagus relic, Sir Justin's ghost</i>"]
     Act4 -->|Secret Keep Passage| Act5["Act 5: Royal Garrison Keep<br/><i>Citadel barracks, showdown with Captain Malakor, Victory</i>"]
 ```
 
@@ -73,7 +74,7 @@ A 2560×1440 open world featuring five distinct physical structures with solid c
 An untamed wilderness featuring a winding river obstacle, stone bridge crossing, ruins, an ancient obelisk, packs of dire wolves, a Goblin peddler, and a hermit scholar.
 
 ### 4. Act 4: Ancient Catacombs (`AncientCatacombs.tscn`)
-A subterranean crypt filled with sarcophagi, the ghost of fallen knight Sir Justin, animated skeleton archers, and the hidden vault key unlocking the citadel passage.
+A subterranean crypt filled with lethal Infinity Engine traps (concealed pressure plates, explosive runes, spike pits), the ghost of fallen knight Sir Justin, animated skeleton archers, and the royal sarcophagus hiding the key to the citadel passage.
 
 ### 5. Act 5: Garrison Keep (`GarrisonKeep.tscn`)
 The fortified citadel overrun by darkness. Heroes breach the barracks, defeat corrupted sentries, and engage in an intense boss battle against Captain Malakor, culminating in the triumphant Victory Screen.

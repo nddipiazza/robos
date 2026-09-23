@@ -100,6 +100,15 @@ func _on_action_clicked(action_id: String) -> void:
 						GameState.log_message("magic", "%s casts Cure Wounds! Restored %d HP." % [GameState.hero_name, heal_amount])
 						if hero and FloatingTextManager:
 							FloatingTextManager.spawn_heal(hero.global_position, heal_amount)
+				elif sp == "find-traps":
+					var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
+					if cm:
+						cm.cast_spell("find-traps", GameState.hero_name)
+					else:
+						GameState.log_message("magic", "%s casts Find Traps! Divine divination illuminates all concealed hazards." % GameState.hero_name)
+						for child in cur_scene.get_children():
+							if child.has_method("reveal_trap"):
+								child.reveal_trap(GameState.hero_name)
 				else:
 					if cur_scene and cur_scene.has_method("execute_spell_on_hound"):
 						var hound = cur_scene.find_child("BlightHound", true, false)
@@ -130,10 +139,14 @@ func _trigger_class_special() -> void:
 			if hero and FloatingTextManager:
 				FloatingTextManager.spawn_heal(hero.global_position, healed)
 		"rogue":
-			GameState.apply_status_effect(GameState.hero_name, "invisible", 2)
-			GameState.log_message("combat", "%s vanished into the shadows! (Invisible)" % GameState.hero_name)
-			if hero and FloatingTextManager:
-				FloatingTextManager.spawn_status(hero.global_position, "INVISIBLE")
+			GameState.set_detect_traps_mode(not GameState.is_detecting_traps)
+			_update_item_slots()
+			if GameState.is_detecting_traps:
+				if hero and FloatingTextManager:
+					FloatingTextManager.spawn_status(hero.global_position, "FIND TRAPS (ON)")
+			else:
+				if hero and FloatingTextManager:
+					FloatingTextManager.spawn_status(hero.global_position, "FIND TRAPS (OFF)")
 		"cleric":
 			GameState.log_message("magic", "%s channels divine power: Turn Undead!" % GameState.hero_name)
 			if hero and FloatingTextManager:
@@ -215,7 +228,7 @@ func _update_item_slots() -> void:
 			"fighter":
 				btn_special.text = "⚡ 2nd Wind"
 			"rogue":
-				btn_special.text = "⚡ Sneak"
+				btn_special.text = "👁️ Find Traps" if not GameState.is_detecting_traps else "👁️ Traps (ON)"
 			"cleric":
 				btn_special.text = "⚡ Turn"
 			"wizard":

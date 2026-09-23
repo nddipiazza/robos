@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://traptemplate01"]
+
+[ext_resource type="Script" path="res://scripts/Trap.gd" id="1_trap"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trap"]
+size = Vector2(72, 72)
+
+[node name="Trap" type="Area2D"]
+collision_layer = 1
+collision_mask = 1
+input_pickable = true
+script = ExtResource("1_trap")
+
+[node name="HazardVisual" type="Polygon2D" parent="."]
+color = Color(0.9, 0.1, 0.1, 0.35)
+polygon = PackedVector2Array(0, -32, 36, 0, 0, 32, -36, 0)
+
+[node name="Outline" type="Line2D" parent="."]
+points = PackedVector2Array(0, -32, 36, 0, 0, 32, -36, 0, 0, -32)
+width = 3.0
+default_color = Color(1, 0.15, 0.15, 0.95)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -54.0
+offset_right = 120.0
+offset_bottom = -34.0
+theme_override_colors/font_color = Color(1, 0.25, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "⚠️ [TRAP]"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_trap")

@@ -1172,4 +1172,117 @@ def step_activity_log_not_contain(context, msg):
         assert clean_msg not in entry_text.lower(), f"Unexpected message '{msg}' found in activity history: {h}"
     assert clean_msg not in raw_log.lower(), f"Unexpected message '{msg}' found in raw log: {raw_log}"
 
+# ── Infinity Engine Traps Steps ────────────────────────────────────────────────
+
+@then('the scene contains concealed traps')
+def step_scene_contains_traps(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    assert len(traps) > 0, f"Expected traps in scene, but found none: {state}"
+
+@when('the player enables Find Traps mode')
+def step_enable_find_traps_mode(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "set_detect_traps",
+        "args": {"enabled": True}
+    })
+    time.sleep(0.6)
+
+@then('the trap "{trap_id}" is detected and highlighted in red')
+def step_trap_detected(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
+    assert found.get("is_detected") is True, f"Expected trap '{trap_id}' to be detected, got: {found}"
+
+@when('the player casts spell "{spell_id}"')
+def step_player_casts_spell_generic(context, spell_id):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id}
+    })
+    time.sleep(0.5)
+
+@then('all concealed traps in the area are revealed in glowing red runes')
+def step_all_traps_revealed(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    assert len(traps) > 0, f"No traps found in scene: {state}"
+    for t in traps:
+        assert t.get("is_detected") is True, f"Expected trap '{t.get('id')}' to be detected, got: {t}"
+
+@when('the trap "{trap_id}" is revealed')
+def step_trap_is_revealed(context, trap_id):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": "find-traps"}
+    })
+    time.sleep(0.4)
+
+@when('the player orders "{actor}" to disarm trap "{trap_id}"')
+def step_disarm_trap(context, actor, trap_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "disarm_trap",
+        "args": {"trap_id": trap_id, "actor": actor}
+    })
+    context.last_disarm_res = res
+    time.sleep(0.5)
+
+@then('the trap "{trap_id}" is disarmed')
+def step_trap_is_disarmed(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
+    assert found.get("is_disarmed") is True, f"Expected trap '{trap_id}' to be disarmed, got: {found}"
+
+@when('the party member steps onto trap "{trap_id}"')
+def step_party_member_steps_trap(context, trap_id):
+    state_before = api_get(context.web_port, "/api/v1/state")
+    context.hero_hp_before = state_before.get("hero", {}).get("hp", 12)
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "trigger_trap",
+        "args": {"trap_id": trap_id, "fail_save": True}
+    })
+    context.last_trigger_res = res
+    time.sleep(0.5)
+
+@then('the trap "{trap_id}" is triggered')
+def step_trap_is_triggered(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
+    assert found.get("is_triggered") is True, f"Expected trap '{trap_id}' to be triggered, got: {found}"
+
+@then('the party member suffers trap damage')
+def step_party_suffers_trap_damage(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    cur_hp = state.get("hero", {}).get("hp", 12)
+    max_hp = state.get("hero", {}).get("max_hp", 12)
+    hp_before = getattr(context, "hero_hp_before", max_hp)
+    assert cur_hp < hp_before or cur_hp < max_hp, f"Expected damage, current HP={cur_hp}, before={hp_before}, max={max_hp}"
+
+@then('the player suffers status effect "{effect}"')
+def step_player_suffers_status_effect(context, effect):
+    state = api_get(context.web_port, "/api/v1/state")
+    hero_name = state.get("hero", {}).get("name", "Lieutenant Vance")
+    status_effects = state.get("status_effects", {})
+    effects = status_effects.get(hero_name, [])
+    log_text = state.get("action_log_text", "").lower()
+    assert effect.lower() in [e.lower() for e in effects] or effect.lower() in log_text, (
+        f"Expected status effect '{effect}' on {hero_name}, active: {effects}, log: {log_text}"
+    )
+
+@when('the disarm attempt on trap "{trap_id}" critically fumbles')
+def step_disarm_trap_fumbles(context, trap_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "disarm_trap",
+        "args": {"trap_id": trap_id, "critical_fumble": True}
+    })
+    context.last_fumble_res = res
+    time.sleep(0.5)
+
+
 

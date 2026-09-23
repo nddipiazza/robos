@@ -525,14 +525,166 @@ func on_boss_vanquished() -> void:
 
 ---
 
-## 7. Summary & Best Practices
+## 7. Adding a New Mod to Your cRPG (Traps, Spells & Data Overrides)
+
+The RobOS cRPG engine includes a modular, zero-code **Mod Loader** (`DataStoreV1.gd`) that automatically discovers and registers user-created content packages from `res://mods/` (project-bundled mods) and `user://mods/` (player-installed mods in the OS user data directory). 
+
+Modders can introduce brand-new Infinity Engine-style traps, custom divination and combat spells, unique items, and modified monster statistics without compiling GDScript or altering core assets.
+
+<div style="margin: 1.5rem 0;">
+  <img src="{{ '/assets/images/crpg-realm/crpg_modding_and_traps_architecture.jpg' | relative_url }}" alt="Tactical cRPG Game Modding & Trap Engine Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #4a3722; box-shadow: 0 4px 24px rgba(0,0,0,0.6);" />
+  <p style="text-align: center; color: #b8860b; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 4: Tactical cRPG Modding & Trap Engine — Mod manifest discovery, hazard components, thief modal search, Thieves' Tools disarm, and D&D 5e DC resolution.</em></p>
+</div>
+
+### Mod Architecture & Discovery Flow
+
+```mermaid
+flowchart TD
+    subgraph ModPackage["Mod Package Structure"]
+        Manifest["mods/<mod-id>/mod.json<br/>(Manifest & Versioning)"]
+        TrapsJSON["traps.json<br/>(Hazard Definitions)"]
+        SpellsJSON["spells.json<br/>(Spell Additions)"]
+        ItemsJSON["items.json<br/>(Loot & Relics)"]
+        MonstersJSON["monsters.json<br/>(Bestiary Additions)"]
+    end
+
+    subgraph EngineDataStore["Engine DataStore Singleton"]
+        Scan["Scan res://mods/ & user://mods/"]
+        Parse["Parse mod.json & Data Overrides"]
+        Register["Merge into Active Game Dictionaries"]
+    end
+
+    subgraph TrapsEngine["Infinity Engine Traps System"]
+        Concealed["Concealed Floor & Container Traps"]
+        Detect["Thief 'Find Traps' Mode / Divination Spell"]
+        Pulse["Pulsing Red Hazard Highlight (BG1/2 Style)"]
+        Disarm["Thieves' Tools Disarm Check (Fumble Trigger)"]
+        Trigger["Area2D Step Trigger -> Save DC -> Damage & Status"]
+    end
+
+    Manifest --> Scan
+    TrapsJSON --> Parse
+    SpellsJSON --> Parse
+    ItemsJSON --> Parse
+    MonstersJSON --> Parse
+    Scan --> Parse --> Register
+    Register --> Concealed
+    Concealed --> Detect --> Pulse --> Disarm
+    Concealed --> Trigger
+```
+
+---
+
+### Step 1: Create the Mod Directory & Manifest
+
+Create a new directory under `mods/<your-mod-slug>/` (or in Godot's `user://mods/`). Every mod requires a `mod.json` descriptor:
+
+```json
+{
+  "id": "catacomb-traps-mod",
+  "name": "Catacomb Traps & Dungeon Hazards Mod",
+  "version": "1.0.0",
+  "author": "RobOS Community Modder",
+  "description": "Adds lethal Infinity Engine dungeon traps, tripwires, and alchemical hazards.",
+  "data_files": {
+    "traps": "traps.json",
+    "spells": "spells.json",
+    "items": "items.json"
+  }
+}
+```
+
+---
+
+### Step 2: Define Custom Traps (`traps.json`)
+
+Traps in the engine follow the classic D&D 5e SRD and Infinity Engine ruleset, supporting passive and active perception thresholds, disarm DCs with Thieves' Tools, saving throw attributes, and persistent status conditions:
+
+```json
+{
+  "thunder-tripwire": {
+    "id": "thunder-tripwire",
+    "title": "Acoustic Thunderstone Tripwire",
+    "type": "floor",
+    "detectDC": 14,
+    "disarmDC": 13,
+    "saveStat": "CON",
+    "saveDC": 14,
+    "damageMin": 4,
+    "damageMax": 16,
+    "damageType": "thunder",
+    "statusEffect": "stunned",
+    "statusDuration": 2,
+    "description": "Taut catgut wire connected to acoustic resonating crystals. Deals deafening thunder damage and stuns victims on a failed Constitution save."
+  }
+}
+```
+
+#### Trap Schema Reference
+
+| Property | Type | Description |
+|:---|:---|:---|
+| `id` | String | Unique slug identifier matching map placement. |
+| `title` | String | User-facing name printed to the `ActionLog` upon detection or springing. |
+| `type` | String | `floor`, `glyph`, `container`, or `door`. |
+| `detectDC` | Integer | Difficulty class for Rogue active Find Traps checks or passive perception sweeps. |
+| `disarmDC` | Integer | Dexterity (Thieves' Tools) DC to dismantle the mechanism. |
+| `saveStat` | String | Target ability for the reflex/saving throw (`DEX`, `CON`, `WIS`). |
+| `saveDC` | Integer | Saving throw DC for targets caught in the blast radius. |
+| `damageMin` / `damageMax` | Integer | Damage range rolled if the trap detonates. Half damage on successful save. |
+| `damageType` | String | Damage category (`poison`, `fire`, `piercing`, `thunder`, `acid`). |
+| `statusEffect` | String | Optional debuff applied on failure (`poisoned`, `stunned`, `blinded`). |
+| `statusDuration` | Integer | Duration in combat rounds / turns. |
+
+---
+
+### Step 3: Placing Traps in a Level Scene
+
+To place traps into an isometric map or dungeon room in Godot:
+
+1. Instance the component `res://scenes/components/Trap.tscn` as a child of your dungeon scene root.
+2. In the Godot Inspector, set the `Trap Id` to your registered trap slug (e.g. `thunder-tripwire` or `poison-dart-trap`).
+3. Shape the `CollisionShape2D` (e.g. `RectangleShape2D` 48×32) across the floor trigger zone.
+4. The engine automatically handles:
+   - **Concealment**: The trap visual remains invisible to party members by default.
+   - **Infinity Engine Pulsing Outline**: When detected by a thief or divination spell, a pulsing red danger rectangle (`Outline` Line2D) alerts the player to steer clear or disarm.
+   - **Disarm Interaction**: Clicking or targeting the trap with a Rogue equipped with Thieves' Tools executes `resolve_trap_disarm()`.
+   - **Trigger Resolution**: Moving across the `Area2D` executes `resolve_trap_trigger()`, rolling victim saves and logging results to the `ActionLog`.
+
+---
+
+### Step 4: Adding Custom Spells for Trap Interaction
+
+Mods can also register custom spells in `spells.json` to interact with hazards:
+
+```json
+{
+  "find-traps": {
+    "id": "find-traps",
+    "title": "Find Traps",
+    "level": 2,
+    "school": "Divination",
+    "range": "120 feet",
+    "castingTime": "1 action",
+    "duration": "Instantaneous",
+    "description": "You sense the presence of any trap within range that is within line of sight. Traps are immediately illuminated in pulsing red runes without requiring an ability check."
+  }
+}
+```
+
+When cast in the game, `CombatManager.gd` broadcasts divination impulses to all `Trap` instances within range, revealing hidden hazards instantly and updating the party HUD.
+
+---
+
+## 8. Summary & Best Practices
 
 | Architecture Rule | Implementation Standard | Why It Matters |
 |:---|:---|:---|
-| **Zero-Hardcoding** | All item, enemy, and dialogue data lives in `data/v1/*.json` | Ensures tests, UI, and Godot stay 100% synchronized without drift. |
+| **Zero-Hardcoding** | All item, enemy, trap, and dialogue data lives in `data/v1/*.json` or `mods/` | Ensures tests, UI, and Godot stay 100% synchronized without drift. |
 | **Layer 1 Colliders** | Place `StaticBody2D` only on physical foundation footprints | Allows natural 2.5D depth sorting with `y_sort_enabled = true`. |
 | **Camera Limits** | Call `set_camera_limits()` on map load | Prevents revealing black margins outside 2560×1440 plates. |
 | **Dual Testing** | Write Normal tests for fast iteration; Full Playthroughs for CI/CD | Guarantees genuine game completability without sacrificing test speed. |
 | **Single Responsibility Singletons** | Route state through `GameState`, rolls through `CombatManager` | Prevents tangled scene coupling and makes state injection trivial. |
+| **Modular Modding** | Place extensions in `mods/<mod-id>/` with `mod.json` manifests | Enables community content packs and custom hazards without touching core code. |
 
 Now you have everything required to expand the world of **cRPG Realm** or build your own complete party-based tactical RPG!

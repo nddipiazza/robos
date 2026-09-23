@@ -1,0 +1,18 @@
+[
+  {
+    "id": "thunder-tripwire",
+    "title": "Concealed Thunder Tripwire",
+    "type": "floor",
+    "detectDC": 14,
+    "disarmDC": 14,
+    "saveStat": "DEX",
+    "saveDC": 13,
+    "damageFormula": "2d8",
+    "damageMin": 2,
+    "damageMax": 16,
+    "damageType": "thunder",
+    "statusEffect": "stunned",
+    "statusDuration": 1,
+    "description": "A taut silver wire strung between dungeon flagstones. Severing it triggers a concussive thunderwave blast."
+  }
+]

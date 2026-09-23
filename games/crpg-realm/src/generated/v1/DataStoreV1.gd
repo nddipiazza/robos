@@ -13,9 +13,12 @@ var items: Dictionary = {} # id -> ItemData
 var zones: Dictionary = {} # id -> Dictionary
 var dialogue_trees: Dictionary = {} # id -> Dictionary
 var quests: Dictionary = {} # id -> Dictionary
+var traps: Dictionary = {} # id -> Dictionary
+var loaded_mods: Array[Dictionary] = []
 
 func _ready() -> void:
 	load_all_data()
+	load_mods()
 
 func load_json(rel_path: String) -> Variant:
 	var path = "res://" + rel_path
@@ -75,4 +78,46 @@ func load_all_data() -> void:
 		for q in quest_list:
 			quests[q["id"]] = q
 
-	print("DataStoreV1: Loaded ", monsters.size(), " monsters, ", spells.size(), " spells, ", items.size(), " items, ", npcs.size(), " npcs.")
+	var trap_list = load_json("data/v1/traps.json")
+	if trap_list is Array:
+		for t in trap_list:
+			traps[t["id"]] = t
+
+	print("DataStoreV1: Loaded ", monsters.size(), " monsters, ", spells.size(), " spells, ", items.size(), " items, ", traps.size(), " traps.")
+
+func load_mods() -> void:
+	var mod_dirs = ["res://mods/", "user://mods/"]
+	for base_dir in mod_dirs:
+		var dir = DirAccess.open(base_dir)
+		if not dir:
+			continue
+		dir.list_dir_begin()
+		var entry = dir.get_next()
+		while entry != "":
+			if dir.current_is_dir() and not entry.begins_with("."):
+				var manifest_path = base_dir + entry + "/mod.json"
+				if FileAccess.file_exists(manifest_path):
+					_load_single_mod(manifest_path, base_dir + entry + "/")
+			entry = dir.get_next()
+
+func _load_single_mod(manifest_path: String, mod_dir: String) -> void:
+	var f = FileAccess.open(manifest_path, FileAccess.READ)
+	if not f:
+		return
+	var manifest = JSON.parse_string(f.get_as_text())
+	if not manifest is Dictionary:
+		return
+	manifest["base_dir"] = mod_dir
+	loaded_mods.append(manifest)
+	print("DataStoreV1: Successfully loaded mod -> %s v%s" % [manifest.get("name", "Unknown"), manifest.get("version", "1.0.0")])
+	
+	# Merge custom traps from mod if present
+	if manifest.has("traps_file"):
+		var tf = mod_dir + manifest["traps_file"]
+		if FileAccess.file_exists(tf):
+			var file_trap = FileAccess.open(tf, FileAccess.READ)
+			var parsed_traps = JSON.parse_string(file_trap.get_as_text())
+			if parsed_traps is Array:
+				for t in parsed_traps:
+					traps[t["id"]] = t
+					print("Mod [%s]: Registered custom trap -> %s" % [manifest.get("id", ""), t.get("id", "")])

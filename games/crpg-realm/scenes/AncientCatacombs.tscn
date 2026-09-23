@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" path="res://assets/props/chest_closed.png" id="16_chc"]
 [ext_resource type="Texture2D" path="res://assets/icons/potions/potion_healing.png" id="17_pot"]
 [ext_resource type="Texture2D" path="res://assets/icons/weapons/dagger.png" id="18_key"]
+[ext_resource type="PackedScene" path="res://scenes/components/Trap.tscn" id="19_trap"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_border_v"]
 size = Vector2(60, 1440)
@@ -137,6 +138,48 @@ item_id = "item-id-potion"
 item_name = "Lesser Healing Draught"
 icon_texture = ExtResource("17_pot")
 
+; ── Dungeon Traps ────────────────────────────────────────────────────────
+
+[node name="PoisonDartTrap" parent="." instance=ExtResource("19_trap")]
+position = Vector2(540, 700)
+trap_id = "poison-dart-trap"
+trap_name = "Concealed Poison Dart Trap"
+trap_type = "floor"
+detect_dc = 13
+disarm_dc = 14
+save_stat = "CON"
+save_dc = 13
+damage_dice_min = 2
+damage_dice_max = 12
+damage_type = "poison"
+status_effect = "poisoned"
+
+[node name="GlyphOfWarding" parent="." instance=ExtResource("19_trap")]
+position = Vector2(1280, 500)
+trap_id = "glyph-of-warding"
+trap_name = "Glyph of Warding (Explosive Runes)"
+trap_type = "glyph"
+detect_dc = 15
+disarm_dc = 15
+save_stat = "DEX"
+save_dc = 14
+damage_dice_min = 3
+damage_dice_max = 24
+damage_type = "fire"
+
+[node name="SpikePitTrap" parent="." instance=ExtResource("19_trap")]
+position = Vector2(1780, 720)
+trap_id = "spike-pit-trap"
+trap_name = "Concealed Spike Pit"
+trap_type = "floor"
+detect_dc = 12
+disarm_dc = 13
+save_stat = "DEX"
+save_dc = 12
+damage_dice_min = 2
+damage_dice_max = 20
+damage_type = "piercing"
+
 ; ── Hero Player ──────────────────────────────────────────────────────────
 
 [node name="HeroPlayer" parent="." instance=ExtResource("4_hp")]
@@ -145,7 +188,7 @@ position = Vector2(260, 680)
 ; ── NPCs ─────────────────────────────────────────────────────────────────
 
 [node name="SirJustinGhost" parent="." instance=ExtResource("7_npc")]
-position = Vector2(1280, 520)
+position = Vector2(1420, 480)
 npc_id = "npc-id-crypt-ghost"
 npc_name = "Spirit of Sir Justin"
 custom_sprite_path = "res://assets/sprites/npcs/npc_guard.png"

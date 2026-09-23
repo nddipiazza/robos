@@ -1,0 +1,8 @@
+{
+  "id": "catacomb-traps-mod",
+  "name": "Catacomb Traps & Dungeon Hazards Mod",
+  "version": "1.0.0",
+  "author": "Lead System Architect",
+  "description": "Adds extra lethal dungeon traps (concealed thunder tripwires, corrosive acid spray), custom status conditions, and expanded disarm checks.",
+  "traps_file": "traps.json"
+}

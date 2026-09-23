@@ -12,6 +12,9 @@ signal status_effects_changed(target_name: String)
 signal pause_toggled(is_paused: bool)
 signal gold_changed(current_gold: int)
 signal party_defeated
+signal trap_detected(trap_id: String, detector_name: String)
+signal trap_disarmed(trap_id: String, disarmer_name: String)
+signal trap_triggered(trap_id: String, victim_name: String)
 
 var settings: Dictionary = {
 	"health_bar_mode": "always", # "always", "injured_only", "none"
@@ -23,6 +26,8 @@ var settings: Dictionary = {
 
 var is_game_paused: bool = false
 var is_party_defeated: bool = false
+var is_detecting_traps: bool = false
+var trap_pulse_accumulator: float = 0.0
 var party_members: Array[Dictionary] = []
 var selected_party_indices: Array[int] = [0]
 var status_effects: Dictionary = {}
@@ -573,6 +578,12 @@ func _process(delta: float) -> void:
 		status_tick_accumulator = 0.0
 		_tick_status_effects()
 
+	if is_detecting_traps:
+		trap_pulse_accumulator += delta
+		if trap_pulse_accumulator >= 1.5:
+			trap_pulse_accumulator = 0.0
+			pulse_trap_detection()
+
 func _tick_status_effects() -> void:
 	var keys = status_durations.keys().duplicate()
 	for key in keys:
@@ -729,3 +740,62 @@ func setup_tactical_party() -> void:
 	selected_party_indices = [0]
 	party_changed.emit()
 	party_selection_changed.emit(selected_party_indices)
+
+func set_detect_traps_mode(enabled: bool) -> void:
+	is_detecting_traps = enabled
+	var th_name = get_thief_member_name()
+	if enabled:
+		log_message("system", "👁️ [FIND TRAPS] %s actively searches for concealed dungeon traps and hazards." % th_name)
+		pulse_trap_detection()
+	else:
+		log_message("system", "[FIND TRAPS] Find Traps mode deactivated.")
+
+func get_thief_member_name() -> String:
+	for m in party_members:
+		if m.get("class") == "rogue":
+			return str(m.get("name", "Thief"))
+	return hero_name
+
+func pulse_trap_detection() -> void:
+	if Engine.get_main_loop() is SceneTree:
+		var tree = Engine.get_main_loop() as SceneTree
+		var cur_sc = tree.current_scene
+		if cur_sc:
+			var th_name = get_thief_member_name()
+			for child in cur_sc.get_children():
+				if child.has_method("attempt_detection") and not child.get("is_disarmed") and not child.get("is_detected"):
+					child.attempt_detection(th_name)
+
+func get_scene_traps() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if Engine.get_main_loop() is SceneTree:
+		var tree = Engine.get_main_loop() as SceneTree
+		var cur_sc = tree.current_scene
+		if cur_sc:
+			for child in cur_sc.get_children():
+				if child.has_method("get_trap_info"):
+					result.append(child.get_trap_info())
+	return result
+
+func disarm_trap_by_id(p_trap_id: String, disarmer_name: String = "", force_fumble: bool = false) -> Dictionary:
+	var actor = disarmer_name if disarmer_name != "" else get_thief_member_name()
+	if Engine.get_main_loop() is SceneTree:
+		var tree = Engine.get_main_loop() as SceneTree
+		var cur_sc = tree.current_scene
+		if cur_sc:
+			for child in cur_sc.get_children():
+				if child.has_method("disarm_trap") and (child.get("trap_id") == p_trap_id or child.name == p_trap_id):
+					return child.disarm_trap(actor, force_fumble)
+	return {"success": false, "error": "Trap not found: %s" % p_trap_id}
+
+func trigger_trap_by_id(p_trap_id: String, victim_name: String = "", force_fail_save: bool = false) -> Dictionary:
+	var victim = victim_name if victim_name != "" else hero_name
+	if Engine.get_main_loop() is SceneTree:
+		var tree = Engine.get_main_loop() as SceneTree
+		var cur_sc = tree.current_scene
+		if cur_sc:
+			for child in cur_sc.get_children():
+				if child.has_method("force_trigger") and (child.get("trap_id") == p_trap_id or child.name == p_trap_id):
+					return child.force_trigger(victim, force_fail_save)
+	return {"success": false, "error": "Trap not found: %s" % p_trap_id}
+

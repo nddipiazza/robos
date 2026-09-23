@@ -1055,7 +1055,28 @@ func _get_full_game_state() -> Dictionary:
 		if int(m.get("hp", 0)) > 0:
 			living_heroes += 1
 
+	var scene_traps: Array[Dictionary] = []
+	var detected_traps_count = 0
+	var disarmed_traps_count = 0
+	var triggered_traps_count = 0
+	if cur_scene:
+		for child in cur_scene.get_children():
+			if child.has_method("get_trap_info"):
+				var t_info = child.get_trap_info()
+				scene_traps.append(t_info)
+				if t_info.get("is_detected", false): detected_traps_count += 1
+				if t_info.get("is_disarmed", false): disarmed_traps_count += 1
+				if t_info.get("is_triggered", false): triggered_traps_count += 1
+
 	return {
+		"traps": scene_traps,
+		"detect_traps_mode": GameState.is_detecting_traps,
+		"traps_summary": {
+			"total": scene_traps.size(),
+			"detected": detected_traps_count,
+			"disarmed": disarmed_traps_count,
+			"triggered": triggered_traps_count
+		},
 		"scene": {
 			"name": scene_name,
 			"path": scene_path
@@ -1386,6 +1407,7 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 
 		"cast_spell":
 			var spell_id = str(args.get("spell", "magic-missile"))
+			var caster = str(args.get("caster", GameState.hero_name))
 			if spell_id == "cure-wounds":
 				var hero = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
 				if hero and has_node("/root/QAOverlay"):
@@ -1396,6 +1418,24 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 					if GameState.hero_hp >= GameState.hero_max_hp:
 						GameState.take_damage(4)
 					GameState.heal(8)
+			elif spell_id == "find-traps":
+				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
+				var hero = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
+				if hero and has_node("/root/QAOverlay"):
+					await _simulate_mouse_to_node_or_pos(hero, Color(0.8, 0.2, 1.0, 0.95), "CAST FIND TRAPS")
+				var res = {}
+				if cm and cm.has_method("cast_spell"):
+					res = cm.cast_spell("find-traps", caster)
+				else:
+					GameState.log_message("magic", "✨ %s casts [b]Find Traps[/b]! Divine divination radiates across the area." % caster)
+					var rev = 0
+					if cur_scene:
+						for child in cur_scene.get_children():
+							if child.has_method("reveal_trap"):
+								child.reveal_trap(caster)
+								rev += 1
+					res = {"success": true, "spell": "find-traps", "revealed_count": rev}
+				return res
 			else:
 				var hound = cur_scene.find_child("BlightHound", true, false) if cur_scene else null
 				if not hound and cur_scene:
@@ -1405,6 +1445,41 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				if cur_scene and cur_scene.has_method("execute_spell_on_hound"):
 					cur_scene.execute_spell_on_hound(spell_id)
 			return {"success": true, "spell": spell_id, "kills": GameState.stats.kills, "hp": GameState.hero_hp}
+
+		"toggle_detect_traps", "set_detect_traps", "find_traps":
+			var en = bool(args.get("enabled", not GameState.is_detecting_traps))
+			GameState.set_detect_traps_mode(en)
+			return {"success": true, "detect_traps_mode": GameState.is_detecting_traps}
+
+		"disarm_trap":
+			var t_id = str(args.get("trap_id", args.get("target", "")))
+			var actor = str(args.get("actor", args.get("disarmer", "")))
+			var fumble = bool(args.get("fumble", args.get("critical_fumble", false)))
+			if cur_scene:
+				var t_node = cur_scene.find_child(t_id, true, false)
+				if not t_node:
+					for child in cur_scene.get_children():
+						if child.get("trap_id") == t_id:
+							t_node = child
+							break
+				if t_node and has_node("/root/QAOverlay"):
+					await _simulate_mouse_to_node_or_pos(t_node, Color(0.2, 0.95, 0.4, 0.95), "DISARM TRAP")
+			return GameState.disarm_trap_by_id(t_id, actor, fumble)
+
+		"trigger_trap":
+			var t_id = str(args.get("trap_id", args.get("target", "")))
+			var victim = str(args.get("victim", ""))
+			var fail_save = bool(args.get("fail_save", args.get("force_fail_save", false)))
+			if cur_scene:
+				var t_node = cur_scene.find_child(t_id, true, false)
+				if not t_node:
+					for child in cur_scene.get_children():
+						if child.get("trap_id") == t_id:
+							t_node = child
+							break
+				if t_node and has_node("/root/QAOverlay"):
+					await _simulate_mouse_to_node_or_pos(t_node, Color(1.0, 0.2, 0.2, 0.95), "TRIGGER TRAP")
+			return GameState.trigger_trap_by_id(t_id, victim, fail_save)
 
 		"enter_garrison":
 			GameState.advance_quest(4)

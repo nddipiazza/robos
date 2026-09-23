@@ -184,5 +184,29 @@
     "range": "60 feet",
     "icon": "assets/icons/spells/counterspell.png",
     "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail."
+  },
+  {
+    "id": "find-traps",
+    "title": "Find Traps",
+    "level": 2,
+    "school": "Divination",
+    "castingTime": "1 action",
+    "range": "120 feet",
+    "damageFormula": null,
+    "damageType": "divination",
+    "icon": "assets/icons/spells/find_traps.png",
+    "description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes."
+  },
+  {
+    "id": "knock",
+    "title": "Knock",
+    "level": 2,
+    "school": "Transmutation",
+    "castingTime": "1 action",
+    "range": "60 feet",
+    "damageFormula": null,
+    "damageType": "utility",
+    "icon": "assets/icons/spells/knock.png",
+    "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism."
   }
 ]

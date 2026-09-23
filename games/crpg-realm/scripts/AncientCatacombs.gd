@@ -1,5 +1,7 @@
 extends Node2D
 
+const TrapClass = preload("res://scripts/Trap.gd")
+
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog
 @onready var hud = $CanvasLayer/PartyHUD
 @onready var combat_mgr = $CombatManager
@@ -30,6 +32,18 @@ func _ready() -> void:
 			show_notice("Recovered Ancient Garrison Key from the Royal Sarcophagus!")
 			hud.update_display("Active Quest: Unlock Garrison Keep Vault Passage")
 		)
+
+	for child in get_children():
+		if child is TrapClass:
+			child.trap_detected.connect(func(_t, by):
+				show_notice("⚠️ Concealed Trap Spotted by %s!" % by)
+			)
+			child.trap_disarmed.connect(func(_t, by):
+				show_notice("🔧 Trap Successfully Disarmed by %s!" % by)
+			)
+			child.trap_triggered.connect(func(_t, vic):
+				show_notice("💥 TRAP SPRUNG on %s!" % vic)
+			)
 
 	if archer:
 		var wa: Array[Vector2] = [Vector2(1100, 640), Vector2(1200, 640)]
