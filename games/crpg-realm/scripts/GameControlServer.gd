@@ -66,6 +66,29 @@ func _handle_client(client: StreamPeerTCP) -> void:
 		return
 
 	var raw_request: String = req_data[1].get_string_from_utf8()
+
+	var cl_idx = raw_request.to_lower().find("content-length:")
+	if cl_idx != -1:
+		var end_cl = raw_request.find("\r\n", cl_idx)
+		if end_cl != -1:
+			var cl_str = raw_request.substr(cl_idx + 15, end_cl - (cl_idx + 15)).strip_edges()
+			var content_len = cl_str.to_int()
+			var body_start = raw_request.find("\r\n\r\n")
+			var body_len = (raw_request.length() - (body_start + 4)) if body_start != -1 else 0
+			var extra_retries = 0
+			while body_len < content_len and extra_retries < 100:
+				client.poll()
+				var avail = client.get_available_bytes()
+				if avail > 0:
+					var extra_data = client.get_data(avail)
+					if extra_data[0] == OK:
+						raw_request += extra_data[1].get_string_from_utf8()
+						body_start = raw_request.find("\r\n\r\n")
+						body_len = (raw_request.length() - (body_start + 4)) if body_start != -1 else 0
+				else:
+					OS.delay_msec(2)
+				extra_retries += 1
+
 	_process_http_request(client, raw_request)
 
 func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
@@ -353,6 +376,12 @@ func _handle_interact_target(payload: Dictionary) -> Dictionary:
 	var node = _find_node_by_target_id(cur_scene, target_id)
 	if not node:
 		return {"success": false, "error": "Target '%s' not found" % target_id}
+
+	if node is TacticalEnemy:
+		if node.is_invisible() and not GameState.can_see_invisible():
+			return {"success": false, "error": "Cannot target an invisible creature that you cannot see!", "reason": "invisible_unseen", "target": target_id}
+		if node.is_sanctuaried():
+			return {"success": false, "error": "Cannot target a sanctuaried character!", "reason": "sanctuary", "target": target_id}
 
 	var hero: HeroPlayer = cur_scene.find_child("HeroPlayer", true, false)
 	if hero and node is Node2D and hero.global_position.distance_to(node.global_position) > 130.0:
@@ -728,6 +757,9 @@ func _handle_inventory_equip(payload: Dictionary) -> Dictionary:
 	if item_id == "":
 		return {"success": false, "error": "Missing item or item_id"}
 
+	if not GameState.inventory.has(item_id) and GameState.equipped_weapon != item_id and GameState.equipped_armor != item_id and GameState.equipped_accessory != item_id:
+		GameState.add_item(item_id)
+
 	var res = GameState.equip_item(item_id)
 	if has_node("/root/QAOverlay"):
 		get_node("/root/QAOverlay").log_event("[EQUIP] %s" % item_id)
@@ -1066,6 +1098,12 @@ func _get_full_game_state() -> Dictionary:
 					"friends": child.get("friends") if "friends" in child else [],
 					"is_prone": (child.has_method("is_prone") and child.is_prone()) or bool(child.get("is_down_prone")),
 					"is_down_prone": bool(child.get("is_down_prone")),
+					"is_invisible": bool(child.has_method("is_invisible") and child.is_invisible()),
+					"is_sanctuaried": bool(child.has_method("is_sanctuaried") and child.is_sanctuaried()),
+					"is_visible_to_player": bool(child.has_method("can_be_seen_by_player") and child.can_be_seen_by_player()),
+					"can_be_targeted": bool(child.has_method("can_be_targeted_by_player") and child.can_be_targeted_by_player()),
+					"node_visible": bool(child.visible),
+					"sprite_opacity": float(child.sprite.modulate.a) if ("sprite" in child and child.sprite) else 1.0,
 					"sprite_rotation": float(child.sprite.rotation_degrees) if ("sprite" in child and child.sprite) else 0.0,
 					"position": [child.global_position.x, child.global_position.y]
 				})
@@ -1139,6 +1177,8 @@ func _get_full_game_state() -> Dictionary:
 			"gold": GameState.gold,
 			"weapon": GameState.equipped_weapon,
 			"armor": GameState.equipped_armor,
+			"accessory": GameState.equipped_accessory,
+			"can_see_invisible": GameState.can_see_invisible(),
 			"ability_scores": GameState.ability_scores,
 			"is_invisible": GameState.is_invisible(GameState.hero_name),
 			"is_prone": ((hero_node.has_method("is_prone") and hero_node.is_prone()) or bool(hero_node.get("is_down_prone"))) if hero_node else false,
@@ -1501,14 +1541,40 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				cur_scene.execute_ranged_attack_on_hound()
 			return {"success": true, "type": "ranged", "kills": GameState.stats.kills}
 
+		"attack_target", "attack_enemy", "attack":
+			var target_id = str(args.get("target_id", args.get("target", args.get("name", ""))))
+			var target_node = _find_node_by_target_id(cur_scene, target_id)
+			if not target_node:
+				return {"success": false, "error": "Target '%s' not found" % target_id}
+			if target_node is TacticalEnemy:
+				if target_node.is_invisible() and not GameState.can_see_invisible():
+					return {"success": false, "error": "Cannot target an invisible creature that you cannot see!", "reason": "invisible_unseen", "target": target_id}
+				if target_node.is_sanctuaried():
+					return {"success": false, "error": "Cannot target a sanctuaried character!", "reason": "sanctuary", "target": target_id}
+				var hero: HeroPlayer = cur_scene.find_child("HeroPlayer", true, false)
+				if hero:
+					hero._update_facing(target_node.global_position)
+				target_node.take_damage(6, hero)
+				return {"success": true, "target": target_id, "action": "attack", "damage": 6}
+			return {"success": false, "error": "Target is not an enemy"}
+
+		"equip_item", "equip":
+			return _handle_inventory_equip(args)
+
 		"cast_spell":
 			var spell_id = str(args.get("spell", "magic-missile"))
 			var caster = str(args.get("caster", GameState.hero_name))
 			var target_actor = str(args.get("target", ""))
 			var target_pos = Vector2(float(args.get("x", 0)), float(args.get("y", 0)))
+			var override_sec = float(args.get("override_duration_seconds", args.get("duration", 0.0)))
 			if cur_scene and cur_scene.has_method("execute_spell_cast"):
 				var res = await cur_scene.execute_spell_cast(spell_id, target_actor, target_pos)
-				return {"success": true, "spell": spell_id, "telemetry": res}
+				if override_sec > 0.0:
+					var eff_target = target_actor if target_actor != "" else caster
+					GameState.override_status_timeout(eff_target, "invisible", override_sec)
+					GameState.override_status_timeout(eff_target, spell_id, override_sec)
+				var is_ok = res.get("success", true) if res is Dictionary else true
+				return {"success": is_ok, "spell": spell_id, "telemetry": res, "error": res.get("error", "") if res is Dictionary else ""}
 
 			if spell_id == "cure-wounds":
 				var hero = cur_scene.find_child("HeroPlayer", true, false) if cur_scene else null
@@ -1540,7 +1606,7 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				return res
 			elif spell_id == "invisibility":
 				target_actor = str(args.get("target", caster))
-				var override_sec = float(args.get("override_duration_seconds", args.get("duration", 0.0)))
+				override_sec = float(args.get("override_duration_seconds", args.get("duration", 0.0)))
 				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
 				if not cm and Engine.get_main_loop() is SceneTree:
 					var root = (Engine.get_main_loop() as SceneTree).root

@@ -78,10 +78,61 @@ func _ready() -> void:
 	_update_ui()
 	GameState.settings_changed.connect(_update_ui)
 	GameState.status_effects_changed.connect(_on_status_effects_changed)
+	GameState.inventory_changed.connect(_update_visibility_visuals)
 	_update_prone_state()
+	_update_visibility_visuals()
 
 func _on_status_effects_changed(_target: String) -> void:
 	_update_prone_state()
+	_update_visibility_visuals()
+	_update_ui()
+
+func is_invisible() -> bool:
+	return GameState.is_invisible(enemy_name) or GameState.is_invisible(enemy_id)
+
+func is_sanctuaried() -> bool:
+	return GameState.has_status_effect(enemy_name, "sanctuary") or GameState.has_status_effect(enemy_id, "sanctuary")
+
+func can_be_seen_by_player() -> bool:
+	if not is_invisible():
+		return true
+	return GameState.can_see_invisible()
+
+func can_be_targeted_by_player() -> bool:
+	if current_state == State.DEAD:
+		return false
+	if is_invisible() and not GameState.can_see_invisible():
+		return false
+	if is_sanctuaried():
+		return false
+	return true
+
+func _update_visibility_visuals() -> void:
+	if current_state == State.DEAD:
+		visible = true
+		if sprite:
+			sprite.visible = true
+		return
+
+	if is_invisible():
+		if not GameState.can_see_invisible():
+			# Invisible enemies are NOT visible at all!
+			visible = false
+			if sprite:
+				sprite.visible = false
+		else:
+			# Player can see invisibility (via equipment or enchantment)
+			visible = true
+			if sprite:
+				sprite.visible = true
+				if not is_down_prone:
+					sprite.modulate = Color(0.70, 0.85, 1.0, 0.45)
+	else:
+		visible = true
+		if sprite:
+			sprite.visible = true
+			if not is_down_prone:
+				sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func is_prone() -> bool:
 	return GameState.has_status_effect(enemy_name, "prone") or GameState.has_status_effect(enemy_id, "prone")
@@ -162,11 +213,16 @@ func _update_ui() -> void:
 		elif is_down_prone:
 			target_label.text = "[PRONE - Down for Turn]"
 			target_label.modulate = Color(1.0, 0.75, 0.2)
+		elif is_sanctuaried():
+			target_label.text = "🕊️ [SANCTUARY - Untargetable]"
+			target_label.modulate = Color(1.0, 0.85, 0.2)
 		elif current_target_name != "":
 			target_label.text = "Target: %s" % current_target_name
 			target_label.modulate = Color(1.0, 0.35, 0.35)
 		else:
 			target_label.text = ""
+
+	_update_visibility_visuals()
 
 	var mode = GameState.settings.get("health_bar_mode", "always")
 	var is_visible = true
@@ -174,8 +230,8 @@ func _update_ui() -> void:
 		"always": is_visible = (current_state != State.DEAD)
 		"injured_only": is_visible = (current_hp < max_hp and current_state != State.DEAD)
 		"none": is_visible = false
-	if hp_bar: hp_bar.visible = is_visible
-	if hp_text: hp_text.visible = is_visible
+	if hp_bar: hp_bar.visible = is_visible and can_be_seen_by_player()
+	if hp_text: hp_text.visible = is_visible and can_be_seen_by_player()
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.DEAD or GameState.is_game_paused:
@@ -205,6 +261,7 @@ func _physics_process(delta: float) -> void:
 	if target_eval_timer <= 0.0:
 		target_eval_timer = 0.45
 		_evaluate_proximity_aggro()
+		_update_visibility_visuals()
 
 	match current_state:
 		State.PATROL:
@@ -402,6 +459,18 @@ func _process_attack(delta: float) -> void:
 func _strike_target() -> void:
 	if current_state == State.DEAD or not current_target or GameState.is_game_paused or is_prone() or is_down_prone or GameState.is_invisible(current_target_name) or (current_target_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name)):
 		return
+
+	if is_sanctuaried():
+		GameState.remove_status_effect(enemy_name, "sanctuary")
+		GameState.remove_status_effect(enemy_id, "sanctuary")
+		GameState.log_message("combat", "🕊️ %s attacked! Sanctuary ward is broken." % enemy_name)
+		_update_ui()
+
+	if is_invisible():
+		GameState.remove_status_effect(enemy_name, "invisible")
+		GameState.remove_status_effect(enemy_id, "invisible")
+		GameState.log_message("combat", "✨ Invisibility broke! %s made an attack." % enemy_name)
+		_update_visibility_visuals()
 
 	var t_name = current_target_name
 	var t_ac = 14
@@ -619,4 +688,6 @@ func loot_corpse(looter: Node2D = null) -> Dictionary:
 
 func _input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if is_invisible() and not GameState.can_see_invisible():
+			return
 		body_clicked.emit(self)

@@ -578,5 +578,27 @@
     "cost": 0,
     "icon": "assets/icons/weapons/dagger.png",
     "description": "Heavy bronze key etched with catacomb runic sigils."
+  },
+  {
+    "id": "gem-of-seeing",
+    "title": "Gem of Seeing",
+    "category": "accessory",
+    "equipSlot": "accessory",
+    "grants_see_invisibility": true,
+    "effect": "see_invisibility",
+    "cost": 1500,
+    "icon": "assets/icons/accessories/gem_of_seeing.png",
+    "description": "A finely cut crystal lens etched with divination sigils. Pierces all veils of invisibility, illusions, and shadows, allowing the wearer to see invisible creatures."
+  },
+  {
+    "id": "helm-of-truesight",
+    "title": "Helm of Truesight",
+    "category": "accessory",
+    "equipSlot": "head",
+    "grants_see_invisibility": true,
+    "effect": "see_invisibility",
+    "cost": 2200,
+    "icon": "assets/icons/accessories/gem_of_seeing.png",
+    "description": "A crown of burnished silver set with an azure star sapphire that pierces all veils of invisibility and shadows."
   }
 ]

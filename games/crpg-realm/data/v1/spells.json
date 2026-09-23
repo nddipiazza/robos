@@ -282,5 +282,27 @@
     "hazard": "toxic_mist",
     "icon": "assets/icons/spells/stinking_cloud.png",
     "description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground."
+  },
+  {
+    "id": "sanctuary",
+    "title": "Sanctuary",
+    "level": 1,
+    "school": "Abjuration",
+    "castingTime": "1 bonus action",
+    "range": "30 feet",
+    "condition": "sanctuary",
+    "icon": "assets/icons/spells/sanctuary.png",
+    "description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks."
+  },
+  {
+    "id": "see-invisibility",
+    "title": "See Invisibility",
+    "level": 2,
+    "school": "Divination",
+    "castingTime": "1 action",
+    "range": "Self",
+    "condition": "see_invisibility",
+    "icon": "assets/icons/spells/see_invisibility.png",
+    "description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline."
   }
 ]

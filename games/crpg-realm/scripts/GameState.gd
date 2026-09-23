@@ -105,6 +105,7 @@ var gold: int = 150
 var inventory: Array = ["potion-healing"]
 var equipped_weapon: String = "service-sword"
 var equipped_armor: String = "chain-mail"
+var equipped_accessory: String = ""
 
 var quest_stage: int = 1
 var flags: Dictionary = {
@@ -330,6 +331,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			"portrait": portrait_path,
 			"weapon": equipped_weapon,
 			"armor": equipped_armor,
+			"accessory": equipped_accessory,
 			"spells": selected_spells.duplicate(),
 			"status_effects": []
 		}
@@ -346,7 +348,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 	print("GameState: Hero initialized -> ", hero_name, " (", hero_race, " ", hero_class, ") HP=", hero_hp, " AC=", hero_ac, " Spells=", selected_spells, " Stats=", ability_scores)
 
 func has_item(item_id: String) -> bool:
-	return inventory.has(item_id) or equipped_weapon == item_id or equipped_armor == item_id
+	return inventory.has(item_id) or equipped_weapon == item_id or equipped_armor == item_id or equipped_accessory == item_id
 
 func add_item(item_id: String) -> void:
 	inventory.append(item_id)
@@ -495,6 +497,15 @@ func equip_item(item_id: String) -> Dictionary:
 		inventory_changed.emit()
 		print("GameState: Equipped armor %s (Swapped out %s, AC=%d)" % [item.title, old_arm, hero_ac])
 		return {"success": true, "slot": "armor", "equipped": item_id, "swapped": old_arm, "ac": hero_ac}
+	elif item.category in ["accessory", "equipment", "gear", "head", "ring"] or item.get("equipSlot") in ["accessory", "head", "ring", "belt", "eyes"]:
+		var old_acc = equipped_accessory
+		inventory.erase(item_id)
+		equipped_accessory = item_id
+		if old_acc != "":
+			inventory.append(old_acc)
+		inventory_changed.emit()
+		print("GameState: Equipped accessory %s (Swapped out %s)" % [item.title, old_acc])
+		return {"success": true, "slot": "accessory", "equipped": item_id, "swapped": old_acc}
 
 	return {"success": false, "error": "Item is not equippable"}
 
@@ -512,7 +523,12 @@ func unequip_item(slot: String) -> Dictionary:
 		hero_ac = 10 + get_stat_modifier(ability_scores.get("DEX", 10))
 		inventory_changed.emit()
 		return {"success": true, "slot": "armor", "unequipped": old, "ac": hero_ac}
-	return {"success": false, "error": "Slot is already empty"}
+	elif slot in ["accessory", "head", "ring", "eyes"] and equipped_accessory != "":
+		var old = equipped_accessory
+		inventory.append(old)
+		equipped_accessory = ""
+		inventory_changed.emit()
+		return {"success": true, "slot": "accessory", "unequipped": old}
 	return {"success": false, "error": "Slot is already empty"}
 
 # ── Party Management ──────────────────────────────────────────────────────────
@@ -803,6 +819,11 @@ func get_status_effects(target_name: String) -> Array:
 		return status_effects[target_name]
 	if (target_name == "hero" or target_name.to_lower() == hero_name.to_lower()) and status_effects.has(hero_name):
 		return status_effects[hero_name]
+	var t_lower = target_name.to_lower()
+	for k in status_effects.keys():
+		var k_str = str(k).to_lower()
+		if k_str == t_lower or (t_lower.length() >= 4 and (t_lower in k_str or k_str in t_lower)):
+			return status_effects[k]
 	for m in party_members:
 		if m.get("name", "").to_lower() == target_name.to_lower() or (target_name == "hero" and m.get("id") == "hero"):
 			return m.get("status_effects", [])
@@ -927,6 +948,28 @@ func is_incapacitated(target_name: String) -> bool:
 
 func is_invisible(target_name: String) -> bool:
 	return has_status_effect(target_name, "invisible")
+
+func is_sanctuaried(target_name: String) -> bool:
+	return has_status_effect(target_name, "sanctuary")
+
+func can_see_invisible(actor_name: String = "") -> bool:
+	if actor_name == "" or actor_name == hero_name or actor_name.to_lower() == "hero" or actor_name.to_lower() == hero_name.to_lower():
+		if has_status_effect(hero_name, "see_invisibility") or has_status_effect("hero", "see_invisibility") or has_status_effect(hero_name, "truesight") or has_status_effect("hero", "truesight"):
+			return true
+		var eq_items = [equipped_weapon, equipped_armor, equipped_accessory]
+		for it_id in eq_items:
+			if it_id != "":
+				var id_lower = it_id.to_lower()
+				if "see-invis" in id_lower or "seeing" in id_lower or "truesight" in id_lower or "gem-of-seeing" in id_lower:
+					return true
+				var it = get_item_data(it_id)
+				if it and ("see_invisibility" in it.properties or "truesight" in it.properties):
+					return true
+		return false
+	else:
+		if has_status_effect(actor_name, "see_invisibility") or has_status_effect(actor_name, "truesight"):
+			return true
+		return false
 
 func damage_party_member(target_id_or_name: String, amount: int) -> void:
 	if target_id_or_name == hero_name or target_id_or_name == "hero":

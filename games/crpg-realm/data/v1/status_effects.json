@@ -167,5 +167,27 @@
     "speedModifier": 0.0,
     "icon": "assets/icons/status_effects/unconscious.png",
     "badgeColor": "#2c3e50"
+  },
+  {
+    "id": "sanctuary",
+    "title": "Sanctuary",
+    "category": "ward",
+    "description": "A protective divine aura wards the creature. Any attacker attempting to target the creature with an attack or harmful spell cannot target it. The ward ends if the warded creature makes an attack.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/sanctuary.png",
+    "badgeColor": "#f1c40f"
+  },
+  {
+    "id": "see_invisibility",
+    "title": "See Invisibility",
+    "category": "buff",
+    "description": "You see invisible creatures and objects as if they were visible, and can pierce ethereal concealment.",
+    "attackDisadvantage": false,
+    "grantAdvantage": false,
+    "speedModifier": 1.0,
+    "icon": "assets/icons/status_effects/see_invisibility.png",
+    "badgeColor": "#00bcd4"
   }
 ]

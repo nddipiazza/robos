@@ -844,6 +844,11 @@ func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
 	GameState.hero_class = hero_class
 	GameState.hero_hp = hero_hp
 	GameState.hero_max_hp = hero_hp
+	GameState.equipped_accessory = ""
+	GameState.remove_status_effect(wizard_name, "see_invisibility")
+	GameState.remove_status_effect("hero", "see_invisibility")
+	GameState.remove_status_effect(wizard_name, "truesight")
+	GameState.remove_status_effect("hero", "truesight")
 	if hero_class == "wizard":
 		GameState.ability_scores = {"STR": 10, "DEX": 14, "CON": 14, "INT": 16, "WIS": 12, "CHA": 10}
 		GameState.hero_ac = 12
@@ -948,9 +953,20 @@ func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
 			tex_path = "res://assets/sprites/enemies/wolf.png"
 		elif "golem" in eid or "golem" in g.enemy_name.to_lower():
 			tex_path = "res://assets/sprites/enemies/golem.png"
-		g.sprite_texture_path = tex_path
+		if edef.get("invisible", false) or edef.get("is_invisible", false):
+			GameState.apply_status_effect(eid, "invisible", 100)
+			GameState.apply_status_effect(g.enemy_name, "invisible", 100)
+		if edef.get("sanctuary", false) or edef.get("is_sanctuary", false):
+			GameState.apply_status_effect(eid, "sanctuary", 100)
+			GameState.apply_status_effect(g.enemy_name, "sanctuary", 100)
+		var custom_effects = edef.get("status_effects", [])
+		for eff in custom_effects:
+			GameState.apply_status_effect(eid, str(eff), 100)
+			GameState.apply_status_effect(g.enemy_name, str(eff), 100)
 
 		add_child(g)
+		g._update_visibility_visuals()
+		g._update_ui()
 		g.enemy_slain.connect(_on_enemy_slain)
 		g.corpse_looted.connect(_on_corpse_looted)
 		g.target_changed.connect(_on_target_changed)
@@ -1003,6 +1019,30 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 			target_node = thrumbar
 			target_name = thrumbar.companion_name
 
+	if target_node and target_node is TacticalEnemy:
+		if target_node.is_invisible() and not GameState.can_see_invisible():
+			if spell_id not in ["dispel", "dispel-magic", "dispel_magic"]:
+				_show_notice("❌ Cannot target an invisible creature that you cannot see!")
+				GameState.log_message("combat", "❌ Spell failed: Cannot target an invisible creature that you cannot see!")
+				return {
+					"success": false,
+					"spell": spell_id,
+					"target": target_name,
+					"error": "Cannot target an invisible creature that you cannot see!",
+					"reason": "invisible_unseen"
+				}
+		if target_node.is_sanctuaried():
+			if spell_id not in ["dispel", "dispel-magic", "dispel_magic"]:
+				_show_notice("❌ Cannot target a sanctuaried character!")
+				GameState.log_message("combat", "❌ Spell failed: %s is warded by Sanctuary!" % target_node.enemy_name)
+				return {
+					"success": false,
+					"spell": spell_id,
+					"target": target_name,
+					"error": "Cannot target a sanctuaried character!",
+					"reason": "sanctuary"
+				}
+
 	if target_pos == Vector2.ZERO:
 		if target_node and "global_position" in target_node:
 			target_pos = target_node.global_position
@@ -1042,6 +1082,10 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 		last_aoe_telemetry = res
 	else:
 		res = combat_mgr.execute_cast_spell(GameState.hero_name, spell_id, target_name, target_node)
+
+	if target_node and target_node is TacticalEnemy and is_instance_valid(target_node):
+		target_node._update_visibility_visuals()
+		target_node._update_ui()
 
 	last_spell_telemetry = res
 	last_aoe_telemetry = res

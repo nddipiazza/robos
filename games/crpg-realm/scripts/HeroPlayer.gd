@@ -498,6 +498,10 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		await _spawn_counterspell_vfx(target_pos, on_cast_callback)
 	elif spell_id in ["dispel", "dispel-magic", "dispel_magic"]:
 		await _spawn_dispel_magic_vfx(target_pos, on_cast_callback)
+	elif spell_id == "sanctuary":
+		await _spawn_shield_vfx(global_position, on_cast_callback)
+	elif spell_id in ["see-invisibility", "see_invisibility"]:
+		await _spawn_find_traps_vfx(global_position, on_cast_callback)
 	elif spell_id == "find-traps":
 		await _spawn_find_traps_vfx(global_position, on_cast_callback)
 	elif spell_id == "knock":

@@ -2216,6 +2216,12 @@ def step_setup_tactical_spell_encounter(context, enc_type, hero_name, hero_class
         ],
         "combat_dummy": [
             {"id": "dummy_1", "name": "Corrupted Target", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520}
+        ],
+        "invisible_infiltrator": [
+            {"id": "stalker_1", "name": "Shadow Cultist Infiltrator", "hp": 18, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520, "invisible": True}
+        ],
+        "sanctuary_warden": [
+            {"id": "acolyte_1", "name": "Sanctuary Acolyte", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520, "sanctuary": True}
         ]
     }
 
@@ -2510,6 +2516,152 @@ def step_verify_hero_nauseated_prone(context):
             break
         time.sleep(0.1)
     assert is_down, f"Expected hero to be overcome by stinking cloud and knocked prone. Hero state: {st.get('hero')}"
+
+@when('the hero attempts to target "{target_id}" and cast spell "{spell_id}"')
+def step_hero_attempts_cast_on_target(context, target_id, spell_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {
+            "spell": spell_id,
+            "target": target_id,
+            "target_id": target_id
+        }
+    })
+    context.last_target_result = res
+    time.sleep(0.5)
+
+@when('the hero attempts to attack "{target_id}"')
+def step_hero_attempts_attack_target(context, target_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "attack_target",
+        "args": {
+            "target_id": target_id,
+            "target": target_id
+        }
+    })
+    context.last_target_result = res
+    time.sleep(0.5)
+
+@when('the hero attacks "{target_id}"')
+def step_hero_attacks_target(context, target_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "attack_target",
+        "args": {
+            "target_id": target_id,
+            "target": target_id
+        }
+    })
+    assert res.get("success") is True, f"Failed to attack {target_id}: {res}"
+    time.sleep(1.0)
+
+@then('the targeting fails with error containing "{err_substr}"')
+def step_verify_targeting_fails(context, err_substr):
+    res = getattr(context, "last_target_result", {})
+    success = res.get("success", True)
+    err = str(res.get("error", ""))
+    if not err and "telemetry" in res and isinstance(res["telemetry"], dict):
+        err = str(res["telemetry"].get("error", ""))
+        success = res["telemetry"].get("success", success)
+    assert not success, f"Expected targeting to fail, but succeeded: {res}"
+    assert err_substr.lower() in err.lower(), f"Expected error to contain '{err_substr}', got: '{err}' in {res}"
+
+@then('enemy "{enemy_id}" is not visible to the player')
+def step_verify_enemy_not_visible(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = False
+    for en in enemies:
+        if en.get("id") == enemy_id or enemy_id.lower() in en.get("name", "").lower():
+            found = True
+            assert en.get("is_invisible") is True, f"Enemy {enemy_id} expected to be invisible, state: {en}"
+            assert en.get("is_visible_to_player") is False, f"Enemy {enemy_id} should NOT be visible to player: {en}"
+            assert en.get("node_visible") is False, f"Enemy {enemy_id} node_visible should be False: {en}"
+            assert en.get("can_be_targeted") is False, f"Enemy {enemy_id} can_be_targeted should be False: {en}"
+            break
+    assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+
+@when('the hero equips item "{item_id}"')
+def step_hero_equips_item(context, item_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "equip_item",
+        "args": {"item": item_id}
+    })
+    assert res.get("success") is True, f"Failed to equip {item_id}: {res}"
+    time.sleep(0.5)
+
+@then('the hero has item "{item_id}" equipped')
+def step_verify_hero_has_item_equipped(context, item_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    equipped = [hero.get("weapon"), hero.get("armor"), hero.get("accessory")]
+    assert item_id in equipped, f"Expected {item_id} to be equipped in {equipped}, hero state: {hero}"
+
+@then('the hero can see invisible creatures')
+def step_verify_hero_can_see_invis(context):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    assert hero.get("can_see_invisible") is True, f"Expected hero.can_see_invisible to be True, got: {hero}"
+
+@then('enemy "{enemy_id}" is revealed to the player with ethereal shimmer')
+def step_verify_enemy_revealed_shimmer(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = False
+    for en in enemies:
+        if en.get("id") == enemy_id or enemy_id.lower() in en.get("name", "").lower():
+            found = True
+            assert en.get("is_invisible") is True, f"Enemy {enemy_id} still has invisible status: {en}"
+            assert en.get("is_visible_to_player") is True, f"Enemy {enemy_id} should be visible to player: {en}"
+            assert en.get("node_visible") is True, f"Enemy {enemy_id} node_visible should be True: {en}"
+            assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True: {en}"
+            op = float(en.get("sprite_opacity", 1.0))
+            assert 0.1 <= op <= 0.8, f"Enemy {enemy_id} sprite opacity expected ethereal shimmer (0.1..0.8), got: {op}"
+            break
+    assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+
+@then('enemy "{enemy_id}" is completely visible')
+def step_verify_enemy_completely_visible(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = False
+    for en in enemies:
+        if en.get("id") == enemy_id or enemy_id.lower() in en.get("name", "").lower():
+            found = True
+            assert en.get("is_invisible") is False, f"Enemy {enemy_id} should not be invisible: {en}"
+            assert en.get("is_visible_to_player") is True, f"Enemy {enemy_id} should be visible to player: {en}"
+            assert en.get("node_visible") is True, f"Enemy {enemy_id} node_visible should be True: {en}"
+            assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True: {en}"
+            op = float(en.get("sprite_opacity", 1.0))
+            assert op >= 0.9, f"Enemy {enemy_id} sprite opacity expected ~1.0, got: {op}"
+            break
+    assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+
+@then('enemy "{enemy_id}" is protected by sanctuary')
+def step_verify_enemy_sanctuary(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = False
+    for en in enemies:
+        if en.get("id") == enemy_id or enemy_id.lower() in en.get("name", "").lower():
+            found = True
+            assert en.get("is_sanctuaried") is True, f"Enemy {enemy_id} should be sanctuaried: {en}"
+            assert en.get("can_be_targeted") is False, f"Enemy {enemy_id} can_be_targeted should be False under sanctuary: {en}"
+            break
+    assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+
+@then('enemy "{enemy_id}" is no longer protected by sanctuary')
+def step_verify_enemy_not_sanctuary(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    enemies = st.get("battle", {}).get("enemies", [])
+    found = False
+    for en in enemies:
+        if en.get("id") == enemy_id or enemy_id.lower() in en.get("name", "").lower():
+            found = True
+            assert en.get("is_sanctuaried") is False, f"Enemy {enemy_id} should NOT be sanctuaried: {en}"
+            assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True when sanctuary drops: {en}"
+            break
+    assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+
 
 
 

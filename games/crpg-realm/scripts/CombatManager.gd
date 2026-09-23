@@ -155,6 +155,49 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 	var am = _get_audio_manager()
 	var gs = _get_game_state()
 
+	# Invisibility & Sanctuary Targeting Validation
+	var is_dispel = spell_id in ["dispel", "dispel-magic", "dispel_magic"]
+	if not is_dispel:
+		# Check if target is invisible and unseen by caster
+		var target_is_invis = false
+		if target_node and target_node.has_method("is_invisible") and target_node.is_invisible():
+			target_is_invis = true
+		elif gs and gs.has_method("is_invisible") and (gs.is_invisible(target_name) or (target_node and "enemy_id" in target_node and gs.is_invisible(target_node.enemy_id))):
+			target_is_invis = true
+
+		if target_is_invis:
+			var caster_can_see = gs.can_see_invisible(caster_name) if (gs and gs.has_method("can_see_invisible")) else false
+			if not caster_can_see:
+				_log_combat("system", "❌ Spell Fails: Cannot target an invisible creature that you cannot see!")
+				if target_node and "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_text(target_node.global_position, "CANNOT TARGET UNSEEN!", Color(1.0, 0.4, 0.4))
+				return {
+					"success": false,
+					"spell": spell_id,
+					"target": target_name,
+					"error": "Cannot target an invisible creature that you cannot see!",
+					"reason": "invisible_unseen"
+				}
+
+		# Check if target is sanctuaried
+		var target_is_sanctuaried = false
+		if target_node and target_node.has_method("is_sanctuaried") and target_node.is_sanctuaried():
+			target_is_sanctuaried = true
+		elif gs and gs.has_method("has_status_effect") and (gs.has_status_effect(target_name, "sanctuary") or (target_node and "enemy_id" in target_node and gs.has_status_effect(target_node.enemy_id, "sanctuary"))):
+			target_is_sanctuaried = true
+
+		if target_is_sanctuaried and spell_id not in ["cure-wounds", "healing-word", "sanctuary"]:
+			_log_combat("system", "❌ Spell Fails: %s is warded by Sanctuary and cannot be targeted!" % target_name)
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position, "WARDED BY SANCTUARY!", Color(1.0, 0.85, 0.2))
+			return {
+				"success": false,
+				"spell": spell_id,
+				"target": target_name,
+				"error": "Cannot target a sanctuaried character!",
+				"reason": "sanctuary"
+			}
+
 	match spell_id:
 		"magic-missile":
 			var tgt = target_name if target_name != "" else "target"
@@ -458,14 +501,51 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 				for eff in effs:
 					gs.remove_status_effect(tgt, eff)
 					dispelled_effects.append(eff)
+			# Ensure invisible and sanctuary are removed for target, enemy_id and enemy_name
+			if gs and gs.has_method("remove_status_effect"):
+				gs.remove_status_effect(tgt, "invisible")
+				gs.remove_status_effect(tgt, "sanctuary")
+				if target_node and "enemy_id" in target_node:
+					gs.remove_status_effect(target_node.enemy_id, "invisible")
+					gs.remove_status_effect(target_node.enemy_id, "sanctuary")
+				if target_node and "enemy_name" in target_node:
+					gs.remove_status_effect(target_node.enemy_name, "invisible")
+					gs.remove_status_effect(target_node.enemy_name, "sanctuary")
 			if dispelled_effects.has("mage_armor") and (tgt == caster_name or tgt == gs.hero_name or tgt == "hero"):
 				gs.hero_ac = 10 + gs.get_stat_modifier(int(gs.ability_scores.get("DEX", 14)))
+			if target_node and target_node.has_method("_update_visibility_visuals"):
+				target_node._update_visibility_visuals()
+				target_node._update_ui()
 			_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! Dispelled magical effects: %s." % [caster_name, tgt, str(dispelled_effects) if dispelled_effects.size() > 0 else "None"])
 			if target_node and "global_position" in target_node and FloatingTextManager:
 				FloatingTextManager.spawn_text(target_node.global_position, "DISPELLED!", Color(0.8, 0.4, 1.0))
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": "dispel-magic", "target": tgt, "dispelled": dispelled_effects}
+
+		"sanctuary":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "sanctuary", 10)
+			_log_combat("combat", "🕊️ %s casts [b]Sanctuary[/b] on %s!" % [caster_name, tgt])
+			_log_combat("magic", "A protective divine aura surrounds %s! Attackers cannot target %s with attacks or harmful spells." % [tgt, tgt])
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -25), "🕊️ SANCTUARY!", Color(1.0, 0.9, 0.3))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "sanctuary", "target": tgt}
+
+		"see-invisibility", "see_invisibility":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "see_invisibility", 10)
+			_log_combat("combat", "👁️ %s casts [b]See Invisibility[/b]!" % caster_name)
+			_log_combat("magic", "Sensory divinations open %s's sight to all hidden and ethereal shapes!" % caster_name)
+			if target_node and "global_position" in target_node and FloatingTextManager:
+				FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -25), "👁️ TRUE SIGHT!", Color(0.2, 0.9, 1.0))
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "see-invisibility", "target": tgt}
 
 		"tremor-stomp", "crushing-cleave", "rallying-stomp":
 			return execute_fighter_ability(caster_name, spell_id, target_name, target_node)
