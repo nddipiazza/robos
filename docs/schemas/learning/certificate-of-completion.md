@@ -81,19 +81,28 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ```json
 {
-  "@id": "urn:robos:learning:certificate-of-completion-sample",
+  "@id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
   "@type": [
     "robos:CertificateOfCompletion",
     "schema:EducationalOccupationalCredential",
     "oslc:Resource"
   ],
-  "dcterms:title": "Sample Certificate Of Completion",
-  "dcterms:description": "Canonical reference instance for robos:CertificateOfCompletion.",
+  "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex",
+  "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex.",
+  "robos:recipientUser": "dungeon-master-robos",
+  "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
+  "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",
+  "robos:issueDate": "2026-09-22T15:56:33.549Z",
+  "robos:scorePercentage": 100,
+  "robos:verificationHash": "ROBOS-CERT-2F4E9C089628E93B",
+  "robos:skillsAcquired": [
+    "Realm of Heroes: A Night Without Memory Architecture & Systems",
+    "BDD Test Scenarios & Contract Verification",
+    "Knowledge Graph State Synchronization"
+  ],
+  "robos:status": "issued",
   "robos:package": "learning",
-  "robos:namespace": "robos.learning",
-  "robos:schemaOrgType": "https://schema.org/EducationalOccupationalCredential",
-  "robos:domainStandard": "https://schema.org/EducationalOccupationalCredential",
-  "robos:refersFrom": "https://schema.org/EducationalOccupationalCredential"
+  "robos:namespace": "robos.learning"
 }
 ```
 
@@ -110,19 +119,28 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:learning:certificate-of-completion-sample",
+        "@id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
         "@type": [
             "robos:CertificateOfCompletion",
             "schema:EducationalOccupationalCredential",
             "oslc:Resource"
         ],
-        "dcterms:title": "Sample Certificate Of Completion",
-        "dcterms:description": "Canonical reference instance for robos:CertificateOfCompletion.",
+        "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex",
+        "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex.",
+        "robos:recipientUser": "dungeon-master-robos",
+        "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
+        "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",
+        "robos:issueDate": "2026-09-22T15:56:33.549Z",
+        "robos:scorePercentage": 100,
+        "robos:verificationHash": "ROBOS-CERT-2F4E9C089628E93B",
+        "robos:skillsAcquired": [
+            "Realm of Heroes: A Night Without Memory Architecture & Systems",
+            "BDD Test Scenarios & Contract Verification",
+            "Knowledge Graph State Synchronization"
+        ],
+        "robos:status": "issued",
         "robos:package": "learning",
-        "robos:namespace": "robos.learning",
-        "robos:schemaOrgType": "https://schema.org/EducationalOccupationalCredential",
-        "robos:domainStandard": "https://schema.org/EducationalOccupationalCredential",
-        "robos:refersFrom": "https://schema.org/EducationalOccupationalCredential"
+        "robos:namespace": "robos.learning"
     }
   ],
 }));

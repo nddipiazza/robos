@@ -1,12 +1,12 @@
 ---
-title: Tactical cRPG Architecture & Masterclass Specification
+title: Tactical cRPG Architecture & Engine Codex
 layout: default
 parent: Tactical cRPG & Infinity AI Engine
 grand_parent: RobOS Projects
 nav_exclude: true
 ---
 
-# Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass
+# Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex
 {: .no_toc }
 
 The definitive architectural deep-dive into party-based tactical isometric cRPGs for video game nerds and D&D dungeon masters. Covers D&D 5e SRD mathematical action economy, Godot 4.3 GL Compatibility 2.5D isometric rendering, physical collision pathfinding, Flare RPG CC-BY-SA paperdoll asset pipelines, 3-mode expandable Activity Log, and autonomous Infinity AI Agent verification with 1080p video proof-of-work.
@@ -14,10 +14,10 @@ The definitive architectural deep-dive into party-based tactical isometric cRPGs
 
 <div style="background: rgba(0, 188, 212, 0.12); border: 1px solid #00bcd4; border-radius: 8px; padding: 14px 20px; margin: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
   <div>
-    <strong style="color: #38bdf8; font-size: 1.05rem;">🎓 Interactive Web Edition Available</strong><br>
-    <span style="color: #c9d1d9; font-size: 0.9rem;">Take this masterclass directly in your browser with interactive lab checklists, instant quiz checks, and verifiable Knowledge Graph completion certificates.</span>
+    <strong style="color: #38bdf8; font-size: 1.05rem;">📜 Interactive Web Codex Available</strong><br>
+    <span style="color: #c9d1d9; font-size: 0.9rem;">Explore this codex directly in your browser with interactive lab checklists, instant quiz checks, and verifiable Knowledge Graph completion certificates.</span>
   </div>
-  <a href="/projects/crpg-realm/elearning/" class="btn btn-primary" style="background: #00bcd4; color: #0d1117; font-weight: 700; padding: 8px 18px; border-radius: 6px; text-decoration: none;">Launch Web eLearning &rarr;</a>
+  <a href="/projects/crpg-realm/elearning/" class="btn btn-primary" style="background: #00bcd4; color: #0d1117; font-weight: 700; padding: 8px 18px; border-radius: 6px; text-decoration: none;">Launch Web Codex &rarr;</a>
 </div>
 
 ## Table of contents
@@ -161,22 +161,21 @@ func _process(delta: float) -> void:
         global_position.y = clamp(global_position.y, 540, 1440 - 540)
 ```
 
-### Physical Collision Geometry (Layer 1)
-Every building in Oakhaven is a true physical obstacle with a `StaticBody2D` collider on **Layer 1**, preventing characters from walking through solid walls:
+### 2.5D Isometric World Layers & Y-Sorting
+Isometric games render 2D sprites to give the illusion of 3D depth. To ensure characters realistically step behind buildings, trees, and other party members, Godot relies on **Y-Sorting**:
+- **`y_sort_enabled = true`**: Nodes placed under a Y-Sort parent have their draw order dynamically sorted by their `global_position.y`. Entities higher on the screen ($y < y_{\text{hero}}$) render behind the hero; entities lower ($y > y_{\text{hero}}$) render in front.
+- **Sprite Anchoring**: Isometric building and character sprites set their origin point (pivot) at their physical base (feet/foundation), guaranteeing seamless depth sorting.
 
-| Building Name | Node Name | Footprint Dimensions | Map Coordinates | Door Transition ID |
-|:---|:---|:---|:---|:---|
-| **The Rusty Dragon Inn** | `HouseInn` | $360 \times 180\text{ px}$ | $(410, 640)$ | `door-id-inn` |
-| **Town Hall & Guildhouse** | `HouseTownHall` | $320 \times 260\text{ px}$ | $(1090, 330)$ | `door-id-townhall` |
-| **Brand's Forge & Armory** | `HouseBlacksmith` | $220 \times 140\text{ px}$ | $(1520, 460)$ | `door-id-blacksmith` |
-| **Maybelle's Remedies** | `HouseApothecary` | $280 \times 140\text{ px}$ | $(1810, 600)$ | `door-id-apothecary` |
-| **Farmer Giles' Cottage** | `HouseCottage` | $240 \times 190\text{ px}$ | $(140, 1120)$ | `door-id-farmhouse` |
-| **Elder Martha's Cottage** | `HouseElderCottage` | $280 \times 180\text{ px}$ | $(670, 1340)$ | `door-id-elder` |
-| **Royal Guard Barracks** | `HouseBarracks` | $340 \times 220\text{ px}$ | $(1620, 1250)$ | `door-id-barracks` |
-| **Ranger Kaelen's Lodge** | `HouseRangerLodge` | $320 \times 200\text{ px}$ | $(1990, 990)$ | `door-id-ranger` |
-| **Sister Althea's Shrine** | `HouseShrine` | $240 \times 200\text{ px}$ | $(2310, 340)$ | `door-id-shrine` |
-| **Miller Hob's Windmill** | `HouseMill` | $220 \times 220\text{ px}$ | $(2330, 130)$ | `door-id-mill` |
-| **Northern Garrison Gate** | `GarrisonGate` | $400 \times 120\text{ px}$ | $(1280, 220)$ | `door-id-1` |
+### Physical Colliders & The Foundation Footprint Rule
+In classical 2.5D isometric RPGs (Baldur's Gate, Pillars of Eternity), buildings are not blocked across their entire visual roof area. Characters must be able to walk *behind* the roof while being blocked by the *foundation*:
+- **Foundation Footprints**: Static colliders (`StaticBody2D` + `CollisionShape2D` on Layer 1) cover only the bottom 25–35% of the building sprite where the walls meet the ground.
+- **Occlusion Transparency**: When the player walks behind upper walls or eaves, an `Area2D` triggers a tween lowering the roof opacity to `0.4` so party members remain visible.
+- **Corridor Clearance**: Walkways between structures must maintain a minimum clear width of 48–64 pixels to allow 4-character party formations to navigate without jamming.
+
+### Pathfinding & Click-to-Move
+Player navigation uses `Pathfinder.gd` combining RayCast line-of-sight checks with `NavigationServer2D`:
+- Direct line-of-sight clicks generate a straight-line vector.
+- Obstructed paths query the navigation polygon mesh, routing around building foundation colliders.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
   <div>
@@ -315,7 +314,7 @@ You can launch and complete this full course interactively inside the **RobOS eL
 - 🌐 **Interactive Web Edition**: [www.rowbose.com/projects/crpg-realm/elearning/](https://www.rowbose.com/projects/crpg-realm/elearning/)
 - 🖥️ **Desktop Player**:
 ```bash
-# Launch central eLearning player loaded to the cRPG Masterclass
+# Launch central eLearning player loaded to the cRPG Codex
 electron packages/robos-elearning --course=robos-crpg
 
 # Or launch the dedicated standalone desktop app

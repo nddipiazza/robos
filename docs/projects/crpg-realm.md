@@ -46,7 +46,8 @@ Rather than being a static demo, the entire campaign slice is governed by an **a
 | **Assets & Art** | 100% genuine open-source assets from Flare RPG / OpenGameArt (CC-BY-SA, CC0) |
 | **Testing Harness** | Headless Xvfb virtual framebuffer execution, 1080p FFmpeg video proof-of-work, behave BDD |
 | **Verification Metrics** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
-| **Interactive eLearning** | [www.rowbose.com/projects/crpg-realm/elearning/](/projects/crpg-realm/elearning/) (5 modules, labs, quizzes, verified certificate) |
+| **Tactical cRPG Codex & Academy** | [www.rowbose.com/projects/crpg-realm/elearning/](/projects/crpg-realm/elearning/) (5 interactive modules, labs, quizzes, verified certificate) |
+| **Game Creator Guide** | [Creating Your Own Game with robos-crpg](/projects/crpg-realm/create-your-own-game.html) (Scenes, maps, items, BDD tests, boss fights) |
 
 ---
 
@@ -138,17 +139,20 @@ RobOS enforces a strict separation between two types of automated E2E tests:
 
 Explore the technical deep-dives into how the cRPG realm and its AI harness are constructed:
 
-1. [**Interactive Tactical cRPG Masterclass**]({{ '/projects/crpg-realm/elearning/' | relative_url }})  
+1. [**Tactical cRPG Architecture & Engine Codex**]({{ '/projects/crpg-realm/elearning/' | relative_url }})  
    *Hands-on interactive 5-module curriculum, live lab checklists, instant knowledge check quizzes, and verifiable W3C completion credential.*
 
-2. [**Tactical cRPG Architecture & Masterclass Living Spec**]({{ '/projects/crpg-realm/elearning-masterclass.html' | relative_url }})  
-   *Comprehensive engineering specification, combat math formulas, colliders, and SCORM 2004 curriculum guide.*
+2. [**Tactical cRPG Architecture Living Specification**]({{ '/projects/crpg-realm/elearning-masterclass.html' | relative_url }})  
+   *Comprehensive engineering specification, combat math formulas, colliders, and curriculum architecture.*
 
-3. [**Autonomous Game Creation Process & Architecture**]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})  
+3. [**Creating Your Own Game with robos-crpg**]({{ '/projects/crpg-realm/create-your-own-game.html' | relative_url }})  
+   *Developer guide to adding scenes, 2.5D maps, custom items, BDD test scenarios (normal & full playthroughs), Godot 4 for coders, and multi-phase boss fights.*
+
+4. [**Autonomous Game Creation Process & Architecture**]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})  
    *Ontological modeling, CC-BY-SA asset harvesting, data pipeline, and GDScript code generation.*
 
-4. [**Infinity AI Engine & BDD Verification Harness**]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})  
+5. [**Infinity AI Engine & BDD Verification Harness**]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})  
    *Threat radar, combined-arms tactics, human mouse simulation, and containerized video proof-of-work.*
 
-5. [**World Systems, Collision Pathfinding & NPC Dialogue**]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})  
+6. [**World Systems, Collision Pathfinding & NPC Dialogue**]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})  
    *Building colliders, Pathfinder.gd obstacle avoidance, 18-NPC roster, and dynamic Fog of War shaders.*

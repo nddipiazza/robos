@@ -234,6 +234,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **IPC**: All Electron apps use `contextBridge` in `preload.js` + `ipcRenderer.invoke()` / `ipcMain.handle()` (never `nodeIntegration: true`)
 - **Config storage**: All persistent data in `~/.config/robos/`
 - **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
+- **Documentation Diagrams & Visuals**: When creating RobOS documentation diagrams, always generate and include Gemini 3.8 AI-generated images/illustrations alongside Mermaid syntax. Diagrams must be very professional, developer-friendly, clean, functional, and extremely easy to read (no chaotic AI "wow bling" or cluttered decorative fluff; focus on crisp, structured technical architecture, clear flow schematics, and legible labels).
 - **Logging**: `pino` JSON logging
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
