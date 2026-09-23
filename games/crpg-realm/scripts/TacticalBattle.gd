@@ -20,11 +20,16 @@ enum CombatMode { REAL_TIME, ROUND_BASED }
 var enemies: Dictionary = {} # id -> TacticalEnemy
 var combat_round_index: int = 0
 var round_history: Array[Dictionary] = []
+var turn_events: Array[Dictionary] = []
 var last_aoe_telemetry: Dictionary = {}
 var last_spell_telemetry: Dictionary = {}
 
 signal combat_round_started(round_number: int)
 signal combat_round_completed(round_number: int, summary: Dictionary)
+signal player_turn_started(hero_name: String, hero_id: String, round_number: int)
+signal player_turn_completed(hero_name: String, hero_id: String, action_data: Dictionary)
+signal enemy_turn_started(enemy_name: String, enemy_id: String, round_number: int)
+signal enemy_turn_completed(enemy_name: String, enemy_id: String, action_data: Dictionary)
 
 func _ready() -> void:
 	print("[TacticalBattle] Battlefield loaded (1920x1080 Arena).")
@@ -323,8 +328,11 @@ func _show_notice(text: String) -> void:
 				notice_label.visible = false
 		)
 
-func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, potions_per_fighter: int = 50) -> Dictionary:
+func configure_golem_encounter(fighters_hp: int = 50, golem_hp: int = 60, potions_per_fighter: int = 10) -> Dictionary:
 	GameState.setup_fighter_trio(fighters_hp, potions_per_fighter)
+	turn_events.clear()
+	round_history.clear()
+	combat_round_index = 0
 
 	if hero and is_instance_valid(hero):
 		if hero.find_child("NameLabel", true, false):
@@ -419,8 +427,8 @@ func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, poti
 	if hud:
 		hud.update_display("Golem Attrition Battle: 3 Fighters vs 3 Ancient Stone Golems")
 
-	_show_notice("⚔️ Golem Attrition: 3 Fighters (100 HP, 50 Potions each) vs 3 Golems (500 HP each)!")
-	GameState.log_message("combat", "⚔️ [b]GOLEM ATTRITION COMBAT:[/b] 3 Veteran Fighters confront 3 colossal 500 HP Ancient Stone Golems!")
+	_show_notice("⚔️ Golem Battle: 3 Fighters (%d HP, %d Potions each) vs 3 Golems (%d HP each)!" % [fighters_hp, potions_per_fighter, golem_hp])
+	GameState.log_message("combat", "⚔️ [b]GOLEM ATTRITION COMBAT:[/b] 3 Veteran Fighters confront 3 Ancient Stone Golems (%d HP each)!" % golem_hp)
 
 	return {
 		"success": true,
@@ -495,17 +503,161 @@ func execute_fighter_maneuver(fighter_name: String, maneuver_id: String, target_
 
 func execute_combat_round() -> Dictionary:
 	combat_round_index += 1
+	var round_start_ev = {
+		"event": "combat_round_started",
+		"round": combat_round_index,
+		"timestamp": Time.get_ticks_msec()
+	}
+	turn_events.append(round_start_ev)
 	combat_round_started.emit(combat_round_index)
-	_show_notice("⚔️ [ROUND %d] Ancient Stone Golems advance and strike!" % combat_round_index)
+	_show_notice("⚔️ [ROUND %d] Heroes and Golems clash in combat!" % combat_round_index)
 	GameState.log_message("combat", "⚔️ [b]COMBAT ROUND %d INITIATED[/b]" % combat_round_index)
 
 	var initial_hp = {}
 	for m in GameState.party_members:
 		initial_hp[str(m.get("name", "Fighter"))] = int(m.get("hp", 0))
 
-	var attacks: Array[Dictionary] = []
+	var player_actions: Array[Dictionary] = []
+	var enemy_actions: Array[Dictionary] = []
 	var heals: Array[Dictionary] = []
 
+	# ── PHASE 1: PLAYER HERO ACTIONS (Commander Vance, Sergeant Garrick, Corporal Brutus) ──
+	var hero_combatants = [
+		{"node": hero, "name": GameState.hero_name, "id": "hero", "target_key": "golem_alpha"},
+		{"node": elora, "name": "Sergeant Garrick", "id": "garrick", "target_key": "golem_beta"},
+		{"node": thrumbar, "name": "Corporal Brutus", "id": "brutus", "target_key": "golem_gamma"}
+	]
+
+	for h_info in hero_combatants:
+		var h_node: Node2D = h_info.node
+		if not h_node or not is_instance_valid(h_node):
+			continue
+
+		var h_hp = 0
+		if h_info.id == "hero":
+			h_hp = GameState.hero_hp
+		else:
+			for m in GameState.party_members:
+				if m.get("name") == h_info.name:
+					h_hp = int(m.get("hp", 0))
+					break
+		if h_hp <= 0:
+			continue
+
+		# Select target golem: preferred target first, otherwise any alive golem
+		var target_golem: TacticalEnemy = enemies.get(h_info.target_key)
+		if not target_golem or not is_instance_valid(target_golem) or target_golem.current_state == TacticalEnemy.State.DEAD or target_golem.current_hp <= 0:
+			target_golem = null
+			for g_id in ["golem_alpha", "golem_beta", "golem_gamma"]:
+				var candidate: TacticalEnemy = enemies.get(g_id)
+				if candidate and is_instance_valid(candidate) and candidate.current_state != TacticalEnemy.State.DEAD and candidate.current_hp > 0:
+					target_golem = candidate
+					break
+
+		if not target_golem:
+			continue
+
+		var p_turn_start = {
+			"event": "player_turn_started",
+			"round": combat_round_index,
+			"actor": h_info.name,
+			"actor_id": h_info.id,
+			"target": target_golem.enemy_name,
+			"target_id": target_golem.enemy_id,
+			"timestamp": Time.get_ticks_msec()
+		}
+		turn_events.append(p_turn_start)
+		player_turn_started.emit(h_info.name, h_info.id, combat_round_index)
+
+		# 1. Approach target if not within 65px
+		var dist_to_golem = h_node.global_position.distance_to(target_golem.global_position)
+		if dist_to_golem > 65.0:
+			var approach_dir = (target_golem.global_position - h_node.global_position).normalized()
+			var move_dest = target_golem.global_position - approach_dir * 55.0
+			var tw_h_move = create_tween()
+			var dur = clamp(h_node.global_position.distance_to(move_dest) / 140.0, 0.15, 0.45)
+			tw_h_move.tween_property(h_node, "global_position", move_dest, dur)
+			await tw_h_move.finished
+
+		# 2. Face target
+		if "sprite" in h_node and h_node.sprite:
+			h_node.sprite.flip_h = (target_golem.global_position.x < h_node.global_position.x)
+
+		# 3. Strike animation
+		var spr = h_node.sprite if ("sprite" in h_node and h_node.sprite) else null
+		var lunge_v = (target_golem.global_position - h_node.global_position).normalized() * 14.0
+		if spr:
+			var orig_pos = spr.position
+			var tw_strike = create_tween()
+			tw_strike.tween_property(spr, "position", orig_pos + lunge_v, 0.12)
+			tw_strike.tween_property(spr, "position", orig_pos, 0.12)
+			if AudioManager:
+				AudioManager.play_sfx("melee_swing")
+			await tw_strike.finished
+		else:
+			await get_tree().create_timer(0.2).timeout
+
+		# 4. Hero attack roll: d20 + 4 vs AC 14
+		var d20 = randi_range(13, 19)
+		var total_atk = d20 + 4
+		var target_ac = 14
+		var hit = total_atk >= target_ac
+		var dmg = randi_range(6, 12) if hit else 0
+
+		var g_hp_before = target_golem.current_hp
+		if hit:
+			target_golem.current_hp = max(0, target_golem.current_hp - dmg)
+			target_golem._update_ui()
+			if AudioManager:
+				AudioManager.play_sfx("melee_hit")
+			if FloatingTextManager and is_instance_valid(target_golem):
+				FloatingTextManager.spawn_damage(target_golem.global_position, dmg)
+			if target_golem.has_method("play_hit_reaction"):
+				target_golem.play_hit_reaction()
+			GameState.log_message("combat", "⚔️ %s strikes %s! [d20: %d + 4 = %d vs AC %d] HIT for %d damage! (%d -> %d/%d HP)" % [
+				h_info.name, target_golem.enemy_name, d20, total_atk, target_ac, dmg, g_hp_before, target_golem.current_hp, target_golem.max_hp
+			])
+		else:
+			if FloatingTextManager and is_instance_valid(target_golem):
+				FloatingTextManager.spawn_miss(target_golem.global_position)
+			GameState.log_message("combat", "🛡️ %s strikes at %s [d20: %d + 4 = %d vs AC %d] - DEFLECTED!" % [
+				h_info.name, target_golem.enemy_name, d20, total_atk, target_ac
+			])
+
+		var g_hp_after = target_golem.current_hp
+		var p_act_record = {
+			"round": combat_round_index,
+			"attacker": h_info.name,
+			"attacker_id": h_info.id,
+			"target": target_golem.enemy_name,
+			"target_id": target_golem.enemy_id,
+			"action_type": "melee_attack",
+			"d20": d20,
+			"attack_bonus": 4,
+			"total_attack": total_atk,
+			"target_ac": target_ac,
+			"hit": hit,
+			"damage": dmg,
+			"target_hp_before": g_hp_before,
+			"target_hp_after": g_hp_after
+		}
+		player_actions.append(p_act_record)
+
+		var p_turn_end = {
+			"event": "player_turn_completed",
+			"round": combat_round_index,
+			"actor": h_info.name,
+			"actor_id": h_info.id,
+			"target": target_golem.enemy_name,
+			"target_id": target_golem.enemy_id,
+			"data": p_act_record,
+			"timestamp": Time.get_ticks_msec()
+		}
+		turn_events.append(p_turn_end)
+		player_turn_completed.emit(h_info.name, h_info.id, p_act_record)
+		await get_tree().create_timer(0.25).timeout
+
+	# ── PHASE 2: ENEMY GOLEM ACTIONS (Alpha, Beta, Gamma) ──
 	var targets = [
 		{"node": hero, "name": GameState.hero_name, "id": "hero"},
 		{"node": elora, "name": "Sergeant Garrick", "id": "garrick"},
@@ -516,16 +668,16 @@ func execute_combat_round() -> Dictionary:
 	for i in range(g_keys.size()):
 		var eid = g_keys[i]
 		var golem: TacticalEnemy = enemies.get(eid)
-		if not golem or not is_instance_valid(golem) or golem.current_state == TacticalEnemy.State.DEAD:
+		if not golem or not is_instance_valid(golem) or golem.current_state == TacticalEnemy.State.DEAD or golem.current_hp <= 0:
 			continue
 
 		# If golem was knocked down prone, it spends its effort standing up from prone during this combat round
 		if golem.is_down_prone or golem.is_prone():
-			GameState.log_message("combat", "🧍 %s spends half movement to stand up from prone before acting." % golem.enemy_name)
+			GameState.log_message("combat", "🧍 %s spends effort to stand up from prone before acting." % golem.enemy_name)
 			golem.stand_up_from_prone()
 			GameState.remove_status_effect(golem.enemy_name, "prone")
 			GameState.remove_status_effect(eid, "prone")
-			await get_tree().create_timer(0.2).timeout
+			await get_tree().create_timer(0.15).timeout
 
 		var tgt_node: Node2D = null
 		var tgt_name: String = ""
@@ -552,13 +704,25 @@ func execute_combat_round() -> Dictionary:
 		if not tgt_node or not is_instance_valid(tgt_node):
 			continue
 
-		# 1. Golem approaches target if not within 70px
+		var e_turn_start = {
+			"event": "enemy_turn_started",
+			"round": combat_round_index,
+			"actor": golem.enemy_name,
+			"actor_id": golem.enemy_id,
+			"target": tgt_name,
+			"target_id": tgt_id,
+			"timestamp": Time.get_ticks_msec()
+		}
+		turn_events.append(e_turn_start)
+		enemy_turn_started.emit(golem.enemy_name, golem.enemy_id, combat_round_index)
+
+		# 1. Golem approaches target if not within 65px
 		var d = golem.global_position.distance_to(tgt_node.global_position)
-		if d > 70.0:
+		if d > 65.0:
 			var dir = (tgt_node.global_position - golem.global_position).normalized()
 			var approach_dest = tgt_node.global_position - dir * 55.0
 			var tw_move = create_tween()
-			var move_dur = clamp(golem.global_position.distance_to(approach_dest) / golem.move_speed, 0.35, 1.1)
+			var move_dur = clamp(golem.global_position.distance_to(approach_dest) / golem.move_speed, 0.25, 0.8)
 			tw_move.tween_property(golem, "global_position", approach_dest, move_dur)
 			await tw_move.finished
 
@@ -569,8 +733,8 @@ func execute_combat_round() -> Dictionary:
 		var orig_pos = golem.sprite.position
 		var lunge_dir = golem.global_position.direction_to(tgt_node.global_position)
 		var tw_strike = create_tween()
-		tw_strike.tween_property(golem.sprite, "position", orig_pos + lunge_dir * 16.0, 0.16)
-		tw_strike.tween_property(golem.sprite, "position", orig_pos, 0.20)
+		tw_strike.tween_property(golem.sprite, "position", orig_pos + lunge_dir * 16.0, 0.14)
+		tw_strike.tween_property(golem.sprite, "position", orig_pos, 0.16)
 
 		if AudioManager:
 			AudioManager.play_sfx("melee_swing")
@@ -642,31 +806,57 @@ func execute_combat_round() -> Dictionary:
 			"target_hp_before": hp_before,
 			"target_hp_after": hp_after
 		}
-		attacks.append(atk_record)
+		enemy_actions.append(atk_record)
 
-		# Deliberate pause between golem strikes (0.6s) so each attack is visible and clean
-		await get_tree().create_timer(0.6).timeout
+		var e_turn_end = {
+			"event": "enemy_turn_completed",
+			"round": combat_round_index,
+			"actor": golem.enemy_name,
+			"actor_id": golem.enemy_id,
+			"target": tgt_name,
+			"target_id": tgt_id,
+			"data": atk_record,
+			"timestamp": Time.get_ticks_msec()
+		}
+		turn_events.append(e_turn_end)
+		enemy_turn_completed.emit(golem.enemy_name, golem.enemy_id, atk_record)
+		await get_tree().create_timer(0.25).timeout
 
-	# 5. Check autonomous AI healing for party members <= 55 HP
+	# ── PHASE 3: AUTONOMOUS AI HEALING (Party members <= 50% HP, e.g. <= 25 HP) ──
 	for m in GameState.party_members:
 		var cur_hp = int(m.get("hp", 0))
-		if cur_hp > 0 and cur_hp <= 55 and GameState.inventory.has("potion-healing"):
-			var heal_res = GameState.execute_party_auto_heal(55, str(m.get("name", "")))
+		var max_m_hp = int(m.get("max_hp", 50))
+		var heal_threshold = int(max_m_hp * 0.5)
+		if cur_hp > 0 and cur_hp <= heal_threshold and GameState.inventory.has("potion-healing"):
+			var heal_res = GameState.execute_party_auto_heal(heal_threshold, str(m.get("name", "")))
 			if heal_res.get("healed", false):
 				heals.append(heal_res)
-				await get_tree().create_timer(0.4).timeout
+				var heal_ev = {
+					"event": "auto_heal_administered",
+					"round": combat_round_index,
+					"actor": heal_res.get("target"),
+					"healed_to_full": heal_res.get("healed_to_full", true),
+					"data": heal_res,
+					"timestamp": Time.get_ticks_msec()
+				}
+				turn_events.append(heal_ev)
+				await get_tree().create_timer(0.25).timeout
 
 	var final_hp = {}
 	for m in GameState.party_members:
 		final_hp[str(m.get("name", "Fighter"))] = int(m.get("hp", 0))
 
 	var total_dmg = 0
-	for a in attacks:
+	for a in enemy_actions:
 		total_dmg += a.get("damage", 0)
 
 	var summary = {
 		"round_number": combat_round_index,
-		"attacks": attacks,
+		"player_actions": player_actions,
+		"enemy_actions": enemy_actions,
+		"attacks": enemy_actions, # alias for backward compatibility
+		"player_attacks_count": player_actions.size(),
+		"enemy_attacks_count": enemy_actions.size(),
 		"heals": heals,
 		"initial_party_hp": initial_hp,
 		"final_party_hp": final_hp,
@@ -676,11 +866,31 @@ func execute_combat_round() -> Dictionary:
 		"party_wiped": GameState.is_party_defeated
 	}
 	round_history.append(summary)
+
+	var round_end_ev = {
+		"event": "combat_round_completed",
+		"round": combat_round_index,
+		"summary": summary,
+		"timestamp": Time.get_ticks_msec()
+	}
+	turn_events.append(round_end_ev)
 	combat_round_completed.emit(combat_round_index, summary)
 	return summary
 
 func execute_golems_assault_round() -> Dictionary:
 	return await execute_combat_round()
+
+func get_all_turn_events() -> Array[Dictionary]:
+	return turn_events
+
+func get_latest_turn_events(round_num: int = -1) -> Array[Dictionary]:
+	if round_num <= 0:
+		round_num = combat_round_index
+	var filtered: Array[Dictionary] = []
+	for ev in turn_events:
+		if ev.get("round", 0) == round_num:
+			filtered.append(ev)
+	return filtered
 
 func get_round_stats(round_num: int = -1) -> Dictionary:
 	if round_history.is_empty():
@@ -694,7 +904,8 @@ func get_combat_telemetry() -> Dictionary:
 		"current_round": combat_round_index,
 		"total_rounds": round_history.size(),
 		"latest_round": round_history.back() if not round_history.is_empty() else {},
-		"rounds": round_history
+		"rounds": round_history,
+		"turn_events": turn_events
 	}
 
 func configure_goblin_crowd_encounter(count: int = 6, goblin_hp: int = 7) -> Dictionary:

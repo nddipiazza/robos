@@ -1126,7 +1126,7 @@ func setup_tactical_party() -> void:
 	party_formation_changed.emit(current_formation)
 	party_selection_changed.emit(selected_party_indices)
 
-func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) -> void:
+func setup_fighter_trio(fighter_hp: int = 50, potions_per_fighter: int = 10) -> void:
 	is_party_defeated = false
 	hero_name = "Commander Vance"
 	hero_class = "fighter"
@@ -1201,7 +1201,7 @@ func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) ->
 	party_changed.emit()
 	party_selection_changed.emit(selected_party_indices)
 	hero_damaged.emit(hero_hp, hero_max_hp)
-	log_message("system", "⚔️ [TRIO DEPLOYED] 3 Hero Fighters (100 HP each, 50 Potions each in toolbelts) enter the fray!")
+	log_message("system", "⚔️ [TRIO DEPLOYED] 3 Hero Fighters (%d HP each, %d Potions each in toolbelts) enter the fray!" % [fighter_hp, potions_per_fighter])
 
 func execute_party_auto_heal(threshold_hp: int = 55, preferred_target: String = "") -> Dictionary:
 	var injured_member: Dictionary = {}
@@ -1227,10 +1227,11 @@ func execute_party_auto_heal(threshold_hp: int = 55, preferred_target: String = 
 	inventory.erase("potion-healing")
 	inventory_changed.emit()
 
-	var heal_roll = randi_range(2, 4) + randi_range(2, 4) + 4 # 8-12 HP restored
 	var t_name = str(injured_member.get("name", "Fighter"))
 	var prev_hp = int(injured_member.get("hp", 0))
-	var max_hp = int(injured_member.get("max_hp", 100))
+	var max_hp = int(injured_member.get("max_hp", 50))
+	# Superior Healing Potion: heals the hero to full health
+	var heal_roll = max(max_hp - prev_hp, 50)
 	var new_hp = min(max_hp, prev_hp + heal_roll)
 	injured_member["hp"] = new_hp
 
@@ -1257,12 +1258,13 @@ func execute_party_auto_heal(threshold_hp: int = 55, preferred_target: String = 
 		AudioManager.play_sfx("wood_open")
 
 	var potions_left = inventory.count("potion-healing")
-	log_message("item", "🧪 [AI HEAL] %s drinks Healing Potion! Restored %d HP (%d -> %d/%d). [%d Potions remaining]" % [
+	log_message("item", "🧪 [AI HEAL] %s drinks Superior Healing Potion! Restored %d HP (%d -> %d/%d) to full health! [%d Potions remaining]" % [
 		t_name, heal_roll, prev_hp, new_hp, max_hp, potions_left
 	])
 
 	return {
 		"healed": true,
+		"healed_to_full": (new_hp == max_hp),
 		"target": t_name,
 		"healed_amount": heal_roll,
 		"target_hp_before": prev_hp,

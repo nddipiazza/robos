@@ -1395,7 +1395,7 @@ def step_isolated_golem_battle(context, hp, golem_hp):
         "args": {
             "fighters_hp": hp,
             "golem_hp": golem_hp,
-            "potions_per_fighter": 50
+            "potions_per_fighter": 10
         }
     })
     time.sleep(1.0)
@@ -1410,6 +1410,7 @@ def step_check_golems_hp(context, count, hp):
 
 @then('each of the {count:d} hero fighters has {hp:d} HP and {potions:d} healing potions')
 def step_check_fighters_hp_potions(context, count, hp, potions):
+    context.starting_potions = count * potions
     state = api_get(context.web_port, "/api/v1/state")
     party = state.get("party_members", state.get("party", []))
     assert len(party) >= count, f"Expected at least {count} party members, got {len(party)}"
@@ -1581,6 +1582,45 @@ def step_verify_telemetry_round(context, round_num):
     assert len(found.get("attacks", [])) >= 3, f"Expected at least 3 golem attacks in round {round_num}, got {found.get('attacks')}"
     context.active_round_summary = found
 
+@then('each hero performed an action and each enemy performed an action in round {round_num:d}')
+def step_verify_symmetrical_actions_in_round(context, round_num):
+    summary = getattr(context, "active_round_summary", None)
+    if not summary or summary.get("round_number") != round_num:
+        stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+        rounds = stats.get("rounds", [])
+        summary = next((r for r in rounds if r.get("round_number") == round_num), None)
+    assert summary is not None, f"Round {round_num} summary not found"
+    player_actions = summary.get("player_actions", [])
+    enemy_actions = summary.get("enemy_actions", [])
+    assert len(player_actions) == 3, f"Expected 3 player actions, got {len(player_actions)}: {player_actions}"
+    assert len(enemy_actions) == 3, f"Expected 3 enemy actions, got {len(enemy_actions)}: {enemy_actions}"
+    hero_names = {a.get("attacker") for a in player_actions}
+    assert "Commander Vance" in hero_names, f"Commander Vance missing from hero actions: {hero_names}"
+    assert "Sergeant Garrick" in hero_names, f"Sergeant Garrick missing from hero actions: {hero_names}"
+    assert "Corporal Brutus" in hero_names, f"Corporal Brutus missing from hero actions: {hero_names}"
+
+@then('the number of enemy attacks equals the number of player attacks')
+def step_verify_equal_attacks(context):
+    summary = getattr(context, "active_round_summary", None)
+    assert summary is not None, "No active round summary found"
+    player_count = summary.get("player_attacks_count", len(summary.get("player_actions", [])))
+    enemy_count = summary.get("enemy_attacks_count", len(summary.get("enemy_actions", [])))
+    assert player_count == enemy_count, f"Attack count mismatch: player {player_count} != enemy {enemy_count}"
+    assert player_count > 0, f"Expected at least 1 attack, got {player_count}"
+
+@then('the hooked turn events record all {player_count:d} player turns and {enemy_count:d} enemy turns')
+def step_verify_turn_events_hooked(context, player_count, enemy_count):
+    res = api_get(context.web_port, "/api/v1/combat/turn_events")
+    turn_events = res.get("turn_events", [])
+    player_start_events = [e for e in turn_events if e.get("event") == "player_turn_started"]
+    player_end_events = [e for e in turn_events if e.get("event") == "player_turn_completed"]
+    enemy_start_events = [e for e in turn_events if e.get("event") == "enemy_turn_started"]
+    enemy_end_events = [e for e in turn_events if e.get("event") == "enemy_turn_completed"]
+    assert len(player_start_events) >= player_count, f"Expected >= {player_count} player_turn_started events, got {len(player_start_events)}"
+    assert len(player_end_events) >= player_count, f"Expected >= {player_count} player_turn_completed events, got {len(player_end_events)}"
+    assert len(enemy_start_events) >= enemy_count, f"Expected >= {enemy_count} enemy_turn_started events, got {len(enemy_start_events)}"
+    assert len(enemy_end_events) >= enemy_count, f"Expected >= {enemy_count} enemy_turn_completed events, got {len(enemy_end_events)}"
+
 @then('each golem strike deals between {min_dmg:d} and {max_dmg:d} damage on hit')
 def step_verify_golem_damage_range(context, min_dmg, max_dmg):
     summary = getattr(context, "active_round_summary", None)
@@ -1610,10 +1650,11 @@ def step_verify_exact_hp_loss(context):
         dmg_per_target[t_name] = dmg_per_target.get(t_name, 0) + a.get("damage", 0)
 
     for t_name, total_dmg in dmg_per_target.items():
-        init_val = initial_hp.get(t_name, 100)
+        init_val = initial_hp.get(t_name, 50)
         final_val = final_hp.get(t_name, init_val)
-        assert final_val == init_val - total_dmg, (
-            f"Cumulative damage mismatch for {t_name}: {final_val} != {init_val} - {total_dmg}"
+        total_healed = sum(h.get("healed_amount", 0) for h in summary.get("heals", []) if h.get("target") == t_name)
+        assert final_val == init_val - total_dmg + total_healed, (
+            f"Cumulative damage mismatch for {t_name}: {final_val} != {init_val} - {total_dmg} + {total_healed}"
         )
 
     state = api_get(context.web_port, "/api/v1/state")
@@ -1629,18 +1670,13 @@ def step_fight_rounds_until_low_hp(context, threshold):
     max_rounds = 10
     rounds_executed = 0
     while rounds_executed < max_rounds:
+        api_post(context.web_port, "/api/v1/action", {"action": "execute_combat_round"})
+        rounds_executed += 1
+        time.sleep(0.5)
         stats = api_get(context.web_port, "/api/v1/combat/round_stats")
         has_heals = any(len(r.get("heals", [])) > 0 for r in stats.get("rounds", []))
         if has_heals:
             break
-        state = api_get(context.web_port, "/api/v1/state")
-        party = state.get("party_members", [])
-        any_low = any(0 < int(m.get("hp", 0)) <= threshold for m in party[:3])
-        if any_low:
-            break
-        api_post(context.web_port, "/api/v1/action", {"action": "execute_combat_round"})
-        rounds_executed += 1
-        time.sleep(0.4)
 
 @then('the autonomous party AI automatically administers healing potions from their toolbelts')
 def step_check_auto_heal_administered(context):
@@ -1650,6 +1686,19 @@ def step_check_auto_heal_administered(context):
     stats = api_get(context.web_port, "/api/v1/combat/round_stats")
     has_heals = any(len(r.get("heals", [])) > 0 for r in stats.get("rounds", []))
     assert heal_logged or has_heals, f"Expected AI heal in activity log or round telemetry. History: {history[-10:]}"
+
+@then('the healing potions restore injured fighters to full health')
+@then('the autonomous party AI restores fighters to full health')
+def step_verify_healed_to_full(context):
+    stats = api_get(context.web_port, "/api/v1/combat/round_stats")
+    all_heals = []
+    for r in stats.get("rounds", []):
+        all_heals.extend(r.get("heals", []))
+    assert len(all_heals) > 0, "No heal events found in round stats"
+    for h in all_heals:
+        cur_hp = h.get("target_hp_after", h.get("current_hp", 0))
+        max_hp = h.get("max_hp", 50)
+        assert cur_hp == max_hp, f"Fighter was not restored to full HP ({cur_hp}/{max_hp}) in {h}"
 
 @then('the hooked round events verify the health restoration and potion consumption')
 def step_verify_heals_telemetry(context):
@@ -1663,7 +1712,8 @@ def step_verify_heals_telemetry(context):
         assert h.get("target_hp_after", 0) > h.get("target_hp_before", 0), f"Expected HP to increase after heal: {h}"
     state = api_get(context.web_port, "/api/v1/state")
     current_potions = state.get("inventory", []).count("potion-healing")
-    expected_potions = 150 - len(all_heals)
+    starting_pots = getattr(context, "starting_potions", 30)
+    expected_potions = starting_pots - len(all_heals)
     assert current_potions == expected_potions, f"Expected {expected_potions} potions left, got {current_potions}"
 
 @then('all 3 hero fighters are still alive and healthy')
