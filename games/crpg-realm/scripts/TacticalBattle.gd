@@ -1021,14 +1021,16 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 			t_wait -= get_process_delta_time()
 
 	var res = {}
-	if spell_id in ["fireball", "burning-hands", "thunderwave", "lightning-bolt", "sleep", "blizzard"]:
+	if spell_id in ["fireball", "burning-hands", "thunderwave", "lightning-bolt", "sleep", "blizzard", "stinking-cloud"]:
 		var dc = 14
 		var stat = "DEX"
 		var rad = 180.0
 		if spell_id == "burning-hands":
 			rad = 150.0
-		elif spell_id == "blizzard":
+		elif spell_id in ["blizzard", "stinking-cloud"]:
 			rad = 140.0
+			if spell_id == "stinking-cloud":
+				stat = "CON"
 		elif spell_id == "thunderwave":
 			stat = "CON"
 			rad = 150.0
@@ -1056,6 +1058,17 @@ func spawn_ice_patch(pos: Vector2, rad: float = 140.0) -> Node2D:
 		add_child(ice)
 		GameState.log_message("combat", "❄️ A freezing ice patch forms across the arena floor at (%d, %d)!" % [int(pos.x), int(pos.y)])
 		return ice
+	return null
+
+func spawn_stinking_cloud(pos: Vector2, rad: float = 140.0) -> Node2D:
+	var cloud_scene = load("res://scenes/components/StinkingCloud.tscn")
+	if cloud_scene:
+		var cloud = cloud_scene.instantiate()
+		cloud.global_position = pos
+		cloud.radius = rad
+		add_child(cloud)
+		GameState.log_message("combat", "🤢 A billowing volumetric stinking cloud expands across the battlefield at (%d, %d)!" % [int(pos.x), int(pos.y)])
+		return cloud
 	return null
 
 

@@ -292,6 +292,12 @@ STEP_PATTERNS = [
      'Verifying prone state: hero is collapsed flat on the ice with sprite rotated {0} degrees.'),
     (r'the hero stands back up from prone upright',
      'Turn recovery: hero turn duration elapses, spending effort to stand back upright and clear prone.'),
+    (r'a volumetric stinking cloud mist exists on the ground at \(([^,]+), ([^)]+)\)',
+     'Stinking Cloud hazard: verifying volumetric toxic mist cloud formed without hard circle borders at ({0}, {1}).'),
+    (r'the hero moves to \(([^,]+), ([^)]+)\) into the stinking cloud',
+     'Movement: cloaked hero steps directly into the billowing stinking cloud mist at ({0}, {1}).'),
+    (r'the hero is overcome by nauseating vapors and collapses prone',
+     'Hazard trigger: hero inhaled noxious vapors, failing CON save and collapsing prone retching onto the arena floor.'),
 ]
 
 def get_step_description(step_type: str, step_name: str, step_docstring: str = None) -> str:

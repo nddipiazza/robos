@@ -1100,13 +1100,17 @@ func _get_full_game_state() -> Dictionary:
 	var hero_pos = [hero_node.global_position.x, hero_node.global_position.y] if hero_node else [0.0, 0.0]
 
 	var scene_ice_patches: Array[Dictionary] = []
+	var scene_stinking_clouds: Array[Dictionary] = []
 	if cur_scene:
 		for child in cur_scene.get_children():
 			if child.has_method("get_ice_patch_info"):
 				scene_ice_patches.append(child.get_ice_patch_info())
+			if child.has_method("get_stinking_cloud_info"):
+				scene_stinking_clouds.append(child.get_stinking_cloud_info())
 
 	return {
 		"ice_patches": scene_ice_patches,
+		"stinking_clouds": scene_stinking_clouds,
 		"traps": scene_traps,
 		"appearing_traps": appearing_traps,
 		"active_map_traps": appearing_traps,

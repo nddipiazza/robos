@@ -512,6 +512,8 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		await _spawn_rallying_stomp_vfx(global_position, on_cast_callback)
 	elif spell_id == "blizzard":
 		await _spawn_blizzard_vfx(target_pos, on_cast_callback)
+	elif spell_id in ["stinking-cloud", "stinking_cloud"]:
+		await _spawn_stinking_cloud_vfx(target_pos, on_cast_callback)
 	elif spell_id == "magic-missile":
 		for dart_idx in range(3):
 			_spawn_magic_missile_dart(target_pos, dart_idx, func():
@@ -1237,35 +1239,93 @@ func _spawn_blizzard_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	vfx.top_level = true
 	vfx.global_position = target_pos
 
+	# Ground freeze flash polygon (flat on floor)
+	var floor_flash = Polygon2D.new()
+	var flash_pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		flash_pts.append(Vector2(cos(a) * 140.0, sin(a) * 90.0))
+	floor_flash.polygon = flash_pts
+	floor_flash.color = Color(0.7, 0.92, 1.4, 0.65)
+	vfx.add_child(floor_flash)
+
+	# Ground frost perimeter ring (flat on floor)
 	var ring = Line2D.new()
 	ring.width = 4.0
 	ring.default_color = Color(0.65, 0.9, 1.4, 0.9)
 	var pts: PackedVector2Array = []
 	for i in range(24):
 		var a = i * (PI * 2.0 / 24.0)
-		pts.append(Vector2(cos(a), sin(a)) * 140.0)
+		pts.append(Vector2(cos(a) * 140.0, sin(a) * 90.0))
 	pts.append(pts[0])
 	ring.points = pts
 	vfx.add_child(ring)
 
+	# Ground frost fractures creeping horizontally across the floor tiles
 	for k in range(12):
-		var shard = Polygon2D.new()
-		shard.color = Color(0.8, 0.95, 1.5, 0.9)
-		shard.polygon = PackedVector2Array([Vector2(-4, -14), Vector2(4, -14), Vector2(0, 14)])
-		var rand_offset = Vector2(randf_range(-120, 120), randf_range(-80, 80))
-		shard.position = rand_offset + Vector2(0, -180)
+		var shard = Line2D.new()
+		shard.width = 2.5
+		shard.default_color = Color(0.85, 0.95, 1.5, 0.95)
+		var angle = k * (PI * 2.0 / 12.0) + randf_range(-0.15, 0.15)
+		var end_pt = Vector2(cos(angle) * randf_range(80, 135), sin(angle) * randf_range(50, 85))
+		shard.points = PackedVector2Array([Vector2.ZERO, end_pt * 0.4, end_pt])
 		vfx.add_child(shard)
 		var s_tw = create_tween()
-		s_tw.tween_property(shard, "position", rand_offset, 0.35 + (k * 0.03)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		s_tw.parallel().tween_property(shard, "rotation_degrees", randf_range(-180, 180), 0.4)
-		s_tw.tween_property(shard, "modulate:a", 0.0, 0.25)
+		s_tw.tween_property(shard, "scale", Vector2(1.1, 1.1), 0.4)
+		s_tw.parallel().tween_property(shard, "modulate:a", 0.0, 0.5)
 
 	get_parent().add_child(vfx)
 
 	var tw = create_tween()
-	tw.parallel().tween_property(ring, "scale", Vector2(1.15, 1.15), 0.7)
-	tw.parallel().tween_property(ring, "rotation_degrees", 90.0, 0.7)
-	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.7)
+	tw.parallel().tween_property(floor_flash, "scale", Vector2(1.15, 1.15), 0.6)
+	tw.parallel().tween_property(floor_flash, "modulate:a", 0.0, 0.6)
+	tw.parallel().tween_property(ring, "scale", Vector2(1.15, 1.15), 0.6)
+	tw.parallel().tween_property(ring, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(vfx.queue_free)
+
+	if AudioManager:
+		AudioManager.play_sfx("spell_cast")
+	await get_tree().create_timer(0.35).timeout
+	if AudioManager:
+		AudioManager.play_sfx("spell_impact")
+	if on_impact.is_valid():
+		on_impact.call()
+	await get_tree().create_timer(0.4).timeout
+
+func _spawn_stinking_cloud_vfx(target_pos: Vector2, on_impact: Callable) -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = target_pos
+
+	# Billowing volumetric toxic vapor cloud (multi-lobed soft gas puffs, no hard outline circle)
+	var puff_colors = [
+		Color(0.78, 0.88, 0.25, 0.35),
+		Color(0.68, 0.82, 0.18, 0.40),
+		Color(0.85, 0.92, 0.30, 0.30),
+		Color(0.58, 0.75, 0.15, 0.38)
+	]
+	for k in range(10):
+		var puff = Polygon2D.new()
+		var p_pts: PackedVector2Array = []
+		var p_rad = randf_range(45.0, 75.0)
+		for i in range(16):
+			var a = i * (PI * 2.0 / 16.0)
+			var r = p_rad * randf_range(0.85, 1.15)
+			p_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.75))
+		puff.polygon = p_pts
+		puff.color = puff_colors[k % puff_colors.size()]
+		var offset = Vector2(randf_range(-90, 90), randf_range(-55, 55))
+		puff.position = offset
+		vfx.add_child(puff)
+
+		var p_tw = create_tween()
+		p_tw.tween_property(puff, "scale", Vector2(1.35, 1.35), 0.8).from(Vector2(0.3, 0.3))
+		p_tw.parallel().tween_property(puff, "modulate:a", 0.0, 0.9).from(1.0)
+
+	get_parent().add_child(vfx)
+
+	var tw = create_tween()
+	tw.tween_interval(0.9)
 	tw.tween_callback(vfx.queue_free)
 
 	if AudioManager:

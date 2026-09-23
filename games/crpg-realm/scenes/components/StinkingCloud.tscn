@@ -1,0 +1,42 @@
+[gd_scene load_steps=3 format=3 uid="uid://stinkingcloud01"]
+
+[ext_resource type="Script" path="res://scripts/StinkingCloud.gd" id="1_cloud"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cloud"]
+radius = 140.0
+
+[node name="StinkingCloud" type="Area2D"]
+collision_layer = 1
+collision_mask = 1
+input_pickable = false
+script = ExtResource("1_cloud")
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -140.0
+offset_right = 120.0
+offset_bottom = -120.0
+theme_override_colors/font_color = Color(0.85, 0.95, 0.3, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "🤢 [MIST] Stinking Cloud"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_cloud")
+
+[node name="MistParticles" type="CPUParticles2D" parent="."]
+amount = 36
+lifetime = 2.4
+emission_shape = 1
+emission_sphere_radius = 115.0
+spread = 180.0
+gravity = Vector2(0, -6)
+initial_velocity_min = 8.0
+initial_velocity_max = 24.0
+angular_velocity_min = -25.0
+angular_velocity_max = 25.0
+scale_amount_min = 2.5
+scale_amount_max = 5.0
+color = Color(0.78, 0.90, 0.25, 0.45)

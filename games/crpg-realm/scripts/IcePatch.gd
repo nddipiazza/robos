@@ -38,7 +38,7 @@ func _rebuild_visuals() -> void:
 	var num_pts = 24
 	for i in range(num_pts):
 		var angle = i * (PI * 2.0 / num_pts)
-		pts.append(Vector2(cos(angle), sin(angle)) * radius)
+		pts.append(Vector2(cos(angle) * radius, sin(angle) * radius * 0.65))
 
 	if visual_poly:
 		visual_poly.polygon = pts
@@ -58,7 +58,7 @@ func _rebuild_visuals() -> void:
 
 	if status_label:
 		status_label.text = "❄️ [ICE] " + ice_name
-		status_label.position = Vector2(-120.0, -radius - 22.0)
+		status_label.position = Vector2(-120.0, -radius * 0.65 - 22.0)
 
 	if particles:
 		particles.emission_sphere_radius = radius * 0.85

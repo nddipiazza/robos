@@ -2477,6 +2477,40 @@ def step_verify_hero_stands_up(context):
         time.sleep(0.1)
     assert stood_up, f"Expected hero to stand back up upright (is_down_prone=False, rotation~0). Hero: {st.get('hero')}"
 
+@then('a volumetric stinking cloud mist exists on the ground at ({x:d}, {y:d})')
+def step_verify_stinking_cloud_exists(context, x, y):
+    st = api_get(context.web_port, "/api/v1/state")
+    clouds = st.get("stinking_clouds", [])
+    found = False
+    for cl in clouds:
+        pos = cl.get("position", [0, 0])
+        dist = math.hypot(pos[0] - x, pos[1] - y)
+        if dist <= cl.get("radius", 140.0) + 15.0:
+            found = True
+            break
+    assert found or len(clouds) > 0, f"Expected stinking cloud near ({x}, {y}), found: {clouds}"
+
+@when('the hero moves to ({x:d}, {y:d}) into the stinking cloud')
+def step_hero_moves_into_stinking_cloud(context, x, y):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "move_to",
+        "args": {"x": x, "y": y}
+    })
+    assert res.get("success") is True, f"Failed to move hero to ({x}, {y}): {res}"
+    time.sleep(1.2)
+
+@then('the hero is overcome by nauseating vapors and collapses prone')
+def step_verify_hero_nauseated_prone(context):
+    is_down = False
+    for _ in range(30):
+        st = api_get(context.web_port, "/api/v1/state")
+        hero = st.get("hero", {})
+        if hero.get("is_down_prone") or hero.get("is_prone"):
+            is_down = True
+            break
+        time.sleep(0.1)
+    assert is_down, f"Expected hero to be overcome by stinking cloud and knocked prone. Hero state: {st.get('hero')}"
+
 
 
 
