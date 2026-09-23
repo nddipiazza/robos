@@ -86,7 +86,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {stats && (
+      {stats && stats.bands >= 10 && (
         <section className="stats" aria-label="Live numbers">
           <div className="wrap stats-grid">
             <div><strong data-testid="stat-bands">{stats.bands}</strong><span>bands</span></div>
