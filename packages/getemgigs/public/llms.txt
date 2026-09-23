@@ -1,0 +1,25 @@
+# Get 'Em Gigs (getemgigs.com)
+
+> Get 'Em Gigs helps local bands fill the room. Two bands make a "Buddy Gig" deal — "I'll come to your gig if you come to mine" — and each locks a small refundable deposit. At the show the attendee shows a rotating check-in QR code and the band that's playing scans it (Venmo-style); the deposit is refunded on the spot. Anyone who bails forfeits their deposit to the band they stood up at the next-morning settlement. Venue Stay-To-Play replaces pay-to-play: bands commit a few tickets to another band's show at the same venue instead of buying tickets to their own.
+
+Key facts:
+- Free to join. Public beta: deposits use "gig credits" (every band starts with $100); no real card payments yet.
+- Deposits are $10–$100 per deal. The higher of the two gigs' deposits is used.
+- Check-in window: from doors (1 hour before start) until 5 hours after. Codes rotate every 30 seconds.
+- If an attendee opened their code at the show but the host never scanned it, the deposit is simply returned (no payout).
+- No location tracking; the camera is only used on-device to read QR codes.
+- Phone-first web app; add getemgigs.com to your home screen.
+
+## Main pages
+- [Home](https://www.getemgigs.com/): what Buddy Gigs and Stay-To-Play are, FAQ
+- [Find gigs](https://www.getemgigs.com/gigs): upcoming local shows, filterable by city (`/gigs?city=Austin`)
+- [Stay-To-Play](https://www.getemgigs.com/stay-to-play): how the pay-to-play alternative works and partner venues
+- [Sign up](https://www.getemgigs.com/signup): create a free band account
+- [Sitemap](https://www.getemgigs.com/sitemap.xml): every public page and upcoming gig
+
+## Policies
+- [Terms](https://www.getemgigs.com/terms)
+- [Privacy](https://www.getemgigs.com/privacy)
+
+## Optional
+- [How it's built](https://rowbose.com/projects/getemgigs/): architecture, check-in design and end-to-end test videos

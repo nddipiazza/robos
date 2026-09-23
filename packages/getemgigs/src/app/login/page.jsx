@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import { LoginForm } from '@/components/forms';
 
-export const metadata = { title: 'Log in' };
+export const metadata = { title: 'Log in', alternates: { canonical: '/login' }, robots: { index: false, follow: true } };
 
 export default async function LoginPage({ searchParams }) {
   const sp = await searchParams;

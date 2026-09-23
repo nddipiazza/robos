@@ -2,24 +2,79 @@ import './globals.css';
 import Link from 'next/link';
 import { currentUser } from '@/lib/session';
 import CaptchaScript from '@/components/CaptchaScript';
+import JsonLd from '@/components/JsonLd';
+import { SITE_URL, SITE_NAME_ASCII, DESCRIPTION, SHORT_DESCRIPTION, KEYWORDS } from '@/lib/site';
 
 export const metadata = {
-  metadataBase: new URL('https://www.getemgigs.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Get 'Em Gigs — fill the room with Buddy Gigs",
+    default: "Get 'Em Gigs — Buddy Gigs for local bands | Fill the room, kill pay-to-play",
     template: "%s · Get 'Em Gigs",
   },
-  description:
-    "Local bands trade attendance: I'll come to your show if you come to mine. Deposits keep everyone honest — get scanned in at the door to get yours back; bail and it pays the band you stood up.",
+  description: DESCRIPTION,
+  applicationName: SITE_NAME_ASCII,
+  keywords: KEYWORDS,
+  authors: [{ name: SITE_NAME_ASCII, url: SITE_URL }],
+  creator: SITE_NAME_ASCII,
+  publisher: SITE_NAME_ASCII,
+  category: 'music',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: "Get 'Em Gigs — The Gig Bandit",
-    description: "Buddy Gigs and Stay-To-Play for local bands. Fill rooms, kill pay-to-play.",
-    url: 'https://www.getemgigs.com',
-    siteName: "Get 'Em Gigs",
     type: 'website',
-    images: [{ url: '/og.png', width: 1200, height: 630 }],
+    siteName: SITE_NAME_ASCII,
+    locale: 'en_US',
+    url: SITE_URL,
+    title: "Get 'Em Gigs — Fill the room. Kill pay-to-play.",
+    description: SHORT_DESCRIPTION,
   },
-  icons: { icon: '/icon.svg' },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Get 'Em Gigs — Fill the room. Kill pay-to-play.",
+    description: SHORT_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+  },
+  formatDetection: { telephone: false, email: false, address: false },
+  appleWebApp: { capable: true, title: SITE_NAME_ASCII, statusBarStyle: 'black-translucent' },
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { other: { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } } : {}),
+  },
+};
+
+const ORG_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#org`,
+      name: SITE_NAME_ASCII,
+      alternateName: ['Get Em Gigs', 'The Gig Bandit', 'getemgigs'],
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon-512.png`,
+      description: SHORT_DESCRIPTION,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      name: SITE_NAME_ASCII,
+      url: SITE_URL,
+      publisher: { '@id': `${SITE_URL}/#org` },
+      inLanguage: 'en-US',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/gigs?city={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
 };
 
 export const viewport = {
@@ -35,6 +90,8 @@ export default async function RootLayout({ children }) {
     <html lang="en">
       <head>
         <CaptchaScript />
+        <link rel="alternate" type="text/plain" title="LLM-readable site summary" href="/llms.txt" />
+        <JsonLd data={ORG_LD} />
       </head>
       <body className={user ? 'has-tabbar' : ''}>
         <a href="#main" className="skip">Skip to content</a>

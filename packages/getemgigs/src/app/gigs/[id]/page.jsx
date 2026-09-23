@@ -5,13 +5,75 @@ import { getGig, listGigs, stayCommitmentsForGig } from '@/lib/services';
 import { money } from '@/lib/format';
 import LocalTime from '@/components/LocalTime';
 import { CancelGigButton, ProposeForm, StayForm } from '@/components/forms';
+import JsonLd from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
+
+function gigWhen(iso) {
+  return new Date(iso).toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function gigIsOver(gig) {
+  return new Date(gig.starts_at).getTime() + 5 * 3600 * 1000 < Date.now();
+}
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const gig = await getGig(id).catch(() => null);
-  return { title: gig ? `${gig.title} — ${gig.band_name}` : 'Gig' };
+  if (!gig) return { title: 'Gig not found', robots: { index: false } };
+  const title = `${gig.title} — ${gig.band_name} at ${gig.venue_name}, ${gig.venue_city}`;
+  const description = `${gig.band_name}${gig.band_genre ? ` (${gig.band_genre})` : ''} plays ${gig.venue_name} in ${gig.venue_city} on ${gigWhen(gig.starts_at)} CT. ${gig.ticket_price_cents ? `Tickets ${money(gig.ticket_price_cents)}.` : 'Free show.'} Local bands: offer a Buddy Gig on Get 'Em Gigs.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/gigs/${gig.id}` },
+    openGraph: { type: 'website', title, description, url: `/gigs/${gig.id}` },
+    twitter: { card: 'summary_large_image', title, description },
+    robots: gig.status !== 'OPEN' || gigIsOver(gig) ? { index: false, follow: true } : undefined,
+  };
+}
+
+function eventLd(gig) {
+  const url = `${SITE_URL}/gigs/${gig.id}`;
+  const [locality, region] = String(gig.venue_city || '').split(',').map((x) => x.trim());
+  const start = new Date(gig.starts_at);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'MusicEvent',
+    '@id': `${url}#event`,
+    name: gig.title,
+    url,
+    description: `${gig.band_name} live at ${gig.venue_name}, ${gig.venue_city}.`,
+    image: [`${url}/opengraph-image`],
+    startDate: start.toISOString(),
+    endDate: new Date(start.getTime() + 3 * 3600 * 1000).toISOString(),
+    doorTime: new Date(start.getTime() - 3600 * 1000).toISOString(),
+    eventStatus: gig.status === 'CANCELLED' ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    location: {
+      '@type': 'MusicVenue',
+      name: gig.venue_name,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: gig.venue_address || undefined,
+        addressLocality: locality || undefined,
+        addressRegion: region || undefined,
+        addressCountry: 'US',
+      },
+    },
+    performer: { '@type': 'MusicGroup', name: gig.band_name, genre: gig.band_genre || undefined },
+    organizer: { '@type': 'MusicGroup', name: gig.band_name, url },
+    offers: {
+      '@type': 'Offer',
+      url,
+      price: (gig.ticket_price_cents / 100).toFixed(2),
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      validFrom: new Date(gig.created_at).toISOString(),
+    },
+    isAccessibleForFree: !gig.ticket_price_cents,
+  };
 }
 
 export default async function GigPage({ params, searchParams }) {
@@ -29,6 +91,7 @@ export default async function GigPage({ params, searchParams }) {
 
   return (
     <div className="wrap narrow page">
+      <JsonLd data={eventLd(gig)} />
       {sp?.created && <p className="alert alert-ok" data-testid="gig-created">Your gig is listed. Share it with other bands!</p>}
       <p className="eyebrow"><Link href="/gigs">← All gigs</Link></p>
       <h1 className="page-title" data-testid="gig-title">{gig.title}</h1>

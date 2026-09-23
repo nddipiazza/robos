@@ -1,4 +1,9 @@
-export const metadata = { title: 'Privacy' };
+export const metadata = {
+  title: 'Privacy policy',
+  description: 'What Get ’Em Gigs collects (and doesn’t): no location tracking, no ad trackers, no data sales.',
+  alternates: { canonical: '/privacy' },
+  openGraph: { title: 'Privacy policy', description: 'What Get ’Em Gigs collects (and doesn’t): no location tracking, no ad trackers, no data sales.', url: '/privacy' },
+};
 
 export default function Privacy() {
   return (

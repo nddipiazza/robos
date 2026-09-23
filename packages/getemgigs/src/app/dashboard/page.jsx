@@ -1,3 +1,4 @@
+import { NO_INDEX } from '@/lib/site';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
@@ -7,7 +8,7 @@ import { BandForm } from '@/components/forms';
 import GigCard from '@/components/GigCard';
 import LocalTime from '@/components/LocalTime';
 
-export const metadata = { title: 'Dashboard' };
+export const metadata = { title: 'Dashboard', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard({ searchParams }) {

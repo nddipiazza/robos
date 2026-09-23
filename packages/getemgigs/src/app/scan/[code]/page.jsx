@@ -1,3 +1,4 @@
+import { NO_INDEX } from '@/lib/site';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
@@ -5,7 +6,7 @@ import { scanCode } from '@/lib/services';
 import { HttpError, audit } from '@/lib/security';
 import { money } from '@/lib/format';
 
-export const metadata = { title: 'Check-in' };
+export const metadata = { title: 'Check-in', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 // Landing page for QR codes scanned with a phone's native camera app.

@@ -3,7 +3,12 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import { SignupForm } from '@/components/forms';
 
-export const metadata = { title: 'Sign up' };
+export const metadata = {
+  title: 'Sign up free — get your band on',
+  description: 'Create a free Get ’Em Gigs account, set up your band and get $100 in beta gig credits for Buddy Gig deposits.',
+  alternates: { canonical: '/signup' },
+  openGraph: { title: 'Sign up free — get your band on', description: 'Create a free Get ’Em Gigs account, set up your band and get $100 in beta gig credits for Buddy Gig deposits.', url: '/signup' },
+};
 
 export default async function SignupPage() {
   if (await currentUser()) redirect('/dashboard');

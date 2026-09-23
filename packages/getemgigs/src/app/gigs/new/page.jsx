@@ -1,10 +1,11 @@
+import { NO_INDEX } from '@/lib/site';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import { listVenues } from '@/lib/services';
 import { GigForm } from '@/components/forms';
 
-export const metadata = { title: 'List a gig' };
+export const metadata = { title: 'List a gig', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 export default async function NewGigPage() {

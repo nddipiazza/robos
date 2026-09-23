@@ -1,9 +1,10 @@
+import { NO_INDEX } from '@/lib/site';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import Scanner from '@/components/Scanner';
 
-export const metadata = { title: 'Scan check-ins' };
+export const metadata = { title: 'Scan check-ins', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 export default async function ScanPage() {

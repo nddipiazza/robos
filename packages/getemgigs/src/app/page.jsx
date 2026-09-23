@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { currentUser } from '@/lib/session';
 import { listGigs, siteStats } from '@/lib/services';
 import GigCard from '@/components/GigCard';
+import JsonLd from '@/components/JsonLd';
+import { FAQ, SITE_URL, SITE_NAME_ASCII, DESCRIPTION } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,28 +17,36 @@ async function loadData() {
   }
 }
 
-const FAQ = [
-  [
-    'Is it free?',
-    'Yes. Signing up, listing gigs and making Buddy Gig deals is free. During the beta, deposits use gig credits (every band starts with $100 in credits) — no card payments are processed yet.',
+const HOME_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebApplication',
+      '@id': `${SITE_URL}/#app`,
+      name: SITE_NAME_ASCII,
+      url: SITE_URL,
+      description: DESCRIPTION,
+      applicationCategory: 'LifestyleApplication',
+      applicationSubCategory: 'Live music',
+      operatingSystem: 'Any (web browser, iOS, Android)',
+      browserRequirements: 'Requires JavaScript. Camera optional for scanning check-ins.',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      publisher: { '@id': `${SITE_URL}/#org` },
+      featureList: [
+        'Buddy Gigs: trade attendance with another band',
+        'Refundable deposits held until both shows are over',
+        'Venmo-style QR scan-in at the door',
+        'Automatic next-morning settlement pays the band you stood up',
+        'Venue Stay-To-Play instead of pay-to-play',
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${SITE_URL}/#faq`,
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
   ],
-  [
-    'How does check-in work?',
-    'Like Venmo. When doors open, open the deal on your phone and show your check-in QR code to the band that’s playing. They scan it with their phone and your deposit is released on the spot. The code changes every 30 seconds, so a screenshot texted to a friend at home won’t work.',
-  ],
-  [
-    'What happens if a band bails?',
-    'The next morning our settlement job closes out every deal. Anyone who never showed up forfeits their deposit to the band whose show they skipped, and their reputation drops. If you opened your code at the show but the host never scanned it, nobody profits — you just get your deposit back.',
-  ],
-  [
-    'What is Stay-To-Play?',
-    'Instead of buying a stack of tickets to your own show (pay-to-play), you commit to buying a few tickets to another band’s show at the same venue. The venue still gets a crowd — and you’re out supporting the scene.',
-  ],
-  [
-    'Can I use it on my phone?',
-    'It’s built phone-first. Add getemgigs.com to your home screen and it works like an app, including the camera scanner for check-ins.',
-  ],
-];
+};
 
 export default async function Home() {
   const [user, { stats, gigs }] = await Promise.all([currentUser(), loadData()]);
@@ -45,6 +55,7 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd data={HOME_LD} />
       <section className="hero">
         <div className="wrap hero-grid">
           <div className="hero-copy">

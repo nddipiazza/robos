@@ -1,4 +1,9 @@
-export const metadata = { title: 'Terms' };
+export const metadata = {
+  title: 'Terms of use',
+  description: 'Terms of use for Get ’Em Gigs, the Buddy Gig and Stay-To-Play platform for local bands.',
+  alternates: { canonical: '/terms' },
+  openGraph: { title: 'Terms of use', description: 'Terms of use for Get ’Em Gigs, the Buddy Gig and Stay-To-Play platform for local bands.', url: '/terms' },
+};
 
 export default function Terms() {
   return (

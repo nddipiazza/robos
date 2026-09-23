@@ -1,8 +1,9 @@
+import { NO_INDEX } from '@/lib/site';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import { BandForm, DeleteAccountForm, LogoutButton } from '@/components/forms';
 
-export const metadata = { title: 'Account' };
+export const metadata = { title: 'Account', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 export default async function AccountPage() {

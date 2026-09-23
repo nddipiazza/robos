@@ -1,3 +1,4 @@
+import { NO_INDEX } from '@/lib/site';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
@@ -8,7 +9,7 @@ import { money, STATUS_LABELS } from '@/lib/format';
 import LocalTime from '@/components/LocalTime';
 import { AgreementActions } from '@/components/forms';
 
-export const metadata = { title: 'Buddy Gig deal' };
+export const metadata = { title: 'Buddy Gig deal', robots: NO_INDEX };
 export const dynamic = 'force-dynamic';
 
 export default async function DealPage({ params, searchParams }) {

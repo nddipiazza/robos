@@ -2,7 +2,12 @@ import Link from 'next/link';
 import { listVenues, listGigs } from '@/lib/services';
 import GigCard from '@/components/GigCard';
 
-export const metadata = { title: 'Stay-To-Play' };
+export const metadata = {
+  title: 'Stay-To-Play: the fair alternative to pay-to-play',
+  description: 'Stop buying tickets to your own gig. At Stay-To-Play partner venues, bands commit 2–10 tickets to another band’s show at the same venue instead — venues still get a crowd, and the scene grows.',
+  alternates: { canonical: '/stay-to-play' },
+  openGraph: { title: 'Stay-To-Play: the fair alternative to pay-to-play', description: 'Stop buying tickets to your own gig. At Stay-To-Play partner venues, bands commit 2–10 tickets to another band’s show at the same venue instead — venues still get a crowd, and the scene grows.', url: '/stay-to-play' },
+};
 export const dynamic = 'force-dynamic';
 
 export default async function StayToPlayPage() {
