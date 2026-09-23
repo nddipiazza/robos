@@ -136,7 +136,18 @@ function normalize(doc) {
   return result;
 }
 
-function validateDocument(doc, { requireEvidence = false } = {}) {
+// A course refinement may coexist with legacy nodes lacking provenance. Only the
+// edited nodes require evidence in this opt-in mode; every node still receives
+// structural, reference, shape and supplied-evidence validation. Derive the scope
+// from the hashed request again during apply and recovery.
+function validateProposal({ candidate, requireEvidence, request }) {
+  const evidenceNodeIds = request?.evidenceScope === 'edited'
+    ? new Set((request.edits || []).filter(edit => edit.op !== 'remove').map(edit => edit.op === 'add' ? edit.node?.['@id'] : edit.id))
+    : undefined;
+  return validateDocument(candidate, { requireEvidence, evidenceNodeIds });
+}
+
+function validateDocument(doc, { requireEvidence = false, evidenceNodeIds } = {}) {
   const errors = [];
   const warnings = [];
   if (!doc || !Array.isArray(doc['robos:nodes'])) return { conforms: false, errors: ['Missing robos:nodes array'], warnings };
@@ -160,7 +171,7 @@ function validateDocument(doc, { requireEvidence = false } = {}) {
     else if (classification.status === 'unclassified') warnings.push(`${id}: classification unresolved`);
     const evidence = n['robos:evidence'];
     if (types.includes('robos:Microservice') && !n['robos:ownerTeam']) warnings.push(`${id}: ownership unresolved`);
-    if (requireEvidence && (!Array.isArray(evidence) || !evidence.length)) errors.push(`${id}: missing evidence`);
+    if (requireEvidence && (!evidenceNodeIds || evidenceNodeIds.has(id)) && (!Array.isArray(evidence) || !evidence.length)) errors.push(`${id}: missing evidence`);
     if (evidence !== undefined) {
       if (!Array.isArray(evidence)) errors.push(`${id}: evidence must be an array`);
       else for (const e of evidence) {
@@ -268,7 +279,8 @@ class GraphWorkspace {
     return { manifest: fs.existsSync(manifest) ? fs.readFileSync(manifest, 'utf8') : null, packages };
   }
 
-  propose({ document, edits, prompt = '', mode = 'import', requireEvidence = false } = {}, snapshot) {
+  propose({ document, edits, prompt = '', mode = 'import', requireEvidence = false, evidenceScope = 'all' } = {}, snapshot) {
+    if (!['all', 'edited'].includes(evidenceScope) || (evidenceScope === 'edited' && mode !== 'refine')) throw new Error('Evidence scope must be all, or edited for a refinement');
     if (!['import', 'refine', 'replace'].includes(mode)) throw new Error('Mode must be import, refine, or replace');
     const current = snapshot ? snapshot.current : this.read();
     const state = snapshot ? snapshot.state : this.state();
@@ -326,8 +338,8 @@ class GraphWorkspace {
       candidate['robos:nodes'] = [...nodes.values()];
     }
     candidate = normalize(candidate);
-    const request = clone({ mode, prompt, requireEvidence, ...(mode === 'refine' ? { edits } : { document }) });
-    const proposal = { version: 1, base: hash(current), stateBase: hash(state), baseline: { current, state }, metadataBase: hash(metadata), metadata, request, mode, prompt, candidate, extracted, retired: [...retired].sort(), conflicts, stale, delta: diffNodes(current['robos:nodes'], candidate['robos:nodes']), validation: validateDocument(candidate, { requireEvidence }), requireEvidence };
+    const request = clone({ mode, prompt, requireEvidence, ...(evidenceScope === 'edited' ? { evidenceScope } : {}), ...(mode === 'refine' ? { edits } : { document }) });
+    const proposal = { version: 1, base: hash(current), stateBase: hash(state), baseline: { current, state }, metadataBase: hash(metadata), metadata, request, mode, prompt, candidate, extracted, retired: [...retired].sort(), conflicts, stale, delta: diffNodes(current['robos:nodes'], candidate['robos:nodes']), validation: validateProposal({ candidate, requireEvidence, request }), requireEvidence };
     proposal.id = hash(proposal);
     return proposal;
   }
@@ -337,7 +349,7 @@ class GraphWorkspace {
     if (hash(body) !== id) throw new Error('Proposal content does not match its ID');
     if (expectedProposalId !== undefined && id !== expectedProposalId) throw new Error('Proposal does not match the reviewed ID');
     if (proposal.conflicts.length) throw new Error('Resolve import conflicts before applying this proposal');
-    const report = validateDocument(proposal.candidate, { requireEvidence: proposal.requireEvidence });
+    const report = validateProposal(proposal);
     if (!report.conforms) throw new Error(`Invalid graph: ${report.errors.join('; ')}`);
     fs.mkdirSync(this.root, { recursive: true });
     const release = acquireLock(path.join(this.root, 'write.lock'));
@@ -397,7 +409,7 @@ class GraphWorkspace {
       if (!fs.existsSync(this.journal)) return { recovered: false };
       const proposal = JSON.parse(fs.readFileSync(this.journal, 'utf8'));
       const { id, ...body } = proposal;
-      if (hash(body) !== id || proposal.conflicts?.length !== 0 || !validateDocument(proposal.candidate, { requireEvidence: proposal.requireEvidence }).conforms) throw new Error('Invalid recovery journal');
+      if (hash(body) !== id || proposal.conflicts?.length !== 0 || !validateProposal(proposal).conforms) throw new Error('Invalid recovery journal');
       if (!proposal.baseline || !proposal.request || !same(this.propose(proposal.request, { ...proposal.baseline, metadata: proposal.metadata }), proposal)) throw new Error('Inconsistent recovery journal');
       const nextState = { revision: hash(normalize(proposal.candidate)), extracted: proposal.extracted, retired: proposal.retired };
       if (hash(this.state()) !== proposal.stateBase && !same(this.state(), nextState)) throw new Error('Recovery journal is stale: import state changed');
