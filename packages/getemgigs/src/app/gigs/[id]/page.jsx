@@ -25,7 +25,7 @@ export default async function GigPage({ params, searchParams }) {
     stayCommitmentsForGig(gig.id),
   ]);
   const plain = (x) => JSON.parse(JSON.stringify(x));
-  const mapUrl = `https://www.openstreetmap.org/?mlat=${gig.venue_lat}&mlon=${gig.venue_lon}#map=17/${gig.venue_lat}/${gig.venue_lon}`;
+  const mapUrl = `https://www.openstreetmap.org/search?query=${encodeURIComponent(`${gig.venue_name}, ${gig.venue_address}, ${gig.venue_city}`)}`;
 
   return (
     <div className="wrap narrow page">
@@ -49,7 +49,7 @@ export default async function GigPage({ params, searchParams }) {
       ) : (
         <section className="block">
           <h2 className="block-title">🤝 Offer a Buddy Gig to {gig.band_name}</h2>
-          <p className="muted">You go to their show, they come to yours. Both bands lock {money(gig.deposit_cents)} (or your gig’s deposit if higher). Check in at the venue to get it back.</p>
+          <p className="muted">You go to their show, they come to yours. Both bands lock {money(gig.deposit_cents)} (or your gig’s deposit if higher). Get scanned in at the show to get it back.</p>
           {user?.band ? (
             <div className="card"><ProposeForm targetGigId={gig.id} myGigs={plain(myGigs)} /></div>
           ) : (

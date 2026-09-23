@@ -22,11 +22,11 @@ const FAQ = [
   ],
   [
     'How does check-in work?',
-    'When doors open, open the deal on your phone at the venue and tap “Check in”. We compare your GPS fix to the venue location — within 150 meters counts. Your deposit is released on the spot.',
+    'Like Venmo. When doors open, open the deal on your phone and show your check-in QR code to the band that’s playing. They scan it with their phone and your deposit is released on the spot. The code changes every 30 seconds, so a screenshot texted to a friend at home won’t work.',
   ],
   [
     'What happens if a band bails?',
-    'The next morning our settlement job closes out every deal. Anyone who never checked in forfeits their deposit to the band whose show they skipped. Their reputation score drops too.',
+    'The next morning our settlement job closes out every deal. Anyone who never showed up forfeits their deposit to the band whose show they skipped, and their reputation drops. If you opened your code at the show but the host never scanned it, nobody profits — you just get your deposit back.',
   ],
   [
     'What is Stay-To-Play?',
@@ -34,7 +34,7 @@ const FAQ = [
   ],
   [
     'Can I use it on my phone?',
-    'It’s built phone-first. Add getemgigs.com to your home screen and it works like an app, including GPS check-in at the venue.',
+    'It’s built phone-first. Add getemgigs.com to your home screen and it works like an app, including the camera scanner for check-ins.',
   ],
 ];
 
@@ -56,7 +56,7 @@ export default async function Home() {
             </h1>
             <p className="lead">
               Trade attendance with other bands: <em>I’ll come to your gig if you come to mine.</em> Both bands lock a small
-              deposit. Show up and check in at the venue — you get it back. Bail — it pays the band you stood up.
+              deposit. Show up and get scanned in at the door — you get it back. Bail — it pays the band you stood up.
             </p>
             <div className="cta-row">
               <Link href={primaryHref} className="btn btn-primary btn-lg" data-testid="hero-cta">
@@ -68,7 +68,7 @@ export default async function Home() {
             </div>
             <ul className="hero-points">
               <li>🤝 Buddy Gigs with deposit escrow</li>
-              <li>📍 GPS check-in at the venue</li>
+              <li>📷 Scan-in at the door, like Venmo</li>
               <li>🎟️ Stay-To-Play instead of pay-to-play</li>
             </ul>
           </div>
@@ -76,7 +76,7 @@ export default async function Home() {
             <div className="phone">
               <img
                 src="/hero.gif"
-                alt="Two bands make a Buddy Gig deal on Get 'Em Gigs, lock deposits, and check in at the venue with GPS"
+                alt="Two bands make a Buddy Gig deal on Get 'Em Gigs, lock deposits, and scan each other in at the door"
                 width="390"
                 height="844"
                 fetchPriority="high"
@@ -118,8 +118,8 @@ export default async function Home() {
             </li>
             <li>
               <span className="step-n">4</span>
-              <h3>Show up &amp; check in</h3>
-              <p>Tap check-in at the venue. Within 150m of the door, your deposit comes straight back.</p>
+              <h3>Show up &amp; get scanned</h3>
+              <p>Show your check-in code at the door. The band playing scans it and your deposit comes straight back.</p>
             </li>
           </ol>
           <div className="outcomes">

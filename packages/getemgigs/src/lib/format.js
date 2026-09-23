@@ -10,8 +10,9 @@ export const STATUS_LABELS = {
   DECLINED: 'Declined',
   CANCELLED: 'Cancelled',
   PENDING: 'Not checked in',
-  VERIFIED: 'Verified at venue',
+  VERIFIED: 'Scanned in at the door',
   FORFEITED: 'No-show — forfeited',
+  DISPUTED: 'Code shown, not scanned — refunded',
 };
 
 export const LEDGER_LABELS = {

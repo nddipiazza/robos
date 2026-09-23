@@ -1,6 +1,6 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect, request as pwRequest } from 'playwright/test';
-import { BASE_URL, rand } from './world.mjs';
+import { BASE_URL, rand, writeCameraQr } from './world.mjs';
 
 const PASSWORD = () => `Stage-Dive-${rand(6)}-2026`;
 
@@ -231,23 +231,38 @@ Then('{string} has a wallet of {string}', async function (name, amount) {
   expect(await wallet(this, name)).toBe(amount);
 });
 
-When('{string} arrives at {string} and checks in with GPS', async function (name, venueName) {
+When('{string} arrives at {string} and shows her check-in code', async function (name, venueName) {
   const a = await this.actor(name);
-  const v = await venueByName(venueName);
-  await a.context.grantPermissions(['geolocation'], { origin: BASE_URL });
-  // ~25m from the venue's front door.
-  await a.context.setGeolocation({ latitude: v.lat + 0.0002, longitude: v.lon + 0.0001, accuracy: 12 });
   await a.page.goto(`/deals/${this.deals.get('current')}`);
-  const btn = a.page.getByTestId('checkin');
-  await btn.scrollIntoViewIfNeeded();
-  await pause(700);
-  await btn.click();
+  const code = a.page.getByTestId('checkin-code');
+  await code.scrollIntoViewIfNeeded();
+  await expect(code).toHaveAttribute('data-url', /\/scan\//);
+  await expect(a.page.getByText(`Your check-in code for ${venueName}`)).toBeVisible();
+  await pause(1500);
 });
 
-Then('{string} sees the check-in verified and the deposit refunded', async function (name) {
+When('{string} scans the check-in code on {word} phone at the door', async function (host, possessive) {
+  const attendee = possessive.replace(/['\u2019]s$/, '');
+  const guest = await this.actor(attendee);
+  const url = await guest.page.getByTestId('checkin-code').getAttribute('data-url');
+  const h = await this.actor(host);
+  // Point the host phone's (fake) camera at the attendee's screen.
+  await writeCameraQr(h.cameraFile, url);
+  await h.page.goto(`/deals/${this.deals.get('current')}`);
+  const open = h.page.getByTestId('open-scanner');
+  await open.scrollIntoViewIfNeeded();
+  await pause(600);
+  await open.click();
+  await h.page.waitForURL('**/scan');
+  await h.page.getByTestId('start-scanner').click();
+  await expect(h.page.getByTestId('scan-ok')).toContainText(guest.band, { timeout: 20000 });
+  await pause(1500);
+});
+
+Then('{string} sees she was scanned in and the deposit refunded', async function (name) {
   const a = await this.actor(name);
-  await expect(a.page.getByTestId('checkin-verified')).toContainText('deposit is back in your wallet');
-  await expect(a.page.getByTestId('my-attendance')).toHaveText('Verified at venue');
+  await expect(a.page.getByTestId('checkin-verified')).toContainText('deposit is back in your wallet', { timeout: 15000 });
+  await expect(a.page.getByTestId('my-attendance')).toHaveText('Scanned in at the door');
   await a.page.getByTestId('deal-timeline').scrollIntoViewIfNeeded();
   await pause(1200);
 });

@@ -74,6 +74,7 @@ After(async function ({ result }) {
       await new Promise((r) => setTimeout(r, 300));
     }
     await a.context.close();
+    await a.browser?.close();
     const entry = this.timeline.actors.find((x) => x.name === a.name);
     entry.band = a.band || null;
     if (a.frames.length) {

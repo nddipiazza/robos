@@ -35,8 +35,8 @@ export const SCHEMA = [
     name text NOT NULL,
     address text NOT NULL DEFAULT '',
     city text NOT NULL,
-    lat double precision NOT NULL,
-    lon double precision NOT NULL,
+    lat double precision,
+    lon double precision,
     capacity int,
     stay_to_play boolean NOT NULL DEFAULT false,
     created_by uuid REFERENCES users(id) ON DELETE SET NULL,
@@ -80,6 +80,12 @@ export const SCHEMA = [
     verified_at timestamptz,
     UNIQUE (agreement_id, attendee_band_id)
   )`,
+  // Camera check-in (replaces GPS). Safe to re-run on existing databases.
+  `ALTER TABLE attendance ADD COLUMN IF NOT EXISTS code_secret text`,
+  `ALTER TABLE attendance ADD COLUMN IF NOT EXISTS checkin_requested_at timestamptz`,
+  `ALTER TABLE attendance ADD COLUMN IF NOT EXISTS verified_by uuid`,
+  `ALTER TABLE venues ALTER COLUMN lat DROP NOT NULL`,
+  `ALTER TABLE venues ALTER COLUMN lon DROP NOT NULL`,
   `CREATE TABLE IF NOT EXISTS ledger (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     band_id uuid NOT NULL REFERENCES bands(id) ON DELETE CASCADE,

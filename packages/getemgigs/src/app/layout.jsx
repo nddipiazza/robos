@@ -10,7 +10,7 @@ export const metadata = {
     template: "%s · Get 'Em Gigs",
   },
   description:
-    "Local bands trade attendance: I'll come to your show if you come to mine. Deposits keep everyone honest — check in at the venue to get yours back, bail and it pays the band you stood up.",
+    "Local bands trade attendance: I'll come to your show if you come to mine. Deposits keep everyone honest — get scanned in at the door to get yours back; bail and it pays the band you stood up.",
   openGraph: {
     title: "Get 'Em Gigs — The Gig Bandit",
     description: "Buddy Gigs and Stay-To-Play for local bands. Fill rooms, kill pay-to-play.",

@@ -57,13 +57,20 @@ test('full Buddy Gig lifecycle: propose, accept, verified check-in, no-show forf
   assert.equal(await svc.walletBalance(a.user.band.id), 10000 - 4000);
   assert.equal(await svc.walletBalance(b.user.band.id), 10000 - 4000);
 
-  // A attends B's gig (at The Mohawk, starting in 10 minutes). Far away first:
-  const far = await svc.checkIn(a.user, deal.id, { lat: 30.29, lon: -97.7362, accuracy: 10 });
-  assert.equal(far.ok, false);
-  const near = await svc.checkIn(a.user, deal.id, { lat: venue.lat + 0.0003, lon: venue.lon, accuracy: 12 });
-  assert.equal(near.ok, true, near.reason);
+  // A attends B's gig (starting in 10 minutes). A shows a code; only the HOST (B) may scan it.
+  const { attendeeCode, scanCode } = svc;
+  const shown = await attendeeCode(a.user, deal.id);
+  assert.equal(shown.hostBandName, 'Velvet Riot');
+  await assert.rejects(() => scanCode(a.user, shown.code), /Only Velvet Riot/);
+  await assert.rejects(() => scanCode(b.user, 'garbage-code'), /not a Get/);
+  await assert.rejects(() => scanCode(b.user, shown.code, new Date(Date.now() + 5 * 60 * 1000)), /expired/);
+  const scanned = await scanCode(b.user, `http://localhost:3000/scan/${shown.code}`);
+  assert.equal(scanned.ok, true);
+  assert.equal(scanned.attendeeBandName, 'The Neon Vipers');
   assert.equal(await svc.walletBalance(a.user.band.id), 10000);
-  await assert.rejects(() => svc.checkIn(a.user, deal.id, { lat: venue.lat, lon: venue.lon }), /already/);
+  assert.equal((await scanCode(b.user, shown.code)).already, true);
+  // B's code for A's gig is locked until doors (A's gig is 3 days out).
+  await assert.rejects(() => attendeeCode(b.user, deal.id), /unlocks at doors/);
 
   // Settlement before both windows close does nothing.
   assert.equal((await svc.settleAgreements({ agreementId: deal.id })).length, 0);
@@ -107,4 +114,22 @@ test('deleting an account cascades its band and gigs', async () => {
   const left = await db.one(`SELECT count(*)::int AS n FROM bands WHERE name='Delete Me'`);
   assert.equal(left.n, 0);
   assert.equal(await userForToken(e.token), null);
+});
+
+test('host who never scans a shown code gets no payout; attendee is refunded (dispute)', async () => {
+  const h = await makeBand('host@example.com', 'Host Band');
+  const g = await makeBand('guest@example.com', 'Guest Band');
+  const soon = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  const later = new Date(Date.now() + 2 * 86400000).toISOString();
+  const hostGig = await svc.createGig(h.user, { title: 'Host Show', venueId: venue.id, startsAt: soon, deposit: 20 });
+  const guestGig = await svc.createGig(g.user, { title: 'Guest Show', venueId: venue.id, startsAt: later, deposit: 20 });
+  const deal = await svc.proposeAgreement(g.user, { myGigId: guestGig.id, targetGigId: hostGig.id });
+  await svc.respondAgreement(h.user, deal.id, 'accept');
+  await svc.attendeeCode(g.user, deal.id); // guest shows up and opens code, host never scans
+  const res = await svc.settleAgreements({ now: new Date(new Date(later).getTime() + 6 * 3600e3), agreementId: deal.id });
+  const disputed = res[0].payouts.find((p) => p.disputed);
+  assert.ok(disputed, 'guest attendance is disputed, not forfeited');
+  assert.equal(await svc.walletBalance(g.user.band.id), 10000 + 2000, 'guest got own deposit back + host no-show payout');
+  // Host never attended the guest's show and never opened a code -> forfeits to guest.
+  assert.equal(await svc.walletBalance(h.user.band.id), 10000 - 2000);
 });

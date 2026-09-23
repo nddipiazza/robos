@@ -1119,3 +1119,106 @@ textarea:focus {
     scroll-behavior: auto !important;
   }
 }
+
+/* ------------------------------------------------------- camera check-in */
+.checkin-code {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.checkin-code .qr {
+  width: min(78vw, 300px);
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 18px;
+  padding: 10px;
+  box-shadow: 0 0 0 4px var(--pink), 0 0 40px rgba(255, 61, 127, 0.45);
+}
+.checkin-code .qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.qr-caption {
+  margin: 4px 0 0;
+  font-size: 1.02rem;
+}
+.viewfinder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 70vh;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #000;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+.viewfinder.live {
+  border-color: var(--cyan);
+  box-shadow: 0 0 30px rgba(62, 230, 255, 0.35);
+}
+.viewfinder video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.viewfinder .btn {
+  position: relative;
+  z-index: 1;
+}
+.reticle {
+  position: absolute;
+  width: 62%;
+  aspect-ratio: 1;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+}
+.manual summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.manual input {
+  flex: 1 1 200px;
+}
+.scan-result {
+  padding: 24px 0;
+}
+.scan-icon {
+  font-size: 3.4rem;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.scan-toast {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  text-align: center;
+  animation: toastIn 0.25s ease-out;
+}
+.scan-toast.ok {
+  background: rgba(8, 60, 40, 0.94);
+  color: #aef5d4;
+  border: 1px solid var(--green);
+}
+.scan-toast.bad {
+  background: rgba(70, 12, 20, 0.94);
+  color: #ffb3b3;
+  border: 1px solid var(--red);
+}
+@keyframes toastIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}

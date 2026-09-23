@@ -5,7 +5,7 @@
 // with $100 in credits. No real card payments are processed yet.
 
 import { q, one } from './db.js';
-import { verifyCheckIn, checkInWindow, isValidCoord } from './geo.js';
+import { checkInWindow, windowState, newCodeSecret, makeCode, parseCode, verifyCode } from './checkin.js';
 import { hashPassword, checkPassword } from './auth.js';
 import { HttpError, cleanText, toCents, assertUuid, normalizeEmail, validatePassword } from './security.js';
 
@@ -98,9 +98,8 @@ export async function createVenue(user, input) {
   const name = cleanText(input.name, { min: 2, max: 80, field: 'Venue name' });
   const address = cleanText(input.address, { max: 120, field: 'Address' });
   const city = cleanText(input.city, { min: 2, max: 60, field: 'City' });
-  const lat = Number(input.lat);
-  const lon = Number(input.lon);
-  if (!isValidCoord(lat, lon)) throw new HttpError(400, 'Venue location is required (use "Use my location" or enter lat/lon).');
+  const lat = null;
+  const lon = null;
   const capacity = input.capacity ? Math.max(1, Math.min(100000, Math.round(Number(input.capacity)) || 0)) : null;
   const recent = await one(
     `SELECT count(*)::int AS n FROM venues WHERE created_by = $1 AND created_at > now() - interval '1 day'`,
@@ -241,7 +240,11 @@ export async function getAgreement(id) {
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
   const a = await one(`${AGREEMENT_SELECT} WHERE a.id = $1`, [id]);
   if (!a) return null;
-  a.attendance = await q('SELECT * FROM attendance WHERE agreement_id = $1', [id]);
+  a.attendance = await q(
+    `SELECT id, agreement_id, attendee_band_id, host_band_id, host_gig_id, status, verified_at, verified_by, checkin_requested_at
+       FROM attendance WHERE agreement_id = $1`,
+    [id],
+  );
   return a;
 }
 
@@ -288,49 +291,81 @@ export async function respondAgreement(user, id, action) {
   );
   // Proposer attends target's gig; target attends proposer's gig.
   await q(
-    `INSERT INTO attendance (agreement_id, attendee_band_id, host_band_id, host_gig_id) VALUES
-       ($1,$2,$3,$4), ($1,$3,$2,$5) ON CONFLICT DO NOTHING`,
-    [id, a.proposer_band_id, a.target_band_id, a.target_gig_id, a.proposer_gig_id],
+    `INSERT INTO attendance (agreement_id, attendee_band_id, host_band_id, host_gig_id, code_secret) VALUES
+       ($1,$2,$3,$4,$6), ($1,$3,$2,$5,$7) ON CONFLICT DO NOTHING`,
+    [id, a.proposer_band_id, a.target_band_id, a.target_gig_id, a.proposer_gig_id, newCodeSecret(), newCodeSecret()],
   );
   return getAgreement(id);
 }
 
-export async function checkIn(user, agreementId, { lat, lon, accuracy }, now = new Date()) {
+async function markVerified(att, agreement, verifierUserId, memo) {
+  const upd = await one(
+    `UPDATE attendance SET status='VERIFIED', verified_at=now(), verified_by=$2 WHERE id=$1 AND status='PENDING' RETURNING id`,
+    [att.id, verifierUserId],
+  );
+  if (!upd) throw new HttpError(409, 'Already checked in.');
+  await q(
+    `INSERT INTO ledger (band_id, agreement_id, kind, amount_cents, memo) VALUES ($1,$2,'DEPOSIT_REFUND',$3,$4)`,
+    [att.attendee_band_id, agreement.id, agreement.deposit_cents, memo],
+  );
+  await q('UPDATE bands SET reputation = LEAST(100, reputation + 1) WHERE id = $1', [att.attendee_band_id]);
+  const remaining = await one(`SELECT count(*)::int AS n FROM attendance WHERE agreement_id=$1 AND status='PENDING'`, [agreement.id]);
+  if (remaining.n === 0) {
+    await q(`UPDATE agreements SET status='SETTLED', settled_at=now() WHERE id=$1 AND status='ACTIVE'`, [agreement.id]);
+  }
+}
+
+/**
+ * Attendee side: get the current rotating check-in code for my attendance on this deal.
+ * Opening it during the gig window records that I showed up and asked to be scanned.
+ */
+export async function attendeeCode(user, agreementId, now = new Date()) {
   assertUuid(agreementId, 'agreement');
   const band = user.band;
   const a = await getAgreement(agreementId);
   if (!a || a.status !== 'ACTIVE') throw new HttpError(404, 'No active Buddy Gig deal found.');
   const att = a.attendance.find((r) => r.attendee_band_id === band.id);
   if (!att) throw new HttpError(403, 'Your band is not an attendee on this deal.');
-  if (att.status !== 'PENDING') throw new HttpError(409, `Attendance already ${att.status.toLowerCase()}.`);
+  if (att.status !== 'PENDING') return { status: att.status };
   const gig = await getGig(att.host_gig_id);
-  const result = verifyCheckIn({
-    lat: Number(lat),
-    lon: Number(lon),
-    accuracy: accuracy == null ? undefined : Number(accuracy),
-    venueLat: gig.venue_lat,
-    venueLon: gig.venue_lon,
-    startsAt: gig.starts_at,
-    now,
-  });
-  if (!result.ok) {
-    return { ok: false, verified: false, distanceM: result.distanceM, reason: result.reason };
+  const w = windowState(gig.starts_at, now);
+  if (!w.open) {
+    throw new HttpError(409, w.reason === 'not_open' ? 'Your check-in code unlocks at doors (1 hour before the show).' : 'The check-in window for this gig has closed.');
   }
-  const upd = await one(
-    `UPDATE attendance SET status='VERIFIED', verified_at=now(), distance_m=$2 WHERE id=$1 AND status='PENDING' RETURNING id`,
-    [att.id, result.distanceM],
-  );
-  if (!upd) throw new HttpError(409, 'Attendance already recorded.');
-  await q(
-    `INSERT INTO ledger (band_id, agreement_id, kind, amount_cents, memo) VALUES ($1,$2,'DEPOSIT_REFUND',$3,$4)`,
-    [band.id, agreementId, a.deposit_cents, `Deposit refunded — verified at ${gig.venue_name} (${result.distanceM}m)`],
-  );
-  await q('UPDATE bands SET reputation = LEAST(100, reputation + 1) WHERE id = $1', [band.id]);
-  const remaining = await one(`SELECT count(*)::int AS n FROM attendance WHERE agreement_id=$1 AND status='PENDING'`, [agreementId]);
-  if (remaining.n === 0) {
-    await q(`UPDATE agreements SET status='SETTLED', settled_at=now() WHERE id=$1 AND status='ACTIVE'`, [agreementId]);
+  const secretRow = await one('SELECT code_secret FROM attendance WHERE id = $1', [att.id]);
+  if (!secretRow?.code_secret) throw new HttpError(409, 'This deal has no check-in code. Contact support.');
+  if (!att.checkin_requested_at) {
+    await q('UPDATE attendance SET checkin_requested_at = now() WHERE id = $1 AND checkin_requested_at IS NULL', [att.id]);
   }
-  return { ok: true, verified: true, distanceM: result.distanceM, reason: result.reason, refundedCents: a.deposit_cents };
+  const hostName = att.host_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name;
+  const { code, rotatesAt } = makeCode(att.id, secretRow.code_secret, now.getTime());
+  return { status: 'PENDING', code, rotatesAt, hostBandName: hostName, venueName: gig.venue_name };
+}
+
+/**
+ * Host side: the band playing the gig scans an attendee's code. Only the host band can verify.
+ */
+export async function scanCode(user, rawCode, now = new Date()) {
+  const parsed = parseCode(rawCode);
+  if (!parsed) throw new HttpError(400, 'That QR code is not a Get \u2019Em Gigs check-in code.');
+  const att = await one('SELECT * FROM attendance WHERE id = $1', [parsed.attendanceId]);
+  if (!att) throw new HttpError(404, 'Check-in code not recognised.');
+  const verdict = verifyCode(parsed, att.code_secret, now.getTime());
+  if (verdict === 'invalid') throw new HttpError(400, 'That check-in code is not valid.');
+  const a = await getAgreement(att.agreement_id);
+  const attendeeName = att.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name;
+  const hostName = att.host_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name;
+  if (user.band?.id !== att.host_band_id) {
+    throw new HttpError(403, `Only ${hostName} (the band playing) can scan ${attendeeName}\u2019s code.`);
+  }
+  if (verdict === 'expired') throw new HttpError(410, `${attendeeName}\u2019s code expired. Ask them to keep the code screen open and scan again.`);
+  if (att.status === 'VERIFIED') return { ok: true, already: true, attendeeBandName: attendeeName, agreementId: a.id };
+  if (a.status !== 'ACTIVE' || att.status !== 'PENDING') throw new HttpError(409, 'This deal is no longer active.');
+  const gig = await getGig(att.host_gig_id);
+  const w = windowState(gig.starts_at, now);
+  if (!w.open) throw new HttpError(409, 'Check-in is only possible from doors until 5 hours after the show starts.');
+  await markVerified(att, a, user.id, `Deposit refunded \u2014 scanned in by ${hostName} at ${gig.venue_name}`);
+  return { ok: true, attendeeBandName: attendeeName, refundedCents: a.deposit_cents, agreementId: a.id };
 }
 
 /**
@@ -352,10 +387,22 @@ export async function settleAgreements({ now = new Date(), agreementId = null } 
     const pending = await q(`SELECT * FROM attendance WHERE agreement_id=$1 AND status='PENDING'`, [a.id]);
     const payouts = [];
     for (const att of pending) {
-      const upd = await one(`UPDATE attendance SET status='FORFEITED' WHERE id=$1 AND status='PENDING' RETURNING id`, [att.id]);
-      if (!upd) continue;
       const bailer = att.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name;
       const host = att.host_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name;
+      if (att.checkin_requested_at) {
+        // They opened their check-in code during the gig window but the host never scanned it.
+        // We can't tell who is right, so nobody profits: the attendee simply gets the deposit back.
+        const upd = await one(`UPDATE attendance SET status='DISPUTED' WHERE id=$1 AND status='PENDING' RETURNING id`, [att.id]);
+        if (!upd) continue;
+        await q(
+          `INSERT INTO ledger (band_id, agreement_id, kind, amount_cents, memo) VALUES ($1,$2,'DEPOSIT_REFUND',$3,$4)`,
+          [att.attendee_band_id, a.id, a.deposit_cents, `Deposit returned \u2014 you showed your code but ${host} never scanned it`],
+        );
+        payouts.push({ from: bailer, to: bailer, cents: a.deposit_cents, disputed: true });
+        continue;
+      }
+      const upd = await one(`UPDATE attendance SET status='FORFEITED' WHERE id=$1 AND status='PENDING' RETURNING id`, [att.id]);
+      if (!upd) continue;
       await q(
         `INSERT INTO ledger (band_id, agreement_id, kind, amount_cents, memo) VALUES ($1,$2,'FORFEIT_PAYOUT',$3,$4)`,
         [att.host_band_id, a.id, a.deposit_cents, `No-show payout: ${bailer} skipped your gig`],

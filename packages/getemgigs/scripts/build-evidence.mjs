@@ -243,7 +243,7 @@ async function main() {
     .readdirSync(EVIDENCE, { withFileTypes: true })
     .filter((d) => d.isDirectory() && fs.existsSync(path.join(EVIDENCE, d.name, 'timeline.json')))
     .map((d) => path.join(EVIDENCE, d.name))
-    .sort((a, b) => JSON.parse(fs.readFileSync(path.join(a, 'timeline.json'))).start - JSON.parse(fs.readFileSync(path.join(b, 'timeline.json'))).start);
+    .sort((a, b) => path.basename(a).slice(0, 2).localeCompare(path.basename(b).slice(0, 2)) || JSON.parse(fs.readFileSync(path.join(a, 'timeline.json'))).start - JSON.parse(fs.readFileSync(path.join(b, 'timeline.json'))).start);
   if (!dirs.length) throw new Error(`No timeline.json found under ${EVIDENCE}`);
   const browser = await chromium.launch();
   const built = [];

@@ -252,8 +252,6 @@ export function GigForm({ venues }) {
   const [venueList, setVenueList] = useState(venues);
   const [venueId, setVenueId] = useState(venues[0]?.id || '');
   const [addingVenue, setAddingVenue] = useState(false);
-  const [coords, setCoords] = useState({ lat: '', lon: '' });
-  const [locating, setLocating] = useState(false);
   const venueForm = useRef(null);
 
   async function saveVenue() {
@@ -324,38 +322,6 @@ export function GigForm({ venues }) {
               <input name="city" maxLength={60} placeholder="Austin, TX" />
             </label>
           </div>
-          <div className="grid-2">
-            <label className="field">
-              <span>Latitude</span>
-              <input name="lat" inputMode="decimal" value={coords.lat} onChange={(e) => setCoords({ ...coords, lat: e.target.value })} />
-            </label>
-            <label className="field">
-              <span>Longitude</span>
-              <input name="lon" inputMode="decimal" value={coords.lon} onChange={(e) => setCoords({ ...coords, lon: e.target.value })} />
-            </label>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            disabled={locating}
-            onClick={() => {
-              if (!navigator.geolocation) return s.setError('Location is not available on this device.');
-              setLocating(true);
-              navigator.geolocation.getCurrentPosition(
-                (p) => {
-                  setCoords({ lat: p.coords.latitude.toFixed(6), lon: p.coords.longitude.toFixed(6) });
-                  setLocating(false);
-                },
-                () => {
-                  s.setError('Could not get your location. Enter coordinates manually.');
-                  setLocating(false);
-                },
-                { enableHighAccuracy: true, timeout: 15000 },
-              );
-            }}
-          >
-            {locating ? 'Locating…' : '📍 I’m at the venue — use my location'}
-          </button>
           <label className="check">
             <input type="checkbox" name="stayToPlay" /> This venue supports Stay-To-Play
           </label>
@@ -496,57 +462,6 @@ export function AgreementActions({ agreementId, canAccept, canCancel }) {
         )}
       </div>
       <Alert error={s.error} />
-    </div>
-  );
-}
-
-export function CheckInButton({ agreementId, venueName }) {
-  const router = useRouter();
-  const s = useSubmit();
-  return (
-    <div className="stack-sm">
-      <button
-        className="btn btn-primary btn-block btn-lg"
-        disabled={s.busy}
-        data-testid="checkin"
-        onClick={() =>
-          s.run(
-            ({ setError, setNotice }) =>
-              new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                  setError('Location is not available on this device.');
-                  return resolve();
-                }
-                navigator.geolocation.getCurrentPosition(
-                  async (p) => {
-                    const res = await api(`/api/agreements/${agreementId}/checkin`, {
-                      body: { lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy },
-                    });
-                    if (res.ok) {
-                      setNotice(`✅ ${res.reason} Your deposit is back in your wallet.`);
-                      router.refresh();
-                    } else {
-                      setError(res.reason || res.error);
-                    }
-                    resolve();
-                  },
-                  (err) => {
-                    setError(
-                      err.code === 1
-                        ? 'Location permission denied. Allow location for getemgigs.com to check in.'
-                        : 'Could not get a GPS fix. Try again near a window or outside.',
-                    );
-                    resolve();
-                  },
-                  { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
-                );
-              }),
-          )
-        }
-      >
-        {s.busy ? 'Getting GPS fix…' : `📍 I’m at ${venueName} — check in`}
-      </button>
-      <Alert error={s.error} notice={s.notice} />
     </div>
   );
 }

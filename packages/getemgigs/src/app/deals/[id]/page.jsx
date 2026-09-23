@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { currentUser } from '@/lib/session';
 import { getAgreement } from '@/lib/services';
-import { checkInWindow } from '@/lib/geo';
+import { checkInWindow } from '@/lib/checkin';
+import CheckInCode from '@/components/CheckInCode';
 import { money, STATUS_LABELS } from '@/lib/format';
 import LocalTime from '@/components/LocalTime';
-import { AgreementActions, CheckInButton } from '@/components/forms';
+import { AgreementActions } from '@/components/forms';
 
 export const metadata = { title: 'Buddy Gig deal' };
 export const dynamic = 'force-dynamic';
@@ -32,6 +33,8 @@ export default async function DealPage({ params, searchParams }) {
   const win = checkInWindow(myDuty.starts);
   const now = new Date();
   const windowOpen = now >= win.opensAt && now <= win.closesAt;
+  const hostWin = checkInWindow(theirDuty.starts);
+  const hostWindowOpen = now >= hostWin.opensAt && now <= hostWin.closesAt;
 
   return (
     <div className="wrap narrow page">
@@ -52,7 +55,7 @@ export default async function DealPage({ params, searchParams }) {
           <p className="small"><LocalTime iso={myDuty.starts} /></p>
           {myAttendance && (
             <p><span className={`status status-${myAttendance.status.toLowerCase()}`} data-testid="my-attendance">{STATUS_LABELS[myAttendance.status]}</span>
-              {myAttendance.distance_m != null && <span className="small muted"> · {myAttendance.distance_m}m from the door</span>}
+
             </p>
           )}
         </div>
@@ -85,19 +88,33 @@ export default async function DealPage({ params, searchParams }) {
 
       {myAttendance?.status === 'VERIFIED' && (
         <p className="alert alert-ok" data-testid="checkin-verified">
-          ✅ You checked in at {myDuty.venue} ({myAttendance.distance_m}m from the door). Your {money(a.deposit_cents)} deposit is back in your wallet.
+          ✅ {other} scanned you in at {myDuty.venue}. Your {money(a.deposit_cents)} deposit is back in your wallet.
         </p>
       )}
 
       {a.status === 'ACTIVE' && myAttendance?.status === 'PENDING' && (
         <section className="block">
-          <h2 className="block-title">Check in at {myDuty.venue}</h2>
+          <h2 className="block-title">Your check-in code for {myDuty.venue}</h2>
           {windowOpen ? (
-            <CheckInButton agreementId={a.id} venueName={myDuty.venue} />
+            <CheckInCode agreementId={a.id} attendanceId={myAttendance.id} hostBandName={other} />
           ) : now < win.opensAt ? (
-            <p className="muted">Check-in opens at doors: <LocalTime iso={win.opensAt.toISOString()} />. You’ll need to be within 150m of the venue.</p>
+            <p className="muted">Your check-in code unlocks at doors: <LocalTime iso={win.opensAt.toISOString()} />. Show it to {other} at the door and they’ll scan you in.</p>
           ) : (
             <p className="muted">The check-in window closed. This deal will be settled at the next morning run.</p>
+          )}
+        </section>
+      )}
+
+      {a.status === 'ACTIVE' && theirAttendance?.status === 'PENDING' && (
+        <section className="block">
+          <h2 className="block-title">Scan {other} in at your show</h2>
+          {hostWindowOpen ? (
+            <>
+              <p className="muted">When {other} arrives at {theirDuty.venue}, scan the code on their phone.</p>
+              <a href="/scan" className="btn btn-secondary btn-block btn-lg" data-testid="open-scanner">📷 Scan check-in code</a>
+            </>
+          ) : (
+            <p className="muted">Scanning opens at doors for your show (<LocalTime iso={hostWin.opensAt.toISOString()} />).</p>
           )}
         </section>
       )}
@@ -108,10 +125,13 @@ export default async function DealPage({ params, searchParams }) {
           <li><LocalTime iso={a.created_at} /> — {a.proposer_band_name} offered the trade</li>
           {a.accepted_at && <li><LocalTime iso={a.accepted_at} /> — {a.target_band_name} accepted; deposits locked</li>}
           {a.attendance.filter((x) => x.verified_at).map((x) => (
-            <li key={x.id}><LocalTime iso={x.verified_at} /> — {x.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name} checked in ({x.distance_m}m) — deposit refunded</li>
+            <li key={x.id}><LocalTime iso={x.verified_at} /> — {x.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name} was scanned in at the door — deposit refunded</li>
           ))}
           {a.attendance.filter((x) => x.status === 'FORFEITED').map((x) => (
             <li key={x.id}>{x.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name} no-show — deposit paid to {x.host_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name}</li>
+          ))}
+          {a.attendance.filter((x) => x.status === 'DISPUTED').map((x) => (
+            <li key={x.id}>{x.attendee_band_id === a.proposer_band_id ? a.proposer_band_name : a.target_band_name} showed a check-in code that was never scanned — deposit returned, no payout</li>
           ))}
           {a.settled_at && <li><LocalTime iso={a.settled_at} /> — deal settled</li>}
         </ol>

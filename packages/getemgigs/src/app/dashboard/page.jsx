@@ -52,7 +52,10 @@ export default async function Dashboard({ searchParams }) {
           <h1 className="page-title" data-testid="band-name">{band.name}</h1>
           <p className="muted">{[band.genre, band.hometown].filter(Boolean).join(' · ')}</p>
         </div>
-        <Link href="/gigs/new" className="btn btn-primary" data-testid="list-gig">+ List a gig</Link>
+        <div className="row">
+          {active.length > 0 && <Link href="/scan" className="btn btn-secondary" data-testid="dash-scan">📷 Scan check-ins</Link>}
+          <Link href="/gigs/new" className="btn btn-primary" data-testid="list-gig">+ List a gig</Link>
+        </div>
       </div>
 
       <div className="kpis">

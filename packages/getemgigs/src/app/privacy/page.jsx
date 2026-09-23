@@ -9,11 +9,11 @@ export default function Privacy() {
       <ul>
         <li>Account: your name, email and a salted password hash (we never store your password).</li>
         <li>Band profile, gigs, venues and deals you create.</li>
-        <li>Location: only when you tap “check in”, a single GPS reading is sent to verify distance to the venue. We store the distance in meters, not your coordinates.</li>
+        <li>Check-ins: when a band scans your check-in code we record who scanned whom and when. The camera is only used on your device to read QR codes; no images are uploaded.</li>
         <li>Security: IP address and browser type on sign-up, log-in and check-in, used for rate limiting and abuse prevention.</li>
       </ul>
       <h2>What we don’t do</h2>
-      <p>We don’t sell your data, run ad trackers, or track your location in the background.</p>
+      <p>We don’t sell your data, run ad trackers, or collect your location.</p>
       <h2>Deleting your data</h2>
       <p>Delete your account any time from the Account page. This permanently removes your account, band, gigs and deals.</p>
     </div>

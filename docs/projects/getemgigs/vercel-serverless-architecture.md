@@ -28,7 +28,7 @@ How getemgigs.com is built, stored, scheduled and deployed.
 
 - **Next.js 15 App Router** on Vercel Node serverless functions. Pages are server components that read the session cookie and query Postgres directly; forms are small client components that call JSON route handlers under `/api/*`.
 - **Route wrapper** (`src/lib/session.js#route`): same-origin enforcement on mutations, uniform JSON errors, and `Retry-After` on 429.
-- **Security headers** from `next.config.mjs`: CSP (Google reCAPTCHA hosts are added only when captcha is enabled), HSTS, frame denial and a geolocation-only Permissions-Policy.
+- **Security headers** from `next.config.mjs`: CSP (Google reCAPTCHA hosts are added only when captcha is enabled), HSTS, frame denial, and a Permissions-Policy that allows the camera (for the check-in scanner) and blocks geolocation.
 
 ## 2. Data
 
