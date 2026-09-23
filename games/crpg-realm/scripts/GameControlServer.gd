@@ -137,6 +137,10 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			var cur_sc = get_tree().current_scene
 			var telemetry = cur_sc.get_combat_telemetry() if (cur_sc and cur_sc.has_method("get_combat_telemetry")) else {"current_round": 0, "rounds": [], "latest_round": {}}
 			_send_http_response(client, 200, telemetry)
+		["GET", "/combat/turn_events"], ["GET", "/api/v1/combat/turn_events"]:
+			var cur_sc = get_tree().current_scene
+			var evs = cur_sc.get_all_turn_events() if (cur_sc and cur_sc.has_method("get_all_turn_events")) else []
+			_send_http_response(client, 200, {"turn_events": evs, "count": evs.size()})
 		["POST", "/user_input/click_button"], ["POST", "/api/v1/user_input/click_button"]:
 			var res = await _handle_click_button(body_dict)
 			_send_http_response(client, 200, res)
@@ -922,7 +926,7 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 		if is_golem_battle:
 			var sc = get_tree().current_scene
 			if sc and sc.has_method("configure_golem_encounter"):
-				sc.configure_golem_encounter(100, 500, 50)
+				sc.configure_golem_encounter(50, 60, 10)
 			await get_tree().process_frame
 			await get_tree().process_frame
 		elif is_goblin_crowd:
@@ -2075,9 +2079,9 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			return {"success": false, "error": "execute_fireball_spell_cast not available"}
 
 		"start_golem_battle", "setup_golem_battle", "load_golem_battle":
-			var f_hp = int(args.get("fighters_hp", 100))
-			var g_hp = int(args.get("golem_hp", 500))
-			var pots = int(args.get("potions_per_fighter", 50))
+			var f_hp = int(args.get("fighters_hp", 50))
+			var g_hp = int(args.get("golem_hp", 60))
+			var pots = int(args.get("potions_per_fighter", 10))
 			if cur_scene and cur_scene.name == "TacticalBattle" and cur_scene.has_method("configure_golem_encounter"):
 				return cur_scene.configure_golem_encounter(f_hp, g_hp, pots)
 			GameState.setup_fighter_trio(f_hp, pots)
