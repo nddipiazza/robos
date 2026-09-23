@@ -219,13 +219,15 @@ func _get_party_candidates() -> Array[Node2D]:
 		return res
 	
 	var hero = cur_sc.find_child("HeroPlayer", true, false)
-	if hero and is_instance_valid(hero) and not GameState.has_status_effect(GameState.hero_name, "unconscious"):
-		res.append(hero)
+	if hero and is_instance_valid(hero):
+		var h_name = hero.get("character_name") if ("character_name" in hero and hero.character_name != "") else GameState.hero_name
+		if not GameState.has_status_effect(h_name, "unconscious") and not GameState.is_invisible(h_name) and not GameState.is_invisible(GameState.hero_name):
+			res.append(hero)
 
 	for child in cur_sc.get_children():
 		if child is PartyCompanion and is_instance_valid(child):
 			var c_name = child.companion_name
-			if not GameState.has_status_effect(c_name, "unconscious"):
+			if not GameState.has_status_effect(c_name, "unconscious") and not GameState.is_invisible(c_name):
 				res.append(child)
 	return res
 
@@ -264,7 +266,7 @@ func _process_chase(_delta: float) -> void:
 	if _is_round_based_mode():
 		velocity = Vector2.ZERO
 		return
-	if not current_target or not is_instance_valid(current_target):
+	if not current_target or not is_instance_valid(current_target) or GameState.is_invisible(current_target_name) or (current_target_name == GameState.hero_name and GameState.is_invisible(GameState.hero_name)):
 		current_state = State.PATROL
 		current_target = null
 		current_target_name = ""

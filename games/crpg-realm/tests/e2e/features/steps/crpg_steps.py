@@ -5,7 +5,7 @@ import sys
 import time
 import urllib.request
 from pathlib import Path
-from behave import given, when, then
+from behave import given, when, then, use_step_matcher
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(PROJECT_DIR) not in sys.path:
@@ -859,6 +859,11 @@ def step_check_enemy_hp(context, enemy_id, hp):
     assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
     assert found.get("hp", 0) == hp, f"Expected enemy '{enemy_id}' HP == {hp}, got {found.get('hp')}"
 
+@then('the enemy "{enemy_id}" target is none')
+@then('enemy "{enemy_id}" target is none')
+def step_check_enemy_target_none(context, enemy_id):
+    step_check_enemy_target(context, enemy_id, "none")
+
 @then('the enemy "{enemy_id}" target is "{target_name}"')
 @then('enemy "{enemy_id}" target is "{target_name}"')
 def step_check_enemy_target(context, enemy_id, target_name):
@@ -868,11 +873,19 @@ def step_check_enemy_target(context, enemy_id, target_name):
         state = api_get(context.web_port, "/api/v1/state")
         enemies = state.get("battle", {}).get("enemies", [])
         found = next((e for e in enemies if e.get("id") == enemy_id), None)
-        if found and found.get("current_target", "").lower() == target_name.lower():
-            break
+        if found:
+            cur_tgt = found.get("current_target", "")
+            if target_name.lower() in ["none", ""]:
+                if cur_tgt == "" or cur_tgt.lower() == "none":
+                    break
+            elif cur_tgt.lower() == target_name.lower():
+                break
         time.sleep(0.15)
     assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
     actual_target = found.get("current_target", "")
+    if target_name.lower() in ["none", ""]:
+        assert actual_target == "" or actual_target.lower() == "none", f"Expected enemy '{enemy_id}' target to be none, got '{actual_target}'"
+        return
     assert actual_target.lower() == target_name.lower(), (
         f"Expected enemy '{enemy_id}' target to be '{target_name}', got '{actual_target}'. "
         f"Threat table: {found.get('threat_table')}"
@@ -1201,13 +1214,15 @@ def step_trap_detected(context, trap_id):
     assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
     assert found.get("is_detected") is True, f"Expected trap '{trap_id}' to be detected, got: {found}"
 
-@when('the player casts spell "{spell_id}"')
+use_step_matcher("re")
+@when(r'the player casts spell "(?P<spell_id>[^"]+)"')
 def step_player_casts_spell_generic(context, spell_id):
     api_post(context.web_port, "/api/v1/action", {
         "action": "cast_spell",
         "args": {"spell": spell_id}
     })
     time.sleep(0.5)
+use_step_matcher("parse")
 
 @then('all concealed traps in the area are revealed in glowing red runes')
 def step_all_traps_revealed(context):
@@ -1953,6 +1968,146 @@ def step_verify_total_victory(context):
     battle = st.get("battle", {})
     assert battle.get("all_enemies_dead") is True, f"Expected all enemies dead for victory: {battle}"
     assert st.get("defeat_screen", {}).get("open") is False, "Defeat screen should not be open on victory"
+
+
+# ── Invisibility & Stealth Steps ──────────────────────────────────────────────
+
+use_step_matcher("re")
+@when(r'the player casts spell "(?P<spell_id>[^"]+)" on "(?P<target>[^"]+)" with timeout override of (?P<sec>\d+(?:\.\d+)?) seconds')
+def step_cast_spell_timeout_override(context, spell_id, target, sec):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id, "target": target, "override_duration_seconds": float(sec)}
+    })
+    time.sleep(0.05)
+
+@when(r'the player casts spell "(?P<spell_id>[^"]+)" on "(?P<target>[^"]+)"')
+def step_cast_spell_on_target(context, spell_id, target):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "cast_spell",
+        "args": {"spell": spell_id, "target": target}
+    })
+    time.sleep(0.3)
+use_step_matcher("parse")
+
+@then('"{actor}" has status effect "{effect}"')
+def step_verify_actor_has_status_effect(context, actor, effect):
+    state = api_get(context.web_port, "/api/v1/state")
+    status_effects = state.get("status_effects", {})
+    effects = status_effects.get(actor, [])
+    if not effects:
+        h_name = state.get("hero", {}).get("name", "")
+        if h_name and (actor.lower() in [h_name.lower(), "vance", "lieutenant vance"]):
+            effects = status_effects.get(h_name, [])
+    if not effects and effect == "invisible":
+        if state.get("hero", {}).get("is_invisible"):
+            return
+        for m in state.get("party", []):
+            if m.get("name", "").lower() == actor.lower() and m.get("is_invisible"):
+                return
+    assert effect in effects, f"Expected {effect} on {actor}, got {effects} (all effects: {status_effects})"
+
+@then('"{actor}" is no longer afflicted with "{effect}"')
+@then('the invisibility effect on "{actor}" has expired')
+@then('the invisibility effect on "{actor}" is immediately broken by physical attack')
+def step_verify_actor_no_status_effect(context, actor, effect="invisible"):
+    state = api_get(context.web_port, "/api/v1/state")
+    status_effects = state.get("status_effects", {})
+    effects = status_effects.get(actor, [])
+    h_name = state.get("hero", {}).get("name", "")
+    if h_name and (actor.lower() in [h_name.lower(), "vance", "lieutenant vance"]):
+        effects = status_effects.get(h_name, effects)
+    assert effect not in effects, f"Expected {effect} NOT on {actor}, but still present: {effects}"
+    if effect == "invisible":
+        assert state.get("hero", {}).get("is_invisible") is not True, "Expected hero not invisible"
+
+@then('the character sprite of "{actor}" is translucent with {pct:d}% opacity')
+def step_verify_character_sprite_opacity(context, actor, pct):
+    time.sleep(0.15)
+    state = api_get(context.web_port, "/api/v1/state")
+    expected = pct / 100.0
+    actual = state.get("hero", {}).get("sprite_opacity", 1.0)
+    assert abs(actual - expected) < 0.08, f"Expected opacity ~{expected} ({pct}%), got {actual}"
+
+@then('the character sprite of "{actor}" returns to full opacity')
+def step_verify_character_sprite_full_opacity(context, actor):
+    time.sleep(0.15)
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state.get("hero", {}).get("sprite_opacity", 1.0)
+    assert actual >= 0.95, f"Expected full opacity (>=0.95), got {actual}"
+
+@when('the player moves "{actor}" directly through the patrol zone of hostile enemy "{enemy_id}" within {dist:d}px')
+@when('the player moves "{actor}" to stand {dist:d}px away from hostile enemy "{enemy_id}"')
+def step_move_actor_near_patrol_enemy(context, actor, enemy_id, dist):
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    found = next((e for e in enemies if e.get("id") == enemy_id), None)
+    target_x = 1200
+    target_y = 540
+    if found and "position" in found:
+        pos = found["position"]
+        target_x = int(pos[0]) - dist
+        target_y = int(pos[1])
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "move_hero",
+        "args": {"x": target_x, "y": target_y, "teleport": True}
+    })
+    time.sleep(0.05)
+
+@then('the enemy "{enemy_id}" remains in state "{state_name}" and ignores the invisible intruder')
+def step_verify_enemy_ignores_invisible(context, enemy_id, state_name):
+    time.sleep(0.05)
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    found = next((e for e in enemies if e.get("id") == enemy_id), None)
+    assert found is not None, f"Enemy '{enemy_id}' not found in {enemies}"
+    actual_state = found.get("state_name", "")
+    assert actual_state == state_name, f"Expected enemy state '{state_name}', got '{actual_state}'"
+    tgt = found.get("current_target", "")
+    assert tgt in ["", None, "none"], f"Expected enemy to ignore intruder (no target), got '{tgt}'"
+
+@when('the test harness overrides the invisibility timeout for "{actor}" to {sec:f} seconds for test verification')
+def step_override_invisibility_timeout(context, actor, sec):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "override_invisibility_timeout",
+        "args": {"target": actor, "effect": "invisible", "duration_seconds": sec}
+    })
+    time.sleep(0.3)
+
+@when('the activity log explicitly notes that the test harness hacked the timeout')
+@then('the activity log explicitly notes that the test harness hacked the timeout')
+def step_verify_log_test_hack(context):
+    time.sleep(0.3)
+    state = api_get(context.web_port, "/api/v1/state")
+    history = state.get("activity_log", [])
+    found_hack = False
+    for entry in history:
+        msg = entry if isinstance(entry, str) else entry.get("message", "")
+        if "TEST HACK" in msg or "overridden" in msg:
+            found_hack = True
+            break
+    assert found_hack, f"Activity log did not mention TEST HACK timeout override: {history}"
+
+@when('the player waits {sec:f} seconds for the overridden invisibility timeout to naturally expire')
+def step_wait_seconds_for_timeout(context, sec):
+    time.sleep(sec)
+
+@then('on the next engine tick the AI engine detects the visible intruder')
+def step_ai_detects_intruder_on_tick(context):
+    start_t = time.time()
+    found_aggro = False
+    while time.time() - start_t < 3.0:
+        st = api_get(context.web_port, "/api/v1/state")
+        enemies = st.get("battle", {}).get("enemies", [])
+        for e in enemies:
+            if e.get("current_target") or e.get("state_name") == "CHASE":
+                found_aggro = True
+                break
+        if found_aggro:
+            break
+        time.sleep(0.2)
+    assert found_aggro, "Expected AI engine to detect visible intruder on next tick, but enemies remain unprovoked"
+
 
 
 

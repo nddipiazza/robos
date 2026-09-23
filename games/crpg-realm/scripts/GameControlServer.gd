@@ -652,6 +652,7 @@ func _handle_move_to(payload: Dictionary) -> Dictionary:
 	var x = float(payload.get("x", 0))
 	var y = float(payload.get("y", 0))
 	var queue = bool(payload.get("queue", false))
+	var teleport = bool(payload.get("teleport", payload.get("instant", false)))
 	var pos = Vector2(x, y)
 	var cur_scene = get_tree().current_scene
 	if not cur_scene:
@@ -660,6 +661,12 @@ func _handle_move_to(payload: Dictionary) -> Dictionary:
 	var hero: Node = cur_scene.get_node_or_null("HeroPlayer")
 	if not hero:
 		hero = cur_scene.find_child("HeroPlayer", true, false)
+
+	if teleport and hero:
+		hero.global_position = pos
+		if hero.has_method("_stop_movement"):
+			hero._stop_movement()
+		return {"success": true, "teleported": true, "hero_pos": [pos.x, pos.y]}
 
 	if has_node("/root/QAOverlay"):
 		var qa = get_node("/root/QAOverlay")
@@ -1106,7 +1113,9 @@ func _get_full_game_state() -> Dictionary:
 			"gold": GameState.gold,
 			"weapon": GameState.equipped_weapon,
 			"armor": GameState.equipped_armor,
-			"ability_scores": GameState.ability_scores
+			"ability_scores": GameState.ability_scores,
+			"is_invisible": GameState.is_invisible(GameState.hero_name),
+			"sprite_opacity": (hero_node.get_node("Sprite").modulate.a if (hero_node and hero_node.has_node("Sprite")) else 1.0)
 		},
 		"inventory": GameState.inventory,
 		"quest_stage": GameState.quest_stage,
@@ -1185,6 +1194,7 @@ func _serialize_party_with_hud_status() -> Array:
 		m_copy["is_dead"] = is_dead
 		m_copy["hud_red"] = is_dead
 		m_copy["is_leader"] = (i == GameState.party_leader_index)
+		m_copy["is_invisible"] = GameState.is_invisible(m.get("name", ""))
 		m_copy["position"] = [0.0, 0.0]
 		if cur_sc:
 			if m.get("id") == "hero" or m.get("name") == GameState.hero_name:
@@ -1486,6 +1496,37 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 								rev += 1
 					res = {"success": true, "spell": "find-traps", "revealed_count": rev}
 				return res
+			elif spell_id == "invisibility":
+				var target_actor = str(args.get("target", caster))
+				var override_sec = float(args.get("override_duration_seconds", args.get("duration", 0.0)))
+				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
+				if not cm and Engine.get_main_loop() is SceneTree:
+					var root = (Engine.get_main_loop() as SceneTree).root
+					if root.has_node("CombatManager"):
+						cm = root.get_node("CombatManager")
+				var res = {}
+				if cm and cm.has_method("execute_cast_spell"):
+					res = cm.execute_cast_spell(caster, "invisibility", target_actor)
+				else:
+					GameState.apply_status_effect(target_actor, "invisible", 10)
+					res = {"success": true, "spell": "invisibility", "target": target_actor}
+				if override_sec > 0.0:
+					GameState.override_status_timeout(target_actor, "invisible", override_sec)
+				return res
+			elif spell_id in ["dispel", "dispel-magic", "dispel_magic"]:
+				var target_actor = str(args.get("target", caster))
+				var cm = cur_scene.find_child("CombatManager", true, false) if cur_scene else null
+				if not cm and Engine.get_main_loop() is SceneTree:
+					var root = (Engine.get_main_loop() as SceneTree).root
+					if root.has_node("CombatManager"):
+						cm = root.get_node("CombatManager")
+				var res = {}
+				if cm and cm.has_method("execute_cast_spell"):
+					res = cm.execute_cast_spell(caster, "dispel-magic", target_actor)
+				else:
+					GameState.remove_status_effect(target_actor, "invisible")
+					res = {"success": true, "spell": "dispel-magic", "target": target_actor}
+				return res
 			else:
 				var hound = cur_scene.find_child("BlightHound", true, false) if cur_scene else null
 				if not hound and cur_scene:
@@ -1495,6 +1536,24 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				if cur_scene and cur_scene.has_method("execute_spell_on_hound"):
 					cur_scene.execute_spell_on_hound(spell_id)
 			return {"success": true, "spell": spell_id, "kills": GameState.stats.kills, "hp": GameState.hero_hp}
+
+		"override_invisibility_timeout", "hack_invisibility_timeout", "set_status_duration":
+			var tgt = str(args.get("target", GameState.hero_name))
+			var eff = str(args.get("effect", "invisible"))
+			var sec = float(args.get("duration_seconds", args.get("duration", 1.5)))
+			GameState.override_status_timeout(tgt, eff, sec)
+			return {"success": true, "target": tgt, "effect": eff, "duration_seconds": sec}
+
+		"dispel_magic":
+			var tgt = str(args.get("target", GameState.hero_name))
+			GameState.remove_status_effect(tgt, "invisible")
+			var cur_sc = Engine.get_main_loop().current_scene if Engine.get_main_loop() else null
+			if cur_sc:
+				var h = cur_sc.find_child("HeroPlayer", true, false)
+				if h and (h.get("character_name") == tgt or tgt == GameState.hero_name):
+					if "sprite" in h and h.sprite:
+						h.sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			return {"success": true, "spell": "dispel-magic", "target": tgt}
 
 		"toggle_detect_traps", "set_detect_traps", "find_traps":
 			var en = bool(args.get("enabled", not GameState.is_detecting_traps))

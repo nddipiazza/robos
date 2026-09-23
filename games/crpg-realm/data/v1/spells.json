@@ -186,6 +186,16 @@
     "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail."
   },
   {
+    "id": "dispel-magic",
+    "title": "Dispel Magic",
+    "level": 3,
+    "school": "Abjuration",
+    "castingTime": "1 action",
+    "range": "120 feet",
+    "icon": "assets/icons/spells/dispel_magic.png",
+    "description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends."
+  },
+  {
     "id": "find-traps",
     "title": "Find Traps",
     "level": 2,

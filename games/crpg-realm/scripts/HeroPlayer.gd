@@ -6,6 +6,7 @@ const Pathfinder = preload("res://scripts/Pathfinder.gd")
 signal attack_finished(target_node: Node2D)
 
 @export var move_speed: float = 220.0
+@export var character_name: String = ""
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var name_label: Label = $OverheadUI/NameLabel
@@ -63,10 +64,14 @@ func _ready() -> void:
 	if GameState.spawn_position != Vector2.ZERO:
 		global_position = GameState.spawn_position
 		GameState.spawn_position = Vector2.ZERO
+	if character_name == "":
+		character_name = GameState.hero_name
 	_load_textures()
 	_update_overhead_ui()
+	_update_invisibility_visual()
 	GameState.hero_damaged.connect(_on_hero_damaged)
 	GameState.settings_changed.connect(_update_overhead_ui)
+	GameState.status_effects_changed.connect(func(_tgt): _update_invisibility_visual())
 	if reticle:
 		reticle.visible = false
 		reticle.top_level = true
@@ -154,7 +159,17 @@ func _on_hero_damaged(current_hp: int, max_hp: int) -> void:
 		sprite.modulate = Color(0.7, 0.2, 0.2, 0.85)
 	else:
 		sprite.rotation_degrees = 0.0
-		sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		_update_invisibility_visual()
+
+func _update_invisibility_visual() -> void:
+	if not sprite:
+		return
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	if GameState.is_invisible(h_name) or GameState.is_invisible(GameState.hero_name):
+		sprite.modulate = Color(1.0, 1.0, 1.0, 0.35)
+	else:
+		if sprite.modulate.a < 0.9 and GameState.hero_hp > 0:
+			sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 func play_hit_reaction() -> void:
 	var tw = create_tween()
@@ -174,6 +189,15 @@ func set_hero_visual_appearance(h_class: String) -> void:
 func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking:
 		return
+
+	# Invisibility breaks on physical attack action
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	if GameState.is_invisible(h_name) or GameState.is_invisible(GameState.hero_name):
+		GameState.remove_status_effect(h_name, "invisible")
+		GameState.remove_status_effect(GameState.hero_name, "invisible")
+		GameState.log_message("combat", "✨ Invisibility broke! %s performed a physical attack." % (GameState.hero_name if GameState.hero_name != "Vance" else h_name))
+		_update_invisibility_visual()
+
 	is_attacking = true
 	_stop_movement()
 	_update_facing(target_pos)
@@ -249,6 +273,14 @@ func attack_target(target_node: Node2D, on_hit_callback: Callable = Callable()) 
 func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking:
 		return
+
+	# Invisibility breaks on ranged attack action
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	if GameState.is_invisible(h_name):
+		GameState.remove_status_effect(h_name, "invisible")
+		GameState.log_message("combat", "✨ Invisibility broke! %s performed an attack." % h_name)
+		_update_invisibility_visual()
+
 	is_attacking = true
 	_stop_movement()
 	_update_facing(target_pos)
@@ -317,6 +349,14 @@ func _spawn_ranged_impact_vfx(hit_pos: Vector2) -> void:
 func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Callable = Callable()) -> void:
 	if is_attacking:
 		return
+
+	# Invisibility breaks on casting non-invisibility spells
+	var h_name = character_name if character_name != "" else GameState.hero_name
+	if spell_id != "invisibility" and GameState.is_invisible(h_name):
+		GameState.remove_status_effect(h_name, "invisible")
+		GameState.log_message("combat", "✨ Invisibility broke! %s cast spell '%s'." % [h_name, spell_id])
+		_update_invisibility_visual()
+
 	is_attacking = true
 	_stop_movement()
 	_update_facing(target_pos)

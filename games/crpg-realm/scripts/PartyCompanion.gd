@@ -37,6 +37,8 @@ func _ready() -> void:
 	_update_overhead_ui()
 	GameState.party_changed.connect(_on_party_changed)
 	GameState.party_selection_changed.connect(_on_selection_changed)
+	GameState.status_effects_changed.connect(func(_tgt): _update_invisibility_visual())
+	_update_invisibility_visual()
 	_on_selection_changed(GameState.selected_party_indices)
 	_find_follow_target()
 
@@ -81,6 +83,16 @@ func _get_member_data() -> Dictionary:
 
 func _on_party_changed() -> void:
 	_update_overhead_ui()
+	_update_invisibility_visual()
+
+func _update_invisibility_visual() -> void:
+	if not sprite:
+		return
+	if GameState.is_invisible(companion_name):
+		sprite.modulate = Color(1.0, 1.0, 1.0, 0.35)
+	else:
+		if sprite.modulate.a < 0.9:
+			sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	var m = _get_member_data()
 	var cur_hp = int(m.get("hp", 10))
 	if cur_hp <= 0 or GameState.has_status_effect(companion_name, "unconscious"):

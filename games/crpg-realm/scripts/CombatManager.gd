@@ -205,6 +205,24 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": "knock"}
 
+		"invisibility":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("apply_status_effect"):
+				gs.apply_status_effect(tgt, "invisible", 10)
+			_log_combat("magic", "✨ %s casts [b]Invisibility[/b] on %s! Light bends around their form." % [caster_name, tgt])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "invisibility", "target": tgt}
+
+		"dispel-magic", "dispel", "dispel_magic":
+			var tgt = target_name if target_name != "" else caster_name
+			if gs and gs.has_method("remove_status_effect"):
+				gs.remove_status_effect(tgt, "invisible")
+			_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! Arcane illusions unravel and dissipate." % [caster_name, tgt])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": "dispel-magic", "target": tgt}
+
 		"tremor-stomp", "crushing-cleave", "rallying-stomp":
 			return execute_fighter_ability(caster_name, spell_id, target_name, target_node)
 

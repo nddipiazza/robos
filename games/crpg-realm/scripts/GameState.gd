@@ -87,6 +87,7 @@ const FORMATIONS: Dictionary = {
 }
 var status_effects: Dictionary = {}
 var status_durations: Dictionary = {}
+var status_realtime_timeouts: Dictionary = {}
 var status_tick_accumulator: float = 0.0
 var activity_log_history: Array[Dictionary] = []
 var spawn_position: Vector2 = Vector2.ZERO
@@ -335,6 +336,8 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 	]
 	selected_party_indices = [0]
 	status_effects = {hero_name: []}
+	status_durations.clear()
+	status_realtime_timeouts.clear()
 	activity_log_history.clear()
 	gold = 150
 	is_game_paused = false
@@ -732,8 +735,14 @@ func apply_status_effect(target_name: String, effect_id: String, duration_rounds
 		status_effects_changed.emit(target_name)
 		party_changed.emit()
 		log_message("combat", "%s is now afflicted with [%s]!" % [target_name, effect_id.to_upper()])
+	status_durations[target_name + ":" + effect_id] = duration_rounds
+	if effect_id == "invisible" and not status_realtime_timeouts.has(target_name + ":invisible"):
+		status_realtime_timeouts[target_name + ":invisible"] = 60.0
 
 func remove_status_effect(target_name: String, effect_id: String) -> void:
+	var key = target_name + ":" + effect_id
+	status_durations.erase(key)
+	status_realtime_timeouts.erase(key)
 	if status_effects.has(target_name) and status_effects[target_name].has(effect_id):
 		status_effects[target_name].erase(effect_id)
 		for m in party_members:
@@ -742,6 +751,11 @@ func remove_status_effect(target_name: String, effect_id: String) -> void:
 		status_effects_changed.emit(target_name)
 		party_changed.emit()
 		log_message("combat", "%s is no longer afflicted with [%s]." % [target_name, effect_id])
+
+func override_status_timeout(target_name: String, effect_id: String, duration_seconds: float) -> void:
+	var key = target_name + ":" + effect_id
+	status_realtime_timeouts[key] = duration_seconds
+	log_message("system", "🛠️ [TEST HACK] Invisibility timeout for %s overridden to %.2f seconds for automated test scenario!" % [target_name, duration_seconds])
 
 func has_status_effect(target_name: String, effect_id: String) -> bool:
 	return status_effects.has(target_name) and status_effects[target_name].has(effect_id)
@@ -806,6 +820,21 @@ func _process(delta: float) -> void:
 	if status_tick_accumulator >= 3.0:
 		status_tick_accumulator = 0.0
 		_tick_status_effects()
+
+	# Process real-time status timeouts
+	var timeout_keys = status_realtime_timeouts.keys().duplicate()
+	for key in timeout_keys:
+		var remaining = float(status_realtime_timeouts[key]) - delta
+		if remaining <= 0.0:
+			status_realtime_timeouts.erase(key)
+			var parts = key.split(":")
+			if parts.size() >= 2:
+				var target_name = parts[0]
+				var effect_id = parts[1]
+				remove_status_effect(target_name, effect_id)
+				log_message("combat", "⏳ %s expired naturally for %s!" % [effect_id.capitalize(), target_name])
+		else:
+			status_realtime_timeouts[key] = remaining
 
 	if is_detecting_traps:
 		trap_pulse_accumulator += delta
@@ -1045,6 +1074,8 @@ func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) ->
 
 	selected_party_indices = [0]
 	status_effects = {hero_name: [], "Sergeant Garrick": [], "Corporal Brutus": []}
+	status_durations.clear()
+	status_realtime_timeouts.clear()
 	party_changed.emit()
 	party_selection_changed.emit(selected_party_indices)
 	hero_damaged.emit(hero_hp, hero_max_hp)
