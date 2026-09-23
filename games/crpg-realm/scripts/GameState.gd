@@ -340,6 +340,8 @@ func take_damage(amount: int) -> void:
 	if hero_hp <= 0:
 		apply_status_effect(hero_name, "unconscious")
 		check_party_defeat()
+	elif hero_hp <= 55 and inventory.has("potion-healing"):
+		execute_party_auto_heal(55)
 
 func heal(amount: int) -> void:
 	hero_hp = min(hero_max_hp, hero_hp + amount)
@@ -633,6 +635,8 @@ func damage_party_member(target_id_or_name: String, amount: int) -> void:
 			if m["hp"] <= 0:
 				apply_status_effect(m.get("name"), "unconscious")
 				check_party_defeat()
+			elif m["hp"] <= 55 and inventory.has("potion-healing"):
+				execute_party_auto_heal(55)
 			break
 
 func heal_party_member(target_id_or_name: String, amount: int) -> void:
@@ -740,6 +744,141 @@ func setup_tactical_party() -> void:
 	selected_party_indices = [0]
 	party_changed.emit()
 	party_selection_changed.emit(selected_party_indices)
+
+func setup_fighter_trio(fighter_hp: int = 100, potions_per_fighter: int = 50) -> void:
+	is_party_defeated = false
+	hero_name = "Commander Vance"
+	hero_class = "fighter"
+	hero_race = "human"
+	hero_max_hp = fighter_hp
+	hero_hp = fighter_hp
+	hero_ac = 18
+	equipped_weapon = "service-sword"
+	equipped_armor = "plate-armor"
+	selected_spells = ["tremor-stomp"]
+	remove_status_effect(hero_name, "unconscious")
+
+	party_members = [
+		{
+			"id": "hero",
+			"name": hero_name,
+			"race": "human",
+			"class": "fighter",
+			"hp": hero_hp,
+			"max_hp": hero_max_hp,
+			"ac": hero_ac,
+			"level": 5,
+			"portrait": "res://assets/portraits/portrait_fighter.png",
+			"weapon": "service-sword",
+			"armor": "plate-armor",
+			"spells": ["tremor-stomp"],
+			"potions": potions_per_fighter,
+			"status_effects": []
+		},
+		{
+			"id": "garrick",
+			"name": "Sergeant Garrick",
+			"race": "human",
+			"class": "fighter",
+			"hp": fighter_hp,
+			"max_hp": fighter_hp,
+			"ac": 18,
+			"level": 5,
+			"portrait": "res://assets/portraits/portrait_fighter.png",
+			"weapon": "greatsword",
+			"armor": "plate-armor",
+			"spells": ["crushing-cleave"],
+			"potions": potions_per_fighter,
+			"status_effects": []
+		},
+		{
+			"id": "brutus",
+			"name": "Corporal Brutus",
+			"race": "dwarf",
+			"class": "fighter",
+			"hp": fighter_hp,
+			"max_hp": fighter_hp,
+			"ac": 18,
+			"level": 5,
+			"portrait": "res://assets/portraits/portrait_fighter.png",
+			"weapon": "warhammer",
+			"armor": "plate-armor",
+			"spells": ["rallying-stomp"],
+			"potions": potions_per_fighter,
+			"status_effects": []
+		}
+	]
+
+	inventory.clear()
+	for i in range(potions_per_fighter * 3):
+		inventory.append("potion-healing")
+
+	selected_party_indices = [0]
+	status_effects = {hero_name: [], "Sergeant Garrick": [], "Corporal Brutus": []}
+	party_changed.emit()
+	party_selection_changed.emit(selected_party_indices)
+	hero_damaged.emit(hero_hp, hero_max_hp)
+	log_message("system", "⚔️ [TRIO DEPLOYED] 3 Hero Fighters (100 HP each, 50 Potions each in toolbelts) enter the fray!")
+
+func execute_party_auto_heal(threshold_hp: int = 55) -> Dictionary:
+	var injured_member: Dictionary = {}
+	for m in party_members:
+		var cur_hp = int(m.get("hp", 0))
+		if cur_hp > 0 and cur_hp <= threshold_hp:
+			injured_member = m
+			break
+
+	if injured_member.is_empty():
+		return {"healed": false, "reason": "No party member below HP threshold"}
+
+	if not inventory.has("potion-healing"):
+		return {"healed": false, "reason": "No healing potions remaining in inventory"}
+
+	inventory.erase("potion-healing")
+	inventory_changed.emit()
+
+	var heal_roll = randi_range(2, 4) + randi_range(2, 4) + 4 # 8-12 HP restored
+	var t_name = str(injured_member.get("name", "Fighter"))
+	var prev_hp = int(injured_member.get("hp", 0))
+	var max_hp = int(injured_member.get("max_hp", 100))
+	var new_hp = min(max_hp, prev_hp + heal_roll)
+	injured_member["hp"] = new_hp
+
+	if injured_member.get("id") == "hero" or t_name == hero_name:
+		hero_hp = new_hp
+		hero_damaged.emit(hero_hp, hero_max_hp)
+
+	party_changed.emit()
+
+	var cur_sc = get_tree().current_scene if get_tree() else null
+	if cur_sc:
+		var target_node: Node2D = null
+		if injured_member.get("id") == "hero" or t_name == hero_name:
+			target_node = cur_sc.find_child("HeroPlayer", true, false)
+		else:
+			for child in cur_sc.get_children():
+				if "companion_name" in child and (child.get("companion_name") == t_name or child.name.to_lower().contains(injured_member.get("id"))):
+					target_node = child
+					break
+		if target_node and "global_position" in target_node and FloatingTextManager:
+			FloatingTextManager.spawn_heal(target_node.global_position, heal_roll)
+
+	if AudioManager:
+		AudioManager.play_sfx("wood_open")
+
+	var potions_left = inventory.count("potion-healing")
+	log_message("item", "🧪 [AI HEAL] %s drinks Healing Potion! Restored %d HP (%d -> %d/%d). [%d Potions remaining]" % [
+		t_name, heal_roll, prev_hp, new_hp, max_hp, potions_left
+	])
+
+	return {
+		"healed": true,
+		"target": t_name,
+		"healed_amount": heal_roll,
+		"current_hp": new_hp,
+		"max_hp": max_hp,
+		"potions_remaining": potions_left
+	}
 
 func set_detect_traps_mode(enabled: bool) -> void:
 	is_detecting_traps = enabled

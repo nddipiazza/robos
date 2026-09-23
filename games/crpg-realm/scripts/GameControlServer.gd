@@ -871,8 +871,12 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 	if scene_to_load != "":
 		if not scene_to_load.begins_with("res://"):
 			scene_to_load = "res://scenes/%s.tscn" % scene_to_load
+		var is_golem_battle = (payload.get("encounter") == "golems" or payload.get("golems", false) or str(payload.get("state_spec", "")).to_lower().contains("golem"))
 		if scene_to_load.contains("TacticalBattle"):
-			GameState.setup_tactical_party()
+			if is_golem_battle:
+				GameState.setup_fighter_trio(100, 50)
+			else:
+				GameState.setup_tactical_party()
 		if get_tree().current_scene and get_tree().current_scene.scene_file_path == scene_to_load:
 			get_tree().reload_current_scene()
 		else:
@@ -880,6 +884,13 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 		await get_tree().process_frame
 		await get_tree().process_frame
 		await get_tree().process_frame
+
+		if is_golem_battle:
+			var sc = get_tree().current_scene
+			if sc and sc.has_method("configure_golem_encounter"):
+				sc.configure_golem_encounter(100, 500, 50)
+			await get_tree().process_frame
+			await get_tree().process_frame
 
 	var cur_scene = get_tree().current_scene
 	var cur_scene_name = cur_scene.name if cur_scene else scene_to_load
@@ -1754,6 +1765,39 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			GameState.setup_tactical_party()
 			get_tree().change_scene_to_file("res://scenes/TacticalBattle.tscn")
 			return {"success": true, "target_scene": "TacticalBattle.tscn"}
+
+		"start_golem_battle", "setup_golem_battle", "load_golem_battle":
+			var f_hp = int(args.get("fighters_hp", 100))
+			var g_hp = int(args.get("golem_hp", 500))
+			var pots = int(args.get("potions_per_fighter", 50))
+			if cur_scene and cur_scene.name == "TacticalBattle" and cur_scene.has_method("configure_golem_encounter"):
+				return cur_scene.configure_golem_encounter(f_hp, g_hp, pots)
+			GameState.setup_fighter_trio(f_hp, pots)
+			get_tree().change_scene_to_file("res://scenes/TacticalBattle.tscn")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var new_sc = get_tree().current_scene
+			if new_sc and new_sc.has_method("configure_golem_encounter"):
+				return new_sc.configure_golem_encounter(f_hp, g_hp, pots)
+			return {"success": true, "scene": "TacticalBattle"}
+
+		"use_fighter_ability", "fighter_maneuver":
+			var fighter = str(args.get("fighter", args.get("actor", GameState.hero_name)))
+			var ability = str(args.get("ability", "tremor-stomp"))
+			var target = str(args.get("target", "golem_alpha"))
+			if cur_scene and cur_scene.has_method("execute_fighter_maneuver"):
+				return cur_scene.execute_fighter_maneuver(fighter, ability, target)
+			return {"success": false, "error": "execute_fighter_maneuver not available"}
+
+		"simulate_golem_assault", "golems_assault", "golem_attack_round":
+			if cur_scene and cur_scene.has_method("execute_golems_assault_round"):
+				return cur_scene.execute_golems_assault_round()
+			return {"success": false, "error": "execute_golems_assault_round not available"}
+
+		"trigger_auto_heal", "execute_party_auto_heal", "auto_heal":
+			var threshold = int(args.get("threshold", 55))
+			return GameState.execute_party_auto_heal(threshold)
 
 		"order_party_attack", "tactical_attack":
 			var attacker = str(args.get("attacker", "hero")).to_lower()

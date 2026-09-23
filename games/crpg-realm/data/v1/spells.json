@@ -208,5 +208,43 @@
     "damageType": "utility",
     "icon": "assets/icons/spells/knock.png",
     "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism."
+  },
+  {
+    "id": "tremor-stomp",
+    "title": "Tremor Stomp",
+    "level": 1,
+    "school": "Martial",
+    "castingTime": "1 action",
+    "range": "Melee",
+    "damageFormula": "2d8",
+    "damageType": "bludgeoning",
+    "condition": "prone",
+    "icon": "assets/icons/weapons/warhammer.png",
+    "description": "A colossal ground slam delivering 2d8 bludgeoning damage and knocking the target prone, granting advantage on all subsequent melee attacks against them."
+  },
+  {
+    "id": "crushing-cleave",
+    "title": "Crushing Cleave",
+    "level": 1,
+    "school": "Martial",
+    "castingTime": "1 action",
+    "range": "Melee",
+    "damageFormula": "2d10",
+    "damageType": "slashing",
+    "icon": "assets/icons/weapons/greatsword.png",
+    "description": "An overpowering overhead martial cleave dealing an additional 2d10 damage."
+  },
+  {
+    "id": "rallying-stomp",
+    "title": "Rallying Stomp",
+    "level": 1,
+    "school": "Martial",
+    "castingTime": "1 bonus action",
+    "range": "30 feet",
+    "damageFormula": "2d6+CON",
+    "damageType": "healing",
+    "acBonus": 2,
+    "icon": "assets/icons/armor/shield.png",
+    "description": "An inspiring battle cry and defensive ground stomp restoring 2d6 + Con HP to party allies and granting a +2 AC defensive resolve bonus."
   }
 ]

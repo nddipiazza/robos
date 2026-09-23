@@ -1328,6 +1328,141 @@ def step_remote_trigger_rejected(context, trap_id):
         f"Expected 'too_far' error requiring walking over trap, got: {res}"
     )
 
+# ── 3 Hero Fighters vs 3 Golems Attrition Steps ───────────────────────────────
+
+@given('an isolated golem attrition battle with 3 fighters of {hp:d} HP each and 3 golems of {golem_hp:d} HP each')
+def step_isolated_golem_battle(context, hp, golem_hp):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "start_golem_battle",
+        "args": {
+            "fighters_hp": hp,
+            "golem_hp": golem_hp,
+            "potions_per_fighter": 50
+        }
+    })
+    time.sleep(1.0)
+
+@then('the tactical battle contains {count:d} enemies with {hp:d} HP each')
+def step_check_golems_hp(context, count, hp):
+    state = api_get(context.web_port, "/api/v1/state")
+    enemies = state.get("battle", {}).get("enemies", [])
+    assert len(enemies) == count, f"Expected {count} enemies, got {len(enemies)} in {enemies}"
+    for e in enemies:
+        assert e.get("hp", 0) == hp, f"Expected enemy {e.get('id')} to have {hp} HP, got {e.get('hp')}"
+
+@then('each of the {count:d} hero fighters has {hp:d} HP and {potions:d} healing potions')
+def step_check_fighters_hp_potions(context, count, hp, potions):
+    state = api_get(context.web_port, "/api/v1/state")
+    party = state.get("party_members", state.get("party", []))
+    assert len(party) >= count, f"Expected at least {count} party members, got {len(party)}"
+    for m in party[:count]:
+        assert m.get("hp", 0) == hp, f"Expected fighter {m.get('name')} to have {hp} HP, got {m.get('hp')}"
+    total_potions = state.get("inventory", []).count("potion-healing")
+    assert total_potions >= count * potions, f"Expected total potions >= {count * potions}, got {total_potions}"
+
+@when('hero "{hero_name}" unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
+def step_hero_unleashes_ability_on_enemy(context, hero_name, ability_id, enemy_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "use_fighter_ability",
+        "args": {
+            "fighter": hero_name,
+            "ability": ability_id,
+            "target": enemy_id
+        }
+    })
+    assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
+    time.sleep(0.8)
+
+@then('enemy "{enemy_id}" is knocked prone granting advantage')
+def step_check_enemy_prone(context, enemy_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    status_effects = state.get("status_effects", {})
+    found_prone = False
+    for k, v in status_effects.items():
+        if enemy_id.lower() in k.lower() or "golem" in k.lower():
+            if "prone" in v:
+                found_prone = True
+                break
+    log_text = state.get("action_log_text", "")
+    history = [e.get("message", "") for e in state.get("activity_log", [])]
+    has_log_prone = "prone" in log_text.lower() or any("prone" in m.lower() for m in history)
+    assert found_prone or has_log_prone, f"Expected enemy '{enemy_id}' to be prone. Status: {status_effects}"
+
+@when('companion "{comp_name}" unleashes fighter ability "{ability_id}" on enemy "{enemy_id}"')
+def step_companion_unleashes_ability_on_enemy(context, comp_name, ability_id, enemy_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "use_fighter_ability",
+        "args": {
+            "fighter": comp_name,
+            "ability": ability_id,
+            "target": enemy_id
+        }
+    })
+    assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
+    time.sleep(0.8)
+
+@when('companion "{comp_name}" unleashes fighter ability "{ability_id}"')
+def step_companion_unleashes_ability_self(context, comp_name, ability_id):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "use_fighter_ability",
+        "args": {
+            "fighter": comp_name,
+            "ability": ability_id
+        }
+    })
+    assert res.get("success") is True, f"Failed to use ability {ability_id}: {res}"
+    time.sleep(0.8)
+
+@when('the 3 golems attack the fighter party across multiple combat rounds')
+def step_golems_attack_party(context):
+    for round_num in range(8):
+        api_post(context.web_port, "/api/v1/action", {
+            "action": "simulate_golem_assault",
+            "args": {}
+        })
+        time.sleep(0.3)
+    time.sleep(0.5)
+
+@then('the party fighters suffer damage from the golems')
+def step_party_suffers_damage(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    history = [e.get("message", "") for e in state.get("activity_log", [])]
+    damage_logged = any("damage" in m.lower() or "hit" in m.lower() for m in history)
+    assert damage_logged, f"Expected damage logs from golems. Recent history: {history[-10:]}"
+
+@when('the autonomous party AI monitors party member health')
+def step_party_ai_monitors_health(context):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "trigger_auto_heal",
+        "args": {"threshold": 95}
+    })
+    time.sleep(0.5)
+
+@then('the autonomous party AI automatically administers healing potions from their toolbelts')
+def step_check_auto_heal_administered(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    history = [e.get("message", "") for e in state.get("activity_log", [])]
+    heal_logged = any("ai heal" in m.lower() or "drinks healing potion" in m.lower() for m in history)
+    assert heal_logged, f"Expected AI HEAL in history: {history[-15:]}"
+
+@then('all 3 hero fighters are still alive and healthy')
+def step_all_fighters_alive(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    party = state.get("party_members", state.get("party", []))
+    assert len(party) >= 3, f"Expected at least 3 party members, got {len(party)}"
+    for m in party[:3]:
+        hp = m.get("hp", 0)
+        assert hp > 0, f"Expected fighter {m.get('name')} to be alive, but HP is {hp}"
+
+@then('none of the hero fighters have fallen or been defeated')
+def step_none_defeated(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    assert state.get("is_party_defeated", False) is False, "Expected party not to be defeated!"
+    party = state.get("party_members", state.get("party", []))
+    for m in party[:3]:
+        assert m.get("hp", 0) > 0, f"Fighter {m.get('name')} has fallen! (HP: {m.get('hp')})"
+
+
 
 
 

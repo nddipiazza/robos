@@ -301,3 +301,159 @@ func _show_notice(text: String) -> void:
 			if notice_label:
 				notice_label.visible = false
 		)
+
+func configure_golem_encounter(fighters_hp: int = 100, golem_hp: int = 500, potions_per_fighter: int = 50) -> Dictionary:
+	GameState.setup_fighter_trio(fighters_hp, potions_per_fighter)
+
+	if hero and is_instance_valid(hero):
+		if hero.find_child("NameLabel", true, false):
+			hero.find_child("NameLabel", true, false).text = "Commander Vance"
+		if hero.find_child("HPBar", true, false):
+			hero.find_child("HPBar", true, false).max_value = fighters_hp
+			hero.find_child("HPBar", true, false).value = fighters_hp
+		if hero.find_child("HPText", true, false):
+			hero.find_child("HPText", true, false).text = "%d/%d" % [fighters_hp, fighters_hp]
+
+	if elora and is_instance_valid(elora):
+		elora.companion_id = "garrick"
+		elora.companion_name = "Sergeant Garrick"
+		elora._update_overhead_ui()
+
+	if thrumbar and is_instance_valid(thrumbar):
+		thrumbar.companion_id = "brutus"
+		thrumbar.companion_name = "Corporal Brutus"
+		thrumbar._update_overhead_ui()
+
+	var golem_configs = [
+		{
+			"old_id": "wolf_alpha",
+			"new_id": "golem_alpha",
+			"name": "Ancient Stone Golem Alpha",
+			"pos": Vector2(1280, 540)
+		},
+		{
+			"old_id": "skeleton_archer",
+			"new_id": "golem_beta",
+			"name": "Ancient Stone Golem Beta",
+			"pos": Vector2(1460, 420)
+		},
+		{
+			"old_id": "shadow_stalker",
+			"new_id": "golem_gamma",
+			"name": "Ancient Stone Golem Gamma",
+			"pos": Vector2(1380, 680)
+		}
+	]
+
+	var new_enemies: Dictionary = {}
+	for cfg in golem_configs:
+		var e: TacticalEnemy = enemies.get(cfg.old_id)
+		if not e:
+			e = enemies.get(cfg.new_id)
+		if e and is_instance_valid(e):
+			e.enemy_id = cfg.new_id
+			e.enemy_name = cfg.name
+			e.max_hp = golem_hp
+			e.current_hp = golem_hp
+			e.armor_class = 14
+			e.attack_bonus = 4
+			e.damage_min = 4
+			e.damage_max = 8
+			e.move_speed = 70.0
+			e.is_ranged = false
+			e.current_state = TacticalEnemy.State.PATROL
+			e.global_position = cfg.pos
+			e.sprite_scale = Vector2(0.55, 0.55)
+			e.sprite_texture_path = "res://assets/sprites/enemies/minotaur.png"
+			e._setup_sprite()
+			e._update_ui()
+			new_enemies[cfg.new_id] = e
+
+	enemies = new_enemies
+
+	if hud:
+		hud.update_display("Golem Attrition Battle: 3 Fighters vs 3 Ancient Stone Golems")
+
+	_show_notice("⚔️ Golem Attrition: 3 Fighters (100 HP, 50 Potions each) vs 3 Golems (500 HP each)!")
+	GameState.log_message("combat", "⚔️ [b]GOLEM ATTRITION COMBAT:[/b] 3 Veteran Fighters confront 3 colossal 500 HP Ancient Stone Golems!")
+
+	return {
+		"success": true,
+		"party": GameState.party_members,
+		"enemies_count": enemies.size(),
+		"golem_hp": golem_hp,
+		"potions_total": GameState.inventory.count("potion-healing")
+	}
+
+func execute_fighter_maneuver(fighter_name: String, maneuver_id: String, target_id: String = "") -> Dictionary:
+	var target_node = null
+	var target_name = ""
+	if target_id != "":
+		target_node = enemies.get(target_id)
+		if target_node:
+			target_name = target_node.enemy_name
+
+	var res = combat_mgr.execute_fighter_ability(fighter_name, maneuver_id, target_name, target_node)
+	_show_notice("⚡ %s unleashes %s!" % [fighter_name, maneuver_id.capitalize().replace("-", " ")])
+	return res
+
+func execute_golems_assault_round() -> Dictionary:
+	var round_hits: Array[Dictionary] = []
+	var targets = [
+		{"node": hero, "name": GameState.hero_name, "id": "hero"},
+		{"node": elora, "name": "Sergeant Garrick", "id": "garrick"},
+		{"node": thrumbar, "name": "Corporal Brutus", "id": "brutus"}
+	]
+
+	var idx = 0
+	for eid in enemies:
+		var e: TacticalEnemy = enemies[eid]
+		if not is_instance_valid(e) or e.current_state == TacticalEnemy.State.DEAD:
+			continue
+
+		var tgt = targets[idx % targets.size()]
+		idx += 1
+
+		# Golem attacks target with balanced attack roll
+		var d20 = randi_range(14, 19)
+		var total_atk = d20 + e.attack_bonus
+		var target_ac = 18
+		var hit = total_atk >= target_ac
+		var dmg = 0
+
+		if hit:
+			dmg = randi_range(e.damage_min, e.damage_max) # 4 to 8 damage
+			GameState.log_message("combat", "%s strikes %s with heavy stone slam! [d20: %d + %d = %d vs AC %d] HIT for %d damage!" % [
+				e.enemy_name, tgt.name, d20, e.attack_bonus, total_atk, target_ac, dmg
+			])
+			if tgt.id == "hero":
+				GameState.take_damage(dmg)
+			else:
+				GameState.damage_party_member(tgt.name, dmg)
+
+			if FloatingTextManager and tgt.node and is_instance_valid(tgt.node):
+				FloatingTextManager.spawn_damage(tgt.node.global_position, dmg)
+			if tgt.node and tgt.node.has_method("play_hit_reaction"):
+				tgt.node.play_hit_reaction()
+		else:
+			GameState.log_message("combat", "%s swings heavy stone fist at %s [d20: %d + %d = %d vs AC %d] - DEFLECTED!" % [
+				e.enemy_name, tgt.name, d20, e.attack_bonus, total_atk, target_ac
+			])
+			if FloatingTextManager and tgt.node and is_instance_valid(tgt.node):
+				FloatingTextManager.spawn_miss(tgt.node.global_position)
+
+		round_hits.append({
+			"golem": e.enemy_name,
+			"target": tgt.name,
+			"hit": hit,
+			"damage": dmg
+		})
+
+	return {
+		"success": true,
+		"assault_results": round_hits,
+		"party_members": GameState.party_members,
+		"potions_remaining": GameState.inventory.count("potion-healing"),
+		"party_wiped": GameState.is_party_defeated
+	}
+

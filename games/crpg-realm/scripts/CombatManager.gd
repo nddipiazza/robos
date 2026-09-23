@@ -215,11 +215,75 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": "knock"}
 
+		"tremor-stomp", "crushing-cleave", "rallying-stomp":
+			return execute_fighter_ability(caster_name, spell_id, target_name, target_node)
+
 		_:
 			_log_combat("combat", "%s casts %s!" % [caster_name, spell_id])
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": spell_id}
+
+func execute_fighter_ability(fighter_name: String, ability_id: String, target_name: String = "", target_node: Node = null) -> Dictionary:
+	var am = _get_audio_manager()
+	var gs = _get_game_state()
+
+	match ability_id:
+		"tremor-stomp":
+			var dmg = randi_range(1, 8) + randi_range(1, 8) + 4 # 2d8+4 bludgeoning
+			_log_combat("combat", "💥 [TREMOR STOMP] %s slams the ground with colossal martial force against %s!" % [
+				fighter_name, target_name if target_name != "" else "the battlefield"
+			])
+			_log_combat("damage", "Ground tremor deals %d bludgeoning damage and knocks %s PRONE (Granting Advantage on melee attacks)!" % [
+				dmg, target_name if target_name != "" else "target"
+			])
+			if gs and gs.has_method("apply_status_effect") and target_name != "":
+				gs.apply_status_effect(target_name, "prone", 3)
+			if target_node:
+				if "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_damage(target_node.global_position, dmg)
+					FloatingTextManager.spawn_text(target_node.global_position + Vector2(0, -25), "KNOCKED PRONE!", Color(1.0, 0.8, 0.2))
+				if target_node.has_method("take_damage"):
+					target_node.take_damage(dmg)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("melee_crit")
+			return {"success": true, "ability": "tremor-stomp", "damage": dmg, "condition": "prone", "advantage": true}
+
+		"crushing-cleave":
+			var dmg = randi_range(1, 10) + randi_range(1, 10) + 6 # +2d10+6 slashing
+			_log_combat("combat", "⚔️ [CRUSHING CLEAVE] %s executes an overwhelming martial strike across %s!" % [
+				fighter_name, target_name if target_name != "" else "target"
+			])
+			_log_combat("damage", "Devastating greatsword cleave inflicts %d crushing slashing damage on %s!" % [
+				dmg, target_name if target_name != "" else "target"
+			])
+			if target_node:
+				if "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_damage(target_node.global_position, dmg, true)
+				if target_node.has_method("take_damage"):
+					target_node.take_damage(dmg)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("melee_crit")
+			return {"success": true, "ability": "crushing-cleave", "damage": dmg}
+
+		"rallying-stomp":
+			var heal = randi_range(1, 6) + randi_range(1, 6) + 4 # 2d6+4 healing
+			_log_combat("combat", "🛡️ [RALLYING STOMP] %s performs an inspiring war stomp and battle cry!" % fighter_name)
+			_log_combat("damage", "Martial resolve bolsters the party, restoring %d HP to all allies and granting +2 AC defensive posture!" % heal)
+			if gs and "party_members" in gs:
+				for m in gs.party_members:
+					var m_name = str(m.get("name", ""))
+					if m.get("id") == "hero" or m_name == gs.hero_name:
+						gs.heal(heal)
+					else:
+						gs.heal_party_member(m_name, heal)
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("heal_cast")
+			return {"success": true, "ability": "rallying-stomp", "healed": heal, "ac_bonus": 2}
+
+		_:
+			_log_combat("combat", "%s executes %s!" % [fighter_name, ability_id])
+			return {"success": true, "ability": ability_id}
 
 func resolve_trap_detection(detector_name: String, perception_bonus: int, trap_dc: int, trap_name: String = "Concealed Trap") -> Dictionary:
 	var d20 = max(10, roll_d20()) # D&D 5e Passive Perception floor (10 + bonus) for active search

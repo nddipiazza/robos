@@ -302,5 +302,63 @@
         }
       }
     }
+  },
+  {
+    "id": "ancient-stone-golem",
+    "title": "Ancient Stone Golem",
+    "challengeRating": "5",
+    "armorClass": 14,
+    "hitPoints": 500,
+    "speed": 70,
+    "abilities": {
+      "STR": 18,
+      "DEX": 9,
+      "CON": 18,
+      "INT": 3,
+      "WIS": 11,
+      "CHA": 1
+    },
+    "attacks": [
+      {
+        "name": "Slam",
+        "attackBonus": 4,
+        "damage": "1d6+2",
+        "damageType": "bludgeoning",
+        "range": 5
+      }
+    ],
+    "sprite": {
+      "assetRef": "flare:creature:minotaur",
+      "frameWidth": 192,
+      "frameHeight": 192,
+      "directions": 8,
+      "animations": {
+        "idle": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "frameDuration": 0.2
+        },
+        "walk": {
+          "startFrame": 32,
+          "frameCount": 8,
+          "frameDuration": 0.16
+        },
+        "attack": {
+          "startFrame": 96,
+          "frameCount": 8,
+          "frameDuration": 0.14
+        },
+        "hurt": {
+          "startFrame": 160,
+          "frameCount": 3,
+          "frameDuration": 0.1
+        },
+        "die": {
+          "startFrame": 184,
+          "frameCount": 7,
+          "frameDuration": 0.18
+        }
+      }
+    }
   }
 ]
