@@ -289,7 +289,7 @@ func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), ta
 				res = on_hit_callback.call()
 			if res == null or not (res is Dictionary) or res.get("hit", true):
 				_spawn_slash_vfx(target_pos)
-		await get_tree().create_timer(0.20).timeout
+		await get_tree().create_timer(0.12).timeout
 	
 	# Reset back to idle
 	if idle_textures.size() > 0:
@@ -345,7 +345,7 @@ func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callabl
 
 	if attack_textures.size() > 1:
 		sprite.texture = attack_textures[1]
-	await get_tree().create_timer(0.24).timeout
+	await get_tree().create_timer(0.12).timeout
 
 	if AudioManager:
 		AudioManager.play_sfx("ranged_shoot")
@@ -369,7 +369,7 @@ func play_ranged_attack(target_pos: Vector2, on_hit_callback: Callable = Callabl
 
 	get_parent().add_child(arrow)
 
-	var flight_time = clamp(global_position.distance_to(target_pos) / 550.0, 0.30, 0.65)
+	var flight_time = clamp(global_position.distance_to(target_pos) / 850.0, 0.16, 0.32)
 	var tw = create_tween()
 	tw.tween_property(arrow, "global_position", target_pos, flight_time)
 	await tw.finished
@@ -446,11 +446,11 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 	get_parent().add_child(circle)
 
 	var circle_tw = create_tween()
-	circle_tw.tween_property(circle, "scale", Vector2(1.4, 0.7), 0.50).from(Vector2(0.2, 0.1))
-	circle_tw.parallel().tween_property(circle, "modulate:a", 0.0, 0.70).from(1.0)
+	circle_tw.tween_property(circle, "scale", Vector2(1.4, 0.7), 0.35).from(Vector2(0.2, 0.1))
+	circle_tw.parallel().tween_property(circle, "modulate:a", 0.0, 0.45).from(1.0)
 	circle_tw.tween_callback(circle.queue_free)
 
-	await get_tree().create_timer(0.40).timeout
+	await get_tree().create_timer(0.12).timeout
 
 	if spell_id == "cure-wounds":
 		var heal_fx = Node2D.new()
@@ -524,7 +524,7 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 				if dart_idx == 0 and on_cast_callback.is_valid():
 					on_cast_callback.call()
 			)
-			await get_tree().create_timer(0.16).timeout
+			await get_tree().create_timer(0.08).timeout
 	else:
 		var orb = Node2D.new()
 		orb.top_level = true
@@ -540,8 +540,9 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		orb.add_child(poly)
 		get_parent().add_child(orb)
 
+		var flight_time = clamp(global_position.distance_to(target_pos) / 1400.0, 0.16, 0.26)
 		var tw = create_tween()
-		tw.tween_property(orb, "global_position", target_pos, 0.52)
+		tw.tween_property(orb, "global_position", target_pos, flight_time)
 		await tw.finished
 		orb.queue_free()
 		if spell_id == "fireball":
@@ -568,12 +569,12 @@ func _spawn_magic_missile_dart(target_pos: Vector2, index: int, on_impact: Calla
 	dart.add_child(poly)
 	get_parent().add_child(dart)
 
-	var offset_y = (index - 1) * 35.0
+	var offset_y = (index - 1) * 25.0
 	var mid_point = (dart.global_position + target_pos) / 2.0 + Vector2(0, offset_y)
 	
 	var tw = create_tween()
-	tw.tween_property(dart, "global_position", mid_point, 0.24)
-	tw.tween_property(dart, "global_position", target_pos, 0.24)
+	tw.tween_property(dart, "global_position", mid_point, 0.10)
+	tw.tween_property(dart, "global_position", target_pos, 0.10)
 	await tw.finished
 
 	dart.queue_free()
@@ -678,7 +679,6 @@ func _spawn_healing_word_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("heal_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_shield_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 	var shield_node = Node2D.new()
@@ -710,7 +710,6 @@ func _spawn_shield_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_mage_armor_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var armor_node = Node2D.new()
@@ -743,7 +742,6 @@ func _spawn_mage_armor_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_bless_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var bless_node = Node2D.new()
@@ -776,7 +774,6 @@ func _spawn_bless_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("heal_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_sleep_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var sleep_node = Node2D.new()
@@ -811,7 +808,6 @@ func _spawn_sleep_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.5).timeout
 
 func _spawn_hold_person_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var chain_node = Node2D.new()
@@ -842,7 +838,6 @@ func _spawn_hold_person_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_spiritual_weapon_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var weapon_node = Node2D.new()
@@ -859,8 +854,8 @@ func _spawn_spiritual_weapon_vfx(target_pos: Vector2, on_impact: Callable) -> vo
 	get_parent().add_child(weapon_node)
 
 	var tw = create_tween()
-	tw.tween_property(weapon_node, "rotation_degrees", 45.0, 0.22).from(-30.0)
-	tw.parallel().tween_property(weapon_node, "global_position", target_pos, 0.22)
+	tw.tween_property(weapon_node, "rotation_degrees", 45.0, 0.16).from(-30.0)
+	tw.parallel().tween_property(weapon_node, "global_position", target_pos, 0.16)
 	await tw.finished
 
 	weapon_node.queue_free()
@@ -869,7 +864,6 @@ func _spawn_spiritual_weapon_vfx(target_pos: Vector2, on_impact: Callable) -> vo
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.3).timeout
 
 func _spawn_burning_hands_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var cone_node = Node2D.new()
@@ -912,7 +906,6 @@ func _spawn_burning_hands_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_thunderwave_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var wave_node = Node2D.new()
@@ -937,7 +930,6 @@ func _spawn_thunderwave_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.35).timeout
 
 func _spawn_lightning_bolt_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var bolt_node = Node2D.new()
@@ -971,7 +963,6 @@ func _spawn_lightning_bolt_vfx(target_pos: Vector2, on_impact: Callable) -> void
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_haste_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var haste_node = Node2D.new()
@@ -1001,7 +992,6 @@ func _spawn_haste_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.35).timeout
 
 func _spawn_counterspell_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var cs_node = Node2D.new()
@@ -1027,7 +1017,6 @@ func _spawn_counterspell_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.35).timeout
 
 func _spawn_dispel_magic_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var dispel_node = Node2D.new()
@@ -1058,7 +1047,6 @@ func _spawn_dispel_magic_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_find_traps_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1086,7 +1074,6 @@ func _spawn_find_traps_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_knock_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1114,7 +1101,6 @@ func _spawn_knock_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.3).timeout
 
 func _spawn_invisibility_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1137,7 +1123,6 @@ func _spawn_invisibility_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("spell_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.3).timeout
 
 func _spawn_tremor_stomp_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1172,7 +1157,6 @@ func _spawn_tremor_stomp_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		AudioManager.play_sfx("melee_crit")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.3).timeout
 
 func _spawn_crushing_cleave_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1196,7 +1180,6 @@ func _spawn_crushing_cleave_vfx(target_pos: Vector2, on_impact: Callable) -> voi
 		AudioManager.play_sfx("melee_crit")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.3).timeout
 
 func _spawn_rallying_stomp_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1236,7 +1219,6 @@ func _spawn_rallying_stomp_vfx(center_pos: Vector2, on_impact: Callable) -> void
 		AudioManager.play_sfx("heal_cast")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_blizzard_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1289,12 +1271,9 @@ func _spawn_blizzard_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 
 	if AudioManager:
 		AudioManager.play_sfx("spell_cast")
-	await get_tree().create_timer(0.35).timeout
-	if AudioManager:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func _spawn_stinking_cloud_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()
@@ -1334,12 +1313,9 @@ func _spawn_stinking_cloud_vfx(target_pos: Vector2, on_impact: Callable) -> void
 
 	if AudioManager:
 		AudioManager.play_sfx("spell_cast")
-	await get_tree().create_timer(0.35).timeout
-	if AudioManager:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
-	await get_tree().create_timer(0.4).timeout
 
 func move_to(target_pos: Vector2) -> void:
 	move_to_point(target_pos)

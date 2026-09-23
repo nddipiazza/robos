@@ -302,8 +302,7 @@ func _execute_melee_strike(target_node: Node2D, on_hit_callback: Callable = Call
 	var orig_pos = sprite.position
 	var lunge_dir = global_position.direction_to(target_node.global_position)
 	var tw = create_tween()
-	tw.tween_property(sprite, "position", orig_pos + lunge_dir * 16.0, 0.14)
-	tw.tween_property(sprite, "position", orig_pos, 0.18)
+	tw.tween_property(sprite, "position", orig_pos + lunge_dir * 16.0, 0.12)
 
 	if AudioManager:
 		AudioManager.play_sfx("melee_swing")
@@ -320,6 +319,10 @@ func _execute_melee_strike(target_node: Node2D, on_hit_callback: Callable = Call
 	elif target_node.has_method("take_damage"):
 		var dmg = randi_range(16, 24)
 		target_node.take_damage(dmg, self)
+
+	var ret_tw = create_tween()
+	ret_tw.tween_property(sprite, "position", orig_pos, 0.14)
+	await ret_tw.finished
 
 	is_attacking = false
 	attack_finished.emit(target_node)
