@@ -532,6 +532,42 @@
   "robos:frontendFramework": [
     "applications"
   ],
+  "robos:appTemplate": [
+    "applications"
+  ],
+  "robos:hostingPlatform": [
+    "infrastructure"
+  ],
+  "robos:productionUrl": [
+    "applications"
+  ],
+  "robos:databaseEngine": [
+    "data"
+  ],
+  "robos:authStrategy": [
+    "applications"
+  ],
+  "robos:abuseControls": [
+    "applications"
+  ],
+  "robos:captchaProvider": [
+    "applications"
+  ],
+  "robos:crawlerPolicy": [
+    "applications"
+  ],
+  "robos:sitemapUrl": [
+    "applications"
+  ],
+  "robos:llmsTxtUrl": [
+    "applications"
+  ],
+  "robos:structuredData": [
+    "applications"
+  ],
+  "robos:e2eEvidence": [
+    "testing"
+  ],
   "robos:gameEngine": [
     "applications"
   ],

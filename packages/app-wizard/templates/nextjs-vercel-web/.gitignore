@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+.vercel/
+evidence/
+*.log
+.DS_Store
+run-local.sh
+run-e2e.sh
+_to_delete/

@@ -337,6 +337,66 @@ const BUILTIN_SHACL_SHAPES = [
         "path": "robos:frontendFramework",
         "minCount": 1,
         "message": "Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte)."
+      },
+      {
+        "path": "robos:appTemplate",
+        "minCount": 0,
+        "message": "Template the app was generated from; optional for hand-built apps."
+      },
+      {
+        "path": "robos:hostingPlatform",
+        "minCount": 0,
+        "message": "Production hosting platform."
+      },
+      {
+        "path": "robos:productionUrl",
+        "minCount": 0,
+        "message": "Canonical production URL."
+      },
+      {
+        "path": "robos:databaseEngine",
+        "minCount": 0,
+        "message": "Primary datastore."
+      },
+      {
+        "path": "robos:authStrategy",
+        "minCount": 0,
+        "message": "Authentication approach."
+      },
+      {
+        "path": "robos:abuseControls",
+        "minCount": 0,
+        "message": "Abuse and bot protections."
+      },
+      {
+        "path": "robos:captchaProvider",
+        "minCount": 0,
+        "message": "CAPTCHA integration and whether it is enabled."
+      },
+      {
+        "path": "robos:crawlerPolicy",
+        "minCount": 0,
+        "message": "robots.txt policy for search engines and AI agents."
+      },
+      {
+        "path": "robos:sitemapUrl",
+        "minCount": 0,
+        "message": "XML sitemap URL."
+      },
+      {
+        "path": "robos:llmsTxtUrl",
+        "minCount": 0,
+        "message": "llms.txt summary for AI agents."
+      },
+      {
+        "path": "robos:structuredData",
+        "minCount": 0,
+        "message": "schema.org JSON-LD types emitted."
+      },
+      {
+        "path": "robos:e2eEvidence",
+        "minCount": 0,
+        "message": "E2E evidence video location."
       }
     ],
     "refersFrom": "https://schema.org/WebApplication",

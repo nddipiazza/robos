@@ -57,6 +57,18 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:technology</code></span>
     <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:frontendFramework</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:appTemplate</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:hostingPlatform</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:productionUrl</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:databaseEngine</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:authStrategy</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:abuseControls</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:captchaProvider</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:crawlerPolicy</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:sitemapUrl</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:llmsTxtUrl</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:structuredData</code></span>
+    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:e2eEvidence</code></span>
   </div>
 </div>
 
@@ -72,6 +84,18 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 | **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Front End App must define a repository. |
 | **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Front End App must specify technology stack. |
 | **`robos:frontendFramework`** | Frontend Framework | `1..*` | `xsd:string` | Applications & entry points | Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte). |
+| **`robos:appTemplate`** | App Template | `0..*` | `xsd:string` | Applications & entry points | Template the app was generated from; optional for hand-built apps. |
+| **`robos:hostingPlatform`** | Hosting Platform | `0..*` | `xsd:string` | Infrastructure & delivery | Production hosting platform. |
+| **`robos:productionUrl`** | Production URL | `0..*` | `xsd:string` | Applications & entry points | Canonical production URL. |
+| **`robos:databaseEngine`** | Database Engine | `0..*` | `xsd:string` | Data stores & messaging | Primary datastore. |
+| **`robos:authStrategy`** | Auth Strategy | `0..*` | `xsd:string` | Applications & entry points | Authentication approach. |
+| **`robos:abuseControls`** | Abuse Controls | `0..*` | `xsd:string` | Applications & entry points | Abuse and bot protections. |
+| **`robos:captchaProvider`** | CAPTCHA Provider | `0..*` | `xsd:string` | Applications & entry points | CAPTCHA integration and whether it is enabled. |
+| **`robos:crawlerPolicy`** | Crawler Policy | `0..*` | `xsd:string` | Applications & entry points | robots.txt policy for search engines and AI agents. |
+| **`robos:sitemapUrl`** | Sitemap URL | `0..*` | `xsd:string` | Applications & entry points | XML sitemap URL. |
+| **`robos:llmsTxtUrl`** | llms.txt URL | `0..*` | `xsd:string` | Applications & entry points | llms.txt summary for AI agents. |
+| **`robos:structuredData`** | Structured Data | `0..*` | `xsd:string` | Applications & entry points | schema.org JSON-LD types emitted. |
+| **`robos:e2eEvidence`** | E2E Evidence | `0..*` | `xsd:string` | Testing & behavior | E2E evidence video location. |
 
 ---
 

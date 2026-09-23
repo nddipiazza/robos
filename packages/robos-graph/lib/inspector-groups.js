@@ -212,7 +212,19 @@
         "robos:executableName",
         "robos:appVersion",
         "robos:appName",
-        "robos:buildCommand"
+        "robos:buildCommand",
+        "robos:appTemplate",
+        "robos:hostingPlatform",
+        "robos:productionUrl",
+        "robos:databaseEngine",
+        "robos:authStrategy",
+        "robos:abuseControls",
+        "robos:captchaProvider",
+        "robos:crawlerPolicy",
+        "robos:sitemapUrl",
+        "robos:llmsTxtUrl",
+        "robos:structuredData",
+        "robos:e2eEvidence"
       ],
       "incoming": [],
       "triggerProperties": [
@@ -227,7 +239,19 @@
         "robos:executableName",
         "robos:appVersion",
         "robos:appName",
-        "robos:buildCommand"
+        "robos:buildCommand",
+        "robos:appTemplate",
+        "robos:hostingPlatform",
+        "robos:productionUrl",
+        "robos:databaseEngine",
+        "robos:authStrategy",
+        "robos:abuseControls",
+        "robos:captchaProvider",
+        "robos:crawlerPolicy",
+        "robos:sitemapUrl",
+        "robos:llmsTxtUrl",
+        "robos:structuredData",
+        "robos:e2eEvidence"
       ]
     },
     {

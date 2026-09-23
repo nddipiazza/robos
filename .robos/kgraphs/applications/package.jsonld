@@ -313,6 +313,52 @@
         "urn:robos:elearning:course:kgraph-parse-portal"
       ],
       "robos:hasDocumentationPage": "urn:robos:doc:kgraph-parse-portal"
+    },
+    {
+      "@id": "urn:robos:frontend-app:getemgigs",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp",
+        "schema:WebApplication"
+      ],
+      "dcterms:title": "Get 'Em Gigs (The Gig Bandit)",
+      "dcterms:description": "Buddy Gigs for local bands: trade attendance, lock a deposit, get scanned in at the door (Venmo-style QR); Venue Stay-To-Play instead of pay-to-play.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/thegigbandit",
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
+      "robos:frontendFramework": "Next.js",
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1 (reference implementation)",
+      "robos:hostingPlatform": "Vercel",
+      "robos:productionUrl": "https://www.getemgigs.com",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "robos:abuseControls": [
+        "rate-limits",
+        "honeypot",
+        "form-timing",
+        "disposable-email-block",
+        "password-policy",
+        "same-origin-csrf",
+        "csp",
+        "audit-log",
+        "rotating-hmac-checkin-codes"
+      ],
+      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
+      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account, /deals, /scan, /gigs/new disallowed",
+      "robos:sitemapUrl": "https://www.getemgigs.com/sitemap.xml",
+      "robos:llmsTxtUrl": "https://www.getemgigs.com/llms.txt",
+      "robos:structuredData": [
+        "schema:Organization",
+        "schema:WebSite",
+        "schema:WebApplication",
+        "schema:FAQPage",
+        "schema:ItemList",
+        "schema:MusicEvent"
+      ],
+      "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:domainStandard": "https://schema.org/WebApplication"
     }
   ],
   "@graph": [

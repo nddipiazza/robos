@@ -1,0 +1,16 @@
+# __APP_NAME__ (__DOMAIN__)
+
+> __DESCRIPTION__
+
+Key facts:
+- __TAGLINE__
+- Phone-first web app; add __DOMAIN__ to your home screen.
+
+## Main pages
+- [Home](https://www.__DOMAIN__/): what __APP_NAME__ is, FAQ
+- [Sign up](https://www.__DOMAIN__/signup): create a free account
+- [Sitemap](https://www.__DOMAIN__/sitemap.xml): every public page
+
+## Policies
+- [Terms](https://www.__DOMAIN__/terms)
+- [Privacy](https://www.__DOMAIN__/privacy)

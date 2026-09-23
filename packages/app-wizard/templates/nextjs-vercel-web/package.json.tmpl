@@ -1,0 +1,36 @@
+{
+  "name": "__APP_SLUG__",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": __DESCRIPTION_JS__,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test tests/unit/*.test.js",
+    "e2e": "cucumber-js --config tests/e2e/cucumber.cjs",
+    "e2e:live": "BASE_URL=https://www.__DOMAIN__ cucumber-js --config tests/e2e/cucumber.cjs",
+    "evidence": "node scripts/encode-frames.mjs && node scripts/build-evidence.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "bcryptjs": "^3.0.2",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.2.0",
+    "@electric-sql/pglite": "^0.3.8",
+    "playwright": "^1.55.1",
+    "qrcode": "^1.5.4"
+  },
+  "robos": {
+    "template": "nextjs-vercel-web",
+    "templateVersion": 1
+  }
+}

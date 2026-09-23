@@ -367,34 +367,39 @@ const DEFAULT_TEMPLATES = [
   },
   {
     id: 'nextjs-fullstack-app',
-    title: 'Plan to Create a Next.js Fullstack SSR Web App',
+    title: 'Plan to Launch a Next.js Web App on Vercel (RobOS Launch Kit)',
     category: 'Front-End Applications',
     icon: '▲',
-    description: 'Scaffold Next.js App Router project with Server Components, Server Actions, SEO metadata, and auth.',
+    description: 'Generate from the RobOS nextjs-vercel-web launch kit (getemgigs.com): auth, Neon Postgres, abuse controls, search + AI-agent discoverability, mobile-first UI, and Cucumber E2E evidence videos.',
     fields: [
-      { id: 'appName', label: 'Next.js App Name', type: 'text', default: 'storefront-nextjs', required: true },
+      { id: 'appName', label: 'App Name / Slug', type: 'text', default: 'storefront-nextjs', required: true },
+      { id: 'domain', label: 'Production Domain', type: 'text', default: 'example.com', help: 'Canonical site becomes https://www.<domain>' },
       { id: 'rendering', label: 'Rendering Strategy', type: 'select', default: 'hybrid', options: [
         { value: 'hybrid', label: 'Hybrid SSR + Static Generation (ISR)' },
         { value: 'pure-ssr', label: 'Dynamic Server Rendering (SSR)' },
         { value: 'static-export', label: 'Static Export (SSG / CDN)' },
       ]},
-      { id: 'authSolution', label: 'Auth Solution', type: 'select', default: 'nextauth', options: [
+      { id: 'authSolution', label: 'Auth Solution', type: 'select', default: 'robos-sessions', options: [
+        { value: 'robos-sessions', label: 'Launch kit: email + password, hashed server-side sessions' },
         { value: 'nextauth', label: 'Auth.js (NextAuth v5)' },
         { value: 'clerk', label: 'Clerk Authentication' },
-        { value: 'custom-jwt', label: 'Custom HTTP-only Cookies JWT' },
       ]},
+      { id: 'coreEntity', label: 'Core Public Entity (for JSON-LD)', type: 'text', default: 'Product', help: 'schema.org type your public pages represent, e.g. Event, MusicEvent, Product, Course' },
     ],
     generatePlan: (a) => makePlan({
-      prompt: `Scaffold Next.js application "${a.appName}" with ${a.rendering} and ${a.authSolution}.`,
-      epicTitle: `Epic: ${a.appName} Next.js Fullstack App`,
+      prompt: `Generate Next.js web app "${a.appName}" (${a.domain}) from the RobOS nextjs-vercel-web launch kit with ${a.rendering} rendering and ${a.authSolution}; public pages describe schema.org ${a.coreEntity || 'Thing'}.`,
+      epicTitle: `Epic: ${a.appName} Next.js Web App Launch`,
       epicName: a.appName,
-      epicBody: `Implement Next.js App Router application with server actions and SEO optimization.`,
-      labels: ['nextjs', 'react', 'fullstack'],
+      epicBody: `Generate ${a.appName} from packages/app-wizard/templates/nextjs-vercel-web (App Wizard → Front End App), build the product on top, and launch on Vercel at https://www.${a.domain} with video proof-of-work.`,
+      labels: ['nextjs', 'react', 'fullstack', 'vercel', 'launch-kit'],
       stories: [
-        { title: `${a.appName}: Next.js App Router & Layout Scaffolding`, body: `Setup App Router directory, root layout, and fonts.` },
-        { title: `${a.appName}: Authentication Integration (${a.authSolution})`, body: `Configure ${a.authSolution} with middleware route protection.` },
-        { title: `${a.appName}: Server Actions & Mutation Endpoints`, body: `Implement type-safe Server Actions for form submissions and data updates.` },
-        { title: `${a.appName}: SEO OpenGraph Metadata & Performance Audit`, body: `Configure dynamic metadata, sitemap.xml, robots.txt, and Lighthouse optimization.` },
+        { title: `${a.appName}: Generate from the nextjs-vercel-web launch kit`, body: `Run the App Wizard (Front End App) with name, tagline, description and keywords. Verify npm test and next build pass; SDLC KGraph node and docs/projects page are created.` },
+        { title: `${a.appName}: Data model & auth (${a.authSolution})`, body: `Extend src/lib/schema.js with app tables (ON DELETE CASCADE to users). Neon via Vercel Marketplace in production, PGlite locally.` },
+        { title: `${a.appName}: Core product workflow (mobile-first)`, body: `Build the primary user flow at 375px first with the bottom tab bar; ${a.rendering} rendering.` },
+        { title: `${a.appName}: Abuse controls review`, body: `Apply rate limits, honeypot/form timing and same-origin checks to every new mutation; keep reCAPTCHA v3 wired but disabled until abuse appears; audit log.` },
+        { title: `${a.appName}: Search engines & AI agents`, body: `Add public URLs to sitemap.js, schema.org ${a.coreEntity || 'Thing'} JSON-LD + per-entity OG images, update llms.txt, keep robots.txt rules for search engines, AI search/agents and link-preview bots; noindex private pages; verify Search Console + Bing and submit the sitemap.` },
+        { title: `${a.appName}: Cucumber E2E + RobOS evidence videos`, body: `Write feature files for the core workflow (one recorded phone per actor), run npm run e2e:live against production, npm run evidence, record the landing hero GIF with scripts/make-hero-gif.sh, embed videos in docs/projects/${a.appName}.md.` },
+        { title: `${a.appName}: Vercel launch checklist`, body: `Custom domain ${a.domain} + www, env vars (DATABASE_URL, E2E_BYPASS_KEY, CRON_SECRET), GitHub Actions CI green, /api/health reports neon, record launch-kit properties on the KGraph node.` },
       ]
     })
   },

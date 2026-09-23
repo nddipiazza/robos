@@ -7333,6 +7333,126 @@
           "@id": "https://robos.dev/ns/sdlc#classification/work"
         }
       ]
+    },
+    {
+      "@id": "robos:appTemplate",
+      "@type": "rdf:Property",
+      "rdfs:label": "appTemplate",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:hostingPlatform",
+      "@type": "rdf:Property",
+      "rdfs:label": "hostingPlatform",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/infrastructure"
+        }
+      ]
+    },
+    {
+      "@id": "robos:productionUrl",
+      "@type": "rdf:Property",
+      "rdfs:label": "productionUrl",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:databaseEngine",
+      "@type": "rdf:Property",
+      "rdfs:label": "databaseEngine",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/data"
+        }
+      ]
+    },
+    {
+      "@id": "robos:authStrategy",
+      "@type": "rdf:Property",
+      "rdfs:label": "authStrategy",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:abuseControls",
+      "@type": "rdf:Property",
+      "rdfs:label": "abuseControls",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:captchaProvider",
+      "@type": "rdf:Property",
+      "rdfs:label": "captchaProvider",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:crawlerPolicy",
+      "@type": "rdf:Property",
+      "rdfs:label": "crawlerPolicy",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:sitemapUrl",
+      "@type": "rdf:Property",
+      "rdfs:label": "sitemapUrl",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:llmsTxtUrl",
+      "@type": "rdf:Property",
+      "rdfs:label": "llmsTxtUrl",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:structuredData",
+      "@type": "rdf:Property",
+      "rdfs:label": "structuredData",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:e2eEvidence",
+      "@type": "rdf:Property",
+      "rdfs:label": "e2eEvidence",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
     }
   ]
 }

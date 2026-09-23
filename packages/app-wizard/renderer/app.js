@@ -653,10 +653,13 @@ service AppService {
     const deploy = document.getElementById('new-app-deploy')?.value || 'vercel';
     const storage = document.getElementById('new-app-storage')?.value || 'embedded-json';
     const domain = document.getElementById('new-app-domain')?.value || '';
+    const tagline = document.getElementById('new-app-tagline')?.value || '';
+    const description = document.getElementById('new-app-description')?.value || '';
+    const keywords = document.getElementById('new-app-keywords')?.value || '';
     const urn = 'urn:robos:' + getArchetypeUrnPrefix(selectedArchetype) + ':' + slug;
 
     const res = await window.api.generateNewApp({
-      name, slug, archetype: selectedArchetype, technology: tech, team, contractType, contractContent, deploy, storage, domain, urn
+      name, slug, archetype: selectedArchetype, technology: tech, team, contractType, contractContent, deploy, storage, domain, urn, tagline, description, keywords
     });
 
     if (res.error) {
@@ -665,18 +668,19 @@ service AppService {
       consoleOut.textContent += '✓ Created component in: ' + res.targetDir + '\n';
       consoleOut.textContent += '✓ Generated: catalog-info.yaml\n';
       consoleOut.textContent += '✓ Generated: dev-setup.sh (chmod +x)\n';
-      if (res.isVercel || tech.includes('Next.js') || deploy === 'vercel') {
-        consoleOut.textContent += '✓ Generated: vercel.json (Serverless / Edge configuration)\n';
-        consoleOut.textContent += '✓ Generated: .github/workflows/ci.yml (GitHub Actions Vercel CI/CD)\n';
-        consoleOut.textContent += '✓ Generated: package.json (Next.js 15, React 19, TailwindCSS)\n';
-        consoleOut.textContent += '✓ Generated: DEPLOYMENT.md (Vercel & getemgigs.com DNS instructions)\n';
-        consoleOut.textContent += '✓ Generated: README.md with Deploy to Vercel button\n';
-        consoleOut.textContent += '✓ Scaffolded: Next.js App Router (src/app/, src/components/, src/lib/)\n';
+      if (res.isVercel && res.template) {
+        consoleOut.textContent += '✓ Template: ' + res.template.name + ' v' + res.template.version + ' (' + res.template.written.length + ' files' + (res.template.skipped.length ? ', ' + res.template.skipped.length + ' existing kept' : '') + ')\n';
+        consoleOut.textContent += '  • Next.js 15 App Router, mobile-first UI, Neon Postgres (PGlite locally)\n';
+        consoleOut.textContent += '  • Email/password auth, rate limits, honeypot, CSRF checks, CSP, reCAPTCHA v3 (disabled)\n';
+        consoleOut.textContent += '  • robots.txt for search engines + AI agents, sitemap.xml, llms.txt, JSON-LD, OG images, manifest\n';
+        consoleOut.textContent += '  • Cucumber + Playwright E2E with RobOS evidence videos (npm run e2e && npm run evidence)\n';
+        consoleOut.textContent += '  • Vercel + GitHub Actions CI, DEPLOYMENT.md launch checklist\n';
+        if (res.kgraph && res.kgraph.registered) consoleOut.textContent += '✓ Added robos:FrontEndApp node to SDLC KGraph (applications package)\n';
+        if (res.docPage) consoleOut.textContent += '✓ Created project doc page: ' + res.docPage + '\n';
       } else {
-        consoleOut.textContent += '✓ Generated: Dockerfile\n';
+        consoleOut.textContent += '✓ Generated: ' + (res.generated || ['Dockerfile']).join(', ') + '\n';
       }
       consoleOut.textContent += '✓ Registered in .robos/packages.yaml (' + res.urn + ')\n';
-      consoleOut.textContent += '✓ Synced to RobOS SDLC Knowledge Graph\n';
       consoleOut.textContent += '🎉 Greenfield Application Scaffolding Complete!';
     }
   });

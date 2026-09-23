@@ -140,6 +140,25 @@ The generation process executes 5 coordinated tasks:
 
 ---
 
+## Web App Launch Kit (Front End Apps on Vercel)
+
+Choosing **Front End App** (or Next.js / Vercel) generates a complete, working product skeleton from the
+`nextjs-vercel-web` template: the launch kit we distilled from building [getemgigs.com]({{ '/projects/getemgigs/' | relative_url }}).
+Fill in **Tagline**, **Description** and **Keywords** in Step 2; they flow into the hero, meta description,
+Open Graph image, `llms.txt` and schema.org JSON-LD.
+
+| Area | What is generated |
+|:---|:---|
+| **Stack** | Next.js 15 App Router, React 19, mobile-first CSS with bottom tab bar |
+| **Data & auth** | Neon Postgres (`DATABASE_URL`) with embedded PGlite locally; email + password, hashed server-side sessions, account deletion |
+| **Abuse controls** | Rate limits, honeypot + form timing, disposable-email block, password rules, same-origin checks, CSP/HSTS, audit log; reCAPTCHA v3 wired but off |
+| **Search engines & AI agents** | `robots.txt` (Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, Claude-SearchBot, ClaudeBot, PerplexityBot, link-preview bots; private paths blocked), `sitemap.xml`, `/llms.txt`, canonical + OG/Twitter tags, generated OG image and app icons, manifest, JSON-LD (Organization, WebSite, WebApplication, FAQPage) |
+| **Tests & proof of work** | Unit tests on real Postgres (PGlite); Cucumber + Playwright scenarios (signup/login, crawler checks, abuse controls) recorded per phone, stitched into RobOS evidence videos with a Cucumber splash intro, step HUD and timeline |
+| **Deploy** | `vercel.json`, GitHub Actions CI (`npm test`, `next build`), `DEPLOYMENT.md` launch checklist (Neon via Vercel Marketplace, env vars, Search Console) |
+| **Registration** | `catalog-info.yaml`, `.robos/packages.yaml`, a `robos:FrontEndApp` node in the SDLC KGraph with launch-kit properties, and a `docs/projects/<slug>.md` page |
+
+The generator never overwrites files that already exist, so it is safe to re-run on a project.
+
 ## Generated Project Blueprint & Manifests
 
 ### 1. Backstage Catalog Manifest (`catalog-info.yaml`)

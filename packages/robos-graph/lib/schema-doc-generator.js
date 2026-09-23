@@ -74,6 +74,66 @@ const PROPERTY_METADATA = {
     type: 'xsd:string',
     description: 'Single-page or SSR web framework (`React`, `Next.js`, `Vue`, `Svelte`).',
   },
+  'robos:appTemplate': {
+    name: 'App Template',
+    type: 'xsd:string',
+    description: "RobOS scaffold template and version the app was generated from (e.g. `robos:template:nextjs-vercel-web@1`).",
+  },
+  'robos:hostingPlatform': {
+    name: 'Hosting Platform',
+    type: 'xsd:string',
+    description: "Where production runs (`Vercel`, `Netlify`, `Cloudflare Pages`, `Kubernetes`).",
+  },
+  'robos:productionUrl': {
+    name: 'Production URL',
+    type: 'xsd:string',
+    description: "Canonical public URL of the production site (`https://www...`).",
+  },
+  'robos:databaseEngine': {
+    name: 'Database Engine',
+    type: 'xsd:string',
+    description: "Primary datastore (e.g. `Neon serverless Postgres (PGlite locally)`).",
+  },
+  'robos:authStrategy': {
+    name: 'Auth Strategy',
+    type: 'xsd:string',
+    description: "How users sign in (e.g. email + password with server-side sessions, OAuth).",
+  },
+  'robos:abuseControls': {
+    name: 'Abuse Controls',
+    type: 'xsd:string',
+    description: "Abuse/bot protections in place (rate limits, honeypot, CSRF, CSP, audit log).",
+  },
+  'robos:captchaProvider': {
+    name: 'CAPTCHA Provider',
+    type: 'xsd:string',
+    description: "CAPTCHA integration and state (e.g. `reCAPTCHA v3 (wired, disabled)`).",
+  },
+  'robos:crawlerPolicy': {
+    name: 'Crawler Policy',
+    type: 'xsd:string',
+    description: "robots.txt policy for search engines, AI search/agents and link-preview bots, and blocked paths.",
+  },
+  'robos:sitemapUrl': {
+    name: 'Sitemap URL',
+    type: 'xsd:string',
+    description: "Public XML sitemap URL submitted to search engines.",
+  },
+  'robos:llmsTxtUrl': {
+    name: 'llms.txt URL',
+    type: 'xsd:string',
+    description: "Plain-text `/llms.txt` summary published for LLM agents.",
+  },
+  'robos:structuredData': {
+    name: 'Structured Data',
+    type: 'xsd:string',
+    description: "schema.org JSON-LD types the site emits (e.g. `schema:WebApplication`, `schema:MusicEvent`).",
+  },
+  'robos:e2eEvidence': {
+    name: 'E2E Evidence',
+    type: 'xsd:string',
+    description: "Where Cucumber/Playwright end-to-end evidence videos live (path or published URL).",
+  },
   'robos:cliCommand': {
     name: 'CLI Binary Command',
     type: 'xsd:string',
@@ -1323,6 +1383,18 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:technology') sample[prop.path] = 'Node.js / TypeScript';
       else if (prop.path === 'robos:desktopFramework') sample[prop.path] = 'Electron';
       else if (prop.path === 'robos:frontendFramework') sample[prop.path] = 'React 18';
+      else if (prop.path === 'robos:appTemplate') sample[prop.path] = "robos:template:nextjs-vercel-web@1";
+      else if (prop.path === 'robos:hostingPlatform') sample[prop.path] = "Vercel";
+      else if (prop.path === 'robos:productionUrl') sample[prop.path] = "https://www.example.com";
+      else if (prop.path === 'robos:databaseEngine') sample[prop.path] = "Neon serverless Postgres (PGlite locally)";
+      else if (prop.path === 'robos:authStrategy') sample[prop.path] = "Email + password, server-side sessions";
+      else if (prop.path === 'robos:abuseControls') sample[prop.path] = "rate-limits, honeypot, same-origin-csrf, csp, audit-log";
+      else if (prop.path === 'robos:captchaProvider') sample[prop.path] = "reCAPTCHA v3 (wired, disabled)";
+      else if (prop.path === 'robos:crawlerPolicy') sample[prop.path] = "Search engines + AI agents allowed on public pages; /api, /dashboard disallowed";
+      else if (prop.path === 'robos:sitemapUrl') sample[prop.path] = "https://www.example.com/sitemap.xml";
+      else if (prop.path === 'robos:llmsTxtUrl') sample[prop.path] = "https://www.example.com/llms.txt";
+      else if (prop.path === 'robos:structuredData') sample[prop.path] = "schema:Organization, schema:WebSite, schema:WebApplication";
+      else if (prop.path === 'robos:e2eEvidence') sample[prop.path] = "docs/assets/videos/example/example-e2e-evidence-reel.mp4";
       else if (prop.path === 'robos:cliCommand') sample[prop.path] = 'robos';
       else if (prop.path === 'robos:platform') sample[prop.path] = 'iOS / Android';
       else if (prop.path === 'robos:gameEngine') sample[prop.path] = 'Unreal Engine 5';
