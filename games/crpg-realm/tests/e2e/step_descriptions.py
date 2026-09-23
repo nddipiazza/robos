@@ -192,6 +192,10 @@ STEP_PATTERNS = [
      'Verifying activity log entries documenting Fireball detonation, saving throw checks, and goblin demise.'),
     (r'the tactical battle signals total victory over the goblin horde',
      'Combat manager verifies all hostile enemies eliminated, triggering total victory state.'),
+    (r'the trap "([^"]+)" is no longer appearing on the map',
+     'Verifying via GameControl API that sprung trap "{0}" has vanished from tactical map display and active map traps collection.'),
+    (r'the trap "([^"]+)" is appearing on the map',
+     'Verifying via GameControl API that trap "{0}" is active and appearing on the tactical map.'),
 ]
 
 def get_step_description(step_type: str, step_name: str, step_docstring: str = None) -> str:

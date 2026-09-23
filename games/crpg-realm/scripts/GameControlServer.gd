@@ -1057,14 +1057,19 @@ func _get_full_game_state() -> Dictionary:
 			living_heroes += 1
 
 	var scene_traps: Array[Dictionary] = []
+	var appearing_traps: Array[Dictionary] = []
 	var detected_traps_count = 0
 	var disarmed_traps_count = 0
 	var triggered_traps_count = 0
+	var appearing_traps_count = 0
 	if cur_scene:
 		for child in cur_scene.get_children():
 			if child.has_method("get_trap_info"):
 				var t_info = child.get_trap_info()
 				scene_traps.append(t_info)
+				if t_info.get("is_appearing_on_map", true):
+					appearing_traps.append(t_info)
+					appearing_traps_count += 1
 				if t_info.get("is_detected", false): detected_traps_count += 1
 				if t_info.get("is_disarmed", false): disarmed_traps_count += 1
 				if t_info.get("is_triggered", false): triggered_traps_count += 1
@@ -1074,9 +1079,12 @@ func _get_full_game_state() -> Dictionary:
 
 	return {
 		"traps": scene_traps,
+		"appearing_traps": appearing_traps,
+		"active_map_traps": appearing_traps,
 		"detect_traps_mode": GameState.is_detecting_traps,
 		"traps_summary": {
 			"total": scene_traps.size(),
+			"appearing": appearing_traps_count,
 			"detected": detected_traps_count,
 			"disarmed": disarmed_traps_count,
 			"triggered": triggered_traps_count

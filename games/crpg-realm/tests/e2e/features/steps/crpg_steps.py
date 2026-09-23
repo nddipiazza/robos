@@ -1261,6 +1261,41 @@ def step_trap_is_triggered(context, trap_id):
     assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
     assert found.get("is_triggered") is True, f"Expected trap '{trap_id}' to be triggered, got: {found}"
 
+@then('the trap "{trap_id}" is no longer appearing on the map')
+def step_trap_no_longer_appearing_on_map(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    if found is not None:
+        assert found.get("is_appearing_on_map") is False, (
+            f"Expected trap '{trap_id}' to have is_appearing_on_map=False via API, got: {found}"
+        )
+        assert found.get("visible") is False, (
+            f"Expected trap '{trap_id}' to have visible=False via API, got: {found}"
+        )
+    appearing_traps = state.get("appearing_traps", [])
+    found_in_appearing = next((t for t in appearing_traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found_in_appearing is None, (
+        f"Expected trap '{trap_id}' to be absent from appearing_traps via API, but found: {found_in_appearing}"
+    )
+    active_traps = state.get("active_map_traps", [])
+    found_in_active = next((t for t in active_traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found_in_active is None, (
+        f"Expected trap '{trap_id}' to be absent from active_map_traps via API, but found: {found_in_active}"
+    )
+
+@then('the trap "{trap_id}" is appearing on the map')
+def step_trap_is_appearing_on_map(context, trap_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    appearing_traps = state.get("appearing_traps", [])
+    found_in_appearing = next((t for t in appearing_traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
+    assert found_in_appearing is not None, (
+        f"Expected trap '{trap_id}' to be present in appearing_traps via API, but got: {appearing_traps}"
+    )
+    assert found_in_appearing.get("is_appearing_on_map") is True, (
+        f"Expected trap '{trap_id}' to have is_appearing_on_map=True, got: {found_in_appearing}"
+    )
+
 @then('the party member suffers trap damage')
 def step_party_suffers_trap_damage(context):
     state = api_get(context.web_port, "/api/v1/state")

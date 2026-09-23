@@ -47,6 +47,7 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     When the party member steps onto trap "poison-dart-trap"
     Then the party member walked over trap "poison-dart-trap"
     And the trap "poison-dart-trap" is triggered
+    And the trap "poison-dart-trap" is no longer appearing on the map
     And the party member suffers trap damage
     And the player suffers status effect "poisoned"
     And the activity log contains message "TRAP TRIGGERED"
@@ -60,6 +61,7 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     And the disarm attempt on trap "glyph-of-warding" critically fumbles
     Then the party member is standing next to trap "glyph-of-warding"
     And the trap "glyph-of-warding" is triggered
+    And the trap "glyph-of-warding" is no longer appearing on the map
     And the activity log contains message "TRAP ACCIDENTAL TRIGGER"
 
   Scenario: Disarming from afar requires walking next to trap while direct remote disarm fails

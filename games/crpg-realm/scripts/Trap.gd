@@ -75,11 +75,18 @@ func _update_visual_state() -> void:
 			label.modulate = Color(0.5, 1.0, 0.5, 1.0)
 	elif is_triggered:
 		_stop_pulse()
-		modulate = Color(0.6, 0.6, 0.6, 0.4)
+		visible = false
+		modulate = Color(1.0, 1.0, 1.0, 0.0)
+		if visual_poly:
+			visual_poly.visible = false
+		if outline_line:
+			outline_line.visible = false
 		if label:
-			label.text = "💥 [SPRUNG] " + trap_name
-			label.visible = true
-			label.modulate = Color(1.0, 0.5, 0.3, 1.0)
+			label.visible = false
+		if collision_shape:
+			collision_shape.set_deferred("disabled", true)
+		monitoring = false
+		monitorable = false
 	elif is_detected:
 		modulate = Color(1.0, 0.15, 0.15, 0.95)
 		if label:
@@ -263,6 +270,7 @@ func force_trigger(victim_name: String, force_fail_save: bool = false, is_fumble
 	is_triggered = true
 	is_detected = true
 	_update_visual_state()
+	_spawn_sprung_vfx()
 
 	if vic_node:
 		if vic_node.has_method("_stop_movement"):
@@ -288,6 +296,39 @@ func force_trigger(victim_name: String, force_fail_save: bool = false, is_fumble
 		FloatingTextManager.spawn_damage(global_position, dmg, false)
 
 	return trig_res
+
+func _spawn_sprung_vfx() -> void:
+	var vfx = Node2D.new()
+	vfx.top_level = true
+	vfx.global_position = global_position
+
+	var ring = Line2D.new()
+	ring.width = 4.0
+	var col = Color(1.8, 0.5, 0.1, 0.95) if damage_type == "fire" else (Color(0.3, 1.5, 0.4, 0.95) if damage_type == "poison" else Color(1.2, 0.8, 0.2, 0.95))
+	ring.default_color = col
+	var pts: PackedVector2Array = []
+	for i in range(24):
+		var a = i * (PI * 2.0 / 24.0)
+		pts.append(Vector2(cos(a), sin(a)) * 20.0)
+	pts.append(pts[0])
+	ring.points = pts
+	vfx.add_child(ring)
+
+	for k in range(8):
+		var spark = Polygon2D.new()
+		spark.polygon = PackedVector2Array([Vector2(-3, -3), Vector2(3, -3), Vector2(3, 3), Vector2(-3, 3)])
+		spark.color = col
+		var angle = randf() * PI * 2.0
+		spark.position = Vector2(cos(angle), sin(angle)) * randf_range(10.0, 35.0)
+		vfx.add_child(spark)
+
+	if get_parent():
+		get_parent().add_child(vfx)
+
+	var tw = create_tween()
+	tw.parallel().tween_property(vfx, "scale", Vector2(2.4, 2.4), 0.35)
+	tw.parallel().tween_property(vfx, "modulate:a", 0.0, 0.35)
+	tw.tween_callback(vfx.queue_free)
 
 func walk_over_and_trigger(victim_name: String = "", force_fail_save: bool = false, on_complete: Callable = Callable()) -> void:
 	var actor = _get_actor_node(victim_name)
@@ -351,6 +392,7 @@ func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> vo
 				hero.move_to_point(get_global_mouse_position())
 
 func get_trap_info() -> Dictionary:
+	var appearing = visible and not is_triggered and not is_queued_for_deletion()
 	return {
 		"id": trap_id,
 		"name": trap_name,
@@ -358,6 +400,8 @@ func get_trap_info() -> Dictionary:
 		"is_detected": is_detected,
 		"is_disarmed": is_disarmed,
 		"is_triggered": is_triggered,
+		"is_appearing_on_map": appearing,
+		"visible": visible,
 		"detect_dc": detect_dc,
 		"disarm_dc": disarm_dc,
 		"disarm_reach": disarm_reach,
