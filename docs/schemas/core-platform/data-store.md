@@ -3,7 +3,7 @@ title: Data Store
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 19
+nav_order: 21
 permalink: /schemas/core-platform/data-store.html
 ---
 

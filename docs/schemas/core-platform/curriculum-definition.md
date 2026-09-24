@@ -3,7 +3,7 @@ title: Curriculum Definition
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 18
+nav_order: 20
 permalink: /schemas/core-platform/curriculum-definition.html
 ---
 

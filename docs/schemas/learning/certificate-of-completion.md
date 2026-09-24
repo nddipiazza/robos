@@ -87,8 +87,8 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "schema:EducationalOccupationalCredential",
     "oslc:Resource"
   ],
-  "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex",
-  "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex.",
+  "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass",
+  "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass.",
   "robos:recipientUser": "dungeon-master-robos",
   "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
   "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",
@@ -125,8 +125,8 @@ const result = validator.validateGraph(new OSLCGraphParser({
             "schema:EducationalOccupationalCredential",
             "oslc:Resource"
         ],
-        "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex",
-        "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Codex.",
+        "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass",
+        "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass.",
         "robos:recipientUser": "dungeon-master-robos",
         "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
         "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",

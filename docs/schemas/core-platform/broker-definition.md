@@ -3,7 +3,7 @@ title: Broker Definition
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 20
+nav_order: 22
 permalink: /schemas/core-platform/broker-definition.html
 ---
 

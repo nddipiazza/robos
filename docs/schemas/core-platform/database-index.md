@@ -3,7 +3,7 @@ title: Database Index
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 11
+nav_order: 13
 permalink: /schemas/core-platform/database-index.html
 ---
 

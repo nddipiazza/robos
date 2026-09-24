@@ -79,19 +79,25 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 ```json
 {
-  "@id": "urn:robos:applications:desktop-app-sample",
+  "@id": "urn:robos:app:voice-prompt",
   "@type": [
     "robos:DesktopApp",
     "schema:SoftwareApplication",
-    "oslc:Resource"
+    "oslc_am:Resource",
+    "c4:Container"
   ],
-  "dcterms:title": "Sample Desktop App",
-  "dcterms:description": "Canonical reference instance for robos:DesktopApp.",
+  "dcterms:title": "Voice Prompt Agent",
+  "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
   "robos:package": "applications",
-  "robos:namespace": "robos.apps",
-  "robos:repository": "github.com/acme/sample-repo",
-  "robos:technology": "Node.js / TypeScript",
+  "robos:namespace": "robos.applications",
+  "robos:repository": "github.com/nddipiazza/robos",
+  "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
   "robos:desktopFramework": "Electron",
+  "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+  "robos:apiPort": 19188,
+  "robos:globalHotkey": "Super+V",
+  "robos:ownerTeam": "urn:robos:team:core-platform",
+  "robos:hasProject": "urn:robos:project:enterprise-core",
   "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
   "robos:domainStandard": "https://schema.org/SoftwareApplication",
   "robos:refersFrom": "https://schema.org/SoftwareApplication"
@@ -111,19 +117,25 @@ const result = validator.validateGraph(new OSLCGraphParser({
   "@context": OSLC_CONTEXT,
   "robos:nodes": [
     {
-        "@id": "urn:robos:applications:desktop-app-sample",
+        "@id": "urn:robos:app:voice-prompt",
         "@type": [
             "robos:DesktopApp",
             "schema:SoftwareApplication",
-            "oslc:Resource"
+            "oslc_am:Resource",
+            "c4:Container"
         ],
-        "dcterms:title": "Sample Desktop App",
-        "dcterms:description": "Canonical reference instance for robos:DesktopApp.",
+        "dcterms:title": "Voice Prompt Agent",
+        "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
         "robos:package": "applications",
-        "robos:namespace": "robos.apps",
-        "robos:repository": "github.com/acme/sample-repo",
-        "robos:technology": "Node.js / TypeScript",
+        "robos:namespace": "robos.applications",
+        "robos:repository": "github.com/nddipiazza/robos",
+        "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
         "robos:desktopFramework": "Electron",
+        "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+        "robos:apiPort": 19188,
+        "robos:globalHotkey": "Super+V",
+        "robos:ownerTeam": "urn:robos:team:core-platform",
+        "robos:hasProject": "urn:robos:project:enterprise-core",
         "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
         "robos:domainStandard": "https://schema.org/SoftwareApplication",
         "robos:refersFrom": "https://schema.org/SoftwareApplication"
