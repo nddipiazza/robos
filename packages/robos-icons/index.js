@@ -61,6 +61,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
   },
   {
+    appId: 'crpg-maker',
+    label: 'RobOS cRPG Maker',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="32" rx="3" ry="3" /><line x1="18" y1="8" x2="18" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="30" y1="8" x2="30" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="6" y1="18" x2="42" y2="18" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="6" y1="30" x2="42" y2="30" stroke-dasharray="2 2" stroke-opacity="0.6" /><rect x="10" y="12" width="14" height="12" fill="#00bcd4" fill-opacity="0.15" stroke-width="1.8" /><line x1="15" y1="24" x2="19" y2="24" stroke="#00bcd4" stroke-width="2.5" /><circle cx="34" cy="16" r="4.5" fill="#00bcd4" fill-opacity="0.2" /><circle cx="34" cy="16" r="1.5" fill="#00bcd4" /><polyline points="24,34 32,34 38,34" stroke-width="2.2" /><polygon points="26,22 36,32 32,36 22,26" fill="#0d1117" stroke="#00bcd4" stroke-width="1.5" /><polygon points="22,26 21,30 25,29" fill="#00bcd4" stroke="#00bcd4" /></svg>'
+  },
+  {
     appId: 'context-manager',
     label: 'Context Manager',
     category: 'RobOS AI',

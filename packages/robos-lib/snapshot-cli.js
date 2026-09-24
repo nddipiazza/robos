@@ -108,6 +108,7 @@ const PORT_REGISTRY = {
   'dev-discussions':   19187,
   'voice-prompt':      19188,
   'kgraph-parse-portal': 19192,
+  'crpg-maker':        19194,
 };
 
 

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS cRPG Maker — Map & Level Designer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="app-brand">
+          <svg class="brand-icon" viewBox="0 0 48 48" width="28" height="28" fill="none" stroke="#00bcd4" stroke-width="2">
+            <rect x="6" y="8" width="36" height="32" rx="3" ry="3" />
+            <line x1="18" y1="8" x2="18" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" />
+            <line x1="30" y1="8" x2="30" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" />
+            <rect x="10" y="12" width="14" height="12" fill="#00bcd4" fill-opacity="0.2" />
+            <circle cx="34" cy="16" r="4.5" fill="#00bcd4" fill-opacity="0.2" />
+          </svg>
+          <div class="brand-text">
+            <span class="brand-title">RobOS cRPG Maker</span>
+            <span class="brand-subtitle">Static Map Image Creator & KGraph Level Designer</span>
+          </div>
+        </div>
+
+        <div class="map-selector-group">
+          <label for="map-select">Map:</label>
+          <select id="map-select" class="dropdown-select">
+            <option value="">(Loading maps...)</option>
+          </select>
+          <button id="btn-new-map" class="btn btn-secondary" title="Create a new map blueprint">
+            <span>+ New Map</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="view-mode-toggle">
+          <button id="btn-view-canvas" class="toggle-btn active" title="Interactive 2D Design Canvas">
+            🎨 Interactive Canvas
+          </button>
+          <button id="btn-view-png" class="toggle-btn" title="View Compiled Background PNG">
+            🖼 Compiled PNG
+          </button>
+        </div>
+
+        <div class="action-buttons">
+          <button id="btn-save-map" class="btn btn-primary" title="Save map JSON-LD to games/crpg-realm/maps/">
+            💾 Save KGraph
+          </button>
+          <button id="btn-build-map" class="btn btn-accent" title="Compile static PNG image and 5-ft collision grid">
+            ⚡ Build PNG & Grid
+          </button>
+          <button id="btn-export-png" class="btn btn-secondary" title="Save PNG copy to custom location">
+            📥 Export PNG
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace-layout">
+      <!-- Left Sidebar: Form inputs -->
+      <aside class="sidebar left-sidebar">
+        <!-- Sidebar Navigation Tabs -->
+        <div class="sidebar-tabs">
+          <button id="tab-btn-map" class="tab-btn active" data-tab="map-settings">
+            🗺 Map Settings
+          </button>
+          <button id="tab-btn-object" class="tab-btn" data-tab="object-form">
+            📐 Map Object
+          </button>
+        </div>
+
+        <!-- Tab 1: Map Dimensions & Properties -->
+        <div id="tab-content-map-settings" class="tab-pane active">
+          <div class="panel-section">
+            <h3 class="section-title">Battle Map Properties</h3>
+            
+            <div class="form-group">
+              <label for="map-slug">Map ID (Slug):</label>
+              <input type="text" id="map-slug" class="input-text" placeholder="e.g. village-square" />
+              <span class="field-hint">Used for filename: games/crpg-realm/maps/&lt;slug&gt;.jsonld</span>
+            </div>
+
+            <div class="form-group">
+              <label for="map-title">Display Title:</label>
+              <input type="text" id="map-title" class="input-text" placeholder="e.g. Oakhaven Village Square" />
+            </div>
+
+            <div class="form-group">
+              <label for="map-terrain">Base Terrain (Floor):</label>
+              <select id="map-terrain" class="dropdown-select">
+                <option value="stone">Stone Floor / Dungeon (Grey)</option>
+                <option value="grass">Grass / Meadow (Forest Green)</option>
+                <option value="dirt">Dirt / Earth (Brown)</option>
+                <option value="wood">Wood Planks / Manor (Warm Brown)</option>
+                <option value="sand">Sand / Desert (Golden Sand)</option>
+                <option value="snow">Snow / Ice (Pale White/Blue)</option>
+                <option value="cave">Cave / Catacomb (Dark Charcoal)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="map-width">Width (feet):</label>
+                <input type="number" id="map-width" class="input-number" min="10" max="600" step="5" value="120" />
+              </div>
+              <div class="form-group half">
+                <label for="map-height">Height (feet):</label>
+                <input type="number" id="map-height" class="input-number" min="10" max="600" step="5" value="80" />
+              </div>
+            </div>
+
+            <!-- Calculated Dimensions Badge -->
+            <div class="calc-badge">
+              <div class="badge-item">
+                <span class="badge-label">Grid Size:</span>
+                <span id="lbl-grid-cells" class="badge-value">24 × 16 cells (5 ft)</span>
+              </div>
+              <div class="badge-item">
+                <span class="badge-label">PNG Resolution:</span>
+                <span id="lbl-png-res" class="badge-value">1920 × 1280 px (16 px/ft)</span>
+              </div>
+            </div>
+
+            <div class="presets-row">
+              <span class="presets-label">Presets:</span>
+              <button class="btn-preset" data-w="60" data-h="40">60×40 (Small Room)</button>
+              <button class="btn-preset" data-w="120" data-h="80">120×80 (Standard Area)</button>
+              <button class="btn-preset" data-w="160" data-h="100">160×100 (Expansive)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Map Object Form (robos:CRPGMapObject) -->
+        <div id="tab-content-object-form" class="tab-pane">
+          <div class="panel-section">
+            <div class="object-form-header">
+              <h3 id="obj-form-title" class="section-title">Add New Map Object</h3>
+              <span id="obj-selected-badge" class="selection-badge">New</span>
+            </div>
+
+            <div class="form-group">
+              <label for="obj-id">Object ID:</label>
+              <input type="text" id="obj-id" class="input-text" placeholder="e.g. smithy_wall_n, oak_tree, main_door" />
+            </div>
+
+            <div class="form-group">
+              <label for="obj-type">Object Type (KGraph Schema):</label>
+              <select id="obj-type" class="dropdown-select">
+                <optgroup label="Solid Structures (Blocks Movement & Sight)">
+                  <option value="wall">Wall (Solid stone/wood wall)</option>
+                  <option value="building">Building (Enclosed structure)</option>
+                  <option value="door">Door (Interactive passage)</option>
+                  <option value="pillar">Pillar (Column/support)</option>
+                </optgroup>
+                <optgroup label="Obstacles & Half-Cover (Blocks Movement)">
+                  <option value="tree">Tree (Foliage/trunk)</option>
+                  <option value="rock">Rock / Boulder</option>
+                  <option value="statue">Statue (Three-quarters cover)</option>
+                  <option value="crate">Crate / Cargo</option>
+                  <option value="barrel">Barrel / Keg</option>
+                  <option value="table">Table / Counter</option>
+                  <option value="altar">Altar / Shrine</option>
+                  <option value="bed">Bed / Furniture</option>
+                  <option value="chest">Treasure Chest</option>
+                  <option value="fence">Fence / Barricade</option>
+                  <option value="pit">Pit / Chasm</option>
+                </optgroup>
+                <optgroup label="Difficult Terrain (Double Cost, Walkable)">
+                  <option value="water">Water / Pond / Stream</option>
+                  <option value="bush">Bush / Dense Briar (Half-cover)</option>
+                  <option value="rubble">Rubble / Debris</option>
+                  <option value="stairs">Stairs / Steps</option>
+                </optgroup>
+                <optgroup label="Decorations & Zones (No Collision Impact)">
+                  <option value="road">Road / Cobblestone Path</option>
+                  <option value="bridge">Bridge Planks</option>
+                  <option value="rug">Carpet / Rug</option>
+                  <option value="zone">Zone / Trigger Region</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="obj-shape">Geometry Shape:</label>
+              <div class="shape-selector">
+                <label class="radio-label">
+                  <input type="radio" name="obj-shape" value="rect" checked /> Rect
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="obj-shape" value="circle" /> Circle
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="obj-shape" value="line" /> Line
+                </label>
+              </div>
+            </div>
+
+            <!-- Dynamic Shape Dimension Fields -->
+            <div id="shape-fields-rect" class="shape-fields">
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="obj-x">X Pos (ft):</label>
+                  <input type="number" id="obj-x" class="input-number" step="5" value="10" />
+                </div>
+                <div class="form-group half">
+                  <label for="obj-y">Y Pos (ft):</label>
+                  <input type="number" id="obj-y" class="input-number" step="5" value="10" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="obj-w">Width (ft):</label>
+                  <input type="number" id="obj-w" class="input-number" step="5" value="20" />
+                </div>
+                <div class="form-group half">
+                  <label for="obj-h">Height (ft):</label>
+                  <input type="number" id="obj-h" class="input-number" step="5" value="15" />
+                </div>
+              </div>
+            </div>
+
+            <div id="shape-fields-circle" class="shape-fields hidden">
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="obj-cx">Center X (ft):</label>
+                  <input type="number" id="obj-cx" class="input-number" step="5" value="30" />
+                </div>
+                <div class="form-group half">
+                  <label for="obj-cy">Center Y (ft):</label>
+                  <input type="number" id="obj-cy" class="input-number" step="5" value="30" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="obj-radius">Radius (ft):</label>
+                <input type="number" id="obj-radius" class="input-number" step="2.5" value="5" />
+              </div>
+            </div>
+
+            <div id="shape-fields-line" class="shape-fields hidden">
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="obj-lx1">Start X (ft):</label>
+                  <input type="number" id="obj-lx1" class="input-number" step="5" value="0" />
+                </div>
+                <div class="form-group half">
+                  <label for="obj-ly1">Start Y (ft):</label>
+                  <input type="number" id="obj-ly1" class="input-number" step="5" value="20" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="obj-lx2">End X (ft):</label>
+                  <input type="number" id="obj-lx2" class="input-number" step="5" value="60" />
+                </div>
+                <div class="form-group half">
+                  <label for="obj-ly2">End Y (ft):</label>
+                  <input type="number" id="obj-ly2" class="input-number" step="5" value="20" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="obj-thickness">Thickness (ft):</label>
+                <input type="number" id="obj-thickness" class="input-number" step="5" value="5" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="obj-label">Display Label / Text:</label>
+              <input type="text" id="obj-label" class="input-text" placeholder="e.g. Brand's Smithy, Throne" />
+              <span class="field-hint">Rendered centered on the static map image</span>
+            </div>
+
+            <!-- Door Specific Properties -->
+            <div id="door-options" class="door-options-group hidden">
+              <label class="checkbox-label">
+                <input type="checkbox" id="obj-door-open" /> Door is Open (Passage unblocked)
+              </label>
+            </div>
+
+            <!-- Collision & Rules Overrides Accordion -->
+            <details class="rules-details">
+              <summary class="details-summary">⚙ Rule Overrides (Optional)</summary>
+              <div class="details-content">
+                <div class="form-group">
+                  <label for="override-movement">Blocks Movement:</label>
+                  <select id="override-movement" class="dropdown-select small">
+                    <option value="">Default for type</option>
+                    <option value="true">Force True (Blocked)</option>
+                    <option value="false">Force False (Walkable)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="override-sight">Blocks Sight (Line of Sight):</label>
+                  <select id="override-sight" class="dropdown-select small">
+                    <option value="">Default for type</option>
+                    <option value="true">Force True (Opaque)</option>
+                    <option value="false">Force False (Transparent)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="override-difficult">Difficult Terrain:</label>
+                  <select id="override-difficult" class="dropdown-select small">
+                    <option value="">Default for type</option>
+                    <option value="true">Force True (10 ft cost)</option>
+                    <option value="false">Force False (Normal)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="override-cover">Cover Rating:</label>
+                  <select id="override-cover" class="dropdown-select small">
+                    <option value="">Default for type</option>
+                    <option value="none">None (+0 AC)</option>
+                    <option value="half">Half (+2 AC)</option>
+                    <option value="three-quarters">Three-Quarters (+5 AC)</option>
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            <!-- Form Action Buttons -->
+            <div class="form-actions">
+              <button id="btn-apply-obj" class="btn btn-primary full-width">
+                ➕ Add / Update Object
+              </button>
+              <div class="secondary-actions">
+                <button id="btn-duplicate-obj" class="btn btn-secondary half" disabled>
+                  Duplicate
+                </button>
+                <button id="btn-delete-obj" class="btn btn-danger half" disabled>
+                  Delete
+                </button>
+              </div>
+              <button id="btn-clear-selection" class="btn btn-subtle full-width">
+                Deselect (New Object)
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Viewport & Canvas Area -->
+      <main class="center-viewport">
+        <!-- Floating Canvas Toolbar -->
+        <div class="viewport-toolbar">
+          <div class="tool-group">
+            <button id="tool-select" class="tool-btn active" title="Select and Move Objects (V)">
+              <span>↖ Select</span>
+            </button>
+            <button id="tool-place" class="tool-btn" title="Click on Canvas to Place Configured Object (P)">
+              <span>➕ Place</span>
+            </button>
+            <button id="tool-pan" class="tool-btn" title="Pan and Scroll Canvas Viewport (H / Space+Drag)">
+              <span>✋ Pan</span>
+            </button>
+          </div>
+
+          <div class="zoom-group">
+            <button id="btn-zoom-out" class="tool-btn icon-only" title="Zoom Out (-)">−</button>
+            <span id="lbl-zoom-level" class="zoom-level-text">100%</span>
+            <button id="btn-zoom-in" class="tool-btn icon-only" title="Zoom In (+)">+</button>
+            <button id="btn-zoom-reset" class="tool-btn icon-only" title="Reset View (Fit)">⊡</button>
+          </div>
+
+          <div class="options-group">
+            <label class="toggle-switch-label" title="Snap positions to 5-foot grid increments">
+              <input type="checkbox" id="chk-snap-grid" checked />
+              <span>Snap 5-ft</span>
+            </label>
+            <label class="toggle-switch-label" title="Show 5-foot grid wireframe overlay">
+              <input type="checkbox" id="chk-show-grid" checked />
+              <span>Grid</span>
+            </label>
+            <label class="toggle-switch-label" title="Show text labels on objects">
+              <input type="checkbox" id="chk-show-labels" checked />
+              <span>Labels</span>
+            </label>
+            <label class="toggle-switch-label" title="Highlight blocked and difficult collision cells in canvas">
+              <input type="checkbox" id="chk-debug-collision" />
+              <span>Collision</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Viewport Box -->
+        <div id="viewport-container" class="canvas-viewport">
+          <!-- Interactive 2D Canvas -->
+          <canvas id="map-canvas"></canvas>
+
+          <!-- Compiled PNG View Container (shown when switched to Compiled PNG mode) -->
+          <div id="png-view-container" class="png-view-overlay hidden">
+            <div class="png-view-scroll">
+              <img id="img-compiled-png" alt="Compiled Static Background Map" />
+            </div>
+            <div id="png-empty-state" class="png-empty-notice hidden">
+              <h3>No Compiled PNG Image Found</h3>
+              <p>Click <strong>⚡ Build PNG & Grid</strong> in the header to render this map into <code>assets/blockouts/&lt;slug&gt;.png</code>.</p>
+            </div>
+          </div>
+
+          <!-- Interactive Hover Coordinate HUD -->
+          <div class="coordinate-hud">
+            <span id="hud-feet">Position: 0 ft, 0 ft</span>
+            <span class="hud-sep">|</span>
+            <span id="hud-cell">Cell: (0, 0)</span>
+            <span class="hud-sep">|</span>
+            <span id="hud-terrain">Terrain: stone</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Sidebar: Object Hierarchy & Statistics -->
+      <aside class="sidebar right-sidebar">
+        <!-- Section: Map Objects List -->
+        <div class="hierarchy-section">
+          <div class="hierarchy-header">
+            <h3>Map Objects (<span id="lbl-object-count">0</span>)</h3>
+            <input type="text" id="filter-objects" class="input-search" placeholder="Filter objects..." />
+          </div>
+
+          <div id="object-list" class="object-tree-view">
+            <!-- Populated dynamically -->
+            <div class="empty-list-notice">No map objects added yet. Click canvas or use form to add objects.</div>
+          </div>
+        </div>
+
+        <!-- Section: Collision Grid & Build Status -->
+        <div class="stats-section">
+          <h3 class="section-title">Blockout Engine & Collision</h3>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-number" id="stat-total-cells">0</span>
+              <span class="stat-label">Total Cells</span>
+            </div>
+            <div class="stat-card blocked">
+              <span class="stat-number" id="stat-blocked-cells">0</span>
+              <span class="stat-label">Blocked</span>
+            </div>
+            <div class="stat-card opaque">
+              <span class="stat-number" id="stat-opaque-cells">0</span>
+              <span class="stat-label">Opaque (LoS)</span>
+            </div>
+            <div class="stat-card difficult">
+              <span class="stat-number" id="stat-difficult-cells">0</span>
+              <span class="stat-label">Difficult</span>
+            </div>
+          </div>
+
+          <div class="engine-paths-card">
+            <div class="path-row">
+              <span class="path-tag">JSON-LD:</span>
+              <span id="lbl-jsonld-path" class="path-text">games/crpg-realm/maps/...</span>
+            </div>
+            <div class="path-row">
+              <span class="path-tag">PNG Image:</span>
+              <span id="lbl-png-path" class="path-text">games/crpg-realm/assets/blockouts/...</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="status-bar">
+      <div class="status-left">
+        <span id="status-message" class="status-msg">Ready.</span>
+      </div>
+      <div class="status-right">
+        <span class="shortcut-tip"><kbd>V</kbd> Select</span>
+        <span class="shortcut-tip"><kbd>P</kbd> Place</span>
+        <span class="shortcut-tip"><kbd>H</kbd> Pan</span>
+        <span class="shortcut-tip"><kbd>Del</kbd> Delete</span>
+        <span class="shortcut-tip"><kbd>Ctrl+S</kbd> Save</span>
+        <span class="shortcut-tip"><kbd>Ctrl+B</kbd> Build</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="canvas-renderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
