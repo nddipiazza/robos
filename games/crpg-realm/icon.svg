@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- d20 icosahedron contour -->
+  <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" />
+  <!-- Inner triangulation edges -->
+  <line x1="24" y1="4" x2="24" y2="44" />
+  <line x1="24" y1="4" x2="15" y2="24" />
+  <line x1="24" y1="4" x2="33" y2="24" />
+  <line x1="6" y1="14" x2="15" y2="24" />
+  <line x1="42" y1="14" x2="33" y2="24" />
+  <line x1="15" y1="24" x2="33" y2="24" />
+  <line x1="15" y1="24" x2="6" y2="34" />
+  <line x1="33" y1="24" x2="42" y2="34" />
+  <line x1="15" y1="24" x2="24" y2="44" />
+  <line x1="33" y1="24" x2="24" y2="44" />
+  <!-- Central Hero Rune / Star -->
+  <polygon points="24,19 25.5,22.5 29,24 25.5,25.5 24,29 22.5,25.5 19,24 22.5,22.5" fill="#00bcd4" stroke="none" />
+</svg>
