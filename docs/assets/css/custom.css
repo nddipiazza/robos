@@ -1693,3 +1693,153 @@ svg[id^="mermaid-"] text.noteText,
 }
 
 
+
+/* ==========================================================================
+   Audience Router: Homepage Hero, Door Cards & Section Landing Pages
+   ========================================================================== */
+.rb-hero {
+  text-align: center;
+  padding: 2.5rem 0 1rem;
+}
+.rb-hero h1 {
+  font-size: 3.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+.rb-hero .rb-tagline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.3;
+  margin: 0 auto 0.75rem;
+  max-width: 36rem;
+}
+.rb-hero .rb-sub {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  max-width: 38rem;
+  margin: 0 auto 1.75rem;
+  line-height: 1.6;
+}
+.rb-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.rb-demo {
+  margin: 2rem 0 3rem;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.rb-demo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rb-section-title {
+  text-align: center;
+  font-size: 1.75rem !important;
+  margin: 0 0 1.5rem !important;
+}
+.rb-doors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+a.rb-door {
+  display: flex;
+  flex-direction: column;
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-top: 3px solid var(--rb-accent, #00e5ff);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-decoration: none !important;
+  color: #e2e8f0 !important;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+a.rb-door:hover {
+  transform: translateY(-3px);
+  border-color: var(--rb-accent, #00e5ff);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+.rb-door .rb-door-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+.rb-door .rb-door-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+.rb-door .rb-door-who {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--rb-accent, #00e5ff);
+  margin-bottom: 0.75rem;
+}
+.rb-door .rb-door-desc {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  line-height: 1.55;
+  flex: 1;
+  margin-bottom: 1rem;
+}
+.rb-door .rb-door-go {
+  font-weight: 700;
+  color: var(--rb-accent, #00e5ff);
+}
+.rb-strip {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 0;
+  border-top: 1px solid #1e293b;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+/* Section landing pages: grouped link cards */
+.rb-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+a.rb-link {
+  display: block;
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  text-decoration: none !important;
+  color: #e2e8f0 !important;
+  transition: border-color 0.15s ease;
+}
+a.rb-link:hover {
+  border-color: #00e5ff;
+}
+a.rb-link strong {
+  display: block;
+  color: #ffffff;
+  font-size: 1.02rem;
+  margin-bottom: 0.25rem;
+}
+a.rb-link span {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .rb-hero h1 { font-size: 2.4rem !important; }
+  .rb-hero .rb-tagline { font-size: 1.3rem; }
+}
