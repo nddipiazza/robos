@@ -59,8 +59,8 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Engine / Profile** | Godot 4.3 (GL Compatibility) |
 | **Language & Stack** | GDScript (typed), Python 3.12+ (`behave`), FFmpeg |
 | **Ontology & Standard** | Schema.org `schema:VideoGame`, RobOS `robos:PCGame`, D&D 5e SRD |
-| **Testing Harness** | Dual E2E Suite: 11 Isolated Features + 6 Start-to-Finish Playthrough Scenarios |
-| **Verification Score** | **17 Features, 28 Scenarios, 482 Steps (100% Passed)** |
+| **Testing Harness** | behave BDD suites: 17 isolated-mechanic features, 24 spell features, 6 start-to-finish playthroughs |
+| **Test Inventory** | **47 features, 75 scenarios**, each recorded to MP4 |
 
 ```mermaid
 flowchart LR
@@ -71,14 +71,14 @@ flowchart LR
 
     subgraph ENGINE_LAYER ["Godot 4.3 Runtime Engine"]
         GD --> World["5-Act Epic Campaign Scenes"]
-        World --> RTwP["RTwP Combat & Round Timer (6.0s)"]
+        World --> RTwP["Real-Time-with-Pause Combat"]
         World --> Phys["StaticBody2D Colliders & Pathfinder.gd"]
         World --> ActLog["3-Mode Infinity Engine Activity Log"]
     end
 
     subgraph QA_LAYER ["Autonomous QA and Verification"]
-        HTTP["GameControlServer (HTTP :18090)"] <--> AI["Infinity AI Agent (qa_player)"]
-        AI --> BDD["Cucumber BDD Scenarios (17 Features)"]
+        HTTP["GameControlServer (HTTP API)"] <--> AI["Infinity AI Agent (qa_player)"]
+        AI --> BDD["behave BDD Suites (47 Features)"]
         BDD --> Video["1080p Video Proof-of-Work (FFmpeg + Xvfb)"]
     end
 
@@ -101,7 +101,7 @@ flowchart LR
 
   <div class="card" style="border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; background: #0d1117;">
     <h3 style="margin-top: 0; color: #58a6ff;"><a href="{{ '/projects/crpg-realm/' | relative_url }}">⚔️ Tactical cRPG & Infinity AI Engine</a></h3>
-    <p style="color: #8b949e; font-size: 0.95rem;">A party-based tactical isometric cRPG built in Godot 4 inspired by classic Infinity Engine masterpieces (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, 5-Act Epic Campaign, physical building collision, 18 unique NPCs with branching dialogue, and autonomous AI questing.</p>
+    <p style="color: #8b949e; font-size: 0.95rem;">A party-based tactical isometric cRPG built in Godot 4 inspired by classic Infinity Engine masterpieces (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, 5-Act Epic Campaign, physical building collision, 17 named NPCs with branching dialogue, and a BDD harness that plays the game and records every scenario to video.</p>
     <div style="margin-top: 1rem;">
       <a href="{{ '/projects/crpg-realm/' | relative_url }}" class="btn btn-primary fs-3">Explore Project</a>
       <a href="{{ '/projects/crpg-realm/game-creation-process.html' | relative_url }}" class="btn fs-3" style="margin-left: 0.5rem;">Architecture</a>

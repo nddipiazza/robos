@@ -1,22 +1,21 @@
 ---
-title: "Game Creator: 10. Aggro Tactics & Pack AI"
+title: "10. Aggro & Pack AI"
 layout: default
-parent: Tactical cRPG & Infinity AI Engine
-grand_parent: RobOS Projects
-nav_order: 50
+parent: Creating Your Own Game
+grand_parent: "Tactical cRPG & Infinity AI Engine"
+nav_order: 10
 permalink: /projects/crpg-realm/create-your-own-game/10-aggro-tactics-and-pack-ai.html
+description: "How TacticalEnemy picks targets: proximity aggro, the threat table, taunts and pack alerts, and how to tune or link enemies."
 ---
 
-# 10. Infinity Engine Aggro, Proximity Aggravation & Pack AI
+# 10. Aggro, Threat and Pack AI
 {: .no_toc }
 
-Architectural blueprint for implementing classic Infinity Engine threat tables, proximity-based enemy aggravation, allied pack rally calls, and tank peeling mechanics in Godot 4.
+In this chapter you place a linked pack of enemies and tune how they react. You will learn the four `TacticalEnemy` states, how proximity aggro and the threat table choose a target, how a taunt forces a switch, and how one enemy pulls its allies into the fight.
 {: .fs-6 .fw-300 }
 
-<div style="margin: 1.5rem 0;">
-  <img src="{{ '/assets/images/crpg-realm/crpg_infinity_engine_aggro.jpg' | relative_url }}" alt="Infinity Engine Aggro Architecture and Pack AI Schematic" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #4a3722; box-shadow: 0 4px 24px rgba(0,0,0,0.6);" />
-  <p style="text-align: center; color: #b8860b; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 10.1: Infinity Engine Aggro Architecture — Proximity evaluation, allied assistance broadcast, threat weight computation, and tank peeling loop.</em></p>
-</div>
+![A BDD run of the pack aggro scenario in TacticalBattle]({{ '/assets/images/crpg-realm/threat_aggro_splash.png' | relative_url }}){: .robos-zoomable-img }
+*Feature 06 running in TacticalBattle: the "Pack enemies aggravate and rally to attack when their ally is struck" scenario.*
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -26,162 +25,269 @@ Architectural blueprint for implementing classic Infinity Engine threat tables, 
 
 ---
 
-## 1. How Classic Infinity Engine Aggro Works
+## How it works
 
-In legendary RPGs like *Baldur's Gate II* and *Icewind Dale*, enemy encounters feel genuinely dangerous because creatures operate under realistic tactical rules rather than omniscient wall-hacks:
+### Which enemies use this AI
 
-1. **Hostility States**:
-   - **Hostile (`is_hostile = true`)**: Actively hunts intruders within visual line of sight and proximity radius (`detection_radius = 280.0`).
-   - **Neutral / Non-Hostile (`is_hostile = false`)**: Ignores party members walking past unless physically attacked or provoked.
-2. **Allied Pack Assistance (`pack_assist_radius = 220.0`)**: Wolves, goblins, and corrupted soldiers rarely fight alone. When an enemy enters combat or suffers damage, it broadcasts a shout to all nearby allies within 220px, pulling the entire pack into battle.
-3. **Dynamic Threat & Peeling**: Enemies don't mindlessly focus on the closest entity; they evaluate a weighted threat table considering damage inflicted, proximity, and active taunt actions. Tanks can step in and peel aggro off vulnerable spellcasters.
+The game has two enemy scripts:
 
-```mermaid
-flowchart TD
-    subgraph ProximityDetection ["Proximity & Hostility Engine"]
-        HeroMove["Hero moves into Area"] --> CheckDist["Compute distance_to(Hero)"]
-        CheckDist --> InRadius{"Dist <= detection_radius<br/>(280px)?"}
-        InRadius -->|No| StayIdle["Remain in IDLE / PATROL"]
-        InRadius -->|Yes| CheckHostile{"is_hostile == true?"}
-        CheckHostile -->|No| Ignore["Neutral: Ignore Intruder"]
-        CheckHostile -->|Yes| Aggro["⚠️ Aggravate: Transition to COMBAT"]
-    end
+| Script | Scene | Used in | AI |
+|:--|:--|:--|:--|
+| `scripts/TacticalEnemy.gd` (`class_name TacticalEnemy`) | `scenes/components/TacticalEnemy.tscn` | `TacticalBattle.tscn` (`EnemyWolfAlpha`, `EnemySkeletonArcher`, `EnemyShadowStalker`), plus the enemies `TacticalBattle.gd` reconfigures or spawns for the golem, goblin and spell test encounters | Threat table, proximity aggro, pack alerts. This chapter. |
+| `scripts/ShadowHound.gd` (`class_name ShadowHound`) | `scenes/ShadowHound.tscn` | `VillageSquare`, `WhisperingForest` (`DireWolf`, `ForestStalker`), `AncientCatacombs` (`SkeletonArcher`, `CryptGuardian`) | Patrols, chases the hero when closer than 190 px, plays an attack animation. No threat table, no pack logic, and its strike deals no damage. The location script kills it when clicked. |
 
-    subgraph PackRally ["Allied Pack Assistance Broadcast"]
-        Aggro & Struck["Enemy Takes Damage"] --> Shout["Broadcast alert_pack(source_pos)"]
-        Shout --> QueryAllies["Query living pack allies within 220px"]
-        QueryAllies --> Rally["Allies Aggravate & Engage Immediately"]
-    end
+Everything below is about `TacticalEnemy`. It does not read `data/v1/monsters.json`. Every stat is an `@export` set on the instance in the `.tscn` file.
 
-    subgraph ThreatPeeling ["Threat Table & Target Selection"]
-        Rally & Aggro --> ThreatCalc["Evaluate Threat Table:<br/>Threat = (Damage * 1.5) + ProximityBonus + Taunt"]
-        ThreatCalc --> SelectTarget["Target Party Member with Highest Threat"]
-        SelectTarget --> PeelCheck{"Tank strikes enemy<br/>with heavy melee?"}
-        PeelCheck -->|Yes| SwitchTarget["🔄 Retarget: Aggro Peeled to Tank!"]
-        PeelCheck -->|No| MaintainFocus["Pursue Current Target"]
-    end
+### Exports that shape behaviour
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
+```gdscript
+@export var enemy_id: String = "enemy_1"
+@export var enemy_name: String = "Corrupted Wolf Alpha"
+# ...
+@export var is_hostile: bool = true:
+	set(val):
+		is_hostile = val
+		_update_ui()
+@export var max_hp: int = 28
+@export var armor_class: int = 13
+@export var attack_bonus: int = 4
+@export var damage_min: int = 4
+@export var damage_max: int = 10
+# ...
+@export var move_speed: float = 140.0
+@export var aggro_radius: float = 280.0
+@export var pack_friend_radius: float = 480.0
+@export var pack_alert_radius: float = 950.0
+@export var friends: Array[String] = []
+# ...
+@export var is_ranged: bool = false
+@export var ranged_standoff_distance: float = 240.0
+@export var waypoints: Array[Vector2] = []
+
+enum State { PATROL, CHASE, ATTACK, DEAD }
 ```
 
----
+| Export | Used by | Meaning |
+|:--|:--|:--|
+| `aggro_radius` (280) | `_evaluate_proximity_aggro()` | A hostile patrolling enemy targets the closest party member inside this radius. |
+| `pack_friend_radius` (480) | `_alert_friends_proximity()` | When an enemy aggros by proximity, allies inside this radius rally. |
+| `pack_alert_radius` (950) | `_alert_friends()` | When an enemy takes damage from an attacker, allies inside this radius join in. |
+| `friends` | both alert functions | `enemy_id`s that always count as allies, at any distance. The link works in both directions. |
+| `is_hostile` | all aggro functions | `false` ignores proximity and ally alerts. Damage still adds threat. |
 
-## 2. GDScript Tactical Enemy Controller
+No shipped scene sets `friends`. The three `TacticalBattle` enemies rely on distance only.
 
-Below is the production implementation of `TacticalEnemy.gd` demonstrating proximity aggravation and pack rallying:
+### The state machine
 
+`_physics_process()` re-evaluates proximity every 0.45 s, then runs one state:
+
+- **PATROL** — walks the `waypoints` loop at 60 % speed, waiting 1.5–3 s at each point. With no waypoints it stands still.
+- **CHASE** — walks straight at `current_target` (no pathfinder) until within 50 px, or within `ranged_standoff_distance` when `is_ranged`. Then switches to ATTACK.
+- **ATTACK** — every 2.4 s calls `_strike_target()`: d20 + `attack_bonus` against the target's AC, damage `randi_range(damage_min, damage_max)`. Falls back to CHASE if the target moves beyond 65 px (ranged: standoff + 40).
+- **DEAD** — set by `die()`. The corpse stays and can be looted with `loot_corpse()`.
+
+A target that becomes invisible sends the enemy back to PATROL. In round-based mode (`combat_mode == 1` on the scene) PATROL and CHASE do not move.
+
+### Proximity aggro
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
 ```gdscript
-# TacticalEnemy.gd — Infinity Engine Proximity & Pack Aggro
-class_name TacticalEnemy
-extends CharacterBody2D
-
-enum State { IDLE, PATROL, COMBAT, RETREAT, DEAD }
-@export var current_state: State = State.IDLE
-@export var is_hostile: bool = true
-@export var detection_radius: float = 280.0
-@export var pack_assist_radius: float = 220.0
-@export var pack_id: String = "goblin-scouts"
-
-var current_target: Node2D = null
-var threat_table: Dictionary = {} # { "Lieutenant Vance": 45, "Aeloria": 10 }
-
-func _physics_process(delta: float) -> void:
+func _evaluate_proximity_aggro() -> void:
 	if current_state == State.DEAD:
 		return
-
-	if current_state == State.COMBAT:
-		_process_combat_behavior(delta)
-	else:
-		_check_proximity_aggro()
-
-func _check_proximity_aggro() -> void:
 	if not is_hostile:
 		return
 
-	var potential_targets = GameState.get_living_party_nodes()
-	for hero in potential_targets:
-		var dist = global_position.distance_to(hero.global_position)
-		if dist <= detection_radius:
-			aggravate_on_target(hero, true)
-			break
-
-func aggravate_on_target(target: Node2D, alert_allies: bool = true) -> void:
-	if current_state == State.DEAD:
-		return
-
-	var was_in_combat = (current_state == State.COMBAT)
-	current_state = State.COMBAT
-	current_target = target
-	_add_threat(target.name, 20)
-
-	GameState.add_log_entry("⚔️ %s aggravates and engages %s!" % [name, target.name])
-
-	if alert_allies and not was_in_combat:
-		_alert_nearby_pack_allies()
-
-func _alert_nearby_pack_allies() -> void:
-	var tree = get_tree()
-	if not tree:
-		return
-	var enemies = tree.get_nodes_in_group("enemies")
-	for ally in enemies:
-		if ally == self or ally.current_state == State.DEAD:
-			continue
-		if ally.has_method("aggravate_on_target"):
-			var dist = global_position.distance_to(ally.global_position)
-			if dist <= pack_assist_radius:
-				ally.aggravate_on_target(current_target, false)
-				GameState.add_log_entry("📣 %s rallies to assist allied %s!" % [ally.name, name])
-
-func take_damage(amount: int, attacker: Node2D) -> void:
-	hp -= amount
-	if hp <= 0:
-		die()
-		return
-
-	# Attacking an enemy immediately aggravates it, even if previously neutral
-	_add_threat(attacker.name, amount * 2)
-	aggravate_on_target(attacker, true)
-
-func _add_threat(target_name: String, amount: int) -> void:
-	threat_table[target_name] = threat_table.get(target_name, 0) + amount
-	_reevaluate_highest_threat_target()
+	var candidates: Array[Node2D] = _get_party_candidates()
+	# ...
+	if current_state == State.PATROL or current_target == null or not is_instance_valid(current_target):
+		var closest: Node2D = null
+		var min_d = aggro_radius
+		for c in candidates:
+			var d = global_position.distance_to(c.global_position)
+			if d <= min_d:
+				min_d = d
+				closest = c
+		if closest:
+			current_state = State.CHASE
+			_set_aggro_target(closest, 30, "Hostile Proximity")
+			# ... log "⚠️ %s is hostile and aggravated by proximity to %s (Distance: %dpx)!"
+			aggravated_by_proximity.emit(self, closest, min_d)
+			_alert_friends_proximity(closest, min_d)
 ```
 
----
+`_get_party_candidates()` returns the node found by `find_child("HeroPlayer")` plus every `PartyCompanion` that is a **direct child** of the current scene, skipping anyone unconscious or invisible.
 
-## 3. Threat Peeling Mechanics
+### The threat table
 
-To implement authentic D&D 5e / MMO-style **threat peeling**, when the party tank (e.g. Fighter with Shield) strikes the enemy with a melee attack or uses a taunt ability:
-1. The tank's threat value in `threat_table` exceeds the ranged companion's threat score.
-2. The enemy reevaluates targets and turns away from the spellcaster to engage the tank.
+Each enemy keeps two dictionaries keyed by actor name (`GameState.hero_name` for the hero, `companion_name` for companions):
 
+- `threat_table` — accumulated threat.
+- `direct_damage_table` — total damage that actor has dealt to this enemy.
+
+`take_damage(amount, attacker)` feeds both, then alerts the pack:
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
 ```gdscript
-func _reevaluate_highest_threat_target() -> void:
-	var highest_name = ""
-	var highest_score = -1
-	for target_name in threat_table:
-		var score = threat_table[target_name]
-		if score > highest_score:
-			highest_score = score
-			highest_name = target_name
-
-	if highest_name != "" and (not current_target or current_target.name != highest_name):
-		var new_node = get_node_or_null("../" + highest_name)
-		if new_node:
-			current_target = new_node
-			GameState.add_log_entry("🔄 %s switches focus to peel threat onto %s!" % [name, highest_name])
+	if attacker:
+		var a_name = _get_actor_name(attacker)
+		direct_damage_table[a_name] = int(direct_damage_table.get(a_name, 0)) + amount
+		add_threat(attacker, amount * 2 + 10, "Attack Damage")
+		_alert_friends(attacker, amount)
 ```
+
+`add_threat()` decides whether to switch target:
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
+```gdscript
+	if current_target == null or not is_instance_valid(current_target):
+		should_switch = true
+	elif source != current_target:
+		var cur_direct = int(direct_damage_table.get(current_target_name, 0))
+		var new_direct = int(direct_damage_table.get(s_name, 0))
+		if cur_direct == 0 and new_direct > 0:
+			should_switch = true
+		elif new_threat > int(cur_threat * 1.15) + 3:
+			should_switch = true
+
+	if should_switch:
+		_set_aggro_target(source, new_threat, reason)
+```
+
+So a hit is worth `damage × 2 + 10` threat, and the enemy switches when:
+
+1. it has no valid target, or
+2. its current target has dealt no damage yet and the new source has (the first real attacker always wins over a proximity pick), or
+3. the new source's threat exceeds `int(current × 1.15) + 3`.
+
+Worked example from feature 06: Vance hits the wolf for 16–24; say 20 (threat 50). Elora's bow hits for 12–16 each (threat 34–42 each). After one arrow she is below `int(50 × 1.15) + 3 = 60`. After two she is above it, and the wolf logs `switches target to Elora`.
+
+### Taunt
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
+```gdscript
+func force_taunt(source: Node2D, taunt_threat: int = 50) -> void:
+	if not source or not is_instance_valid(source) or current_state == State.DEAD:
+		return
+	var s_name = _get_actor_name(source)
+	threat_table[s_name] = int(threat_table.get(s_name, 0)) + taunt_threat
+	_set_aggro_target(source, threat_table[s_name], "Taunt")
+	GameState.log_message("combat", "🛡️ %s taunted %s! Aggro forcefully diverted!" % [s_name, enemy_name])
+```
+
+A taunt switches unconditionally. The only caller is `TacticalBattle.execute_taunt_on_enemy(source_name, enemy_id)`, which passes 60. There is no taunt button in the toolbar; it is reached through the HTTP API.
+
+### Pack alerts
+
+Two functions broadcast to allies. Both loop over `get_tree().current_scene.get_children()` and only consider hostile, living `TacticalEnemy` siblings:
+
+| Trigger | Broadcaster | Ally condition | Ally reaction | Ally threat added |
+|:--|:--|:--|:--|:--|
+| Enemy takes damage from an attacker | `_alert_friends()` | linked in `friends`, or distance ≤ `pack_alert_radius` | `aggravate_on_friend_attack()` | `int(damage × 0.75) + 35` if linked, `+ 20` otherwise |
+| Enemy aggros by proximity | `_alert_friends_proximity()` | linked in `friends`, or distance ≤ `pack_friend_radius` | `aggravate_on_friend_proximity()` | 25 |
+
+[scripts/TacticalEnemy.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/TacticalEnemy.gd)
+```gdscript
+func _alert_friends(attacker: Node2D, damage: int) -> void:
+	# ...
+	for child in cur_sc.get_children():
+		if child is TacticalEnemy and child != self and is_instance_valid(child):
+			if child.current_state != State.DEAD and child.is_hostile:
+				var dist = global_position.distance_to(child.global_position)
+				var is_linked_friend = friends.has(child.enemy_id) or child.friends.has(enemy_id)
+				if is_linked_friend or dist <= pack_alert_radius:
+					child.aggravate_on_friend_attack(self, attacker, damage)
+```
+
+An ally that is patrolling always takes the attacker as its target. An ally that already has a target switches only if the new threat beats the same `× 1.15 + 3` rule. A proximity rally only retargets allies that are patrolling or have no target.
+
+### Signals
+
+`TacticalEnemy` emits `enemy_slain`, `corpse_looted`, `body_clicked`, `target_changed`, `friend_aggravated` and `aggravated_by_proximity`. `TacticalBattle._ready()` connects all of them to show notices and check for victory. A scene that uses `TacticalEnemy` must at least connect `body_clicked`, or clicking the enemy does nothing (chapter 12 shows a handler).
 
 ---
 
-## 4. Automated Cucumber BDD Verification
+## Step by step: a linked pack
 
-The aggro and pack dynamics are verified through automated feature specifications (`11_infinity_engine_enemy_aggro_dynamics.feature`):
+Do this in your own scene (chapter 12 builds one). Adding enemies to `TacticalBattle.tscn` breaks feature 06, which asserts `the tactical battle contains 3 enemies`.
+
+1. **Instance the enemy scene.** In your location `.tscn`, add `scenes/components/TacticalEnemy.tscn` as an `ext_resource`, then add two instances as **direct children of the scene root**:
+
+   New code — add to your scene file:
+   ```
+   [node name="GhoulLeader" parent="." instance=ExtResource("5_te")]
+   position = Vector2(1500, 540)
+   enemy_id = "ghoul_leader"
+   enemy_name = "Vault Ghoul"
+   max_hp = 30
+   armor_class = 12
+   attack_bonus = 4
+   damage_min = 3
+   damage_max = 8
+   sprite_texture_path = "res://assets/sprites/enemies/zombie.png"
+   friends = ["ghoul_lurker"]
+
+   [node name="GhoulLurker" parent="." instance=ExtResource("5_te")]
+   position = Vector2(1750, 300)
+   enemy_id = "ghoul_lurker"
+   enemy_name = "Vault Lurker"
+   max_hp = 18
+   armor_class = 13
+   sprite_texture_path = "res://assets/sprites/enemies/orc.png"
+   waypoints = [Vector2(1750, 300), Vector2(1750, 450)]
+   ```
+   `GhoulLurker` is about 350 px from the leader, which is inside `pack_friend_radius` anyway. The `friends` link matters once you move it further than 480 px (proximity rally) or 950 px (damage alert).
+
+2. **Tune the radii if needed.** Smaller `aggro_radius` makes sneaking past possible. `pack_friend_radius` controls how far a proximity pull spreads. Set these per instance, e.g. `aggro_radius = 200.0`.
+
+3. **Make a bystander.** Set `is_hostile = false` on an instance. It ignores proximity and ally alerts, but hitting it still builds threat and turns it on the attacker.
+
+4. **Handle clicks.** Connect `body_clicked` in your scene script and call `take_damage(amount, attacker_node)` with a real attacker node. See `_on_enemy_clicked()` in chapter 12. Passing `null` as the attacker skips threat and pack alerts.
+
+5. **(Optional) Taunt from code.** Call `enemy.force_taunt(hero, 60)` from your scene script, for example from a button or a dialogue outcome.
+
+---
+
+## Verify it
+
+[tests/e2e/features/normal/06_infinity_aggro_threat_and_target_switching.feature](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/tests/e2e/features/normal/06_infinity_aggro_threat_and_target_switching.feature) covers all of this in `TacticalBattle`:
+
+1. **Threat switching and taunt.** Vance attacks `wolf_alpha`, Elora attacks three times, the wolf switches to Elora, then Vance taunts it back.
+2. **Pack alert on damage.** One hit on `wolf_alpha` turns `skeleton_archer` and `shadow_stalker` onto Vance.
+3. **Proximity aggro and rally.** `shadow_stalker` is moved to (2200, 680). Vance approaches to 220 px of the wolf. The wolf and the nearby archer aggro. The distant stalker stays on patrol.
+4. **Passive enemy.** With `wolf_alpha` set to passive, approaching it triggers nothing.
+
+```bash
+cd games/crpg-realm
+python3 run_cucumber_tests.py tests/e2e/features/normal/06_infinity_aggro_threat_and_target_switching.feature
+```
+
+The state steps read the `battle.enemies` list in `/api/v1/state`. `GameControlServer.gd` builds it from every direct child of the current scene that has `loot_corpse()` and an `enemy_id`, so the same steps work in your own scene. For the pack from the steps above:
 
 ```gherkin
-Scenario: Pack enemies aggravate and rally to attack when their ally is struck
-  Given an isolated test starting in scene "AncientCrypt" with party "Lieutenant Vance" the "fighter"
-  When the player orders "Lieutenant Vance" to strike enemy "Goblin Sentry"
-  Then enemy "Goblin Sentry" enters combat state
-  And nearby allied enemy "Goblin Skirmisher" within 220px alerts and joins the battle
-  And the activity log contains message "rallies to assist allied Goblin Sentry"
+  Scenario: Approaching the ghoul pulls its linked ally
+    Given an isolated scenario starting in scene "SunkenVault"
+    Then all tactical enemies are on patrol with no targets
+    When the player approaches within proximity distance of enemy "ghoul_leader"
+    Then enemy "ghoul_leader" becomes aggravated with target "Lieutenant Vance"
+    And close pack friend "ghoul_lurker" also aggros on "Lieutenant Vance"
+    And the activity log contains message "rallies with close ally"
 ```
+
+---
+
+## Gotchas
+
+- **Direct children only.** Party candidates, pack alerts, fireball targets and the `battle.enemies` API list all scan `current_scene.get_children()`. An enemy under an `Enemies` group node never gets alerted and never shows up in tests. A companion under a group node is never targeted.
+- **No attacker, no threat.** `take_damage(amount)` with no attacker only lowers HP. `CombatManager.execute_cast_spell()` passes `null` to its AoE helper, so spells cast through it (outside `TacticalBattle.execute_spell_cast()`) neither build threat nor alert the pack.
+- **Proximity aggro does not write threat.** `_set_aggro_target(closest, 30, ...)` only logs 30. The threat table entry stays at 0, so the first party member to deal damage takes the enemy over (rule 2 above).
+- **Threat is keyed by display name.** Two actors with the same `companion_name` share one entry.
+- **Enemies walk in straight lines.** CHASE and PATROL use `move_and_slide()` toward the target with no pathfinding. Place walls so enemies cannot get pinned behind them.
+- **Enemies spring traps.** A patrolling `TacticalEnemy` that walks over a `Trap` triggers it (chapter 5). Keep patrol routes clear of traps.
+- **`monsters.json` is not wired in.** Editing a monster there changes nothing for `TacticalEnemy`. Set the exports on the instance.
+- **ShadowHound is not TacticalEnemy.** Scenes that use `ShadowHound.tscn` get none of the behaviour in this chapter, and those enemies do not appear in `battle.enemies`.
+
+---
+
+[← Previous: 9. Party dynamics and formations]({{ '/projects/crpg-realm/create-your-own-game/09-party-dynamics-and-formations.html' | relative_url }}) · [Next: 11. Spells, AoE and magic →]({{ '/projects/crpg-realm/create-your-own-game/11-spells-aoe-and-magic-systems.html' | relative_url }})
