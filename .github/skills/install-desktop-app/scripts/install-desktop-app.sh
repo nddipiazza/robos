@@ -1,0 +1,397 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# RobOS GNOME Linux Desktop App & .desktop Icon Installer
+# Compliant with FreeDesktop.org Desktop Entry Specification 1.5 & Icon Theme Spec
+# Supports GNOME Shell Dash/Dock Favorites, Desktop Icons (DING), and XDG Caching
+# ==============================================================================
+
+set -euo pipefail
+
+APP_ID=""
+APP_NAME=""
+EXEC_CMD=""
+ICON_PATH=""
+COMMENT=""
+GENERIC_NAME=""
+WORK_DIR=""
+CATEGORIES="Utility;Development;"
+KEYWORDS=""
+STARTUP_WM_CLASS=""
+TERMINAL=false
+CREATE_DESKTOP_SHORTCUT=false
+PIN_FAVORITE=false
+CREATE_WRAPPER=false
+ROBOS_CATEGORY=""
+SCOPE="user" # "user" or "system"
+DRY_RUN=false
+
+usage() {
+  cat << 'EOF'
+Usage: install-desktop-app.sh [OPTIONS]
+
+Required Options:
+  -a, --app-id <id>          Unique application identifier (e.g. "robos-crpg")
+  -n, --name <name>          Human-readable display name (e.g. "RobOS cRPG: Realm of Heroes")
+  -e, --exec <command>       Execution command line or executable path
+
+Optional Configurations:
+  -i, --icon <path-or-name>  Path to icon file (.svg, .png) or theme icon name
+  -c, --comment <comment>    Tooltip / description text for launcher
+  -g, --generic-name <name>  Generic application category name (e.g. "Role-Playing Game")
+  -p, --path <dir>           Working directory for application process (Path=...)
+  --categories <list>        Semicolon-separated categories (e.g. "Game;RolePlaying;")
+  --keywords <list>          Semicolon-separated search keywords (e.g. "game;crpg;rpg;")
+  --wm-class <class>         StartupWMClass for GNOME Shell window matching
+  -t, --terminal             Run application inside terminal emulator (Terminal=true)
+  -w, --wrapper              Create a clean binary wrapper in ~/.local/bin/<app-id>
+  --robos-category <cat>     RobOS classification (Games, AI, Dev, Tools, etc.)
+
+GNOME Integration:
+  -d, --desktop              Create launchable desktop shortcut in ~/Desktop with GIO trust
+  -f, --favorite, --dock     Pin application to GNOME Shell favorites dock
+  -s, --scope <user|system>  Install target scope: "user" (default) or "system"
+  --dry-run                  Preview generated files and actions without modifying disk
+  -h, --help                 Show this help message
+
+Examples:
+  # Install game with desktop shortcut and icon
+  ./install-desktop-app.sh \
+    --app-id robos-crpg \
+    --name "RobOS cRPG: Realm of Heroes" \
+    --exec "/home/user/apps/godot4 --path /home/user/source/robos/games/crpg-realm" \
+    --icon "/home/user/source/robos/games/crpg-realm/icon.svg" \
+    --path "/home/user/source/robos/games/crpg-realm" \
+    --categories "Game;RolePlaying;" \
+    --desktop \
+    --favorite
+EOF
+  exit 0
+}
+
+# Parse CLI arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -a|--app-id)
+      APP_ID="${2:-}"
+      shift 2
+      ;;
+    -n|--name)
+      APP_NAME="${2:-}"
+      shift 2
+      ;;
+    -e|--exec)
+      EXEC_CMD="${2:-}"
+      shift 2
+      ;;
+    -i|--icon)
+      ICON_PATH="${2:-}"
+      shift 2
+      ;;
+    -c|--comment)
+      COMMENT="${2:-}"
+      shift 2
+      ;;
+    -g|--generic-name)
+      GENERIC_NAME="${2:-}"
+      shift 2
+      ;;
+    -p|--path)
+      WORK_DIR="${2:-}"
+      shift 2
+      ;;
+    --categories)
+      CATEGORIES="${2:-}"
+      shift 2
+      ;;
+    --keywords)
+      KEYWORDS="${2:-}"
+      shift 2
+      ;;
+    --wm-class)
+      STARTUP_WM_CLASS="${2:-}"
+      shift 2
+      ;;
+    -t|--terminal)
+      TERMINAL=true
+      shift
+      ;;
+    -w|--wrapper)
+      CREATE_WRAPPER=true
+      shift
+      ;;
+    --robos-category)
+      ROBOS_CATEGORY="${2:-}"
+      shift 2
+      ;;
+    -d|--desktop|--desktop-shortcut)
+      CREATE_DESKTOP_SHORTCUT=true
+      shift
+      ;;
+    -f|--favorite|--dock)
+      PIN_FAVORITE=true
+      shift
+      ;;
+    -s|--scope)
+      SCOPE="${2:-user}"
+      shift 2
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "Error: Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# Validate required inputs
+if [[ -z "$APP_ID" ]]; then
+  echo "Error: --app-id is required" >&2
+  exit 1
+fi
+if [[ -z "$APP_NAME" ]]; then
+  echo "Error: --name is required" >&2
+  exit 1
+fi
+if [[ -z "$EXEC_CMD" ]]; then
+  echo "Error: --exec is required" >&2
+  exit 1
+fi
+
+# Sanitize app-id: lowercase kebab-case
+APP_ID="$(echo "$APP_ID" | tr '[:upper:]' '[:lower:]' | tr -s ' _/' '-' | sed 's/^-//;s/-$//')"
+
+# Ensure Categories ends with a semicolon
+if [[ -n "$CATEGORIES" && "${CATEGORIES: -1}" != ";" ]]; then
+  CATEGORIES="${CATEGORIES};"
+fi
+
+# Ensure Keywords ends with a semicolon
+if [[ -n "$KEYWORDS" && "${KEYWORDS: -1}" != ";" ]]; then
+  KEYWORDS="${KEYWORDS};"
+fi
+
+# Configure directories based on scope
+if [[ "$SCOPE" == "system" ]]; then
+  APPS_DIR="/usr/share/applications"
+  ICONS_BASE_DIR="/usr/share/icons/hicolor"
+  PIXMAPS_DIR="/usr/share/pixmaps"
+  BIN_DIR="/usr/local/bin"
+  SUDO_PREFIX="sudo"
+else
+  APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+  ICONS_BASE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor"
+  PIXMAPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/pixmaps"
+  BIN_DIR="$HOME/.local/bin"
+  SUDO_PREFIX=""
+fi
+
+DESKTOP_FILE_PATH="${APPS_DIR}/${APP_ID}.desktop"
+
+echo "======================================================================"
+echo "Installing GNOME Desktop Entry: ${APP_NAME} (${APP_ID})"
+echo "Scope: ${SCOPE} | Target: ${DESKTOP_FILE_PATH}"
+echo "======================================================================"
+
+# Step 1: Optional Wrapper Generation
+FINAL_EXEC="$EXEC_CMD"
+if [[ "$CREATE_WRAPPER" = true ]]; then
+  WRAPPER_SCRIPT="${BIN_DIR}/${APP_ID}"
+  echo "Creating executable launcher wrapper at: ${WRAPPER_SCRIPT}..."
+  if [[ "$DRY_RUN" = false ]]; then
+    ${SUDO_PREFIX} mkdir -p "${BIN_DIR}"
+    cat << EOFWRAP | ${SUDO_PREFIX} tee "${WRAPPER_SCRIPT}" > /dev/null
+#!/usr/bin/env bash
+set -e
+${WORK_DIR:+cd "$WORK_DIR"}
+exec $EXEC_CMD "\$@"
+EOFWRAP
+    ${SUDO_PREFIX} chmod +x "${WRAPPER_SCRIPT}"
+  else
+    echo "[DRY-RUN] Create script ${WRAPPER_SCRIPT} with command: ${EXEC_CMD}"
+  fi
+  FINAL_EXEC="${WRAPPER_SCRIPT} %U"
+fi
+
+# Step 2: Icon Resolution & Installation
+FINAL_ICON_NAME="$APP_ID"
+if [[ -n "$ICON_PATH" ]]; then
+  if [[ -f "$ICON_PATH" ]]; then
+    ICON_EXT="${ICON_PATH##*.}"
+    ICON_EXT="$(echo "$ICON_EXT" | tr '[:upper:]' '[:lower:]')"
+    
+    if [[ "$ICON_EXT" == "svg" ]]; then
+      TARGET_ICON_DIR="${ICONS_BASE_DIR}/scalable/apps"
+      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.svg"
+    elif [[ "$ICON_EXT" == "png" ]]; then
+      # Determine PNG dimensions if identify or file available
+      PNG_SIZE="128x128"
+      if command -v identify >/dev/null 2>&1; then
+        DIM="$(identify -format "%wx%h" "$ICON_PATH" 2>/dev/null || echo "")"
+        if [[ -n "$DIM" ]]; then
+          PNG_SIZE="$DIM"
+        fi
+      elif file "$ICON_PATH" | grep -oP '\d+\s*x\s*\d+' >/dev/null 2>&1; then
+        DIM="$(file "$ICON_PATH" | grep -oP '\d+\s*x\s*\d+' | head -n1 | tr -d ' ')"
+        if [[ -n "$DIM" ]]; then
+          PNG_SIZE="$DIM"
+        fi
+      fi
+      TARGET_ICON_DIR="${ICONS_BASE_DIR}/${PNG_SIZE}/apps"
+      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.png"
+    else
+      TARGET_ICON_DIR="${PIXMAPS_DIR}"
+      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.${ICON_EXT}"
+    fi
+
+    echo "Installing icon to: ${TARGET_ICON_FILE}..."
+    if [[ "$DRY_RUN" = false ]]; then
+      ${SUDO_PREFIX} mkdir -p "${TARGET_ICON_DIR}"
+      ${SUDO_PREFIX} cp "${ICON_PATH}" "${TARGET_ICON_FILE}"
+      # Also keep a copy in pixmaps for high-compatibility desktop shells
+      ${SUDO_PREFIX} mkdir -p "${PIXMAPS_DIR}"
+      ${SUDO_PREFIX} cp "${ICON_PATH}" "${PIXMAPS_DIR}/${APP_ID}.${ICON_EXT}"
+      ${SUDO_PREFIX} chmod 644 "${PIXMAPS_DIR}/${APP_ID}.${ICON_EXT}"
+
+      # Also install companion PNG/SVG if available
+      SIBLING_PNG="${ICON_PATH%.*}.png"
+      if [[ "$ICON_EXT" == "svg" && -f "$SIBLING_PNG" ]]; then
+        ${SUDO_PREFIX} mkdir -p "${ICONS_BASE_DIR}/128x128/apps"
+        ${SUDO_PREFIX} cp "${SIBLING_PNG}" "${ICONS_BASE_DIR}/128x128/apps/${APP_ID}.png"
+        ${SUDO_PREFIX} cp "${SIBLING_PNG}" "${PIXMAPS_DIR}/${APP_ID}.png"
+      elif [[ "$ICON_EXT" == "png" && -f "${ICON_PATH%.*}.svg" ]]; then
+        ${SUDO_PREFIX} mkdir -p "${ICONS_BASE_DIR}/scalable/apps"
+        ${SUDO_PREFIX} cp "${ICON_PATH%.*}.svg" "${ICONS_BASE_DIR}/scalable/apps/${APP_ID}.svg"
+        ${SUDO_PREFIX} cp "${ICON_PATH%.*}.svg" "${PIXMAPS_DIR}/${APP_ID}.svg"
+      fi
+    else
+      echo "[DRY-RUN] Copy ${ICON_PATH} -> ${TARGET_ICON_FILE}"
+    fi
+    FINAL_ICON_NAME="$APP_ID"
+  else
+    # Value is an existing theme icon name or direct URI
+    FINAL_ICON_NAME="$ICON_PATH"
+  fi
+
+  # Update GTK Icon Cache
+  if [[ "$DRY_RUN" = false && -d "$ICONS_BASE_DIR" ]] && command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    echo "Updating GTK icon cache for: ${ICONS_BASE_DIR}..."
+    ${SUDO_PREFIX} gtk-update-icon-cache -f -t -q "${ICONS_BASE_DIR}" 2>/dev/null || true
+  fi
+fi
+
+# Step 3: Generate .desktop Entry File
+TEMP_DESKTOP_FILE="$(mktemp "/tmp/${APP_ID}-XXXXXX.desktop")"
+
+cat > "${TEMP_DESKTOP_FILE}" << EOF
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=${APP_NAME}
+${GENERIC_NAME:+GenericName=${GENERIC_NAME}}
+${COMMENT:+Comment=${COMMENT}}
+Exec=${FINAL_EXEC}
+Icon=${FINAL_ICON_NAME}
+${WORK_DIR:+Path=${WORK_DIR}}
+Terminal=${TERMINAL}
+Categories=${CATEGORIES}
+${KEYWORDS:+Keywords=${KEYWORDS}}
+${STARTUP_WM_CLASS:+StartupWMClass=${STARTUP_WM_CLASS}}
+StartupNotify=true
+X-RobOS-App=true
+${ROBOS_CATEGORY:+X-RobOS-Category=${ROBOS_CATEGORY}}
+EOF
+
+# Clean up empty lines
+sed -i '/^[[:space:]]*$/d' "${TEMP_DESKTOP_FILE}"
+
+echo "Validating generated desktop entry with desktop-file-validate..."
+if command -v desktop-file-validate >/dev/null 2>&1; then
+  desktop-file-validate "${TEMP_DESKTOP_FILE}"
+  echo "Validation passed."
+fi
+
+# Step 4: Install to Applications Directory
+echo "Installing desktop entry to: ${DESKTOP_FILE_PATH}..."
+if [[ "$DRY_RUN" = false ]]; then
+  ${SUDO_PREFIX} mkdir -p "${APPS_DIR}"
+  ${SUDO_PREFIX} cp "${TEMP_DESKTOP_FILE}" "${DESKTOP_FILE_PATH}"
+  ${SUDO_PREFIX} chmod 644 "${DESKTOP_FILE_PATH}"
+  rm -f "${TEMP_DESKTOP_FILE}"
+else
+  echo "[DRY-RUN] Install desktop file content to ${DESKTOP_FILE_PATH}"
+  cat "${TEMP_DESKTOP_FILE}"
+  rm -f "${TEMP_DESKTOP_FILE}"
+fi
+
+# Step 5: Update Desktop Database
+if [[ "$DRY_RUN" = false ]] && command -v update-desktop-database >/dev/null 2>&1; then
+  echo "Updating desktop application database for: ${APPS_DIR}..."
+  ${SUDO_PREFIX} update-desktop-database -q "${APPS_DIR}" 2>/dev/null || true
+fi
+
+# Step 6: Create & Trust Desktop Shortcut (GNOME Shell DING Extension)
+if [[ "$CREATE_DESKTOP_SHORTCUT" = true ]]; then
+  DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
+  SHORTCUT_PATH="${DESKTOP_DIR}/${APP_ID}.desktop"
+  echo "Creating launchable GNOME desktop shortcut at: ${SHORTCUT_PATH}..."
+
+  if [[ "$DRY_RUN" = false ]]; then
+    mkdir -p "${DESKTOP_DIR}"
+    cp "${DESKTOP_FILE_PATH}" "${SHORTCUT_PATH}"
+    chmod +x "${SHORTCUT_PATH}"
+
+    # GNOME DING metadata trust flag:
+    # This prevents the "Untrusted application" prompt and allows immediate direct launch
+    if command -v gio >/dev/null 2>&1; then
+      gio set "${SHORTCUT_PATH}" metadata::trusted true 2>/dev/null || true
+      gio set "${SHORTCUT_PATH}" metadata::trusted yes 2>/dev/null || true
+    fi
+  else
+    echo "[DRY-RUN] Create ${SHORTCUT_PATH}, chmod +x, and set gio metadata::trusted true"
+  fi
+fi
+
+# Step 7: Pin to GNOME Shell Favorites (Dock)
+if [[ "$PIN_FAVORITE" = true ]]; then
+  if command -v gsettings >/dev/null 2>&1; then
+    DESKTOP_BASENAME="${APP_ID}.desktop"
+    echo "Checking GNOME Shell favorites dock..."
+    CURRENT_FAVS="$(gsettings get org.gnome.shell favorite-apps 2>/dev/null || echo "[]")"
+
+    if [[ "$CURRENT_FAVS" == *"'${DESKTOP_BASENAME}'"* || "$CURRENT_FAVS" == *"\"${DESKTOP_BASENAME}\""* ]]; then
+      echo "${DESKTOP_BASENAME} is already pinned to GNOME Shell favorites."
+    else
+      echo "Adding ${DESKTOP_BASENAME} to GNOME Shell favorites..."
+      if [[ "$DRY_RUN" = false ]]; then
+        # Append before the closing bracket
+        if [[ "$CURRENT_FAVS" == "[]" || -z "$CURRENT_FAVS" ]]; then
+          NEW_FAVS="['${DESKTOP_BASENAME}']"
+        else
+          # Strip trailing bracket and append
+          NEW_FAVS="$(echo "$CURRENT_FAVS" | sed "s/]$/, '${DESKTOP_BASENAME}']/")"
+        fi
+        gsettings set org.gnome.shell favorite-apps "$NEW_FAVS"
+        echo "Successfully updated GNOME Shell favorites: $NEW_FAVS"
+      else
+        echo "[DRY-RUN] Would append '${DESKTOP_BASENAME}' to org.gnome.shell favorite-apps"
+      fi
+    fi
+  fi
+fi
+
+echo "======================================================================"
+echo "Installation complete!"
+echo "• Desktop Entry: ${DESKTOP_FILE_PATH}"
+if [[ "$CREATE_DESKTOP_SHORTCUT" = true ]]; then
+  echo "• Desktop Shortcut: ${DESKTOP_DIR:-$HOME/Desktop}/${APP_ID}.desktop (Trusted)"
+fi
+if [[ -n "$ICON_PATH" ]]; then
+  echo "• Icon: ${FINAL_ICON_NAME}"
+fi
+echo "======================================================================"

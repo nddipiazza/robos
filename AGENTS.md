@@ -146,6 +146,10 @@ Run isolated E2E tests in a Docker container with Xvfb virtual framebuffer and P
 ./scripts/e2e-container.sh -i                      # Drop into interactive container shell
 ```
 
+### cRPG game (`games/crpg-realm`)
+
+The cRPG has its own [AGENTS.md](games/crpg-realm/AGENTS.md): the e2e test pyramid (headless Infinity AI scenario engine at the base, long real-player playthroughs at the top), how to set up game state as `robos:CRPGTestScenario` KGraph nodes, how to direct the Infinity AI, and how to assert outcomes.
+
 ### Running Apps
 Launch any application from the **RobOS App Launcher** (the searchable application grid in the panel/dock) or run it directly from the terminal via Electron:
 ```bash
@@ -200,6 +204,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `generate-app-elearning` — Inspect an application/project in KGraph, synthesize interactive eLearning curriculum, scaffold standalone Electron app, and issue verified completion certificates
 - `import-company-kgraph` — Ingest company/organization repository catalogs from HTTP, FileSystem, AWS S3, or Git forges into RobOS Knowledge Graph package files
 - `ide-java` — Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces
+- `install-desktop-app` — Install .desktop entries, icons, desktop shortcuts with GIO trust, and GNOME Shell favorites
 - `install-dev-deps` — Audit and install all dev machine dependencies for all RobOS components
 - `kgraph-delete` — Safely remove an entity node from the Knowledge Graph with optional cascade reference pruning
 - `kgraph-diff` — Semantic blast radius diff comparing World 1 (main) against World 2 (feature branch)
