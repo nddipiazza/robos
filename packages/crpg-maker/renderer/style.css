@@ -633,6 +633,11 @@ body {
   display: none;
 }
 
+.png-empty-notice.hidden,
+.hidden {
+  display: none !important;
+}
+
 .png-view-scroll {
   padding: 40px;
   display: flex;
