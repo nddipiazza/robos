@@ -41,7 +41,7 @@ Every software engineer who has pushed autonomous coding agents (Claude Code, Op
 
 ---
 
-## 4 Pillars of Deep IDE & Agent Co-Debugging
+## Pillars of Deep IDE & Agent Co-Debugging
 
 ```mermaid
 flowchart LR
@@ -213,4 +213,4 @@ The `ide-bridge-mcp` service exposes standard MCP tools consumable by Claude Cod
 
 ---
 
-👉 **[Back to All 21 RobOS Big Wins →]({{ site.baseurl }}{% link big-wins.md %})**
+👉 **[Back to All RobOS Big Wins →]({{ site.baseurl }}{% link big-wins.md %})**

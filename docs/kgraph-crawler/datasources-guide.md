@@ -20,9 +20,9 @@ Practical recipe-based guides for systematically crawling Git repositories, data
 
 ---
 
-## 1. Overview: The 7 Datasource Domains
+## 1. Overview: The Datasource Domains
 
-The RobOS KGraph Crawler is designed to parse enterprise systems across 7 primary datasource domains:
+The RobOS KGraph Crawler is designed to parse enterprise systems across primary datasource domains:
 
 | # | Domain | Primary Targets | Extracted Entities | Target KGraph Package |
 |:---|:---|:---|:---|:---|

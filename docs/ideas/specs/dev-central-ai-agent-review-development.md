@@ -5,7 +5,7 @@ nav_exclude: true
 
 # Feature Spec: RobOS Dev Central — AI Agent Review-Based Development Hub
 
-- **Status**: In Plan ([Epic 29](../../project-plan/dev-central-review-hub/epic.md))
+- **Status**: In Plan ([Epic 29](https://github.com/nddipiazza/robos/blob/main/docs/project-plan/dev-central-review-hub/epic.md))
 - **Created Date**: 2026-08-31
 - **Target Component**: Electron App (`packages/dev-central`), Shared Agent Libraries (`packages/robos-agent-session`, `packages/robos-lib`), RobOS IDE Plugin (IPC port 63343), Desktop Shell & Widgets
 - **Author/Idea Source**: User / Antigravity Paradigm

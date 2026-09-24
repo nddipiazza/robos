@@ -36,12 +36,6 @@ When an engineering team builds its workflows around a single closed ecosystem:
 
 Engineering teams maintain complete sovereignty: swap underlying models at will, dispatch the right agent to the right task based on complexity and cost, and run fully offline when necessary.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/pillar3-ai-orchestration.jpg' | relative_url }}" alt="Universal Agent-Agnostic Framework and Multi-Model Dispatcher" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Agent-Agnostic Architecture & Dispatcher</strong>: Connecting open-standard SDLC context to any AI model (Claude, OpenAI, Gemini, DeepSeek, local Ollama) based on task value and cost. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
 
 ---
 

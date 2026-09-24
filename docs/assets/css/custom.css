@@ -1734,7 +1734,8 @@ svg[id^="mermaid-"] text.noteText,
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
-.rb-demo img {
+.rb-demo img,
+.rb-demo video {
   display: block;
   width: 100%;
   height: auto;
@@ -1842,4 +1843,173 @@ a.rb-link span {
 @media (max-width: 600px) {
   .rb-hero h1 { font-size: 2.4rem !important; }
   .rb-hero .rb-tagline { font-size: 1.3rem; }
+}
+
+/* ==========================================================================
+   App Directory & Per-App Pages
+   ========================================================================== */
+.rb-app-filter input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0b101b;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.rb-app-filter input:focus {
+  outline: 2px solid #00e5ff;
+  outline-offset: 1px;
+}
+.rb-cat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1rem 0 0.5rem;
+}
+.rb-cat-pills a {
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid #1e293b;
+  background: #111827;
+  color: #cbd5e1 !important;
+  text-decoration: none !important;
+}
+.rb-cat-pills a:hover {
+  border-color: #00e5ff;
+}
+.rb-cat {
+  margin-top: 2rem;
+  scroll-margin-top: 4rem;
+}
+.rb-cat-title {
+  font-size: 1.35rem !important;
+}
+.rb-app-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #162032;
+  color: #00e5ff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.rb-app-none {
+  color: #94a3b8;
+  text-align: center;
+  padding: 2rem 0;
+}
+.rb-app-crumbs {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+.rb-app-header {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #1e293b;
+}
+.rb-app-header h1 {
+  margin: 0 0 0.35rem !important;
+}
+.rb-app-icon {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: #111827;
+  border: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00e5ff;
+}
+.rb-app-summary {
+  font-size: 1.1rem;
+  color: #cbd5e1;
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+.rb-app-meta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.rb-app-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+.rb-app-empty {
+  color: #94a3b8;
+}
+@media (max-width: 600px) {
+  .rb-app-header { flex-direction: column; gap: 0.75rem; }
+  .rb-app-icon { width: 56px; height: 56px; font-size: 1.5rem; }
+}
+
+.robos-app-card[hidden], .rb-cat[hidden] {
+  display: none !important;
+}
+
+/* Keep the (hidden) image lightbox from widening the page on phones */
+.robos-lightbox-overlay {
+  overflow: hidden;
+}
+.robos-lightbox-header {
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.robos-lightbox-controls {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .robos-lightbox-header {
+    padding: 0.75rem;
+  }
+}
+
+/* KaTeX's hidden MathML is absolutely positioned; give scroll boxes a containing
+   block so it gets clipped instead of widening the page on phones. */
+.main-content .table-wrapper,
+.main-content div.highlight,
+.main-content pre {
+  position: relative;
+}
+
+/* Wide ASCII diagrams and code blocks scroll inside themselves instead of the page */
+.main-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.robos-diagram-card {
+  max-width: 100%;
+}
+
+/* Long identifiers in headings (e.g. robos:GitProjectOrganization) wrap on phones */
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4 {
+  overflow-wrap: anywhere;
+}
+.main-content h1 code,
+.main-content h2 code,
+.main-content h3 code,
+.main-content h4 code {
+  white-space: normal;
 }

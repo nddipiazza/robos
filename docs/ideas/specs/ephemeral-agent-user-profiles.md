@@ -5,7 +5,7 @@ nav_exclude: true
 
 # Feature Spec: Ephemeral Agent User Profiles with Direct Host Display Bridging
 
-- **Status**: Approved (Promoted to [Ephemeral Agent User Profiles with Direct Host Display Bridging](../../project-plan/ephemeral-agent-user-profiles/epic.md))
+- **Status**: Approved (Promoted to [Ephemeral Agent User Profiles with Direct Host Display Bridging](https://github.com/nddipiazza/robos/blob/main/docs/project-plan/ephemeral-agent-user-profiles/epic.md))
 - **Created Date**: 2026-08-31
 - **Target Component**: Linux Desktop Shell (`packages/desktop-shell`, `packages/desktop-manager`), Host Session Daemon (`robos-profiled`), Taskbar Dock / Toolbar Widgets, App Launchers
 - **Author/Idea Source**: User Idea Dump

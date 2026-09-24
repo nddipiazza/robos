@@ -12,7 +12,7 @@
   <a href="https://rowbose.com/"><strong>Documentation</strong></a> ·
   <a href="https://rowbose.com/getting-started.html"><strong>Quickstart</strong></a> ·
   <a href="https://rowbose.com/big-wins.html"><strong>Core Innovations</strong></a> ·
-  <a href="https://rowbose.com/apps.html"><strong>30+ App Suite</strong></a> ·
+  <a href="https://rowbose.com/apps.html"><strong>App Suite</strong></a> ·
   <a href="https://rowbose.com/architecture.html"><strong>Architecture</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a> ·
   <a href="https://discord.gg/6PjxzkHujE"><strong>Discord Community</strong></a>
@@ -155,7 +155,7 @@ In modern software engineering:
    └─────────────────────────────────────────────────────────────┘
 ```
 
-RobOS supports auto-generation and governance across **9 application archetypes**:
+RobOS supports auto-generation and governance across **application archetypes**:
 - **Microservices & Web APIs** (`robos:Microservice`): OpenAPI 3.1 YAML, Protobuf gRPC, GraphQL.
 - **Frontend Web Applications** (`robos:FrontEndApp`): React, Vite, Next.js, Vue, Svelte SPAs/SSRs.
 - **Desktop Applications** (`robos:DesktopApp`): Electron, Qt, GTK, Tauri local applications.
@@ -205,7 +205,7 @@ npx electron packages/kgraph-explorer
 
 ---
 
-## 🧰 Native Developer Tool Suite (30+ Apps)
+## 🧰 Native Developer Tool Suite (Apps)
 
 RobOS includes a complete suite of lightweight, high-performance developer tools built with Electron and vanilla JavaScript (zero framework overhead). All tools are natively wired to your SDLC Knowledge Graph:
 

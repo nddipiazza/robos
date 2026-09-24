@@ -1,5 +1,5 @@
 ---
-title: The 4 Architectural Pillars
+title: The Architectural Pillars
 layout: default
 nav_exclude: true
 permalink: /four-pillars.html

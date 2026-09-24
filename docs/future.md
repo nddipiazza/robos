@@ -235,7 +235,7 @@ This future is not science fiction—it is the direct logical extension of archi
 | Future Requirement | How RobOS Implements the Foundation Today |
 |:---|:---|
 | **Standardized Skill Structure** | The **RobOS Skills Standard** (`plugins/robos/skills/` and `.agents/skills/`) uses portable, structured `SKILL.md` documents with validated YAML metadata and parameter contracts. |
-| **Strict Typed Schemas** | RobOS models all SDLC entities using **W3C JSON-LD**, **OASIS OSLC 3.0**, and **91+ W3C SHACL shape constraints** in Modular KGraph Packages (`.robos/kgraphs/`). |
+| **Strict Typed Schemas** | RobOS models all SDLC entities using **W3C JSON-LD**, **OASIS OSLC 3.0**, and **W3C SHACL shape constraints** in Modular KGraph Packages (`.robos/kgraphs/`). |
 | **Hermetic Verification** | RobOS provides containerized headless testing using **Xvfb virtual framebuffers**, DOM snapshot inspection, and automated neural voiceover walkthroughs. |
 | **Knowledge Graph-First Assembly** | RobOS's core premise—**"Build the KGraph, and full applications become auto-generated"**—proves that software can be synthesized from semantic relationship graphs rather than manual typing. |
 | **Offline, Local-First Execution** | RobOS stores all data in plain-text files in your local Git repository (`.robos/`) with zero plaintext secrets (backed by UNIX `pass` GPG store), running fully offline on local workstations. |

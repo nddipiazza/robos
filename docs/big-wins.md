@@ -1,7 +1,8 @@
 ---
 title: RobOS Main Wins
 layout: default
-nav_order: 3
+parent: RobOS for Teams
+nav_order: 2
 has_children: true
 permalink: /big-wins.html
 redirect_from:
@@ -11,7 +12,7 @@ redirect_from:
 # RobOS Main Wins: Core Innovations & Strategic Advantages
 {: .no_toc }
 
-The 21 core architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants—transforming software engineering from manual boilerplate and review fatigue into visual proof-of-work, open standards, and Knowledge Graph-First generation.
+The core architectural breakthroughs and engineering advantages that separate RobOS from traditional IDEs and coding assistants—transforming software engineering from manual boilerplate and review fatigue into visual proof-of-work, open standards, and Knowledge Graph-First generation.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -30,36 +31,36 @@ Traditional IDEs and AI coding tools give you autocompletions, chat sidebars, an
 2. **Context Blindness & Invisible Blast Radiuses**: Coding assistants only understand single files or isolated folders. They have zero awareness of system-wide contracts, cross-repo dependencies, database migrations, or downstream microservices.
 3. **Workstation Clutter & Machine Pollution**: Autonomous agents run arbitrary shell commands directly in your primary user account, littering your machine with leftover files, orphaned Docker containers, zombie processes, and leaked credentials.
 
-RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a 30+ native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around **21 RobOS Main Wins** organized into **5 strategic chapters**:
+RobOS replaces this fragmented paradigm with an **autonomous engineering operating system, a native developer application suite, and an executable semantic blueprint**. In RobOS, software development is anchored around the **RobOS Main Wins**, grouped by theme:
 
 <div style="margin: 1.75rem 0; padding: 1.1rem 1.5rem; background: linear-gradient(90deg, rgba(0, 229, 255, 0.12) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 4px 20px rgba(0, 229, 255, 0.15);">
   <div>
-    <strong style="color: #ffffff; font-size: 1.05rem; display: block; margin-bottom: 2px;">⚡ Looking for all 21 Wins explained in plain English?</strong>
+    <strong style="color: #ffffff; font-size: 1.05rem; display: block; margin-bottom: 2px;">⚡ Looking for the wins explained in plain English?</strong>
     <span style="font-size: 0.9rem; color: #cbd5e1;">Explore our high-res startup showcase page with layman analogies, before/after contrasts, and visual bling.</span>
   </div>
-  <a href="{{ '/demo.html' | relative_url }}" class="btn btn-primary" style="font-weight: 700; white-space: nowrap;">⚡ Launch 21 Wins Demo →</a>
+  <a href="{{ '/demo.html' | relative_url }}" class="btn btn-primary" style="font-weight: 700; white-space: nowrap;">⚡ Read the Plain-English Version →</a>
 </div>
 
 <!-- QUICK JUMP CHAPTER BAR -->
 <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.5rem 0 2rem;">
-  <a href="#cat-trust" class="btn btn-purple fs-4" style="padding: 6px 14px;">🛡️ Chapter 1: Trust & Proof (#01–#04)</a>
-  <a href="#cat-agents" class="btn btn-purple fs-4" style="padding: 6px 14px;">🤖 Chapter 2: Agent Superpowers (#05–#08)</a>
-  <a href="#cat-open" class="btn btn-purple fs-4" style="padding: 6px 14px;">🌐 Chapter 3: Open Standards & Security (#09–#12)</a>
-  <a href="#cat-cloud" class="btn btn-purple fs-4" style="padding: 6px 14px;">🚀 Chapter 4: Cloud & Scale (#13–#16)</a>
-  <a href="#cat-flow" class="btn btn-purple fs-4" style="padding: 6px 14px;">🎯 Chapter 5: Architecture, IDEs & Flow (#17–#21)</a>
+  <a href="#cat-trust" class="btn btn-purple fs-4" style="padding: 6px 14px;">🛡️ Trust & Proof</a>
+  <a href="#cat-agents" class="btn btn-purple fs-4" style="padding: 6px 14px;">🤖 Agent Superpowers</a>
+  <a href="#cat-open" class="btn btn-purple fs-4" style="padding: 6px 14px;">🌐 Open Standards & Security</a>
+  <a href="#cat-cloud" class="btn btn-purple fs-4" style="padding: 6px 14px;">🚀 Cloud & Scale</a>
+  <a href="#cat-flow" class="btn btn-purple fs-4" style="padding: 6px 14px;">🎯 Architecture, IDEs & Flow</a>
 </div>
 
 ---
 
-## The 21 Big Wins at a Glance
+## The Big Wins at a Glance
 
-### Chapter 1: 🛡️ Trust, Verification & Machine Hygiene
+### 🛡️ Trust, Verification & Machine Hygiene
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0 2rem;">
 
 <!-- Win 01: Video Proof of Work -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #10b981; font-size: 1.05rem;">🎥 Win #01: 1080p Video Proof-of-Work</h4>
+<h4 style="margin-top: 0; color: #10b981; font-size: 1.05rem;">🎥 1080p Video Proof-of-Work</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">No code reaches human review on trust alone: headless virtual framebuffers record 1080p narrated video walkthroughs with Piper TTS verifying every DOM and API assertion.</p>
 </div>
 <a href="#win-01" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -68,7 +69,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 02: PR Review Theater -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #8b5cf6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #8b5cf6; font-size: 1.05rem;">🎭 Win #02: PR Review Theater</h4>
+<h4 style="margin-top: 0; color: #8b5cf6; font-size: 1.05rem;">🎭 PR Review Theater</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Eliminate rubber-stamping. 6-stage review cockpit: anti-rubber-stamp knowledge checks, living sequence flows, in-app file diffs, IDE bridges, and verified signoff gates.</p>
 </div>
 <a href="#win-02" style="color: #8b5cf6; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -77,7 +78,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 03: Dual-State Blast Radius -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #a855f7; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #a855f7; font-size: 1.05rem;">🧠 Win #03: Dual-State Blast Radius</h4>
+<h4 style="margin-top: 0; color: #a855f7; font-size: 1.05rem;">🧠 Dual-State Blast Radius</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Compare World 1 (Production <code>main</code>) against World 2 (Feature Branch). Traces cross-repo impact and schema drift before any code is generated.</p>
 </div>
 <a href="#win-03" style="color: #a855f7; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -86,7 +87,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 04: RAM-Only Sandboxes -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #3b82f6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #3b82f6; font-size: 1.05rem;">👤 Win #04: RAM-Only Sandboxes</h4>
+<h4 style="margin-top: 0; color: #3b82f6; font-size: 1.05rem;">👤 RAM-Only Sandboxes</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Agents execute in isolated Linux profiles mounted in high-speed RAM (<code>tmpfs</code>) with virtual display isolation. Zero machine residue and total credential isolation.</p>
 </div>
 <a href="#win-04" style="color: #3b82f6; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -94,14 +95,14 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 
 </div>
 
-### Chapter 2: 🤖 Agent Superpowers & Tool Control
+### 🤖 Agent Superpowers & Tool Control
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0 2rem;">
 
 <!-- Win 05: Direct Desktop App Control -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f43f5e; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #f43f5e; font-size: 1.05rem;">🤖 Win #05: Direct Desktop App Control</h4>
-<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">AI agents aren't "blind typists". They programmatically see and drive all 30+ native applications via DOM inspection (<code>snapshot-cli.js</code>) and the Unified MCP Router.</p>
+<h4 style="margin-top: 0; color: #f43f5e; font-size: 1.05rem;">🤖 Direct Desktop App Control</h4>
+<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">AI agents aren't "blind typists". They programmatically see and drive all native applications via DOM inspection (<code>snapshot-cli.js</code>) and the Unified MCP Router.</p>
 </div>
 <a href="#win-05" style="color: #f43f5e; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
 </div>
@@ -109,8 +110,8 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 06: KGraph-First App Generation -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #00bcd4; font-size: 1.05rem;">🧬 Win #06: KGraph-First App Generation</h4>
-<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Compile entire polyglot applications across 9 archetypes from schema-validated, modular package stores (<code>.robos/kgraphs/</code>) with multi-repo composition.</p>
+<h4 style="margin-top: 0; color: #00bcd4; font-size: 1.05rem;">🧬 KGraph-First App Generation</h4>
+<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Compile entire polyglot applications across archetypes from schema-validated, modular package stores (<code>.robos/kgraphs/</code>) with multi-repo composition.</p>
 </div>
 <a href="#win-06" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
 </div>
@@ -118,16 +119,16 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 07: Interactive PR Masterclasses -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #38bdf8; font-size: 1.05rem;">🎓 Win #07: Interactive PR Masterclasses</h4>
+<h4 style="margin-top: 0; color: #38bdf8; font-size: 1.05rem;">🎓 Interactive PR Masterclasses</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Just-in-time PR learning modules, hands-on coding labs in sandboxes, and immutable completion certificates registered directly to the Knowledge Graph.</p>
 </div>
 <a href="#win-07" style="color: #38bdf8; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
 </div>
 
-<!-- Win 08: 30+ Native Developer Apps -->
+<!-- Win 08: Native Developer Apps -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #06b6d4; font-size: 1.05rem;">🛠️ Win #08: 30+ Native Developer Apps</h4>
+<h4 style="margin-top: 0; color: #06b6d4; font-size: 1.05rem;">🛠️ Native Developer Apps</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Zero web-framework bloat. Fast Electron + vanilla JS desktop suite: Relational DB, NoSQL, Git REST Client (<code>.bru</code>), gRPC, GraphQL, Kube Studio, and Topology.</p>
 </div>
 <a href="#win-08" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -135,13 +136,13 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 
 </div>
 
-### Chapter 3: 🌐 Open Standards, Security & Clients
+### 🌐 Open Standards, Security & Clients
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0 2rem;">
 
 <!-- Win 09: Agent-Agnostic Freedom -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ec4899; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #ec4899; font-size: 1.05rem;">🔓 Win #09: 100% Agent-Agnostic Freedom</h4>
+<h4 style="margin-top: 0; color: #ec4899; font-size: 1.05rem;">🔓 100% Agent-Agnostic Freedom</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Conforms to Unified Harness Protocol (UHP 2026-08-11) and MCP. Dynamically routes tasks across Claude Code, Antigravity, Copilot CLI, Codex, and Gemini CLI.</p>
 </div>
 <a href="#win-09" style="color: #ec4899; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -150,7 +151,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 10: Bank-Vault Security & Prompt Guard -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #eab308; font-size: 1.05rem;">🔒 Win #10: Bank-Vault Security & Prompt Guard</h4>
+<h4 style="margin-top: 0; color: #eab308; font-size: 1.05rem;">🔒 Bank-Vault Security & Prompt Guard</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Zero plaintext secrets (UNIX <code>pass</code> GPG vault) and runtime Prompt Security Guard (Gitleaks, TruffleHog, Presidio PII, Shannon entropy, OWASP LLM01 auto-redact).</p>
 </div>
 <a href="#win-10" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -159,7 +160,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 11: Git-Backed API Client -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #14b8a6; font-size: 1.05rem;">📬 Win #11: Git-Backed Universal API Client</h4>
+<h4 style="margin-top: 0; color: #14b8a6; font-size: 1.05rem;">📬 Git-Backed Universal API Client</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Postman without SaaS lock-in: Bruno-compatible <code>.bru</code> collections versioned in Git, Protobuf gRPC reflection, GraphQL introspection, and Kafka streaming.</p>
 </div>
 <a href="#win-11" style="color: #14b8a6; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -168,7 +169,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 12: Unified Data Sources GUI -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f97316; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #f97316; font-size: 1.05rem;">🗄️ Win #12: Unified Data Sources GUI</h4>
+<h4 style="margin-top: 0; color: #f97316; font-size: 1.05rem;">🗄️ Unified Data Sources GUI</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">DBeaver-grade SQL console (PostgreSQL, MySQL, Oracle), MongoDB and Redis NoSQL explorer, and automatic schema synchronization with KGraph entity models.</p>
 </div>
 <a href="#win-12" style="color: #f97316; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -176,13 +177,13 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 
 </div>
 
-### Chapter 4: 🚀 Cloud, Build & Optimization
+### 🚀 Cloud, Build & Optimization
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0 2rem;">
 
 <!-- Win 13: Declarative GitOps Storage -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #f59e0b; font-size: 1.05rem;">⚡ Win #13: Zero-YAML Declarative GitOps</h4>
+<h4 style="margin-top: 0; color: #f59e0b; font-size: 1.05rem;">⚡ Zero-YAML Declarative GitOps</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">System topology, data sources, and contracts live in clean Git files under <code>.robos/</code>. Modifying architecture synthesizes ready-to-deploy Kubernetes manifests.</p>
 </div>
 <a href="#win-13" style="color: #f59e0b; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -191,7 +192,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 14: Remote Execution Studio -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #ef4444; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #ef4444; font-size: 1.05rem;">🏎️ Win #14: Remote Execution Studio (REAPI v2)</h4>
+<h4 style="margin-top: 0; color: #ef4444; font-size: 1.05rem;">🏎️ Remote Execution Studio (REAPI v2)</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Zero-overhead Bazel & Buck2 distributed build clusters: connect to Buildbarn or NativeLink, auto-synthesize <code>.bazelrc</code>, and stream live gRPC telemetry.</p>
 </div>
 <a href="#win-14" style="color: #ef4444; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -200,7 +201,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 15: Agent Tiers & Token Optimization -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #84cc16; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #84cc16; font-size: 1.05rem;">💰 Win #15: Smart AI Dispatcher & Tiers</h4>
+<h4 style="margin-top: 0; color: #84cc16; font-size: 1.05rem;">💰 Smart AI Dispatcher & Tiers</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">4-tier task-to-value routing matrix, Caveman prompt compression (saving 65% tokens), and DSPy teleprompter Bayesian prompt optimization slashing AI bills by 90%.</p>
 </div>
 <a href="#win-15" style="color: #84cc16; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -209,7 +210,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 16: Hierarchical Context & Rules Inheritance -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #6366f1; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #6366f1; font-size: 1.05rem;">🧠 Win #16: Hierarchical Rules Inheritance</h4>
+<h4 style="margin-top: 0; color: #6366f1; font-size: 1.05rem;">🧠 Hierarchical Rules Inheritance</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">5-level context (Global &rarr; Enterprise &rarr; Org &rarr; Team &rarr; Repo). Eliminates duplicate skills, conflicting instructions, and <code>.cursorrules</code> file sprawl.</p>
 </div>
 <a href="#win-16" style="color: #6366f1; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -217,13 +218,13 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 
 </div>
 
-### Chapter 5: 🎯 Architecture, Review & Developer Flow
+### 🎯 Architecture, Review & Developer Flow
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.25rem 0 2rem;">
 
 <!-- Win 17: IDE Breakpoint Debugging -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #0284c7; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #0284c7; font-size: 1.05rem;">🔍 Win #17: Native IDE Breakpoint Debugging</h4>
+<h4 style="margin-top: 0; color: #0284c7; font-size: 1.05rem;">🔍 Native IDE Breakpoint Debugging</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">One-click jump from PR review into IntelliJ IDEA (port 63343 IPC) or VS Code (<code>vscode://</code>). Automatically pauses execution at modified lines for interactive variable inspection.</p>
 </div>
 <a href="#win-17" style="color: #0284c7; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -232,7 +233,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 18: Living C4 Visual Architecture -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #10b981; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #10b981; font-size: 1.05rem;">🗺️ Win #18: Living C4 Visual Architecture</h4>
+<h4 style="margin-top: 0; color: #10b981; font-size: 1.05rem;">🗺️ Living C4 Visual Architecture</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Never look at a stale architecture wiki diagram again. Standardized 4-level progressive zoom (Context &rarr; Containers &rarr; Components &rarr; Code) rendered directly from KGraph.</p>
 </div>
 <a href="#win-18" style="color: #10b981; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -241,8 +242,8 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 19: Task Planning & App Wizards -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #a855f7; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #a855f7; font-size: 1.05rem;">✨ Win #19: Task Planning & Scaffolding Wizards</h4>
-<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Task Planner Studio (66+ domain web forms, custom builder, bidirectional GitHub & Jira sync) combined with Greenfield Scaffolding & Brownfield Codebase Ingestion Wizards.</p>
+<h4 style="margin-top: 0; color: #a855f7; font-size: 1.05rem;">✨ Task Planning & Scaffolding Wizards</h4>
+<p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Task Planner Studio (domain web forms, custom builder, bidirectional GitHub & Jira sync) combined with Greenfield Scaffolding & Brownfield Codebase Ingestion Wizards.</p>
 </div>
 <a href="#win-19" style="color: #a855f7; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
 </div>
@@ -250,7 +251,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 20: Consumer-Driven Contract Testing -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f43f5e; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #f43f5e; font-size: 1.05rem;">🤝 Win #20: Consumer-Driven Contract Testing</h4>
+<h4 style="margin-top: 0; color: #f43f5e; font-size: 1.05rem;">🤝 Consumer-Driven Contract Testing</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">Pact consumer contracts guarding REST, gRPC, and Kafka streams. Ephemeral Prism mock servers and automated PR merge gates preventing cross-service breakages.</p>
 </div>
 <a href="#win-20" style="color: #f43f5e; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -259,7 +260,7 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 <!-- Win 21: AI-Enhanced DevTools & IDEs -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h4 style="margin-top: 0; color: #00bcd4; font-size: 1.05rem;">🔌 Win #21: AI-Enhanced DevTools & IDEs</h4>
+<h4 style="margin-top: 0; color: #00bcd4; font-size: 1.05rem;">🔌 AI-Enhanced DevTools & IDEs</h4>
 <p style="margin-bottom: 0.75rem; font-size: 0.9rem; color: #c9d1d9;">When autonomous agents struggle with tricky bugs, RobOS agent plugins integrate directly with IntelliJ IDEA, VS Code, and browser DevTools to freeze threads, inject secrets, and co-debug live.</p>
 </div>
 <a href="#win-21" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Jump to Section ↓</a>
@@ -269,12 +270,12 @@ RobOS replaces this fragmented paradigm with an **autonomous engineering operati
 
 ---
 
-## Chapter 1: 🛡️ Trust, Verification & Machine Hygiene
+## 🛡️ Trust, Verification & Machine Hygiene
 {: #cat-trust }
 
 Solving the AI pull request crisis: how to eliminate review fatigue, prevent workstation pollution, and verify that generated code actually works in real runtime environments.
 
-### 1. 🎥 Autonomous E2E-Driven Dev with 1080p Video Proof-of-Work (AI Proves Its Work)
+### 🎥 Autonomous E2E-Driven Dev with 1080p Video Proof-of-Work (AI Proves Its Work)
 {: #win-01 }
 
 The single greatest bottleneck in AI-assisted software development is **Verification Fatigue**: an AI agent generates 2,000 lines of code across 15 files and outputs *"Task complete!"*. The human engineer must spend 20 minutes pulling the branch, downloading dependencies, spinning up local databases, seeding test records, and manually clicking buttons just to see if the feature works.
@@ -299,7 +300,7 @@ The single greatest bottleneck in AI-assisted software development is **Verifica
 
 ---
 
-### 2. 🎭 The Anti-Rubber-Stamp Cockpit: PR Review Theater
+### 🎭 The Anti-Rubber-Stamp Cockpit: PR Review Theater
 {: #win-02 }
 
 Rubber-stamping is the existential danger of AI coding. When an AI generates hundreds of pull requests a week, exhausted engineers scan a few lines of green diffs and click "Merge", introducing architectural drift, subtle logic regressions, and security holes into production.
@@ -326,7 +327,7 @@ Rubber-stamping is the existential danger of AI coding. When an AI generates hun
 
 ---
 
-### 3. 🧠 Google Maps for Code: Dual-State Blast Radius & Schema Drift
+### 🧠 Google Maps for Code: Dual-State Blast Radius & Schema Drift
 {: #win-03 }
 
 Traditional AI coding assistants are myopic: they only see the file or folder open in the editor. They cannot predict whether renaming a database column in service A breaks an event consumer in service B, or invalidates a mobile client contract.
@@ -344,14 +345,14 @@ Traditional AI coding assistants are myopic: they only see the file or folder op
 #### Key Capabilities:
 - **World 1 vs. World 2 Graph Diffing**: Compares active microservices, contracts, and database tables against the proposed changes.
 - **Pre-Code Blast Radius Calculation**: Flags affected downstream services, databases, Kafka topics, and client applications before agents touch a single file.
-- **W3C SHACL Constraint Gates**: 98 formal constraint shapes ensure every architectural change satisfies domain rules, contract standards, and security requirements.
+- **W3C SHACL Constraint Gates**: formal constraint shapes ensure every architectural change satisfies domain rules, contract standards, and security requirements.
 - **Living Documentation Continuous Sync**: Automatically updates Mermaid flowcharts, architecture diagrams, and living docs whenever graph objects change.
 
 👉 **[Read the Complete Guide: Dual-State Knowledge Graph →]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**
 
 ---
 
-### 4. 👤 The Magic Etch-A-Sketch: RAM-Only Sandboxes (`tmpfs`)
+### 👤 The Magic Etch-A-Sketch: RAM-Only Sandboxes (`tmpfs`)
 {: #win-04 }
 
 Letting autonomous AI agents execute shell commands, install npm packages, and spin up background processes in your primary user account is dangerous. It pollutes your home directory, leaves orphaned containers running, opens stray ports, and risks credential leakage.
@@ -376,23 +377,23 @@ Letting autonomous AI agents execute shell commands, install npm packages, and s
 
 ---
 
-## Chapter 2: 🤖 Agent Superpowers & Tool Control
+## 🤖 Agent Superpowers & Tool Control
 {: #cat-agents }
 
 Transforming AI agents from text-only typists into fully capable software engineers equipped with programmatic eyes, hands, and whole-application compilation capabilities.
 
-### 5. 🤖 AI with Eyes & Hands: Direct Desktop App Control
+### 🤖 AI with Eyes & Hands: Direct Desktop App Control
 {: #win-05 }
 
 In traditional software development, AI assistants operate as **blind typists**: they can edit text files on disk and run basic shell commands, but they cannot see running applications, check GUI layouts, or interact with developer tools like database consoles, API clients, and Kubernetes dashboards.
 
 **The RobOS Breakthrough:**
-> In RobOS, autonomous AI agents can directly see, inspect, and control all 30+ RobOS desktop applications through a **dual-surface control fabric**: every app provides a sleek GUI for humans and a programmatic API for agents.
+> In RobOS, autonomous AI agents can directly see, inspect, and control all RobOS desktop applications through a **dual-surface control fabric**: every app provides a sleek GUI for humans and a programmatic API for agents.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/robos-mcp-router-frame_01.png' | relative_url }}" alt="RobOS Unified MCP Router and Agent App Interaction Fabric" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Unified Agent Control Fabric</strong>: Autonomous AI agents discover, multiplex, and drive tools across all 30+ native applications via Model Context Protocol and programmatic DOM inspection. <em>(Click image to zoom full screen)</em>
+    <strong>Unified Agent Control Fabric</strong>: Autonomous AI agents discover, multiplex, and drive tools across all native applications via Model Context Protocol and programmatic DOM inspection. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -406,7 +407,7 @@ In traditional software development, AI assistants operate as **blind typists**:
 
 ---
 
-### 6. 🧬 The Master Blueprint: KGraph-First Application Generation
+### 🧬 The Master Blueprint: KGraph-First Application Generation
 {: #win-06 }
 
 In modern software development, contracts eliminate boilerplate: OpenAPI generates REST SDKs, Protobuf compiles into gRPC stubs, and SQL DDL generates ORM models. RobOS elevates this principle to the entire application:
@@ -421,7 +422,7 @@ In modern software development, contracts eliminate boilerplate: OpenAPI generat
 
 #### Key Capabilities:
 - **Modular Package Stores (`.robos/kgraphs/`)**: Decentralized, multi-package architecture indexed by `.robos/kgraph.yaml` (`core-platform`, `services`, `applications`, `organization`, `devops`, `learning`), eliminating Git merge conflicts and supporting multi-repo version pinning.
-- **9 Application Archetypes**: Full polyglot scaffolding across `Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`.
+- **Application Archetypes**: Full polyglot scaffolding across `Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`.
 - **End-to-End Synthesis**: Generates domain models (TypeSpec), API controllers, database migrations, Dockerfiles, devcontainers, and consumer contract tests.
 - **Agent Review-Based Governance**: The lead architect reviews synthesized code against KGraph requirements and inspects video proof-of-work before approving merge.
 
@@ -429,7 +430,7 @@ In modern software development, contracts eliminate boilerplate: OpenAPI generat
 
 ---
 
-### 7. 🎓 Just-In-Time Learning: Interactive PR Masterclasses & eLearning Hub
+### 🎓 Just-In-Time Learning: Interactive PR Masterclasses & eLearning Hub
 {: #win-07 }
 
 When an AI agent introduces a new architectural pattern, changes an ORM caching strategy, or updates a complex security flow, human reviewers often struggle to understand the change without hours of background research.
@@ -454,568 +455,16 @@ When an AI agent introduces a new architectural pattern, changes an ORM caching 
 
 ---
 
-### 8. 🛠️ Zero Framework Bloat: 30+ Native Developer Application Suite
+### 🛠️ Zero Framework Bloat: Native Developer Application Suite
 {: #win-08 }
 
 Modern developer machines are bogged down by dozens of heavyweight, disconnected browser tabs and Electron apps that consume gigabytes of RAM. Postman, DBeaver, lens, MongoDB Compass, and web dashboards create severe workstation drag.
 
 **The RobOS Breakthrough:**
-> RobOS delivers a cohesive suite of **30+ native developer applications built with Electron and vanilla JavaScript (zero React/Vue/Angular bundle overhead)**, booting in milliseconds and natively connected to the SDLC Knowledge Graph.
+> RobOS delivers a cohesive suite of **native developer applications built with Electron and vanilla JavaScript (zero React/Vue/Angular bundle overhead)**, booting in milliseconds and natively connected to the SDLC Knowledge Graph.
 
-<!-- INTERACTIVE ROBOS APP LAUNCHER & MENU WIDGET -->
-<div class="robos-app-launcher-widget" style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <!-- Window Header Bar -->
-  <div style="background: #0d1424; border-bottom: 1px solid #1e293b; padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <span style="display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #ef4444;"></span>
-      <span style="display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #f59e0b;"></span>
-      <span style="display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #10b981;"></span>
-      <span style="margin-left: 0.5rem; font-family: 'Space Grotesk', sans-serif; font-size: 0.88rem; font-weight: 600; color: #e2e8f0;">
-        RobOS App Launcher & Menu &bull; 30+ Native Applications
-      </span>
-    </div>
-    <span style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: #00e5ff; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: 9999px; padding: 2px 10px;">
-      ⚡ 0ms Web Framework Overhead &bull; Vanilla JS + Electron
-    </span>
-  </div>
+The whole suite has its own **[App Directory]({{ site.baseurl }}{% link apps.md %})**, with a page for every app.
 
-  <!-- Search & Category Filters -->
-  <div style="padding: 1.25rem 1.25rem 0.65rem; background: #0e1626; border-bottom: 1px solid #1a2333;">
-    <div style="position: relative; margin-bottom: 0.85rem;">
-      <input type="text" id="win8-app-search" placeholder="🔍 Search applications by name, package, or role (e.g. 'db', 'rest', 'agent', 'kube', 'planner')..." 
-             style="width: 100%; background: #070b13; border: 1px solid #1e293b; border-radius: 8px; padding: 0.65rem 1rem; color: #f8fafc; font-size: 0.9rem; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box;"
-             oninput="filterWin8Apps()" />
-    </div>
-    <div id="win8-cat-bar" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
-      <button class="win8-cat-btn active" onclick="selectWin8Cat(this, 'all')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; font-family: 'Space Grotesk', sans-serif; background: #00e5ff; color: #070b13; border: 1px solid #00e5ff; transition: all 0.2s;">All (37)</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'ai')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🤖 AI & Agents</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'review')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">📊 Architecture & Review</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'data')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🗄️ Databases & Streams</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'api')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">📬 APIs & Contracts</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'cloud')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🚀 Cloud & DevOps</button>
-      <button class="win8-cat-btn" onclick="selectWin8Cat(this, 'core')" style="cursor: pointer; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; font-family: 'Space Grotesk', sans-serif; background: #111827; color: #cbd5e1; border: 1px solid #1e293b; transition: all 0.2s;">🖥️ Core Desktop</button>
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #94a3b8; padding-bottom: 0.25rem;">
-      <span id="win8-app-count">Showing 37 of 37 applications</span>
-      <span>Click any card to explore its full guide</span>
-    </div>
-  </div>
-
-  <!-- Scrollable App Cards Grid -->
-  <div id="win8-apps-container" style="padding: 1.25rem; max-height: 540px; overflow-y: auto;">
-    <div id="win8-apps-grid" class="robos-apps-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.85rem;">
-
-      <!-- 1. Dev Central -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#dev-central-developer-command-center" class="robos-app-card win8-app-item" data-cat="core review" data-title="Dev Central" data-pkg="robos:dev-central" data-desc="Daily developer command center sprint burndown PR health blocker radar AI standup">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/dev-central.svg' | relative_url }}" alt="Dev Central" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Dev Central</div>
-          <span class="robos-app-pkg">robos:dev-central</span>
-          <p class="robos-app-desc">Daily developer command center: sprint burndown, PR health, blocker radar, and AI standup.</p>
-        </div>
-      </a>
-
-      <!-- Dev Discussions -->
-      <a href="{{ site.baseurl }}{% link big-wins/dev-discussions.md %}" class="robos-app-card win8-app-item" data-cat="review core" data-title="Dev Discussions" data-pkg="robos:dev-discussions" data-desc="Discord-like work-item and PR review chat interface projects features tasks smart caching kgraph">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/dev-discussions.svg' | relative_url }}" alt="Dev Discussions" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Dev Discussions</div>
-          <span class="robos-app-pkg">robos:dev-discussions</span>
-          <p class="robos-app-desc">Discord/Slack-like work-item and PR review discussion threads (Projects &rarr; Features &rarr; Tasks/PRs) with smart caching.</p>
-        </div>
-      </a>
-
-      <!-- 2. Agent Chat -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#agent-chat--vs-code-style-conversational-assistant" class="robos-app-card win8-app-item" data-cat="ai" data-title="Agent Chat" data-pkg="robos:agent-chat" data-desc="Conversational AI assistant multi-model switcher tool cards quick prompt popup">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/agent-chat.svg' | relative_url }}" alt="Agent Chat" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Agent Chat</div>
-          <span class="robos-app-pkg">robos:agent-chat</span>
-          <p class="robos-app-desc">Conversational AI assistant with multi-model switcher, live tool cards, and floating popup (Ctrl+Space).</p>
-        </div>
-      </a>
-
-      <!-- 3. PR Review Theater -->
-      <a href="{{ site.baseurl }}{% link pr-review-theater.md %}" class="robos-app-card win8-app-item" data-cat="review ai" data-title="PR Review Theater" data-pkg="robos:agent-code-review" data-desc="6-stage review cockpit anti-rubber-stamp knowledge checks sequence flows in-app file diffs IDE bridge">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/pr-review.svg' | relative_url }}" alt="PR Review Theater" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">PR Review Theater</div>
-          <span class="robos-app-pkg">robos:agent-code-review</span>
-          <p class="robos-app-desc">6-stage anti-rubber-stamp review cockpit: reviewer knowledge quizzes, sequence flows, diffs, and IDE bridge.</p>
-        </div>
-      </a>
-
-      <!-- 4. Knowledge Graph Explorer -->
-      <a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}" class="robos-app-card win8-app-item" data-cat="review data" data-title="Knowledge Graph Explorer" data-pkg="robos:knowledge-graph" data-desc="Dual-State OSLC JSON-LD architecture browser SHACL validator living docs blast radius">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/schema-studio.svg' | relative_url }}" alt="Knowledge Graph Explorer" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Knowledge Graph Explorer</div>
-          <span class="robos-app-pkg">robos:knowledge-graph</span>
-          <p class="robos-app-desc">Dual-State OSLC JSON-LD architecture browser, SHACL validator, living documentation, and blast radius.</p>
-        </div>
-      </a>
-
-      <!-- 5. Relational DB Manager -->
-      <a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" class="robos-app-card win8-app-item" data-cat="data" data-title="Relational DB Manager" data-pkg="robos:db-manager" data-desc="SQL console postgres mysql oracle ER diagrams foreign keys DDL migrations dbeaver">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/db-manager.svg' | relative_url }}" alt="Relational DB Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Relational DB Manager</div>
-          <span class="robos-app-pkg">robos:db-manager</span>
-          <p class="robos-app-desc">DBeaver-grade SQL console, schema inspector, ER diagrams, and DDL migrations for PostgreSQL, MySQL, Oracle.</p>
-        </div>
-      </a>
-
-      <!-- 6. NoSQL DB Manager -->
-      <a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" class="robos-app-card win8-app-item" data-cat="data" data-title="NoSQL DB Manager" data-pkg="robos:nosql-manager" data-desc="MongoDB document viewer Redis key-value inspector TTL editor query console compass">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/nosql-manager.svg' | relative_url }}" alt="NoSQL DB Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">NoSQL DB Manager</div>
-          <span class="robos-app-pkg">robos:nosql-manager</span>
-          <p class="robos-app-desc">MongoDB document viewer, Redis key-value inspector, TTL editor, and real-time query console.</p>
-        </div>
-      </a>
-
-      <!-- 7. Data Sources Explorer -->
-      <a href="{{ site.baseurl }}{% link big-wins/data-sources-management.md %}" class="robos-app-card win8-app-item" data-cat="data" data-title="Data Sources Explorer" data-pkg="robos:data-sources" data-desc="Unified topology explorer databases kafka streaming topics aws s3 cloud storage query console">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/data-sources.svg' | relative_url }}" alt="Data Sources Explorer" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Data Sources Explorer</div>
-          <span class="robos-app-pkg">robos:data-sources</span>
-          <p class="robos-app-desc">Unified topology explorer linking databases, Kafka streaming topics, and S3 vaults with live query console.</p>
-        </div>
-      </a>
-
-      <!-- 8. REST API Client -->
-      <a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" class="robos-app-card win8-app-item" data-cat="api" data-title="REST API Client" data-pkg="robos:rest-client" data-desc="Git-backed plain text collections .bru Bruno postman insomnia assertions environments">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/rest-client.svg' | relative_url }}" alt="REST API Client" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">REST API Client</div>
-          <span class="robos-app-pkg">robos:rest-client</span>
-          <p class="robos-app-desc">Git-backed plain text collections (.bru), Bruno compatibility, environment matrices, and test assertions.</p>
-        </div>
-      </a>
-
-      <!-- 9. gRPC Client -->
-      <a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" class="robos-app-card win8-app-item" data-cat="api" data-title="gRPC Client" data-pkg="robos:grpc-client" data-desc="Protobuf dynamic server reflection streaming inspection unary bidi rpc test harness bloomrpc">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/grpc-client.svg' | relative_url }}" alt="gRPC Client" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">gRPC Client</div>
-          <span class="robos-app-pkg">robos:grpc-client</span>
-          <p class="robos-app-desc">Protobuf server reflection, streaming inspection, and unary/bidi RPC test harness without manual compilation.</p>
-        </div>
-      </a>
-
-      <!-- 10. GraphQL Client -->
-      <a href="{{ site.baseurl }}{% link big-wins/api-and-web-clients.md %}" class="robos-app-card win8-app-item" data-cat="api" data-title="GraphQL Client" data-pkg="robos:graphql-client" data-desc="Schema introspection query mutation composer variables editor graphiql altair">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/graphql-client.svg' | relative_url }}" alt="GraphQL Client" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">GraphQL Client</div>
-          <span class="robos-app-pkg">robos:graphql-client</span>
-          <p class="robos-app-desc">Interactive schema introspection, query/mutation composer, variable editor, and response visualizer.</p>
-        </div>
-      </a>
-
-      <!-- 11. Kube Studio -->
-      <a href="{{ site.baseurl }}{% link big-wins/declarative-gitops-synthesis.md %}" class="robos-app-card win8-app-item" data-cat="cloud" data-title="Kube Studio" data-pkg="robos:kube-studio" data-desc="Kubernetes clusters kind eks gke aks pods logs helm gitops argocd lens k9s">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/kube-studio.svg' | relative_url }}" alt="Kube Studio" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Kube Studio</div>
-          <span class="robos-app-pkg">robos:kube-studio</span>
-          <p class="robos-app-desc">Multi-cluster Kubernetes navigator for local Kind, EKS, GKE, and AKS with live pod log streaming and GitOps.</p>
-        </div>
-      </a>
-
-      <!-- 12. Remote Execution Studio -->
-      <a href="{{ site.baseurl }}{% link big-wins/remote-execution-studio.md %}" class="robos-app-card win8-app-item" data-cat="cloud" data-title="Remote Execution Studio" data-pkg="robos:remote-execution-studio" data-desc="REAPI v2 buildbarn nativelink distributed builds bazel buck2 CAS telemetry">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/remote-execution-studio.svg' | relative_url }}" alt="Remote Execution Studio" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Remote Execution Studio</div>
-          <span class="robos-app-pkg">robos:remote-execution-studio</span>
-          <p class="robos-app-desc">REAPI v2 distributed build cluster manager for Bazel and Buck2 with Buildbarn / NativeLink CAS telemetry.</p>
-        </div>
-      </a>
-
-      <!-- 13. Agents Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#agents-manager--universal-ai-tool-connections-mcp" class="robos-app-card win8-app-item" data-cat="ai" data-title="Agents Manager" data-pkg="robos:agents-manager" data-desc="Orchestrate claude code google antigravity github copilot cli gemini sessions sandboxes">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/agents-manager.svg' | relative_url }}" alt="Agents Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Agents Manager</div>
-          <span class="robos-app-pkg">robos:agents-manager</span>
-          <p class="robos-app-desc">Orchestrate Claude Code, Google Antigravity, GitHub Copilot CLI, and Gemini agent sessions.</p>
-        </div>
-      </a>
-
-      <!-- 14. Task Planner -->
-      <a href="{{ site.baseurl }}{% link big-wins/interactive-task-planning.md %}" class="robos-app-card win8-app-item" data-cat="ai review" data-title="Task Planner" data-pkg="robos:task-planner" data-desc="AI task planning 66 templates domain web forms phased DAGs github jira sync">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/task-planner.svg' | relative_url }}" alt="Task Planner" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Task Planner</div>
-          <span class="robos-app-pkg">robos:task-planner</span>
-          <p class="robos-app-desc">AI-assisted project breakdown with 66+ domain web forms, phased execution DAGs, and GitHub/Jira sync.</p>
-        </div>
-      </a>
-
-      <!-- 15. Task Implementer -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#ai-agents" class="robos-app-card win8-app-item" data-cat="ai" data-title="Task Implementer" data-pkg="robos:task-implementer" data-desc="Autonomous multi-file code generator diff reviewer test runner atomic patch applier">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/task-implementer.svg' | relative_url }}" alt="Task Implementer" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Task Implementer</div>
-          <span class="robos-app-pkg">robos:task-implementer</span>
-          <p class="robos-app-desc">Autonomous multi-file code generator, diff reviewer, test execution runner, and atomic patch applier.</p>
-        </div>
-      </a>
-
-      <!-- 16. AI Prompt Studio -->
-      <a href="{{ site.baseurl }}{% link agent-tiers.md %}" class="robos-app-card win8-app-item" data-cat="ai" data-title="AI Prompt Studio" data-pkg="robos:ai-prompt" data-desc="Context-aware prompt engineering DSPy Bayesian optimization Caveman token compression">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/ai-prompt.svg' | relative_url }}" alt="AI Prompt Studio" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">AI Prompt Studio</div>
-          <span class="robos-app-pkg">robos:ai-prompt</span>
-          <p class="robos-app-desc">Context-aware prompt engineering with DSPy automated optimization and Caveman token compression.</p>
-        </div>
-      </a>
-
-      <!-- 17. MCP Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#agents-manager--universal-ai-tool-connections-mcp" class="robos-app-card win8-app-item" data-cat="ai" data-title="MCP Manager" data-pkg="robos:mcp-manager" data-desc="Model Context Protocol server registry interactive tool testbench oauth connectors">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/mcp-manager.svg' | relative_url }}" alt="MCP Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">MCP Manager</div>
-          <span class="robos-app-pkg">robos:mcp-manager</span>
-          <p class="robos-app-desc">Model Context Protocol server registry, interactive tool testbench, and OAuth resource connection manager.</p>
-        </div>
-      </a>
-
-      <!-- 18. Context Manager -->
-      <a href="{{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %}#hierarchical-agent-context--multi-level-rules-inheritance-eliminating-duplicate-skills" class="robos-app-card win8-app-item" data-cat="ai" data-title="Context Manager" data-pkg="robos:context-manager" data-desc="Curate files web URLs git repos jira tickets hierarchical context rules">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/context-manager.svg' | relative_url }}" alt="Context Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Context Manager</div>
-          <span class="robos-app-pkg">robos:context-manager</span>
-          <p class="robos-app-desc">Curate files, web URLs, Git repos, and Jira tickets into high-signal, hierarchical AI agent context.</p>
-        </div>
-      </a>
-
-      <!-- 19. Skills Manager -->
-      <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="robos-app-card win8-app-item" data-cat="ai" data-title="Skills Manager" data-pkg="robos:skills-manager" data-desc="Cross-agent AI skills marketplace claude codex antigravity gemini copilot">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/skills-manager.svg' | relative_url }}" alt="Skills Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Skills Manager</div>
-          <span class="robos-app-pkg">robos:skills-manager</span>
-          <p class="robos-app-desc">Cross-agent AI skills marketplace supporting Claude, Codex, Antigravity, and Gemini with verified schemas.</p>
-        </div>
-      </a>
-
-      <!-- 20. RobOS App Wizard -->
-      <a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" class="robos-app-card win8-app-item" data-cat="review" data-title="RobOS App Wizard" data-pkg="robos:app-wizard" data-desc="Greenfield scaffolding brownfield ingestion 9 archetypes microservice front-end game">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/app-wizard.svg' | relative_url }}" alt="RobOS App Wizard" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">RobOS App Wizard</div>
-          <span class="robos-app-pkg">robos:app-wizard</span>
-          <p class="robos-app-desc">Greenfield scaffolding and brownfield codebase ingestion wizard across 9 multi-app archetypes.</p>
-        </div>
-      </a>
-
-      <!-- 21. Git Projects -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#git-projects-multi-repo-hub" class="robos-app-card win8-app-item" data-cat="review core" data-title="Git Projects" data-pkg="robos:git-projects" data-desc="Multi-repository hub Monaco editor terminal runners dev-setup generation branch switching">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/git-projects.svg' | relative_url }}" alt="Git Projects" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Git Projects</div>
-          <span class="robos-app-pkg">robos:git-projects</span>
-          <p class="robos-app-desc">Multi-repository hub with Monaco editor, terminal runners, dev-setup generation, and branch switching.</p>
-        </div>
-      </a>
-
-      <!-- 22. Issue Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#arch-planning" class="robos-app-card win8-app-item" data-cat="review" data-title="Issue Manager" data-pkg="robos:issue-manager" data-desc="GitHub Gitea Issues client drag-and-drop Kanban board AI ticket breakdown">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/issue-manager.svg' | relative_url }}" alt="Issue Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Issue Manager</div>
-          <span class="robos-app-pkg">robos:issue-manager</span>
-          <p class="robos-app-desc">GitHub & Gitea Issues client with drag-and-drop Kanban board, sprint milestones, and AI ticket breakdown.</p>
-        </div>
-      </a>
-
-      <!-- 23. Task Board -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#arch-planning" class="robos-app-card win8-app-item" data-cat="review" data-title="Task Board" data-pkg="robos:task-board" data-desc="Interactive sprint Kanban board swimlanes custom columns WIP limits">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/task-board.svg' | relative_url }}" alt="Task Board" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Task Board</div>
-          <span class="robos-app-pkg">robos:task-board</span>
-          <p class="robos-app-desc">Interactive sprint Kanban board with swimlanes, custom status columns, and WIP limits.</p>
-        </div>
-      </a>
-
-      <!-- 24. Task Servers -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#arch-planning" class="robos-app-card win8-app-item" data-cat="review" data-title="Task Servers" data-pkg="robos:task-servers" data-desc="Connect authenticate Jira GitHub Enterprise Linear task servers">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/task-servers.svg' | relative_url }}" alt="Task Servers" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Task Servers</div>
-          <span class="robos-app-pkg">robos:task-servers</span>
-          <p class="robos-app-desc">Connect and authenticate Jira, GitHub Enterprise, and Linear task management servers.</p>
-        </div>
-      </a>
-
-      <!-- 25. Workflow Studio -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#arch-planning" class="robos-app-card win8-app-item" data-cat="review" data-title="Workflow Studio" data-pkg="robos:workflow-studio" data-desc="Visual issue lifecycle designer status transitions condition gates validation rules">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/workflow-studio.svg' | relative_url }}" alt="Workflow Studio" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Workflow Studio</div>
-          <span class="robos-app-pkg">robos:workflow-studio</span>
-          <p class="robos-app-desc">Visual issue lifecycle designer, status transitions, condition gates, and validation rules.</p>
-        </div>
-      </a>
-
-      <!-- 26. Automation Studio -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#arch-planning" class="robos-app-card win8-app-item" data-cat="review" data-title="Automation Studio" data-pkg="robos:automation-studio" data-desc="Low-code SDLC event triggers Git webhook actions automated agent runbooks">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/automation-studio.svg' | relative_url }}" alt="Automation Studio" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Automation Studio</div>
-          <span class="robos-app-pkg">robos:automation-studio</span>
-          <p class="robos-app-desc">Low-code SDLC event triggers, Git webhook actions, and automated agent runbooks.</p>
-        </div>
-      </a>
-
-      <!-- 27. Schema Studio & Registry -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#robos-schema-studio--definitive-registry" class="robos-app-card win8-app-item" data-cat="review data" data-title="Schema Studio & Registry" data-pkg="robos:schema-studio" data-desc="Schema.org ontology TypeSpec domain modeling W3C SHACL synthesis JSON-LD validator">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/schema-studio.svg' | relative_url }}" alt="Schema Studio & Registry" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Schema Studio & Registry</div>
-          <span class="robos-app-pkg">robos:schema-studio</span>
-          <p class="robos-app-desc">Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL shape synthesis, and JSON-LD validator.</p>
-        </div>
-      </a>
-
-      <!-- 28. RobOS Group Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#robos-group-manager-teams-organizations--enterprise-directory-sync" class="robos-app-card win8-app-item" data-cat="review core" data-title="RobOS Group Manager" data-pkg="robos:group-manager" data-desc="Enterprise directory sync Okta SCIM LDAP company tenant onboarding Team Topologies">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/group-manager.svg' | relative_url }}" alt="RobOS Group Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">RobOS Group Manager</div>
-          <span class="robos-app-pkg">robos:group-manager</span>
-          <p class="robos-app-desc">Enterprise directory sync (Okta/SCIM/LDAP), company tenant onboarding, and Team Topologies.</p>
-        </div>
-      </a>
-
-      <!-- 29. Pass Manager -->
-      <a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" class="robos-app-card win8-app-item" data-cat="cloud core" data-title="Pass Manager" data-pkg="robos:pass-manager" data-desc="UNIX password store pass GUI GPG key encryption zero plaintext secrets credential injection">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/pass-manager.svg' | relative_url }}" alt="Pass Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Pass Manager</div>
-          <span class="robos-app-pkg">robos:pass-manager</span>
-          <p class="robos-app-desc">GUI for local UNIX password store (pass) with GPG key encryption, zero plaintext secrets, and credential injection.</p>
-        </div>
-      </a>
-
-      <!-- 30. RobOS eLearning Hub -->
-      <a href="{{ site.baseurl }}{% link pr-review-theater.md %}#standalone-robos-elearning-player-hub" class="robos-app-card win8-app-item" data-cat="ai core" data-title="RobOS eLearning Hub" data-pkg="robos:robos-elearning" data-desc="Interactive developer learning player hands-on labs tmpfs sandboxes knowledge graph certificates">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/robos-elearning.svg' | relative_url }}" alt="RobOS eLearning Hub" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">RobOS eLearning Hub</div>
-          <span class="robos-app-pkg">robos:robos-elearning</span>
-          <p class="robos-app-desc">Interactive developer learning player, hands-on lab runner in tmpfs sandboxes, and Knowledge Graph certificates.</p>
-        </div>
-      </a>
-
-      <!-- 31. Software Center -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="Software Center" data-pkg="robos:software-center" data-desc="Developer tool store install manage IDEs compilers runtimes cloud CLI SDKs">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/software-center.svg' | relative_url }}" alt="Software Center" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Software Center</div>
-          <span class="robos-app-pkg">robos:software-center</span>
-          <p class="robos-app-desc">Developer tool store to install and manage IDEs (IntelliJ, VS Code), compilers, language runtimes, and cloud SDKs.</p>
-        </div>
-      </a>
-
-      <!-- 32. Workspace Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="Workspace Manager" data-pkg="robos:workspace-manager" data-desc="Auto-discover configure switch provision local repository workspaces IntelliJ VS Code">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/workspace-manager.svg' | relative_url }}" alt="Workspace Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Workspace Manager</div>
-          <span class="robos-app-pkg">robos:workspace-manager</span>
-          <p class="robos-app-desc">Auto-discover, configure, switch, and provision local repository workspaces in IntelliJ IDEA and VS Code.</p>
-        </div>
-      </a>
-
-      <!-- 33. Desktop Shell -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="Desktop Shell" data-pkg="robos:robos-desktop" data-desc="Wayland X11 desktop taskbar panel launchers dock system tray status notifications">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/robos-desktop.svg' | relative_url }}" alt="Desktop Shell" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Desktop Shell</div>
-          <span class="robos-app-pkg">robos:robos-desktop</span>
-          <p class="robos-app-desc">Wayland/X11 desktop taskbar, panel launchers, dock, and system tray status notifications.</p>
-        </div>
-      </a>
-
-      <!-- 34. Desktop Manager -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="Desktop Manager" data-pkg="robos:desktop-manager" data-desc="Session lifecycle manager GNOME panel bridge multi-display workspace organizer">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/desktop-manager.svg' | relative_url }}" alt="Desktop Manager" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Desktop Manager</div>
-          <span class="robos-app-pkg">robos:desktop-manager</span>
-          <p class="robos-app-desc">Session lifecycle manager, GNOME panel extension bridge, and multi-display workspace organizer.</p>
-        </div>
-      </a>
-
-      <!-- 35. Desktop Customizer -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="Desktop Customizer" data-pkg="robos:desktop-customizer" data-desc="Configure dark navy cyan desktop themes accent colors panel layouts fonts shortcuts">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/desktop-customizer.svg' | relative_url }}" alt="Desktop Customizer" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">Desktop Customizer</div>
-          <span class="robos-app-pkg">robos:desktop-customizer</span>
-          <p class="robos-app-desc">Configure dark navy/cyan desktop themes, accent colors, panel layouts, terminal fonts, and window decorations.</p>
-        </div>
-      </a>
-
-      <!-- 36. RobOS Preferences -->
-      <a href="{{ site.baseurl }}{% link apps.md %}#core-desktop" class="robos-app-card win8-app-item" data-cat="core" data-title="RobOS Preferences" data-pkg="robos:robos-preferences" data-desc="System-wide developer settings AI model routing tiers GPG keyrings Prompt Security Guard">
-        <div class="robos-app-icon-wrap">
-          <img src="{{ '/assets/images/icons/robos-preferences.svg' | relative_url }}" alt="RobOS Preferences" width="38" height="38" loading="lazy">
-        </div>
-        <div class="robos-app-body">
-          <div class="robos-app-name">RobOS Preferences</div>
-          <span class="robos-app-pkg">robos:robos-preferences</span>
-          <p class="robos-app-desc">System-wide developer settings, AI model routing tiers, GPG keyrings, and Prompt Security Guard policies.</p>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- Empty State -->
-    <div id="win8-empty-state" style="display: none; text-align: center; padding: 3rem 1rem; color: #94a3b8;">
-      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔍</div>
-      <div style="font-weight: 600; font-size: 1.05rem; color: #e2e8f0; margin-bottom: 0.25rem;">No applications found</div>
-      <div style="font-size: 0.85rem;">Try a different keyword or select the "All" category.</div>
-    </div>
-  </div>
-
-  <!-- Window Footer Bar -->
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.82rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-    <span>⚡ All applications boot instantly with shared native modules & zero framework weight</span>
-    <a href="{{ site.baseurl }}{% link apps.md %}" style="color: #00e5ff; font-weight: 600; text-decoration: none;">Browse Full App Suite Catalog &rarr;</a>
-  </div>
-</div>
-
-<script>
-let currentWin8Cat = 'all';
-function selectWin8Cat(btn, cat) {
-  currentWin8Cat = cat;
-  document.querySelectorAll('.win8-cat-btn').forEach(b => {
-    b.classList.remove('active');
-    b.style.background = '#111827';
-    b.style.color = '#cbd5e1';
-    b.style.borderColor = '#1e293b';
-  });
-  btn.classList.add('active');
-  btn.style.background = '#00e5ff';
-  btn.style.color = '#070b13';
-  btn.style.borderColor = '#00e5ff';
-  filterWin8Apps();
-}
-function filterWin8Apps() {
-  const query = (document.getElementById('win8-app-search').value || '').toLowerCase().trim();
-  const cards = document.querySelectorAll('.win8-app-item');
-  let visibleCount = 0;
-  cards.forEach(card => {
-    const catStr = card.getAttribute('data-cat') || '';
-    const cats = catStr.split(' ');
-    const title = (card.getAttribute('data-title') || '').toLowerCase();
-    const pkg = (card.getAttribute('data-pkg') || '').toLowerCase();
-    const desc = (card.getAttribute('data-desc') || '').toLowerCase();
-    const matchesCat = (currentWin8Cat === 'all' || cats.includes(currentWin8Cat));
-    const matchesQuery = !query || title.includes(query) || pkg.includes(query) || desc.includes(query);
-    if (matchesCat && matchesQuery) {
-      card.style.display = 'flex';
-      visibleCount++;
-    } else {
-      card.style.display = 'none';
-    }
-  });
-  const countEl = document.getElementById('win8-app-count');
-  if (countEl) countEl.textContent = `Showing ${visibleCount} of ${cards.length} applications`;
-  const emptyEl = document.getElementById('win8-empty-state');
-  const gridEl = document.getElementById('win8-apps-grid');
-  if (emptyEl && gridEl) {
-    if (visibleCount === 0) {
-      emptyEl.style.display = 'block';
-      gridEl.style.display = 'none';
-    } else {
-      emptyEl.style.display = 'none';
-      gridEl.style.display = 'grid';
-    }
-  }
-}
-</script>
 
 #### Key Capabilities:
 - **Full SDLC Coverage**: Dev Central, Issue Manager, Relational DB Manager, NoSQL Manager, Git-backed REST API Client (`.bru`), gRPC Client, GraphQL Client, Kube Studio, Pass Manager, Task Planner, and more.
@@ -1023,16 +472,16 @@ function filterWin8Apps() {
 - **Universal Knowledge Graph Backing**: Fast local mirror in `~/.config/robos/` continuously synchronized with the SDLC Knowledge Graph.
 - **Seamless Inter-App Cascades**: Changes in one app (e.g. adding a table in Relational DB Manager) immediately reflect across System Topology, REST Client, and Kube Studio.
 
-👉 **[Browse the Full 30+ Native Developer App Suite →]({{ site.baseurl }}{% link apps.md %})**
+👉 **[Browse the Full Native Developer App Suite →]({{ site.baseurl }}{% link apps.md %})**
 
 ---
 
-## Chapter 3: 🌐 Open Standards, Security & Clients
+## 🌐 Open Standards, Security & Clients
 {: #cat-open }
 
 Ensuring total algorithmic independence, enterprise-grade secret isolation, and open git-backed API/database toolchains with zero vendor lock-in.
 
-### 9. 🔓 Never Locked In: 100% Agent-Agnostic Freedom & Open Standards
+### 🔓 Never Locked In: 100% Agent-Agnostic Freedom & Open Standards
 {: #win-09 }
 
 Proprietary coding assistants lock engineering teams into closed vendor ecosystems with incompatible prompt syntax and rigid model dependencies. If a vendor changes pricing, throttles rate limits, or introduces breaking behavior, teams are stranded.
@@ -1057,7 +506,7 @@ Proprietary coding assistants lock engineering teams into closed vendor ecosyste
 
 ---
 
-### 10. 🔒 Bank-Vault Security: Zero Plaintext Secrets & Prompt Security Guard
+### 🔒 Bank-Vault Security: Zero Plaintext Secrets & Prompt Security Guard
 {: #win-10 }
 
 Managing credentials across multiple cloud providers is a major vector for data leaks. Developers accidentally commit `.env` files with plaintext API keys, or inadvertently paste production connection strings into AI chat prompts.
@@ -1068,12 +517,12 @@ Managing credentials across multiple cloud providers is a major vector for data 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}" alt="DevOps Account Integrations Wizard in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>DevOps Account Integrations Wizard</strong>: Guided connection wizards across 7 categories and 25+ providers with zero plaintext secrets and GPG UNIX password store encryption. <em>(Click image to zoom full screen)</em>
+    <strong>DevOps Account Integrations Wizard</strong>: Guided connection wizards across categories and providers with zero plaintext secrets and GPG UNIX password store encryption. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 #### Key Capabilities:
-- **25+ Cloud Providers**: Guided onboarding wizards across Source Control, Cloud Infra, CI/CD, Container Registries, Virtualization, OAuth/Identity, and DNS.
+- **Cloud Providers**: Guided onboarding wizards across Source Control, Cloud Infra, CI/CD, Container Registries, Virtualization, OAuth/Identity, and DNS.
 - **UNIX Password Store (`pass`) GPG Vault**: Sensitive tokens are saved directly into `~/.password-store/` encrypted with GPG; the KGraph only stores first-class `robos:PassCredential` reference URNs.
 - **Runtime Prompt Security Guard**: Pre-flight prompt inspection across `<robos-ai-textarea>`, `AgentSession`, and `EmbeddedHarnessRouter`.
 - **Gitleaks & TruffleHog Secrets Detection**: Catches AWS keys, GitHub tokens, private keys, and API secrets before they reach the model.
@@ -1084,7 +533,7 @@ Managing credentials across multiple cloud providers is a major vector for data 
 
 ---
 
-### 11. 📬 Postman Without Cloud Lock-In: Git-Backed Universal API & Web Clients
+### 📬 Postman Without Cloud Lock-In: Git-Backed Universal API & Web Clients
 {: #win-11 }
 
 Commercial API testing tools like Postman and Insomnia have migrated to proprietary clouds, locking collections behind subscriptions, forcing team sync through closed servers, and introducing heavy desktop bloat.
@@ -1109,7 +558,7 @@ Commercial API testing tools like Postman and Insomnia have migrated to propriet
 
 ---
 
-### 12. 🗄️ All Databases in One Window: Unified Data Sources GUI
+### 🗄️ All Databases in One Window: Unified Data Sources GUI
 {: #win-12 }
 
 Engineers constantly juggle multiple heavy database tools (DBeaver, DataGrip, pgAdmin, MongoDB Compass, RedisInsight) alongside their IDE, consuming gigabytes of RAM and fragmenting data context.
@@ -1134,12 +583,12 @@ Engineers constantly juggle multiple heavy database tools (DBeaver, DataGrip, pg
 
 ---
 
-## Chapter 4: 🚀 Cloud, Build & Optimization
+## 🚀 Cloud, Build & Optimization
 {: #cat-cloud }
 
 Eliminating YAML sprawl, accelerating multi-gigabyte code builds, and slashing AI token expenditures through intelligent dispatching and hierarchical rules.
 
-### 13. ⚡ Visual Cloud Delivery: Zero-YAML Declarative GitOps Storage
+### ⚡ Visual Cloud Delivery: Zero-YAML Declarative GitOps Storage
 {: #win-13 }
 
 Writing, debugging, and maintaining hundreds of Kubernetes YAML manifests, Helm charts, and GitOps pipelines by hand is tedious, error-prone, and a major source of configuration drift.
@@ -1164,7 +613,7 @@ Writing, debugging, and maintaining hundreds of Kubernetes YAML manifests, Helm 
 
 ---
 
-### 14. 🏎️ Turbo Builds: Remote Execution Studio & REAPI v2
+### 🏎️ Turbo Builds: Remote Execution Studio & REAPI v2
 {: #win-14 }
 
 Rebuilding multi-gigabyte codebases in C++, Rust, Go, or monorepo TypeScript easily takes 20 to 60 minutes on local laptops. Yet most engineering teams never use remote build servers because setting up Buildbarn or NativeLink (configuring 5+ microservices, mTLS certs, NVMe storage allocations) is notoriously difficult.
@@ -1189,7 +638,7 @@ Rebuilding multi-gigabyte codebases in C++, Rust, Go, or monorepo TypeScript eas
 
 ---
 
-### 15. 💰 The Smart AI Dispatcher: Agent Tiers & Token Cost Optimization
+### 💰 The Smart AI Dispatcher: Agent Tiers & Token Cost Optimization
 {: #win-15 }
 
 Using frontier reasoning models (like Claude Sonnet 5 or OpenAI o3) for every simple task—such as formatting a JSON payload, generating basic test stubs, or checking lint errors—wastes massive amounts of money and token budget.
@@ -1217,7 +666,7 @@ Using frontier reasoning models (like Claude Sonnet 5 or OpenAI o3) for every si
 
 ---
 
-### 16. 🧠 One Shared Brain: Hierarchical Context & Rules Inheritance
+### 🧠 One Shared Brain: Hierarchical Context & Rules Inheritance
 {: #win-16 }
 
 Engineering teams using modern AI tools suffer from severe prompt configuration sprawl: developers copy and paste `.cursorrules`, `CLAUDE.md`, or system instructions across 40 different repositories. When company compliance rules change, half the repos have outdated instructions.
@@ -1246,12 +695,12 @@ Engineering teams using modern AI tools suffer from severe prompt configuration 
 
 ---
 
-## Chapter 5: 🎯 Architecture, IDEs & Developer Flow
+## 🎯 Architecture, IDEs & Developer Flow
 {: #cat-flow }
 
 Bridging AI code generation into familiar IDE environments, rendering living architecture diagrams that never go stale, and ensuring rock-solid cross-service contracts.
 
-### 17. 🔍 Step Inside AI Code: Native IDE Breakpoint Debugging & Review Bridge
+### 🔍 Step Inside AI Code: Native IDE Breakpoint Debugging & Review Bridge
 {: #win-17 }
 
 Reviewing complex AI-generated code solely inside a browser diff or chat window isolates developers from their real engineering tools. You lose AST symbol navigation, type hierarchies, hot reload, and interactive debuggers.
@@ -1276,7 +725,7 @@ Reviewing complex AI-generated code solely inside a browser diff or chat window 
 
 ---
 
-### 18. 🗺️ Diagrams That Never Go Stale: Living C4 Visual Architecture Map
+### 🗺️ Diagrams That Never Go Stale: Living C4 Visual Architecture Map
 {: #win-18 }
 
 Architecture diagrams drawn on whiteboards or static tools like Miro, Lucidchart, and Confluence are notoriously out of date the day after they are drawn. New engineers waste weeks trying to figure out which microservices still talk to which databases.
@@ -1305,13 +754,13 @@ Architecture diagrams drawn on whiteboards or static tools like Miro, Lucidchart
 
 ---
 
-### 19. ✨ From Plan to Scaffolding: Interactive Task Planning & Application Wizards
+### ✨ From Plan to Scaffolding: Interactive Task Planning & Application Wizards
 {: #win-19 }
 
 Vague chat prompts like *"Add user authentication"* or *"Scaffold a billing service"* lead to AI hallucinations, missing database migrations, and broken architectures. Similarly, onboarding to legacy repositories or scaffolding greenfield apps is often an arduous, error-prone process.
 
 **The RobOS Breakthrough:**
-> RobOS pairs the **Task Planner Studio** (interactive web forms across 66+ domains with phased DAG execution) with **Greenfield Scaffolding & Brownfield Ingestion Wizards**, converting product intent into verified applications in minutes.
+> RobOS pairs the **Task Planner Studio** (interactive web forms across domains with phased DAG execution) with **Greenfield Scaffolding & Brownfield Ingestion Wizards**, converting product intent into verified applications in minutes.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/interactive-task-planning-flow.jpg' | relative_url }}" alt="Interactive Task Planning Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -1321,7 +770,7 @@ Vague chat prompts like *"Add user authentication"* or *"Scaffold a billing serv
 </div>
 
 #### Key Capabilities:
-- **Comprehensive Interactive Form Templates**: 66+ purpose-built templates spanning Web APIs (Spring Boot / FastAPI), Frontend SPAs (React / Vue), Godot / Unity games, libraries, and cloud infrastructure.
+- **Comprehensive Interactive Form Templates**: purpose-built templates spanning Web APIs (Spring Boot / FastAPI), Frontend SPAs (React / Vue), Godot / Unity games, libraries, and cloud infrastructure.
 - **Custom Template Authoring Studio**: Visual builder empowering teams to define organizational task templates with required inputs and validation constraints.
 - **Phased Execution DAGs**: Synthesizes high-level product intent into a 4-phase Directed Acyclic Graph: Architecture & Contracts &rarr; Backend Implementation &rarr; Frontend Integration &rarr; Automated Verification.
 - **Bidirectional Issue Tracker Sync**: Real-time two-way synchronization with **GitHub Issues** and **Jira Cloud/Server**.
@@ -1331,7 +780,7 @@ Vague chat prompts like *"Add user authentication"* or *"Scaffold a billing serv
 
 ---
 
-### 20. 🤝 Ironclad Handshakes: Consumer-Driven Contract Testing
+### 🤝 Ironclad Handshakes: Consumer-Driven Contract Testing
 {: #win-20 }
 
 In microservice architectures, backend and frontend teams frequently ship code independently, hoping their APIs still match. Breaking changes are discovered late in staging or production, sparking finger-pointing and emergency rollbacks.
@@ -1356,7 +805,7 @@ In microservice architectures, backend and frontend teams frequently ship code i
 
 ---
 
-### 21. 🔌 Improved AI-Enhanced DevTools & IDEs: When Agents Struggle, RobOS Assists Far More
+### 🔌 Improved AI-Enhanced DevTools & IDEs: When Agents Struggle, RobOS Assists Far More
 {: #win-21 }
 
 Autonomous coding agents (Claude Code, OpenAI Codex, Antigravity, GitHub Copilot) excel at greenfield code generation and standard refactoring, but they hit an intractable wall when debugging subtle concurrency race conditions, deadlocks, missing runtime credentials, or complex multi-repository dependencies. In traditional setups, agents operate blindfolded in raw terminals—wildly thrashing and guessing random code modifications in a frustrating, token-burning loop.
@@ -1382,7 +831,7 @@ Autonomous coding agents (Claude Code, OpenAI Codex, Antigravity, GitHub Copilot
 
 ---
 
-### 22. 💬 Stop Using Team Chat in Your SDLC: Context-First Work-Item & PR Threads (Dev Discussions)
+### 💬 Stop Using Team Chat in Your SDLC: Context-First Work-Item & PR Threads (Dev Discussions)
 {: #win-22 }
 
 Software engineering discussions in generic team chat (Slack, Microsoft Teams, Discord) create devastating knowledge fragmentation. Architectural compromises, edge-case solutions, and review feedback vanish into ephemeral scrollback—detached from the code, PRs, and work items they affect.
@@ -1403,38 +852,38 @@ Software engineering discussions in generic team chat (Slack, Microsoft Teams, D
 
 ## Executive Summary: Traditional Tools vs. RobOS Autonomous Platform
 
-| # | Capability | Traditional AI Tools (Cursor, Copilot, Chatbots) | RobOS Autonomous SDLC Platform |
-|:---|:---|:---|:---|
-| **01** | **Proof of Correctness** | "Trust me, it works" text & mocked unit tests | **1080p Headless Video Walkthroughs with Piper Neural Voiceovers** |
-| **02** | **Pull Request Review** | Passive lines of green/red browser diffs (Rubber-stamped) | **6-Stage PR Review Theater with Anti-Rubber-Stamp Quizzes** |
-| **03** | **System Awareness** | Myopic single-file or single-directory view | **Dual-State Knowledge Graph with Cross-Repo Blast Radius (OSLC 3.0)** |
-| **04** | **Workstation Hygiene** | Agent runs in personal account (Orphaned files, port clutter) | **Ephemeral In-Memory Sandboxes (`tmpfs` in RAM, zero residue)** |
-| **05** | **Desktop App Control** | Blind typists; cannot see or interact with developer tools | **Direct GUI & MCP control across 30+ native desktop applications** |
-| **06** | **App Generation** | Manual boilerplate typing file-by-file | **KGraph-First compilation across 9 polyglot application archetypes** |
-| **07** | **Developer Training** | Static wikis and generic video courses | **Just-in-time interactive PR masterclasses & RobOS eLearning Hub** |
-| **08** | **Developer Suite** | Fragmented commercial apps with heavy web-framework bloat | **Fast 30+ native Electron + vanilla JS application suite** |
-| **09** | **Vendor Freedom** | Proprietary prompts locked to one vendor's cloud | **100% Open Standards (UHP 2026-08-11, MCP, OSLC 3.0, W3C JSON-LD)** |
-| **10** | **Secrets & Security** | Plaintext `.env` files and accidental prompt leakage | **Military-grade GPG UNIX password store (`pass`) + Prompt Security Guard** |
-| **11** | **API Clients** | Heavy, SaaS-locked apps (Postman, Insomnia) | **Git-backed REST (`.bru`), gRPC reflection, GraphQL & Kafka streams** |
-| **12** | **Data Management** | Heavy external tools (DBeaver, DataGrip, Compass) | **Unified Relational, NoSQL, Kafka & S3 Data Sources Manager** |
-| **13** | **Cloud & GitOps** | Manual YAML writing and copy-pasted Helm templates | **100% Declarative Zero-YAML GitOps Synthesis from Architecture Canvas** |
-| **14** | **Build Acceleration** | 30+ min local builds; complex REAPI setups | **Remote Execution Studio: Zero-Overhead Bazel & Buck2 REAPI v2** |
-| **15** | **AI Cost Optimization** | Monolithic frontier model usage for all tasks | **4-Tier Model Routing, Caveman compression & DSPy Bayesian optimization** |
-| **16** | **Context Architecture** | Duplicate `.cursorrules` files and copy-pasted prompts | **5-Level Hierarchical Context Inheritance (Global &rarr; Repo)** |
-| **17** | **IDE Review Bridge** | Browser-only review isolated from editor tooling | **One-click IntelliJ (port 63343 IPC) & VS Code bridge with live breakpoints** |
-| **18** | **Living Architecture** | Stale Confluence diagrams and whiteboard photos | **Living C4 Architecture Diagrams continuously compiled from KGraph** |
-| **19** | **Planning & Scaffolding** | Free-form chat prompts with hallucinated requirements | **66+ Domain Web Form Templates, Phased DAGs & Greenfield/Brownfield Wizards** |
-| **20** | **Contract Governance** | Silent breakages caught in staging or production | **Formal Pact Consumer-Driven Contracts & Ephemeral Stoplight Prism Mocks** |
-| **21** | **Agent & IDE Co-Debugging** | Agents guess & loop in the dark when tests fail | **Live IDE Breakpoint Halts, Thread Stack Unwinding, In-Memory Secrets & Ephemeral Multi-Project Workspaces** |
-| **22** | **Technical Discussions** | Ephemeral Slack/Teams scrollback; detached from code & tickets | **Dev Discussions: Discord-style Projects &rarr; Features &rarr; Tasks & PR channels with smart caching & KGraph integration** |
+| Capability | Traditional AI Tools (Cursor, Copilot, Chatbots) | RobOS Autonomous SDLC Platform |
+|:---|:---|:---|
+| **Proof of Correctness** | "Trust me, it works" text & mocked unit tests | **1080p Headless Video Walkthroughs with Piper Neural Voiceovers** |
+| **Pull Request Review** | Passive lines of green/red browser diffs (Rubber-stamped) | **6-Stage PR Review Theater with Anti-Rubber-Stamp Quizzes** |
+| **System Awareness** | Myopic single-file or single-directory view | **Dual-State Knowledge Graph with Cross-Repo Blast Radius (OSLC 3.0)** |
+| **Workstation Hygiene** | Agent runs in personal account (Orphaned files, port clutter) | **Ephemeral In-Memory Sandboxes (`tmpfs` in RAM, zero residue)** |
+| **Desktop App Control** | Blind typists; cannot see or interact with developer tools | **Direct GUI & MCP control across native desktop applications** |
+| **App Generation** | Manual boilerplate typing file-by-file | **KGraph-First compilation across polyglot application archetypes** |
+| **Developer Training** | Static wikis and generic video courses | **Just-in-time interactive PR masterclasses & RobOS eLearning Hub** |
+| **Developer Suite** | Fragmented commercial apps with heavy web-framework bloat | **Fast native Electron + vanilla JS application suite** |
+| **Vendor Freedom** | Proprietary prompts locked to one vendor's cloud | **100% Open Standards (UHP 2026-08-11, MCP, OSLC 3.0, W3C JSON-LD)** |
+| **Secrets & Security** | Plaintext `.env` files and accidental prompt leakage | **Military-grade GPG UNIX password store (`pass`) + Prompt Security Guard** |
+| **API Clients** | Heavy, SaaS-locked apps (Postman, Insomnia) | **Git-backed REST (`.bru`), gRPC reflection, GraphQL & Kafka streams** |
+| **Data Management** | Heavy external tools (DBeaver, DataGrip, Compass) | **Unified Relational, NoSQL, Kafka & S3 Data Sources Manager** |
+| **Cloud & GitOps** | Manual YAML writing and copy-pasted Helm templates | **100% Declarative Zero-YAML GitOps Synthesis from Architecture Canvas** |
+| **Build Acceleration** | 30+ min local builds; complex REAPI setups | **Remote Execution Studio: Zero-Overhead Bazel & Buck2 REAPI v2** |
+| **AI Cost Optimization** | Monolithic frontier model usage for all tasks | **4-Tier Model Routing, Caveman compression & DSPy Bayesian optimization** |
+| **Context Architecture** | Duplicate `.cursorrules` files and copy-pasted prompts | **5-Level Hierarchical Context Inheritance (Global &rarr; Repo)** |
+| **IDE Review Bridge** | Browser-only review isolated from editor tooling | **One-click IntelliJ (port 63343 IPC) & VS Code bridge with live breakpoints** |
+| **Living Architecture** | Stale Confluence diagrams and whiteboard photos | **Living C4 Architecture Diagrams continuously compiled from KGraph** |
+| **Planning & Scaffolding** | Free-form chat prompts with hallucinated requirements | **Domain Web Form Templates, Phased DAGs & Greenfield/Brownfield Wizards** |
+| **Contract Governance** | Silent breakages caught in staging or production | **Formal Pact Consumer-Driven Contracts & Ephemeral Stoplight Prism Mocks** |
+| **Agent & IDE Co-Debugging** | Agents guess & loop in the dark when tests fail | **Live IDE Breakpoint Halts, Thread Stack Unwinding, In-Memory Secrets & Ephemeral Multi-Project Workspaces** |
+| **Technical Discussions** | Ephemeral Slack/Teams scrollback; detached from code & tickets | **Dev Discussions: Discord-style Projects &rarr; Features &rarr; Tasks & PR channels with smart caching & KGraph integration** |
 
 ---
 
 ## Next Steps
 
-- **[⚡ Explore the Layman's Guide: 21 Big Wins Demo]({{ '/demo.html' | relative_url }})**: Experience plain-English analogies and before/after comparisons.
+- **[⚡ Big Wins in Plain English]({{ '/demo.html' | relative_url }})**: Experience plain-English analogies and before/after comparisons.
 - **[Installation & Getting Started]({{ site.baseurl }}{% link getting-started.md %})**: Set up RobOS on your workstation.
 - **[PR Review Theater Deep-Dive]({{ site.baseurl }}{% link pr-review-theater.md %})**: Learn how the 6-stage review cockpit operates.
-- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full suite of native desktop developer applications.
+- **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full suite of native desktop developer applications.
 - **[RobOS Skills Marketplace]({{ site.baseurl }}{% link robos-skills.md %})**: Standard cross-agent skills for Claude, Codex, Antigravity, Copilot, and Gemini.
 - **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Deep dive into the internal engine, IPC buses, and desktop bridges.

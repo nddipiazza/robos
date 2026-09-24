@@ -727,7 +727,7 @@ The principles articulated in this whitepaper are not theoretical conjectures—
 </figure>
 
 1. **Standardized Skill Directory Structure**: All RobOS agent skills (in `plugins/robos/skills/` and `.agents/skills/`) are structured with validated YAML frontmatter, typed arguments, and explicit execution steps.
-2. **Rigorous Ontologies and SHACL Validation**: RobOS models all SDLC entities using **91+ W3C SHACL shape constraints** across modular packages (`.robos/kgraphs/`). Invocations are validated against schema shapes prior to execution.
+2. **Rigorous Ontologies and SHACL Validation**: RobOS models all SDLC entities using **W3C SHACL shape constraints** across modular packages (`.robos/kgraphs/`). Invocations are validated against schema shapes prior to execution.
 3. **In-Memory Disposable Sandboxes (`tmpfs`)**: Agents operate in isolated virtual environments with virtual displays and disposable filesystems, guaranteeing that workstation files and host credentials remain unpolluted.
 4. **Dual-State Blast-Radius Diffing**: RobOS calculates semantic blast-radius diffs comparing `main` against proposed changes before code is generated, preventing structural regressions.
 5. **Headless Verification Chambers & Video Proof**: Every pull request is verified in headless containerized test chambers (`Xvfb + Picom`), producing 1080p narrated video walkthroughs and WebVTT subtitles with Piper neural TTS.

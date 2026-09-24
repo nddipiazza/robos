@@ -167,7 +167,7 @@ RobOS development skills strictly ensure the Knowledge Graph is kept up to date:
 #### Phase 3c — Documentation Synchronization Prompt
 **Cardinal Rule**: Whenever Knowledge Graph objects are updated, the AI coding agent must be prompted to discern any noticeable updates to system documentation and update the documentation accordingly:
 1. Examine what was added or altered in Modular KGraph Packages.
-2. Discern any noticeable updates needed across `docs/index.md`, `README.md`, `docs/project-plan/`, and specs.
+2. Discern any noticeable updates needed across `docs/why-robos.md`, `README.md`, `docs/project-plan/`, and specs.
 3. Automatically update the corresponding documentation files to maintain perfect documentation alignment.
 
 ---

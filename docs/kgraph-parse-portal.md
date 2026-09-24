@@ -1,7 +1,8 @@
 ---
 title: RobOS Kgraph Parse Portal
 layout: default
-nav_order: 10
+parent: Build on RobOS
+nav_order: 4
 permalink: /kgraph-parse-portal.html
 ---
 

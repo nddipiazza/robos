@@ -1,6 +1,13 @@
+---
+title: Schema-Aware Inspector Coverage
+layout: default
+parent: Build on RobOS
+nav_order: 8
+---
+
 # Schema-aware inspector coverage
 
-The Knowledge Graph Explorer maps all 98 built-in SHACL shapes and 141 target types/aliases into 25 contextual property groups. Exact type eligibility and recorded domain data are both required. Empty objects and title/provenance-only records stay in the standard inspector.
+The Knowledge Graph Explorer maps all built-in SHACL shapes and target types/aliases into contextual property groups. Exact type eligibility and recorded domain data are both required. Empty objects and title/provenance-only records stay in the standard inspector.
 
 ## Property groups
 
@@ -155,4 +162,4 @@ Protocol field definitions follow the [MCP schema reference](https://modelcontex
 - `npm --prefix packages/robos-test run test:inspector:e2e`: real Electron navigation, rendered declarations, evidence links, safe text, paging, contextual fallback and resizable sidebar.
 - `npm --prefix packages/robos-test run test:kgraph-workspace:e2e`: workspace import/review, companion apps, classification, topology and inspector regressions.
 
-The executable catalog is [inspector-groups.js](../packages/robos-graph/lib/inspector-groups.js); see the [inspector guide](../packages/robos-graph/INSPECTOR.md) for usage.
+The executable catalog is [inspector-groups.js](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/lib/inspector-groups.js); see the [inspector guide](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/INSPECTOR.md) for usage.

@@ -8,7 +8,7 @@ nav_order: 1
 # Complete Skills Catalog & Reference
 {: .no_toc }
 
-Comprehensive reference of all 34+ AI Agent Skills in the RobOS Plugin Marketplace and their execution parameters, companion engines, and verification methods.
+Comprehensive reference of all AI Agent Skills in the RobOS Plugin Marketplace and their execution parameters, companion engines, and verification methods.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -132,7 +132,7 @@ The RobOS SDLC Knowledge Graph is the executable blueprint of your entire engine
   - `--output <file>`: Destination JSON-LD file path.
   - `--import-to-robos`: Merge generated nodes directly into `.robos/kgraphs/` package stores and register projects in `~/.config/robos/git-projects.json`.
   - `--dry-run`: Preview discovered entities without writing files.
-- **Description**: Automatically ingests enterprise repositories from HTTP REST endpoints (Backstage `catalog-entities.json`), AWS S3 buckets, local directories, or Git URLs. Classifies components into 9 multi-app archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files.
+- **Description**: Automatically ingests enterprise repositories from HTTP REST endpoints (Backstage `catalog-entities.json`), AWS S3 buckets, local directories, or Git URLs. Classifies components into multi-app archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files.
 - **Documentation**: [Company KGraph Import Skill Guide]({{ site.baseurl }}{% link skills/import-company-kgraph.md %})
 
 ### `sync-kgraph-docs` (Alias: `/kgraph-sync-docs`)

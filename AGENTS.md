@@ -235,6 +235,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **Config storage**: All persistent data in `~/.config/robos/`
 - **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
 - **Documentation Diagrams & Visuals**: When creating RobOS documentation diagrams, always generate and include Gemini 3.8 AI-generated images/illustrations alongside Mermaid syntax. Diagrams must be very professional, developer-friendly, clean, functional, and extremely easy to read (no chaotic AI "wow bling" or cluttered decorative fluff; focus on crisp, structured technical architecture, clear flow schematics, and legible labels).
+- **Docs site (`docs/`, published to rowbose.com)**: Every app has its own page in `docs/_apps/` (run `node scripts/sync-app-docs.js` after adding an app). Don't state totals of things that grow — write "the app suite", not "30+ apps"; "the Big Wins", not "21 Big Wins"; "SHACL shapes", not "98 SHACL shapes". Counts go stale and contradict each other across pages.
 - **Logging**: `pino` JSON logging
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
@@ -313,7 +314,7 @@ Every repository registered in RobOS Git Projects (`~/.config/robos/git-projects
 **Cardinal Rule for KGraph Updates & Documentation Sync**:
 Whenever Knowledge Graph objects are updated (added, altered, or deleted), the AI must be prompted to discern any noticeable updates to system documentation and to update the documentation accordingly:
 1. **Analyze Graph Deltas**: Inspect newly added or modified nodes (Microservices, Desktop Apps, Console Apps, Mobile Apps, Data Pipelines, Libraries, Contracts, Requirements, eLearning courses, Teams, Projects, DevOps Integrations).
-2. **Discern Noticeable Documentation Impacts**: Check user-facing documentation (`docs/index.md`, `README.md`, `docs/project-plan/`, API specs, and feature specs) for any necessary updates reflecting the changed architecture or capabilities.
+2. **Discern Noticeable Documentation Impacts**: Check user-facing documentation (`docs/why-robos.md`, `README.md`, `docs/project-plan/`, API specs, and feature specs) for any necessary updates reflecting the changed architecture or capabilities.
 3. **Synchronize Living Docs**: Automatically apply the corresponding documentation updates so that documentation and the Knowledge Graph remain in continuous lockstep.
 
 ### CSS Theme Variables

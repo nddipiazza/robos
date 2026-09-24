@@ -1,7 +1,8 @@
 ---
 title: RobOS Skills
 layout: default
-nav_order: 6
+parent: Build on RobOS
+nav_order: 7
 has_children: true
 permalink: /robos-skills.html
 ---
@@ -50,7 +51,7 @@ RobOS provides two complementary layers of skills designed for developer product
 | Layer | Purpose | Target Audience | Storage Location | Examples |
 |:---|:---|:---|:---|:---|
 | **AI Agent Skills (Plugin Marketplace)** | Complex, multi-step SDLC operations, code scaffolding, automated testing, E2E video proof-of-work, and Knowledge Graph synchronization | Autonomous AI Coding Agents & Devs via CLI | `plugins/robos/skills/` and `.agents/skills/` | `import-company-kgraph`, `sync-kgraph-docs`, `create-robos-app`, `e2e-driven-dev` |
-| **Desktop Shell Skills (Skills Manager)** | Fast, parameterized bash commands and workstation diagnostic utilities | Developers via GUI and `<robos-ai-textarea>` | `packages/skills-manager/skills-data.js` | 74+ shell skills across Git, Docker, Networking, Memory, and Storage |
+| **Desktop Shell Skills (Skills Manager)** | Fast, parameterized bash commands and workstation diagnostic utilities | Developers via GUI and `<robos-ai-textarea>` | `packages/skills-manager/skills-data.js` | shell skills across Git, Docker, Networking, Memory, and Storage |
 
 ---
 
@@ -235,7 +236,7 @@ This automatically:
 
 ## The Skills Manager Desktop App (`packages/skills-manager`)
 
-In addition to AI agent skills, RobOS includes the **Skills Manager** application (`packages/skills-manager`), which equips developers with an interactive GUI library of 74+ shell and system diagnostic commands:
+In addition to AI agent skills, RobOS includes the **Skills Manager** application (`packages/skills-manager`), which equips developers with an interactive GUI library of shell and system diagnostic commands:
 
 - **10 Categorized Packs**: File Operations, Process Management, Git Operations, Networking, Docker / Containers, System Info, Package Management, Text Processing, Security, and Development Runtimes.
 - **Instant Search & Parameterization**: Search by tag, keyword, or command name, with customizable argument fields.

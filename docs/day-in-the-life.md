@@ -61,7 +61,7 @@ Every new capability begins with clear alignment on business intent and architec
 Once the architectural boundaries are established, RobOS establishes strict interface contracts and generates boilerplate across polyglot components.
 
 ### 🪄 App Wizard
-- **What It Does**: Scaffolds greenfield projects or ingests existing codebases across 9 multi-app archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
+- **What It Does**: Scaffolds greenfield projects or ingests existing codebases across multi-app archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
 - **Role in the Lifecycle**: Generates idiomatic directory structures, dependency manifests, Devcontainers, Dockerfiles, and `dev-setup.sh` provisioning scripts. Automatically registers the new package into `.robos/packages.yaml` and the central Knowledge Graph.
 
 ### 📜 Contract Studio
@@ -139,5 +139,5 @@ After approval and merge, RobOS automates deployment and tracks production healt
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Learn about the core architectural innovations and strategic advantages powering this lifecycle.
 - **[Installation & Getting Started]({{ site.baseurl }}{% link getting-started.md %})**: Install RobOS and configure your development environment.
 - **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial using the reference Acme Pet Store Platform.
-- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
+- **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

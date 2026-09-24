@@ -1,7 +1,8 @@
 ---
 title: RobOS Projects
 layout: default
-nav_order: 6
+parent: Use RobOS
+nav_order: 4
 has_children: true
 permalink: /projects/
 ---
@@ -59,8 +60,8 @@ The **RobOS Projects** portfolio showcases complex, multi-subsystem applications
 | **Engine / Profile** | Godot 4.3 (GL Compatibility) |
 | **Language & Stack** | GDScript (typed), Python 3.12+ (`behave`), FFmpeg |
 | **Ontology & Standard** | Schema.org `schema:VideoGame`, RobOS `robos:PCGame`, D&D 5e SRD |
-| **Testing Harness** | behave BDD suites: 17 isolated-mechanic features, 24 spell features, 6 start-to-finish playthroughs |
-| **Test Inventory** | **47 features, 75 scenarios**, each recorded to MP4 |
+| **Testing Harness** | behave BDD suites for isolated mechanics, spells, and start-to-finish playthroughs |
+| **Test Inventory** | Every feature and scenario is recorded to MP4 |
 
 ```mermaid
 flowchart LR
@@ -78,7 +79,7 @@ flowchart LR
 
     subgraph QA_LAYER ["Autonomous QA and Verification"]
         HTTP["GameControlServer (HTTP API)"] <--> AI["Infinity AI Agent (qa_player)"]
-        AI --> BDD["behave BDD Suites (47 Features)"]
+        AI --> BDD["behave BDD Suites"]
         BDD --> Video["1080p Video Proof-of-Work (FFmpeg + Xvfb)"]
     end
 

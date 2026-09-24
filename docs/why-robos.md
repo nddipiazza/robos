@@ -11,14 +11,14 @@ permalink: /why-robos.html
 ## The AI-First SDLC Platform & Autonomous Agent Governance Harness
 {: .fs-9 }
 
-### Review AI-generated code 10× faster. Model your architecture once in an executable Knowledge Graph, auto-generate polyglot applications, and govern coding agents with the PR Review Theater, interactive micro-masterclasses, and a 30+ native developer app suite.
+### Review AI-generated code 10× faster. Model your architecture once in an executable Knowledge Graph, auto-generate polyglot applications, and govern coding agents with the PR Review Theater, interactive micro-masterclasses, and a native developer app suite.
 {: .fs-6 .text-grey-dk-000 }
 
 Today's autonomous AI coding agents can generate code 100× faster than humans can write it. But speed without comprehension is a disaster: engineering teams are drowning under an unreviewable avalanche of massive pull requests, rubber-stamping diffs they don't understand, and suffering catastrophic production regressions.
 
 **RobOS solves the AI PR review crisis and transforms how engineering teams build with AI.**
 
-Instead of forcing developers to manually decipher thousands of lines of uncontextualized code, RobOS gives you an **integrated 30+ native developer application suite**, an **executable Knowledge Graph**, and an **autonomous agent governance cockpit**. Human engineers act as **Lead System Architects**—guiding architecture, auditing semantic blast-radiuses, passing interactive PR knowledge checks, and verifying runtime test evidence while agents carry out the grueling background labor.
+Instead of forcing developers to manually decipher thousands of lines of uncontextualized code, RobOS gives you an **integrated native developer application suite**, an **executable Knowledge Graph**, and an **autonomous agent governance cockpit**. Human engineers act as **Lead System Architects**—guiding architecture, auditing semantic blast-radiuses, passing interactive PR knowledge checks, and verifying runtime test evidence while agents carry out the grueling background labor.
 
 {: .fs-6 .fw-300 }
 
@@ -88,12 +88,12 @@ Pull request platforms like GitHub and GitLab were engineered in 2008 for small,
 
 ### The RobOS Solution: The Knowledge Graph-Driven Review Flywheel
 
-RobOS eliminates the AI PR review crisis by flipping the entire paradigm. We don't ask developers to read thousands of lines of raw AI diffs. Instead, RobOS promotes human developers to **Lead System Architects** equipped with an executable Knowledge Graph, an interactive **PR Review Theater**, on-demand **interactive eLearning**, and an integrated **30+ native developer app suite**:
+RobOS eliminates the AI PR review crisis by flipping the entire paradigm. We don't ask developers to read thousands of lines of raw AI diffs. Instead, RobOS promotes human developers to **Lead System Architects** equipped with an executable Knowledge Graph, an interactive **PR Review Theater**, on-demand **interactive eLearning**, and an integrated **native developer app suite**:
 
 1. **🧬 Dual-State Semantic Blast-Radius Diffing (World 1 vs. World 2)**  
    Before reading a single line of code, the Dual-State Comparison Engine compares **Production Reality (`World 1: main`)** against **Proposed Reality (`World 2: feature-branch`)**. You immediately see an exact map of touched REST endpoints, database schemas, Kafka topics, and downstream consumers. If a change violates a contract, you know instantly.
 2. **🎭 The PR Review Theater & Anti-Rubber-Stamp Knowledge Gates**  
-   When an agent completes a task, it doesn't just open a static PR—it authors an interactive **6-stage PR Review Theater**. Reviewers are enrolled in an on-demand micro-masterclass explaining *why* changes were made. Code diffs in Stage 3 and merge controls in Stage 6 remain **cryptographically locked** behind a scenario-based **Reviewer Knowledge Check** quiz ($\ge 80\%$). Rubber-stamping is physically impossible.
+   When an agent completes a task, it doesn't just open a static PR—it authors an interactive **6-stage PR Review Theater**. Reviewers are enrolled in an on-demand micro-masterclass explaining *why* changes were made. Code diffs in Stage 3 and merge controls in Stage 6 remain **cryptographically locked** behind a scenario-based **Reviewer Knowledge Check** quiz (≥ 80%). Rubber-stamping is physically impossible.
 3. **🎓 Interactive eLearning Hub & Verifiable KGraph Credentials**  
    Reviewers and developers level up their architectural knowledge through on-demand curriculums, guided walkthroughs, and hands-on coding labs in disposable sandboxes. Passing checks mints an immutable `robos:CompletionCertificate` linked directly to the developer's node in the SDLC Knowledge Graph for audit compliance.
 4. **📐 Living Architecture Sequence Flows & Live In-Theater API Execution**  
@@ -102,7 +102,7 @@ RobOS eliminates the AI PR review crisis by flipping the entire paradigm. We don
    Need to inspect the AST or step through code? One click launches the pull request branch directly inside **IntelliJ IDEA** (via port 63343 IPC) or **VS Code** (`vscode://`). RobOS can automatically trigger breakpoints at modified lines in the IDE so you inspect real paused thread stacks and variables live.
 6. **🎥 Autonomous Test Reviews & Video Proof-of-Work**  
    Instead of asking "did anyone actually test this?", agents execute real end-to-end tests inside headless virtual framebuffers (`Xvfb`) or live on `DISPLAY=:0`. The agent records a 1080p walkthrough with Piper neural voiceovers and WebVTT captions, proving that forms submit, buttons click, and database records persist.
-7. **🛠️ 30+ Native Developer Applications for Instant Inspection**  
+7. **🛠️ Native Developer Applications for Instant Inspection**  
    When a PR modifies a database or service, you don't need third-party SaaS or slow local setups. RobOS provides dedicated, zero-framework desktop apps—**Relational DB Manager**, **NoSQL DB Manager**, **REST API Client** (`.bru`), **gRPC Client**, **GraphQL Client**, **Kube Studio**, and **Topology Studio**—pre-configured with the branch context for instantaneous verification.
 
 <div style="overflow-x: auto; margin: 2rem 0;">
@@ -148,7 +148,7 @@ RobOS eliminates the AI PR review crisis by flipping the entire paradigm. We don
     <tr>
       <td><strong>Developer Tooling</strong></td>
       <td>Generic browser diffs; disconnected third-party database and API tools.</td>
-      <td><strong>30+ Native App Suite</strong>: Dedicated zero-framework apps for SQL, NoSQL, REST (<code>.bru</code>), gRPC, GraphQL, and Kube.</td>
+      <td><strong>Native App Suite</strong>: Dedicated zero-framework apps for SQL, NoSQL, REST (<code>.bru</code>), gRPC, GraphQL, and Kube.</td>
     </tr>
     <tr>
       <td><strong>Compliance & Auditability</strong></td>
@@ -209,7 +209,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #00bcd4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <h3 style="margin-top: 0; color: #00bcd4; font-size: 1.1rem;">🧬 1. KGraph-Driven Development Lifecycle</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">The foundational blueprint: auto-generates full applications across 9 archetypes from schema-validated, modular package stores (<code>.robos/kgraphs/</code>) with multi-repo composition and Git-tag version pinning.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">The foundational blueprint: auto-generates full applications across archetypes from schema-validated, modular package stores (<code>.robos/kgraphs/</code>) with multi-repo composition and Git-tag version pinning.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %}" style="color: #00bcd4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
@@ -232,10 +232,10 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 <a href="{{ site.baseurl }}{% link pr-review-theater.md %}#standalone-robos-elearning-player-hub" style="color: #38bdf8; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
 
-<!-- 4. 30+ Native Developer Application Suite -->
+<!-- 4. Native Developer Application Suite -->
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #06b6d4; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
-<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🛠️ 4. 30+ Native Developer Application Suite</h3>
+<h3 style="margin-top: 0; color: #06b6d4; font-size: 1.1rem;">🛠️ 4. Native Developer Application Suite</h3>
 <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Zero web-framework bloat. Fast Electron + vanilla JS desktop tools backing every phase of SDLC: Relational DB Manager, NoSQL Manager, Git-backed REST API Client (<code>.bru</code>), gRPC, GraphQL, Kube Studio, and Topology Canvas.</p>
 </div>
 <a href="{{ site.baseurl }}{% link apps.md %}" style="color: #06b6d4; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
@@ -245,7 +245,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #f43f5e; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <h3 style="margin-top: 0; color: #f43f5e; font-size: 1.1rem;">🤖 5. RobOS Agents Interact With All RobOS Apps</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Autonomous AI agents aren't "blind typists". They programmatically see and drive all 30+ native applications via DOM inspection (<code>snapshot-cli.js</code>) and the Unified MCP Router, triggering live multi-app cascades across your desktop.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Autonomous AI agents aren't "blind typists". They programmatically see and drive all native applications via DOM inspection (<code>snapshot-cli.js</code>) and the Unified MCP Router, triggering live multi-app cascades across your desktop.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/agent-app-interaction.md %}" style="color: #f43f5e; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
@@ -299,7 +299,7 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 <div style="background: #161b22; border-radius: 8px; padding: 1.25rem; border-top: 4px solid #eab308; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <h3 style="margin-top: 0; color: #eab308; font-size: 1.1rem;">☁️ 11. DevOps Security & GPG Password Store</h3>
-<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for 25+ providers across 7 categories. Zero plaintext secrets in Git: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
+<p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Onboarding wizards for providers across categories. Zero plaintext secrets in Git: credentials are encrypted directly into the UNIX password store (<code>pass</code>) with GPG.</p>
 </div>
 <a href="{{ site.baseurl }}{% link big-wins/devops-security-pass.md %}" style="color: #eab308; font-weight: 600; font-size: 0.88rem;">Explore Full Guide →</a>
 </div>
@@ -321,13 +321,13 @@ Traditional IDEs and AI tools give you autocompletions and popups. RobOS gives y
 
 ---
 
-## 🤖 RobOS Agents Control All 30+ RobOS Apps: The Live Multi-App Cascade
+## 🤖 RobOS Agents Control All RobOS Apps: The Live Multi-App Cascade
 
 In traditional software development, AI coding assistants (Claude Code, GitHub Copilot, OpenAI Codex, Cursor) operate as **blind typists**. They can modify source code and execute commands in a shell, but they cannot see the UI, cannot inspect database states, and cannot interact with active developer tools.
 
 **RobOS transforms AI agents from blind typists into full-stack desktop operators:**
 
-> **In RobOS, autonomous AI agents can directly interact with all 30+ RobOS desktop applications.**
+> **In RobOS, autonomous AI agents can directly interact with all RobOS desktop applications.**
 
 Using a dual-surface control fabric—direct DOM snapshot automation (`snapshot-cli.js`) across dedicated debug ports (`19100–19186`) and the Unified MCP Router (`robos-mcp-router`)—agents can inspect UI elements, click buttons, fill forms, run SQL migrations, execute API requests, and stream Kubernetes logs.
 
@@ -341,7 +341,7 @@ The developer presses `Ctrl+Space` (or clicks **Pop Out Prompt** in **RobOS Agen
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}" alt="RobOS Agent Prompt Window Popped Up Over Active RobOS Apps" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Agent Prompt Popped Up Over Active RobOS Apps</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window pops up directly in the foreground over your running apps, dispatching live actions across all 30+ RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Agent Prompt Popped Up Over Active RobOS Apps</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window pops up directly in the foreground over your running apps, dispatching live actions across all RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -425,14 +425,14 @@ Having verified the topology, database, API contract, and cloud containers, the 
 
 <div style="text-align: center; margin: 1.5rem 0 2.5rem;">
   <a href="{{ site.baseurl }}{% link big-wins/agent-app-interaction.md %}" class="btn btn-primary fs-5 mr-2">Explore Agent-App Interaction in Depth →</a>
-  <a href="{{ site.baseurl }}{% link apps.md %}" class="btn fs-5">Browse the 30+ Native App Suite →</a>
+  <a href="{{ site.baseurl }}{% link apps.md %}" class="btn fs-5">Browse the Native App Suite →</a>
 </div>
 
 ---
 
 ## A Day in the Life: From Business Idea to Production
 
-RobOS coordinates its 30+ native applications into an orchestrated lifecycle—taking a raw business requirement through automated planning, visual architecture, contract design, ephemeral agent implementation, multi-protocol verification, and IDE review, all the way to live cloud operations.
+RobOS coordinates its native applications into an orchestrated lifecycle—taking a raw business requirement through automated planning, visual architecture, contract design, ephemeral agent implementation, multi-protocol verification, and IDE review, all the way to live cloud operations.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/day-in-the-life-flowchart.jpg' | relative_url }}" alt="RobOS Lifecycle: From Business Idea to Production Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
@@ -449,7 +449,7 @@ RobOS coordinates its 30+ native applications into an orchestrated lifecycle—t
 
 ## The Complete Native Application Suite: Accelerating Development & PR Review
 
-RobOS provides over 30 native developer applications designed with zero web-framework bloat (Electron + vanilla JavaScript), sharing a unified dark theme and local system services. **Every application is directly backed by the SDLC Knowledge Graph**, empowering the Lead System Architect to instantly inspect, verify, and test any database, contract, API, or container touched by a pull request with zero manual setup:
+RobOS provides native developer applications designed with zero web-framework bloat (Electron + vanilla JavaScript), sharing a unified dark theme and local system services. **Every application is directly backed by the SDLC Knowledge Graph**, empowering the Lead System Architect to instantly inspect, verify, and test any database, contract, API, or container touched by a pull request with zero manual setup:
 
 ### 🎭 PR Review, Interactive Learning & Governance
 - **Agent Code Review Platform & PR Review Theater**: Autonomous AI pull request auditor, 6-stage Review Theater, semantic blast-radius diffs, anti-rubber-stamp knowledge checks, and IDE review bridge (IntelliJ IDEA & VS Code plugins).
@@ -459,7 +459,7 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 - **Workflow Studio & Task Planner**: Multi-domain interactive web form templates, visual custom template builder, and bidirectional sync with GitHub Issues and Jira.
 
 ### 🏗️ Architecture, Topology & Scaffolding
-- **App Wizard**: Greenfield scaffolding and brownfield codebase ingestion across 9 application archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
+- **App Wizard**: Greenfield scaffolding and brownfield codebase ingestion across application archetypes (`Microservice`, `FrontEndApp`, `DesktopApp`, `PCGame`, `MobileGame`, `ConsoleApp`, `MobileApp`, `DataPipeline`, and `Library`).
 - **System Topology Studio**: Interactive visual canvas for C4 architecture modeling, dependency mapping, and automatic Kubernetes/Helm manifest generation.
 - **Group Manager**: Enterprise directory synchronization (Okta, Azure AD SCIM, Google Workspace, OpenLDAP) and declarative Team Topologies management (`.robos/teams.yaml`).
 - **Workspace Manager**: Discover, inspect, and open local workspaces in any IDE with branch synchronization.
@@ -481,7 +481,7 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 ### 🤖 AI Orchestration & Developer Tools
 - **RobOS Agent Chat**: VS Code Copilot Chat and Cursor-inspired conversational AI assistant with multi-model switcher (Claude 3.7 Sonnet, OpenAI o3-mini, Gemini 2.5 Flash, Antigravity Harness), live MCP tool cards, and quick prompt popup.
 - **Agents Manager & MCP Router**: Manage local AI agents (Claude Code, Google Antigravity, GitHub Copilot, Google Gemini) via standardized Model Context Protocol tools.
-- **Knowledge Graph Explorer**: Modular multi-file package browser (`.robos/kgraphs/`), multi-repo dependency manager with Git-tag versioning, DevOps onboarding wizards across 7 categories, and SHACL validation.
+- **Knowledge Graph Explorer**: Modular multi-file package browser (`.robos/kgraphs/`), multi-repo dependency manager with Git-tag versioning, DevOps onboarding wizards across categories, and SHACL validation.
 - **Contract Studio**: OpenAPI 3.1 and AsyncAPI contract designer with instant mock servers and Spectral linting.
 - **Remote Execution Studio**: Bazel, Buck2, and Buildbarn REAPI v2 distributed build cluster configuration with live CAS telemetry.
 
@@ -489,7 +489,7 @@ RobOS provides over 30 native developer applications designed with zero web-fram
 
 ## RobOS Skills: Cross-Agent AI Capabilities & Shell Marketplace
 
-In addition to 30+ native applications and the SDLC Knowledge Graph, RobOS introduces a standardized cross-platform **Skills Standard** that empowers autonomous AI coding agents—Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI—to execute complex software engineering operations deterministically with zero hallucination.
+In addition to native applications and the SDLC Knowledge Graph, RobOS introduces a standardized cross-platform **Skills Standard** that empowers autonomous AI coding agents—Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI—to execute complex software engineering operations deterministically with zero hallucination.
 
 Instead of writing vendor-locked prompt instructions, RobOS skills are packaged as open, plain-text markdown specifications (`SKILL.md`) and companion CLI engines stored in `plugins/robos/skills/` and `.agents/skills/`.
 
@@ -501,12 +501,12 @@ Instead of writing vendor-locked prompt instructions, RobOS skills are packaged 
 </div>
 
 ### Key Skill Capabilities
-- **Enterprise Knowledge Graph Ingestion (`import-company-kgraph`)**: Extracts complete company repository inventories from HTTP REST endpoints (Spotify Backstage), AWS S3 buckets, local directories, or Git forge URLs, classifying components across 9 archetypes and auto-synthesizing OpenAPI 3.1 contracts.
+- **Enterprise Knowledge Graph Ingestion (`import-company-kgraph`)**: Extracts complete company repository inventories from HTTP REST endpoints (Spotify Backstage), AWS S3 buckets, local directories, or Git forge URLs, classifying components across archetypes and auto-synthesizing OpenAPI 3.1 contracts.
 - **Living Documentation Synchronization (`sync-kgraph-docs`)**: Automatically updates system architecture diagrams, user guides, and API specs whenever Knowledge Graph objects are updated in `.robos/`.
 - **Greenfield App Generation (`create-robos-app`)**: Scaffolds production-grade desktop applications with complete IPC bridges, Lucide icons, and DOM snapshot debug servers.
 - **Automated E2E Proof-of-Work (`e2e-driven-dev`, `record-demo`)**: Runs headless tests and captures 1080p narrated video walkthroughs with neural voiceovers (Piper TTS) and WebVTT captions.
 - **VM Lifecycle Management (`build-vm`, `start-vm`, `deploy-to-vm`)**: Provisions cloud-init developer virtual machines with zero manual steps.
-- **74+ Desktop Shell Macros**: Instant parameterized shell commands for Git, Docker, network diagnostics, and memory inspections via `<robos-ai-textarea>` and the **Skills Manager** application.
+- **Desktop Shell Macros**: Instant parameterized shell commands for Git, Docker, network diagnostics, and memory inspections via `<robos-ai-textarea>` and the **Skills Manager** application.
 
 <div style="text-align: center; margin: 1.5rem 0 2.5rem;">
   <a href="{{ site.baseurl }}{% link robos-skills.md %}" class="btn btn-primary fs-5">Explore the Complete RobOS Skills Guide & Catalog →</a>
@@ -599,10 +599,10 @@ electron packages/topology-manager
 You can also drop `.robos/` directly into your existing Git repositories to immediately enable Knowledge Graph architecture modeling, TypeSpec contracts, and pre-code blast-radius diffs with your favorite AI agent (Claude Code, Gemini, Copilot, Antigravity).
 
 ### Option 2: Full Native Developer Suite (Linux / GNOME Desktop)
-If you run Ubuntu Linux, deploy all 30+ native developer applications, GNOME desktop launchers, and shared libraries directly alongside your daily environment:
+If you run Ubuntu Linux, deploy all native developer applications, GNOME desktop launchers, and shared libraries directly alongside your daily environment:
 
 ```bash
-# Install all 30+ apps, launchers, and shared libraries to /usr/local/share/robos/
+# Install all apps, launchers, and shared libraries to /usr/local/share/robos/
 sudo bash packages/desktop-shell/install.sh
 ```
 
@@ -623,8 +623,8 @@ infra/desktop/run.sh
 
 - **[Installation / Getting Started Guide]({{ site.baseurl }}{% link getting-started.md %})**: Set up your development environment and launch your first RobOS app.
 - **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Learn the complete end-to-end development cycle.
-- **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Dive deep into the 8 architectural pillars and the Dual-State Comparison Engine.
-- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
+- **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Dive deep into the architectural pillars and the Dual-State Comparison Engine.
+- **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch high-definition video walkthroughs of real-world engineering scenarios.
 - **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: Read our vision for standardized Turing skills, machine-code leaf skills, and local edge assembly without data centers.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: Browse raw idea notes, community feature proposals, and structured architecture specs.

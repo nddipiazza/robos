@@ -1,7 +1,8 @@
 ---
 title: Agent Governance & Review
 layout: default
-nav_order: 5
+parent: RobOS for Teams
+nav_order: 3
 has_children: true
 permalink: /agent-review-development.html
 ---

@@ -67,7 +67,7 @@ RobOS bridges the gap between local GitOps planning and enterprise issue trackin
 
 ## Complete Index of Built-In Task Plans
 
-RobOS includes a comprehensive library of pre-configured, battle-tested task plans and interactive templates organized across 10 primary engineering domains. Each plan guides developers and AI agents through domain-specific inputs, synthesizing executable Epics, Stories, and phased Directed Acyclic Graph (DAG) task specifications:
+RobOS includes a comprehensive library of pre-configured, battle-tested task plans and interactive templates organized across primary engineering domains. Each plan guides developers and AI agents through domain-specific inputs, synthesizing executable Epics, Stories, and phased Directed Acyclic Graph (DAG) task specifications:
 
 ### Services & APIs (12 Plans)
 

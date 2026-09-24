@@ -579,7 +579,7 @@ Running multiple autonomous AI coding agents on a single laptop can quickly caus
 ### Desktop AI Agent Supervisor & Status Sidebar
 
 #### The Real-World Scenario
-A lead engineer assigns 3 different feature tasks to AI agents concurrently: one agent builds a new backend API, another writes frontend React components, and a third runs database migration tests. The engineer uses the Desktop Agents Supervisor dock to monitor all 3 agents simultaneously, view live terminal streams, and pause or resume agent sessions.
+A lead engineer assigns 3 different feature tasks to AI agents concurrently: one agent builds a new backend API, another writes frontend React components, and a third runs database migration tests. The engineer uses the Desktop Agents Supervisor dock to monitor all agents simultaneously, view live terminal streams, and pause or resume agent sessions.
 - **Source Demo Scripts**: [`robos-agentd-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-agentd-demo.js), [`desktop-agents-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/desktop-agents-demo.js), [`agent-sidebar-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-sidebar-demo.js), [`agent-session-lib-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-session-lib-demo.js)
 
 | Live Multi-Agent Session Console | Background Process Supervisor |
@@ -733,7 +733,7 @@ An engineer is tasked with building a new microservice or desktop utility. Inste
 
 #### What the Test Actually Executes Step-by-Step
 1. **Launch App Wizard**: Opens **RobOS App Wizard** in Greenfield App Creation mode.
-2. **Select Multi-App Archetype**: Selects `Microservice` from 6 core archetypes (`DesktopApp`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`).
+2. **Select Multi-App Archetype**: Selects `Microservice` from core archetypes (`DesktopApp`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`).
 3. **App Identity & Team Ownership**: Names the service `Payment Gateway`, sets technology to `Node.js 20 / TypeScript`, and binds ownership to `Core Platform Team`.
 4. **Contract Specification**: Chooses OpenAPI 3.1 specification for contract-first API development.
 5. **Generate Scaffolding**: Synthesizes `catalog-info.yaml`, Dockerfile, runnable `dev-setup.sh`, and automatically registers the application node in `.robos/packages.yaml` and the Knowledge Graph.
@@ -745,7 +745,7 @@ An engineer is tasked with building a new microservice or desktop utility. Inste
   Your browser does not support the video tag.
 </video>
 
-| 6 Multi-App Archetypes Selection | App Identity & Team Assignment |
+| Multi-App Archetypes Selection | App Identity & Team Assignment |
 |:---:|:---:|
 | ![Archetypes]({{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }}) | ![App Identity]({{ '/assets/images/screenshots/new-app-identity-team_frame.png' | relative_url }}) |
 
@@ -794,7 +794,7 @@ RobOS solves this by decomposing the dual-state Knowledge Graph into modular, na
 #### What the Test Actually Executes Step-by-Step
 1. **Inspect Graph Architecture**: Opens **RobOS Knowledge Graph Explorer** and inspects telemetry stats.
 2. **Open Packages & Repositories Console**: Clicks **📦 Packages & Repos** (`#btn-open-packages-modal`) to reveal the package management hub.
-3. **Inspect Standard Namespaces**: Audits the 6 foundational RobOS packages (`robos.core`, `robos.org`, `robos.services`, `robos.apps`, `robos.devops`, `robos.learning`) stored in `.robos/kgraphs/<pkg>/package.jsonld`.
+3. **Inspect Standard Namespaces**: Audits the foundational RobOS packages (`robos.core`, `robos.org`, `robos.services`, `robos.apps`, `robos.devops`, `robos.learning`) stored in `.robos/kgraphs/<pkg>/package.jsonld`.
 4. **Register External KGraph Dependency**: Enters Repository ID `enterprise-contracts`, Title `Enterprise Cloud Contracts`, Git URL `https://github.com/acme/cloud-contracts`, and Git Tag `v2.4.0`.
 5. **Sync & Cache Remote Repository**: Executes remote repository sync, cloning and validating into `~/.robos/cache/kgraphs/enterprise-contracts@v2.4.0/` with on-demand package resolution.
 6. **Package Namespace Filter**: Closes the modal and uses the sidebar package filter (`#node-package-filter`) to isolate `robos.services` microservices and contracts.
@@ -831,7 +831,7 @@ In conventional tooling, API keys and access tokens are scattered across plainte
 #### What the Test Actually Executes Step-by-Step
 1. **Open DevOps Hub**: Clicks **☁️ DevOps Integrations** (`#btn-open-devops-modal`) in the Knowledge Graph explorer.
 2. **Launch Interactive Onboarding Wizard**: Clicks **⚡ Onboard Account** (`#btn-devops-start-onboarding`) to start guided account setup.
-3. **Explore 7 Categories & 25+ Providers**: Navigates category filter pills (`Source Control`, `Cloud Infrastructure`, `CI/CD & GitOps`, `Package & Artifact Registries`, `Containers & Virtualization`, `OAuth & Identity`, `Domains & DNS Providers`).
+3. **Explore Categories & Providers**: Navigates category filter pills (`Source Control`, `Cloud Infrastructure`, `CI/CD & GitOps`, `Package & Artifact Registries`, `Containers & Virtualization`, `OAuth & Identity`, `Domains & DNS Providers`).
 4. **Configure GitLab Provider**: Selects GitLab provider, dynamically generating the credential form with account slug `acme-gitlab`, server URL `https://gitlab.com`, and personal access token `glpat-MOCKTOKEN987654321`.
 5. **Audit GPG Pass Encryption Badge**: Inspects visual security indicator confirming the token will be encrypted to `~/.password-store/devops/source-control/gitlab/acme-gitlab/personalAccessToken`.
 6. **Execute Live Connection Probe**: Clicks **⚡ Test Connection** (`#btn-test-devops-connection`) to verify credentials and endpoint reachability with instant green status confirmation.
@@ -845,7 +845,7 @@ In conventional tooling, API keys and access tokens are scattered across plainte
   Your browser does not support the video tag.
 </video>
 
-| DevOps Hub & Active Accounts | Onboarding Wizard (7 Categories & 25+ Providers) |
+| DevOps Hub & Active Accounts | Onboarding Wizard (Categories & Providers) |
 |:---:|:---:|
 | ![DevOps Modal]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}) | ![Categories]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}) |
 

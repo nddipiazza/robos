@@ -1,7 +1,8 @@
 ---
 title: Application Development
 layout: default
-nav_order: 4
+parent: Build on RobOS
+nav_order: 5
 has_children: true
 permalink: /app-development-flow.html
 ---
@@ -79,12 +80,12 @@ With organization and team identities established, developers provision their ap
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}" alt="Phase 1: Component Scaffolding or Codebase Ingestion Flowchart" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Phase 1 Decision Flowchart</strong>: Greenfield scaffolding across 9 archetypes vs. Brownfield deep codebase inspection with AI refinement. <em>(Click image to zoom full screen)</em>
+    <strong>Phase 1 Decision Flowchart</strong>: Greenfield scaffolding across archetypes vs. Brownfield deep codebase inspection with AI refinement. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 ### Path A: Develop a New App (Greenfield Scaffolding)
-Developers generate a production-ready repository skeleton across **9 core multi-app archetypes**:
+Developers generate a production-ready repository skeleton across **core multi-app archetypes**:
 1. **Microservice & Web API** (`robos:Microservice`): Java Spring Boot, Node Fastify/Express, Go Gin, Python FastAPI. Includes OpenAPI 3.1 / TypeSpec contracts and Dockerfiles.
 2. **Front End Application** (`robos:FrontEndApp` / `schema:WebApplication`): Single-page and SSR web clients with React 18, Vite, Next.js, Vue, or Svelte.
 3. **Desktop Application** (`robos:DesktopApp`): Electron, Qt, GTK, or Tauri desktop clients.
@@ -138,10 +139,10 @@ Clicking **Deep Thinking AI Extract & Queue Targets** invokes the `KGraphResourc
 
 Clicking **Deep Inspect & Analyze Targets 🔍** transitions to **Step 2: Inspection & Knowledge Graph Topology**:
 * **Topology Entity Discovery**: The engine crawls the queued targets and identifies **21 total SDLC Graph Entities** across 4 Git organizations, 5 microservices/APIs, 5 OpenAPI 3.1 contracts, 3 living documentation pages and ADRs, 1 database, and 1 Kafka cluster.
-* **100% W3C SHACL Shape Conformance**: Every single discovered node is validated in real time against **98 W3C SHACL constraint shapes** across 8 standard modular packages (`organization`, `services`, `documentation`, `core-platform`).
+* **100% W3C SHACL Shape Conformance**: Every single discovered node is validated in real time against **W3C SHACL constraint shapes** across standard modular packages (`organization`, `services`, `documentation`, `core-platform`).
 * **Deep Thinking AI Architectural Refinement (`<robos-ai-textarea>`)**:
   Developers can use the dedicated **Deep Thinking AI Architectural Refinement** prompt bar to tune detected parameters before committing:
-  - *"Confirm microservice archetype robos:Microservice with Java 21 / Spring Boot 3, assign to Core Platform Team, and verify W3C SHACL 100% compliance across all 8 packages"*
+  - *"Confirm microservice archetype robos:Microservice with Java 21 / Spring Boot 3, assign to Core Platform Team, and verify W3C SHACL 100% compliance across all packages"*
   - *"Reassign payment-gateway to Payments Stream Squad and set package slug to payment-gateway-api"*
   - *"Map the Confluence wiki pages to living documentation with interactive Mermaid sequence flow"*
 
@@ -372,7 +373,7 @@ Once ingested, the entire system topology is immediately visible and queryable i
 | Phase | RobOS Application | Primary Purpose | Key Open Standard | Output Artifact |
 |:---|:---|:---|:---|:---|
 | **0. Foundation** | **Group Manager** (`group-manager` & `security-setup`) | Enterprise directory SCIM/LDAP sync, team topologies, GPG/SSH crypto keys | SCIM 2.0, LDAP, GPG, SSH, `pass` | `.robos/teams.yaml`, `~/.config/robos/` |
-| **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across 9 archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
+| **1. Provisioning** | **App Wizard** (`app-wizard`) | Greenfield scaffolding across archetypes or deep brownfield inspection with AI refinement | Backstage `catalog-info.yaml`, OCI, TypeSpec | `dev-setup.sh`, `.robos/packages.yaml` |
 | **2. Planning** | **Task Planner** (`issue-manager`) | Business prompt to ordered task roadmap & DAG | OASIS OSLC 3.0, GitHub Issues, Jira | Modular KGraph Packages |
 | **3. Architecture** | **Topology Studio** | C4 multi-level visual system architecture & blast radius analysis | C4 Model, Spotify Backstage | `catalog-info.yaml` |
 | **4. Contracts** | **Contract Studio** | API contracts & live mock server testing | OpenAPI 3.1, TypeSpec, Prism | `models.tsp`, `openapi.yaml` |
@@ -392,11 +393,11 @@ Follow the four foundational onboarding and application provisioning guides, or 
 
 * [🏢 **Existing Company Setup Guide** (SCIM 2.0, LDAP, Team Topologies)]({{ site.baseurl }}{% link existing-company-setup.md %})
 * [🚀 **New Company Setup Guide** (Greenfield Bootstrap & Tenant Init)]({{ site.baseurl }}{% link new-company-setup.md %})
-* [✨ **Develop a New App Guide** (App Wizard & 6 Archetypes)]({{ site.baseurl }}{% link new-app-wizard.md %})
+* [✨ **Develop a New App Guide** (App Wizard & Archetypes)]({{ site.baseurl }}{% link new-app-wizard.md %})
 * [📦 **Import Existing Apps Guide** (Deep Inspection & AI Refinement)]({{ site.baseurl }}{% link app-import-wizard.md %})
 * [👉 **Real-World E2E Walkthroughs & Proof of Work (The 16-Step Acme Petshop)**]({{ site.baseurl }}{% link walkthroughs.md %})
 * [🏗️ **System Architecture & The Dual-State Comparison Engine**]({{ site.baseurl }}{% link architecture.md %})
 * [🤖 **AI Agent Review-Based Software Development (The 5-Stage Lifecycle)**]({{ site.baseurl }}{% link agent-review-development.md %})
-* [💻 **Browse All 30+ Applications in the RobOS Suite**]({{ site.baseurl }}{% link apps.md %})
+* [💻 **Browse All Applications in the RobOS Suite**]({{ site.baseurl }}{% link apps.md %})
 * [💡 **Explore the Ideas Store on GitHub**](https://github.com/nddipiazza/robos/tree/main/docs/ideas)
 

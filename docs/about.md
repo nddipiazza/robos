@@ -1,7 +1,7 @@
 ---
 title: About RobOS
 layout: default
-nav_order: 13
+nav_order: 5
 permalink: /about.html
 ---
 
@@ -132,10 +132,10 @@ Rather than locking into a single vendor's closed ecosystem or proprietary promp
 
 ### How Multi-Agent Engineering Succeeded Without Conflicts
 
-How do four different AI models from competing research labs collaborate on a complex 30+ application SDLC platform and suite without breaking each other's code?
+How do four different AI models from competing research labs collaborate on a complex, many-application SDLC platform and suite without breaking each other's code?
 
 1. **The SDLC Knowledge Graph as the Universal Source of Truth**: All models read and write to the same standardized OSLC JSON-LD knowledge graph (`.robos/kgraphs/`). The graph guarantees that no model can invent imaginary APIs or violate service contracts.
-2. **W3C SHACL Shape Validation Gates**: Every architectural mutation is checked against 91+ strict SHACL shape constraints (`npm run kgraph:validate`). If an agent attempts to emit an invalid structure, the gate immediately blocks it with deterministic error diagnostics.
+2. **W3C SHACL Shape Validation Gates**: Every architectural mutation is checked against strict SHACL shape constraints (`npm run kgraph:validate`). If an agent attempts to emit an invalid structure, the gate immediately blocks it with deterministic error diagnostics.
 3. **Model Context Protocol (MCP) & Unified Skills**: All agent tools—from DOM snapshot debuggers to Kubernetes cluster managers—are exposed via standard MCP servers and portable skills (`plugins/robos/skills/` and `.agents/skills/`), allowing any model to invoke identical toolchains.
 4. **Isolated Ephemeral Sandboxes & Video Proof-of-Work**: Agents write code and run test suites inside disposable Linux profiles with X11 display bridging, recording 1080p video walkthroughs that prove their changes work before a human ever reviews the PR.
 

@@ -29,22 +29,22 @@ In modern cloud engineering and autonomous AI agent workflows, credential manage
 
 **The RobOS Big Win:**
 
-> **RobOS provides interactive onboarding wizards across 7 categories and 25+ cloud providers with zero plaintext credentials stored in the Knowledge Graph or Git repositories.**
+> **RobOS provides interactive onboarding wizards across categories and cloud providers with zero plaintext credentials stored in the Knowledge Graph or Git repositories.**
 
 All sensitive API keys, private certificates, and tokens are encrypted locally using **GPG** and stored directly into the standard **UNIX password store (`pass`)** at `~/.password-store/devops/`. The RobOS Knowledge Graph stores first-class **`robos:PassCredential` reference nodes** that declare the secure path to the credential without ever exposing the sensitive secret.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}" alt="DevOps Account Integrations Wizard in RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS DevOps Account Integrations Wizard</strong>: Guided connection wizards covering 7 infrastructure categories and 25+ cloud providers with zero plaintext secrets. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS DevOps Account Integrations Wizard</strong>: Guided connection wizards covering infrastructure categories and cloud providers with zero plaintext secrets. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 ---
 
-## The 7 Categories & 25+ Supported Providers
+## The Categories & Supported Providers
 
-RobOS includes purpose-built onboarding wizards across 7 essential infrastructure domains:
+RobOS includes purpose-built onboarding wizards across essential infrastructure domains:
 
 | Category | Supported Cloud & Infrastructure Providers | Credentials Managed Securely |
 |:---|:---|:---|
@@ -134,7 +134,7 @@ To guarantee zero data leakage into LLM model contexts, RobOS equips the platfor
 
 - **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[Ephemeral In-Memory Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how ephemeral Linux accounts isolate agents from host keys.
-- **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Read about the 6 standard namespaced package stores and 9 application archetypes.
+- **[KGraph-First App Generation & Modular Architecture]({{ site.baseurl }}{% link big-wins/kgraph-first-app-generation.md %})**: Read about the standard namespaced package stores and application archetypes.
 - **[Existing Company Setup Guide]({{ site.baseurl }}{% link existing-company-setup.md %})**: Walk through configuring enterprise SSO and directory synchronization.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 

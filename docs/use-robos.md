@@ -1,7 +1,9 @@
 ---
 title: Use RobOS
 layout: default
-nav_order: 1.1
+nav_order: 2
+has_children: true
+has_toc: false
 ---
 
 # Use RobOS
@@ -20,7 +22,7 @@ New here? Start with these pages to get RobOS running and find your way around i
 
 <div class="rb-links">
   <a class="rb-link" href="{{ '/demo.html' | relative_url }}">
-    <strong>⚡ 21 Big Wins in plain English</strong>
+    <strong>⚡ Big Wins in plain English</strong>
     <span>What RobOS does differently, explained with everyday comparisons instead of jargon.</span>
   </a>
   <a class="rb-link" href="{{ site.baseurl }}{% link voice-prompt.md %}">

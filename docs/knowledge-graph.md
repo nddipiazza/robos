@@ -1,7 +1,8 @@
 ---
 title: SDLC Knowledge Graph
 layout: default
-nav_order: 8
+parent: Build on RobOS
+nav_order: 1
 ---
 
 # The RobOS SDLC Knowledge Graph
@@ -106,7 +107,7 @@ RobOS provides **first-class multi-repository composition**:
 
 A major engineering challenge is integrating external cloud infrastructure and CI/CD tools without leaking sensitive credentials into version control. 
 
-RobOS includes an interactive **DevOps Integration Hub** covering **7 major categories and 25+ providers**:
+RobOS includes an interactive **DevOps Integration Hub** covering **major categories and providers**:
 
 - **Source Control**: GitHub, GitLab, Bitbucket, Gitea, Azure Repos
 - **Cloud Infrastructure**: AWS, Google Cloud (GCP), Microsoft Azure, Red Hat OpenShift, Cloudflare, DigitalOcean
@@ -143,7 +144,7 @@ Instead, RobOS integrates directly with the UNIX standard password store (`pass`
 3. The parent `robos:DevOpsIntegration` node references the credential via `robos:hasCredential`.
 4. **Pre-Flight Connection Probing**: Before saving, RobOS runs a live connection probe (`⚡ Test Connection`) to authenticate credentials against provider endpoints.
 
-| DevOps Hub & Active Accounts | Onboarding Wizard (7 Categories & 25+ Providers) |
+| DevOps Hub & Active Accounts | Onboarding Wizard (Categories & Providers) |
 |:---:|:---:|
 | ![DevOps Modal]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}) | ![Categories]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}) |
 
@@ -223,7 +224,7 @@ node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js
   --import-to-robos
 ```
 
-### Automatic Classification Across All 9 Multi-App Archetypes
+### Automatic Classification Across All Multi-App Archetypes
 The engine inspects build manifests (`package.json`, `pom.xml`, `go.mod`, `Cargo.toml`, etc.) and repository names, classifying components into:
 - **`robos:Microservice`** — Backend web services with auto-synthesized OpenAPI 3.1 YAML contracts.
 - **`robos:FrontEndApp`** — Web SPAs and SSR portals (React, Next.js, Vue, Svelte).
@@ -347,7 +348,7 @@ Every `robos:GitProjectOrganization` is validated against `urn:robos:shape:GitPr
 
 ## 9. Foundational SDLC Domains: Data, AI Agents, Cloud GitOps & Contracts
 
-To provide a complete, unbroken digital twin of modern software development, RobOS models the 4 foundational operational domains of software engineering as first-class, SHACL-validated citizens:
+To provide a complete, unbroken digital twin of modern software development, RobOS models the foundational operational domains of software engineering as first-class, SHACL-validated citizens:
 
 ### 1. Data Infrastructure & Storage (`core-platform`)
 
@@ -543,7 +544,7 @@ Modern monorepos and polyglot architectures rely on distributed compilation, rem
 
 ### Upstream Schema Provenance (`robos:refersFrom`)
 
-RobOS establishes complete semantic traceability and provenance for all 98 schema definitions. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
+RobOS establishes complete semantic traceability and provenance for every schema definition. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
 
 - **W3C & Schema.org**: `https://schema.org/SoftwareApplication`, `https://schema.org/WebApplication`, `https://schema.org/VideoGame`, `https://schema.org/Organization`, `https://schema.org/Person`, `https://schema.org/Dataset`, `https://schema.org/DataCatalog`.
 - **OASIS OSLC (Open Services for Lifecycle Collaboration)**:
@@ -600,7 +601,7 @@ From the single source of truth in the Knowledge Graph, the companion desktop ap
 
 ## 10. Universal Application Backing Audit (Zero Unbacked Data)
 
-In RobOS, **all application operational data across the 30+ desktop app suite is 100% backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`)**. No application maintains orphaned or isolated configuration states.
+In RobOS, **all application operational data across the desktop app suite is 100% backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`)**. No application maintains orphaned or isolated configuration states.
 
 ### Audited App Data & Ontological Mapping
 
@@ -710,7 +711,7 @@ Relational and NoSQL datastores decompose into schemas, tables, and columns:
 ## Next Steps
 
 - **[🌐 Browse Live Knowledge Graph Packages on GitHub](https://github.com/nddipiazza/robos/tree/main/.robos/kgraphs)**: Inspect the modular JSON-LD package stores, ontology schemas, and GitOps models live in the repository.
-- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all 79+ SHACL constraint shapes across the 7 standard RobOS package stores.
+- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all SHACL constraint shapes across the standard RobOS package stores.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.
 - **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

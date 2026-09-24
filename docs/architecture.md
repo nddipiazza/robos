@@ -1,13 +1,14 @@
 ---
 title: System Architecture
 layout: default
-nav_order: 7
+parent: Build on RobOS
+nav_order: 6
 ---
 
 # System Architecture (How RobOS Works Under the Hood)
 {: .no_toc }
 
-The 8 architectural pillars, the Dual-State Comparison Engine, multi-app archetypes, and the secure desktop bridge powering RobOS.
+The architectural pillars, the Dual-State Comparison Engine, multi-app archetypes, and the secure desktop bridge powering RobOS.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -18,14 +19,14 @@ The 8 architectural pillars, the Dual-State Comparison Engine, multi-app archety
 
 ---
 
-## The 8 Pillars of RobOS
+## The Pillars of RobOS
 
 RobOS structures all development lifecycle information into 8 connected, plain-text categories stored directly in your Git repositories:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="The 8 Architectural Pillars of RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="The Architectural Pillars of RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>The 8 Architectural Pillars of RobOS</strong>: How connected Git-backed standards (C4 maps, Team Topologies, TypeSpec models, API contracts, multi-app archetypes, multi-repo workspaces, and DAG task roadmaps) converge into a unified SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
+    <strong>The Architectural Pillars of RobOS</strong>: How connected Git-backed standards (C4 maps, Team Topologies, TypeSpec models, API contracts, multi-app archetypes, multi-repo workspaces, and DAG task roadmaps) converge into a unified SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -33,7 +34,7 @@ RobOS structures all development lifecycle information into 8 connected, plain-t
 2. **Team Roster & Team Topologies**: Clear directory of engineering squads (stream-aligned, platform, enablement, complicated-subsystem), service ownership, and enterprise directory sync (Okta, Azure AD, LDAP) stored in `.robos/teams.yaml`.
 3. **Data Model Studio (TypeSpec)**: Define domain data models once and generate TypeScript, Java, and Go types automatically.
 4. **API Contracts & Mock Servers**: Define REST APIs (OpenAPI 3.1), gRPC Protobuf, and event streams with live mock servers for instant testing.
-5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across 9 archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
+5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
 6. **Multi-Repo Workspace Hub**: Switch between Git branches across multiple repositories simultaneously without duplicate disk storage.
 7. **Step-by-Step Task Roadmap**: Breaks high-level feature goals down into a clean checklist of prerequisite and dependent tasks (OASIS OSLC Change Management).
 8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files across **Modular KGraph Packages** under `.robos/` (`teams.yaml`, `packages.yaml`, `topology.yaml`) with zero proprietary cloud databases.
@@ -77,12 +78,12 @@ RobOS applications are built using lightweight vanilla JavaScript and Electron, 
 - **`robos-mcp-router`**: Fast tool router connecting AI models (Claude, Antigravity, Copilot, Gemini) to local developer tools.
 
 ### Core Architectural Applications
-- **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across 9 multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
+- **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
 - **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
 - **RobOS Voice Prompt Agent (`packages/voice-prompt`)**: Offline neural Whisper speech-to-text dictation with real-time streaming, active window context detection (`xdotool`, `wmctrl`), global push-to-talk (`Super+V`), and headless REST API (`:19188`).
 
 ### Universal Knowledge Graph Data Backing (Zero Unbacked Data)
-Every application in the RobOS 30+ suite is backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`):
+Every application in the RobOS suite is backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`):
 - **Databases & Caches**: `db-manager`, `nosql-manager`, and `data-sources` persist relational and NoSQL datastores as `robos:Database` and `robos:NoSQLDatabase` nodes in the `core-platform` package with W3C SHACL shape enforcement.
 - **Microservices & APIs**: OpenAPI 3.1 contracts, Protobuf gRPC definitions, and GraphQL schemas are linked directly to `robos:Microservice` nodes.
 - **Cloud & Kubernetes**: `kube-studio` reconciles clusters (`robos:KubernetesCluster`) and GitOps applications (`robos:GitOpsDeployment`) in the `devops` package.
@@ -95,7 +96,7 @@ Every application in the RobOS 30+ suite is backed by the SDLC Knowledge Graph (
 ## Next Steps
 
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[Browse All 30+ Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
+- **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 
 
