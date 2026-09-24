@@ -3,7 +3,7 @@ title: Database Table
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 9
+nav_order: 11
 permalink: /schemas/core-platform/database-table.html
 ---
 

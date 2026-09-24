@@ -3,7 +3,7 @@ title: MCP Server
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 5
+nav_order: 7
 permalink: /schemas/core-platform/mcp-server.html
 ---
 

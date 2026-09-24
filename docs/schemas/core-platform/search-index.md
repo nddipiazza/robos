@@ -3,7 +3,7 @@ title: Search Index
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 22
+nav_order: 4
 permalink: /schemas/core-platform/search-index.html
 ---
 
@@ -38,7 +38,7 @@ Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Sear
 
 This RobOS schema is modeled after and directly aligns with two levels of global standards:
 - **Universal Schema.org Class**: [https://schema.org/DataStore](https://schema.org/DataStore) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/DataStore](https://schema.org/DataStore) (de facto standard for enterprise search and information retrieval stores)
+- **Specialized Domain Standard**: [https://schema.org/DataStore](https://schema.org/DataStore) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
 - **Canonical Reference**: [https://schema.org/DataStore](https://schema.org/DataStore)
 - **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:SearchIndex`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
 
@@ -66,8 +66,8 @@ This RobOS schema is modeled after and directly aligns with two levels of global
 
 | Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
 |---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Data stores & messaging | Search Index must have a title or display name. |
-| **`robos:engine`** | Search Engine | `1..*` | `xsd:string` | Data stores & messaging, Agents & MCP | Search Index must declare its engine (luxir, solr, elasticsearch, opensearch). |
+| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Search Index must have a title or display name. |
+| **`robos:engine`** | engine | `1..*` | `xsd:string` | Data stores & messaging, Agents & MCP | Search Index must declare its engine (luxir, solr, elasticsearch, opensearch). |
 
 ---
 
@@ -81,15 +81,75 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "robos:SearchIndex",
     "schema:DataStore"
   ],
-  "dcterms:title": "Luxir RobOS KGraph Hybrid Search Index",
-  "dcterms:description": "High-performance C++ embedded search index indexing AST symbols, contracts, and evidence-backed file nodes.",
+  "dcterms:title": "Luxir Knowledge Graph Search Index",
+  "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
   "robos:engine": "luxir",
-  "robos:status": "experimental",
+  "robos:indexName": "kgraph_nodes",
   "robos:productionReady": false,
-  "robos:endpoint": "http://127.0.0.1:8983",
+  "robos:status": "experimental",
+  "robos:readiness": "not-yet-prod-ready",
+  "robos:maturity": "pre-release",
+  "robos:host": "localhost",
+  "robos:port": 8983,
+  "robos:features": [
+    "full-text",
+    "vector-search",
+    "faceting",
+    "instant-warmup",
+    "no-gc"
+  ],
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
+  "robos:technology": "https://robos.dev/ns/technology#luxir",
   "robos:schemaOrgType": "https://schema.org/DataStore",
   "robos:domainStandard": "https://schema.org/DataStore"
 }
+```
+
+---
+
+## Programmatic SHACL Validation
+
+```javascript
+const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
+const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
+
+const validator = new SHACLValidator();
+const result = validator.validateGraph(new OSLCGraphParser({
+  "@context": OSLC_CONTEXT,
+  "robos:nodes": [
+    {
+        "@id": "urn:robos:search:luxir-kgraph-index",
+        "@type": [
+            "oslc_am:Resource",
+            "robos:SearchIndex",
+            "schema:DataStore"
+        ],
+        "dcterms:title": "Luxir Knowledge Graph Search Index",
+        "dcterms:description": "Experimental high-performance C++ hybrid full-text & vector search index evaluated for Knowledge Graph retrieval. In pre-release (v0.1.0) and not yet production-ready.",
+        "robos:engine": "luxir",
+        "robos:indexName": "kgraph_nodes",
+        "robos:productionReady": false,
+        "robos:status": "experimental",
+        "robos:readiness": "not-yet-prod-ready",
+        "robos:maturity": "pre-release",
+        "robos:host": "localhost",
+        "robos:port": 8983,
+        "robos:features": [
+            "full-text",
+            "vector-search",
+            "faceting",
+            "instant-warmup",
+            "no-gc"
+        ],
+        "robos:package": "core-platform",
+        "robos:namespace": "robos.platform",
+        "robos:technology": "https://robos.dev/ns/technology#luxir",
+        "robos:schemaOrgType": "https://schema.org/DataStore",
+        "robos:domainStandard": "https://schema.org/DataStore"
+    }
+  ],
+}));
+
+console.log("Conforms:", result.conforms); // Expected: true
 ```

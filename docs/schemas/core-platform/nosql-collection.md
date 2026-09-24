@@ -3,7 +3,7 @@ title: NoSQL Collection
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 12
+nav_order: 14
 permalink: /schemas/core-platform/nosql-collection.html
 ---
 

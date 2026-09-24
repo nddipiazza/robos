@@ -3,7 +3,7 @@ title: Prompt Strategy
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 7
+nav_order: 9
 permalink: /schemas/core-platform/prompt-strategy.html
 ---
 

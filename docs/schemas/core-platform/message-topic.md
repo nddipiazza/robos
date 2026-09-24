@@ -3,7 +3,7 @@ title: Message Topic
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 13
+nav_order: 15
 permalink: /schemas/core-platform/message-topic.html
 ---
 

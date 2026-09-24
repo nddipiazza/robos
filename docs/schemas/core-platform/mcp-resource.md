@@ -3,7 +3,7 @@ title: MCP Resource
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 16
+nav_order: 18
 permalink: /schemas/core-platform/mcp-resource.html
 ---
 

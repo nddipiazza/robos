@@ -3,7 +3,7 @@ title: MCP Prompt
 layout: default
 parent: Core Platform (robos.core)
 grand_parent: KGraph Schemas
-nav_order: 17
+nav_order: 19
 permalink: /schemas/core-platform/mcp-prompt.html
 ---
 
