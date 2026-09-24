@@ -1,0 +1,14 @@
+<a href="{{ include.app.url | relative_url }}" class="robos-app-card">
+  <div class="robos-app-icon-wrap">
+    {%- if include.app.icon %}
+    <img src="{{ '/assets/images/icons/' | append: include.app.icon | relative_url }}" width="38" height="38" alt="" loading="lazy">
+    {%- else %}
+    <span class="rb-app-letter" aria-hidden="true">{{ include.app.title | slice: 0 }}</span>
+    {%- endif %}
+  </div>
+  <div class="robos-app-body">
+    <div class="robos-app-name">{{ include.app.title }}</div>
+    <span class="robos-app-pkg">{{ include.app.package }}</span>
+    <p class="robos-app-desc">{{ include.app.summary }}</p>
+  </div>
+</a>

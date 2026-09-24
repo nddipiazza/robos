@@ -11,6 +11,11 @@ twitter:
 
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 
+plugins:
+  - jekyll-remote-theme
+  - jekyll-redirect-from
+  - jekyll-seo-tag
+
 color_scheme: dark
 
 logo: "/assets/images/logo.png"
@@ -59,6 +64,28 @@ kramdown:
   syntax_highlighter_opts:
     block:
       line_numbers: false
+
+# One page per RobOS app lives in _apps/ and is listed on /apps.html.
+# To add a page for a new app, run: node scripts/sync-app-docs.js
+collections:
+  apps:
+    output: true
+    permalink: /apps/:name/
+
+just_the_docs:
+  collections:
+    apps:
+      name: Apps
+      nav_exclude: true
+      search_exclude: false
+
+defaults:
+  - scope:
+      path: ""
+      type: apps
+    values:
+      layout: app
+      nav_exclude: true
 
 exclude:
   - project-plan/

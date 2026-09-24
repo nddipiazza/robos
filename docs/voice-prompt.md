@@ -1,7 +1,8 @@
 ---
 title: Voice Prompt Dictation & Audio Input Agent
 layout: default
-nav_order: 8
+parent: Use RobOS
+nav_order: 3
 permalink: /voice-prompt.html
 ---
 
@@ -409,6 +410,6 @@ node --test packages/robos-test/tests/voice-prompt/e2e.test.js
 
 ## Next Steps
 
-- **[Browse All RobOS Apps]({{ site.baseurl }}{% link apps.md %})**: View the full suite of 30+ native developer tools.
+- **[Browse All RobOS Apps]({{ site.baseurl }}{% link apps.md %})**: View the full suite of native developer tools.
 - **[RobOS Architecture]({{ site.baseurl }}{% link architecture.md %})**: Learn about the 4-tier desktop bridge and Knowledge Graph governance.
 - **[Agent Code Review Platform]({{ site.baseurl }}{% link pr-review-theater.md %})**: Explore the 6-stage PR Review Theater.

@@ -1,7 +1,8 @@
 ---
 title: Enterprise & Organization Setup
 layout: default
-nav_order: 11
+parent: RobOS for Teams
+nav_order: 4
 has_children: true
 permalink: /existing-company-setup.html
 ---

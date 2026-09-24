@@ -24,7 +24,7 @@ Use this skill whenever:
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │ 2. Discern Noticeable Documentation Impacts            │
-│    Identify impacted docs: README.md, docs/index.md,   │
+│    Identify impacted docs: README.md, docs/*.md,       │
 │    docs/project-plan/, specs, and .robos/ GitOps files │
 └──────────────────────────┬─────────────────────────────┘
                            │
@@ -46,8 +46,8 @@ Use this skill whenever:
 
 ### Step 2 — Discern Noticeable Documentation Impacts
 Evaluate whether the entity update introduces or alters:
-- User-facing application suites (`AGENTS.md`, `README.md`, `docs/index.md`)
-- Architecture topology diagrams or C4 descriptions (`docs/index.md`, `docs/app-development-flow.md`)
+- User-facing application suites (`AGENTS.md`, `README.md`, the app's page in `docs/_apps/`)
+- Architecture topology diagrams or C4 descriptions (`docs/architecture.md`, `docs/app-development-flow.md`)
 - Interactive training curriculums or courses (`.robos/elearning.yaml`, `docs/project-plan/engineering-knowledge-graph/epic.md`)
 - API contracts or interface specifications (`specs/contracts/`)
 

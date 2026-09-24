@@ -9,7 +9,7 @@ permalink: /big-wins/agent-app-interaction.html
 # RobOS Agents Interact With All RobOS Apps
 {: .no_toc }
 
-How RobOS equips autonomous AI coding agents with direct programmatic eyes and hands across the entire 30+ native application suite—combining Electron-native DOM snapshot inspection (`snapshot-cli.js`) and the Unified Model Context Protocol Router (`robos-mcp-router`).
+How RobOS equips autonomous AI coding agents with direct programmatic eyes and hands across the entire native application suite—combining Electron-native DOM snapshot inspection (`snapshot-cli.js`) and the Unified Model Context Protocol Router (`robos-mcp-router`).
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -29,14 +29,14 @@ In traditional software engineering, AI coding assistants (Claude Code, GitHub C
 
 **RobOS introduces a fundamental breakthrough:**
 
-> **In RobOS, every AI agent can directly interact with all 30+ RobOS desktop applications.**
+> **In RobOS, every AI agent can directly interact with all RobOS desktop applications.**
 
 RobOS bridges the gap between AI agents and developer tooling through a **dual-surface control fabric**: every application in the platform provides a sleek, dark-mode GUI for human engineers and a first-class, programmatic control surface for autonomous AI agents.
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/robos-mcp-router-frame_01.png' | relative_url }}" alt="RobOS Unified MCP Router and Agent App Interaction Fabric" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Unified Agent Control Fabric</strong>: Autonomous AI agents discover, multiplex, and drive tools across all 30+ native applications via Model Context Protocol and programmatic DOM inspection. <em>(Click image to zoom full screen)</em>
+    <strong>Unified Agent Control Fabric</strong>: Autonomous AI agents discover, multiplex, and drive tools across all native applications via Model Context Protocol and programmatic DOM inspection. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -81,7 +81,7 @@ The developer hits the global hotkey (`Ctrl+Space` or clicks **Pop Out Prompt** 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}" alt="RobOS Agent Prompt Window Popped Up Over Active RobOS Apps" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Agent Prompt Popped Up Over Active Applications</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window floats directly over your active tools, dispatching live actions across all 30+ RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Agent Prompt Popped Up Over Active Applications</strong>: Press <code>Ctrl+Space</code> or click <code>Pop Out Prompt</code> in <strong>RobOS Agent Chat</strong>. The prompt window floats directly over your active tools, dispatching live actions across all RobOS applications simultaneously. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -284,4 +284,4 @@ While the **RobOS Agent Prompt Popup** (`Ctrl+Space`) provides an ultra-lightwei
 - **[Explore RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Return to the Main Wins executive overview.
 - **[PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %})**: Discover how agents present proof in the interactive review cockpit.
 - **[Ephemeral Agent Sandboxes]({{ site.baseurl }}{% link big-wins/ephemeral-agent-sandboxes.md %})**: Learn how agents execute in RAM without polluting your workstation.
-- **[Browse All 30+ Applications]({{ site.baseurl }}{% link apps.md %})**: Explore the complete application catalog.
+- **[Browse All Applications]({{ site.baseurl }}{% link apps.md %})**: Explore the complete application catalog.

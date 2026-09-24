@@ -97,6 +97,8 @@ Add an entry to the `BUILTIN_APPS` array (in alphabetical order by appId):
 
 Add the new app to the appropriate section in the App Suite tables in `AGENTS.md`.
 
+Then give the app its page on the docs site: run `node scripts/sync-app-docs.js`, which creates `docs/_apps/<app-id>.md` from the `.desktop` entry. Set its `category:` to an id from `docs/_data/app_categories.yml` and write a short guide in the page body.
+
 ### 4. Deploy to VM
 
 After creating the app locally, deploy it to the running RobOS VM. Use `-o StrictHostKeyChecking=no` for all SSH/SCP commands.

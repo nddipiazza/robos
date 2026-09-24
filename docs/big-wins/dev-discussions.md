@@ -149,4 +149,4 @@ Stop losing your SDLC in team chat. Start having your discussions where the code
 - **[Knowledge Graph Explorer & Dual-State Blast Radius]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**: Understand how discussion nodes connect to SDLC architecture.
 - **[Interactive Task Planning Studio]({{ site.baseurl }}{% link big-wins/interactive-task-planning.md %})**: Generate phased DAG tasks and work items.
 - **[Autonomous PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %})**: Inspect code reviews with video proof-of-work and knowledge checks.
-- **[All 30+ RobOS Desktop Applications]({{ site.baseurl }}{% link apps.md %})**: Browse the complete native developer tool suite.
+- **[All RobOS Desktop Applications]({{ site.baseurl }}{% link apps.md %})**: Browse the complete native developer tool suite.

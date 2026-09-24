@@ -1,3 +1,10 @@
+---
+title: Validating Course Revisions
+layout: default
+parent: Build on RobOS
+nav_order: 9
+---
+
 # Validating course revisions in existing graphs
 
 Course preview must not require new provenance on unrelated, unchanged graph

@@ -8,7 +8,7 @@ nav_order: 2
 # New App Development Wizard
 {: .no_toc }
 
-How application developers use the guided RobOS App Wizard (`packages/app-wizard`) to build brand-new applications from scratch across all 9 multi-app archetypes: Desktop Applications, Front End Applications, PC Games, Mobile Games, Microservices & Web APIs, Console CLIs, Mobile Apps, Data Pipelines, and Libraries.
+How application developers use the guided RobOS App Wizard (`packages/app-wizard`) to build brand-new applications from scratch across all multi-app archetypes: Desktop Applications, Front End Applications, PC Games, Mobile Games, Microservices & Web APIs, Console CLIs, Mobile Apps, Data Pipelines, and Libraries.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -19,7 +19,7 @@ How application developers use the guided RobOS App Wizard (`packages/app-wizard
 
 ---
 
-## Overview: Fast Scaffolding Across 9 Archetypes
+## Overview: Fast Scaffolding Across Archetypes
 
 In conventional software development, creating a new application requires hours of tedious setup: stitching together boilerplate directories, writing Dockerfiles, creating local developer setup scripts (`dev-setup.sh`), setting up CI pipelines, configuring contract linting, and registering team ownership metadata.
 
@@ -36,7 +36,7 @@ The **RobOS App Wizard** (`packages/app-wizard`) eliminates this setup friction 
 
 ## Supported Multi-App Archetypes
 
-RobOS provides first-class support for **9 distinct software archetypes**, each equipped with tailored scaffolding generators, runtime configs, and SDLC Knowledge Graph ontology definitions:
+RobOS provides first-class support for **distinct software archetypes**, each equipped with tailored scaffolding generators, runtime configs, and SDLC Knowledge Graph ontology definitions:
 
 | Archetype | URN Format | Supported Technology Stacks | What RobOS Scaffolds |
 |:---|:---|:---|:---|
@@ -63,7 +63,7 @@ Launch the App Wizard from the **RobOS App Launcher** (search for "App Wizard" i
 electron packages/app-wizard
 ```
 
-The developer chooses between the 9 available archetypes. Clicking an archetype card immediately selects the corresponding architectural archetype and configures downstream options:
+The developer chooses between the available archetypes. Clicking an archetype card immediately selects the corresponding architectural archetype and configures downstream options:
 
 | Step 1: Multi-Archetype Selection Grid |
 |:---:|

@@ -1,7 +1,8 @@
 ---
 title: Roadmap & Future Vision
 layout: default
-nav_order: 12
+parent: RobOS for Teams
+nav_order: 5
 has_children: true
 permalink: /roadmap.html
 ---
@@ -31,7 +32,7 @@ A curated, strategic catalog of our favorite transformative concepts, pending sp
 ## The Next Frontier: From Foundation to Autonomous Mastery
 
 RobOS has successfully established its baseline developer workstation environment:
-- **30+ Native Electron Applications** spanning the entire SDLC (Dev Central, App Wizard, Task Planner, Schema Studio, Kube Studio, Protocol Clients, and Pass Manager).
+- **Native Electron Applications** spanning the entire SDLC (Dev Central, App Wizard, Task Planner, Schema Studio, Kube Studio, Protocol Clients, and Pass Manager).
 - **Dual-State SDLC Knowledge Graph Engine** powered by OASIS OSLC Core 3.0 and W3C JSON-LD + SHACL validation.
 - **Containerized Headless E2E Verification Fabric** using virtual framebuffers (`Xvfb + Picom`), DOM snapshot inspection, and neural Piper TTS video proofs.
 - **Bi-Directional IDE Review Bridges** integrating JetBrains IntelliJ IDEA (IPC port 63343) and VS Code for native pull request reviews.
@@ -42,7 +43,7 @@ With the operational foundation proven, the previous historical phase milestones
 
 ## Roadmap Priority Matrix
 
-The table below summarizes our top unimplemented ideas, categorized across 5 strategic architectural pillars:
+The table below summarizes our top unimplemented ideas, categorized across strategic architectural pillars:
 
 | Strategic Pillar | Feature Initiative | Target Subsystems | Status | Impact / Complexity |
 |:---|:---|:---|:---:|:---:|

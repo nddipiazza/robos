@@ -8,7 +8,7 @@ nav_order: 3
 # Skills Manager Desktop App (`skills-manager`)
 {: .no_toc }
 
-How application developers use the RobOS Skills Manager (`packages/skills-manager`) to browse, parameterize, execute, and author 74+ system, Git, and Docker terminal skills directly from the desktop and within `<robos-ai-textarea>` prompt bars.
+How application developers use the RobOS Skills Manager (`packages/skills-manager`) to browse, parameterize, execute, and author system, Git, and Docker terminal skills directly from the desktop and within `<robos-ai-textarea>` prompt bars.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -23,27 +23,27 @@ How application developers use the RobOS Skills Manager (`packages/skills-manage
 
 While AI agent skills handle complex multi-step orchestration across the codebase, developers also need fast, deterministic shell commands for daily workstation operations: inspecting running Docker containers, finding large files, cleaning up merged Git branches, or profiling memory consumption.
 
-The **RobOS Skills Manager** (`packages/skills-manager`) provides an interactive GUI skill catalog shipping with **74+ built-in shell skills** across 10 operational categories:
+The **RobOS Skills Manager** (`packages/skills-manager`) provides an interactive GUI skill catalog shipping with **built-in shell skills** across operational categories:
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/skills-manager-overview.png' | relative_url }}" alt="RobOS Skills Manager Catalog Overview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Skills Manager Live Catalog</strong>: Interactive desktop grid displaying 61+ built-in workstation skills, category navigation pills, fast typeahead search, and inline parameter fields. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Skills Manager Live Catalog</strong>: Interactive desktop grid displaying built-in workstation skills, category navigation pills, fast typeahead search, and inline parameter fields. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}" alt="RobOS Skills Manager & Shell Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Skills Manager & Shell Architecture</strong>: Interactive catalog of 74+ shell skills and custom macros accessible via GUI and prompt completion, executing deterministically in POSIX shell and Tilix terminal. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Skills Manager & Shell Architecture</strong>: Interactive catalog of shell skills and custom macros accessible via GUI and prompt completion, executing deterministically in POSIX shell and Tilix terminal. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
 ---
 
-## 10 Built-In Skill Categories
+## Built-In Skill Categories
 
-The Skills Manager organizes commands into 10 structured categories:
+The Skills Manager organizes commands into structured categories:
 
 | Category | Skill Count | Common Operations & Commands |
 |:---|:---:|:---|

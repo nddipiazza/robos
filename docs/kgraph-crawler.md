@@ -1,7 +1,8 @@
 ---
 title: KGraph Crawler
 layout: default
-nav_order: 9
+parent: Build on RobOS
+nav_order: 3
 has_children: true
 permalink: /kgraph-crawler.html
 ---
@@ -60,7 +61,7 @@ Rather than treating content extraction as generic full-text indexing, RobOS equ
 A major limitation of traditional crawler engines is rigid schema coupling: if a crawler encounters data outside its predefined schema, it either drops the data or dumps it as unstructured blobs.
 
 The RobOS KGraph Crawler introduces **Domain-Aware Schema Inference**:
-- When the crawler extracts an entity, it evaluates the entity against all 91 W3C SHACL shapes in RobOS.
+- When the crawler extracts an entity, it evaluates the entity against all W3C SHACL shapes in RobOS.
 - If a shape matches (e.g. an OpenAPI YAML matches `robos:Microservice` and `MicroserviceShape`), the entity is emitted into `.robos/kgraphs/services/package.jsonld`.
 - If the entity represents a **novel domain** (such as IoT telemetry devices, ML model weight registries, or specialized ERP configurations), the crawler:
   1. Derives an RDF class (e.g., `robos:MLModelRegistry`).

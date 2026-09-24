@@ -9,7 +9,7 @@ permalink: /big-wins/kgraph-first-app-generation.html
 # Knowledge Graph-First (KGraph-First) App Generation & Modular Architecture
 {: .no_toc }
 
-How RobOS elevates contract-driven engineering to the entire application lifecycle, automatically synthesizing full production applications across 9 archetypes from schema-validated, modular namespaced Knowledge Graph blueprints.
+How RobOS elevates contract-driven engineering to the entire application lifecycle, automatically synthesizing full production applications across archetypes from schema-validated, modular namespaced Knowledge Graph blueprints.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -39,7 +39,7 @@ In RobOS, human software engineers act as **Lead System Architects**. Instead of
 
 ---
 
-## The 9 Supported Application Archetypes
+## The Supported Application Archetypes
 
 RobOS treats applications as first-class, typed architectural nodes rather than generic directories. When you scaffold or import an application into the Knowledge Graph, you declare its explicit archetype:
 
@@ -111,7 +111,7 @@ In large engineering organizations, storing an entire enterprise architecture in
   </div>
 </div>
 
-### The 6 Standard RobOS Namespaced Packages
+### The Standard RobOS Namespaced Packages
 
 ```
 .robos/

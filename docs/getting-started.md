@@ -1,7 +1,8 @@
 ---
 title: Installation / Getting Started
 layout: default
-nav_order: 2
+parent: Use RobOS
+nav_order: 1
 ---
 
 # Installation / Getting Started
@@ -87,7 +88,7 @@ cd robos
 # Audit & install dev machine dependencies
 node scripts/install-dev-deps.js
 
-# Install all 30+ apps, .desktop entries, and shared libraries to /usr/local/share/robos/
+# Install all apps, .desktop entries, and shared libraries to /usr/local/share/robos/
 sudo bash packages/desktop-shell/install.sh
 ```
 
@@ -110,7 +111,7 @@ For regulated environments, hardware air-gapping, or developers who want a dedic
 | **Bootable Installer ISO** | `robos-v0.0.7.iso` | Unattended bootable OS installer for bare metal |
 | **VM Disk Image** | `robos-v0.0.7.qcow2` | Ready-to-boot QEMU/KVM virtual machine disk image |
 | **Seed ISO** | `robos-v0.0.7-seed.iso` | Cloud-init seed ISO for VM auto-provisioning |
-| **Packages Bundle** | `robos-v0.0.7-packages.tar.gz` | Complete 30+ native Electron application packages |
+| **Packages Bundle** | `robos-v0.0.7-packages.tar.gz` | Complete native Electron application packages |
 
 👉 **[Download all v0.0.7 binaries & checksums on GitHub Releases](https://github.com/nddipiazza/robos/releases/tag/v0.0.7)**
 
@@ -255,7 +256,7 @@ When you first launch RobOS or log into the desktop, you can onboard your organi
 - [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — For greenfield startups and new ventures: provision root administrator credentials, initialize VCS organizations, scaffold foundational squads, and configure AI provider keys.
 
 ### 🛠️ Developer Application Wizards
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Launch the **RobOS App Wizard** to scaffold a brand-new application across 9 multi-app archetypes (`DesktopApp`, `FrontEndApp`, `PCGame`, `MobileGame`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`) with API contract specifications and runnable `dev-setup.sh`.
+- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Launch the **RobOS App Wizard** to scaffold a brand-new application across multi-app archetypes (`DesktopApp`, `FrontEndApp`, `PCGame`, `MobileGame`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`) with API contract specifications and runnable `dev-setup.sh`.
 - [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Use the App Wizard's import engine to deeply inspect existing brownfield repositories, auto-detect runtime frameworks, synthesize Backstage `catalog-info.yaml`, and link into the Knowledge Graph.
 
 ---
@@ -284,12 +285,12 @@ xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle
 
 - [**Existing Company Setup**]({{ site.baseurl }}{% link existing-company-setup.md %}) — Connect enterprise directory sync (Okta, Azure AD, OpenLDAP) and map Team Topologies.
 - [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — Bootstrap a new startup, root administrator, and foundational squads.
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Scaffold a new application across 9 archetypes with API contracts and Backstage catalog.
+- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Scaffold a new application across archetypes with API contracts and Backstage catalog.
 - [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Ingest existing brownfield repositories with automated tech stack detection.
-- [**RobOS Skills**]({{ site.baseurl }}{% link robos-skills.md %}) — Master cross-agent AI skills (Claude, Codex, Antigravity, Copilot, Gemini) and 74+ shell macros.
+- [**RobOS Skills**]({{ site.baseurl }}{% link robos-skills.md %}) — Master cross-agent AI skills (Claude, Codex, Antigravity, Copilot, Gemini) and shell macros.
 - [**App Development Flow**]({{ site.baseurl }}{% link app-development-flow.md %}) — Learn the progressive flow of RobOS apps used to build an application.
 - [**AI Agent Review-Based Development**]({{ site.baseurl }}{% link agent-review-development.md %}) — Learn the plan-code-review-verify workflow.
 - [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.
 - [**System Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Explore the 8-pillar SDLC architecture and Knowledge Graph.
-- [**App Suite Catalog**]({{ site.baseurl }}{% link apps.md %}) — Explore all 30+ applications.
+- [**App Suite Catalog**]({{ site.baseurl }}{% link apps.md %}) — Explore all applications.
 - [**💡 Feature Ideas Store on GitHub**](https://github.com/nddipiazza/robos/tree/main/docs/ideas) — Explore raw ideas, structured specs, and community feature requests.

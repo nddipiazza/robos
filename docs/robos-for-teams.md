@@ -1,8 +1,9 @@
 ---
 title: RobOS for Teams
 layout: default
-nav_order: 1.3
+nav_order: 4
 has_children: true
+has_toc: false
 ---
 
 # RobOS for Teams
@@ -21,7 +22,7 @@ For tech leads and anyone deciding whether RobOS fits their team: how it keeps A
 
 <div class="rb-links">
   <a class="rb-link" href="{{ site.baseurl }}{% link big-wins.md %}">
-    <strong>🏆 The 21 big wins</strong>
+    <strong>🏆 The big wins</strong>
     <span>The main advantages over traditional IDEs and coding assistants, in depth.</span>
   </a>
   <a class="rb-link" href="{{ site.baseurl }}{% link walkthroughs.md %}">

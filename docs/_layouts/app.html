@@ -1,0 +1,62 @@
+---
+layout: default
+---
+{%- assign cat = site.data.app_categories | where: "id", page.category | first -%}
+<nav class="rb-app-crumbs" aria-label="Breadcrumb">
+  <a href="{{ '/apps.html' | relative_url }}">App Directory</a>
+  {%- if cat %} <span aria-hidden="true">/</span> <a href="{{ '/apps.html' | relative_url }}#{{ cat.id }}">{{ cat.name }}</a>{% endif %}
+</nav>
+
+<header class="rb-app-header">
+  <div class="rb-app-icon">
+    {%- if page.icon -%}
+    <img src="{{ '/assets/images/icons/' | append: page.icon | relative_url }}" alt="" width="56" height="56">
+    {%- else -%}
+    <span aria-hidden="true">{{ page.title | slice: 0 }}</span>
+    {%- endif -%}
+  </div>
+  <div>
+    <h1>{{ page.title }}</h1>
+    <p class="rb-app-summary">{{ page.summary }}</p>
+    <p class="rb-app-meta">
+      <a href="https://github.com/nddipiazza/robos/tree/main/packages/{{ page.package }}" target="_blank" rel="noopener"><code>packages/{{ page.package }}</code></a>
+    </p>
+  </div>
+</header>
+
+{%- assign body = content | strip -%}
+{%- if body != "" %}
+<div class="rb-app-body">
+{{ content }}
+</div>
+{%- else %}
+<p class="rb-app-empty">This app doesn't have a full guide yet. Browse its source on <a href="https://github.com/nddipiazza/robos/tree/main/packages/{{ page.package }}" target="_blank" rel="noopener">GitHub</a>, or ask about it on <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Discord</a>.</p>
+{%- endif %}
+
+{%- if page.related %}
+<h2>Related guides</h2>
+<ul>
+  {%- for url in page.related -%}
+  {%- assign target = site.html_pages | where: "url", url | first -%}
+  {%- unless target -%}{%- assign target = site.apps | where: "url", url | first -%}{%- endunless -%}
+  <li><a href="{{ url | relative_url }}">{% if target %}{{ target.title }}{% else %}{{ url }}{% endif %}</a></li>
+  {%- endfor %}
+</ul>
+{%- endif %}
+
+{%- if cat %}
+{%- assign siblings = site.apps | where: "category", page.category | sort_natural: "title" -%}
+{%- if siblings.size > 1 %}
+<h2>More in {{ cat.name }}</h2>
+<div class="rb-links">
+  {%- for app in siblings -%}
+  {%- if app.url != page.url %}
+  <a class="rb-link" href="{{ app.url | relative_url }}">
+    <strong>{{ app.title }}</strong>
+    <span>{{ app.summary }}</span>
+  </a>
+  {%- endif -%}
+  {%- endfor %}
+</div>
+{%- endif %}
+{%- endif %}

@@ -141,7 +141,7 @@ Explore our fully realized, production-grade video game project built, verified,
 ## Next Steps
 
 - **[RobOS Projects Showcase]({{ '/projects/' | relative_url }})**: Browse all real-world applications and games built with RobOS.
-- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all 9 multi-app archetypes.
+- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all multi-app archetypes.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
 
