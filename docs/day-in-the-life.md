@@ -1,5 +1,5 @@
 ---
-title: A Day in the Life: Idea to Production
+title: "A Day in the Life: Idea to Production"
 layout: default
 parent: Application Development
 nav_order: 1
