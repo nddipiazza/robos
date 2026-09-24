@@ -1,22 +1,18 @@
 ---
-title: "Game Creator: 11. Spells, AoE & Magic Systems"
+title: "11. Spells & Area Effects"
 layout: default
-parent: Tactical cRPG & Infinity AI Engine
-grand_parent: RobOS Projects
-nav_order: 51
+parent: Creating Your Own Game
+grand_parent: "Tactical cRPG & Infinity AI Engine"
+nav_order: 11
 permalink: /projects/crpg-realm/create-your-own-game/11-spells-aoe-and-magic-systems.html
+description: "How CombatManager resolves spells by id, how Fireball rolls 8d6 against DEX saves, and how to add a new spell with data, code and a test."
 ---
 
-# 11. Spells, Evocation AoE & Tactical Magic Systems
+# 11. Spells, Area Effects and Magic
 {: .no_toc }
 
-A complete engineering guide on building authentic D&D 5e Area-of-Effect (AoE) spells, geometric blast spheres, authentic multi-dice rolling pipelines, and multi-target saving throw resolution in Godot 4.
+In this chapter you add a new spell, Ray of Frost, and prove it works with a feature file. You will learn where spell behaviour actually lives (a `match` block in `CombatManager.gd`), what `data/v1/spells.json` does and does not do, how Fireball finds and damages every enemy in its radius, and where the casting visuals come from.
 {: .fs-6 .fw-300 }
-
-<div style="margin: 1.5rem 0;">
-  <img src="{{ '/assets/images/crpg-realm/crpg_fireball_aoe_architecture.jpg' | relative_url }}" alt="Fireball AoE Magic Engine Architecture Schematic" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #4a3722; box-shadow: 0 4px 24px rgba(0,0,0,0.6);" />
-  <p style="text-align: center; color: #b8860b; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure 11.1: Evocation AoE Magic Engine — Projectile streaking, geometric blast sphere query, 8d6 dice roll, individual Dexterity saving throws, and simultaneous multi-kill resolution.</em></p>
-</div>
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -26,170 +22,330 @@ A complete engineering guide on building authentic D&D 5e Area-of-Effect (AoE) s
 
 ---
 
-## 1. The D&D 5e Evocation Magic Pipeline
+## How it works
 
-Area-of-Effect spells like **Fireball**, **Cone of Cold**, and **Lightning Bolt** are the hallmark of classic tabletop RPGs and tactical video games. Unlike single-target attacks, an AoE spell involves a coordinated multi-entity resolution pipeline:
+### CombatManager is a scene node
 
-1. **Targeting & Range**: The caster selects ground coordinates within cast range (up to 150 feet / 1200px).
-2. **Projectile Streaking**: A fiery orb travels along a linear path toward the detonation point.
-3. **Geometric Blast Sphere**: Upon impact, an explosion detonates across a 20-foot radius (180 screen pixels).
-4. **Authentic Multi-Dice Roll**: The spell rolls authentic dice (e.g. $8d6$, rolling 8 individual six-sided dice, producing scores from 8 to 48) without mocked constants.
-5. **Independent Saving Throws**: Every creature caught inside the radius rolls a D&D 5e saving throw (e.g. Dexterity vs Spell Save DC 14).
-6. **Damage Scaling**:
-   - **Failed Save**: Target suffers full damage ($8d6$).
-   - **Successful Save**: Target suffers half damage ($\lceil \frac{8d6}{2} \rceil$).
-7. **Simultaneous Multi-Target Application**: Floating combat indicators appear over every victim, damage is applied to health pools, and slain creatures transition to `State.DEAD`, spawning lootable corpses.
+`scripts/CombatManager.gd` starts with `class_name CombatManager` / `extends Node`. It is **not** an autoload. Each location scene has a child node named `CombatManager` with this script, and scene scripts reach it with `@onready var combat_mgr = $CombatManager`. `Trap.gd` finds it with `find_child("CombatManager")` and creates a throwaway `CombatManager.new()` if the scene has none.
 
-```mermaid
-flowchart TD
-    Wizard["🧙 Wizard: Cast Fireball(1150, 520)"] --> Projectile["🔥 Fiery Projectile Streaking Vector"]
-    Projectile --> Detonate["💥 Detonation Point (1150, 520)<br/>20ft / 180px Blast Sphere"]
-    
-    Detonate --> Dice["🎲 Roll 8d6 Fire Damage<br/>(Min: 8, Avg: 28, Max: 48)"]
-    Detonate --> Query["🔍 Query Creatures in 180px Radius"]
-    
-    Dice & Query --> ResolveTargets["Multi-Target Damage Loop"]
-    
-    subgraph TargetResolution ["Per-Target Saving Throw & Damage"]
-        ResolveTargets --> CheckSave["Roll Dexterity Save (d20 + DEX mod)"]
-        CheckSave -->|Roll >= DC 14| Pass["Take Half Damage: ceil(Dmg / 2)"]
-        CheckSave -->|Roll < DC 14| Fail["Take Full Damage: Dmg"]
-        Pass & Fail --> Apply["target.take_damage(dmg, wizard)"]
-        Apply --> FCT["Floating Combat Text: -XX FIRE"]
-        Apply --> DeathCheck{"HP <= 0?"}
-        DeathCheck -->|Yes| Corpse["☠️ Corpse Spawned & Lootable"]
-    end
+Two methods resolve spells:
+
+| Method | Signature | Handles |
+|:--|:--|:--|
+| `execute_cast_spell` | `(caster_name: String, spell_id: String, target_name: String = "", target_node: Node = null) -> Dictionary` | Every spell id. Single-target spells are resolved here. AoE ids are forwarded to `execute_aoe_spell` with a fixed radius and `caster_node = null`. |
+| `execute_aoe_spell` | `(caster_name: String, spell_id: String, target_center: Vector2, radius: float = 180.0, save_dc: int = 14, save_stat: String = "DEX", caster_node: Node = null) -> Dictionary` | `fireball`, `burning-hands`, `thunderwave`, `lightning-bolt`, `blizzard`, `stinking-cloud`, `sleep`. |
+
+Fighter manoeuvres `tremor-stomp`, `crushing-cleave` and `rallying-stomp` also go through `execute_cast_spell`, which forwards them to `execute_fighter_ability()`.
+
+### Behaviour is a `match` on the spell id
+
+Before the `match`, `execute_cast_spell` rejects targets that are invisible (unless the caster can see invisible) or protected by Sanctuary (except for `cure-wounds`, `healing-word` and `sanctuary`). Dispel variants skip both checks. Then:
+
+[scripts/CombatManager.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/CombatManager.gd)
+```gdscript
+	match spell_id:
+		"magic-missile":
+			# ...
+			var d1 = randi_range(1, 4) + 1
+			var d2 = randi_range(1, 4) + 1
+			var d3 = randi_range(1, 4) + 1
+			var total_dmg = d1 + d2 + d3
+			_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, tgt])
+			_log_combat("damage", "Arcane energy darts strike %s for %d force damage (%d + %d + %d)!" % [tgt, total_dmg, d1, d2, d3])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+				am.play_sfx("spell_impact")
+			if target_node:
+				if "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_damage(target_node.global_position, total_dmg)
+				if target_node.has_method("take_damage"):
+					target_node.take_damage(total_dmg)
+			return {"success": true, "spell": "magic-missile", "damage": total_dmg, "hit": true, "darts": [d1, d2, d3]}
+		# ... 23 more branches ...
+		_:
+			_log_combat("combat", "%s casts %s!" % [caster_name, spell_id])
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("spell_cast")
+			return {"success": true, "spell": spell_id}
 ```
 
----
+The branches are: `magic-missile`, `cure-wounds`, `healing-word`, `shield`, `sleep`, `mage-armor`, `burning-hands`, `thunderwave`, `bless`, `hold-person`, `spiritual-weapon`, `fireball`, `lightning-bolt`, `blizzard`, `stinking-cloud`, `haste`, `counterspell`, `find-traps`, `knock`, `invisibility`, `dispel-magic`, `sanctuary`, `see-invisibility`, and the three fighter abilities. Any other id hits `_`: it logs "X casts Y!", plays `spell_cast`, and returns `success: true` without doing anything.
 
-## 2. GDScript CombatManager AoE Engine
+### What spells.json is for
 
-The spell pipeline lives inside the autoload singleton `CombatManager.gd`:
+`data/v1/spells.json` is a JSON array of 26 objects:
+
+[data/v1/spells.json](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/data/v1/spells.json)
+```json
+{
+  "id": "magic-missile",
+  "title": "Magic Missile",
+  "level": 1,
+  "school": "Evocation",
+  "castingTime": "1 action",
+  "range": "120 feet",
+  "damageFormula": "3d4+3",
+  "damageType": "force",
+  "icon": "assets/icons/spells/magic_missile.png",
+  "description": "You create three glowing darts of magical force. ..."
+}
+```
+
+`DataStoreV1.load_all_data()` turns each entry into a `SpellData` (`src/generated/v1/SpellData.gd`) and stores it in `DataStore.spells[id]`. No gameplay script reads `DataStore.spells` today: damage, radius, DC and range are all hard-coded in the `match` branches. The JSON entry is the catalogue record for the spell (id, title, icon, rules text) and keeps the data set complete for tools and future UI. **Adding a spell needs both** an entry in `spells.json` and a branch in `CombatManager`.
+
+Which spells a hero knows is `GameState.selected_spells`, an `Array` of ids. `CharacterSelect.gd` only wires three spell buttons (`magic-missile`, `cure-wounds`, `fireball`). Tests set any id through the HTTP API.
+
+### Who calls it
+
+| Caller | When | What it calls |
+|:--|:--|:--|
+| `TacticalBattle.execute_spell_cast(spell_id, target_id, target_pos)` | HTTP action `cast_spell` in TacticalBattle (all `spells/*.feature` files) | Plays `hero.play_cast_spell()`, then `execute_aoe_spell(..., hero)` for the seven AoE ids or `execute_cast_spell()` for the rest. |
+| `TacticalBattle.execute_fireball_spell_cast(target_pos)` | HTTP action `cast_fireball` (feature 15) | `execute_aoe_spell("Ignis the Evoker", "fireball", target_pos, 180.0, 14, "DEX", hero)` |
+| `VillageSquare._cast_spell_at_hound()` / `execute_heal_spell()` | A wizard clicks the hound, or the toolbar casts Cure Wounds | `execute_cast_spell()` |
+| `ActionToolbar._on_action_clicked("spell")` | The toolbar Spell button | Only `cure-wounds` and `find-traps` do anything. See Gotchas. |
+
+`TacticalBattle.execute_spell_cast()` picks these AoE parameters:
+
+| Spell id | Radius (px) | Save |
+|:--|:--|:--|
+| `fireball` | 180 | DC 14 DEX |
+| `burning-hands` | 150 | DC 14 DEX |
+| `thunderwave` | 150 | DC 14 CON |
+| `lightning-bolt` | 450 | DC 14 DEX |
+| `sleep` | 160 | (no save) |
+| `blizzard` | 140 | DC 14 DEX |
+| `stinking-cloud` | 140 | DC 14 CON |
+
+### Fireball step by step
+
+[scripts/CombatManager.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/CombatManager.gd)
+```gdscript
+		"fireball":
+			var dice_rolls: Array[int] = []
+			var total_dmg: int = 0
+			for _k in range(8):
+				var r = randi_range(1, 6)
+				dice_rolls.append(r)
+				total_dmg += r
+			# ... log the cast and the 8d6 roll, play "spell_cast" and "spell_impact"
+			var tree = Engine.get_main_loop() as SceneTree
+			var cur_sc = tree.current_scene if tree else null
+			if cur_sc:
+				var candidate_nodes: Array[Node] = []
+				if "enemies" in cur_sc and cur_sc.enemies is Dictionary:
+					for eid in cur_sc.enemies:
+						# ... add each valid node
+				for child in cur_sc.get_children():
+					if child is TacticalEnemy and not candidate_nodes.has(child):
+						candidate_nodes.append(child)
+
+				for target in candidate_nodes:
+					if not is_instance_valid(target) or target.current_state == TacticalEnemy.State.DEAD:
+						continue
+
+					var dist = target_center.distance_to(target.global_position)
+					if dist <= radius:
+						var d20 = roll_d20()
+						var dex_save_mod = 2
+						if "dex_save_mod" in target:
+							dex_save_mod = target.dex_save_mod
+						# ...
+						var total_save = d20 + dex_save_mod
+						var save_passed = (total_save >= save_dc)
+						var dmg_taken = total_dmg
+						if save_passed:
+							dmg_taken = int(ceil(total_dmg / 2.0))
+						# ... log the save, spawn floating damage
+						target.take_damage(dmg_taken, caster_node)
+						# ... record the hit in targets_hit
+```
+
+1. One 8d6 roll is shared by every target.
+2. Candidates are the scene's `enemies` dictionary (TacticalBattle has one) plus every `TacticalEnemy` that is a direct child of the scene.
+3. Each living enemy within `radius` pixels rolls d20 + `dex_save_mod` (an export on `TacticalEnemy`, default 2). Meeting the DC halves the damage, rounded up.
+4. `take_damage(dmg_taken, caster_node)` applies damage and, when `caster_node` is not null, threat and pack alerts (chapter 10).
+
+The return value:
 
 ```gdscript
-# CombatManager.gd — Multi-Target AoE Evocation Resolution
-func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vector2, radius: float, save_dc: int, save_stat: String, caster_node: Node2D = null) -> Dictionary:
-	var total_dmg: int = 0
-	var dice_rolls: Array[int] = []
+			return {
+				"success": true,
+				"spell": "fireball",
+				"center": {"x": target_center.x, "y": target_center.y},
+				"radius": radius,
+				"damage_dice": dice_rolls,
+				"total_damage": total_dmg,
+				"save_dc": save_dc,
+				"targets_hit": targets_hit,
+				"targets_hit_count": targets_hit.size(),
+				"slain_count": slain_count,
+				"all_slain": (targets_hit.size() > 0 and slain_count == targets_hit.size())
+			}
+```
 
-	# Authentic 8d6 fire damage roll
-	if spell_id == "fireball":
-		for i in range(8):
-			var roll = (randi() % 6) + 1
-			dice_rolls.append(roll)
-			total_dmg += roll
+Each `targets_hit` entry has `id`, `name`, `distance`, `d20`, `save_mod`, `total_save`, `save_passed`, `damage_taken`, `hp_before`, `hp_after` and `slain`. The HTTP API returns this dictionary as `telemetry`.
+
+### Visuals and sound
+
+The cast animation is `HeroPlayer.play_cast_spell(spell_id, target_pos, on_cast_callback)`. It plays `spell_cast`, draws a ring under the caster, then branches on the id. Most spells have their own `_spawn_*_vfx()` function (for example `_spawn_blizzard_vfx`, `_spawn_lightning_bolt_vfx`). Anything else, Fireball included, falls through to a generic orb that flies to `target_pos`:
+
+[scripts/HeroPlayer.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/HeroPlayer.gd)
+```gdscript
 	else:
-		total_dmg = 20
-
-	var hit_targets: Array[Dictionary] = []
-	var slain_count = 0
-	var tree = Engine.get_main_loop() as SceneTree
-	if not tree or not tree.current_scene:
-		return {"success": false, "error": "No active scene"}
-
-	# Query all living enemy nodes within blast radius
-	var enemies = tree.current_scene.get_tree().get_nodes_in_group("enemies")
-	for enemy in enemies:
-		if not is_instance_valid(enemy) or enemy.get("current_state") == 4: # State.DEAD
-			continue
-
-		var dist = target_center.distance_to(enemy.global_position)
-		if dist <= radius:
-			# D&D 5e Dexterity saving throw: d20 + stat modifier
-			var d20 = (randi() % 20) + 1
-			var dex_mod = int(enemy.get("dex_mod")) if "dex_mod" in enemy else 2
-			var save_total = d20 + dex_mod
-			var saved = (save_total >= save_dc)
-
-			# Half damage on successful save
-			var final_dmg = int(ceil(total_dmg / 2.0)) if saved else total_dmg
-
-			# Apply authentic damage
-			if enemy.has_method("take_damage"):
-				enemy.take_damage(final_dmg, caster_node)
-			elif "hp" in enemy:
-				enemy.hp -= final_dmg
-
-			var is_slain = (int(enemy.get("hp")) <= 0)
-			if is_slain:
-				slain_count += 1
-
-			hit_targets.append({
-				"name": enemy.name,
-				"distance": dist,
-				"save_roll": d20,
-				"save_total": save_total,
-				"saved": saved,
-				"damage_taken": final_dmg,
-				"slain": is_slain
-			})
-
-	GameState.add_log_entry("💥 %s casts %s! Blast deals %d fire damage across %d targets (%d slain)." % [
-		caster_name, spell_id.capitalize(), total_dmg, hit_targets.size(), slain_count
-	])
-
-	return {
-		"success": true,
-		"spell_id": spell_id,
-		"center": [target_center.x, target_center.y],
-		"radius": radius,
-		"total_damage_rolled": total_dmg,
-		"dice_rolls": dice_rolls,
-		"targets_hit": hit_targets,
-		"slain_count": slain_count
-	}
+		var orb = Node2D.new()
+		orb.top_level = true
+		orb.global_position = global_position + Vector2(0, -10)
+		var orb_col = Color(1.5, 0.6, 0.2, 1.0) if spell_id == "fireball" else Color(0.4, 0.8, 1.5, 1.0)
+		# ... 16-point Polygon2D circle
+		var flight_time = clamp(global_position.distance_to(target_pos) / 1400.0, 0.16, 0.26)
+		var tw = create_tween()
+		tw.tween_property(orb, "global_position", target_pos, flight_time)
+		await tw.finished
+		orb.queue_free()
+		if spell_id == "fireball":
+			_spawn_fireball_explosion_vfx(target_pos, 180.0)
+		else:
+			_spawn_spell_blast_vfx(target_pos, orb_col)
+		if AudioManager:
+			AudioManager.play_sfx("spell_impact")
+		if on_cast_callback.is_valid():
+			on_cast_callback.call()
 ```
+
+`_spawn_fireball_explosion_vfx()` draws a 32-point `Line2D` ring at the radius, a jagged `Polygon2D` core and 12 sparks, then tweens scale and alpha. The spell SFX keys in `AudioManager.gd` are `spell_cast`, `spell_impact` and `heal_cast`.
+
+The visual and the rules are separate. `play_cast_spell()` does not call `CombatManager`; the caller does that, usually from `on_cast_callback` or after waiting for it.
 
 ---
 
-## 3. Visual Shockwaves & Explosion VFX
+## Step by step: add Ray of Frost
 
-In addition to mathematical damage calculation, creating high-impact tactile feedback requires procedural VFX rings and sparks:
+Ray of Frost is a single-target spell: 1d8 cold damage to one creature.
 
-```gdscript
-# HeroPlayer.gd — Procedural Fireball Blast Shockwave
-func _spawn_fireball_explosion_vfx(hit_pos: Vector2, radius: float) -> void:
-	var vfx = Node2D.new()
-	vfx.top_level = true
-	vfx.global_position = hit_pos
+1. **Add the data entry.** Append an object to the array in `data/v1/spells.json`. The `id` is what everything else keys on.
 
-	# Expanding Shockwave Ring
-	var ring = Line2D.new()
-	ring.width = 6.0
-	ring.default_color = Color(2.0, 0.6, 0.1, 0.95) # High-dynamic range orange
-	var pts: PackedVector2Array = []
-	for i in range(32):
-		var a = i * (PI * 2.0 / 32.0)
-		pts.append(Vector2(cos(a), sin(a)) * (radius * 0.15))
-	pts.append(pts[0])
-	ring.points = pts
-	vfx.add_child(ring)
+   New code — add to `data/v1/spells.json`:
+   ```json
+   {
+     "id": "ray-of-frost",
+     "title": "Ray of Frost",
+     "level": 0,
+     "school": "Evocation",
+     "castingTime": "1 action",
+     "range": "60 feet",
+     "damageFormula": "1d8",
+     "damageType": "cold",
+     "icon": "assets/icons/spells/blizzard.png",
+     "description": "A frigid beam of blue-white light streaks toward a creature within range, dealing 1d8 cold damage."
+   }
+   ```
+   Check the file still parses: `python3 -m json.tool data/v1/spells.json > /dev/null`. A syntax error does not crash the game: `JSON.parse_string()` returns `null` and `DataStore.spells` ends up empty.
 
-	get_parent().add_child(vfx)
+2. **Add the behaviour.** In `scripts/CombatManager.gd`, inside `execute_cast_spell()`, add a branch to `match spell_id:` **above** the final `_:` branch. It follows the `magic-missile` pattern.
 
-	# Procedural Tween Expansion & Fade
-	var tw = create_tween()
-	tw.parallel().tween_property(ring, "scale", Vector2(6.5, 6.5), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(vfx, "modulate:a", 0.0, 0.45)
-	tw.tween_callback(vfx.queue_free)
-```
+   New code — add to the `match` in `execute_cast_spell()`:
+   ```gdscript
+   		"ray-of-frost":
+   			var tgt = target_name if target_name != "" else "target"
+   			var dmg = randi_range(1, 8)
+   			_log_combat("combat", "❄️ %s casts [b]Ray of Frost[/b] at %s!" % [caster_name, tgt])
+   			_log_combat("damage", "A frigid beam strikes %s for %d cold damage!" % [tgt, dmg])
+   			if am and am.has_method("play_sfx"):
+   				am.play_sfx("spell_cast")
+   				am.play_sfx("spell_impact")
+   			if target_node:
+   				if "global_position" in target_node and FloatingTextManager:
+   					FloatingTextManager.spawn_damage(target_node.global_position, dmg)
+   				if target_node.has_method("take_damage"):
+   					target_node.take_damage(dmg)
+   			return {"success": true, "spell": "ray-of-frost", "damage": dmg, "hit": true}
+   ```
+   `am` and `gs` are already defined at the top of the function. `take_damage(dmg)` is called with one argument because `ShadowHound.take_damage(amount)` accepts only one; `TacticalEnemy.take_damage(amount, attacker = null)` accepts both.
+
+3. **Visuals: nothing to do.** `HeroPlayer.play_cast_spell()` has no `"ray-of-frost"` branch, so it uses the generic blue orb and `_spawn_spell_blast_vfx()`. Add an `elif spell_id == "ray-of-frost":` branch with your own `_spawn_*_vfx()` function only if you want a custom look. Keep the `on_cast_callback.call()` at the end of it, as the other VFX functions do.
+
+4. **Routing: nothing to do.** `TacticalBattle.execute_spell_cast()` sends every id that is not in its AoE list to `execute_cast_spell()`, with the enemy node looked up from `enemies[target_id]`.
+
+5. **(Optional) Let players pick it.** To offer it at character creation, add a `BtnSpellRayOfFrost` button to the `SpellGrid` in `scenes/CharacterSelect.tscn` and add `"ray-of-frost"` to the list in the `for sp in [...]` loop in `CharacterSelect.gd`. The loop builds the button name from the id with `"BtnSpell" + _pascal_case(sp.replace("-", "_"))`.
 
 ---
 
-## 4. Automated Cucumber BDD Verification
+## Verify it
 
-The AoE spell pipeline is verified through automated feature specifications (`14_infinity_engine_fireball_aoe_spell.feature`):
+Fireball has a dedicated feature, [tests/e2e/features/normal/15_classic_fireball_goblin_crowd_decimation.feature](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/tests/e2e/features/normal/15_classic_fireball_goblin_crowd_decimation.feature). It sets up six 7-HP goblins around (1150, 520), casts through `cast_fireball`, and checks the 8d6 roll, the DC 14 DEX saves, and that all six die.
+
+```bash
+cd games/crpg-realm
+python3 run_cucumber_tests.py tests/e2e/features/normal/15_classic_fireball_goblin_crowd_decimation.feature
+```
+
+Every spell also has a short feature in `tests/e2e/features/spells/`. Run them all with `python3 run_cucumber_tests.py --spells`.
+
+| Feature | Spell id | Encounter preset |
+|:--|:--|:--|
+| `spell_01_magic_missile` | `magic-missile` | `evasion_scout` |
+| `spell_02_cure_wounds` | `cure-wounds` | `combat_dummy` |
+| `spell_03_healing_word` | `healing-word` | `combat_dummy` |
+| `spell_04_shield` | `shield` | `incoming_striker` |
+| `spell_05_sleep` | `sleep` | `boss_and_minions` |
+| `spell_06_mage_armor` | `mage-armor` | `combat_dummy` |
+| `spell_07_burning_hands` | `burning-hands` | `charging_pack` |
+| `spell_08_thunderwave` | `thunderwave` | `charging_pack` |
+| `spell_09_bless` | `bless` | `combat_dummy` |
+| `spell_10_hold_person` | `hold-person` | `humanoid_and_beast` |
+| `spell_11_invisibility` | `invisibility` | `combat_dummy` |
+| `spell_12_spiritual_weapon` | `spiritual-weapon` | `combat_dummy` |
+| `spell_13_fireball` | `fireball` | `goblin_crowd` |
+| `spell_14_lightning_bolt` | `lightning-bolt` | `corridor_column` |
+| `spell_15_haste` | `haste` | `combat_dummy` |
+| `spell_16_counterspell` | `counterspell` | `dueling_caster` |
+| `spell_17_dispel_magic` | `dispel-magic` (after `mage-armor`) | `combat_dummy` |
+| `spell_18_find_traps` | `find-traps` | `combat_dummy` |
+| `spell_19_knock` | `knock` | `combat_dummy` |
+| `spell_20_tremor_stomp` | `tremor-stomp` | `combat_dummy` |
+| `spell_21_crushing_cleave` | `crushing-cleave` | `combat_dummy` |
+| `spell_22_rallying_stomp` | `rallying-stomp` | `combat_dummy` |
+| `spell_23_blizzard` | `blizzard` | `incoming_striker` |
+| `spell_24_stinking_cloud` | `stinking-cloud` | `incoming_striker` |
+
+The presets are defined in the step `an isolated tactical spell encounter "{enc_type}" with hero "{hero_name}" class "{hero_class}" and {hp:d} HP` in `tests/e2e/features/steps/crpg_steps.py`. `sanctuary` and `see-invisibility` have no file here; they are exercised by `normal/17_invisible_enemy_and_sanctuary_targeting.feature`.
+
+For Ray of Frost, create `tests/e2e/features/spells/spell_25_ray_of_frost.feature`. All steps exist already:
 
 ```gherkin
-Scenario: Wizard casts Fireball on goblin crowd, rolling 8d6 fire damage and decimating the horde
-  Given an isolated test starting in scene "BattleArena" with party "Ignis the Evoker" the "wizard"
-  And the arena contains a dense cluster of 6 hostile goblins with 7 HP each at (1150, 520)
-  When the wizard casts spell "fireball" at target coordinates (1150, 520)
-  Then a fiery projectile streaks to the target point and detonates in a 20ft radius explosion
-  And the spell rolls authentic 8d6 fire damage with minimum 8 damage
-  And each goblin within the 180px blast radius rolls a Dexterity saving throw vs DC 14
-  And all 6 goblins take lethal fire damage exceeding their 7 HP
-  And all 6 goblins are slain simultaneously by the fire blast
-  And the tactical battle signals total victory over the goblin horde
+@spells @ray_of_frost
+Feature: Spell 25 - Ray of Frost (Cantrip)
+  As a wizard
+  I want to hit a single enemy with a beam of cold
+  So that I have a reliable damage option
+
+  Scenario: Frigid beam damages the combat dummy
+    Given an isolated tactical spell encounter "combat_dummy" with hero "Ignis" class "wizard" and 35 HP
+    When the hero targets "dummy_1" and casts spell "ray-of-frost"
+    Then the spell "ray-of-frost" resolves successfully
+    And enemy "dummy_1" takes 1 damage
+    And the activity log contains message "cold damage"
 ```
+
+```bash
+python3 run_cucumber_tests.py tests/e2e/features/spells/spell_25_ray_of_frost.feature
+```
+
+`resolves successfully` alone proves nothing, because the `_` fallback also returns `success: true`. The damage and log checks fail if your branch is missing or misspelled.
+
+---
+
+## Gotchas
+
+- **JSON alone does nothing.** A new id in `spells.json` without a `match` branch falls into `_`, logs "casts", and reports success.
+- **Branch order matters.** A branch placed after `_:` never runs.
+- **Only `TacticalEnemy` is hit by the blast.** Every AoE loop in `execute_aoe_spell` collects `TacticalEnemy` nodes only, so `ShadowHound`, NPCs and the party take no blast damage. The lingering hazards are different: Blizzard and Stinking Cloud leave `IcePatch` / `StinkingCloud` nodes that also affect party members who walk into them (see `spell_23_blizzard.feature` and `spell_24_stinking_cloud.feature`).
+- **Enemies must be direct children of the scene root.** Otherwise they are not candidates (unless the scene script lists them in an `enemies` dictionary, as TacticalBattle does).
+- **Radius is in pixels.** The "20ft radius" in the Fireball log is text. There is no range check between caster and target, and no spell slots or cast cooldown.
+- **`execute_cast_spell` passes `caster_node = null` to AoE spells.** Damage then builds no threat and alerts no pack. `TacticalBattle.execute_spell_cast()` avoids this by calling `execute_aoe_spell(..., hero)` directly.
+- **The toolbar Spell button is limited.** `ActionToolbar._on_action_clicked("spell")` only uses `selected_spells[0]`. For damage spells it looks for a node named `BlightHound`, which no scene has, so nothing happens. For `find-traps` it calls `cm.cast_spell()`, which `CombatManager` does not define. `cure-wounds` works.
+- **Sleep ignores `save_dc`.** The `sleep` branch of `execute_aoe_spell` rolls a 5d8 HP pool and puts the lowest-HP enemies in range to sleep, whatever DC the caller passes (see `spell_05_sleep.feature`).
+
+---
+
+[← Previous: 10. Aggro, tactics and pack AI]({{ '/projects/crpg-realm/create-your-own-game/10-aggro-tactics-and-pack-ai.html' | relative_url }}) · [Next: 12. Build a dungeon end to end →]({{ '/projects/crpg-realm/create-your-own-game/12-step-by-step-game-creation-recipe.html' | relative_url }})
