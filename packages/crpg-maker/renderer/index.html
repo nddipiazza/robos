@@ -128,9 +128,28 @@
 
             <div class="presets-row">
               <span class="presets-label">Presets:</span>
-              <button class="btn-preset" data-w="60" data-h="40">60×40 (Small Room)</button>
-              <button class="btn-preset" data-w="120" data-h="80">120×80 (Standard Area)</button>
+              <button class="btn-preset" data-w="60" data-h="40">60×40 (Small)</button>
+              <button class="btn-preset" data-w="120" data-h="80">120×80 (Standard)</button>
               <button class="btn-preset" data-w="160" data-h="100">160×100 (Expansive)</button>
+              <button class="btn-preset" data-w="320" data-h="240">320×240 (BG1 5120×3840)</button>
+            </div>
+
+            <!-- Background Artwork / Underlay Image -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label for="map-bg-image">Background Artwork / Underlay Image:</label>
+              <div class="input-with-button" style="display: flex; gap: 8px;">
+                <input type="text" id="map-bg-image" class="input-text" placeholder="e.g. assets/maps/candlekeep_bg.jpg" />
+                <button id="btn-browse-bg" class="btn-secondary" type="button" style="padding: 0 12px; white-space: nowrap;">Select</button>
+              </div>
+              <span class="field-hint">Static background art composited under the 5-ft blockout grid</span>
+            </div>
+
+            <div class="form-group">
+              <div class="slider-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label for="map-bg-opacity" style="margin: 0;">Artwork Opacity:</label>
+                <span id="lbl-bg-opacity" style="color: #00bcd4; font-weight: 600; font-size: 12px;">100%</span>
+              </div>
+              <input type="range" id="map-bg-opacity" class="input-range" min="0" max="100" value="100" style="width: 100%; accent-color: #00bcd4;" />
             </div>
           </div>
         </div>
@@ -274,6 +293,12 @@
               <span class="field-hint">Rendered centered on the static map image</span>
             </div>
 
+            <div class="form-group">
+              <label for="obj-sprite">Sprite / Icon Image (Optional):</label>
+              <input type="text" id="obj-sprite" class="input-text" placeholder="e.g. assets/icons/tree.png, props/statue.png" />
+              <span class="field-hint">Visual artwork sprite displayed on canvas at object position</span>
+            </div>
+
             <!-- Door Specific Properties -->
             <div id="door-options" class="door-options-group hidden">
               <label class="checkbox-label">
@@ -381,6 +406,10 @@
             <label class="toggle-switch-label" title="Highlight blocked and difficult collision cells in canvas">
               <input type="checkbox" id="chk-debug-collision" />
               <span>Collision</span>
+            </label>
+            <label class="toggle-switch-label" title="Toggle static background artwork visibility">
+              <input type="checkbox" id="chk-show-bg" checked />
+              <span>Art</span>
             </label>
           </div>
         </div>

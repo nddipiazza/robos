@@ -109,6 +109,8 @@ const PORT_REGISTRY = {
   'voice-prompt':      19188,
   'kgraph-parse-portal': 19192,
   'crpg-maker':        19194,
+  'crpg-campaign':     19195,
+  'crpg-scene-studio': 19196,
 };
 
 

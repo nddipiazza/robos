@@ -1,0 +1,20 @@
+{
+  "name": "crpg-campaign",
+  "version": "1.0.0",
+  "description": "RobOS cRPG Campaign Creator & Game State Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "robos",
+    "crpg",
+    "campaign",
+    "gamestate",
+    "dnd5e",
+    "heroes",
+    "rpg"
+  ],
+  "author": "RobOS Deepmind Team",
+  "license": "Apache-2.0"
+}

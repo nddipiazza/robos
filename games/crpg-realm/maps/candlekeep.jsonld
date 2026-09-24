@@ -9165,5 +9165,6 @@
     "image": "res://assets/blockouts/candlekeep.png",
     "imagePxPerFoot": 16
   },
-  "robos:backgroundImage": "res://assets/blockouts/candlekeep.png"
+  "robos:backgroundImage": "res://assets/blockouts/candlekeep.png",
+  "robos:backgroundOpacity": 1.0
 }

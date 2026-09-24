@@ -1,0 +1,438 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:scene:candlekeep-exterior",
+  "@type": "robos:CRPGScene",
+  "dcterms:title": "Candlekeep Exterior (AR2600)",
+  "dcterms:description": "The exterior courtyards, library grounds, and fortified gates of Candlekeep monastery overlooking the Sea of Swords.",
+  "robos:map": "urn:robos:crpg:battle-map:candlekeep",
+  "robos:campaign": "urn:robos:crpg:campaign:candlekeep-prologue",
+  "robos:dimensions": {
+    "width": 5120,
+    "height": 3840,
+    "feetWidth": 320,
+    "feetHeight": 240
+  },
+  "robos:atmosphere": {
+    "robos:lighting": "Day Sunlight",
+    "robos:ambientAudio": "candlekeep_day_theme.ogg",
+    "robos:fogOfWar": false
+  },
+  "robos:entities": [
+    {
+      "id": "hero-vance-spawn",
+      "type": "hero",
+      "name": "Vance",
+      "heroClass": "Human Fighter (Lv 1)",
+      "portrait": "⚔️",
+      "x": 1120,
+      "y": 620,
+      "facing": 135,
+      "hpMax": 12,
+      "hpCurrent": 12,
+      "ac": 16
+    },
+    {
+      "id": "hero-imoen-spawn",
+      "type": "hero",
+      "name": "Imoen",
+      "heroClass": "Human Rogue (Lv 1)",
+      "portrait": "🏹",
+      "x": 1150,
+      "y": 640,
+      "facing": 135,
+      "hpMax": 10,
+      "hpCurrent": 10,
+      "ac": 15
+    },
+    {
+      "id": "hero-ignis-spawn",
+      "type": "hero",
+      "name": "Ignis",
+      "heroClass": "High Elf Wizard (Lv 1)",
+      "portrait": "🔮",
+      "x": 1090,
+      "y": 640,
+      "facing": 135,
+      "hpMax": 7,
+      "hpCurrent": 7,
+      "ac": 12
+    },
+    {
+      "id": "hero-thrumbar-spawn",
+      "type": "hero",
+      "name": "Thrumbar Ironforge",
+      "heroClass": "Shield Dwarf Cleric (Lv 1)",
+      "portrait": "🛡️",
+      "x": 1120,
+      "y": 660,
+      "facing": 135,
+      "hpMax": 11,
+      "hpCurrent": 11,
+      "ac": 18
+    },
+    {
+      "id": "hero-elora-spawn",
+      "type": "hero",
+      "name": "Elora Nightbreeze",
+      "heroClass": "Wood Elf Ranger (Lv 1)",
+      "portrait": "🌲",
+      "x": 1060,
+      "y": 660,
+      "facing": 135,
+      "hpMax": 12,
+      "hpCurrent": 12,
+      "ac": 15
+    },
+    {
+      "id": "hero-faerun-spawn",
+      "type": "hero",
+      "name": "Faerûn",
+      "heroClass": "Half-Elf Paladin (Lv 1)",
+      "portrait": "✨",
+      "x": 1150,
+      "y": 680,
+      "facing": 135,
+      "hpMax": 12,
+      "hpCurrent": 12,
+      "ac": 18
+    },
+    {
+      "id": "npc-gorion",
+      "type": "npc",
+      "name": "Gorion",
+      "role": "Foster Father & Sage",
+      "portrait": "🧙‍♂️",
+      "x": 3180,
+      "y": 1450,
+      "facing": 225,
+      "dialogueTree": "dlg-gorion-prologue"
+    },
+    {
+      "id": "npc-winthrop",
+      "type": "npc",
+      "name": "Winthrop",
+      "role": "Innkeeper",
+      "portrait": "🍺",
+      "x": 1120,
+      "y": 560,
+      "facing": 180,
+      "dialogueTree": "dlg-winthrop"
+    },
+    {
+      "id": "npc-firebead",
+      "type": "npc",
+      "name": "Firebead Elfmirk",
+      "role": "Visiting Sage",
+      "portrait": "📜",
+      "x": 1180,
+      "y": 580,
+      "facing": 270,
+      "dialogueTree": "dlg-firebead"
+    },
+    {
+      "id": "npc-phlydia",
+      "type": "npc",
+      "name": "Phlydia",
+      "role": "Forgetful Scribe",
+      "portrait": "📖",
+      "x": 1450,
+      "y": 1220,
+      "facing": 90,
+      "dialogueTree": "dlg-phlydia"
+    },
+    {
+      "id": "npc-dreppin",
+      "type": "npc",
+      "name": "Dreppin",
+      "role": "Stablehand",
+      "portrait": "🌾",
+      "x": 3900,
+      "y": 1950,
+      "facing": 0,
+      "dialogueTree": "dlg-dreppin"
+    },
+    {
+      "id": "npc-nessa",
+      "type": "npc",
+      "name": "Nessa",
+      "role": "Sick Cow",
+      "portrait": "🐄",
+      "x": 3950,
+      "y": 1970,
+      "facing": 270,
+      "dialogueTree": "dlg-nessa"
+    },
+    {
+      "id": "npc-priest-oghma",
+      "type": "npc",
+      "name": "Priest of Oghma",
+      "role": "Temple Curate",
+      "portrait": "⛪",
+      "x": 2900,
+      "y": 2650,
+      "facing": 180,
+      "dialogueTree": "dlg-priest-oghma"
+    },
+    {
+      "id": "npc-jondalar",
+      "type": "npc",
+      "name": "Jondalar",
+      "role": "Combat Instructor",
+      "portrait": "🤺",
+      "x": 4050,
+      "y": 1280,
+      "facing": 225,
+      "dialogueTree": "dlg-jondalar"
+    },
+    {
+      "id": "npc-erik",
+      "type": "npc",
+      "name": "Erik",
+      "role": "Sparring Student",
+      "portrait": "🥋",
+      "x": 4120,
+      "y": 1310,
+      "facing": 45,
+      "dialogueTree": "dlg-erik"
+    },
+    {
+      "id": "npc-reevor",
+      "type": "npc",
+      "name": "Reevor",
+      "role": "Storehouse Master",
+      "portrait": "🗝️",
+      "x": 2200,
+      "y": 1750,
+      "facing": 90,
+      "dialogueTree": "dlg-reevor"
+    },
+    {
+      "id": "npc-hull",
+      "type": "npc",
+      "name": "Hull",
+      "role": "Gate Guard",
+      "portrait": "🛡️",
+      "x": 1850,
+      "y": 3350,
+      "facing": 0,
+      "dialogueTree": "dlg-hull"
+    },
+    {
+      "id": "npc-fuller",
+      "type": "npc",
+      "name": "Fuller",
+      "role": "Barracks Quartermaster",
+      "portrait": "📦",
+      "x": 1550,
+      "y": 2400,
+      "facing": 90,
+      "dialogueTree": "dlg-fuller"
+    },
+    {
+      "id": "npc-obe",
+      "type": "npc",
+      "name": "Obe the Illusionist",
+      "role": "Tutorial Tutor",
+      "portrait": "🎩",
+      "x": 3400,
+      "y": 2800,
+      "facing": 270,
+      "dialogueTree": "dlg-obe"
+    },
+    {
+      "id": "npc-tethtoril",
+      "type": "npc",
+      "name": "Tethtoril",
+      "role": "Archmage of Oghma",
+      "portrait": "✨",
+      "x": 3000,
+      "y": 1600,
+      "facing": 135,
+      "dialogueTree": "dlg-tethtoril"
+    },
+    {
+      "id": "enemy-shank",
+      "type": "enemy",
+      "name": "Shank (Assassin)",
+      "aiDirective": "ambush_melee",
+      "hpMax": 12,
+      "hpCurrent": 12,
+      "ac": 13,
+      "x": 2550,
+      "y": 1400,
+      "facing": 270
+    },
+    {
+      "id": "enemy-carbos",
+      "type": "enemy",
+      "name": "Carbos (Assassin)",
+      "aiDirective": "aggressive_flank",
+      "hpMax": 10,
+      "hpCurrent": 10,
+      "ac": 12,
+      "x": 1620,
+      "y": 2300,
+      "facing": 180
+    },
+    {
+      "id": "enemy-rat-1",
+      "type": "enemy",
+      "name": "Giant Rat",
+      "aiDirective": "swarm_aggressive",
+      "hpMax": 4,
+      "hpCurrent": 4,
+      "ac": 10,
+      "x": 2230,
+      "y": 1790,
+      "facing": 135
+    },
+    {
+      "id": "enemy-rat-2",
+      "type": "enemy",
+      "name": "Giant Rat",
+      "aiDirective": "swarm_aggressive",
+      "hpMax": 4,
+      "hpCurrent": 4,
+      "ac": 10,
+      "x": 2270,
+      "y": 1790,
+      "facing": 225
+    },
+    {
+      "id": "enemy-rat-3",
+      "type": "enemy",
+      "name": "Giant Rat",
+      "aiDirective": "swarm_aggressive",
+      "hpMax": 4,
+      "hpCurrent": 4,
+      "ac": 10,
+      "x": 2240,
+      "y": 1830,
+      "facing": 45
+    },
+    {
+      "id": "enemy-rat-4",
+      "type": "enemy",
+      "name": "Giant Rat",
+      "aiDirective": "swarm_aggressive",
+      "hpMax": 4,
+      "hpCurrent": 4,
+      "ac": 10,
+      "x": 2280,
+      "y": 1830,
+      "facing": 315
+    },
+    {
+      "id": "portal-inn-entrance",
+      "type": "portal",
+      "name": "Candlekeep Inn Portal",
+      "targetScene": "candlekeep-inn-interior",
+      "targetX": 240,
+      "targetY": 380,
+      "x": 1070,
+      "y": 550,
+      "facing": 0
+    },
+    {
+      "id": "portal-central-library",
+      "type": "portal",
+      "name": "Central Library Portal",
+      "targetScene": "candlekeep-library",
+      "targetX": 500,
+      "targetY": 600,
+      "x": 3180,
+      "y": 1380,
+      "facing": 0
+    },
+    {
+      "id": "portal-priest-quarters",
+      "type": "portal",
+      "name": "Priest Quarters Portal",
+      "targetScene": "candlekeep-priest-quarters",
+      "targetX": 180,
+      "targetY": 220,
+      "x": 2530,
+      "y": 1380,
+      "facing": 0
+    },
+    {
+      "id": "portal-barracks",
+      "type": "portal",
+      "name": "Bunkhouse / Barracks Portal",
+      "targetScene": "candlekeep-barracks",
+      "targetX": 200,
+      "targetY": 280,
+      "x": 1580,
+      "y": 2350,
+      "facing": 0
+    },
+    {
+      "id": "portal-infirmary",
+      "type": "portal",
+      "name": "Infirmary / Temple of Oghma",
+      "targetScene": "candlekeep-infirmary",
+      "targetX": 300,
+      "targetY": 400,
+      "x": 2920,
+      "y": 2620,
+      "facing": 0
+    },
+    {
+      "id": "portal-gates",
+      "type": "portal",
+      "name": "Coast Way Gates",
+      "targetScene": "coast-way-world-map",
+      "targetX": 100,
+      "targetY": 100,
+      "x": 1850,
+      "y": 3480,
+      "facing": 180
+    },
+    {
+      "id": "prop-inn-barrel",
+      "type": "container",
+      "name": "Inn Porch Barrel",
+      "lockDc": 0,
+      "loot": [
+        "12 gp",
+        "Dagger",
+        "Flint and Steel"
+      ],
+      "x": 1020,
+      "y": 620,
+      "facing": 90
+    },
+    {
+      "id": "prop-storehouse-chest",
+      "type": "container",
+      "name": "Storehouse Chest",
+      "lockDc": 12,
+      "loot": [
+        "Potion of Healing",
+        "Antidote",
+        "25 gp"
+      ],
+      "x": 2280,
+      "y": 1780,
+      "facing": 0
+    },
+    {
+      "id": "prop-barracks-chest",
+      "type": "container",
+      "name": "Barracks Chest",
+      "lockDc": 15,
+      "loot": [
+        "Hull's Longsword",
+        "Heavy Crossbow",
+        "20x Crossbow Bolts"
+      ],
+      "x": 1620,
+      "y": 2450,
+      "facing": 270
+    }
+  ]
+}

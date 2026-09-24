@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS cRPG Scene Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-branding">
+        <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        <div>
+          <h1 class="header-title">RobOS cRPG Scene Studio</h1>
+          <span class="header-subtitle">5120×3840 Scene Stage, Hero Spawns & Infinity AI Directives</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="control-group">
+          <label for="scene-select">Scene:</label>
+          <select id="scene-select">
+            <option value="">(Loading scenes...)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="map-select">Battle Map:</label>
+          <select id="map-select">
+            <option value="">(Select Map)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="campaign-select">Campaign:</label>
+          <select id="campaign-select">
+            <option value="">(Select Campaign)</option>
+          </select>
+        </div>
+
+        <button id="btn-new-scene" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New
+        </button>
+        <button id="btn-save-scene" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Scene
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Left Sidebar: Entity Placement Palette -->
+      <aside class="palette-sidebar">
+        <div class="palette-header">
+          <h2>Entity Palette</h2>
+          <span class="palette-hint">Click item to spawn</span>
+        </div>
+
+        <div class="palette-scroll">
+          <!-- Category 1: Party Heroes -->
+          <div class="palette-category">
+            <div class="category-title">Party Heroes (from Campaign)</div>
+            <div class="palette-items" id="hero-palette-items">
+              <!-- Dynamically populated from linked campaign -->
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Vance" data-class="Fighter" data-portrait="⚔️">
+                <span class="btn-icon">⚔️</span>
+                <span class="btn-label">Vance (Fighter)</span>
+              </button>
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Imoen" data-class="Rogue" data-portrait="🏹">
+                <span class="btn-icon">🏹</span>
+                <span class="btn-label">Imoen (Rogue)</span>
+              </button>
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Ignis" data-class="Wizard" data-portrait="🔮">
+                <span class="btn-icon">🔮</span>
+                <span class="btn-label">Ignis (Wizard)</span>
+              </button>
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Thrumbar" data-class="Cleric" data-portrait="🛡️">
+                <span class="btn-icon">🛡️</span>
+                <span class="btn-label">Thrumbar (Cleric)</span>
+              </button>
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Elora" data-class="Ranger" data-portrait="🌲">
+                <span class="btn-icon">🌲</span>
+                <span class="btn-label">Elora (Ranger)</span>
+              </button>
+              <button class="palette-btn hero-btn" data-type="hero" data-name="Faerûn" data-class="Paladin" data-portrait="✨">
+                <span class="btn-icon">✨</span>
+                <span class="btn-label">Faerûn (Paladin)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category 2: Friendly NPCs -->
+          <div class="palette-category">
+            <div class="category-title">Friendly NPCs & Sages</div>
+            <div class="palette-items">
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Gorion" data-role="Foster Father & Sage">
+                <span class="btn-icon">🧙‍♂️</span>
+                <span class="btn-label">Gorion</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Winthrop" data-role="Innkeeper">
+                <span class="btn-icon">🍺</span>
+                <span class="btn-label">Winthrop (Inn)</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Firebead Elfmirk" data-role="Visiting Mage">
+                <span class="btn-icon">📜</span>
+                <span class="btn-label">Firebead</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Phlydia" data-role="Forgetful Scribe">
+                <span class="btn-icon">📖</span>
+                <span class="btn-label">Phlydia</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Dreppin" data-role="Stablehand">
+                <span class="btn-icon">🌾</span>
+                <span class="btn-label">Dreppin</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Nessa" data-role="Sick Cow">
+                <span class="btn-icon">🐄</span>
+                <span class="btn-label">Nessa (Cow)</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Priest of Oghma" data-role="Temple Curate">
+                <span class="btn-icon">⛪</span>
+                <span class="btn-label">Priest of Oghma</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Jondalar" data-role="Combat Trainer">
+                <span class="btn-icon">🤺</span>
+                <span class="btn-label">Jondalar</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Hull" data-role="Gate Guard">
+                <span class="btn-icon">🛡️</span>
+                <span class="btn-label">Hull (Guard)</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Reevor" data-role="Storehouse Master">
+                <span class="btn-icon">🗝️</span>
+                <span class="btn-label">Reevor</span>
+              </button>
+              <button class="palette-btn npc-btn" data-type="npc" data-name="Tethtoril" data-role="Archmage">
+                <span class="btn-icon">✨</span>
+                <span class="btn-label">Tethtoril</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category 3: Encounters / Monsters -->
+          <div class="palette-category">
+            <div class="category-title">Combat Encounters (Infinity AI)</div>
+            <div class="palette-items">
+              <button class="palette-btn enemy-btn" data-type="enemy" data-name="Shank" data-ai="ambush_melee" data-hp="12" data-ac="13">
+                <span class="btn-icon">🗡️</span>
+                <span class="btn-label">Shank (Assassin)</span>
+              </button>
+              <button class="palette-btn enemy-btn" data-type="enemy" data-name="Carbos" data-ai="aggressive_flank" data-hp="10" data-ac="12">
+                <span class="btn-icon">🗡️</span>
+                <span class="btn-label">Carbos (Assassin)</span>
+              </button>
+              <button class="palette-btn enemy-btn" data-type="enemy" data-name="Giant Rat" data-ai="swarm_aggressive" data-hp="4" data-ac="10">
+                <span class="btn-icon">🐀</span>
+                <span class="btn-label">Giant Rat</span>
+              </button>
+              <button class="palette-btn enemy-btn" data-type="enemy" data-name="Bounty Hunter" data-ai="tactical_ranged" data-hp="16" data-ac="14">
+                <span class="btn-icon">🏹</span>
+                <span class="btn-label">Bounty Hunter</span>
+              </button>
+              <button class="palette-btn enemy-btn" data-type="enemy" data-name="Skeleton Warrior" data-ai="defensive_tank" data-hp="13" data-ac="13">
+                <span class="btn-icon">💀</span>
+                <span class="btn-label">Skeleton Warrior</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category 4: Interactive Props & Containers -->
+          <div class="palette-category">
+            <div class="category-title">Interactive Containers & Props</div>
+            <div class="palette-items">
+              <button class="palette-btn prop-btn" data-type="container" data-name="Loot Chest" data-prop="chest">
+                <span class="btn-icon">📦</span>
+                <span class="btn-label">Treasure Chest</span>
+              </button>
+              <button class="palette-btn prop-btn" data-type="container" data-name="Grain Barrel" data-prop="barrel">
+                <span class="btn-icon">🛢️</span>
+                <span class="btn-label">Barrel</span>
+              </button>
+              <button class="palette-btn prop-btn" data-type="container" data-name="Storage Crate" data-prop="crate">
+                <span class="btn-icon">🪵</span>
+                <span class="btn-label">Storage Crate</span>
+              </button>
+              <button class="palette-btn prop-btn" data-type="container" data-name="Weapon Rack" data-prop="rack">
+                <span class="btn-icon">⚔️</span>
+                <span class="btn-label">Weapon Rack</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category 5: Transition Portals -->
+          <div class="palette-category">
+            <div class="category-title">Scene Transition Portals</div>
+            <div class="palette-items">
+              <button class="palette-btn portal-btn" data-type="portal" data-name="Candlekeep Inn Portal" data-target="candlekeep-inn-interior">
+                <span class="btn-icon">🚪</span>
+                <span class="btn-label">Inn Interior</span>
+              </button>
+              <button class="palette-btn portal-btn" data-type="portal" data-name="Central Library Portal" data-target="candlekeep-library">
+                <span class="btn-icon">🏛️</span>
+                <span class="btn-label">Central Library</span>
+              </button>
+              <button class="palette-btn portal-btn" data-type="portal" data-name="Priest Quarters Portal" data-target="candlekeep-priest-quarters">
+                <span class="btn-icon">🚪</span>
+                <span class="btn-label">Priest Quarters</span>
+              </button>
+              <button class="palette-btn portal-btn" data-type="portal" data-name="Barracks Portal" data-target="candlekeep-barracks">
+                <span class="btn-icon">🚪</span>
+                <span class="btn-label">Barracks</span>
+              </button>
+              <button class="palette-btn portal-btn" data-type="portal" data-name="Coast Way Gates" data-target="coast-way-world-map">
+                <span class="btn-icon">🗺️</span>
+                <span class="btn-label">Coast Way Gate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Stage Area -->
+      <section class="stage-center">
+        <!-- Stage Toolbar -->
+        <div class="stage-toolbar">
+          <div class="toolbar-left">
+            <button id="btn-fit" class="btn btn-sm btn-secondary" title="Fit to Screen">Fit</button>
+            <button id="btn-zoom-in" class="btn btn-sm btn-secondary" title="Zoom In">+</button>
+            <button id="btn-zoom-out" class="btn btn-sm btn-secondary" title="Zoom Out">−</button>
+            <span class="toolbar-divider"></span>
+            <label class="toolbar-checkbox">
+              <input type="checkbox" id="chk-grid" checked>
+              <span>5ft Grid</span>
+            </label>
+            <label class="toolbar-checkbox">
+              <input type="checkbox" id="chk-collisions" checked>
+              <span>Collisions</span>
+            </label>
+            <label class="toolbar-checkbox">
+              <input type="checkbox" id="chk-labels" checked>
+              <span>Labels</span>
+            </label>
+          </div>
+          <div class="toolbar-right">
+            <span id="canvas-coords">X: 0, Y: 0 (0 ft, 0 ft)</span>
+          </div>
+        </div>
+
+        <!-- Stage Canvas Container -->
+        <div class="stage-canvas-container" id="stage-container">
+          <canvas id="stage-canvas"></canvas>
+          <div class="placement-indicator" id="placement-indicator" style="display:none;">
+            Click anywhere on the map to place <strong id="placement-entity-name"></strong>
+            <button id="btn-cancel-placement" class="btn btn-sm btn-danger">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Inspector -->
+      <aside class="inspector-sidebar">
+        <!-- Atmosphere & Environment Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Atmosphere & Lighting</h2>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label for="atmo-lighting">Lighting Environment</label>
+              <select id="atmo-lighting">
+                <option value="Day Sunlight">Day Sunlight (Clear Sword Coast)</option>
+                <option value="Sunset Dusk">Sunset Dusk (Golden Hour)</option>
+                <option value="Midnight Darkness">Midnight Darkness (Moonlit)</option>
+                <option value="Dungeon Torchlight">Dungeon Torchlight</option>
+                <option value="Misty Fog">Misty Sea Fog</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="atmo-audio">Ambient Audio Track</label>
+              <input type="text" id="atmo-audio" value="candlekeep_day_theme.ogg">
+            </div>
+            <div class="form-group">
+              <label class="toolbar-checkbox">
+                <input type="checkbox" id="atmo-fog">
+                <span>Fog of War Enabled</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Entity Inspector Panel -->
+        <div class="panel flex-1">
+          <div class="panel-header">
+            <h2 id="inspector-entity-title">Entity Inspector</h2>
+            <div class="header-actions">
+              <button id="btn-delete-entity" class="btn btn-sm btn-danger" style="display:none;">Delete</button>
+            </div>
+          </div>
+          <div class="panel-body" id="inspector-body">
+            <div class="empty-inspector-msg" id="empty-inspector-msg">
+              Select an entity on the stage or click an item from the palette on the left to spawn it.
+            </div>
+
+            <div id="inspector-form" style="display:none;">
+              <div class="form-group">
+                <label for="ent-name">Entity Name</label>
+                <input type="text" id="ent-name">
+              </div>
+              <div class="form-group">
+                <label for="ent-type">Type</label>
+                <input type="text" id="ent-type" readonly style="opacity:0.7;">
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="ent-x">Pos X (px)</label>
+                  <input type="number" id="ent-x">
+                </div>
+                <div class="form-group flex-1">
+                  <label for="ent-y">Pos Y (px)</label>
+                  <input type="number" id="ent-y">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="ent-x-ft">Pos X (ft)</label>
+                  <input type="number" id="ent-x-ft" step="0.5">
+                </div>
+                <div class="form-group flex-1">
+                  <label for="ent-y-ft">Pos Y (ft)</label>
+                  <input type="number" id="ent-y-ft" step="0.5">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="ent-facing">Facing Direction (0°–360°)</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="range" id="ent-facing" min="0" max="359" value="135" style="flex:1;">
+                  <span id="facing-degree-label" style="width:40px; font-family:monospace;">135°</span>
+                </div>
+              </div>
+
+              <!-- NPC Fields -->
+              <div id="inspector-npc-fields">
+                <div class="form-group">
+                  <label for="ent-role">NPC Role / Title</label>
+                  <input type="text" id="ent-role" placeholder="e.g. Sage, Innkeeper">
+                </div>
+                <div class="form-group">
+                  <label for="ent-dialogue">Dialogue Tree ID</label>
+                  <input type="text" id="ent-dialogue" placeholder="e.g. dlg-gorion-prologue">
+                </div>
+              </div>
+
+              <!-- Enemy / Infinity AI Fields -->
+              <div id="inspector-enemy-fields" style="display:none;">
+                <div class="form-group">
+                  <label for="ent-ai-directive">Infinity AI Directive</label>
+                  <select id="ent-ai-directive">
+                    <option value="ambush_melee">Ambush Melee (Stealth until close)</option>
+                    <option value="aggressive_flank">Aggressive Flank (Target squishy casters)</option>
+                    <option value="swarm_aggressive">Swarm Aggressive (Overwhelm nearest)</option>
+                    <option value="tactical_ranged">Tactical Ranged (Maintain distance)</option>
+                    <option value="tactical_caster">Tactical Caster (Buff/CC then damage)</option>
+                    <option value="defensive_tank">Defensive Tank (Hold choke points)</option>
+                    <option value="flee_at_low_hp">Flee at Low HP (Retreat to allies)</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="ent-hp">Hit Points (HP)</label>
+                    <input type="number" id="ent-hp" value="10">
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="ent-ac">Armor Class (AC)</label>
+                    <input type="number" id="ent-ac" value="12">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Portal Fields -->
+              <div id="inspector-portal-fields" style="display:none;">
+                <div class="form-group">
+                  <label for="ent-portal-target">Target Scene Slug</label>
+                  <input type="text" id="ent-portal-target" placeholder="e.g. candlekeep-inn-interior">
+                </div>
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="ent-target-x">Spawn X (px)</label>
+                    <input type="number" id="ent-target-x" value="200">
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="ent-target-y">Spawn Y (px)</label>
+                    <input type="number" id="ent-target-y" value="300">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Container Fields -->
+              <div id="inspector-container-fields" style="display:none;">
+                <div class="form-group">
+                  <label for="ent-lock-dc">Lock Pick DC (0 = unlocked)</label>
+                  <input type="number" id="ent-lock-dc" value="0">
+                </div>
+                <div class="form-group">
+                  <label for="ent-loot-items">Contained Items / Gold (comma-separated)</label>
+                  <input type="text" id="ent-loot-items" placeholder="e.g. 15 gp, Potion of Healing">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Footer Status Bar -->
+    <footer class="app-status-bar">
+      <span class="status-indicator"></span>
+      <span id="status-message">Ready</span>
+      <span class="status-filepath" id="status-filepath"></span>
+    </footer>
+  </div>
+
+  <script src="stage-renderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
