@@ -1,0 +1,16 @@
+[project]
+name = "robos-crpg-blockout"
+version = "0.1.0"
+description = "Blockout (greybox) maps for robos-crpg: KGraph map data to background images and collision grids"
+requires-python = ">=3.10"
+dependencies = ["Pillow>=10"]
+
+[project.scripts]
+robos-crpg-blockout = "robos_crpg_blockout.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["robos_crpg_blockout"]

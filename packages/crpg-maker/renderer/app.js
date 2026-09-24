@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const chkShowGrid = document.getElementById('chk-show-grid');
   const chkShowLabels = document.getElementById('chk-show-labels');
   const chkDebugCollision = document.getElementById('chk-debug-collision');
+  const chkShowBg = document.getElementById('chk-show-bg');
 
   // HUD Elements
   const hudFeet = document.getElementById('hud-feet');
@@ -44,6 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const selectTerrain = document.getElementById('map-terrain');
   const inputWidth = document.getElementById('map-width');
   const inputHeight = document.getElementById('map-height');
+  const inputBgImage = document.getElementById('map-bg-image');
+  const inputBgOpacity = document.getElementById('map-bg-opacity');
+  const lblBgOpacity = document.getElementById('lbl-bg-opacity');
+  const btnBrowseBg = document.getElementById('btn-browse-bg');
   const lblGridCells = document.getElementById('lbl-grid-cells');
   const lblPngRes = document.getElementById('lbl-png-res');
 
@@ -52,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const objSelectedBadge = document.getElementById('obj-selected-badge');
   const inputObjId = document.getElementById('obj-id');
   const selectObjType = document.getElementById('obj-type');
+  const inputObjSprite = document.getElementById('obj-sprite');
   const shapeFieldsRect = document.getElementById('shape-fields-rect');
   const shapeFieldsCircle = document.getElementById('shape-fields-circle');
   const shapeFieldsLine = document.getElementById('shape-fields-line');
@@ -190,6 +196,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectTerrain.value = data['robos:terrain'] || data.terrain || 'stone';
     inputWidth.value = data['robos:width'] || data.width || 120;
     inputHeight.value = data['robos:height'] || data.height || 80;
+    const bgImage = data['robos:backgroundImage'] || data.backgroundImage || '';
+    inputBgImage.value = bgImage;
+    const bgOpacity = data['robos:backgroundOpacity'] !== undefined ? Math.round(data['robos:backgroundOpacity'] * 100) : 100;
+    inputBgOpacity.value = bgOpacity;
+    lblBgOpacity.textContent = `${bgOpacity}%`;
+    renderer.backgroundOpacity = bgOpacity / 100.0;
 
     updateDimensionBadges();
     updateStatsPanel(res);
@@ -359,6 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     inputObjLabel.value = obj['dcterms:title'] || obj.label || '';
+    inputObjSprite.value = obj['robos:sprite'] || obj.sprite || '';
     chkDoorOpen.checked = Boolean(obj['robos:open'] || obj.open);
     doorOptionsGroup.classList.toggle('hidden', selectObjType.value !== 'door');
 
@@ -384,6 +397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     inputObjId.value = '';
     inputObjLabel.value = '';
+    inputObjSprite.value = '';
     chkDoorOpen.checked = false;
     doorOptionsGroup.classList.toggle('hidden', selectObjType.value !== 'door');
 
@@ -426,6 +440,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (label) {
       obj['dcterms:title'] = label;
+    }
+
+    const sprite = (inputObjSprite.value || '').trim();
+    if (sprite) {
+      obj['robos:sprite'] = sprite;
     }
 
     if (shape === 'rect') {
@@ -605,6 +624,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   chkDebugCollision.addEventListener('change', () => {
     renderer.debugCollision = chkDebugCollision.checked;
     renderer.render();
+  });
+
+  chkShowBg.addEventListener('change', () => {
+    renderer.showBackground = chkShowBg.checked;
+    renderer.render();
+  });
+
+  inputBgImage.addEventListener('input', () => {
+    if (renderer.mapData) {
+      renderer.mapData['robos:backgroundImage'] = inputBgImage.value.trim();
+      renderer.render();
+    }
+  });
+
+  inputBgOpacity.addEventListener('input', (e) => {
+    const val = Number(e.target.value);
+    lblBgOpacity.textContent = `${val}%`;
+    renderer.backgroundOpacity = val / 100.0;
+    if (renderer.mapData) {
+      renderer.mapData['robos:backgroundOpacity'] = val / 100.0;
+    }
+    renderer.render();
+  });
+
+  btnBrowseBg.addEventListener('click', () => {
+    const defaultVal = inputBgImage.value || 'assets/maps/candlekeep_bg.jpg';
+    const chosen = prompt('Enter background image path (relative to games/crpg-realm/):', defaultVal);
+    if (chosen !== null) {
+      inputBgImage.value = chosen.trim();
+      inputBgImage.dispatchEvent(new Event('input'));
+    }
   });
 
   // View Mode: Canvas vs Compiled PNG
@@ -814,6 +864,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     setStatus(`Saving map: ${slug}...`);
+
+    if (renderer.mapData) {
+      renderer.mapData['dcterms:title'] = (inputTitle.value || '').trim();
+      renderer.mapData['robos:terrain'] = selectTerrain.value;
+      renderer.mapData['robos:width'] = Number(inputWidth.value) || 120;
+      renderer.mapData['robos:height'] = Number(inputHeight.value) || 80;
+      const bg = (inputBgImage.value || '').trim();
+      if (bg) {
+        renderer.mapData['robos:backgroundImage'] = bg;
+        renderer.mapData['robos:backgroundOpacity'] = Number(inputBgOpacity.value) / 100.0;
+      } else {
+        delete renderer.mapData['robos:backgroundImage'];
+        delete renderer.mapData['robos:backgroundOpacity'];
+      }
+    }
+
     const payload = {
       slug,
       data: renderer.mapData,

@@ -19,6 +19,9 @@ class MapCanvasRenderer {
     this.showGrid = true;
     this.showLabels = true;
     this.debugCollision = false;
+    this.showBackground = true;
+    this.backgroundOpacity = 1.0;
+    this.imageCache = new Map();
 
     // Active state
     this.mapData = null;
@@ -81,6 +84,24 @@ class MapCanvasRenderer {
     this.canvas.width = width;
     this.canvas.height = height;
     this.render();
+  }
+
+  getImage(src) {
+    if (!src) return null;
+    let url = src;
+    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('file://')) {
+      url = 'file:///home/ndipiazza/source/robos/games/crpg-realm/' + src.replace(/^games\/crpg-realm\//, '').replace(/^res:\/\//, '');
+    }
+    if (this.imageCache.has(url)) {
+      return this.imageCache.get(url);
+    }
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      this.render();
+    };
+    this.imageCache.set(url, img);
+    return img;
   }
 
   // Coordinate Conversion
@@ -152,16 +173,31 @@ class MapCanvasRenderer {
     ctx.fillStyle = this.TERRAIN_COLORS[terrain] || this.TERRAIN_COLORS.stone;
     ctx.fillRect(origin.x, origin.y, mapPixelW, mapPixelH);
 
-    // Checkerboard floor tile variation (every 5-ft cell)
+    // If background image is present and visible, draw it
+    const bgImageSrc = this.mapData['robos:backgroundImage'] || this.mapData.backgroundImage;
+    if (bgImageSrc && this.showBackground) {
+      const bgImg = this.getImage(bgImageSrc);
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.save();
+        const opacity = this.backgroundOpacity !== undefined ? this.backgroundOpacity : (this.mapData['robos:backgroundOpacity'] || 1.0);
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(bgImg, origin.x, origin.y, mapPixelW, mapPixelH);
+        ctx.restore();
+      }
+    }
+
+    // Checkerboard floor tile variation (every 5-ft cell) if no background or transparent
     const cellPx = this.GRID_FT * s;
     const cols = Math.floor(mapW / this.GRID_FT);
     const rows = Math.floor(mapH / this.GRID_FT);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
-    for (let c = 0; c < cols; c++) {
-      for (let r = 0; r < rows; r++) {
-        if ((c + r) % 2 === 0) {
-          ctx.fillRect(origin.x + c * cellPx, origin.y + r * cellPx, cellPx, cellPx);
+    if (!bgImageSrc || !this.showBackground || this.backgroundOpacity < 0.8) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          if ((c + r) % 2 === 0) {
+            ctx.fillRect(origin.x + c * cellPx, origin.y + r * cellPx, cellPx, cellPx);
+          }
         }
       }
     }
