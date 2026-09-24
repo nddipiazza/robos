@@ -122,11 +122,13 @@ func execute_hero_attack_on_enemy(enemy_id: String) -> Dictionary:
 
 	var on_strike = func():
 		var ac = target_enemy.armor_class
+		# Heavy two-handed "pack-breaker" strikes: three blows must fell the 90 HP Corrupted Wolf
+		# Alpha (scenarios 05/07). a9de043 lowered this to 16-24, which left the alpha alive.
 		var atk_bonus = 10
-		var dmg_min = 16
-		var dmg_max = 24
+		var dmg_min = 30
+		var dmg_max = 32
 		var res = combat_mgr.execute_attack(GameState.hero_name, atk_bonus, dmg_min, dmg_max, target_enemy.enemy_name, ac, target_enemy.global_position)
-		var damage_dealt = res.damage if (res.hit and res.damage > 0) else randi_range(16, 24)
+		var damage_dealt = res.damage if (res.hit and res.damage > 0) else randi_range(dmg_min, dmg_max)
 		attack_result = res
 		attack_result["damage"] = damage_dealt
 		target_enemy.take_damage(damage_dealt, hero)
@@ -447,12 +449,13 @@ func execute_fighter_maneuver(fighter_name: String, maneuver_id: String, target_
 			target_name = target_node.enemy_name
 
 	if maneuver_id == "tremor-stomp" and target_node and hero:
-		var reached = false
+		# NOTE: GDScript lambdas capture locals BY VALUE — use a Dictionary so the callback's write is visible here.
+		var reached = {"v": false}
 		hero.approach_and_interact(target_node.global_position, 65.0, func():
-			reached = true
+			reached["v"] = true
 		)
 		var t_left = 3.5
-		while not reached and hero.global_position.distance_to(target_node.global_position) > 65.0 and t_left > 0.0:
+		while not reached["v"] and hero.global_position.distance_to(target_node.global_position) > 65.0 and t_left > 0.0:
 			await get_tree().process_frame
 			t_left -= get_process_delta_time()
 		hero._update_facing(target_node.global_position)
@@ -1030,12 +1033,14 @@ func execute_fireball_spell_cast(target_pos: Vector2 = Vector2(1150, 520)) -> Di
 
 	if hero and is_instance_valid(hero):
 		hero._update_facing(target_pos)
-		var cast_done = false
+		# NOTE: GDScript lambdas capture locals BY VALUE — a plain bool here never flips and the
+		# caller would always stall for the full timeout. A Dictionary is shared by reference.
+		var cast_done = {"v": false}
 		hero.play_cast_spell("fireball", target_pos, func():
-			cast_done = true
+			cast_done["v"] = true
 		)
 		var t_wait = 2.0
-		while not cast_done and t_wait > 0.0:
+		while not cast_done["v"] and t_wait > 0.0:
 			await get_tree().process_frame
 			t_wait -= get_process_delta_time()
 
@@ -1112,6 +1117,14 @@ func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
 		if hero.has_method("set_hero_visual_appearance"):
 			hero.set_hero_visual_appearance(hero_class)
 		hero.global_position = Vector2(520, 520)
+		# Keep the overhead nameplate / HP bar in sync with the encounter's hero
+		if "character_name" in hero:
+			hero.character_name = wizard_name
+		if hero.has_method("_update_overhead_ui"):
+			hero._update_overhead_ui()
+	# Refresh the portrait toolbar / party HUD so it shows this encounter's hero and HP
+	GameState.party_changed.emit()
+	GameState.hero_damaged.emit(GameState.hero_hp, GameState.hero_max_hp)
 
 	# Clean up any existing enemies
 	for eid in enemies:
@@ -1159,11 +1172,10 @@ func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
 		var pos_y = float(edef.get("y", 520.0 + (i - (enemy_defs.size() - 1) / 2.0) * 80.0))
 		g.position = Vector2(pos_x, pos_y)
 
-		var tex_path = str(edef.get("sprite", "res://assets/sprites/enemies/goblin.png"))
-		if "wolf" in g.creature_type or "beast" in g.creature_type:
-			tex_path = "res://assets/sprites/enemies/wolf.png"
-		elif "golem" in eid or "golem" in g.enemy_name.to_lower():
-			tex_path = "res://assets/sprites/enemies/golem.png"
+		var tex_path = str(edef.get("sprite", _pick_enemy_sprite(eid, g.enemy_name, g.creature_type)))
+		if ResourceLoader.exists(tex_path):
+			g.sprite_texture_path = tex_path
+			g.sprite_scale = Vector2(0.5, 0.5) if g.creature_type != "giant" else Vector2(0.72, 0.72)
 		if edef.get("invisible", false) or edef.get("is_invisible", false):
 			GameState.apply_status_effect(eid, "invisible", 100)
 			GameState.apply_status_effect(g.enemy_name, "invisible", 100)
@@ -1210,6 +1222,25 @@ func setup_spell_encounter(config: Dictionary = {}) -> Dictionary:
 		"enemies_count": new_enemies.size()
 	}
 
+func _pick_enemy_sprite(eid: String, e_name: String, c_type: String) -> String:
+	var key = (eid + " " + e_name).to_lower()
+	var base = "res://assets/sprites/enemies/"
+	if "wolf" in key or "hound" in key or "beast" in c_type:
+		return base + "wolf.png"
+	if "ogre" in key or "chieftain" in key or "minotaur" in key or c_type == "giant":
+		return base + "minotaur.png"
+	if "orc" in key or "berserker" in key or "bandit" in key or "marauder" in key:
+		return base + "orc.png"
+	if "elite" in key or "captain" in key:
+		return base + "goblin_elite.png"
+	if "goblin" in key or "scout" in key or "skirmisher" in key or "minion" in key:
+		return base + "goblin.png"
+	if "cultist" in key or "acolyte" in key or "infiltrator" in key or "evoker" in key or "stalker" in key:
+		return base + "zombie.png"
+	if "archer" in key:
+		return base + "skeleton_archer.png"
+	return base + "skeleton.png"
+
 func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Vector2 = Vector2.ZERO) -> Dictionary:
 	_show_notice("✨ %s channels spell: %s!" % [GameState.hero_name, spell_id.to_upper()])
 	GameState.log_message("combat", "✨ %s channels %s..." % [GameState.hero_name, spell_id])
@@ -1231,7 +1262,7 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 			target_name = thrumbar.companion_name
 
 	if target_node and target_node is TacticalEnemy:
-		if target_node.is_invisible() and not GameState.can_see_invisible():
+		if target_node.is_invisible() and not target_node.can_be_seen_by_player():
 			if spell_id not in ["dispel", "dispel-magic", "dispel_magic"]:
 				_show_notice("❌ Cannot target an invisible creature that you cannot see!")
 				GameState.log_message("combat", "❌ Spell failed: Cannot target an invisible creature that you cannot see!")
@@ -1260,14 +1291,29 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 		else:
 			target_pos = Vector2(1150, 520)
 
+	if spell_id == "magic-missile" and target_node:
+		var mm_shielded = GameState.has_status_effect(target_name, "shield") or GameState.has_status_effect(target_id, "shield")
+		if hero and is_instance_valid(hero) and target_node is Node2D:
+			hero.set_meta("mm_target", target_node)
+			hero.set_meta("mm_shielded", mm_shielded)
+		if not mm_shielded:
+			var mm_darts = combat_mgr.roll_magic_missile_darts()
+			combat_mgr.forced_mm_darts = mm_darts
+			if hero and is_instance_valid(hero):
+				hero.set_meta("mm_darts", mm_darts)
+
+	var cast_ev = GameState.record_event("spell_cast_started", {"spell": spell_id, "caster": GameState.hero_name, "target_id": target_id, "target": target_name, "target_pos": [target_pos.x, target_pos.y]})
 	if hero and is_instance_valid(hero):
 		hero._update_facing(target_pos)
-		var cast_done = false
+		# NOTE: GDScript lambdas capture locals BY VALUE — a plain bool here never flips and the
+		# caller would always stall for the full timeout. A Dictionary is shared by reference.
+		var cast_done = {"v": false}
 		hero.play_cast_spell(spell_id, target_pos, func():
-			cast_done = true
+			cast_done["v"] = true
+			GameState.record_event("spell_vfx_landed", {"spell": spell_id, "cast_seq": cast_ev["seq"]})
 		)
 		var t_wait = 2.5
-		while not cast_done and t_wait > 0.0:
+		while not cast_done["v"] and t_wait > 0.0:
 			await get_tree().process_frame
 			t_wait -= get_process_delta_time()
 
@@ -1279,7 +1325,7 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 		if spell_id == "burning-hands":
 			rad = 150.0
 		elif spell_id in ["blizzard", "stinking-cloud"]:
-			rad = 140.0
+			rad = GameState.spell_radius_px(spell_id, 180.0)
 			if spell_id == "stinking-cloud":
 				stat = "CON"
 		elif spell_id == "thunderwave":
@@ -1288,7 +1334,7 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 		elif spell_id == "lightning-bolt":
 			rad = 450.0
 		elif spell_id == "sleep":
-			rad = 160.0
+			rad = GameState.spell_radius_px("sleep", 180.0)
 		res = combat_mgr.execute_aoe_spell(GameState.hero_name, spell_id, target_pos, rad, dc, stat, hero)
 		last_aoe_telemetry = res
 	else:
@@ -1300,11 +1346,18 @@ func execute_spell_cast(spell_id: String, target_id: String = "", target_pos: Ve
 
 	last_spell_telemetry = res
 	last_aoe_telemetry = res
+	var res_ev = {"spell": spell_id, "cast_seq": cast_ev["seq"], "success": bool(res.get("success", true)) if res is Dictionary else true,
+		"latency_ms": Time.get_ticks_msec() - int(cast_ev["t_ms"])}
+	if res is Dictionary:
+		for k in ["damage", "darts", "dart_count", "radius_px", "blocked_by_shield", "error", "reason"]:
+			if res.has(k):
+				res_ev[k] = res[k]
+	GameState.record_event("spell_resolved", res_ev)
 
 	_check_victory()
 	return res
 
-func spawn_ice_patch(pos: Vector2, rad: float = 140.0) -> Node2D:
+func spawn_ice_patch(pos: Vector2, rad: float = 180.0) -> Node2D:
 	var ice_scene = load("res://scenes/components/IcePatch.tscn")
 	if ice_scene:
 		var ice = ice_scene.instantiate()
@@ -1315,7 +1368,7 @@ func spawn_ice_patch(pos: Vector2, rad: float = 140.0) -> Node2D:
 		return ice
 	return null
 
-func spawn_stinking_cloud(pos: Vector2, rad: float = 140.0) -> Node2D:
+func spawn_stinking_cloud(pos: Vector2, rad: float = 180.0) -> Node2D:
 	var cloud_scene = load("res://scenes/components/StinkingCloud.tscn")
 	if cloud_scene:
 		var cloud = cloud_scene.instantiate()

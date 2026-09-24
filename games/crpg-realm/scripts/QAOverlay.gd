@@ -32,6 +32,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	_create_step_toolbar()
 	_create_event_viewer()
+	_create_proof_panel()
 	_create_virtual_cursor()
 	_create_scenario_splash()
 
@@ -217,6 +218,98 @@ func set_step(step_text: String, subtitle: String = "", description: String = ""
 	var tw = create_tween()
 	tw.tween_property(step_badge, "modulate", Color(1.5, 1.5, 1.5, 1), 0.15)
 	tw.tween_property(step_badge, "modulate", Color(1, 1, 1, 1), 0.25)
+
+# ── State-API proof panel ─────────────────────────────────────────────────────
+# Every Then-step posts what it verified *and the live values it read back from the
+# GameState API / engine event journal*, so the recorded video carries its own evidence.
+var proof_panel: PanelContainer = null
+var proof_title: Label = null
+var proof_round: Label = null
+var proof_list: VBoxContainer = null
+const PROOF_MAX_LINES := 9
+
+func _create_proof_panel() -> void:
+	proof_panel = PanelContainer.new()
+	proof_panel.position = Vector2(14, 64)
+	proof_panel.custom_minimum_size = Vector2(700, 0)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.06, 0.05, 0.72)
+	style.set_border_width_all(1)
+	style.border_color = Color(0.2, 0.95, 0.55, 0.55)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	proof_panel.add_theme_stylebox_override("panel", style)
+	proof_panel.visible = false
+	add_child(proof_panel)
+	var v = VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
+	proof_panel.add_child(v)
+	var hdr = HBoxContainer.new()
+	v.add_child(hdr)
+	proof_title = Label.new()
+	proof_title.text = "✅ VERIFIED VIA GAME STATE API"
+	proof_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	proof_title.add_theme_color_override("font_color", Color(0.35, 1.0, 0.6))
+	proof_title.add_theme_font_size_override("font_size", 12)
+	hdr.add_child(proof_title)
+	proof_round = Label.new()
+	proof_round.add_theme_color_override("font_color", Color(0.75, 0.9, 1.0))
+	proof_round.add_theme_font_size_override("font_size", 12)
+	hdr.add_child(proof_round)
+	proof_list = VBoxContainer.new()
+	proof_list.add_theme_constant_override("separation", 1)
+	v.add_child(proof_list)
+
+func _process(_delta: float) -> void:
+	if proof_round and proof_panel and proof_panel.visible and has_node("/root/GameState"):
+		var gs = get_node("/root/GameState")
+		proof_round.text = "⏱ IE ROUND %d  ·  %.1fs / %.0fs" % [gs.ie_round, gs.ie_round_elapsed, gs.IE_ROUND_SECONDS]
+
+func clear_proofs(title: String = "") -> void:
+	if not proof_list:
+		return
+	for c in proof_list.get_children():
+		c.queue_free()
+	var short = title if title.length() <= 64 else title.substr(0, 61) + "…"
+	proof_title.text = "✅ VERIFIED VIA GAME STATE API" + ((" — " + short) if short != "" else "")
+	proof_panel.visible = false
+
+func add_proof(check: String, evidence: String = "", passed: bool = true) -> void:
+	if not proof_list:
+		return
+	proof_panel.visible = true
+	var box = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	var l1 = Label.new()
+	l1.text = ("✔ " if passed else "✘ ") + check
+	l1.add_theme_color_override("font_color", Color(0.55, 1.0, 0.65) if passed else Color(1.0, 0.4, 0.4))
+	l1.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.95))
+	l1.add_theme_constant_override("shadow_offset_y", 1)
+	l1.add_theme_font_size_override("font_size", 12)
+	l1.custom_minimum_size = Vector2(680, 0)
+	l1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(l1)
+	if evidence != "":
+		var l2 = Label.new()
+		l2.text = "    ↳ " + evidence
+		l2.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0, 0.95))
+		l2.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.95))
+		l2.add_theme_constant_override("shadow_offset_y", 1)
+		l2.add_theme_font_size_override("font_size", 11)
+		l2.custom_minimum_size = Vector2(680, 0)
+		l2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(l2)
+	proof_list.add_child(box)
+	while proof_list.get_child_count() > PROOF_MAX_LINES:
+		var old = proof_list.get_child(0)
+		proof_list.remove_child(old)
+		old.queue_free()
+	var tw = create_tween()
+	box.modulate = Color(2.0, 2.0, 2.0, 0.0)
+	tw.tween_property(box, "modulate", Color(1, 1, 1, 1), 0.35)
 
 func log_event(event_text: String) -> void:
 	recent_events.append(event_text)

@@ -127,9 +127,15 @@ func _on_action_clicked(action_id: String) -> void:
 						cm.cast_spell("find-traps", GameState.hero_name)
 					else:
 						GameState.log_message("magic", "%s casts Find Traps! Divine divination illuminates all concealed hazards." % GameState.hero_name)
+						var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
 						for child in cur_scene.get_children():
-							if child.has_method("reveal_trap"):
-								child.reveal_trap(GameState.hero_name)
+							if child.has_method("reveal_trap") and not child.get("is_disarmed") and not child.get("is_triggered"):
+								var is_fow_revealed = true
+								if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+									if fow._is_fog_enabled():
+										is_fow_revealed = fow.is_point_explored(child.global_position) or fow.is_point_in_vision(child.global_position)
+								if is_fow_revealed:
+									child.reveal_trap(GameState.hero_name)
 				else:
 					if cur_scene and cur_scene.has_method("execute_spell_on_hound"):
 						var hound = cur_scene.find_child("BlightHound", true, false)

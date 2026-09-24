@@ -26,19 +26,58 @@ var slipped_cooldowns: Dictionary = {}
 @onready var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
 @onready var particles: CPUParticles2D = get_node_or_null("FrostParticles")
 
+var ground_layer: Node2D = null
+
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 	body_entered.connect(_on_body_entered)
+	_setup_ground_layer()
 	_rebuild_visuals()
 	_pulse_glow()
+	_announce_spawn.call_deferred()
+
+func _announce_spawn() -> void:
+	var info = get_ice_patch_info()
+	info["kind"] = "ice_patch"
+	GameState.record_event("hazard_spawned", info)
+
+func _visual_extent() -> float:
+	var m = 0.0
+	if visual_poly:
+		for p in visual_poly.polygon:
+			m = max(m, p.length())
+	return m
+
+## Floor decals must never draw over the creatures standing on them. The parent scene
+## Y-sorts its children, so the ice sheet is re-parented under a pivot placed at the
+## patch's BACK edge: anyone whose feet are on the ice has a larger Y and renders on top.
+func _setup_ground_layer() -> void:
+	y_sort_enabled = true
+	ground_layer = Node2D.new()
+	ground_layer.name = "GroundLayer"
+	add_child(ground_layer)
+	move_child(ground_layer, 0)
+	for n in [visual_poly, outline_line, particles]:
+		if n:
+			n.reparent(ground_layer, false)
+	_position_ground_layer()
+
+func _position_ground_layer() -> void:
+	if not ground_layer:
+		return
+	var back_edge = radius + 6.0
+	ground_layer.position = Vector2(0, -back_edge)
+	for n in ground_layer.get_children():
+		if n is Node2D:
+			n.position = Vector2(0, back_edge)
 
 func _rebuild_visuals() -> void:
 	var pts: PackedVector2Array = []
-	var num_pts = 24
+	var num_pts = 40
 	for i in range(num_pts):
 		var angle = i * (PI * 2.0 / num_pts)
-		pts.append(Vector2(cos(angle) * radius, sin(angle) * radius * 0.65))
+		pts.append(Vector2(cos(angle), sin(angle)) * radius)
 
 	if visual_poly:
 		visual_poly.polygon = pts
@@ -51,6 +90,8 @@ func _rebuild_visuals() -> void:
 		outline_line.width = 3.0
 		outline_line.default_color = Color(0.85, 0.95, 1.0, 0.80)
 
+	_rebuild_frost_detail(pts)
+
 	if collision_shape:
 		var circle_s = CircleShape2D.new()
 		circle_s.radius = radius
@@ -58,10 +99,50 @@ func _rebuild_visuals() -> void:
 
 	if status_label:
 		status_label.text = "❄️ [ICE] " + ice_name
-		status_label.position = Vector2(-120.0, -radius * 0.65 - 22.0)
+		status_label.position = Vector2(-120.0, -radius - 22.0)
 
 	if particles:
 		particles.emission_sphere_radius = radius * 0.85
+		particles.amount = int(clamp(radius / 6.0, 16, 48))
+	_position_ground_layer()
+
+var frost_detail: Node2D = null
+
+func _rebuild_frost_detail(rim_pts: PackedVector2Array) -> void:
+	# Glassy sheen + hairline fractures so the sheet reads as ice rather than a flat disc
+	if not visual_poly:
+		return
+	if frost_detail and is_instance_valid(frost_detail):
+		frost_detail.queue_free()
+	frost_detail = Node2D.new()
+	frost_detail.name = "FrostDetail"
+	visual_poly.add_child(frost_detail)
+	var sheen = Polygon2D.new()
+	var sh_pts: PackedVector2Array = []
+	for p in rim_pts:
+		sh_pts.append(p * 0.72 + Vector2(-radius * 0.12, -radius * 0.14))
+	sheen.polygon = sh_pts
+	sheen.color = Color(0.9, 0.97, 1.0, 0.16)
+	frost_detail.add_child(sheen)
+	var rng = RandomNumberGenerator.new()
+	rng.seed = int(radius * 1000.0) + 7
+	for k in range(9):
+		var crack = Line2D.new()
+		crack.width = 1.4
+		crack.default_color = Color(0.92, 0.98, 1.0, 0.55)
+		var ang = (float(k) + rng.randf() * 0.6) * TAU / 9.0
+		var p0 = Vector2(cos(ang), sin(ang)) * radius * sqrt(rng.randf_range(0.02, 0.55))
+		var cpts: PackedVector2Array = [p0]
+		var dir = ang + rng.randf_range(-1.2, 1.2)
+		var cur = p0
+		for seg in range(4):
+			dir += rng.randf_range(-0.5, 0.5)
+			cur += Vector2(cos(dir), sin(dir)) * radius * rng.randf_range(0.07, 0.14)
+			if cur.length() > radius * 0.95:
+				break
+			cpts.append(cur)
+		crack.points = cpts
+		frost_detail.add_child(crack)
 
 func _pulse_glow() -> void:
 	var tw = create_tween().set_loops()
@@ -114,12 +195,24 @@ func _check_actor_slip(actor: Node2D) -> void:
 	elif actor.has_method("is_prone") and actor.is_prone():
 		is_already_down = true
 
-	if is_moving and not is_already_down:
+	# IE rule: a creature is "in" an area effect when its footprint centre (feet) is inside
+	# the radius — merely brushing the edge with its collision capsule does not count.
+	var feet_inside = actor.global_position.distance_to(global_position) <= radius
+	if is_moving and not is_already_down and feet_inside:
 		trigger_slip(actor)
 
 func trigger_slip(actor: Node2D) -> void:
 	slipped_cooldowns[actor] = 4.5 # Prevent re-slip during prone turn
 	actor_slipped.emit(actor)
+	GameState.record_event("hazard_contact", {
+		"kind": "ice_patch", "effect": "slipped",
+		"actor": str(actor.get("character_name") if "character_name" in actor and str(actor.get("character_name")) != "" else (actor.get("enemy_name") if "enemy_name" in actor else actor.name)),
+		"actor_is_hero": actor is HeroPlayer,
+		"actor_pos": [actor.global_position.x, actor.global_position.y],
+		"distance_from_center": actor.global_position.distance_to(global_position),
+		"radius": radius,
+		"floor_sort_y": ground_layer.global_position.y if ground_layer else global_position.y,
+		"actor_drawn_above_floor": GameState.is_drawn_above(actor, ground_layer)})
 
 	var actor_name = "Character"
 	if "character_name" in actor and actor.character_name != "":
@@ -164,5 +257,11 @@ func get_ice_patch_info() -> Dictionary:
 		"position": [global_position.x, global_position.y],
 		"radius": radius,
 		"duration": duration_seconds,
-		"time_remaining": max(0.0, duration_seconds - elapsed_time)
+		"time_remaining": max(0.0, duration_seconds - elapsed_time),
+		"collision_radius": (collision_shape.shape.radius if (collision_shape and collision_shape.shape is CircleShape2D) else -1.0),
+		"feet": GameState.px_to_feet(radius),
+		"floor_sort_y": (ground_layer.global_position.y if ground_layer else global_position.y),
+		"floor_z": (GameState.effective_z(ground_layer) if ground_layer else 0),
+		"y_sort_enabled": y_sort_enabled,
+		"visual_radius": _visual_extent()
 	}

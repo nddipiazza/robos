@@ -26,12 +26,45 @@ var puff_nodes: Array[Node2D] = []
 @onready var collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
 @onready var particles: CPUParticles2D = get_node_or_null("MistParticles")
 
+var ground_layer: Node2D = null
+var front_layer: Node2D = null
+
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 	body_entered.connect(_on_body_entered)
+	# Volumetric layering: the dense vapour bank is a floor layer pivoted at the cloud's
+	# back edge (so creatures inside the cloud render over it), while thin wisps drift in
+	# FRONT of everyone so characters appear immersed in the gas rather than hidden by it.
+	y_sort_enabled = true
+	ground_layer = Node2D.new()
+	ground_layer.name = "GroundLayer"
+	add_child(ground_layer)
+	move_child(ground_layer, 0)
+	front_layer = Node2D.new()
+	front_layer.name = "FrontWisps"
+	front_layer.z_index = 2
+	add_child(front_layer)
+	if particles:
+		particles.reparent(front_layer, false)
 	_rebuild_mist()
 	_start_mist_undulation()
+	_announce_spawn.call_deferred()
+
+func _announce_spawn() -> void:
+	var info = get_stinking_cloud_info()
+	info["kind"] = "stinking_cloud"
+	GameState.record_event("hazard_spawned", info)
+
+func _visual_extent() -> float:
+	var m = 0.0
+	if ground_layer:
+		for p in ground_layer.get_children():
+			if p is Polygon2D:
+				var local_c = p.position - Vector2(0, radius + 8.0)
+				for v in p.polygon:
+					m = max(m, (local_c + v).length())
+	return m
 
 func _rebuild_mist() -> void:
 	# Clear old puffs
@@ -56,24 +89,42 @@ func _rebuild_mist() -> void:
 		Vector2(-30, 40), Vector2(35, -45), Vector2(60, -20)
 	]
 
+	var back_edge = radius + 8.0
+	if ground_layer:
+		ground_layer.position = Vector2(0, -back_edge)
+	var k_scale = radius / 140.0
 	for idx in range(puff_offsets.size()):
 		var base_offset = puff_offsets[idx]
-		# scale offsets by radius
-		var p_pos = base_offset * (radius / 140.0)
+		var p_pos = base_offset * k_scale
 		var puff = Polygon2D.new()
 		var p_pts: PackedVector2Array = []
-		var p_rad = randf_range(48.0, 75.0) * (radius / 140.0)
-		var lobes = 16
+		var p_rad = randf_range(44.0, 66.0) * k_scale
+		var lobes = 18
 		for i in range(lobes):
 			var a = i * (PI * 2.0 / lobes)
-			var r = p_rad * randf_range(0.85, 1.18)
-			# Isometric ground plane perspective (0.75 y-scale)
-			p_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.75))
+			var r = p_rad * randf_range(0.85, 1.15)
+			p_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.85))
 		puff.polygon = p_pts
 		puff.color = puff_colors[idx % puff_colors.size()]
-		puff.position = p_pos
-		add_child(puff)
+		puff.position = p_pos + (Vector2(0, back_edge) if ground_layer else Vector2.ZERO)
+		(ground_layer if ground_layer else self).add_child(puff)
 		puff_nodes.append(puff)
+
+	# Thin drifting wisps layered in front of the creatures inside the cloud
+	if front_layer:
+		for k in range(7):
+			var wisp = Polygon2D.new()
+			var w_pts: PackedVector2Array = []
+			var w_rad = randf_range(34.0, 52.0) * k_scale
+			for i in range(16):
+				var a = i * (PI * 2.0 / 16.0)
+				w_pts.append(Vector2(cos(a) * w_rad * 1.5, sin(a) * w_rad * 0.55) * randf_range(0.9, 1.1))
+			wisp.polygon = w_pts
+			wisp.color = Color(0.80, 0.90, 0.30, 0.11)
+			var ang = k * TAU / 7.0 + randf() * 0.4
+			wisp.position = Vector2(cos(ang), sin(ang)) * radius * randf_range(0.15, 0.6)
+			front_layer.add_child(wisp)
+			puff_nodes.append(wisp)
 
 	if collision_shape:
 		var circle_s = CircleShape2D.new()
@@ -82,7 +133,7 @@ func _rebuild_mist() -> void:
 
 	if status_label:
 		status_label.text = "🤢 [MIST] " + cloud_name
-		status_label.position = Vector2(-120.0, -radius * 0.75 - 24.0)
+		status_label.position = Vector2(-120.0, -radius * 0.9 - 24.0)
 
 	if particles:
 		particles.emission_sphere_radius = radius * 0.85
@@ -143,12 +194,23 @@ func _check_actor_nausea(actor: Node2D) -> void:
 	elif actor.has_method("is_prone") and actor.is_prone():
 		is_already_down = true
 
-	if is_moving and not is_already_down:
+	# IE rule: the creature's feet must be inside the cloud's radius, not just its capsule edge
+	var feet_inside = actor.global_position.distance_to(global_position) <= radius
+	if is_moving and not is_already_down and feet_inside:
 		trigger_nausea(actor)
 
 func trigger_nausea(actor: Node2D) -> void:
 	cooldowns[actor] = 4.5 # Prevent re-trigger while down
 	actor_nauseated.emit(actor)
+	GameState.record_event("hazard_contact", {
+		"kind": "stinking_cloud", "effect": "nauseated",
+		"actor": str(actor.get("character_name") if "character_name" in actor and str(actor.get("character_name")) != "" else (actor.get("enemy_name") if "enemy_name" in actor else actor.name)),
+		"actor_is_hero": actor is HeroPlayer,
+		"actor_pos": [actor.global_position.x, actor.global_position.y],
+		"distance_from_center": actor.global_position.distance_to(global_position),
+		"radius": radius,
+		"floor_sort_y": ground_layer.global_position.y if ground_layer else global_position.y,
+		"actor_drawn_above_floor": GameState.is_drawn_above(actor, ground_layer)})
 
 	var actor_name = "Character"
 	if "character_name" in actor and actor.character_name != "":
@@ -195,5 +257,12 @@ func get_stinking_cloud_info() -> Dictionary:
 		"position": [global_position.x, global_position.y],
 		"radius": radius,
 		"duration": duration_seconds,
-		"time_remaining": max(0.0, duration_seconds - elapsed_time)
+		"time_remaining": max(0.0, duration_seconds - elapsed_time),
+		"collision_radius": (collision_shape.shape.radius if (collision_shape and collision_shape.shape is CircleShape2D) else -1.0),
+		"feet": GameState.px_to_feet(radius),
+		"floor_sort_y": (ground_layer.global_position.y if ground_layer else global_position.y),
+		"floor_z": (GameState.effective_z(ground_layer) if ground_layer else 0),
+		"y_sort_enabled": y_sort_enabled,
+		"visual_radius": _visual_extent(),
+		"front_wisps_z": (GameState.effective_z(front_layer) if front_layer else 0)
 	}

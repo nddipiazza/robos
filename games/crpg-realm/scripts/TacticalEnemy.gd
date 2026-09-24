@@ -96,12 +96,13 @@ func is_sanctuaried() -> bool:
 func can_be_seen_by_player() -> bool:
 	if not is_invisible():
 		return true
-	return GameState.can_see_invisible()
+	# IE rule: true sight only pierces invisibility within the seer's visual range + LOS
+	return GameState.can_see_invisible_at(global_position)
 
 func can_be_targeted_by_player() -> bool:
 	if current_state == State.DEAD:
 		return false
-	if is_invisible() and not GameState.can_see_invisible():
+	if is_invisible() and not can_be_seen_by_player():
 		return false
 	if is_sanctuaried():
 		return false
@@ -115,7 +116,7 @@ func _update_visibility_visuals() -> void:
 		return
 
 	if is_invisible():
-		if not GameState.can_see_invisible():
+		if not can_be_seen_by_player():
 			# Invisible enemies are NOT visible at all!
 			visible = false
 			if sprite:
@@ -126,7 +127,8 @@ func _update_visibility_visuals() -> void:
 			if sprite:
 				sprite.visible = true
 				if not is_down_prone:
-					sprite.modulate = Color(0.70, 0.85, 1.0, 0.45)
+					# Ethereal true-sight shimmer: pale spectral tint, clearly readable but still "not really there"
+					sprite.modulate = Color(0.95, 1.1, 1.45, 0.6)
 	else:
 		visible = true
 		if sprite:
@@ -168,6 +170,7 @@ func knock_down_prone() -> void:
 	if FloatingTextManager:
 		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "KNOCKED DOWN!", Color(1.0, 0.8, 0.2))
 	GameState.log_message("combat", "💥 %s was knocked down flat on the ground! (Prone - unable to attack or sprint for 1 turn)" % enemy_name)
+	GameState.record_event("prone_start", {"actor": enemy_name, "actor_id": enemy_id, "actor_kind": "enemy", "position": [global_position.x, global_position.y]})
 
 func stand_up_from_prone() -> void:
 	if not is_down_prone or current_state == State.DEAD:
@@ -187,6 +190,7 @@ func stand_up_from_prone() -> void:
 	if FloatingTextManager:
 		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "STANDS UP!", Color(0.4, 0.9, 1.0))
 	GameState.log_message("combat", "🧍 %s spends effort and stands back up from prone." % enemy_name)
+	GameState.record_event("prone_end", {"actor": enemy_name, "actor_id": enemy_id, "actor_kind": "enemy"})
 
 func _setup_sprite() -> void:
 	if sprite and ResourceLoader.exists(sprite_texture_path):
@@ -197,6 +201,7 @@ func _update_ui() -> void:
 	if hp_bar:
 		hp_bar.max_value = max_hp
 		hp_bar.value = current_hp
+		_style_hp_bar()
 	if hp_text:
 		hp_text.text = "%d/%d" % [current_hp, max_hp]
 	if name_label:
@@ -232,6 +237,56 @@ func _update_ui() -> void:
 		"none": is_visible = false
 	if hp_bar: hp_bar.visible = is_visible and can_be_seen_by_player()
 	if hp_text: hp_text.visible = is_visible and can_be_seen_by_player()
+
+var _hp_fill_style: StyleBoxFlat = null
+var _hp_bg_style: StyleBoxFlat = null
+
+func _style_hp_bar() -> void:
+	# Infinity-Engine style hostile health bar: crimson fill that darkens as the creature weakens
+	if _hp_fill_style == null:
+		_hp_fill_style = StyleBoxFlat.new()
+		_hp_fill_style.set_corner_radius_all(2)
+		_hp_bg_style = StyleBoxFlat.new()
+		_hp_bg_style.bg_color = Color(0.08, 0.06, 0.07, 0.9)
+		_hp_bg_style.border_color = Color(0.0, 0.0, 0.0, 0.9)
+		_hp_bg_style.set_border_width_all(1)
+		_hp_bg_style.set_corner_radius_all(2)
+		hp_bar.add_theme_stylebox_override("fill", _hp_fill_style)
+		hp_bar.add_theme_stylebox_override("background", _hp_bg_style)
+	var pct = float(current_hp) / max(1.0, float(max_hp))
+	if not is_hostile:
+		_hp_fill_style.bg_color = Color(0.55, 0.75, 0.55, 1.0)
+	elif pct > 0.5:
+		_hp_fill_style.bg_color = Color(0.9, 0.18, 0.16, 1.0)
+	elif pct > 0.25:
+		_hp_fill_style.bg_color = Color(0.95, 0.55, 0.12, 1.0)
+	else:
+		_hp_fill_style.bg_color = Color(0.6, 0.08, 0.08, 1.0)
+
+var _vis_poll_timer: float = 0.0
+var _last_seen_by_player: bool = true
+
+func _process(delta: float) -> void:
+	# Invisible creatures pop in/out of view as true-sight wearers move in or out of visual range
+	if current_state == State.DEAD or not is_invisible():
+		return
+	_vis_poll_timer -= delta
+	if _vis_poll_timer > 0.0:
+		return
+	_vis_poll_timer = 0.12
+	var seen = can_be_seen_by_player()
+	if seen != _last_seen_by_player:
+		_last_seen_by_player = seen
+		_update_ui()
+		var seer = GameState.get_leader_node()
+		var d = seer.global_position.distance_to(global_position) if seer else -1.0
+		GameState.record_event("true_sight_reveal" if seen else "true_sight_lost", {
+			"target_id": enemy_id, "target": enemy_name, "distance_px": d,
+			"visual_range_px": GameState.VISUAL_RANGE_PX,
+			"line_of_sight": GameState.has_line_of_sight(seer.global_position, global_position) if seer else false,
+			"sprite_opacity": sprite.modulate.a if sprite else 1.0})
+		if seen and FloatingTextManager:
+			FloatingTextManager.spawn_text(global_position + Vector2(0, -40), "REVEALED BY TRUE SIGHT", Color(0.7, 0.85, 1.0))
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.DEAD or GameState.is_game_paused:
@@ -522,7 +577,9 @@ func take_damage(amount: int, attacker: Node2D = null) -> void:
 		if FloatingTextManager:
 			FloatingTextManager.spawn_text(global_position + Vector2(0, -25), "AWAKENED!", Color(1.0, 0.8, 0.2))
 
+	var hp_before = current_hp
 	current_hp = max(0, current_hp - amount)
+	GameState.record_event("damage_applied", {"target_id": enemy_id, "target": enemy_name, "amount": amount, "hp_before": hp_before, "hp_after": current_hp, "attacker": _get_actor_name(attacker) if attacker else ""})
 	_update_ui()
 	
 	if FloatingTextManager:
@@ -628,6 +685,7 @@ func die() -> void:
 	is_down_prone = false
 	velocity = Vector2.ZERO
 	GameState.log_message("damage", "☠ %s was slain! Its corpse can be looted." % enemy_name)
+	GameState.record_event("creature_slain", {"target_id": enemy_id, "target": enemy_name})
 	GameState.add_kill()
 
 	if hp_bar: hp_bar.visible = false
@@ -688,6 +746,6 @@ func loot_corpse(looter: Node2D = null) -> Dictionary:
 
 func _input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if is_invisible() and not GameState.can_see_invisible():
+		if is_invisible() and not can_be_seen_by_player():
 			return
 		body_clicked.emit(self)
