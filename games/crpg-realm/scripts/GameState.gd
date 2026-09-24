@@ -17,6 +17,8 @@ signal party_defeated
 signal trap_detected(trap_id: String, detector_name: String)
 signal trap_disarmed(trap_id: String, disarmer_name: String)
 signal trap_triggered(trap_id: String, victim_name: String)
+signal ie_round_started(round_number: int)
+signal engine_event_recorded(event: Dictionary)
 
 var settings: Dictionary = {
 	"health_bar_mode": "always", # "always", "injured_only", "none"
@@ -29,6 +31,10 @@ var settings: Dictionary = {
 var is_game_paused: bool = false
 var is_party_defeated: bool = false
 var is_detecting_traps: bool = false
+# Infinity Engine rule: once a trap is disarmed or sprung it is gone for good.
+# Keyed "<scene_name>/<trap_id>" -> "disarmed" | "triggered" so the trap stays
+# neutralized when the party leaves the area and comes back.
+var neutralized_traps: Dictionary = {}
 var trap_pulse_accumulator: float = 0.0
 var party_members: Array[Dictionary] = []
 var selected_party_indices: Array[int] = [0]
@@ -155,6 +161,7 @@ func get_stat_modifier(val: int) -> int:
 	return int(floor((val - 10) / 2.0))
 
 func reset_flags() -> void:
+	neutralized_traps.clear()
 	flags = {
 		"partner_conversed": false,
 		"footlocker_looted": false,
@@ -765,6 +772,7 @@ func apply_status_effect(target_name: String, effect_id: String, duration_rounds
 		status_effects_changed.emit(target_name)
 		party_changed.emit()
 		log_message("combat", "%s is now afflicted with [%s]!" % [target_name, effect_id.to_upper()])
+		record_event("status_applied", {"target": target_name, "effect": effect_id})
 	status_durations[target_name + ":" + effect_id] = duration_rounds
 	if effect_id == "invisible" and not status_realtime_timeouts.has(target_name + ":invisible"):
 		status_realtime_timeouts[target_name + ":invisible"] = 60.0
@@ -795,6 +803,7 @@ func remove_status_effect(target_name: String, effect_id: String) -> void:
 	party_changed.emit()
 	if removed_any:
 		log_message("combat", "%s is no longer afflicted with [%s]." % [target_name, effect_id])
+		record_event("status_removed", {"target": target_name, "effect": effect_id})
 
 func override_status_timeout(target_name: String, effect_id: String, duration_seconds: float) -> void:
 	var key = target_name + ":" + effect_id
@@ -879,9 +888,77 @@ func sell_item(item_id: String) -> bool:
 
 
 
+# ── Infinity Engine round clock & engine event journal ───────────────────────
+# IE rule: one combat round = 6 seconds of unpaused real time (RTwP). Timed effects,
+# "down for a turn" knockdowns and hazard saves are all measured against this clock.
+const IE_ROUND_SECONDS := 6.0
+var ie_round: int = 1
+var ie_round_elapsed: float = 0.0
+# Every observable engine outcome (damage, statuses, VFX impacts, hazard contacts, trap
+# state changes, reveals) is journalled with a monotonic sequence number, a millisecond
+# timestamp and the IE round it happened in. E2E tests read it through
+# POST /api/v1/engine/events {"since": seq} to prove *what* happened, *in what order*
+# and *in which round* — not merely that a request returned success.
+var engine_events: Array[Dictionary] = []
+var engine_event_seq: int = 0
+const ENGINE_EVENT_CAP := 800
+
+func record_event(type: String, data: Dictionary = {}) -> Dictionary:
+	engine_event_seq += 1
+	var ev = data.duplicate()
+	ev["seq"] = engine_event_seq
+	ev["type"] = type
+	ev["t_ms"] = Time.get_ticks_msec()
+	ev["round"] = ie_round
+	ev["round_t"] = snappedf(ie_round_elapsed, 0.01)
+	engine_events.append(ev)
+	if engine_events.size() > ENGINE_EVENT_CAP:
+		engine_events.pop_front()
+	engine_event_recorded.emit(ev)
+	return ev
+
+## Effective canvas z of a CanvasItem (sums relative z_index up the tree).
+static func effective_z(n: Node) -> int:
+	var z = 0
+	var cur = n
+	while cur and cur is CanvasItem:
+		z += (cur as CanvasItem).z_index
+		if not (cur as CanvasItem).z_as_relative:
+			break
+		cur = cur.get_parent()
+	return z
+
+## Render-order proof for floor decals: under the parent's Y-sort an actor is drawn on
+## top of a floor layer when its z is >= the layer's z and its feet are below the layer's
+## sort pivot (the hazard's back edge).
+static func is_drawn_above(actor: Node2D, floor_layer: Node2D) -> bool:
+	if not actor or not floor_layer:
+		return false
+	var za = effective_z(actor)
+	var zf = effective_z(floor_layer)
+	if za != zf:
+		return za > zf
+	return actor.global_position.y > floor_layer.global_position.y
+
+func get_engine_events(since_seq: int = 0, type_filter: String = "") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for ev in engine_events:
+		if int(ev.get("seq", 0)) > since_seq and (type_filter == "" or ev.get("type") == type_filter):
+			out.append(ev)
+	return out
+
+func _advance_round_clock(delta: float) -> void:
+	ie_round_elapsed += delta
+	while ie_round_elapsed >= IE_ROUND_SECONDS:
+		ie_round_elapsed -= IE_ROUND_SECONDS
+		ie_round += 1
+		ie_round_started.emit(ie_round)
+		record_event("round_started", {"round_number": ie_round})
+
 func _process(delta: float) -> void:
 	if is_game_paused:
 		return
+	_advance_round_clock(delta)
 	status_tick_accumulator += delta
 	if status_tick_accumulator >= 3.0:
 		status_tick_accumulator = 0.0
@@ -951,6 +1028,102 @@ func is_invisible(target_name: String) -> bool:
 
 func is_sanctuaried(target_name: String) -> bool:
 	return has_status_effect(target_name, "sanctuary")
+
+# ── World scale & Infinity Engine visual range ──────────────────────────────
+# Scale anchor: the classic 20-ft-radius Fireball renders at 180 px, so 1 ft = 9 px.
+const PX_PER_FOOT := 9.0
+# Infinity Engine (BG1/BG2) rule: every creature sees 448 IE units in all directions
+# (the edge of the fog-of-war circle, ~"30 ft" in spell range terms), blocked only by
+# walls/doors — never by other creatures. Scaled to this game's sprite size the sight
+# circle is 340 px, which is exactly the FogOfWar vision_radius.
+const VISUAL_RANGE_PX := 340.0
+
+# Area-of-effect radii in FEET (5e SRD sizes, cross-checked against the Infinity Engine,
+# where Fireball, Stinking Cloud and Dispel Magic all share the same 256-unit projectile).
+const SPELL_AOE_FEET := {
+	"fireball": 20.0,        # 20-ft-radius sphere
+	"stinking-cloud": 20.0,  # 20-ft-radius sphere of nauseating gas (BG2 text: "30-ft radius")
+	"blizzard": 20.0,        # Ice Storm-sized freezing burst that leaves slick ice
+	"dispel-magic": 20.0,    # BG/IWD area dispel: every creature caught in the burst
+	"sleep": 20.0,           # 20-ft-radius sphere
+}
+
+static func spell_radius_px(spell_id: String, fallback_px: float = 180.0) -> float:
+	var key = spell_id.replace("_", "-")
+	if key == "dispel":
+		key = "dispel-magic"
+	if SPELL_AOE_FEET.has(key):
+		return float(SPELL_AOE_FEET[key]) * PX_PER_FOOT
+	return fallback_px
+
+static func feet_to_px(feet: float) -> float:
+	return feet * PX_PER_FOOT
+
+static func px_to_feet(px: float) -> float:
+	return px / PX_PER_FOOT
+
+## Line of sight in the IE sense: only static geometry (walls, closed doors, structures)
+## blocks sight. Characters and Area2D hazards never occlude.
+func has_line_of_sight(from_pos: Vector2, to_pos: Vector2) -> bool:
+	var cur_sc = get_tree().current_scene if get_tree() else null
+	if not cur_sc or not (cur_sc is Node2D):
+		return true
+	var space = (cur_sc as Node2D).get_world_2d().direct_space_state
+	if not space:
+		return true
+	var exclude: Array[RID] = []
+	for _i in range(8):
+		var q = PhysicsRayQueryParameters2D.create(from_pos, to_pos)
+		q.collide_with_areas = false
+		q.collide_with_bodies = true
+		q.exclude = exclude
+		var hit = space.intersect_ray(q)
+		if hit.is_empty():
+			return true
+		var col = hit.get("collider")
+		if col is StaticBody2D:
+			return false
+		exclude.append(hit.get("rid"))
+	return true
+
+## Names/ids under which a party node may carry status effects.
+func _actor_keys_for_node(n: Node) -> Array[String]:
+	var keys: Array[String] = []
+	if n == null:
+		return keys
+	if n.name == "HeroPlayer" or n is HeroPlayer:
+		keys.append(hero_name)
+		keys.append("hero")
+	for prop in ["character_name", "companion_name", "companion_id"]:
+		if prop in n:
+			var v = str(n.get(prop))
+			if v != "" and not keys.has(v):
+				keys.append(v)
+	return keys
+
+## True when some party member has a see-invisibility source (Gem of Seeing,
+## True Seeing, See Invisibility) AND the point is inside that member's visual range
+## with a clear line of sight — the Infinity Engine rule for revealing invisible foes.
+func can_see_invisible_at(world_pos: Vector2) -> bool:
+	for n in get_scene_party_nodes():
+		if not is_instance_valid(n):
+			continue
+		var keys = _actor_keys_for_node(n)
+		var has_sight = false
+		for k in keys:
+			if can_see_invisible(k):
+				has_sight = true
+				break
+		if not has_sight:
+			continue
+		if n.global_position.distance_to(world_pos) > VISUAL_RANGE_PX:
+			continue
+		if has_line_of_sight(n.global_position, world_pos):
+			return true
+	# Scenes without party nodes (menus/tests) fall back to the global check
+	if get_scene_party_nodes().is_empty():
+		return can_see_invisible()
+	return false
 
 func can_see_invisible(actor_name: String = "") -> bool:
 	if actor_name == "" or actor_name == hero_name or actor_name.to_lower() == "hero" or actor_name.to_lower() == hero_name.to_lower():
@@ -1298,6 +1471,12 @@ func pulse_trap_detection() -> void:
 			for child in cur_sc.get_children():
 				if child.has_method("attempt_detection") and not child.get("is_disarmed") and not child.get("is_detected"):
 					child.attempt_detection(th_name)
+
+func mark_trap_neutralized(scene_name: String, p_trap_id: String, how: String) -> void:
+	neutralized_traps["%s/%s" % [scene_name, p_trap_id]] = how
+
+func get_trap_neutralized_state(scene_name: String, p_trap_id: String) -> String:
+	return str(neutralized_traps.get("%s/%s" % [scene_name, p_trap_id], ""))
 
 func get_scene_traps() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

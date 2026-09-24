@@ -201,6 +201,7 @@ func knock_down_prone() -> void:
 		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "KNOCKED PRONE!", Color(1.0, 0.8, 0.2))
 	var h_name = character_name if character_name != "" else GameState.hero_name
 	GameState.log_message("combat", "💥 %s was knocked down flat on the ground! (Prone - unable to act or sprint for 1 turn)" % h_name)
+	GameState.record_event("prone_start", {"actor": h_name, "actor_kind": "hero", "position": [global_position.x, global_position.y]})
 
 func stand_up_from_prone() -> void:
 	if not is_down_prone or GameState.hero_hp <= 0:
@@ -215,6 +216,7 @@ func stand_up_from_prone() -> void:
 		FloatingTextManager.spawn_text(global_position + Vector2(0, -30), "STANDS UP!", Color(0.4, 0.9, 1.0))
 	var h_name = character_name if character_name != "" else GameState.hero_name
 	GameState.log_message("combat", "🧍 %s spends effort and stands back up from prone." % h_name)
+	GameState.record_event("prone_end", {"actor": h_name, "actor_kind": "hero", "position": [global_position.x, global_position.y]})
 
 func _update_invisibility_visual() -> void:
 	if not sprite:
@@ -519,12 +521,32 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 	elif spell_id in ["stinking-cloud", "stinking_cloud"]:
 		await _spawn_stinking_cloud_vfx(target_pos, on_cast_callback)
 	elif spell_id == "magic-missile":
-		for dart_idx in range(3):
-			_spawn_magic_missile_dart(target_pos, dart_idx, func():
-				if dart_idx == 0 and on_cast_callback.is_valid():
-					on_cast_callback.call()
+		# 5e / Infinity Engine: glowing force darts that weave independently and never miss.
+		var dart_values: Array = get_meta("mm_darts", []) if has_meta("mm_darts") else []
+		var dart_count: int = max(1, dart_values.size()) if dart_values.size() > 0 else 3
+		var landed = [0]
+		var all_landed = func():
+			if on_cast_callback.is_valid():
+				on_cast_callback.call()
+		for dart_idx in range(dart_count):
+			var dv = int(dart_values[dart_idx]) if dart_idx < dart_values.size() else -1
+			_spawn_magic_missile_dart(target_pos, dart_idx, dart_count, dv, func():
+				landed[0] += 1
+				if landed[0] == dart_count:
+					all_landed.call()
 			)
-			await get_tree().create_timer(0.08).timeout
+			await get_tree().create_timer(0.14).timeout
+		# Hold the casting pose until the last dart lands
+		var guard_t = 1.5
+		while landed[0] < dart_count and guard_t > 0.0:
+			await get_tree().process_frame
+			guard_t -= get_process_delta_time()
+		if has_meta("mm_darts"):
+			remove_meta("mm_darts")
+		if has_meta("mm_target"):
+			remove_meta("mm_target")
+		if has_meta("mm_shielded"):
+			remove_meta("mm_shielded")
 	else:
 		var orb = Node2D.new()
 		orb.top_level = true
@@ -558,31 +580,164 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		sprite.texture = idle_textures[0]
 	is_attacking = false
 
-func _spawn_magic_missile_dart(target_pos: Vector2, index: int, on_impact: Callable) -> void:
+func _spawn_magic_missile_dart(target_pos: Vector2, index: int, total: int, dart_value: int, on_impact: Callable) -> void:
+	var start_pos = global_position + Vector2(0, -30)
 	var dart = Node2D.new()
 	dart.top_level = true
-	dart.global_position = global_position + Vector2(0, -14)
-	
-	var poly = Polygon2D.new()
-	poly.polygon = PackedVector2Array([Vector2(-6, -3), Vector2(8, 0), Vector2(-6, 3)])
-	poly.color = Color(0.4, 0.9, 1.8, 1.0)
-	dart.add_child(poly)
+	dart.global_position = start_pos
+	dart.z_index = 20
+
+	# Soft outer glow + bright white-hot core (HDR colours bloom in GL Compatibility)
+	var glow = Polygon2D.new()
+	var g_pts: PackedVector2Array = []
+	for i in range(14):
+		var a = i * (PI * 2.0 / 14.0)
+		g_pts.append(Vector2(cos(a) * 15.0, sin(a) * 9.0))
+	glow.polygon = g_pts
+	glow.color = Color(0.35, 0.7, 1.6, 0.45)
+	dart.add_child(glow)
+	var core = Polygon2D.new()
+	core.polygon = PackedVector2Array([Vector2(-9, -4), Vector2(12, 0), Vector2(-9, 4), Vector2(-5, 0)])
+	core.color = Color(1.6, 1.9, 2.4, 1.0)
+	dart.add_child(core)
+
+	# Comet trail
+	var trail = Line2D.new()
+	trail.top_level = true
+	trail.z_index = 19
+	trail.width = 9.0
+	var wc = Curve.new()
+	wc.add_point(Vector2(0.0, 0.0))
+	wc.add_point(Vector2(1.0, 1.0))
+	trail.width_curve = wc
+	var grad = Gradient.new()
+	grad.set_color(0, Color(0.2, 0.5, 1.4, 0.0))
+	grad.set_color(1, Color(0.6, 0.95, 2.0, 0.95))
+	trail.gradient = grad
+	trail.joint_mode = Line2D.LINE_JOINT_ROUND
+	trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	trail.end_cap_mode = Line2D.LINE_CAP_ROUND
+	get_parent().add_child(trail)
 	get_parent().add_child(dart)
 
-	var offset_y = (index - 1) * 25.0
-	var mid_point = (dart.global_position + target_pos) / 2.0 + Vector2(0, offset_y)
-	
+	# Each dart weaves along its own quadratic bezier arc (alternating sides, like BG's homing missiles)
+	var to_target = target_pos - start_pos
+	var perp = Vector2(-to_target.y, to_target.x).normalized()
+	var spread = 0.0 if total == 1 else lerp(-1.0, 1.0, float(index) / float(total - 1))
+	var bulge = (70.0 + randf() * 50.0) * (spread if abs(spread) > 0.01 else (1.0 if index % 2 == 0 else -1.0) * 0.35)
+	var ctrl = start_pos + to_target * 0.45 + perp * bulge - Vector2(0, 40.0 + randf() * 30.0)
+	var hit_offset = Vector2(randf_range(-8, 8), randf_range(-26, -8))
+	# Shared by reference: GDScript lambdas capture locals by value, so the homing
+	# target point lives in a Dictionary that both closures read/write.
+	var imp = {"p": target_pos + hit_offset}
+	# Magic missiles home in on their victim even if it moves mid-flight
+	var homing: Node2D = get_meta("mm_target") if has_meta("mm_target") else null
+	var flight = clamp(start_pos.distance_to(imp["p"]) / 1100.0, 0.38, 0.62)
+	var bez = func(t: float) -> Vector2:
+		return start_pos.lerp(ctrl, t).lerp(ctrl.lerp(imp["p"], t), t)
+
+	var step = func(t: float):
+		if homing and is_instance_valid(homing):
+			imp["p"] = homing.global_position + hit_offset
+		var p: Vector2 = bez.call(t)
+		var tangent = (ctrl.lerp(imp["p"], t) - start_pos.lerp(ctrl, t))
+		if is_instance_valid(dart):
+			dart.global_position = p
+			if tangent.length() > 0.01:
+				dart.rotation = tangent.angle()
+		if is_instance_valid(trail):
+			# Sample the curve behind the dart so the comet tail follows the arc smoothly
+			var tp: PackedVector2Array = []
+			for k in range(10, -1, -1):
+				tp.append(bez.call(max(0.0, t - k * 0.028)))
+			trail.points = tp
 	var tw = create_tween()
-	tw.tween_property(dart, "global_position", mid_point, 0.10)
-	tw.tween_property(dart, "global_position", target_pos, 0.10)
+	tw.tween_method(step, 0.0, 1.0, flight).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await tw.finished
 
 	dart.queue_free()
-	_spawn_spell_blast_vfx(target_pos, Color(0.4, 0.9, 1.8, 1.0))
+	var fade = create_tween()
+	fade.tween_property(trail, "modulate:a", 0.0, 0.18)
+	fade.tween_callback(trail.queue_free)
+
+	var impact_pos: Vector2 = imp["p"]
+	var tgt_pos = homing.global_position if (homing and is_instance_valid(homing)) else target_pos
+	var tgt_id = str(homing.get("enemy_id")) if (homing and is_instance_valid(homing) and "enemy_id" in homing) else ""
+	if has_meta("mm_shielded") and bool(get_meta("mm_shielded")):
+		# Shield (5e): the darts splash harmlessly against a shimmering hexagonal ward
+		_spawn_shield_ripple(tgt_pos + Vector2(0, -16))
+		GameState.record_event("mm_dart_absorbed", {"index": index, "target_id": tgt_id, "impact": [impact_pos.x, impact_pos.y]})
+	else:
+		_spawn_magic_missile_impact(impact_pos)
+		GameState.record_event("mm_dart_impact", {"index": index, "of": total, "value": dart_value, "target_id": tgt_id,
+			"impact": [impact_pos.x, impact_pos.y], "miss_distance_px": impact_pos.distance_to(tgt_pos + Vector2(0, -17)),
+			"flight_s": flight})
+	if dart_value > 0 and FloatingTextManager:
+		FloatingTextManager.spawn_text(impact_pos + Vector2(randf_range(-22, 22), -18 - index * 12), str(dart_value), Color(0.55, 0.9, 1.0), false)
 	if AudioManager:
 		AudioManager.play_sfx("spell_impact")
 	if on_impact.is_valid():
 		on_impact.call()
+
+func _spawn_shield_ripple(center: Vector2) -> void:
+	var fx = Node2D.new()
+	fx.top_level = true
+	fx.z_index = 21
+	fx.global_position = center
+	var hex_pts: PackedVector2Array = []
+	for i in range(7):
+		var a = i * TAU / 6.0 + PI / 6.0
+		hex_pts.append(Vector2(cos(a), sin(a)) * 30.0)
+	var fill = Polygon2D.new()
+	fill.polygon = hex_pts.slice(0, 6)
+	fill.color = Color(0.4, 0.8, 1.6, 0.28)
+	fx.add_child(fill)
+	var rim = Line2D.new()
+	rim.width = 3.0
+	rim.default_color = Color(0.7, 1.2, 2.2, 0.95)
+	rim.points = hex_pts
+	fx.add_child(rim)
+	get_parent().add_child(fx)
+	var tw = create_tween()
+	tw.parallel().tween_property(fx, "scale", Vector2(1.35, 1.35), 0.3).from(Vector2(0.85, 0.85))
+	tw.parallel().tween_property(fx, "modulate:a", 0.0, 0.35)
+	tw.tween_callback(fx.queue_free)
+
+func _spawn_magic_missile_impact(hit_pos: Vector2) -> void:
+	var fx = Node2D.new()
+	fx.top_level = true
+	fx.z_index = 21
+	fx.global_position = hit_pos
+	var flash = Polygon2D.new()
+	var f_pts: PackedVector2Array = []
+	for i in range(16):
+		var a = i * (PI * 2.0 / 16.0)
+		var r = 16.0 if i % 2 == 0 else 7.0
+		f_pts.append(Vector2(cos(a), sin(a)) * r)
+	flash.polygon = f_pts
+	flash.color = Color(1.4, 1.8, 2.4, 1.0)
+	fx.add_child(flash)
+	var ring = Line2D.new()
+	ring.width = 3.0
+	ring.default_color = Color(0.45, 0.85, 2.0, 0.9)
+	var pts: PackedVector2Array = []
+	for i in range(21):
+		var a = i * (PI * 2.0 / 20.0)
+		pts.append(Vector2(cos(a), sin(a) * 0.6) * 18.0)
+	ring.points = pts
+	fx.add_child(ring)
+	for k in range(6):
+		var spark = Polygon2D.new()
+		spark.polygon = PackedVector2Array([Vector2(-2, -2), Vector2(2, -2), Vector2(2, 2), Vector2(-2, 2)])
+		spark.color = Color(0.8, 1.2, 2.2, 1.0)
+		var ang = randf() * TAU
+		spark.position = Vector2(cos(ang), sin(ang)) * randf_range(6.0, 26.0)
+		fx.add_child(spark)
+	get_parent().add_child(fx)
+	var tw = create_tween()
+	tw.parallel().tween_property(fx, "scale", Vector2(2.0, 2.0), 0.28).from(Vector2(0.5, 0.5))
+	tw.parallel().tween_property(fx, "modulate:a", 0.0, 0.32)
+	tw.tween_callback(fx.queue_free)
 
 func _spawn_fireball_explosion_vfx(hit_pos: Vector2, radius: float = 180.0) -> void:
 	var blast = Node2D.new()
@@ -1019,34 +1174,84 @@ func _spawn_counterspell_vfx(target_pos: Vector2, on_impact: Callable) -> void:
 		on_impact.call()
 
 func _spawn_dispel_magic_vfx(target_pos: Vector2, on_impact: Callable) -> void:
-	var dispel_node = Node2D.new()
-	dispel_node.top_level = true
-	dispel_node.global_position = target_pos
+	# Infinity-Engine style area dispel: a mote of anti-magic streaks to the target point,
+	# then a shock ring sweeps out to the full 20-ft burst radius, unravelling enchantments.
+	var radius = GameState.spell_radius_px("dispel-magic", 180.0)
+	var mote = Node2D.new()
+	mote.top_level = true
+	mote.z_index = 20
+	mote.global_position = global_position + Vector2(0, -28)
+	var m_poly = Polygon2D.new()
+	var m_pts: PackedVector2Array = []
+	for i in range(12):
+		var a = i * TAU / 12.0
+		m_pts.append(Vector2(cos(a), sin(a)) * (9.0 if i % 2 == 0 else 5.0))
+	m_poly.polygon = m_pts
+	m_poly.color = Color(1.6, 1.3, 2.2, 1.0)
+	mote.add_child(m_poly)
+	get_parent().add_child(mote)
+	var fly = create_tween()
+	fly.tween_property(mote, "global_position", target_pos, clamp(global_position.distance_to(target_pos) / 1300.0, 0.25, 0.5)).set_trans(Tween.TRANS_SINE)
+	fly.parallel().tween_property(mote, "rotation", TAU * 2.0, 0.5)
+	await fly.finished
+	mote.queue_free()
 
-	var colors = [Color(0.3, 0.9, 1.5, 0.9), Color(1.5, 0.4, 1.2, 0.9), Color(1.5, 1.4, 0.3, 0.9)]
-	for k in range(3):
-		var ring = Line2D.new()
-		ring.width = 3.5
-		ring.default_color = colors[k]
-		var pts: PackedVector2Array = []
-		for i in range(16):
-			var a = i * (PI * 2.0 / 16.0)
-			pts.append(Vector2(cos(a), sin(a)) * (18.0 + k * 12.0))
-		pts.append(pts[0])
-		ring.points = pts
-		dispel_node.add_child(ring)
+	var burst = Node2D.new()
+	burst.top_level = true
+	burst.z_index = 3
+	burst.global_position = target_pos
+	# Translucent anti-magic field
+	var disc = Polygon2D.new()
+	var d_pts: PackedVector2Array = []
+	for i in range(48):
+		var a = i * TAU / 48.0
+		d_pts.append(Vector2(cos(a), sin(a)) * radius)
+	disc.polygon = d_pts
+	disc.color = Color(0.55, 0.3, 0.95, 0.20)
+	burst.add_child(disc)
+	# Bright shock rim at the exact edge of the area of effect
+	var rim = Line2D.new()
+	rim.width = 5.0
+	rim.default_color = Color(1.3, 0.85, 2.0, 0.95)
+	var r_pts = d_pts.duplicate()
+	r_pts.append(d_pts[0])
+	rim.points = r_pts
+	burst.add_child(rim)
+	var inner = Line2D.new()
+	inner.width = 2.0
+	inner.default_color = Color(0.5, 1.2, 1.8, 0.8)
+	var i_pts: PackedVector2Array = []
+	for p in r_pts:
+		i_pts.append(p * 0.62)
+	inner.points = i_pts
+	burst.add_child(inner)
+	# Orbiting arcane runes being torn apart
+	var runes = Node2D.new()
+	burst.add_child(runes)
+	for k in range(10):
+		var rune = Line2D.new()
+		rune.width = 2.5
+		rune.default_color = Color(1.4, 1.1, 2.0, 0.9)
+		var ang = k * TAU / 10.0
+		var c = Vector2(cos(ang), sin(ang)) * radius * 0.82
+		rune.points = PackedVector2Array([c + Vector2(-7, -9), c + Vector2(0, 9), c + Vector2(7, -9), c + Vector2(-7, -2), c + Vector2(7, -2)])
+		runes.add_child(rune)
+	get_parent().add_child(burst)
 
-	get_parent().add_child(dispel_node)
-
+	burst.scale = Vector2(0.08, 0.08)
 	var tw = create_tween()
-	tw.parallel().tween_property(dispel_node, "scale", Vector2(1.8, 1.8), 0.45).from(Vector2(0.4, 0.4))
-	tw.parallel().tween_property(dispel_node, "modulate:a", 0.0, 0.55).from(1.0)
-	tw.tween_callback(dispel_node.queue_free)
-
+	tw.tween_property(burst, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(runes, "rotation", -PI * 0.6, 1.3)
 	if AudioManager:
-		AudioManager.play_sfx("spell_cast")
+		AudioManager.play_sfx("spell_impact")
+	await tw.finished
 	if on_impact.is_valid():
 		on_impact.call()
+	var fade = create_tween()
+	fade.tween_interval(0.55)
+	fade.tween_property(burst, "modulate:a", 0.0, 0.6)
+	fade.parallel().tween_property(runes, "scale", Vector2(1.25, 1.25), 0.6)
+	fade.tween_callback(burst.queue_free)
 
 func _spawn_find_traps_vfx(center_pos: Vector2, on_impact: Callable) -> void:
 	var vfx = Node2D.new()

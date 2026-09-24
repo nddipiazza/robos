@@ -26,18 +26,25 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     Then the current scene is "AncientCatacombs"
     When the player casts spell "find-traps"
     Then all concealed traps in the area are revealed in glowing red runes
+    And traps not yet revealed by fog of war remain concealed
     And the activity log contains message "Find Traps! Divine divination radiates across the area"
 
   Scenario: Thief uses Thieves' Tools to successfully disarm a detected trap
     With the Poison Dart Trap revealed in red highlight, the rogue steps forward with Thieves' Tools.
     The rogue rolls a Dexterity (Thieves' Tools) check against the mechanism's disarm DC 14.
-    Upon succeeding, the pressure plate is safely wedged and dismantled, rendering it harmless.
+    Per Infinity Engine rules a neutralized trap vanishes from the map instead of lingering as a highlight,
+    Its pressure plate is dead too: the rogue can walk straight across it unharmed.
     Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
     When the trap "poison-dart-trap" is revealed
-    And the player orders "Bramble" to disarm trap "poison-dart-trap"
+    Then the trap "poison-dart-trap" is armed and highlighted on the map
+    When the player orders "Bramble" to disarm trap "poison-dart-trap"
     Then the party member is standing next to trap "poison-dart-trap"
     And the trap "poison-dart-trap" is disarmed
+    And the trap "poison-dart-trap" vanishes from the map after the disarm flash
+    And the trap "poison-dart-trap" is no longer appearing on the map
     And the activity log contains message "safely disarmed Concealed Poison Dart Trap with Thieves' Tools"
+    When "Bramble" walks straight across the neutralized trap "poison-dart-trap"
+    Then the trap "poison-dart-trap" does not fire and the party takes no damage
 
   Scenario: Stepping onto an armed trap triggers saving throws, damage, and poison condition
     An unwary warrior marches down the central corridor without checking for hidden hazards.
@@ -77,3 +84,17 @@ Feature: Infinity Engine Traps Detection, Disarming, and Trigger Resolution
     Given an isolated test starting in scene "AncientCatacombs" with party "Lieutenant Vance" the "fighter"
     Then a remote trigger on trap "spike-pit-trap" without walking over it is rejected
 
+  Scenario: A disarmed trap stays gone after the party leaves and re-enters the area
+    Infinity Engine areas remember their state: a trap that has been dismantled never re-arms.
+    Given an isolated test starting in scene "AncientCatacombs" with party "Bramble" the "rogue"
+    When the trap "poison-dart-trap" is revealed
+    And the player orders "Bramble" to disarm trap "poison-dart-trap"
+    Then the trap "poison-dart-trap" is disarmed
+    And the trap "poison-dart-trap" vanishes from the map after the disarm flash
+    When the party leaves and re-enters the current area
+    Then the current scene is "AncientCatacombs"
+    And the engine restored trap "poison-dart-trap" as already neutralized
+    And the trap "poison-dart-trap" is disarmed
+    And the trap "poison-dart-trap" is no longer appearing on the map
+    When "Bramble" walks straight across the neutralized trap "poison-dart-trap"
+    Then the trap "poison-dart-trap" does not fire and the party takes no damage

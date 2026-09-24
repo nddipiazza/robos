@@ -208,6 +208,15 @@ def before_scenario(context, scenario):
             print(f"⚠️ [SetupState] Failed to initialize {target_scene}: {e}")
         time.sleep(0.5)
 
+    # 1b. Reset the on-screen proof panel and remember where this scenario's engine events begin
+    try:
+        from tests.e2e.proof_helpers import clear_proofs, mark
+        clear_proofs(context.web_port, scenario.name)
+        context.scenario_event_mark = mark(context)
+    except Exception as e:
+        context.scenario_event_mark = 0
+        print(f"⚠️ [Proof] Could not reset proof panel: {e}")
+
     # 2. Start FFmpeg recording now that the game is in the exact initial scene!
     ffmpeg_bin = resolve_ffmpeg_bin()
     ffmpeg_log = open(os.path.join(REPORTS_DIR, "ffmpeg.log"), "a", encoding="utf-8")
@@ -295,6 +304,7 @@ def before_scenario(context, scenario):
         print(f"⚠️ [Splash] Could not display scenario splash: {e}")
 
 def before_step(context, step):
+    context.step_proofs = []
     try:
         from tests.e2e.step_descriptions import get_step_description
         url = f"http://127.0.0.1:{context.web_port}/api/v1/qa/set_step"
@@ -311,8 +321,38 @@ def before_step(context, step):
     except Exception:
         pass
 
+def after_step(context, step):
+    """Post every verification (and the live values it read back) onto the recorded video."""
+    try:
+        from tests.e2e.proof_helpers import post_proof
+        proofs = getattr(context, "step_proofs", []) or []
+        passed = step.status.name == "passed"
+        if step.step_type == "then" or proofs or not passed:
+            evidence = "  |  ".join(proofs)
+            if not passed:
+                err = str(getattr(step, "error_message", "") or "").strip().splitlines()
+                evidence = (err[0][:220] if err else "assertion failed") + (("  |  " + evidence) if evidence else "")
+            post_proof(context.web_port, step.name, evidence, passed)
+            time.sleep(0.45 if proofs else 0.2)
+    except Exception as e:
+        print(f"⚠️ [Proof] Could not post step proof: {e}")
+
+
 def after_scenario(context, scenario):
-    time.sleep(0.5)
+    # Automatic, scenario-wide proof: no visible label renders a "tofu" box
+    try:
+        from tests.e2e.proof_helpers import _get, post_proof
+        g = _get(context.web_port, "/api/v1/ui/glyphs")
+        miss = g.get("missing", [])
+        uniq = sorted({m.get("codepoint") for m in miss})
+        covered = g.get("covered", {})
+        ordered = sorted(covered.items(), key=lambda kv: -int(kv[0][2:], 16))
+        sample = ", ".join(f"{v['char']} {k}→{v['font'].split('-')[0]}" for k, v in ordered[:5])
+        post_proof(context.web_port, f"UI glyph audit: {g.get('labels_scanned', 0)} visible labels, {len(uniq)} missing glyphs",
+                   ("MISSING " + ", ".join(uniq)) if uniq else (sample or "all ASCII"), not uniq)
+    except Exception as e:
+        print(f"⚠️ [Proof] Glyph audit failed: {e}")
+    time.sleep(1.2)
 
     # Capture GameState JSON telemetry
     try:

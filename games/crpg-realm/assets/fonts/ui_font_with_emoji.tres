@@ -1,0 +1,9 @@
+[gd_resource type="FontVariation" load_steps=4 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/OpenSans-SemiBold.ttf" id="1_base"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoEmoji-Medium.ttf" id="2_emoji"]
+[ext_resource type="FontFile" path="res://assets/fonts/DejaVuSans.ttf" id="3_symbols"]
+
+[resource]
+base_font = ExtResource("1_base")
+fallbacks = Array[Font]([ExtResource("2_emoji"), ExtResource("3_symbols")])

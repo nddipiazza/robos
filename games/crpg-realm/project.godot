@@ -29,6 +29,10 @@ window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
+[gui]
+
+theme/custom_font="res://assets/fonts/ui_font_with_emoji.tres"
+
 [input]
 
 toggle_pause={

@@ -205,6 +205,22 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			if has_node("/root/QAOverlay"):
 				get_node("/root/QAOverlay").set_step(step, subtitle, description)
 			_send_http_response(client, 200, {"success": true, "step": step, "subtitle": subtitle, "description": description})
+		["POST", "/engine/events"], ["POST", "/api/v1/engine/events"]:
+			var since = int(body_dict.get("since", 0))
+			var tfilter = str(body_dict.get("type", ""))
+			var evs = GameState.get_engine_events(since, tfilter)
+			_send_http_response(client, 200, {"events": evs, "count": evs.size(), "latest_seq": GameState.engine_event_seq,
+				"ie_round": GameState.ie_round, "ie_round_elapsed": GameState.ie_round_elapsed, "ie_round_seconds": GameState.IE_ROUND_SECONDS})
+		["GET", "/ui/glyphs"], ["GET", "/api/v1/ui/glyphs"]:
+			_send_http_response(client, 200, _scan_ui_glyphs())
+		["POST", "/qa/proof"], ["POST", "/api/v1/qa/proof"]:
+			if has_node("/root/QAOverlay"):
+				get_node("/root/QAOverlay").add_proof(str(body_dict.get("check", "")), str(body_dict.get("evidence", "")), bool(body_dict.get("passed", true)))
+			_send_http_response(client, 200, {"success": true})
+		["POST", "/qa/proof_clear"], ["POST", "/api/v1/qa/proof_clear"]:
+			if has_node("/root/QAOverlay"):
+				get_node("/root/QAOverlay").clear_proofs(str(body_dict.get("title", "")))
+			_send_http_response(client, 200, {"success": true})
 		["POST", "/qa/give_item"], ["POST", "/api/v1/qa/give_item"]:
 			var res = _handle_give_item(body_dict)
 			_send_http_response(client, 200, res)
@@ -382,7 +398,7 @@ func _handle_interact_target(payload: Dictionary) -> Dictionary:
 		return {"success": false, "error": "Target '%s' not found" % target_id}
 
 	if node is TacticalEnemy:
-		if node.is_invisible() and not GameState.can_see_invisible():
+		if node.is_invisible() and not node.can_be_seen_by_player():
 			return {"success": false, "error": "Cannot target an invisible creature that you cannot see!", "reason": "invisible_unseen", "target": target_id}
 		if node.is_sanctuaried():
 			return {"success": false, "error": "Cannot target a sanctuaried character!", "reason": "sanctuary", "target": target_id}
@@ -1044,6 +1060,61 @@ func _gather_screen_elements(root: Node, buttons: Array, inputs: Array, objects:
 
 # ── General Telemetry & Legacy Actions ────────────────────────────────────────
 
+# ── Glyph coverage proof: which font in the chain renders each non-ASCII character ──
+func _font_covering(font: Font, code: int, depth: int = 0) -> String:
+	if font == null or depth > 6:
+		return ""
+	if font is FontVariation:
+		var fv = font as FontVariation
+		var base = fv.base_font
+		var hit = _font_covering(base, code, depth + 1) if base else ""
+		if hit != "":
+			return hit
+	elif font is FontFile:
+		if font.has_char(code):
+			return (font as FontFile).resource_path.get_file()
+	for fb in font.fallbacks:
+		var h2 = _font_covering(fb, code, depth + 1)
+		if h2 != "":
+			return h2
+	return ""
+
+func _scan_ui_glyphs() -> Dictionary:
+	var ignored = [0x200D, 0xFE0E, 0xFE0F, 0x20E3]
+	var roots: Array[Node] = []
+	if get_tree().current_scene:
+		roots.append(get_tree().current_scene)
+	if has_node("/root/QAOverlay"):
+		roots.append(get_node("/root/QAOverlay"))
+	var controls: Array[Node] = []
+	for r in roots:
+		controls.append_array(r.find_children("*", "Label", true, false))
+		controls.append_array(r.find_children("*", "Button", true, false))
+		controls.append_array(r.find_children("*", "RichTextLabel", true, false))
+	var missing: Array[Dictionary] = []
+	var covered: Dictionary = {}
+	var scanned = 0
+	for c in controls:
+		if not (c is Control) or not c.is_visible_in_tree():
+			continue
+		var txt = c.get_parsed_text() if c is RichTextLabel else str(c.get("text"))
+		if txt == "":
+			continue
+		scanned += 1
+		var font: Font = c.get_theme_font("normal_font" if c is RichTextLabel else "font")
+		for i in range(txt.length()):
+			var code = txt.unicode_at(i)
+			if code < 0x80 or ignored.has(code):
+				continue
+			var by = _font_covering(font, code)
+			var key = "U+%04X" % code
+			if by == "":
+				missing.append({"char": String.chr(code), "codepoint": key, "node": str(c.get_path()), "text": txt.substr(0, 60)})
+			else:
+				covered[key] = {"char": String.chr(code), "font": by}
+	return {"labels_scanned": scanned, "missing": missing, "missing_count": missing.size(), "covered": covered,
+		"project_font": str(ProjectSettings.get_setting("gui/theme/custom_font", ""))}
+
 func _get_full_game_state() -> Dictionary:
 	var cur_scene = get_tree().current_scene
 	var scene_name = cur_scene.name if cur_scene else "None"
@@ -1130,6 +1201,11 @@ func _get_full_game_state() -> Dictionary:
 		for child in cur_scene.get_children():
 			if child.has_method("get_trap_info"):
 				var t_info = child.get_trap_info()
+				var is_fow_revealed = true
+				if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+					if fow._is_fog_enabled():
+						is_fow_revealed = fow.is_point_explored(child.global_position) or fow.is_point_in_vision(child.global_position)
+				t_info["is_revealed_by_fog_of_war"] = is_fow_revealed
 				scene_traps.append(t_info)
 				if t_info.get("is_appearing_on_map", true):
 					appearing_traps.append(t_info)
@@ -1151,6 +1227,10 @@ func _get_full_game_state() -> Dictionary:
 				scene_stinking_clouds.append(child.get_stinking_cloud_info())
 
 	return {
+		"ie_round": GameState.ie_round,
+		"ie_round_elapsed": GameState.ie_round_elapsed,
+		"ie_round_seconds": GameState.IE_ROUND_SECONDS,
+		"engine_event_seq": GameState.engine_event_seq,
 		"ice_patches": scene_ice_patches,
 		"stinking_clouds": scene_stinking_clouds,
 		"traps": scene_traps,
@@ -1183,6 +1263,9 @@ func _get_full_game_state() -> Dictionary:
 			"armor": GameState.equipped_armor,
 			"accessory": GameState.equipped_accessory,
 			"can_see_invisible": GameState.can_see_invisible(),
+			"visual_range_px": GameState.VISUAL_RANGE_PX,
+			"fog_vision_radius_px": (cur_scene.find_child("FogOfWar", true, false).vision_radius if (cur_scene and cur_scene.find_child("FogOfWar", true, false)) else GameState.VISUAL_RANGE_PX),
+			"visual_range_ft": GameState.px_to_feet(GameState.VISUAL_RANGE_PX),
 			"ability_scores": GameState.ability_scores,
 			"is_invisible": GameState.is_invisible(GameState.hero_name),
 			"is_prone": ((hero_node.has_method("is_prone") and hero_node.is_prone()) or bool(hero_node.get("is_down_prone"))) if hero_node else false,
@@ -1551,14 +1634,28 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			if not target_node:
 				return {"success": false, "error": "Target '%s' not found" % target_id}
 			if target_node is TacticalEnemy:
-				if target_node.is_invisible() and not GameState.can_see_invisible():
+				if target_node.is_invisible() and not target_node.can_be_seen_by_player():
 					return {"success": false, "error": "Cannot target an invisible creature that you cannot see!", "reason": "invisible_unseen", "target": target_id}
 				if target_node.is_sanctuaried():
 					return {"success": false, "error": "Cannot target a sanctuaried character!", "reason": "sanctuary", "target": target_id}
 				var hero: HeroPlayer = cur_scene.find_child("HeroPlayer", true, false)
-				if hero:
-					hero._update_facing(target_node.global_position)
-				target_node.take_damage(6, hero)
+				var landed = {"v": false}
+				var strike = func():
+					if not landed["v"] and is_instance_valid(target_node):
+						landed["v"] = true
+						target_node.take_damage(6, hero)
+					return {"hit": true}
+				if hero and hero.has_method("attack_target") and not hero.is_prone():
+					# Walk into melee reach and swing, like a real click-to-attack order
+					hero.attack_target(target_node, strike)
+					var t_left = 6.0
+					while not landed["v"] and t_left > 0.0:
+						await get_tree().process_frame
+						t_left -= get_process_delta_time()
+				if not landed["v"]:
+					if hero:
+						hero._update_facing(target_node.global_position)
+					strike.call()
 				return {"success": true, "target": target_id, "action": "attack", "damage": 6}
 			return {"success": false, "error": "Target is not an enemy"}
 
@@ -1601,12 +1698,21 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				else:
 					GameState.log_message("magic", "✨ %s casts [b]Find Traps[/b]! Divine divination radiates across the area." % caster)
 					var rev = 0
+					var unrev = 0
 					if cur_scene:
+						var fow = cur_scene.find_child("FogOfWar", true, false)
 						for child in cur_scene.get_children():
-							if child.has_method("reveal_trap"):
-								child.reveal_trap(caster)
-								rev += 1
-					res = {"success": true, "spell": "find-traps", "revealed_count": rev}
+							if child.has_method("reveal_trap") and not child.get("is_disarmed") and not child.get("is_triggered"):
+								var is_fow_revealed = true
+								if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+									if fow._is_fog_enabled():
+										is_fow_revealed = fow.is_point_explored(child.global_position) or fow.is_point_in_vision(child.global_position)
+								if is_fow_revealed:
+									child.reveal_trap(caster)
+									rev += 1
+								else:
+									unrev += 1
+					res = {"success": true, "spell": "find-traps", "revealed_count": rev, "unrevealed_fow_count": unrev}
 				return res
 			elif spell_id == "invisibility":
 				target_actor = str(args.get("target", caster))
@@ -1671,6 +1777,27 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			var en = bool(args.get("enabled", not GameState.is_detecting_traps))
 			GameState.set_detect_traps_mode(en)
 			return {"success": true, "detect_traps_mode": GameState.is_detecting_traps}
+
+		"reveal_trap":
+			var t_id = str(args.get("trap_id", args.get("target", "")))
+			var by_actor = str(args.get("actor", "Test Harness"))
+			if cur_scene:
+				var t_node = cur_scene.find_child(t_id, true, false)
+				if not t_node:
+					for child in cur_scene.find_children("*", "Area2D", true, false):
+						var c_name = String(child.name).to_snake_case().replace("_", "-")
+						if child.get("trap_id") == t_id or String(child.name) == t_id or c_name == t_id:
+							t_node = child
+							break
+				if not t_node:
+					for child in cur_scene.get_children():
+						if child.get("trap_id") == t_id or child.name == t_id:
+							t_node = child
+							break
+				if t_node and t_node.has_method("reveal_trap"):
+					t_node.reveal_trap(by_actor)
+					return {"success": true, "revealed": t_id}
+			return {"success": false, "error": "Trap not found: " + t_id}
 
 		"disarm_trap":
 			var t_id = str(args.get("trap_id", args.get("target", "")))
@@ -2033,6 +2160,18 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				elif at.has_method("_on_action_clicked"):
 					at._on_action_clicked(act)
 			return {"success": true, "action": act}
+
+		"reenter_area", "reload_current_scene", "leave_and_reenter_area":
+			# Leave the current area and walk back in: the scene is rebuilt from disk while
+			# GameState (party, flags, neutralized traps, fog memory) persists.
+			if not cur_scene or cur_scene.scene_file_path == "":
+				return {"success": false, "error": "No reloadable scene"}
+			var sc_path = cur_scene.scene_file_path
+			var sc_name = String(cur_scene.name)
+			get_tree().change_scene_to_file(sc_path)
+			for _i in range(4):
+				await get_tree().process_frame
+			return {"success": true, "scene": sc_name, "path": sc_path}
 
 		"start_tactical_battle", "load_tactical_battle":
 			GameState.setup_tactical_party()

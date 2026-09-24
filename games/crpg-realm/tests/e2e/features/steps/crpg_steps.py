@@ -12,6 +12,7 @@ if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
 
 from qa_player.qa_player import VideoGameQAPlayer
+from tests.e2e.proof_helpers import proof
 
 def api_get(port, endpoint):
     url = f"http://127.0.0.1:{port}{endpoint}"
@@ -218,6 +219,7 @@ def step_exit_village(context):
 def step_current_scene(context, scene_name):
     state = api_get(context.web_port, "/api/v1/state")
     assert state["scene"]["name"] == scene_name, f"Expected scene {scene_name}, got {state['scene']['name']}"
+    proof(context, f"scene.name = {state['scene']['name']}")
 
 @when('the player speaks with Blacksmith Brand')
 def step_talk_blacksmith(context):
@@ -828,6 +830,7 @@ def step_activity_log_contains_msg(context, msg):
         f"Log text:\n{log_text}\n"
         f"Recent entries: {[e.get('message', '') for e in history[-10:]]}"
     )
+    proof(context, f"activity log ∋ \"{msg[:70]}\"")
 
 # ── Tactical Battle & Multi-Party Skirmish Steps ───────────────────────────────
 
@@ -1225,18 +1228,36 @@ def step_player_casts_spell_generic(context, spell_id):
 use_step_matcher("parse")
 
 @then('all concealed traps in the area are revealed in glowing red runes')
+@then('all concealed traps in the revealed area are revealed in glowing red runes')
 def step_all_traps_revealed(context):
     state = api_get(context.web_port, "/api/v1/state")
     traps = state.get("traps", [])
     assert len(traps) > 0, f"No traps found in scene: {state}"
+    revealed_count = 0
     for t in traps:
-        assert t.get("is_detected") is True, f"Expected trap '{t.get('id')}' to be detected, got: {t}"
+        is_fow_revealed = t.get("is_revealed_by_fog_of_war", True)
+        if is_fow_revealed:
+            assert t.get("is_detected") is True, f"Expected trap '{t.get('id')}' in revealed fog of war area to be detected, got: {t}"
+            revealed_count += 1
+        else:
+            assert t.get("is_detected") is False, f"Expected trap '{t.get('id')}' shrouded under fog of war to remain concealed, got: {t}"
+    assert revealed_count > 0, f"Expected at least one trap to be revealed in explored area, but found none: {traps}"
+
+@then('traps not yet revealed by fog of war remain concealed')
+def step_traps_under_fow_remain_concealed(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    traps = state.get("traps", [])
+    assert len(traps) > 0, f"No traps found in scene: {state}"
+    unrevealed_fow_traps = [t for t in traps if not t.get("is_revealed_by_fog_of_war", True)]
+    assert len(unrevealed_fow_traps) > 0, f"Expected traps hidden under fog of war, got: {traps}"
+    for t in unrevealed_fow_traps:
+        assert t.get("is_detected") is False, f"Expected trap '{t.get('id')}' not revealed by fog of war to remain concealed, got: {t}"
 
 @when('the trap "{trap_id}" is revealed')
 def step_trap_is_revealed(context, trap_id):
     api_post(context.web_port, "/api/v1/action", {
-        "action": "cast_spell",
-        "args": {"spell": "find-traps"}
+        "action": "reveal_trap",
+        "args": {"trap_id": trap_id}
     })
     time.sleep(0.4)
 
@@ -1256,6 +1277,7 @@ def step_trap_is_disarmed(context, trap_id):
     found = next((t for t in traps if t.get("id") == trap_id or t.get("name") == trap_id), None)
     assert found is not None, f"Trap '{trap_id}' not found in scene traps: {traps}"
     assert found.get("is_disarmed") is True, f"Expected trap '{trap_id}' to be disarmed, got: {found}"
+    proof(context, f"is_disarmed=True is_triggered={found.get('is_triggered')}")
 
 @when('the party member steps onto trap "{trap_id}"')
 def step_party_member_steps_trap(context, trap_id):
@@ -1298,6 +1320,7 @@ def step_trap_no_longer_appearing_on_map(context, trap_id):
     assert found_in_active is None, (
         f"Expected trap '{trap_id}' to be absent from active_map_traps via API, but found: {found_in_active}"
     )
+    proof(context, f"is_appearing_on_map=False · absent from appearing_traps ({len(appearing_traps)}) and active_map_traps")
 
 @then('the trap "{trap_id}" is appearing on the map')
 def step_trap_is_appearing_on_map(context, trap_id):
@@ -1310,6 +1333,7 @@ def step_trap_is_appearing_on_map(context, trap_id):
     assert found_in_appearing.get("is_appearing_on_map") is True, (
         f"Expected trap '{trap_id}' to have is_appearing_on_map=True, got: {found_in_appearing}"
     )
+    proof(context, f"is_appearing_on_map=True · detected={found_in_appearing.get('is_detected')}")
 
 @then('the party member suffers trap damage')
 def step_party_suffers_trap_damage(context):
@@ -1352,6 +1376,7 @@ def step_party_standing_next_to_trap(context, trap_id):
     reach = float(found.get("disarm_reach", 72.0))
     dist = math.hypot(hero_pos[0] - trap_pos[0], hero_pos[1] - trap_pos[1])
     assert dist <= reach + 10.0, f"Expected actor to be standing next to trap (reach <= {reach}), but distance is {dist:.1f} px"
+    proof(context, f"actor {dist:.0f}px from plate ≤ reach {reach:.0f}px")
 
 @then('the party member walked over trap "{trap_id}"')
 def step_party_walked_over_trap(context, trap_id):
@@ -2137,10 +2162,16 @@ def step_verify_character_sprite_opacity(context, actor, pct):
 
 @then('the character sprite of "{actor}" returns to full opacity')
 def step_verify_character_sprite_full_opacity(context, actor):
-    time.sleep(0.15)
-    state = api_get(context.web_port, "/api/v1/state")
-    actual = state.get("hero", {}).get("sprite_opacity", 1.0)
+    # Poll briefly: hit-reaction / attack flashes tween the modulate for a few frames
+    actual = 0.0
+    for _ in range(12):
+        time.sleep(0.1)
+        state = api_get(context.web_port, "/api/v1/state")
+        actual = state.get("hero", {}).get("sprite_opacity", 1.0)
+        if actual >= 0.95:
+            break
     assert actual >= 0.95, f"Expected full opacity (>=0.95), got {actual}"
+    proof(context, f"hero sprite_opacity={actual:.2f} · is_invisible={state.get('hero', {}).get('is_invisible')}")
 
 @when('the player moves "{actor}" directly through the patrol zone of hostile enemy "{enemy_id}" within {dist:d}px')
 @when('the player moves "{actor}" to stand {dist:d}px away from hostile enemy "{enemy_id}"')
@@ -2264,11 +2295,22 @@ def step_setup_tactical_spell_encounter(context, enc_type, hero_name, hero_class
         "incoming_striker": [
             {"id": "striker_1", "name": "Orc Berserker", "hp": 25, "ac": 13, "attack_bonus": 4, "creature_type": "humanoid", "x": 620, "y": 520}
         ],
+        # Orc waiting across the arena so a 20-ft (180 px) hazard can be dropped on it
+        # without catching the caster standing at (520, 520).
+        "distant_striker": [
+            {"id": "striker_1", "name": "Orc Berserker", "hp": 30, "ac": 13, "attack_bonus": 4, "creature_type": "humanoid", "x": 900, "y": 520}
+        ],
         "combat_dummy": [
             {"id": "dummy_1", "name": "Corrupted Target", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520}
         ],
         "invisible_infiltrator": [
             {"id": "stalker_1", "name": "Shadow Cultist Infiltrator", "hp": 18, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520, "invisible": True}
+        ],
+        # Three invisible cultists: two huddled together, one lurking well outside a 20-ft burst
+        "invisible_ambush": [
+            {"id": "stalker_1", "name": "Shadow Cultist Infiltrator", "hp": 18, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520, "invisible": True},
+            {"id": "stalker_2", "name": "Shadow Cultist Lurker", "hp": 18, "ac": 13, "creature_type": "humanoid", "x": 1260, "y": 600, "invisible": True},
+            {"id": "stalker_3", "name": "Shadow Cultist Sentry", "hp": 18, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 900, "invisible": True}
         ],
         "sanctuary_warden": [
             {"id": "acolyte_1", "name": "Sanctuary Acolyte", "hp": 20, "ac": 13, "creature_type": "humanoid", "x": 1150, "y": 520, "sanctuary": True}
@@ -2298,8 +2340,12 @@ def step_hero_targets_and_casts(context, target_id, spell_id):
         "action": "cast_spell",
         "args": {"spell": spell_id, "target": target_id}
     })
-    assert res.get("success") is True, f"Failed to cast spell {spell_id} on {target_id}: {res}"
-    context.last_spell_telemetry = res.get("telemetry", {})
+    telem = res.get("telemetry", {}) if isinstance(res.get("telemetry"), dict) else {}
+    # A spell that is cast but has no effect (e.g. Hold Person vs. a beast) is still a valid cast;
+    # the follow-up "resisted" step verifies the immunity.
+    cast_but_resisted = bool(telem.get("immune") or telem.get("save_passed"))
+    assert res.get("success") is True or cast_but_resisted, f"Failed to cast spell {spell_id} on {target_id}: {res}"
+    context.last_spell_telemetry = telem
     # 1.8s pause gives human viewer ample time to observe the full spell effect
     time.sleep(1.8)
 
@@ -2330,6 +2376,10 @@ def step_verify_spell_success(context, spell_id):
     if not telem:
         telem = getattr(context, 'last_spell_telemetry', {})
     assert telem.get("success", False) is True, f"Expected success in spell telemetry for {spell_id}: {telem}"
+    extra = {k: telem[k] for k in ("damage", "darts", "radius_px", "dispelled", "target", "total_damage", "slain_count") if k in telem}
+    if isinstance(telem.get("targets_hit"), list):
+        extra["targets_hit"] = [t.get("id", t.get("name")) for t in telem["targets_hit"]]
+    proof(context, f"telemetry.success=True {extra}"[:200])
 
 @then('enemy "{enemy_id}" takes {dmg:d} damage')
 def step_verify_enemy_takes_damage(context, enemy_id, dmg):
@@ -2340,6 +2390,7 @@ def step_verify_enemy_takes_damage(context, enemy_id, dmg):
     assert found.get("max_hp", 0) - found.get("hp", 0) >= dmg, (
         f"Expected enemy {enemy_id} to take at least {dmg} damage. Max: {found.get('max_hp')}, Cur: {found.get('hp')}"
     )
+    proof(context, f"{enemy_id} HP {found.get('hp')}/{found.get('max_hp')} (−{found.get('max_hp', 0) - found.get('hp', 0)} ≥ {dmg})")
 
 @then('enemy "{enemy_id}" takes lethal damage and is defeated')
 def step_verify_enemy_defeated(context, enemy_id):
@@ -2490,6 +2541,7 @@ def step_verify_hero_invisible(context):
     assert hero.get("is_invisible") is True, f"Expected hero to be invisible: {hero}"
     opacity = hero.get("sprite_opacity", 1.0)
     assert opacity <= 0.50, f"Expected hero sprite opacity <= 0.50 for translucent shimmer, got {opacity}"
+    proof(context, f"hero.is_invisible=True sprite_opacity={opacity:.2f}")
 
 @when('the hero moves to ({x:d}, {y:d}) onto the ice')
 def step_hero_moves_onto_ice(context, x, y):
@@ -2511,6 +2563,7 @@ def step_verify_hero_slips_prone(context):
             break
         time.sleep(0.1)
     assert is_down, f"Expected hero to be knocked prone on the ice. Hero state: {st.get('hero')}"
+    proof(context, f"hero.is_down_prone={st['hero'].get('is_down_prone')} is_prone={st['hero'].get('is_prone')}")
 
 @then('the hero is flat on the ground with sprite rotation of {deg:d} degrees')
 def step_verify_hero_flat_on_ground(context, deg):
@@ -2519,6 +2572,7 @@ def step_verify_hero_flat_on_ground(context, deg):
     assert hero.get("is_down_prone") is True or hero.get("is_prone") is True, f"Expected hero is_down_prone True: {hero}"
     rot = abs(hero.get("sprite_rotation", 0.0))
     assert abs(rot - deg) <= 10.0, f"Expected sprite rotation ~{deg} degrees, got {rot} (Hero: {hero})"
+    proof(context, f"hero sprite_rotation={rot:.0f}°")
 
 @then('the hero stands back up from prone upright')
 def step_verify_hero_stands_up(context):
@@ -2532,6 +2586,7 @@ def step_verify_hero_stands_up(context):
             break
         time.sleep(0.1)
     assert stood_up, f"Expected hero to stand back up upright (is_down_prone=False, rotation~0). Hero: {st.get('hero')}"
+    proof(context, f"is_down_prone=False sprite_rotation={abs(st['hero'].get('sprite_rotation', 0.0)):.0f}°")
 
 @then('a volumetric stinking cloud mist exists on the ground at ({x:d}, {y:d})')
 def step_verify_stinking_cloud_exists(context, x, y):
@@ -2566,6 +2621,7 @@ def step_verify_hero_nauseated_prone(context):
             break
         time.sleep(0.1)
     assert is_down, f"Expected hero to be overcome by stinking cloud and knocked prone. Hero state: {st.get('hero')}"
+    proof(context, f"hero.is_down_prone={st['hero'].get('is_down_prone')} status={st['hero'].get('status_effects')}"[:200])
 
 @when('the hero attempts to target "{target_id}" and cast spell "{spell_id}"')
 def step_hero_attempts_cast_on_target(context, target_id, spell_id):
@@ -2614,6 +2670,7 @@ def step_verify_targeting_fails(context, err_substr):
         success = res["telemetry"].get("success", success)
     assert not success, f"Expected targeting to fail, but succeeded: {res}"
     assert err_substr.lower() in err.lower(), f"Expected error to contain '{err_substr}', got: '{err}' in {res}"
+    proof(context, f"success=False error=\"{err[:90]}\"")
 
 @then('enemy "{enemy_id}" is not visible to the player')
 def step_verify_enemy_not_visible(context, enemy_id):
@@ -2629,6 +2686,7 @@ def step_verify_enemy_not_visible(context, enemy_id):
             assert en.get("can_be_targeted") is False, f"Enemy {enemy_id} can_be_targeted should be False: {en}"
             break
     assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
+    proof(context, f"{enemy_id}: is_invisible=True visible_to_player=False node_visible=False targetable=False")
 
 @when('the hero equips item "{item_id}"')
 def step_hero_equips_item(context, item_id):
@@ -2645,12 +2703,14 @@ def step_verify_hero_has_item_equipped(context, item_id):
     hero = st.get("hero", {})
     equipped = [hero.get("weapon"), hero.get("armor"), hero.get("accessory")]
     assert item_id in equipped, f"Expected {item_id} to be equipped in {equipped}, hero state: {hero}"
+    proof(context, f"equipped = {[e for e in equipped if e]}")
 
 @then('the hero can see invisible creatures')
 def step_verify_hero_can_see_invis(context):
     st = api_get(context.web_port, "/api/v1/state")
     hero = st.get("hero", {})
     assert hero.get("can_see_invisible") is True, f"Expected hero.can_see_invisible to be True, got: {hero}"
+    proof(context, f"hero.can_see_invisible=True (range-limited to {hero.get('visual_range_px', 0):.0f}px)")
 
 @then('enemy "{enemy_id}" is revealed to the player with ethereal shimmer')
 def step_verify_enemy_revealed_shimmer(context, enemy_id):
@@ -2666,6 +2726,7 @@ def step_verify_enemy_revealed_shimmer(context, enemy_id):
             assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True: {en}"
             op = float(en.get("sprite_opacity", 1.0))
             assert 0.1 <= op <= 0.8, f"Enemy {enemy_id} sprite opacity expected ethereal shimmer (0.1..0.8), got: {op}"
+            proof(context, f"{enemy_id}: still invisible, visible_to_player=True targetable=True shimmer opacity={op:.2f}")
             break
     assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
 
@@ -2683,6 +2744,7 @@ def step_verify_enemy_completely_visible(context, enemy_id):
             assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True: {en}"
             op = float(en.get("sprite_opacity", 1.0))
             assert op >= 0.9, f"Enemy {enemy_id} sprite opacity expected ~1.0, got: {op}"
+            proof(context, f"{enemy_id}: is_invisible=False visible=True targetable=True opacity={op:.2f}")
             break
     assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
 
@@ -2696,6 +2758,7 @@ def step_verify_enemy_sanctuary(context, enemy_id):
             found = True
             assert en.get("is_sanctuaried") is True, f"Enemy {enemy_id} should be sanctuaried: {en}"
             assert en.get("can_be_targeted") is False, f"Enemy {enemy_id} can_be_targeted should be False under sanctuary: {en}"
+            proof(context, f"{enemy_id}: is_sanctuaried=True can_be_targeted=False")
             break
     assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
 
@@ -2709,6 +2772,7 @@ def step_verify_enemy_not_sanctuary(context, enemy_id):
             found = True
             assert en.get("is_sanctuaried") is False, f"Enemy {enemy_id} should NOT be sanctuaried: {en}"
             assert en.get("can_be_targeted") is True, f"Enemy {enemy_id} can_be_targeted should be True when sanctuary drops: {en}"
+            proof(context, f"{enemy_id}: is_sanctuaried=False can_be_targeted=True")
             break
     assert found, f"Enemy {enemy_id} not found in battle.enemies: {enemies}"
 
@@ -2720,3 +2784,103 @@ def step_verify_enemy_not_sanctuary(context, enemy_id):
 
 
 
+
+
+# ── Infinity Engine scale, visual range & area-of-effect verification ─────────────
+
+PX_PER_FOOT = 9.0  # mirrors GameState.PX_PER_FOOT (20-ft Fireball == 180 px)
+
+
+@then('the {hazard} has a radius of {feet:d} feet')
+def step_verify_hazard_radius_feet(context, hazard, feet):
+    st = api_get(context.web_port, "/api/v1/state")
+    key = {"slippery ice patch": "ice_patches", "ice patch": "ice_patches",
+           "stinking cloud": "stinking_clouds", "stinking cloud mist": "stinking_clouds"}.get(hazard.lower())
+    assert key, f"Unknown hazard type '{hazard}'"
+    items = st.get(key, [])
+    assert items, f"No {hazard} present in state: {key}={items}"
+    expected = feet * PX_PER_FOOT
+    radius = float(items[-1].get("radius", 0))
+    assert abs(radius - expected) <= 1.0, f"Expected {hazard} radius {expected}px ({feet} ft), got {radius}px"
+    proof(context, f"{hazard} radius {radius:.0f}px = {radius / PX_PER_FOOT:.0f} ft")
+
+
+@then('the hero is standing outside the hazard at ({x:d}, {y:d})')
+def step_verify_hero_outside_hazard(context, x, y):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    pos = hero.get("position") or st.get("hero_position") or [0, 0]
+    hazards = st.get("ice_patches", []) + st.get("stinking_clouds", [])
+    for hz in hazards:
+        hp = hz.get("position", [0, 0])
+        if math.hypot(hp[0] - x, hp[1] - y) < 5:
+            d = math.hypot(pos[0] - hp[0], pos[1] - hp[1])
+            assert d > float(hz.get("radius", 0)), f"Hero at {pos} should be outside hazard radius {hz.get('radius')} (dist {d:.0f})"
+            proof(context, f"hero {d:.0f}px from centre > radius {float(hz.get('radius', 0)):.0f}px — caster not caught in her own spell")
+            return
+    raise AssertionError(f"No hazard found centred at ({x}, {y}): {hazards}")
+
+
+@then('the hero has a visual range of {feet:d} feet')
+def step_verify_visual_range(context, feet):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero = st.get("hero", {})
+    vr = float(hero.get("visual_range_px", 0))
+    assert vr > 0, f"hero.visual_range_px missing: {hero}"
+    assert abs(vr / PX_PER_FOOT - feet) <= 2.0, f"Expected ~{feet} ft visual range, got {vr}px ({vr / PX_PER_FOOT:.1f} ft)"
+    proof(context, f"visual_range_px={vr:.0f} = {vr / PX_PER_FOOT:.1f} ft")
+
+
+@then('enemy "{enemy_id}" remains hidden beyond the wearer\'s visual range')
+def step_verify_enemy_hidden_beyond_range(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    hero_pos = st.get("hero", {}).get("position") or [0, 0]
+    vr = float(st.get("hero", {}).get("visual_range_px", 340))
+    en = next((e for e in st.get("battle", {}).get("enemies", []) if e.get("id") == enemy_id), None)
+    assert en is not None, f"Enemy {enemy_id} not found"
+    ep = en.get("position") or [0, 0]
+    dist = math.hypot(ep[0] - hero_pos[0], ep[1] - hero_pos[1])
+    assert dist > vr, f"Test precondition: {enemy_id} should be beyond visual range ({dist:.0f}px <= {vr}px)"
+    assert en.get("is_invisible") is True, f"{enemy_id} should still be invisible: {en}"
+    assert en.get("is_visible_to_player") is False, f"True sight must not reach beyond visual range: {en}"
+    assert en.get("can_be_targeted") is False, f"{enemy_id} must not be targetable beyond visual range: {en}"
+    proof(context, f"{enemy_id} at {dist:.0f}px > visual range {vr:.0f}px → hidden & untargetable despite the Gem")
+
+
+@when('the hero advances to ({x:d}, {y:d}) within visual range')
+def step_hero_advances_within_visual_range(context, x, y):
+    res = api_post(context.web_port, "/api/v1/action", {"action": "move_to", "args": {"x": x, "y": y}})
+    assert res.get("success") is True, f"Failed to move hero to ({x}, {y}): {res}"
+    for _ in range(40):
+        st = api_get(context.web_port, "/api/v1/state")
+        pos = st.get("hero", {}).get("position") or [0, 0]
+        if math.hypot(pos[0] - x, pos[1] - y) < 24:
+            break
+        time.sleep(0.1)
+    time.sleep(0.5)
+
+
+@then('enemy "{enemy_id}" is still invisible')
+def step_verify_enemy_still_invisible(context, enemy_id):
+    st = api_get(context.web_port, "/api/v1/state")
+    en = next((e for e in st.get("battle", {}).get("enemies", []) if e.get("id") == enemy_id), None)
+    assert en is not None, f"Enemy {enemy_id} not found"
+    assert en.get("is_invisible") is True, f"{enemy_id} was outside the burst and should still be invisible: {en}"
+    assert en.get("is_visible_to_player") is False, f"{enemy_id} should remain unseen: {en}"
+    proof(context, f"{enemy_id}: is_invisible=True visible_to_player=False")
+
+
+@then('the dispel burst covers a {feet:d} foot radius')
+def step_verify_dispel_radius(context, feet):
+    st = api_get(context.web_port, "/api/v1/state")
+    telem = st.get("last_spell_telemetry", {}) or getattr(context, "last_spell_telemetry", {})
+    r = float(telem.get("radius_px", 0))
+    assert abs(r - feet * PX_PER_FOOT) <= 1.0, f"Expected dispel radius {feet} ft ({feet * PX_PER_FOOT}px), got {r}px: {telem}"
+    proof(context, f"telemetry.radius_px={r:.0f} = {r / PX_PER_FOOT:.0f} ft")
+
+
+@when('the party leaves and re-enters the current area')
+def step_party_leaves_and_reenters(context):
+    res = api_post(context.web_port, "/api/v1/action", {"action": "reenter_area", "args": {}})
+    assert res.get("success") is True, f"Failed to re-enter area: {res}"
+    time.sleep(1.2)

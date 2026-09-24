@@ -41,12 +41,39 @@ var next_trigger_force_fail_save: bool = false
 
 var pulse_tween: Tween = null
 
+var is_vanishing: bool = false
+var vanish_tween: Tween = null
+
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 1
 	body_entered.connect(_on_body_entered)
 	_sync_data_store()
-	_update_visual_state()
+	# Restore persistent neutralized state (a trap disarmed/sprung earlier stays gone on re-entry)
+	var prior = GameState.get_trap_neutralized_state(_scene_key(), trap_id) if GameState.has_method("get_trap_neutralized_state") else ""
+	if prior == "disarmed":
+		is_disarmed = true
+		is_detected = true
+	elif prior == "triggered":
+		is_triggered = true
+		is_detected = true
+	_update_visual_state(false)
+	if prior != "":
+		_report_restored.call_deferred(prior)
+
+func _report_restored(prior: String) -> void:
+	var info = get_trap_info()
+	info["previous_state"] = prior
+	GameState.record_event("trap_restored_neutralized", info)
+
+func _scene_key() -> String:
+	var tree = get_tree()
+	if tree and tree.current_scene:
+		return String(tree.current_scene.name)
+	return String(owner.name) if owner else "Scene"
+
+func is_neutralized() -> bool:
+	return is_disarmed or is_triggered
 
 func _sync_data_store() -> void:
 	var ds = null
@@ -65,29 +92,17 @@ func _sync_data_store() -> void:
 		status_effect = str(d.get("statusEffect", status_effect))
 		status_duration = int(d.get("statusDuration", status_duration))
 
-func _update_visual_state() -> void:
-	if is_disarmed:
+func _update_visual_state(animate: bool = true) -> void:
+	if is_disarmed or is_triggered:
+		# Infinity Engine rule: a neutralized trap is removed from the map entirely.
 		_stop_pulse()
-		modulate = Color(0.4, 0.9, 0.4, 0.7)
-		if label:
-			label.text = "🔧 [DISARMED] " + trap_name
-			label.visible = true
-			label.modulate = Color(0.5, 1.0, 0.5, 1.0)
-	elif is_triggered:
-		_stop_pulse()
-		visible = false
-		modulate = Color(1.0, 1.0, 1.0, 0.0)
-		if visual_poly:
-			visual_poly.visible = false
-		if outline_line:
-			outline_line.visible = false
-		if label:
-			label.visible = false
-		if collision_shape:
-			collision_shape.set_deferred("disabled", true)
-		monitoring = false
-		monitorable = false
+		_disable_hazard()
+		if animate and is_inside_tree() and visible:
+			_vanish(Color(0.35, 1.0, 0.45, 1.0) if is_disarmed else Color(1.0, 0.55, 0.15, 1.0))
+		else:
+			_hide_immediately()
 	elif is_detected:
+		visible = true
 		modulate = Color(1.0, 0.15, 0.15, 0.95)
 		if label:
 			label.text = "⚠️ [TRAP] " + trap_name
@@ -96,10 +111,52 @@ func _update_visual_state() -> void:
 		_start_pulse()
 	else:
 		_stop_pulse()
-		# Concealed: subtle translucent shadow (visible in editor, invisible to player)
+		# Concealed: fully transparent to the player until detected
 		modulate = Color(1.0, 1.0, 1.0, 0.0)
 		if label:
 			label.visible = false
+
+func _disable_hazard() -> void:
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	input_pickable = false
+
+func _hide_immediately() -> void:
+	var was_shown = visible
+	is_vanishing = false
+	visible = false
+	modulate = Color(1.0, 1.0, 1.0, 0.0)
+	if visual_poly:
+		visual_poly.visible = false
+	if outline_line:
+		outline_line.visible = false
+	if label:
+		label.visible = false
+	if was_shown and is_inside_tree():
+		_report_vanished.call_deferred()
+
+func _report_vanished() -> void:
+	# Deferred so the physics flags set with set_deferred() are already applied
+	GameState.record_event("trap_vanished", get_trap_info())
+
+func _vanish(flash_color: Color) -> void:
+	# Brief confirmation flash (green = dismantled, orange = sprung), then the glyph fades out
+	if vanish_tween:
+		vanish_tween.kill()
+	is_vanishing = true
+	if label:
+		label.visible = false
+	modulate = flash_color
+	vanish_tween = create_tween()
+	vanish_tween.tween_property(self, "scale", Vector2(1.15, 1.15), 0.12).set_trans(Tween.TRANS_SINE)
+	vanish_tween.parallel().tween_property(self, "modulate", Color(flash_color.r, flash_color.g, flash_color.b, 0.0), 0.55).set_delay(0.1)
+	vanish_tween.parallel().tween_property(self, "scale", Vector2(0.6, 0.6), 0.55).set_delay(0.1)
+	vanish_tween.tween_callback(func():
+		scale = Vector2.ONE
+		_hide_immediately()
+	)
 
 func _start_pulse() -> void:
 	if pulse_tween:
@@ -120,6 +177,7 @@ func reveal_trap(by_actor: String = "Divine Divination") -> void:
 		return
 	is_detected = true
 	_update_visual_state()
+	GameState.record_event("trap_detected", {"trap_id": trap_id, "by": by_actor, "position": [global_position.x, global_position.y]})
 	GameState.trap_detected.emit(trap_id, by_actor)
 	trap_detected.emit(self, by_actor)
 	if FloatingTextManager:
@@ -144,6 +202,14 @@ func attempt_detection(detector_name: String) -> bool:
 
 	if actor_pos != Vector2.ZERO and global_position.distance_to(actor_pos) > detection_radius:
 		return false
+
+	# Check fog of war
+	if cur_sc:
+		var fow = cur_sc.find_child("FogOfWar", true, false)
+		if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+			if fow._is_fog_enabled():
+				if not (fow.is_point_explored(global_position) or fow.is_point_in_vision(global_position)):
+					return false
 
 	var cm = _get_combat_manager()
 	var perception_bonus = 4 # Default rogue / high perception bonus (+2 WIS + 2 Prof)
@@ -204,6 +270,10 @@ func disarm_trap(disarmer_name: String, force_fumble: bool = false) -> Dictionar
 
 	if res.get("success", false):
 		is_disarmed = true
+		GameState.mark_trap_neutralized(_scene_key(), trap_id, "disarmed")
+		var disarmer = _get_actor_node(disarmer_name)
+		GameState.record_event("trap_disarmed", {"trap_id": trap_id, "by": disarmer_name, "roll_total": res.get("total"), "dc": disarm_dc,
+			"disarmer_distance_px": disarmer.global_position.distance_to(global_position) if disarmer else -1.0, "disarm_reach_px": disarm_reach})
 		_update_visual_state()
 		GameState.trap_disarmed.emit(trap_id, disarmer_name)
 		trap_disarmed.emit(self, disarmer_name)
@@ -269,6 +339,8 @@ func force_trigger(victim_name: String, force_fail_save: bool = false, is_fumble
 
 	is_triggered = true
 	is_detected = true
+	GameState.mark_trap_neutralized(_scene_key(), trap_id, "triggered")
+	GameState.record_event("trap_triggered", {"trap_id": trap_id, "victim": victim_name, "fumble": is_fumble})
 	_update_visual_state()
 	_spawn_sprung_vfx()
 
@@ -392,7 +464,14 @@ func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> vo
 				hero.move_to_point(get_global_mouse_position())
 
 func get_trap_info() -> Dictionary:
-	var appearing = visible and not is_triggered and not is_queued_for_deletion()
+	var appearing = visible and not is_vanishing and not is_disarmed and not is_triggered and not is_queued_for_deletion()
+	var is_fow_revealed = true
+	var cur_sc = get_tree().current_scene if get_tree() else null
+	if cur_sc:
+		var fow = cur_sc.find_child("FogOfWar", true, false)
+		if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+			if fow._is_fog_enabled():
+				is_fow_revealed = fow.is_point_explored(global_position) or fow.is_point_in_vision(global_position)
 	return {
 		"id": trap_id,
 		"name": trap_name,
@@ -401,7 +480,14 @@ func get_trap_info() -> Dictionary:
 		"is_disarmed": is_disarmed,
 		"is_triggered": is_triggered,
 		"is_appearing_on_map": appearing,
-		"visible": visible,
+		"is_revealed_by_fog_of_war": is_fow_revealed,
+		"visible": visible and not is_vanishing and not is_neutralized(),
+		"node_visible": visible,
+		"modulate_alpha": modulate.a,
+		"collision_disabled": collision_shape.disabled if collision_shape else true,
+		"monitoring": monitoring,
+		"input_pickable": input_pickable,
+		"label_visible": label.visible if label else false,
 		"detect_dc": detect_dc,
 		"disarm_dc": disarm_dc,
 		"disarm_reach": disarm_reach,

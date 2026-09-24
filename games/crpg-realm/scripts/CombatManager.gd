@@ -151,6 +151,16 @@ func execute_ranged_attack(attacker_name: String, attack_bonus: int, damage_dice
 		"type": "ranged"
 	}
 
+## Magic Missile (5e SRD): 3 darts at 1st-level, each 1d4+1 force damage, auto-hit.
+const MAGIC_MISSILE_BASE_DARTS := 3
+var forced_mm_darts: Array = []
+
+func roll_magic_missile_darts(dart_count: int = MAGIC_MISSILE_BASE_DARTS) -> Array:
+	var out: Array = []
+	for i in range(dart_count):
+		out.append(randi_range(1, 4) + 1)
+	return out
+
 func execute_cast_spell(caster_name: String, spell_id: String, target_name: String = "", target_node: Node = null) -> Dictionary:
 	var am = _get_audio_manager()
 	var gs = _get_game_state()
@@ -166,7 +176,11 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			target_is_invis = true
 
 		if target_is_invis:
-			var caster_can_see = gs.can_see_invisible(caster_name) if (gs and gs.has_method("can_see_invisible")) else false
+			var caster_can_see = false
+			if target_node and target_node.has_method("can_be_seen_by_player"):
+				caster_can_see = target_node.can_be_seen_by_player()
+			elif gs and gs.has_method("can_see_invisible"):
+				caster_can_see = gs.can_see_invisible(caster_name)
 			if not caster_can_see:
 				_log_combat("system", "❌ Spell Fails: Cannot target an invisible creature that you cannot see!")
 				if target_node and "global_position" in target_node and FloatingTextManager:
@@ -201,28 +215,33 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 	match spell_id:
 		"magic-missile":
 			var tgt = target_name if target_name != "" else "target"
-			if gs and gs.has_method("has_status_effect") and gs.has_status_effect(tgt, "shield"):
+			var shielded = gs and gs.has_method("has_status_effect") and (gs.has_status_effect(tgt, "shield") or (target_node and "enemy_id" in target_node and gs.has_status_effect(target_node.enemy_id, "shield")))
+			if shielded:
+				forced_mm_darts = []
 				_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, tgt])
 				_log_combat("magic", "🛡️ [SHIELD] The invisible barrier of magical force completely blocks and absorbs the Magic Missiles! (0 damage)")
 				if FloatingTextManager and target_node and "global_position" in target_node:
 					FloatingTextManager.spawn_text(target_node.global_position, "BLOCKED BY SHIELD!", Color(0.3, 0.8, 1.0))
 				return {"success": true, "spell": "magic-missile", "damage": 0, "blocked_by_shield": true, "hit": false}
 
-			var d1 = randi_range(1, 4) + 1
-			var d2 = randi_range(1, 4) + 1
-			var d3 = randi_range(1, 4) + 1
-			var total_dmg = d1 + d2 + d3
-			_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s!" % [caster_name, tgt])
-			_log_combat("damage", "Arcane energy darts strike %s for %d force damage (%d + %d + %d)!" % [tgt, total_dmg, d1, d2, d3])
+			# Darts may have been pre-rolled so the per-dart VFX numbers match the resolved damage
+			var darts: Array = forced_mm_darts.duplicate() if forced_mm_darts.size() > 0 else roll_magic_missile_darts()
+			forced_mm_darts = []
+			var total_dmg = 0
+			var dart_strs: Array[String] = []
+			for d in darts:
+				total_dmg += int(d)
+				dart_strs.append(str(d))
+			_log_combat("combat", "✨ %s casts [b]Magic Missile[/b] at %s! %d unerring force darts streak across the battlefield." % [caster_name, tgt, darts.size()])
+			_log_combat("damage", "Arcane energy darts strike %s for %d force damage (%s)! Magic Missile never misses." % [tgt, total_dmg, " + ".join(dart_strs)])
 			if am and am.has_method("play_sfx"):
-				am.play_sfx("spell_cast")
 				am.play_sfx("spell_impact")
 			if target_node:
-				if "global_position" in target_node and FloatingTextManager:
-					FloatingTextManager.spawn_damage(target_node.global_position, total_dmg)
 				if target_node.has_method("take_damage"):
 					target_node.take_damage(total_dmg)
-			return {"success": true, "spell": "magic-missile", "damage": total_dmg, "hit": true, "darts": [d1, d2, d3]}
+				elif "global_position" in target_node and FloatingTextManager:
+					FloatingTextManager.spawn_damage(target_node.global_position, total_dmg, false, "force")
+			return {"success": true, "spell": "magic-missile", "damage": total_dmg, "hit": true, "darts": darts, "dart_count": darts.size()}
 
 		"cure-wounds":
 			var wis_mod = 2
@@ -432,13 +451,13 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			var target_pos = Vector2.ZERO
 			if target_node and "global_position" in target_node:
 				target_pos = target_node.global_position
-			return execute_aoe_spell(caster_name, "blizzard", target_pos, 140.0, 14, "DEX", null)
+			return execute_aoe_spell(caster_name, "blizzard", target_pos, GameState.spell_radius_px("blizzard"), 14, "DEX", null)
 
 		"stinking-cloud", "stinking_cloud":
 			var target_pos = Vector2.ZERO
 			if target_node and "global_position" in target_node:
 				target_pos = target_node.global_position
-			return execute_aoe_spell(caster_name, "stinking-cloud", target_pos, 140.0, 14, "CON", null)
+			return execute_aoe_spell(caster_name, "stinking-cloud", target_pos, GameState.spell_radius_px("stinking-cloud"), 14, "CON", null)
 
 		"haste":
 			var tgt = target_name if target_name != "" else caster_name
@@ -467,16 +486,28 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			var revealed_count = 0
+			var unrevealed_fow_count = 0
 			if Engine.get_main_loop() is SceneTree:
 				var tree = Engine.get_main_loop() as SceneTree
 				var cur_sc = tree.current_scene
 				if cur_sc:
+					var fow = cur_sc.find_child("FogOfWar", true, false)
 					for child in cur_sc.get_children():
-						if child.has_method("reveal_trap") and not child.get("is_disarmed"):
-							child.reveal_trap(caster_name)
-							revealed_count += 1
-			_log_combat("system", "✨ Find Traps illuminated %d concealed hazards in red runic light!" % revealed_count)
-			return {"success": true, "spell": "find-traps", "revealed_count": revealed_count}
+						if child.has_method("reveal_trap") and not child.get("is_disarmed") and not child.get("is_triggered"):
+							var is_fow_revealed = true
+							if fow and fow.has_method("is_point_explored") and fow.has_method("_is_fog_enabled"):
+								if fow._is_fog_enabled():
+									is_fow_revealed = fow.is_point_explored(child.global_position) or fow.is_point_in_vision(child.global_position)
+							if is_fow_revealed:
+								child.reveal_trap(caster_name)
+								revealed_count += 1
+							else:
+								unrevealed_fow_count += 1
+			if unrevealed_fow_count > 0:
+				_log_combat("system", "✨ Find Traps illuminated %d concealed hazard(s) in the revealed area! (%d hazard(s) remain hidden under unexplored fog of war)" % [revealed_count, unrevealed_fow_count])
+			else:
+				_log_combat("system", "✨ Find Traps illuminated %d concealed hazard(s) in red runic light!" % revealed_count)
+			return {"success": true, "spell": "find-traps", "revealed_count": revealed_count, "unrevealed_fow_count": unrevealed_fow_count}
 
 		"knock":
 			_log_combat("magic", "✨ %s casts [b]Knock[/b]! Resonant arcane vibrations bypass locks and traps." % caster_name)
@@ -494,34 +525,7 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			return {"success": true, "spell": "invisibility", "target": tgt}
 
 		"dispel-magic", "dispel", "dispel_magic":
-			var tgt = target_name if target_name != "" else caster_name
-			var dispelled_effects: Array[String] = []
-			if gs and gs.has_method("get_status_effects"):
-				var effs = gs.get_status_effects(tgt).duplicate()
-				for eff in effs:
-					gs.remove_status_effect(tgt, eff)
-					dispelled_effects.append(eff)
-			# Ensure invisible and sanctuary are removed for target, enemy_id and enemy_name
-			if gs and gs.has_method("remove_status_effect"):
-				gs.remove_status_effect(tgt, "invisible")
-				gs.remove_status_effect(tgt, "sanctuary")
-				if target_node and "enemy_id" in target_node:
-					gs.remove_status_effect(target_node.enemy_id, "invisible")
-					gs.remove_status_effect(target_node.enemy_id, "sanctuary")
-				if target_node and "enemy_name" in target_node:
-					gs.remove_status_effect(target_node.enemy_name, "invisible")
-					gs.remove_status_effect(target_node.enemy_name, "sanctuary")
-			if dispelled_effects.has("mage_armor") and (tgt == caster_name or tgt == gs.hero_name or tgt == "hero"):
-				gs.hero_ac = 10 + gs.get_stat_modifier(int(gs.ability_scores.get("DEX", 14)))
-			if target_node and target_node.has_method("_update_visibility_visuals"):
-				target_node._update_visibility_visuals()
-				target_node._update_ui()
-			_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! Dispelled magical effects: %s." % [caster_name, tgt, str(dispelled_effects) if dispelled_effects.size() > 0 else "None"])
-			if target_node and "global_position" in target_node and FloatingTextManager:
-				FloatingTextManager.spawn_text(target_node.global_position, "DISPELLED!", Color(0.8, 0.4, 1.0))
-			if am and am.has_method("play_sfx"):
-				am.play_sfx("spell_cast")
-			return {"success": true, "spell": "dispel-magic", "target": tgt, "dispelled": dispelled_effects}
+			return _execute_area_dispel(caster_name, target_name, target_node)
 
 		"sanctuary":
 			var tgt = target_name if target_name != "" else caster_name
@@ -555,6 +559,125 @@ func execute_cast_spell(caster_name: String, spell_id: String, target_name: Stri
 			if am and am.has_method("play_sfx"):
 				am.play_sfx("spell_cast")
 			return {"success": true, "spell": spell_id}
+
+# ── Dispel Magic (Infinity Engine area dispel) ─────────────────────────────────
+# BG1/BG2/IWD: Dispel Magic is cast at a point and strips magical effects from EVERY
+# creature caught in the burst — foes and allies alike. Mundane conditions (poison,
+# prone, exhaustion) and item-granted powers (Gem of Seeing) are untouched.
+const DISPELLABLE_EFFECTS := [
+	"invisible", "sanctuary", "shield", "mage_armor", "bless", "haste", "hasted",
+	"see_invisibility", "truesight", "blur", "mirror_image", "protection_from_evil",
+	"hold_person", "paralyzed", "asleep", "slowed", "spiritual_weapon", "armor_of_agathys",
+]
+
+func _dispellable_on(key: String, gs: Node) -> Array[String]:
+	var out: Array[String] = []
+	if key == "" or not gs or not gs.has_method("get_status_effects"):
+		return out
+	for eff in gs.get_status_effects(key):
+		var e = str(eff)
+		if DISPELLABLE_EFFECTS.has(e) and not out.has(e):
+			out.append(e)
+	return out
+
+func _execute_area_dispel(caster_name: String, target_name: String, target_node: Node) -> Dictionary:
+	var am = _get_audio_manager()
+	var gs = _get_game_state()
+	var tree = Engine.get_main_loop() as SceneTree
+	var cur_sc = tree.current_scene if tree else null
+	var radius = GameState.spell_radius_px("dispel-magic", 180.0)
+
+	var center = Vector2.ZERO
+	if target_node and "global_position" in target_node:
+		center = target_node.global_position
+	elif cur_sc:
+		var h = cur_sc.find_child("HeroPlayer", true, false)
+		if h:
+			center = h.global_position
+
+	# Gather every creature (enemies + party) whose feet are inside the burst
+	var victims: Array[Dictionary] = []
+	if cur_sc:
+		for n in cur_sc.get_children():
+			if not (n is Node2D) or not is_instance_valid(n):
+				continue
+			var keys: Array[String] = []
+			var disp_name = ""
+			if n is TacticalEnemy:
+				if n.current_state == TacticalEnemy.State.DEAD:
+					continue
+				keys = [n.enemy_id, n.enemy_name]
+				disp_name = n.enemy_name
+			elif n.name == "HeroPlayer" or n is PartyCompanion:
+				keys = gs._actor_keys_for_node(n) if gs.has_method("_actor_keys_for_node") else []
+				disp_name = keys[0] if keys.size() > 0 else str(n.name)
+			else:
+				continue
+			if n.global_position.distance_to(center) <= radius:
+				victims.append({"node": n, "keys": keys, "name": disp_name})
+	# The explicitly targeted creature is always included (even if it has no node)
+	if target_node == null and target_name != "":
+		victims.append({"node": null, "keys": [target_name], "name": target_name})
+
+	var affected: Array[Dictionary] = []
+	var all_removed: Array[String] = []
+	for v in victims:
+		var removed: Array[String] = []
+		for k in v["keys"]:
+			for eff in _dispellable_on(str(k), gs):
+				gs.remove_status_effect(str(k), eff)
+				if not removed.has(eff):
+					removed.append(eff)
+		var vn = v["node"]
+		if removed.has("mage_armor") and vn and vn.name == "HeroPlayer":
+			gs.hero_ac = 10 + gs.get_stat_modifier(int(gs.ability_scores.get("DEX", 14)))
+		if vn and is_instance_valid(vn):
+			if vn.has_method("_update_visibility_visuals"):
+				vn._update_visibility_visuals()
+			if vn.has_method("_update_ui"):
+				vn._update_ui()
+			if vn.has_method("_update_invisibility_visual"):
+				vn._update_invisibility_visual()
+			if removed.size() > 0 and FloatingTextManager:
+				FloatingTextManager.spawn_text(vn.global_position + Vector2(0, -34), "DISPELLED!", Color(0.85, 0.55, 1.0))
+		if removed.size() > 0:
+			affected.append({"name": v["name"], "id": str(vn.get("enemy_id")) if (vn and "enemy_id" in vn) else v["name"], "removed": removed,
+				"distance_px": vn.global_position.distance_to(center) if (vn and is_instance_valid(vn)) else 0.0})
+			for r in removed:
+				if not all_removed.has(r):
+					all_removed.append(r)
+
+	# Creatures OUTSIDE the burst keep their enchantments — journal them as proof of the radius
+	var outside: Array[Dictionary] = []
+	if cur_sc:
+		for n in cur_sc.get_children():
+			if n is TacticalEnemy and n.current_state != TacticalEnemy.State.DEAD and n.global_position.distance_to(center) > radius:
+				var kept: Array[String] = []
+				for k in [n.enemy_id, n.enemy_name]:
+					for e in _dispellable_on(str(k), gs):
+						if not kept.has(e):
+							kept.append(e)
+				outside.append({"id": n.enemy_id, "name": n.enemy_name, "distance_px": n.global_position.distance_to(center), "kept": kept})
+	GameState.record_event("dispel_burst", {"center": [center.x, center.y], "radius_px": radius, "radius_ft": GameState.px_to_feet(radius),
+		"affected": affected, "outside": outside})
+	var tgt = target_name if target_name != "" else caster_name
+	_log_combat("magic", "✨ %s casts [b]Dispel Magic on %s[/b]! A %d-ft-radius burst of anti-magic unravels every enchantment it touches." % [caster_name, tgt, int(GameState.px_to_feet(radius))])
+	if affected.is_empty():
+		_log_combat("magic", "No enchantments were caught in the burst.")
+	for a in affected:
+		_log_combat("magic", "🌀 %s loses: %s" % [a["name"], ", ".join(a["removed"])])
+	if am and am.has_method("play_sfx"):
+		am.play_sfx("spell_cast")
+	return {
+		"success": true,
+		"spell": "dispel-magic",
+		"target": tgt,
+		"dispelled": all_removed,
+		"affected": affected,
+		"radius_px": radius,
+		"radius_ft": GameState.px_to_feet(radius),
+		"center": [center.x, center.y]
+	}
 
 func execute_aoe_spell(caster_name: String, spell_id: String, target_center: Vector2, radius: float = 180.0, save_dc: int = 14, save_stat: String = "DEX", caster_node: Node = null) -> Dictionary:
 	var am = _get_audio_manager()
