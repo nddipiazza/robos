@@ -21,7 +21,7 @@ describe('Voice Prompt Agent E2E Test Suite', () => {
 
       // 1. Verify basic DOM elements rendered
       const title = await evalJS(app.port, 'document.querySelector(".title-group h1")?.textContent');
-      assert.strictEqual(title, 'RobOS Voice Prompt Agent');
+      assert.strictEqual(title, 'RobOS Voice');
 
       const statusText = await evalJS(app.port, 'document.getElementById("status-text")?.textContent');
       assert.strictEqual(statusText, 'STANDBY');

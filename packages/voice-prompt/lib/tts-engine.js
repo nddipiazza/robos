@@ -20,7 +20,7 @@ const DEFAULT_PREFS = {
   pitch: 0,          // -50 - +50 (or semitones for edge-tts)
   volume: 100,       // 0 - 100%
   autoSpeakResponses: true,
-  wakeWordGreeting: "Hello! How can I help you, Lead Architect?",
+  wakeWordGreeting: "Hi!",
 };
 
 /**

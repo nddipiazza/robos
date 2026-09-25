@@ -134,6 +134,52 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(states.includes('SPEAKING'));
       assert.ok(states.includes('IDLE'));
     });
+
+    it('responds casually with "Hi!" when user says "hello robos" and nothing else', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => {
+        spokenText = text;
+        return { ok: true, text };
+      };
+
+      const detector = new WakeWordDetector();
+      const assistant = new DesktopAssistant({ ttsEngine: tts, wakeDetector: detector, autoSpeak: true });
+
+      // User says "hello robos" on the stream and nothing else
+      const wakeRes = detector.processText('hello robos');
+      assert.strictEqual(wakeRes.matched, true);
+      assert.strictEqual(wakeRes.query, '');
+
+      // Allow microtask ticks for handleWakeWord
+      await new Promise(r => setTimeout(r, 50));
+
+      assert.strictEqual(spokenText, 'Hi!', 'Assistant must respond "Hi!" when greeted with just wake word');
+      assert.strictEqual(assistant.getState(), 'LISTENING');
+    });
+
+    it('responds with "Hi!" when direct query is a greeting ("hello robos", "hi", "row bose")', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => {
+        spokenText = text;
+        return { ok: true, text };
+      };
+
+      const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
+
+      const res1 = await assistant.processQuery('hello robos');
+      assert.strictEqual(res1.turn.response, 'Hi!');
+      assert.strictEqual(spokenText, 'Hi!');
+
+      const res2 = await assistant.processQuery('hi');
+      assert.strictEqual(res2.turn.response, 'Hi!');
+      assert.strictEqual(spokenText, 'Hi!');
+
+      const res3 = await assistant.processQuery('row bose');
+      assert.strictEqual(res3.turn.response, 'Hi!');
+      assert.strictEqual(spokenText, 'Hi!');
+    });
   });
 
   describe('4. RobOS Voice Library Wrapper (packages/robos-lib/voice.js)', () => {
