@@ -115,6 +115,7 @@ function displayName(name) {
 const onboardingState = require('./onboarding-state');
 const { GitOpsSDLCParser } = require('./gitops-parser');
 const promptSecurity = require('./prompt-security');
+const agentPersonas = require('./agent-personas');
 
 module.exports = {
   CATEGORIES,
@@ -133,6 +134,8 @@ module.exports = {
   luhnCheck: promptSecurity.luhnCheck,
   OSS_RULE_CATALOG: promptSecurity.OSS_RULE_CATALOG,
   PROMPT_SECURITY_MODES: promptSecurity.PROMPT_SECURITY_MODES,
+  agentPersonas,
+  ...agentPersonas,
 };
 
 

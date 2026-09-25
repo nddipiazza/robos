@@ -15,7 +15,10 @@
         </svg>
         <h1>Task Implementer</h1>
       </div>
-      <div id="server-badge" class="server-badge">Loading…</div>
+      <div class="header-right" style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-sm btn-outline" id="btn-agent-personas" title="Configure Agent Personas & Prompts">🤖 Agent Personas</button>
+        <div id="server-badge" class="server-badge">Loading…</div>
+      </div>
     </header>
 
     <div id="no-server" class="empty-state" style="display:none">
@@ -63,6 +66,11 @@
               <span id="ws-task-title" class="workspace-title"></span>
             </div>
             <div class="workspace-controls">
+              <div class="persona-select-container">
+                <span class="persona-icon-label" title="Assigned Agent Persona">🤖</span>
+                <select id="ws-agent-persona-select" class="select-sm persona-select" title="Assigned Agent Persona"></select>
+                <button id="btn-toggle-directives" class="btn btn-sm btn-outline" title="Toggle prompt directives & guidance">Directives</button>
+              </div>
               <a href="#" id="ws-open-url" class="link-btn" style="display:none">↗ Open</a>
               <button id="btn-start-agent" class="btn btn-accent">
                 <span id="btn-start-text">▶ Start Agent</span>
@@ -70,6 +78,20 @@
               </button>
               <button id="btn-stop-agent" class="btn btn-danger" style="display:none">■ Stop</button>
             </div>
+          </div>
+
+          <!-- Role Prompt & Directives Expandable Drawer -->
+          <div class="persona-directives-box" id="persona-directives-box" style="display:none">
+            <div class="directives-header">
+              <div class="directives-title-row">
+                <span class="directives-badge" id="directives-role-badge">Frontend Web Developer</span>
+                <span class="directives-subtext" id="directives-subtext">Specialized prompt directives &amp; development guidance for this task</span>
+              </div>
+              <div class="directives-actions">
+                <button id="btn-reset-directives" class="btn btn-xs btn-outline" title="Reset prompt to role default">Reset to Role Default</button>
+              </div>
+            </div>
+            <textarea id="persona-prompt-preview" class="directives-textarea" placeholder="Role execution prompt directives and RobOS development guidance..."></textarea>
           </div>
 
           <div class="context-row">
@@ -92,6 +114,62 @@
       </main>
     </div>
   </div>
+
+  <!-- Agent Personas Management Overlay -->
+  <div id="agent-personas-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-card personas-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <h2>🤖 RobOS Developer Agent Personas</h2>
+          <span class="templates-count-badge" id="personas-count-badge">6 Roles</span>
+        </div>
+        <button class="modal-close-btn" id="btn-close-personas">✕</button>
+      </div>
+      <p class="modal-subtitle" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Configure specialized agent roles, system prompts, implementation directives, and RobOS development guidance.</p>
+      <div class="personas-layout">
+        <aside class="personas-sidebar" id="personas-tabs-list"></aside>
+        <div class="personas-editor" id="personas-editor-panel">
+          <div class="meta-field">
+            <label>Role &amp; Title</label>
+            <div class="input-split-row">
+              <input type="text" id="persona-edit-role" class="meta-input" placeholder="e.g. Frontend Web Developer" />
+              <input type="text" id="persona-edit-title" class="meta-input" placeholder="e.g. RobOS Frontend Web Developer Agent" />
+            </div>
+          </div>
+          <div class="meta-field">
+            <label>Specialization &amp; Description</label>
+            <input type="text" id="persona-edit-desc" class="meta-input" placeholder="Brief summary of duties..." />
+          </div>
+          <div class="meta-field">
+            <label>Core System Prompt (Persona Directive)</label>
+            <textarea id="persona-edit-sysprompt" class="meta-input code-font" rows="4" placeholder="You are an expert..."></textarea>
+          </div>
+          <div class="meta-field">
+            <label>RobOS Development &amp; Architectural Guidance</label>
+            <textarea id="persona-edit-guidance" class="meta-input code-font" rows="5" placeholder="1. Conventions... 2. Architecture..."></textarea>
+          </div>
+          <div class="input-split-row">
+            <div class="meta-field">
+              <label>Planning Directive (Epic Breakdown)</label>
+              <textarea id="persona-edit-planning" class="meta-input code-font" rows="3" placeholder="Directive when breaking down epics..."></textarea>
+            </div>
+            <div class="meta-field">
+              <label>Implementation Directive (Task Execution)</label>
+              <textarea id="persona-edit-implementation" class="meta-input code-font" rows="3" placeholder="Directive when implementing tasks..."></textarea>
+            </div>
+          </div>
+          <div class="modal-actions personas-actions">
+            <button type="button" class="btn btn-outline" id="btn-reset-personas">↺ Restore Defaults</button>
+            <div class="modal-actions-right">
+              <button type="button" class="btn btn-outline" id="btn-new-custom-persona">＋ Add Custom Persona</button>
+              <button type="button" class="btn btn-success" id="btn-save-persona">💾 Save Persona Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>

@@ -12,7 +12,17 @@ case "$1" in
     exit 0
     ;;
   *)
-    echo "claude stub: $*"
+    if echo "$*" | grep -q -- "--output-format stream-json"; then
+      echo '{"type":"assistant","message":{"content":[{"type":"text","text":"Reading task description and exploring the repo…\n"}]}}'
+      sleep 0.2
+      echo '{"type":"assistant","message":{"content":[{"type":"text","text":"Identified the change required.\n"}]}}'
+      sleep 0.2
+      echo '{"type":"assistant","message":{"content":[{"type":"text","text":"Drafting the patch in src/auth/login.ts.\n"}]}}'
+      sleep 0.2
+      echo '{"type":"result","result":"Done. Summary: implemented the login endpoint with rate limiting.\n"}'
+    else
+      echo "claude stub: $*"
+    fi
     exit 0
     ;;
 esac

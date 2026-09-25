@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('robos', {
   openTaskServers: ()    => ipcRenderer.invoke('open-task-servers'),
   searchIndex:     (prefix) => ipcRenderer.invoke('ti-list-path', prefix),
 
+  listAgentPersonas:  ()  => ipcRenderer.invoke('list-agent-personas'),
+  saveAgentPersona:   (p) => ipcRenderer.invoke('save-agent-persona', p),
+  resetAgentPersonas: ()  => ipcRenderer.invoke('reset-agent-personas'),
+
   onAgentStream: (cb) => ipcRenderer.on('agent-stream', (_, data) => cb(data)),
   onAgentDone:   (cb) => ipcRenderer.on('agent-done',   (_, data) => cb(data)),
   removeAgentListeners: () => {

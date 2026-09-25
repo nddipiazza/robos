@@ -360,7 +360,7 @@ EOF
       else
         cat "$DATA_DIR/tasks-generated.json"
       fi
-    elif echo "$PROMPT_BLOB" | grep -qiE 'TASK:|implementing a task'; then
+    elif echo "$PROMPT_BLOB" | grep -qiE 'TASK:|TASK SUMMARY:|ROLE DIRECTIVE:|implementing a task'; then
       echo "Reading task description and exploring the repo…"
       echo "Identified the change required."
       echo "Drafting the patch in src/auth/login.ts."

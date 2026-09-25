@@ -31,6 +31,11 @@ contextBridge.exposeInMainWorld('robos', {
   deleteCustomTemplate: (id)      => ipcRenderer.invoke('delete-custom-template', id),
   generateTemplatePlan: (p)       => ipcRenderer.invoke('generate-template-plan', p),
 
+  // Agent Personas & Prompts
+  listAgentPersonas:    ()        => ipcRenderer.invoke('list-agent-personas'),
+  saveAgentPersona:     (p)       => ipcRenderer.invoke('save-agent-persona', p),
+  resetAgentPersonas:   ()        => ipcRenderer.invoke('reset-agent-personas'),
+
   // Story 31.08 DAG & Planning Mode
   getTaskGraph:     ()       => ipcRenderer.invoke('dag-get-task-graph'),
   dispatchPlanning: (id)     => ipcRenderer.invoke('dag-dispatch-planning', id),

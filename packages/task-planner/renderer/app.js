@@ -12,6 +12,10 @@ try {
 let existingEpics = [];
 let parentEpicKey = null;
 
+// Agent Personas state
+let agentPersonas = [];
+let selectedPersonaIdx = 0;
+
 // Projects state
 let projectsList = [];
 let currentProjectId = null;
@@ -71,6 +75,8 @@ async function init() {
 
   await loadProjectsList();
   await loadTaskTemplates();
+  await loadAgentPersonas();
+  setupAgentPersonasModal();
 }
 
 async function loadExistingEpics() {
@@ -174,17 +180,20 @@ async function openProject(id) {
   currentProjectName = proj.name;
 
   tasks = (proj.tasks || []).map(t => ({
-    title:         t.title || '',
-    body:          t.body || t.description || '',
-    labels:        Array.isArray(t.labels) ? t.labels : [],
-    isEpic:        !!t.isEpic,
-    epicName:      t.epicName || '',
-    parentEpicIdx: typeof t.parentEpicIdx === 'number' ? t.parentEpicIdx : null,
-    issueType:     t.issueType || '',
-    epicKey:       t.epicKey || null,
-    ticketKey:     t.ticketKey || null,
-    ticketUrl:     t.ticketUrl || null,
-    ticketStatus:  t.ticketStatus || null,
+    title:                  t.title || '',
+    body:                   t.body || t.description || '',
+    labels:                 Array.isArray(t.labels) ? t.labels : [],
+    isEpic:                 !!t.isEpic,
+    epicName:               t.epicName || '',
+    parentEpicIdx:          typeof t.parentEpicIdx === 'number' ? t.parentEpicIdx : null,
+    issueType:              t.issueType || '',
+    assignedRole:           t.assignedRole || '',
+    agentPersonaId:         t.agentPersonaId || '',
+    implementationGuidance: t.implementationGuidance || '',
+    epicKey:                t.epicKey || null,
+    ticketKey:              t.ticketKey || null,
+    ticketUrl:              t.ticketUrl || null,
+    ticketStatus:           t.ticketStatus || null,
   }));
 
   if (proj.prompt) document.getElementById('prompt-input').value = proj.prompt;
@@ -1192,22 +1201,54 @@ function buildCard(i, indent) {
     }
   }
 
+  const personasList = agentPersonas && agentPersonas.length ? agentPersonas : [
+    { role: 'Software Architect', icon: '🏛️', id: 'urn:robos:agent:software-architect' },
+    { role: 'Frontend Web Developer', icon: '🖥️', id: 'urn:robos:agent:frontend-web-dev' },
+    { role: 'Game Developer', icon: '🎮', id: 'urn:robos:agent:game-dev' },
+    { role: 'Backend Systems Developer', icon: '⚙️', id: 'urn:robos:agent:backend-dev' },
+    { role: 'Data & Storage Engineer', icon: '💾', id: 'urn:robos:agent:data-engineer-dev' },
+    { role: 'DevOps & Cloud Engineer', icon: '☁️', id: 'urn:robos:agent:devops-engineer' },
+  ];
+  const currentRole = task.assignedRole || (task.isEpic ? 'Software Architect' : 'Backend Systems Developer');
+  const roleOptions = personasList.map(p =>
+    `<option value="${escHtml(p.role)}" data-id="${escHtml(p.id)}" ${p.role === currentRole ? 'selected' : ''}>${p.icon || '🤖'} ${escHtml(p.role)}</option>`
+  ).join('');
+
+  const roleSelectHtml = `
+    <select class="task-role-select" title="Assigned Agent Persona" data-idx="${i}">
+      ${roleOptions}
+    </select>
+  `;
+
+  const directivesBtnHtml = `
+    <button class="task-directives-btn" data-idx="${i}" title="View / customize prompt directives for this agent">🤖 Directives</button>
+  `;
+
   card.innerHTML = `
     <div class="task-card-header">
       ${indent ? '<span class="tree-indent">└</span>' : ''}
       ${epicTypeBadge}
       <span class="task-num">#${i + 1}</span>
       <input class="task-title-input" type="text" value="${escHtml(task.title)}" placeholder="Task title…"/>
+      ${roleSelectHtml}
+      ${directivesBtnHtml}
       <div class="task-actions-area">
         <div class="task-sync-area">${syncHtml}</div>
         <button class="task-remove-btn" title="Remove task">×</button>
       </div>
     </div>
     ${epicNameRow}
+    <div class="task-directives-box" id="directives-box-${i}" style="display:none">
+      <div class="task-directives-header">
+        <span>🤖 Agent Directives (${escHtml(currentRole)})</span>
+        <span style="font-size:10px; color:var(--accent);">Governs Task Implementer</span>
+      </div>
+      <textarea class="task-directives-input" rows="2" placeholder="Custom instructions for ${escHtml(currentRole)}...">${escHtml(task.implementationGuidance || '')}</textarea>
+    </div>
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
     <textarea class="task-body-input" rows="5" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
     <div class="task-labels">
-      ${task.labels.map((lbl, li) => `<span class="label-chip" data-li="${li}" data-ti="${i}" title="Click to remove">${escHtml(lbl)} ×</span>`).join('')}
+      ${(task.labels || []).map((lbl, li) => `<span class="label-chip" data-li="${li}" data-ti="${i}" title="Click to remove">${escHtml(lbl)} ×</span>`).join('')}
       <button class="add-label-btn" data-ti="${i}">+ label</button>
     </div>
     <div class="label-input-wrap" style="display:none">
@@ -1218,6 +1259,42 @@ function buildCard(i, indent) {
   `;
 
   card.querySelector('.task-title-input').addEventListener('input', e => { tasks[i].title = e.target.value; });
+
+  const roleSelect = card.querySelector('.task-role-select');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', e => {
+      const selectedRole = e.target.value;
+      const selectedOpt = e.target.options[e.target.selectedIndex];
+      const personaId = selectedOpt ? selectedOpt.getAttribute('data-id') : '';
+      tasks[i].assignedRole = selectedRole;
+      tasks[i].agentPersonaId = personaId;
+      const matched = personasList.find(p => p.role === selectedRole);
+      if (matched && (!tasks[i].implementationGuidance || !tasks[i].implementationGuidance.trim())) {
+        tasks[i].implementationGuidance = matched.implementationPrompt || '';
+        const dirInput = card.querySelector('.task-directives-input');
+        if (dirInput) dirInput.value = tasks[i].implementationGuidance;
+      }
+      const headerSpan = card.querySelector('.task-directives-header span');
+      if (headerSpan) headerSpan.textContent = `🤖 Agent Directives (${selectedRole})`;
+    });
+  }
+
+  const dirToggle = card.querySelector('.task-directives-btn');
+  if (dirToggle) {
+    dirToggle.addEventListener('click', () => {
+      const box = card.querySelector('.task-directives-box');
+      if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+  }
+
+  const dirInput = card.querySelector('.task-directives-input');
+  if (dirInput) {
+    dirInput.addEventListener('input', e => {
+      tasks[i].implementationGuidance = e.target.value;
+    });
+  }
 
   const preview = card.querySelector('.task-body-preview');
   const textarea = card.querySelector('.task-body-input');
@@ -1404,3 +1481,169 @@ function renderMd(src) {
   } catch (_) {}
   return escHtml(src || '').replace(/\n/g, '<br>');
 }
+
+// ── Agent Personas Controller & Modal ───────────────────────────────────────
+async function loadAgentPersonas() {
+  try {
+    const res = await window.robos.listAgentPersonas();
+    if (res && res.ok && Array.isArray(res.personas) && res.personas.length) {
+      agentPersonas = res.personas;
+    }
+  } catch (_) {}
+
+  if (!agentPersonas.length) {
+    agentPersonas = [
+      { id: 'urn:robos:agent:software-architect', slug: 'software-architect', role: 'Software Architect', icon: '🏛️', title: 'RobOS Software Architect Agent', category: 'Architecture', systemPrompt: 'You are a Lead Software Architect in RobOS.', developmentGuidance: 'Maintain modular boundaries and C4 models.' },
+      { id: 'urn:robos:agent:frontend-web-dev', slug: 'frontend-web-dev', role: 'Frontend Web Developer', icon: '🖥️', title: 'RobOS Frontend Web Developer Agent', category: 'Frontend', systemPrompt: 'You are an expert Frontend Web Developer in RobOS.', developmentGuidance: 'Use RobOS CSS design tokens and contextBridge isolation.' },
+      { id: 'urn:robos:agent:game-dev', slug: 'game-dev', role: 'Game Developer', icon: '🎮', title: 'RobOS Tactical Game Developer Agent', category: 'Game Development', systemPrompt: 'You are an expert Tactical Game Developer in RobOS.', developmentGuidance: 'Use Godot 4 LTS, GDScript, and D&D 5e SRD rules.' },
+      { id: 'urn:robos:agent:backend-dev', slug: 'backend-dev', role: 'Backend Systems Developer', icon: '⚙️', title: 'RobOS Backend Systems Developer Agent', category: 'Backend', systemPrompt: 'You are a Backend Systems Developer in RobOS.', developmentGuidance: 'Use Spring Boot 3 or Node.js with strict OpenAPI contracts.' },
+      { id: 'urn:robos:agent:data-engineer-dev', slug: 'data-engineer-dev', role: 'Data & Storage Engineer', icon: '💾', title: 'RobOS Data & Storage Engineer Agent', category: 'Data & Storage', systemPrompt: 'You are a Data & Storage Engineer in RobOS.', developmentGuidance: 'Use PostgreSQL with Flyway migrations and Kafka event streaming.' },
+      { id: 'urn:robos:agent:devops-engineer', slug: 'devops-engineer', role: 'DevOps & Cloud Engineer', icon: '☁️', title: 'RobOS DevOps & Cloud Infrastructure Agent', category: 'DevOps & Cloud', systemPrompt: 'You are a DevOps & Cloud Engineer in RobOS.', developmentGuidance: 'Use multi-cluster Kubernetes, Helm, and GitOps pipelines.' },
+    ];
+  }
+}
+
+function setupAgentPersonasModal() {
+  const btnOpen = document.getElementById('btn-agent-personas');
+  const btnClose = document.getElementById('btn-close-personas');
+  const overlay = document.getElementById('agent-personas-overlay');
+  const btnSave = document.getElementById('btn-save-persona');
+  const btnReset = document.getElementById('btn-reset-personas');
+  const btnNew = document.getElementById('btn-new-custom-persona');
+
+  if (btnOpen) {
+    btnOpen.addEventListener('click', () => {
+      overlay.style.display = 'flex';
+      renderPersonasModal();
+    });
+  }
+  if (btnClose) {
+    btnClose.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+  }
+
+  if (btnSave) {
+    btnSave.addEventListener('click', async () => {
+      const current = agentPersonas[selectedPersonaIdx];
+      if (!current) return;
+      const updated = {
+        ...current,
+        role: document.getElementById('persona-edit-role').value.trim() || current.role,
+        title: document.getElementById('persona-edit-title').value.trim() || current.title,
+        description: document.getElementById('persona-edit-desc').value.trim(),
+        systemPrompt: document.getElementById('persona-edit-sysprompt').value.trim(),
+        developmentGuidance: document.getElementById('persona-edit-guidance').value.trim(),
+        planningPrompt: document.getElementById('persona-edit-planning').value.trim(),
+        implementationPrompt: document.getElementById('persona-edit-implementation').value.trim(),
+      };
+      try {
+        const res = await window.robos.saveAgentPersona(updated);
+        if (res && res.ok && res.persona) {
+          agentPersonas[selectedPersonaIdx] = res.persona;
+        } else {
+          agentPersonas[selectedPersonaIdx] = updated;
+        }
+      } catch (_) {
+        agentPersonas[selectedPersonaIdx] = updated;
+      }
+      renderPersonasModal();
+      renderTasks();
+      showCreateStatus(`✓ Saved changes for ${updated.role}`);
+    });
+  }
+
+  if (btnReset) {
+    btnReset.addEventListener('click', async () => {
+      try {
+        const res = await window.robos.resetAgentPersonas();
+        if (res && res.ok && Array.isArray(res.personas)) {
+          agentPersonas = res.personas;
+        }
+      } catch (_) {}
+      selectedPersonaIdx = 0;
+      renderPersonasModal();
+      renderTasks();
+      showCreateStatus('✓ Restored built-in RobOS agent personas');
+    });
+  }
+
+  if (btnNew) {
+    btnNew.addEventListener('click', () => {
+      const newSlug = `custom-dev-${Date.now().toString().slice(-4)}`;
+      const newPersona = {
+        id: `urn:robos:agent:${newSlug}`,
+        slug: newSlug,
+        role: 'Specialized Engineer',
+        title: 'Custom Specialized Engineer Agent',
+        description: 'Custom autonomous agent persona tailored for specialized development.',
+        icon: '⭐',
+        category: 'Custom',
+        systemPrompt: 'You are an autonomous specialized software engineer in RobOS.',
+        developmentGuidance: 'Follow standard RobOS SDLC guidelines.',
+        planningPrompt: 'Break down tasks according to specialized domain requirements.',
+        implementationPrompt: 'Implement specialized components and unit tests.',
+        isDefault: false,
+      };
+      agentPersonas.push(newPersona);
+      selectedPersonaIdx = agentPersonas.length - 1;
+      renderPersonasModal();
+    });
+  }
+}
+
+function renderPersonasModal() {
+  const tabsList = document.getElementById('personas-tabs-list');
+  if (!tabsList) return;
+
+  const badge = document.getElementById('personas-count-badge');
+  if (badge) badge.textContent = `${agentPersonas.length} Roles`;
+
+  tabsList.innerHTML = agentPersonas.map((p, idx) => `
+    <button class="persona-tab-item ${idx === selectedPersonaIdx ? 'active' : ''}" data-idx="${idx}">
+      <span class="persona-tab-icon">${p.icon || '🤖'}</span>
+      <div class="persona-tab-info">
+        <span class="persona-tab-name">${escHtml(p.role || p.title)}</span>
+        <span class="persona-tab-category">${escHtml(p.category || 'Specialist')}</span>
+      </div>
+    </button>
+  `).join('');
+
+  tabsList.querySelectorAll('.persona-tab-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedPersonaIdx = parseInt(btn.dataset.idx, 10);
+      renderPersonasModal();
+    });
+  });
+
+  const active = agentPersonas[selectedPersonaIdx] || agentPersonas[0];
+  if (active) {
+    document.getElementById('persona-edit-role').value = active.role || '';
+    document.getElementById('persona-edit-title').value = active.title || '';
+    document.getElementById('persona-edit-desc').value = active.description || '';
+    document.getElementById('persona-edit-sysprompt').value = active.systemPrompt || '';
+    document.getElementById('persona-edit-guidance').value = active.developmentGuidance || '';
+    document.getElementById('persona-edit-planning').value = active.planningPrompt || '';
+    document.getElementById('persona-edit-implementation').value = active.implementationPrompt || '';
+  }
+}
+
+// ── Demo & Test helper — inject tasks directly for automated testing ────────
+window._demoInjectTasks = function(newTasks) {
+  tasks = (newTasks || []).map(t => ({
+    title: t.title || '',
+    summary: t.summary || '',
+    body: t.body || t.summary || '',
+    type: t.type || 'Story',
+    parent: t.parent || null,
+    points: t.points || 3,
+    labels: t.labels || [],
+    assignedRole: t.assignedRole || null,
+    agentPersonaId: t.agentPersonaId || null,
+    implementationGuidance: t.implementationGuidance || null,
+  }));
+  renderTasks();
+  updateCount();
+  const prev = document.getElementById('preview-section');
+  if (prev) prev.style.display = tasks.length ? 'block' : 'none';
+};
