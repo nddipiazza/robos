@@ -30,6 +30,8 @@ const api = {
   getAssistantHistory: () => ipcRenderer.invoke('vp-assistant-get-history'),
   clearAssistantHistory: () => ipcRenderer.invoke('vp-assistant-clear-history'),
   toggleWakeWord: (enabled) => ipcRenderer.invoke('vp-wake-word-toggle', enabled),
+  listSkills: () => ipcRenderer.invoke('vp-skills-list'),
+  executeSkill: (command, options) => ipcRenderer.invoke('vp-skills-execute', command, options),
 
   // Event Listeners
   onActivated: (callback) => {

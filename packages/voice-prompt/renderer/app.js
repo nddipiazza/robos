@@ -295,8 +295,9 @@ function appendChatTurn(turn) {
     <div class="chat-bubble assistant">
       <div class="bubble-text">${escapeHtml(turn.response)}</div>
       <div class="bubble-meta">
-        <span>RobOS Assistant</span> •
-        <button class="btn-icon btn-sm btn-replay-turn" title="Replay spoken audio">🔊 Play</button>
+        <span>RobOS Assistant</span>
+        ${turn.actionDone ? `• <span class="badge" style="background:#1e293b; color:#38bdf8; font-size:11px; padding:2px 6px; border-radius:4px; border:1px solid #334155;">⚡ ${escapeHtml(turn.actionDone)}</span>` : ''}
+        • <button class="btn-icon btn-sm btn-replay-turn" title="Replay spoken audio">🔊 Play</button>
       </div>
     </div>`;
 

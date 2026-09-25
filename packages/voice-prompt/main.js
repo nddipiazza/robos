@@ -489,6 +489,21 @@ function startApiServer(overridePort) {
         return res.end(JSON.stringify({ ok: true, chunk }));
       }
 
+      // 10.10 GET /api/skills & POST /api/skills/execute — execute RobOS skills via voice/API
+      if (pathname === '/api/skills' && method === 'GET') {
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, skills: desktopAssistant.skillsExecutor.getSupportedSkills() }));
+      }
+
+      if (pathname === '/api/skills/execute' && method === 'POST') {
+        const body = await parseBody(req);
+        const command = typeof body === 'string' ? body : (body.command || body.query || body.message || '');
+        const context = await contextProvider.getAggregatedContext();
+        const result = await desktopAssistant.skillsExecutor.executeCommand(command, context, typeof body === 'object' ? body : {});
+        res.writeHead(result.ok ? 200 : 400);
+        return res.end(JSON.stringify(result));
+      }
+
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health
       if (pathname === '/eval' && method === 'POST') {
         const body = await parseBody(req);
@@ -747,6 +762,15 @@ ipcMain.handle('vp-assistant-clear-history', () => {
 ipcMain.handle('vp-wake-word-toggle', (_e, enabled) => {
   wakeDetector.setEnabled(enabled !== false);
   return { ok: true, enabled: wakeDetector.isEnabled() };
+});
+
+ipcMain.handle('vp-skills-list', () => {
+  return desktopAssistant.skillsExecutor.getSupportedSkills();
+});
+
+ipcMain.handle('vp-skills-execute', async (_e, command, options) => {
+  const context = await contextProvider.getAggregatedContext();
+  return desktopAssistant.skillsExecutor.executeCommand(command, context, options || {});
 });
 
 // App lifecycle
