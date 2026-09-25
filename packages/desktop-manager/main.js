@@ -109,7 +109,7 @@ const APPS = [
   { id: 'claude-console',          label: 'Claude Console',         icon: '🧬', desc: 'Enhanced Claude Code GUI',        category: 'RobOS AI' },
   { id: 'skills-manager',          label: 'Skills Manager',         icon: '🔮', desc: 'Browse & manage OS skills',       category: 'RobOS AI' },
   { id: 'ai-prompt',               label: 'AI Prompt',              icon: '✨', desc: 'AI-powered OS prompt',            category: 'RobOS AI' },
-  { id: 'voice-prompt',            label: 'Voice Prompt',           icon: '🎙️', desc: 'Voice prompt agent & STT dictation', category: 'RobOS AI' },
+  { id: 'voice-prompt',            label: 'RobOS Voice',            icon: '🎙️', desc: 'Speech dictation, natural neural TTS & desktop assistant', category: 'RobOS AI' },
   // System / Tools
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },

@@ -114,7 +114,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **File Explorer** | Dark-themed file browser |
 | **Icon Manager** | Manage and customize RobOS app icons |
 | **Notifications** | Notification history viewer |
-| **Voice Prompt** | Voice Prompt Agent: speech-to-text dictation with real-time app context metadata and REST API |
+| **RobOS Voice** | Bi-directional voice assistant: natural Kokoro/Edge-TTS speech, continuous stream listening, wake-word detection, Whisper STT, and desktop assistant |
 | **Toast Daemon** | System-wide overlay toast notifications |
 | **Security Setup** | First-run GPG + SSH key initialization |
 | **Search Index** | File system indexer for @-search in AI textareas |

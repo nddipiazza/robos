@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RobOS Voice Prompt Agent</title>
+  <title>RobOS Voice</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,17 +20,21 @@
           </svg>
         </div>
         <div class="title-group">
-          <h1>RobOS Voice Prompt Agent</h1>
-          <span class="subtitle">Speech-to-Text Dictation with Real-Time App Context</span>
+          <h1>RobOS Voice</h1>
+          <span class="subtitle">Speech Dictation, Natural Neural Outgoing Voice & Desktop Assistant <em class="pronounce-tag">(Pronounced "Row Bose")</em></span>
         </div>
       </div>
       <div class="header-right">
         <div class="device-selector-wrapper">
-          <label for="select-device">Microphone:</label>
+          <label for="select-device">Mic:</label>
           <select id="select-device" class="device-select" title="Configured Microphone Device">
             <option value="default">Default System Microphone</option>
           </select>
         </div>
+        <button id="btn-toggle-bg-stream" class="btn-badge-toggle" title="Toggle background streaming mode (ephemeral topic)">
+          <span class="badge-dot"></span>
+          <span id="bg-stream-label">Background Stream: OFF</span>
+        </button>
         <div id="status-pill" class="status-pill idle">
           <span class="status-dot"></span>
           <span id="status-text">STANDBY</span>
@@ -38,142 +42,280 @@
       </div>
     </header>
 
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-dictation">
+        <span class="tab-icon">🎙️</span> Dictation & Context
+      </button>
+      <button class="nav-tab" data-tab="tab-outgoing">
+        <span class="tab-icon">🔊</span> Outgoing Voice (Natural TTS)
+      </button>
+      <button class="nav-tab" data-tab="tab-assistant">
+        <span class="tab-icon">🤖</span> RobOS Desktop Assistant
+      </button>
+    </nav>
+
+    <div id="feedback-banner" class="feedback-banner hidden"></div>
+
     <!-- Main Content Layout -->
     <main class="main-content">
-      <!-- Left Panel: Dictation & App Context -->
-      <section class="left-panel">
-        <!-- Microphone & Dictation Controller -->
-        <div class="card controller-card">
-          <div class="controller-header">
-            <h3>Voice Input Dictation</h3>
-            <span class="hotkey-badge">Hotkey: Super+V</span>
-          </div>
+      <!-- ── TAB 1: DICTATION & CONTEXT ────────────────────────────────────────── -->
+      <div id="tab-dictation" class="tab-panel active">
+        <div class="split-view">
+          <section class="left-panel">
+            <div class="card controller-card">
+              <div class="controller-header">
+                <h3>Voice Input Dictation</h3>
+                <span class="hotkey-badge">Hotkey: Super+V</span>
+              </div>
 
-          <div id="feedback-banner" class="feedback-banner hidden"></div>
-
-          <div class="mic-action-area">
-            <button id="btn-toggle-mic" class="btn-mic-toggle idle">
-              <svg class="mic-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" x2="12" y1="19" y2="22"/>
-                <line x1="8" x2="16" y1="22" y2="22"/>
-              </svg>
-              <span id="btn-mic-label">Activate Microphone</span>
-            </button>
-            <div id="recording-waveform" class="waveform-container hidden">
-              <span class="wave-bar"></span>
-              <span class="wave-bar"></span>
-              <span class="wave-bar"></span>
-              <span class="wave-bar"></span>
-              <span class="wave-bar"></span>
-            </div>
-          </div>
-
-          <!-- Dictation Stream Area -->
-          <div class="dictation-input-wrapper">
-            <div class="dictation-header-row">
-              <label for="dictation-input">Recognized Speech Text:</label>
-              <span id="streaming-indicator" class="streaming-indicator hidden">● Live Streaming Dictation</span>
-            </div>
-            <textarea id="dictation-input" placeholder="Speak into your configured microphone or type here to dictate..."></textarea>
-            <div class="dictation-actions">
-              <button id="btn-save-dictation" class="btn-primary">Save Voice Prompt</button>
-              <button id="btn-clear-dictation" class="btn-secondary">Clear</button>
-            </div>
-
-            <!-- RobOS Agent Streaming Panel -->
-            <div class="agent-stream-panel">
-              <div class="agent-stream-header">
-                <div class="agent-stream-toggle-wrap">
-                  <input type="checkbox" id="chk-stream-agent" class="agent-checkbox">
-                  <label for="chk-stream-agent">Auto-Stream to RobOS Agent</label>
-                </div>
-                <div class="agent-select-wrap">
-                  <label for="select-agent-target">Target:</label>
-                  <select id="select-agent-target" class="agent-select" title="Target RobOS Agent">
-                    <option value="fast-reactive">⚡ Fast Reactive Assistant</option>
-                    <option value="claude-code">Claude Code</option>
-                    <option value="github-copilot">GitHub Copilot</option>
-                    <option value="codex">Codex</option>
-                  </select>
+              <div class="mic-action-area">
+                <button id="btn-toggle-mic" class="btn-mic-toggle idle">
+                  <svg class="mic-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" x2="12" y1="19" y2="22"/>
+                    <line x1="8" x2="16" y1="22" y2="22"/>
+                  </svg>
+                  <span id="btn-mic-label">Activate Microphone</span>
+                </button>
+                <div id="recording-waveform" class="waveform-container hidden">
+                  <span class="wave-bar"></span>
+                  <span class="wave-bar"></span>
+                  <span class="wave-bar"></span>
+                  <span class="wave-bar"></span>
+                  <span class="wave-bar"></span>
                 </div>
               </div>
-              <div class="agent-actions-row">
-                <button id="btn-send-agent" class="btn-agent-send">⚡ Send to Agent</button>
-                <span id="agent-status-badge" class="agent-status-badge idle">Agent: Standby</span>
+
+              <div class="dictation-input-wrapper">
+                <div class="dictation-header-row">
+                  <label for="dictation-input">Recognized Speech Text:</label>
+                  <span id="streaming-indicator" class="streaming-indicator hidden">● Live Streaming Dictation</span>
+                </div>
+                <textarea id="dictation-input" placeholder="Speak into your configured microphone or type here to dictate..."></textarea>
+                <div class="dictation-actions">
+                  <button id="btn-save-dictation" class="btn-primary">Save Voice Prompt</button>
+                  <button id="btn-clear-dictation" class="btn-secondary">Clear</button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Active RobOS App Context Card -->
-        <div class="card context-card">
-          <div class="card-header">
-            <h3>Active RobOS App Context (Queryable API)</h3>
-            <button id="btn-refresh-context" class="btn-icon" title="Refresh Context">🔄</button>
-          </div>
-          <div class="context-body">
-            <div class="context-row">
-              <span class="context-label">Focused App:</span>
-              <span id="ctx-active-app" class="context-badge active-app-badge">Detecting...</span>
-            </div>
-            <div class="context-row">
-              <span class="context-label">Window Title:</span>
-              <span id="ctx-window-title" class="context-value">None</span>
-            </div>
-            <div class="context-row">
-              <span class="context-label">Running Apps:</span>
-              <div id="ctx-running-apps" class="chips-container">
-                <span class="chip">desktop</span>
+            <div class="card context-card">
+              <div class="card-header">
+                <h3>Active RobOS App Context</h3>
+                <button id="btn-refresh-context" class="btn-icon" title="Refresh Context">🔄</button>
+              </div>
+              <div class="context-body">
+                <div class="context-row">
+                  <span class="context-label">Focused App:</span>
+                  <span id="ctx-active-app" class="context-badge active-app-badge">Detecting...</span>
+                </div>
+                <div class="context-row">
+                  <span class="context-label">Window Title:</span>
+                  <span id="ctx-window-title" class="context-value">None</span>
+                </div>
+                <div class="context-row">
+                  <span class="context-label">Running Apps:</span>
+                  <div id="ctx-running-apps" class="chips-container">
+                    <span class="chip">desktop</span>
+                  </div>
+                </div>
+                <div class="context-row">
+                  <span class="context-label">Active Workspace:</span>
+                  <span id="ctx-workspace" class="context-value">robos (branch: main)</span>
+                </div>
               </div>
             </div>
-            <div class="context-row">
-              <span class="context-label">Active Workspace:</span>
-              <span id="ctx-workspace" class="context-value">robos (branch: main)</span>
+          </section>
+
+          <section class="right-panel">
+            <div class="card history-card">
+              <div class="history-header">
+                <div class="header-title-count">
+                  <h3>Recorded Voice Prompts</h3>
+                  <span id="prompts-count" class="count-badge">0</span>
+                </div>
+                <div class="history-actions">
+                  <input type="text" id="input-search" class="search-input" placeholder="Search prompts or apps...">
+                  <button id="btn-clear-all" class="btn-danger-outline" title="Clear all recorded voice prompts">Clear All</button>
+                </div>
+              </div>
+
+              <div id="prompts-list" class="prompts-list">
+                <div class="empty-state">
+                  <p>No voice prompts recorded yet.</p>
+                  <p class="empty-sub">Activate microphone or type text to record your first prompt.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ── TAB 2: OUTGOING VOICE (TTS) ───────────────────────────────────────── -->
+      <div id="tab-outgoing" class="tab-panel">
+        <div class="tts-container">
+          <div class="card tts-settings-card">
+            <div class="card-header">
+              <h3>Outgoing Voice & Natural Neural Speech (TTS)</h3>
+              <span class="badge-tag">Human Lifelike Quality</span>
+            </div>
+            <p class="section-desc">RobOS Voice synthesizes natural, expressive human voices using Kokoro-82M (local offline neural) and Edge-TTS (studio neural), completely eliminating robotic computer voices.</p>
+
+            <div class="tts-form-grid">
+              <div class="form-group">
+                <label for="select-tts-engine">Speech Engine:</label>
+                <select id="select-tts-engine" class="input-select">
+                  <option value="kokoro">Kokoro-82M (100% Offline Open-Source - Recommended)</option>
+                  <option value="edge-tts">Edge-TTS (Studio Human Neural - Zero API Key)</option>
+                  <option value="piper">Piper Neural TTS (Fast Offline)</option>
+                  <option value="speech-dispatcher">Speech Dispatcher (Linux System)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="select-tts-voice">Voice Model / Persona:</label>
+                <select id="select-tts-voice" class="input-select">
+                  <!-- Populated dynamically via listVoices() -->
+                  <option value="af_heart">Heart (Warm, Natural Female - Recommended)</option>
+                  <option value="am_michael">Michael (Natural Confident Male)</option>
+                  <option value="en-US-AndrewMultilingualNeural">Andrew (Warm Studio Copilot Male)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <div class="slider-header">
+                  <label for="slider-tts-speed">Speed / Rate:</label>
+                  <span id="val-tts-speed" class="slider-val">1.0x</span>
+                </div>
+                <input type="range" id="slider-tts-speed" min="0.5" max="2.0" step="0.05" value="1.0" class="input-slider">
+              </div>
+
+              <div class="form-group">
+                <div class="slider-header">
+                  <label for="slider-tts-pitch">Pitch Adjustment:</label>
+                  <span id="val-tts-pitch" class="slider-val">0 Hz</span>
+                </div>
+                <input type="range" id="slider-tts-pitch" min="-30" max="30" step="1" value="0" class="input-slider">
+              </div>
+
+              <div class="form-group full-width">
+                <div class="slider-header">
+                  <label for="slider-tts-volume">Speech Volume:</label>
+                  <span id="val-tts-volume" class="slider-val">100%</span>
+                </div>
+                <input type="range" id="slider-tts-volume" min="0" max="100" step="1" value="100" class="input-slider">
+              </div>
+
+              <div class="form-group full-width checkbox-row">
+                <input type="checkbox" id="chk-auto-speak" class="input-checkbox" checked>
+                <label for="chk-auto-speak">Speak RobOS Desktop Assistant responses out loud automatically</label>
+              </div>
+            </div>
+
+            <div class="tts-actions-bar">
+              <button id="btn-save-tts-prefs" class="btn-primary">Save Voice Settings</button>
+            </div>
+          </div>
+
+          <div class="card tts-preview-card">
+            <div class="card-header">
+              <h3>Preview Speech Synthesis</h3>
+              <span id="tts-playing-badge" class="playing-badge hidden">● Speaking Aloud</span>
+            </div>
+            <textarea id="tts-preview-input" class="tts-textarea" rows="3">Hello! I am RobOS Voice, your AI desktop companion. How can I help you today?</textarea>
+            <div class="tts-preview-actions">
+              <button id="btn-test-speak" class="btn-primary btn-speak">
+                <span class="btn-icon">▶</span> Speak Out Loud
+              </button>
+              <button id="btn-stop-speak" class="btn-danger-outline">
+                <span class="btn-icon">⏹</span> Stop Playback
+              </button>
+            </div>
+            <div class="pronounce-note">
+              <strong>Pronunciation Rule:</strong> "RobOS" is automatically voiced as <em>"Row Bose"</em> (like the Bose audio system).
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- Right Panel: Voice Prompts History -->
-      <section class="right-panel">
-        <div class="card history-card">
-          <div class="history-header">
-            <div class="header-title-count">
-              <h3>Recorded Voice Prompts</h3>
-              <span id="prompts-count" class="count-badge">0</span>
+      <!-- ── TAB 3: ROBOS DESKTOP ASSISTANT ────────────────────────────────────── -->
+      <div id="tab-assistant" class="tab-panel">
+        <div class="assistant-container">
+          <div class="assistant-top-bar card">
+            <div class="wake-word-controls">
+              <div class="toggle-wrap">
+                <input type="checkbox" id="chk-wake-word" class="toggle-checkbox" checked>
+                <label for="chk-wake-word" class="toggle-label">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Listen for <strong>"hello robos"</strong> (or "rob OS" / "row bose")</span>
+                </label>
+              </div>
+              <div class="toggle-wrap">
+                <input type="checkbox" id="chk-bg-stream-mode" class="toggle-checkbox">
+                <label for="chk-bg-stream-mode" class="toggle-label">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">Continuous Stream Mode (Ephemeral Topic — not saved to disk)</span>
+                </label>
+              </div>
             </div>
-            <div class="history-actions">
-              <input type="text" id="input-search" class="search-input" placeholder="Search prompts or apps...">
-              <button id="btn-clear-all" class="btn-danger-outline" title="Clear all recorded voice prompts">Clear All</button>
+            <div class="assistant-state-box">
+              <span class="state-label">Assistant Status:</span>
+              <span id="assistant-state-badge" class="state-badge idle">IDLE</span>
             </div>
           </div>
 
-          <!-- Prompts Feed -->
-          <div id="prompts-list" class="prompts-list">
-            <div class="empty-state">
-              <p>No voice prompts recorded yet.</p>
-              <p class="empty-sub">Activate microphone or type text to record your first prompt.</p>
+          <div class="card assistant-chat-card">
+            <div class="card-header">
+              <h3>Live Conversation & Voice Stream</h3>
+              <button id="btn-clear-chat" class="btn-secondary btn-sm">Clear History</button>
+            </div>
+
+            <!-- Live Stream Monitor Banner -->
+            <div id="stream-live-banner" class="stream-live-banner hidden">
+              <span class="stream-pulse">●</span>
+              <span class="stream-label">Live Stream Hearing:</span>
+              <span id="stream-live-text" class="stream-text">...</span>
+            </div>
+
+            <!-- Chat History Feed -->
+            <div id="assistant-chat-feed" class="chat-feed">
+              <div class="chat-welcome">
+                <div class="welcome-icon">🤖</div>
+                <h4>RobOS Desktop Assistant Ready</h4>
+                <p>Say <strong>"hello robos"</strong> (or "row bose"), then ask your question. The assistant streams the voice input, queries the AI agent with active window & workspace context, and talks back out loud.</p>
+                <p class="welcome-hints">Try saying: <em>"Hello RobOS, what is the git status?"</em> or <em>"Hello RobOS, what is our active app?"</em></p>
+              </div>
+            </div>
+
+            <!-- Query Input Bar -->
+            <div class="assistant-input-row">
+              <input type="text" id="assistant-text-input" class="assistant-input" placeholder="Type a request or speak 'hello robos' into your microphone...">
+              <button id="btn-send-assistant" class="btn-primary">Ask Assistant</button>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </main>
 
     <!-- Bottom Status Bar -->
     <footer class="status-bar">
       <div class="status-item">
-        <span class="status-key">API Server:</span>
+        <span class="status-key">API:</span>
         <span id="stat-api-url" class="status-val">http://localhost:19188</span>
       </div>
       <div class="status-item">
-        <span class="status-key">Active Device:</span>
+        <span class="status-key">Input Mic:</span>
         <span id="stat-device" class="status-val">Default System Microphone</span>
       </div>
       <div class="status-item">
-        <span class="status-key">Context State:</span>
-        <span id="stat-context" class="status-val">Synced</span>
+        <span class="status-key">Outgoing TTS:</span>
+        <span id="stat-tts-engine" class="status-val">Kokoro-82M (Natural)</span>
+      </div>
+      <div class="status-item">
+        <span class="status-key">Stream Mode:</span>
+        <span id="stat-stream-mode" class="status-val">Standard</span>
       </div>
     </footer>
   </div>

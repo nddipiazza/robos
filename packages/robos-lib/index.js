@@ -116,6 +116,7 @@ const onboardingState = require('./onboarding-state');
 const { GitOpsSDLCParser } = require('./gitops-parser');
 const promptSecurity = require('./prompt-security');
 const agentPersonas = require('./agent-personas');
+const voiceModule = require('./voice');
 
 module.exports = {
   CATEGORIES,
@@ -136,6 +137,9 @@ module.exports = {
   PROMPT_SECURITY_MODES: promptSecurity.PROMPT_SECURITY_MODES,
   agentPersonas,
   ...agentPersonas,
+  RobOSVoiceClient: voiceModule.RobOSVoiceClient,
+  voice: voiceModule.voice,
+  voiceClient: voiceModule.voiceClient,
 };
 
 

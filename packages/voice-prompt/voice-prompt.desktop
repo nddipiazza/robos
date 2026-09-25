@@ -2,11 +2,11 @@
 X-RobOS-App=true
 Version=1.0
 Type=Application
-Name=RobOS Voice Prompt
-Comment=Voice Prompt Agent — dictation to text with active RobOS app context metadata
+Name=RobOS Voice
+Comment=RobOS Voice — Speech dictation, ultra-natural neural outgoing voice synthesis, and desktop assistant
 Exec=/usr/bin/electron /usr/local/share/robos/voice-prompt/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
 Icon=/usr/local/share/robos/voice-prompt/icon.svg
 Terminal=false
 Categories=Development;
 X-RobOS-Category=AI
-StartupWMClass=robos-voice-prompt
+StartupWMClass=robos-voice

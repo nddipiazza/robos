@@ -1,15 +1,15 @@
 ---
-title: Voice Prompt Dictation & Audio Input Agent
+title: RobOS Voice — Bi-directional Voice & Desktop Assistant
 layout: default
 parent: Use RobOS
 nav_order: 3
 permalink: /voice-prompt.html
 ---
 
-# Voice Prompt Dictation & Audio Input Agent
+# RobOS Voice — Bi-directional Voice & Desktop Assistant
 {: .no_toc }
 
-Real-time, 100% offline neural speech-to-text dictation engineered for AI-first software development. Speak complex instructions, refactor prompts, and task requirements at speaking speed while RobOS automatically captures and attaches active desktop application context, window titles, Git branches, and working directories.
+Bi-directional, 100% privacy-first voice interaction engineered for AI-first software development. Features lifelike neural text-to-speech (Kokoro-82M and Edge-TTS), ambient background stream listening with wake-word detection ("hello robos", "rob OS", "row bose"), desktop context injection, and an interactive out-loud Desktop Assistant.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -20,391 +20,219 @@ Real-time, 100% offline neural speech-to-text dictation engineered for AI-first 
 
 ---
 
-## 1. The Typing Bottleneck in AI-Driven Development
+## 1. Bi-directional Voice in AI-Driven Development
 
-In the era of autonomous coding agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex), software engineering speed is no longer limited by how fast developers write boilerplate syntax—it is bottlenecked by **prompt authoring bandwidth**:
+In the era of autonomous coding agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex), software engineering speed is no longer limited by how fast developers write boilerplate syntax—it is bottlenecked by **prompt authoring and review bandwidth**:
 
 - **The Speaking vs. Typing Speed Gap**: Average developers type between 40 to 65 words per minute (WPM). Natural speech occurs at 140 to 180 WPM—nearly **3x to 4x faster**.
 - **Context Switching Friction**: To instruct an AI agent on a bug or refactor, a developer traditionally must stop, switch windows, open an AI chat, manually type file names, paste error lines, specify the active Git branch, and explain what they were looking at.
-- **Privacy & Air-Gap Compliance**: Sending raw audio streams to commercial cloud speech APIs (OpenAI Whisper API, Google Cloud Speech, AWS Transcribe) introduces compliance, latency, cost, and secret leakage risks for enterprise engineering codebases.
+- **Robotic Audio Fatigue**: Conventional developer TTS engines (espeak, standard Piper voices) sound mechanical and robotic. Developers need warm, lifelike neural voices for long reviews and conversational debugging.
+- **Privacy & Air-Gap Compliance**: Sending raw audio streams to commercial cloud speech APIs introduces compliance, latency, cost, and secret leakage risks for enterprise engineering codebases.
 
-### The RobOS Solution: Voice Prompt Agent
+### The RobOS Solution: RobOS Voice
 
-The **RobOS Voice Prompt Agent** (`packages/voice-prompt`, CLI: `robos-voice`, binary: `robos-voice-prompt`) turns speech into actionable AI prompts with zero cloud dependencies:
+The **RobOS Voice** platform (`packages/voice-prompt`, CLI: `robos-voice`, library: `packages/robos-lib/voice.js`) provides a full-duplex bi-directional voice pipeline:
 
-1. **100% Local Neural Whisper STT**: Uses on-device ONNX runtime models via `@xenova/transformers` (`whisper-tiny.en`, `whisper-base.en`). Audio never leaves the local machine.
-2. **Real-Time Live Streaming Dictation**: Speech is captured in chunks and transcribed continuously every ~2 seconds. Transcribed text streams live into the UI and via Server-Sent Events (`GET /api/stream`), allowing developers to watch words appear in real-time.
-3. **Automated Desktop Context Injection**: The agent silently inspects X11/Wayland window state, active PID, application class (`vscode`, `idea`, `browser`, `terminal`), active file, current working directory, and Git branch. When dictation stops, the prompt is automatically wrapped in high-signal developer context.
-4. **Global Push-to-Talk Hotkey (`Super+V`)**: Summon dictation globally from any running RobOS app or terminal without losing keyboard focus.
-5. **Universal Headless REST API (`:19188`)**: Exposes full programmatic control to CLI scripts, IDE plugins, and autonomous agent loops.
+1. **Natural Outgoing Neural Voice (TTS)**: High-fidelity speech synthesis featuring **Kokoro-82M** (24kHz warm open-source offline TTS) and **Edge-TTS** (Microsoft Studio-grade neural voices with zero API keys).
+2. **Strict "Row Bose" Phonetic Pronunciation**: Integrated speech normalization guarantees that "RobOS" is phonetically pronounced as *"Row Bose"* across all voice engines.
+3. **Continuous Background Topic Stream**: Ambient voice listening emits speech chunks directly to subscriber topics without cluttering disk or prompt storage unless explicitly consumed.
+4. **Hands-free Wake-Word Detection**: Listens on the continuous stream for `"hello robos"`, `"rob OS"`, and `"row bose"` (and phonetic variants like *rowbose* and *roh bose*).
+5. **Interactive Desktop Assistant**: Connects the wake-word listener, active window context, and AI agent reasoning to speak answers back out loud to the developer.
+6. **100% Local Neural Whisper STT**: On-device ONNX runtime models via `@xenova/transformers` (`whisper-tiny.en`). Audio never leaves the local machine.
+7. **Automated Desktop Context Injection**: Automatically attaches focused window titles, application class (`vscode`, `idea`, `browser`, `terminal`), active PID, current working directory, and Git branch.
 
 ---
 
 ## 2. System Architecture & Multimodal Pipeline
 
+```mermaid
+flowchart TD
+    subgraph Audio Input & STT
+        Mic[Microphone Input] --> Capture[Audio Capture: pw-record / arecord / sox]
+        Capture --> Whisper[Local Neural Whisper STT ONNX]
+        Whisper --> Stream[Continuous Topic Stream]
+    end
+
+    subgraph Wake Word & Assistant
+        Stream --> WakeDetector{"Wake Word Detector\n'hello robos' | 'rob OS' | 'row bose'"}
+        WakeDetector -->|Triggered Query| Assistant[RobOS Desktop Assistant]
+        Context[Desktop Context Provider: X11/Wayland + Git] --> Assistant
+        Agent[Autonomous Agent / LLM Bridge] <--> Assistant
+    end
+
+    subgraph Outgoing Voice TTS
+        Assistant --> PhoneticEngine["Phonetic Engine: 'RobOS' -> 'Row Bose'"]
+        PhoneticEngine --> TTSEngine{TTS Engine Selector}
+        TTSEngine -->|Offline Lifelike| Kokoro["Kokoro-82M (24kHz ONNX)"]
+        TTSEngine -->|Studio Grade| EdgeTTS["Edge-TTS (Andrew / Ava Neural)"]
+        TTSEngine -->|Fallback| Piper["Piper / Speech-Dispatcher"]
+        Kokoro --> Playback[Audio Output / Speakers]
+        EdgeTTS --> Playback
+        Piper --> Playback
+    end
+```
+
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/voice-prompt-architecture.jpg' | relative_url }}" alt="RobOS Voice Prompt Agent Architecture: Audio Capture, Offline Neural STT, and Desktop Context Enrichment" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/robos-voice-architecture.jpg' | relative_url }}" alt="RobOS Voice Architecture Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Voice Prompt Agent Architecture</strong>: 100% offline local neural Whisper speech-to-text pipeline with real-time streaming, active window context capture, and global push-to-talk execution. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS Voice Architecture</strong>: Bi-directional neural voice pipeline connecting ambient Whisper stream listening, wake-word detection, context-aware desktop assistant, and lifelike Kokoro/Edge-TTS speech output. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
-### Execution Flow: Speech to Context-Enriched Prompt
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/voice-prompt-sequence-flow.jpg' | relative_url }}" alt="Speech to Context-Enriched Prompt Execution Flow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Speech to Context-Enriched Prompt Execution Flow</strong>: End-to-end lifecycle from push-to-talk activation and interim streaming to desktop context extraction and autonomous agent dispatch. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
 ---
 
-## 3. Core Engine Components
+## 3. Outgoing Voice (Natural Neural TTS)
 
-### 3.1 Local Offline Neural STT Engine (`stt-engine.js`)
+RobOS Voice includes a high-performance, non-robotic outgoing speech engine (`lib/tts-engine.js`):
 
-The speech-to-text core operates completely offline inside the Node.js/Electron environment without external API keys:
+### 3.1 Supported Voice Engines
 
-- **Model**: OpenAI Whisper (`Xenova/whisper-tiny.en` by default, configurable to `Xenova/whisper-base.en` or `small.en`).
-- **Runtime**: ONNX Runtime Node (`onnxruntime-node`) with CPU acceleration. First run downloads the quantized ONNX model weights once to `~/.cache/huggingface/hub/` or bundled local storage; all subsequent runs require zero internet connectivity.
-- **Audio Capture Abstraction**:
-  - Automatically probes available capture binaries in order: `pw-record` (PipeWire), `arecord` (ALSA), `sox` / `rec`.
-  - Captures 16,000 Hz, 16-bit, single-channel (mono) uncompressed PCM WAV.
-  - Custom RIFF parser (`readWavToFloat32`) handles live streaming WAV buffers with in-flight zero-length data chunks without corrupting memory.
-- **Transcript Sanitization**: Cleans acoustic noise tokens (`[BLANK_AUDIO]`, `[applause]`, `[laughter]`, `[music]`, `(noise)`) and normalizes spacing.
+| Engine | Type | Sample Rate | Description |
+|---|---|---|---|
+| **Kokoro-82M** (`kokoro`) | Local Offline Neural | 24,000 Hz | State-of-the-art open-source 82M parameter neural TTS. Produces warm, lifelike human cadence. Model stored locally at `~/.local/share/kokoro/kokoro-v1.0.onnx`. |
+| **Edge-TTS** (`edge-tts`) | Studio Neural | 24,000 Hz | High-quality Microsoft Azure neural speech voices (`en-US-AndrewMultilingualNeural`, `en-US-AvaMultilingualNeural`) accessible with zero account or API key required. |
+| **Piper** (`piper`) | Local Fast Neural | 22,050 Hz | Ultra-fast local neural TTS model (`en_US-lessac-medium`). |
+| **Speech Dispatcher** (`speech-dispatcher`) | System Local | Varies | Local Linux standard speech synthesizer fallback (`spd-say`). |
 
-### 3.2 Real-Time Streaming Dictation & Server-Sent Events
+### 3.2 Phonetic Normalization: Pronouncing "Row Bose"
 
-During voice recording, `STTEngine` runs an asynchronous interval every 2,000ms:
-1. Inspects the active recording file size.
-2. If at least 1.5 seconds of new audio is present, parses the Float32 samples and runs an interim transcription pass.
-3. Fires `interim-text` events across the Electron IPC bridge to update the UI instantly.
-4. Broadcasts server-sent event (SSE) packets over `GET /api/stream` to all connected CLI watchers or external tools.
+To ensure consistent branding and natural pronunciation, all outgoing speech passes through the phonetic pre-processor (`prepareSpeechText`):
 
-### 3.3 Active Desktop Context Provider (`context-provider.js`)
-
-Voice instructions are only as good as the context they provide. Saying *"fix the memory leak in this service"* is ambiguous without knowing which file or service is currently open.
-
-The `ContextProvider` automatically queries the X11/Wayland desktop environment:
-- **Active Window**: Discovers focused window ID via `xdotool getactivewindow` or root window property `_NET_ACTIVE_WINDOW`.
-- **Application Class**: Queries `WM_CLASS` to identify IDEs (`code`, `idea`), terminals (`tilix`, `alacritty`), browsers (`google-chrome`, `firefox`), or RobOS apps.
-- **Active Process & Working Directory**: Reads `_NET_WM_PID` and inspects `/proc/<pid>/cwd` to resolve the project repository path on disk.
-- **Git Repository & Branch**: Runs `git rev-parse --abbrev-ref HEAD` and `git status --porcelain` to capture branch name, commit hash, and dirty working tree status.
-- **Context Output**:
-```json
-{
-  "activeApp": {
-    "appId": "kube-studio",
-    "name": "Kube Studio",
-    "wid": "0x3400012",
-    "pid": 48215,
-    "wmClass": "kube-studio"
-  },
-  "windowTitle": "Kube Studio — cluster-prod-us-east (Pods: 42)",
-  "workspace": {
-    "cwd": "/home/ndipiazza/source/robos",
-    "repo": "robos",
-    "branch": "main",
-    "dirty": true
-  },
-  "timestamp": "2026-09-22T10:14:00.000Z"
-}
+```javascript
+// Ensures RobOS is pronounced "Row Bose" like Bose speaker system
+text = text.replace(/\bRobOS\b/gi, 'Row Bose');
+text = text.replace(/\bRob-OS\b/gi, 'Row Bose');
 ```
 
-### 3.4 Direct Agent Dispatch & Auto-Streaming
+---
 
-The Voice Prompt interface includes an integrated **RobOS Agent Streaming Panel** enabling zero-click execution:
-- **Auto-Stream to RobOS Agent**: When enabled via checkbox, finalized dictation is immediately routed to the selected coding agent without requiring manual copy-pasting.
-- **Configurable Agent Targets**: Select between:
-  - `fast-reactive`: Instant sub-second reactive coding assistant.
-  - `claude-code`: Anthropic Claude Code session.
-  - `github-copilot`: GitHub Copilot CLI harness.
-  - `codex`: OpenAI Codex reasoning model.
-- **Live Dispatch Status Indicator**: Real-time status pill animating from `Agent: Standby` &rarr; `Agent: Streaming...` &rarr; `Agent: Dispatched`.
-- **Manual "Send to Agent" Trigger**: Preview, edit or augment the recognized transcript before explicitly dispatching with one click.
+## 4. Background Topic Streaming & Wake-Word Detection
+
+### 4.1 Ephemeral Topic Stream Mode
+
+When background mode is enabled (`POST /api/background/start`), the microphone streams continuous audio chunks through the Whisper STT engine:
+
+- **No Disk Pollution**: Speech chunks are emitted live as `stream-text` events to active subscribers.
+- **Zero Save Default**: Unlike dictation mode, speech recognized in background mode is **not written** to the persistent `voice-prompts.json` file. It operates strictly like a pub/sub message topic.
+
+### 4.2 Wake-Word Triggers
+
+The wake-word detector (`lib/wake-word.js`) monitors the live stream for trigger phrases:
+
+- **"hello robos"**
+- **"rob OS"**
+- **"row bose"** (including variants: `row-bose`, `rowbose`, `roh bose`)
+
+When a wake word is detected, it strips the wake phrase and extracts the trailing instruction to immediately dispatch to the Desktop Assistant.
 
 ---
 
-## 4. HTTP REST API Reference
+## 5. RobOS Desktop Assistant
 
-The Voice Prompt Agent embeds an HTTP server on port **`19188`** (configurable via `ROBOS_VOICE_PORT`).
+The **RobOS Desktop Assistant** (`lib/desktop-assistant.js`) provides hands-free pair programming:
 
-### Summary of Endpoints
-
-| Method | Endpoint | Description |
-|:---|:---|:---|
-| `GET` | `/api/status` | Current running status, active recording state, and focused app |
-| `GET` | `/api/stream` | Server-Sent Events (SSE) live streaming interim speech transcription |
-| `POST` | `/api/activate` | Start microphone recording and live streaming |
-| `POST` | `/api/deactivate` | Stop recording, finalize Whisper transcription, and save prompt |
-| `POST` | `/api/dictate` | Programmatic dictation injection (text payload) with context capture |
-| `GET` | `/api/prompts` | List recorded prompts (supports `?limit=N` and `?app=appId`) |
-| `POST` | `/api/prompts` | Manually insert a voice prompt record |
-| `DELETE` | `/api/prompts/:id` | Delete a single voice prompt by ID |
-| `DELETE` | `/api/prompts` | Clear all recorded voice prompts |
-| `GET` | `/api/devices` | List detected audio input hardware microphones |
-| `GET` | `/api/context` | Query real-time active window and Git context |
+1. **Trigger**: Listens for wake words or explicit API prompts (`POST /api/assistant/chat`).
+2. **Context Enrichment**: Gathers focused application name, window title, PID, and Git branch from `ContextProvider`.
+3. **Agent Reasoning**: Sends the query and desktop context to the RobOS AI Agent loop.
+4. **Spoken Response**: Speaks the response out loud using the configured natural neural voice.
+5. **State Lifecycle**: Emits real-time state changes (`IDLE`, `WAKE_DETECTED`, `LISTENING`, `PROCESSING`, `SPEAKING`).
 
 ---
 
-### Endpoint Details & Examples
+## 6. RobOS Voice Library (`packages/robos-lib/voice.js`)
 
-#### `GET /api/status`
-Returns agent health, recording state, active window, and prompt statistics.
+Other RobOS Electron applications, CLI scripts, and AI agent skills can interact with the voice engine via the JavaScript client library:
+
+```javascript
+const { RobOSVoiceClient, voice } = require('/usr/local/share/robos/robos-lib');
+// Or import directly from packages/robos-lib/voice.js
+
+// Speak out loud with lifelike neural voice
+await voice.speak('Task completed successfully. All unit tests passed.');
+
+// Query available voices
+const voices = await voice.getVoices();
+
+// Send query to Desktop Assistant
+const reply = await voice.chatAssistant('What branch am I currently working on?');
+console.log('Assistant replied:', reply.response);
+
+// Control background stream listening
+await voice.startBackgroundStream();
+```
+
+---
+
+## 7. CLI Workflows (`robos-voice`)
+
+The `robos-voice` CLI tool provides complete terminal control:
 
 ```bash
-curl -s http://127.0.0.1:19188/api/status | jq
-```
-
-**Response (200 OK):**
-```json
-{
-  "status": "ok",
-  "active": false,
-  "recording": false,
-  "device": "default",
-  "activeApp": "vscode",
-  "activeWindowTitle": "stt-engine.js — robos",
-  "totalPrompts": 14,
-  "interimText": "",
-  "port": 19188
-}
-```
-
----
-
-#### `GET /api/stream` (Server-Sent Events)
-Connect to receive real-time interim speech transcription deltas as words are spoken.
-
-```bash
-curl -N http://127.0.0.1:19188/api/stream
-```
-
-**Stream Output (`text/event-stream`):**
-```
-data: {"text":"investigate high","isFinal":false,"elapsedMs":2100}
-
-data: {"text":"investigate high memory usage in kubernetes","isFinal":false,"elapsedMs":4150}
-
-data: {"text":"investigate high memory usage in kubernetes cluster pods","isFinal":true,"durationMs":5320}
-```
-
----
-
-#### `POST /api/activate`
-Activates microphone listening and begins recording audio to an ephemeral buffer.
-
-```bash
-curl -X POST http://127.0.0.1:19188/api/activate \
-  -H "Content-Type: application/json" \
-  -d '{"device": "default"}'
-```
-
-**Response (200 OK):**
-```json
-{
-  "ok": true,
-  "active": true,
-  "device": "default",
-  "startTime": 1726884840120
-}
-```
-
----
-
-#### `POST /api/deactivate`
-Stops recording, runs final neural Whisper transcription pass, enriches with active window metadata, and saves to storage.
-
-```bash
-curl -X POST http://127.0.0.1:19188/api/deactivate
-```
-
-**Response (200 OK):**
-```json
-{
-  "ok": true,
-  "active": false,
-  "durationMs": 4820,
-  "text": "Refactor the authentication middleware to use JWT tokens with automatic rotation."
-}
-```
-
----
-
-#### `POST /api/dictate`
-Programmatically inject a dictation text. Useful for testing, automated agent simulations, or external speech providers.
-
-```bash
-curl -X POST http://127.0.0.1:19188/api/dictate \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Add unit tests for the streaming audio parser"}'
-```
-
-**Response (200 OK):**
-```json
-{
-  "ok": true,
-  "prompt": {
-    "id": "vp-1726884920000",
-    "text": "Add unit tests for the streaming audio parser",
-    "timestamp": "2026-09-22T10:15:20.000Z",
-    "durationMs": 1500,
-    "device": "api",
-    "status": "recorded",
-    "metadata": {
-      "activeApp": { "appId": "tilix", "name": "Tilix Terminal" },
-      "windowTitle": "robos: packages/voice-prompt",
-      "workspace": { "repo": "robos", "branch": "main" }
-    }
-  }
-}
-```
-
----
-
-#### `GET /api/prompts`
-List recorded prompt history. Filter by application or limit result size.
-
-```bash
-# Get last 5 prompts recorded while using VS Code
-curl -s "http://127.0.0.1:19188/api/prompts?app=vscode&limit=5" | jq
-```
-
-**Response (200 OK):**
-```json
-{
-  "ok": true,
-  "count": 1,
-  "prompts": [
-    {
-      "id": "vp-1726884920000",
-      "text": "Refactor the authentication middleware to use JWT tokens",
-      "timestamp": "2026-09-22T10:15:20.000Z",
-      "durationMs": 3200,
-      "metadata": {
-        "activeApp": { "appId": "vscode" },
-        "windowTitle": "auth.js — robos",
-        "workspace": { "branch": "feat/jwt-auth" }
-      }
-    }
-  ]
-}
-```
-
----
-
-## 5. CLI Tooling & Terminal Workflows (`robos-voice`)
-
-RobOS includes a fast command-line tool `robos-voice` (`packages/robos-cli/robos-voice`) that communicates with the daemon over HTTP or falls back directly to local libraries if the GUI daemon is stopped:
-
-```bash
-# Check status of the Voice Prompt daemon
+# Check daemon status
 robos-voice status
 
-# Query real-time active desktop context
-robos-voice context
+# Speak text using natural neural voice
+robos-voice speak "Row Bose is online and ready."
 
-# Start microphone listening (push-to-talk start)
+# Stop currently playing speech
+robos-voice stop-speaking
+
+# List available voices across Kokoro, Edge-TTS, and Piper
+robos-voice voices
+
+# Query Desktop Assistant hands-free
+robos-voice assistant "What is the git status in the active window?"
+
+# Start / stop background continuous streaming mode
+robos-voice background start
+robos-voice background stop
+
+# Push-to-talk dictation commands
 robos-voice activate
-
-# Stop microphone listening and transcribe (push-to-talk stop)
 robos-voice deactivate
-
-# Record a prompt directly from the shell with attached context
-robos-voice dictate "Generate OpenAPI 3.1 schema for billing service"
-
-# List recent voice prompts
-robos-voice list --limit 10
-
-# Clear voice prompt history
-robos-voice clear
+robos-voice context
+robos-voice list --limit 5
 ```
 
-### Piping Voice Prompts to AI Coding Agents
+---
 
-Combine `robos-voice` with AI coding agent CLI tools for a hands-free workflow:
+## 8. REST API Reference (`:19188`)
+
+RobOS Voice exposes an HTTP REST server on port `19188`:
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/speak` | Synthesize and speak text out loud (`{ text, engine, voice, rate, pitch }`) |
+| `POST` | `/api/stop-speaking` | Stop all active audio playback |
+| `GET` | `/api/voices` | List all discovered TTS voices grouped by engine |
+| `GET` | `/api/tts/config` | Get current TTS configuration |
+| `POST` | `/api/tts/config` | Update default TTS engine, voice, and speed |
+| `POST` | `/api/background/start` | Start ephemeral background stream listening |
+| `POST` | `/api/background/stop` | Stop background stream listening |
+| `POST` | `/api/assistant/chat` | Send a query to the Desktop Assistant (`{ message, speak }`) |
+| `GET` | `/api/assistant/history` | Get recent conversation history |
+| `DELETE`| `/api/assistant/history` | Clear conversation history |
+| `POST` | `/api/wake-word/toggle` | Enable or disable wake word detection (`{ enabled }`) |
+| `GET` | `/api/status` | Get daemon health, microphone state, and assistant status |
+| `GET` | `/api/context` | Capture real-time focused window and Git context |
+| `POST` | `/api/activate` | Start microphone push-to-talk recording |
+| `POST` | `/api/deactivate` | Stop recording and transcribe to persistent prompt storage |
+| `GET` | `/api/prompts` | Query recorded prompt history |
+| `GET` | `/api/stream` | Server-Sent Events (SSE) live speech stream |
+
+---
+
+## 9. Verification & Testing
+
+RobOS Voice includes full test coverage for TTS, background streaming, wake-word detection, and assistant workflows:
 
 ```bash
-# 1. Fetch latest voice prompt text and feed into Claude Code
-claude "$(robos-voice list --limit 1 | jq -r '.prompts[0].text')"
-
-# 2. Feed prompt + enriched Git context into Antigravity Harness
-agy run "$(robos-voice list --limit 1 | jq -r '.prompts[0].text')" \
-  --context "$(robos-voice context)"
-```
-
----
-
-## 6. Desktop Integration & Global Hotkeys
-
-### Push-to-Talk Hotkey: `Super + V`
-
-The Voice Prompt Agent registers a global X11 shortcut **`Super+V`** (Windows key + V):
-1. **First Press / Hold**: Triggers microphone activation. The system tray icon pulses red, and an overlay audio waveform visualizer displays audio volume levels.
-2. **Second Press / Release**: Finalizes audio recording, completes Whisper inference, and places the transcribed text onto the system clipboard while saving to `~/.config/robos/voice-prompts.json`.
-3. **Audio Waveform Feedback**: The UI uses the Web Audio API (`AudioContext` and `AnalyserNode`) connected to the local user media stream to render dynamic amplitude bars during recording.
-
-### Desktop Entry & Runner
-
-- **Desktop File**: Installed to `~/.local/share/applications/voice-prompt.desktop` and `/usr/share/applications/voice-prompt.desktop`.
-- **System Dock**: Accessible directly from the **RobOS App Launcher** grid under the **Autonomous AI & Agent Workflows** category.
-- **Binary**: Standalone runner installed to `/usr/local/bin/robos-voice-prompt`.
-
----
-
-## 7. Dual-State Knowledge Graph & SHACL Standards
-
-In accordance with RobOS linked-data architecture, the Voice Prompt Agent is registered in the SDLC Knowledge Graph as a first-class `robos:DesktopApp` conforming to W3C SHACL shape `urn:robos:shape:DesktopAppShape` and Schema.org `schema:SoftwareApplication`.
-
-### Canonical JSON-LD Entity
-
-```json
-{
-  "@id": "urn:robos:app:voice-prompt",
-  "@type": [
-    "robos:DesktopApp",
-    "schema:SoftwareApplication",
-    "oslc_am:Resource",
-    "c4:Container"
-  ],
-  "dcterms:title": "Voice Prompt Agent",
-  "dcterms:description": "Offline speech-to-text dictation agent with real-time desktop app context capture and REST API.",
-  "robos:package": "applications",
-  "robos:namespace": "robos.applications",
-  "robos:repository": "github.com/nddipiazza/robos",
-  "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
-  "robos:desktopFramework": "Electron",
-  "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
-  "robos:apiPort": 19188,
-  "robos:globalHotkey": "Super+V",
-  "robos:ownerTeam": "urn:robos:team:core-platform",
-  "robos:hasProject": "urn:robos:project:enterprise-core",
-  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-  "robos:domainStandard": "https://schema.org/SoftwareApplication",
-  "robos:refersFrom": "https://schema.org/SoftwareApplication"
-}
-```
-
----
-
-## 8. Verification & Testing
-
-The Voice Prompt Agent features a complete dual-tier test suite verifying offline speech processing, HTTP endpoints, IPC bridges, and headless UI rendering:
-
-### Running Unit Tests
-Verifies RIFF WAV sample extraction, streaming buffer handling with zero chunkSize, Whisper noise cleaning, HTTP REST routes, and storage operations:
-```bash
+# Run all voice-prompt tests
+node --test packages/robos-test/tests/voice-prompt/tts.test.js
+node --test packages/robos-test/tests/voice-prompt/stream-assistant.test.js
 node --test packages/robos-test/tests/voice-prompt/unit.test.js
+node --test packages/robos-test/tests/voice-prompt/agent-streaming.test.js
 ```
-*Expected: 19 passing tests, 0 failures.*
-
-### Running Headless E2E Tests
-Launches the full Electron application in a virtual display, verifies DOM elements (`#status-text`, `#btn-toggle-mic`, `#recording-waveform`, `#streaming-indicator`), selects input devices, simulates activation, and asserts prompt recording:
-```bash
-node --test packages/robos-test/tests/voice-prompt/e2e.test.js
-```
-*Expected: 1 suite, 1 test passing, 0 failures.*
 
 ---
 
