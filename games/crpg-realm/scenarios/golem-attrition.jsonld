@@ -1,0 +1,101 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:crpg:test-scenario:golem-attrition",
+  "@type": [
+    "robos:CRPGTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Three fighters against a stone golem",
+  "dcterms:description": "Three level-5 fighters with healing potions grind down an ancient stone golem that resists their weapons. Proves resistance math, extra attacks, maneuvers and potion use over a long fight.",
+  "robos:seed": 99,
+  "robos:maxRounds": 40,
+  "robos:executionMode": "human",
+  "robos:map": {
+    "@id": "urn:robos:crpg:battle-map:golem-vault"
+  },
+  "robos:party": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "vance",
+      "dcterms:title": "Commander Vance",
+      "robos:race": "human",
+      "robos:characterClass": "fighter",
+      "robos:level": 5,
+      "robos:position": [
+        15,
+        20
+      ],
+      "robos:inventory": [
+        "potion-healing",
+        "potion-healing"
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "garrick",
+      "dcterms:title": "Sergeant Garrick",
+      "robos:race": "dwarf",
+      "robos:characterClass": "fighter",
+      "robos:level": 5,
+      "robos:position": [
+        15,
+        35
+      ],
+      "robos:inventory": [
+        "potion-healing",
+        "potion-healing"
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "brutus",
+      "dcterms:title": "Corporal Brutus",
+      "robos:race": "half-orc",
+      "robos:characterClass": "fighter",
+      "robos:level": 5,
+      "robos:position": [
+        15,
+        50
+      ],
+      "robos:inventory": [
+        "potion-healing",
+        "potion-healing"
+      ]
+    }
+  ],
+  "robos:enemies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "golem",
+      "robos:monster": "ancient-stone-golem",
+      "robos:position": [
+        55,
+        35
+      ],
+      "robos:hp": 90,
+      "robos:attacks": [
+        {
+          "name": "Slam",
+          "attackBonus": 7,
+          "damage": "2d8+4",
+          "damageType": "bludgeoning",
+          "range": 5
+        }
+      ]
+    }
+  ],
+  "robos:directives": [
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:side": "party",
+      "robos:controller": "infinity_ai",
+      "robos:potionThreshold": 0.35
+    }
+  ]
+}

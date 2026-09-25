@@ -55,7 +55,9 @@
           "frameDuration": 0.14
         }
       }
-    }
+    },
+    "creatureType": "beast",
+    "token": "res://assets/sprites/enemies/wolf.png"
   },
   {
     "id": "corrupted-guard",
@@ -113,7 +115,9 @@
           "frameDuration": 0.14
         }
       }
-    }
+    },
+    "creatureType": "humanoid",
+    "token": "res://assets/sprites/enemies/orc.png"
   },
   {
     "id": "captain-malakor-boss",
@@ -178,7 +182,9 @@
           "frameDuration": 0.15
         }
       }
-    }
+    },
+    "creatureType": "humanoid",
+    "token": "res://assets/sprites/characters/captain_malakor_boss.png"
   },
   {
     "id": "skeleton",
@@ -243,7 +249,18 @@
           "frameDuration": 0.14
         }
       }
-    }
+    },
+    "creatureType": "undead",
+    "token": "res://assets/sprites/enemies/skeleton.png",
+    "damageVulnerabilities": [
+      "bludgeoning"
+    ],
+    "damageImmunities": [
+      "poison"
+    ],
+    "conditionImmunities": [
+      "poisoned"
+    ]
   },
   {
     "id": "zombie",
@@ -301,7 +318,15 @@
           "frameDuration": 0.18
         }
       }
-    }
+    },
+    "creatureType": "undead",
+    "token": "res://assets/sprites/enemies/zombie.png",
+    "damageImmunities": [
+      "poison"
+    ],
+    "conditionImmunities": [
+      "poisoned"
+    ]
   },
   {
     "id": "ancient-stone-golem",
@@ -359,6 +384,23 @@
           "frameDuration": 0.18
         }
       }
-    }
+    },
+    "creatureType": "construct",
+    "token": "res://assets/sprites/enemies/minotaur.png",
+    "damageImmunities": [
+      "poison",
+      "psychic"
+    ],
+    "damageResistances": [
+      "bludgeoning",
+      "piercing",
+      "slashing"
+    ],
+    "conditionImmunities": [
+      "poisoned",
+      "paralyzed",
+      "frightened",
+      "charmed"
+    ]
   }
 ]

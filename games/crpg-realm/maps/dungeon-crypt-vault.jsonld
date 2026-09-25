@@ -1,0 +1,1278 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:dungeon-crypt-vault",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Subterranean Crypt & Reliquary Vault",
+  "robos:width": 100,
+  "robos:height": 80,
+  "robos:terrain": "stone",
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dungeon_north_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        0,
+        5
+      ],
+      "robos:to": [
+        100,
+        5
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dungeon_south_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        0,
+        75
+      ],
+      "robos:to": [
+        100,
+        75
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dungeon_west_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        5,
+        5
+      ],
+      "robos:to": [
+        5,
+        75
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dungeon_east_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        95,
+        5
+      ],
+      "robos:to": [
+        95,
+        75
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "cell_divider_1",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        30,
+        5
+      ],
+      "robos:to": [
+        30,
+        25
+      ],
+      "robos:thickness": 4
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "cell_divider_2",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        55,
+        5
+      ],
+      "robos:to": [
+        55,
+        25
+      ],
+      "robos:thickness": 4
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "cell_wall_front",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        5,
+        25
+      ],
+      "robos:to": [
+        70,
+        25
+      ],
+      "robos:thickness": 4
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "cell_door_west",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        18,
+        23
+      ],
+      "robos:size": [
+        6,
+        4
+      ],
+      "dcterms:title": "Reinforced Iron Cell Door"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "cell_door_mid",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        42,
+        23
+      ],
+      "robos:size": [
+        6,
+        4
+      ],
+      "dcterms:title": "Chained Inmate Cell Door"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "vault_partition_north",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        70,
+        25
+      ],
+      "robos:to": [
+        70,
+        46
+      ],
+      "robos:thickness": 4
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "vault_partition_south",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        70,
+        54
+      ],
+      "robos:to": [
+        70,
+        75
+      ],
+      "robos:thickness": 4
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "vault_gate",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        68,
+        46
+      ],
+      "robos:size": [
+        4,
+        8
+      ],
+      "dcterms:title": "Heavy Iron Crypt Portcullis"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_hall_pillar_n1",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        25,
+        40
+      ],
+      "robos:radius": 3,
+      "dcterms:title": "Crypt vault arch pillar"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_hall_pillar_s1",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        25,
+        60
+      ],
+      "robos:radius": 3,
+      "dcterms:title": "Crypt vault arch pillar"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_hall_pillar_n2",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        55,
+        40
+      ],
+      "robos:radius": 3,
+      "dcterms:title": "Crypt vault arch pillar"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_hall_pillar_s2",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        55,
+        60
+      ],
+      "robos:radius": 3,
+      "dcterms:title": "Crypt vault arch pillar"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "grand_sarcophagus_dais",
+      "robos:objectType": "altar",
+      "robos:shape": "rect",
+      "robos:position": [
+        78,
+        45
+      ],
+      "robos:size": [
+        12,
+        10
+      ],
+      "dcterms:title": "Ancient Archmage Grand Sarcophagus Dais"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "statue_guardian_north",
+      "robos:objectType": "statue",
+      "robos:shape": "rect",
+      "robos:position": [
+        74,
+        32
+      ],
+      "robos:size": [
+        5,
+        5
+      ],
+      "dcterms:title": "Gargoyle Sentinel Statue"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "statue_guardian_south",
+      "robos:objectType": "statue",
+      "robos:shape": "rect",
+      "robos:position": [
+        74,
+        62
+      ],
+      "robos:size": [
+        5,
+        5
+      ],
+      "dcterms:title": "Gargoyle Sentinel Statue"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_reliquary_chest",
+      "robos:objectType": "chest",
+      "robos:shape": "rect",
+      "robos:position": [
+        88,
+        50
+      ],
+      "robos:size": [
+        4,
+        4
+      ],
+      "dcterms:title": "Gilded Archmage Reliquary Chest"
+    }
+  ],
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 21,
+    "rows": 17,
+    "blocked": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        15
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        1,
+        10
+      ],
+      [
+        1,
+        11
+      ],
+      [
+        1,
+        12
+      ],
+      [
+        1,
+        13
+      ],
+      [
+        1,
+        14
+      ],
+      [
+        1,
+        15
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        15
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        15
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        15
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        5,
+        15
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        15
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        7,
+        15
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        8,
+        5
+      ],
+      [
+        8,
+        15
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        9,
+        4
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        9,
+        15
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        10,
+        5
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        11,
+        1
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        11,
+        5
+      ],
+      [
+        11,
+        8
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        15
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        12,
+        15
+      ],
+      [
+        13,
+        1
+      ],
+      [
+        13,
+        5
+      ],
+      [
+        13,
+        9
+      ],
+      [
+        13,
+        10
+      ],
+      [
+        13,
+        15
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        14,
+        5
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        14,
+        7
+      ],
+      [
+        14,
+        8
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        14,
+        10
+      ],
+      [
+        14,
+        11
+      ],
+      [
+        14,
+        12
+      ],
+      [
+        14,
+        13
+      ],
+      [
+        14,
+        14
+      ],
+      [
+        14,
+        15
+      ],
+      [
+        15,
+        1
+      ],
+      [
+        15,
+        6
+      ],
+      [
+        15,
+        7
+      ],
+      [
+        15,
+        9
+      ],
+      [
+        15,
+        10
+      ],
+      [
+        15,
+        12
+      ],
+      [
+        15,
+        13
+      ],
+      [
+        15,
+        15
+      ],
+      [
+        16,
+        1
+      ],
+      [
+        16,
+        9
+      ],
+      [
+        16,
+        10
+      ],
+      [
+        16,
+        15
+      ],
+      [
+        17,
+        1
+      ],
+      [
+        17,
+        9
+      ],
+      [
+        17,
+        10
+      ],
+      [
+        17,
+        15
+      ],
+      [
+        18,
+        1
+      ],
+      [
+        18,
+        10
+      ],
+      [
+        18,
+        15
+      ],
+      [
+        19,
+        1
+      ],
+      [
+        19,
+        2
+      ],
+      [
+        19,
+        3
+      ],
+      [
+        19,
+        4
+      ],
+      [
+        19,
+        5
+      ],
+      [
+        19,
+        6
+      ],
+      [
+        19,
+        7
+      ],
+      [
+        19,
+        8
+      ],
+      [
+        19,
+        9
+      ],
+      [
+        19,
+        10
+      ],
+      [
+        19,
+        11
+      ],
+      [
+        19,
+        12
+      ],
+      [
+        19,
+        13
+      ],
+      [
+        19,
+        14
+      ],
+      [
+        19,
+        15
+      ],
+      [
+        20,
+        1
+      ],
+      [
+        20,
+        15
+      ]
+    ],
+    "opaque": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        15
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        1,
+        10
+      ],
+      [
+        1,
+        11
+      ],
+      [
+        1,
+        12
+      ],
+      [
+        1,
+        13
+      ],
+      [
+        1,
+        14
+      ],
+      [
+        1,
+        15
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        15
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        15
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        15
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        5,
+        15
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        15
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        7,
+        15
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        8,
+        5
+      ],
+      [
+        8,
+        15
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        9,
+        4
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        9,
+        15
+      ],
+      [
+        10,
+        1
+      ],
+      [
+        10,
+        5
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        11,
+        1
+      ],
+      [
+        11,
+        2
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        11,
+        5
+      ],
+      [
+        11,
+        8
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        15
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        12,
+        15
+      ],
+      [
+        13,
+        1
+      ],
+      [
+        13,
+        5
+      ],
+      [
+        13,
+        9
+      ],
+      [
+        13,
+        10
+      ],
+      [
+        13,
+        15
+      ],
+      [
+        14,
+        1
+      ],
+      [
+        14,
+        5
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        14,
+        7
+      ],
+      [
+        14,
+        8
+      ],
+      [
+        14,
+        9
+      ],
+      [
+        14,
+        10
+      ],
+      [
+        14,
+        11
+      ],
+      [
+        14,
+        12
+      ],
+      [
+        14,
+        13
+      ],
+      [
+        14,
+        14
+      ],
+      [
+        14,
+        15
+      ],
+      [
+        15,
+        1
+      ],
+      [
+        15,
+        15
+      ],
+      [
+        16,
+        1
+      ],
+      [
+        16,
+        15
+      ],
+      [
+        17,
+        1
+      ],
+      [
+        17,
+        15
+      ],
+      [
+        18,
+        1
+      ],
+      [
+        18,
+        15
+      ],
+      [
+        19,
+        1
+      ],
+      [
+        19,
+        2
+      ],
+      [
+        19,
+        3
+      ],
+      [
+        19,
+        4
+      ],
+      [
+        19,
+        5
+      ],
+      [
+        19,
+        6
+      ],
+      [
+        19,
+        7
+      ],
+      [
+        19,
+        8
+      ],
+      [
+        19,
+        9
+      ],
+      [
+        19,
+        10
+      ],
+      [
+        19,
+        11
+      ],
+      [
+        19,
+        12
+      ],
+      [
+        19,
+        13
+      ],
+      [
+        19,
+        14
+      ],
+      [
+        19,
+        15
+      ],
+      [
+        20,
+        1
+      ],
+      [
+        20,
+        15
+      ]
+    ],
+    "difficult": [],
+    "cover": {
+      "half": [
+        [
+          15,
+          9
+        ],
+        [
+          15,
+          10
+        ],
+        [
+          16,
+          9
+        ],
+        [
+          16,
+          10
+        ],
+        [
+          17,
+          9
+        ],
+        [
+          17,
+          10
+        ],
+        [
+          18,
+          10
+        ]
+      ],
+      "three-quarters": [
+        [
+          14,
+          6
+        ],
+        [
+          14,
+          7
+        ],
+        [
+          14,
+          12
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          15,
+          6
+        ],
+        [
+          15,
+          7
+        ],
+        [
+          15,
+          12
+        ],
+        [
+          15,
+          13
+        ]
+      ]
+    },
+    "objectsHash": "7025e8211510da6e",
+    "image": "res://assets/blockouts/dungeon-crypt-vault.png",
+    "imagePxPerFoot": 16
+  },
+  "robos:backgroundImage": "res://assets/blockouts/dungeon-crypt-vault.png"
+}

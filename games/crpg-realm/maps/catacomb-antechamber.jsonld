@@ -1,0 +1,333 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:catacomb-antechamber",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Ancient Catacombs antechamber",
+  "robos:width": 120,
+  "robos:height": 80,
+  "robos:terrain": "stone",
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_nw",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        40,
+        10
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_sw",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        40,
+        65
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_ne",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        60,
+        10
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_se",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        60,
+        65
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "sarcophagus",
+      "robos:objectType": "altar",
+      "robos:shape": "rect",
+      "robos:position": [
+        100,
+        55
+      ],
+      "robos:size": [
+        10,
+        5
+      ],
+      "dcterms:title": "Sarcophagus"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "collapsed_rubble",
+      "robos:objectType": "rubble",
+      "robos:shape": "rect",
+      "robos:position": [
+        45,
+        40
+      ],
+      "robos:size": [
+        10,
+        10
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crates",
+      "robos:objectType": "crate",
+      "robos:shape": "rect",
+      "robos:position": [
+        25,
+        65
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crates_2",
+      "robos:objectType": "crate",
+      "robos:shape": "rect",
+      "robos:position": [
+        30,
+        70
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crypt_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        105,
+        0
+      ],
+      "robos:to": [
+        105,
+        40
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "burial_niche",
+      "robos:objectType": "zone",
+      "robos:shape": "rect",
+      "robos:position": [
+        106,
+        5
+      ],
+      "robos:size": [
+        14,
+        30
+      ],
+      "dcterms:title": "Burial niches"
+    }
+  ],
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 25,
+    "rows": 17,
+    "blocked": [
+      [
+        5,
+        13
+      ],
+      [
+        6,
+        14
+      ],
+      [
+        8,
+        2
+      ],
+      [
+        8,
+        13
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        20,
+        11
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        21,
+        1
+      ],
+      [
+        21,
+        2
+      ],
+      [
+        21,
+        3
+      ],
+      [
+        21,
+        4
+      ],
+      [
+        21,
+        5
+      ],
+      [
+        21,
+        6
+      ],
+      [
+        21,
+        7
+      ],
+      [
+        21,
+        8
+      ],
+      [
+        21,
+        11
+      ]
+    ],
+    "opaque": [
+      [
+        8,
+        2
+      ],
+      [
+        8,
+        13
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        21,
+        1
+      ],
+      [
+        21,
+        2
+      ],
+      [
+        21,
+        3
+      ],
+      [
+        21,
+        4
+      ],
+      [
+        21,
+        5
+      ],
+      [
+        21,
+        6
+      ],
+      [
+        21,
+        7
+      ],
+      [
+        21,
+        8
+      ]
+    ],
+    "difficult": [
+      [
+        9,
+        8
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        10,
+        9
+      ]
+    ],
+    "cover": {
+      "half": [
+        [
+          5,
+          13
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          20,
+          11
+        ],
+        [
+          21,
+          11
+        ]
+      ],
+      "three-quarters": []
+    },
+    "objectsHash": "3afce7e41780ab6a",
+    "image": "res://assets/blockouts/catacomb-antechamber.png",
+    "imagePxPerFoot": 16
+  },
+  "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png"
+}

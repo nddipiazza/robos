@@ -9,7 +9,16 @@
     "damageFormula": "3d4+3",
     "damageType": "force",
     "icon": "assets/icons/spells/magic_missile.png",
-    "description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage."
+    "description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage.",
+    "mechanics": {
+      "kind": "auto_damage",
+      "target": "creature",
+      "range": 120,
+      "darts": 3,
+      "dartDamage": "1d4+1",
+      "damageType": "force",
+      "blockedByCondition": "shielded"
+    }
   },
   {
     "id": "cure-wounds",
@@ -21,7 +30,13 @@
     "damageFormula": "1d8+WIS",
     "damageType": "healing",
     "icon": "assets/icons/spells/cure_wounds.png",
-    "description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier."
+    "description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier.",
+    "mechanics": {
+      "kind": "heal",
+      "target": "ally",
+      "range": 5,
+      "heal": "1d8+MOD"
+    }
   },
   {
     "id": "healing-word",
@@ -33,7 +48,14 @@
     "damageFormula": "1d4+WIS",
     "damageType": "healing",
     "icon": "assets/icons/spells/healing_word.png",
-    "description": "A creature of your choice that you can see within range regains hit points equal to 1d4 + your spellcasting modifier."
+    "description": "A creature of your choice that you can see within range regains hit points equal to 1d4 + your spellcasting modifier.",
+    "mechanics": {
+      "kind": "heal",
+      "target": "ally",
+      "range": 60,
+      "heal": "1d4+MOD",
+      "bonusAction": true
+    }
   },
   {
     "id": "shield",
@@ -45,7 +67,16 @@
     "damageFormula": null,
     "acBonus": 5,
     "icon": "assets/icons/spells/shield.png",
-    "description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn."
+    "description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "self",
+      "range": 0,
+      "condition": "shielded",
+      "duration": 1,
+      "acBonus": 5,
+      "reaction": "when_hit"
+    }
   },
   {
     "id": "sleep",
@@ -57,7 +88,24 @@
     "damageFormula": "5d8",
     "condition": "unconscious",
     "icon": "assets/icons/spells/sleep.png",
-    "description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect."
+    "description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect.",
+    "mechanics": {
+      "kind": "hp_pool",
+      "target": "point",
+      "range": 90,
+      "area": {
+        "shape": "sphere",
+        "size": 20
+      },
+      "pool": "5d8",
+      "condition": "unconscious",
+      "duration": 10,
+      "endsOnDamage": true,
+      "immuneCreatureTypes": [
+        "undead",
+        "construct"
+      ]
+    }
   },
   {
     "id": "mage-armor",
@@ -69,7 +117,15 @@
     "damageFormula": null,
     "acBonus": 3,
     "icon": "assets/icons/spells/mage_armor.png",
-    "description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier."
+    "description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "ally",
+      "range": 5,
+      "condition": "mage_armor",
+      "duration": 600,
+      "baseAc": 13
+    }
   },
   {
     "id": "burning-hands",
@@ -81,7 +137,21 @@
     "damageFormula": "3d6",
     "damageType": "fire",
     "icon": "assets/icons/spells/burning_hands.png",
-    "description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save."
+    "description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "point",
+      "origin": "self",
+      "range": 15,
+      "area": {
+        "shape": "cone",
+        "size": 15
+      },
+      "save": "DEX",
+      "onSave": "half",
+      "damage": "3d6",
+      "damageType": "fire"
+    }
   },
   {
     "id": "thunderwave",
@@ -93,7 +163,22 @@
     "damageFormula": "2d8",
     "damageType": "thunder",
     "icon": "assets/icons/spells/thunderwave.png",
-    "description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away."
+    "description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "self",
+      "origin": "self",
+      "range": 0,
+      "area": {
+        "shape": "cube",
+        "size": 15
+      },
+      "save": "CON",
+      "onSave": "half",
+      "damage": "2d8",
+      "damageType": "thunder",
+      "pushOnFail": 10
+    }
   },
   {
     "id": "bless",
@@ -104,7 +189,16 @@
     "range": "30 feet",
     "damageFormula": "1d4",
     "icon": "assets/icons/spells/bless.png",
-    "description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll."
+    "description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "allies",
+      "range": 30,
+      "maxTargets": 3,
+      "condition": "blessed",
+      "duration": 10,
+      "concentration": true
+    }
   },
   {
     "id": "hold-person",
@@ -115,7 +209,18 @@
     "range": "60 feet",
     "condition": "paralyzed",
     "icon": "assets/icons/spells/hold_person.png",
-    "description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed."
+    "description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed.",
+    "mechanics": {
+      "kind": "save_condition",
+      "target": "creature",
+      "range": 60,
+      "save": "WIS",
+      "condition": "paralyzed",
+      "duration": 10,
+      "repeatSave": true,
+      "requiresCreatureType": "humanoid",
+      "concentration": true
+    }
   },
   {
     "id": "invisibility",
@@ -126,7 +231,16 @@
     "range": "Touch",
     "condition": "invisible",
     "icon": "assets/icons/spells/invisibility.png",
-    "description": "A creature you touch becomes invisible until the spell ends, gaining advantage on attacks and stealth."
+    "description": "A creature you touch becomes invisible until the spell ends, gaining advantage on attacks and stealth.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "ally",
+      "range": 5,
+      "condition": "invisible",
+      "duration": 600,
+      "endsOnAttackOrCast": true,
+      "concentration": true
+    }
   },
   {
     "id": "spiritual-weapon",
@@ -138,7 +252,15 @@
     "damageFormula": "1d8+WIS",
     "damageType": "force",
     "icon": "assets/icons/spells/spiritual_weapon.png",
-    "description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage."
+    "description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage.",
+    "mechanics": {
+      "kind": "spell_attack",
+      "target": "creature",
+      "range": 60,
+      "damage": "1d8+MOD",
+      "damageType": "force",
+      "bonusAction": true
+    }
   },
   {
     "id": "fireball",
@@ -150,7 +272,20 @@
     "damageFormula": "8d6",
     "damageType": "fire",
     "icon": "assets/icons/spells/fireball.png",
-    "description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage."
+    "description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "point",
+      "range": 150,
+      "area": {
+        "shape": "sphere",
+        "size": 20
+      },
+      "save": "DEX",
+      "onSave": "half",
+      "damage": "8d6",
+      "damageType": "fire"
+    }
   },
   {
     "id": "lightning-bolt",
@@ -162,7 +297,22 @@
     "damageFormula": "8d6",
     "damageType": "lightning",
     "icon": "assets/icons/spells/lightning_bolt.png",
-    "description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage."
+    "description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "point",
+      "origin": "self",
+      "range": 100,
+      "area": {
+        "shape": "line",
+        "size": 100,
+        "width": 5
+      },
+      "save": "DEX",
+      "onSave": "half",
+      "damage": "8d6",
+      "damageType": "lightning"
+    }
   },
   {
     "id": "haste",
@@ -173,7 +323,16 @@
     "range": "30 feet",
     "acBonus": 2,
     "icon": "assets/icons/spells/haste.png",
-    "description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action."
+    "description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "ally",
+      "range": 30,
+      "condition": "hasted",
+      "duration": 10,
+      "acBonus": 2,
+      "concentration": true
+    }
   },
   {
     "id": "counterspell",
@@ -183,7 +342,14 @@
     "castingTime": "1 reaction",
     "range": "60 feet",
     "icon": "assets/icons/spells/counterspell.png",
-    "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail."
+    "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail.",
+    "mechanics": {
+      "kind": "counter",
+      "target": "creature",
+      "range": 60,
+      "reaction": "when_enemy_casts",
+      "autoCounterUpToLevel": 3
+    }
   },
   {
     "id": "dispel-magic",
@@ -193,7 +359,16 @@
     "castingTime": "1 action",
     "range": "120 feet",
     "icon": "assets/icons/spells/dispel_magic.png",
-    "description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends."
+    "description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends.",
+    "mechanics": {
+      "kind": "dispel",
+      "target": "point",
+      "range": 120,
+      "area": {
+        "shape": "sphere",
+        "size": 20
+      }
+    }
   },
   {
     "id": "find-traps",
@@ -205,7 +380,12 @@
     "damageFormula": null,
     "damageType": "divination",
     "icon": "assets/icons/spells/find_traps.png",
-    "description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes."
+    "description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes.",
+    "mechanics": {
+      "kind": "detect_traps",
+      "target": "self",
+      "range": 120
+    }
   },
   {
     "id": "knock",
@@ -217,7 +397,12 @@
     "damageFormula": null,
     "damageType": "utility",
     "icon": "assets/icons/spells/knock.png",
-    "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism."
+    "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism.",
+    "mechanics": {
+      "kind": "utility",
+      "target": "point",
+      "range": 60
+    }
   },
   {
     "id": "tremor-stomp",
@@ -230,7 +415,17 @@
     "damageType": "bludgeoning",
     "condition": "prone",
     "icon": "assets/icons/weapons/warhammer.png",
-    "description": "A colossal ground slam delivering 2d8 bludgeoning damage and knocking the target prone, granting advantage on all subsequent melee attacks against them."
+    "description": "A colossal ground slam delivering 2d8 bludgeoning damage and knocking the target prone, granting advantage on all subsequent melee attacks against them.",
+    "mechanics": {
+      "kind": "maneuver_attack",
+      "target": "creature",
+      "range": 5,
+      "damage": "2d8+4",
+      "damageType": "bludgeoning",
+      "condition": "prone",
+      "duration": 1,
+      "resource": "maneuver"
+    }
   },
   {
     "id": "crushing-cleave",
@@ -242,7 +437,15 @@
     "damageFormula": "2d10",
     "damageType": "slashing",
     "icon": "assets/icons/weapons/greatsword.png",
-    "description": "An overpowering overhead martial cleave dealing an additional 2d10 damage."
+    "description": "An overpowering overhead martial cleave dealing an additional 2d10 damage.",
+    "mechanics": {
+      "kind": "maneuver_attack",
+      "target": "creature",
+      "range": 5,
+      "damage": "2d10+6",
+      "damageType": "slashing",
+      "resource": "maneuver"
+    }
   },
   {
     "id": "rallying-stomp",
@@ -255,7 +458,17 @@
     "damageType": "healing",
     "acBonus": 2,
     "icon": "assets/icons/armor/shield.png",
-    "description": "An inspiring battle cry and defensive ground stomp restoring 2d6 + Con HP to party allies and granting a +2 AC defensive resolve bonus."
+    "description": "An inspiring battle cry and defensive ground stomp restoring 2d6 + Con HP to party allies and granting a +2 AC defensive resolve bonus.",
+    "mechanics": {
+      "kind": "heal",
+      "target": "allies_all",
+      "range": 30,
+      "heal": "2d6+4",
+      "condition": "rallied",
+      "duration": 1,
+      "acBonus": 2,
+      "resource": "maneuver"
+    }
   },
   {
     "id": "blizzard",
@@ -268,7 +481,22 @@
     "damageType": "cold",
     "hazard": "ice",
     "icon": "assets/icons/spells/blizzard.png",
-    "description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice."
+    "description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "point",
+      "range": 150,
+      "area": {
+        "shape": "sphere",
+        "size": 20
+      },
+      "save": "DEX",
+      "onSave": "half",
+      "damage": "6d6",
+      "damageType": "cold",
+      "conditionOnFail": "prone",
+      "duration": 1
+    }
   },
   {
     "id": "stinking-cloud",
@@ -281,7 +509,22 @@
     "damageType": "poison",
     "hazard": "toxic_mist",
     "icon": "assets/icons/spells/stinking_cloud.png",
-    "description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground."
+    "description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground.",
+    "mechanics": {
+      "kind": "save_damage",
+      "target": "point",
+      "range": 90,
+      "area": {
+        "shape": "sphere",
+        "size": 20
+      },
+      "save": "CON",
+      "onSave": "none",
+      "damage": "4d6",
+      "damageType": "poison",
+      "conditionOnFail": "poisoned",
+      "duration": 2
+    }
   },
   {
     "id": "sanctuary",
@@ -292,7 +535,15 @@
     "range": "30 feet",
     "condition": "sanctuary",
     "icon": "assets/icons/spells/sanctuary.png",
-    "description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks."
+    "description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "ally",
+      "range": 30,
+      "condition": "sanctuary",
+      "duration": 10,
+      "wardSave": "WIS"
+    }
   },
   {
     "id": "see-invisibility",
@@ -303,6 +554,13 @@
     "range": "Self",
     "condition": "see_invisibility",
     "icon": "assets/icons/spells/see_invisibility.png",
-    "description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline."
+    "description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline.",
+    "mechanics": {
+      "kind": "buff",
+      "target": "self",
+      "range": 0,
+      "condition": "see_invisibility",
+      "duration": 600
+    }
   }
 ]

@@ -1,0 +1,72 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:crpg:test-scenario:homestead-hound-pack",
+  "@type": [
+    "robos:CRPGTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Hound pack at the homestead",
+  "dcterms:description": "A level-1 fighter and a village guard NPC hold the homestead gate against corrupted hounds. The NPC ally is played by the Infinity AI exactly like a party member.",
+  "robos:seed": 7,
+  "robos:maxRounds": 25,
+  "robos:executionMode": "human",
+  "robos:map": {
+    "@id": "urn:robos:crpg:battle-map:homestead-yard"
+  },
+  "robos:party": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "vance",
+      "dcterms:title": "Lieutenant Vance",
+      "robos:race": "human",
+      "robos:characterClass": "fighter",
+      "robos:level": 1,
+      "robos:position": [
+        20,
+        30
+      ],
+      "robos:inventory": [
+        "potion-healing",
+        "potion-healing"
+      ]
+    }
+  ],
+  "robos:enemies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "hound",
+      "robos:monster": "corrupted-hound",
+      "robos:position": [
+        70,
+        20
+      ],
+      "robos:count": 3
+    }
+  ],
+  "robos:directives": [
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:side": "all",
+      "robos:controller": "infinity_ai",
+      "robos:targetPriority": "nearest"
+    }
+  ],
+  "robos:allies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "gate_guard",
+      "robos:monster": "corrupted-guard",
+      "robos:position": [
+        20,
+        40
+      ],
+      "robos:name": "Village Gate Guard"
+    }
+  ]
+}

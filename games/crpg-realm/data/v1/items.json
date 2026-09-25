@@ -7,7 +7,9 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "slashing",
-    "properties": ["versatile"],
+    "properties": [
+      "versatile"
+    ],
     "weight": 3,
     "acBonus": 0,
     "cost": 15,
@@ -22,12 +24,17 @@
     "equipSlot": "main_hand",
     "damageDice": "1d4",
     "damageType": "piercing",
-    "properties": ["finesse", "light", "thrown"],
+    "properties": [
+      "finesse",
+      "light",
+      "thrown"
+    ],
     "weight": 1,
     "acBonus": 0,
     "cost": 2,
     "icon": "assets/icons/weapons/dagger.png",
-    "description": "A small, double-edged knife favored for swift strikes and concealment."
+    "description": "A small, double-edged knife favored for swift strikes and concealment.",
+    "rangeFeet": 20
   },
   {
     "id": "shortsword",
@@ -37,7 +44,10 @@
     "equipSlot": "main_hand",
     "damageDice": "1d6",
     "damageType": "piercing",
-    "properties": ["finesse", "light"],
+    "properties": [
+      "finesse",
+      "light"
+    ],
     "weight": 2,
     "acBonus": 0,
     "cost": 10,
@@ -52,7 +62,9 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "slashing",
-    "properties": ["versatile"],
+    "properties": [
+      "versatile"
+    ],
     "weight": 3,
     "acBonus": 0,
     "cost": 15,
@@ -67,7 +79,10 @@
     "equipSlot": "main_hand",
     "damageDice": "2d6",
     "damageType": "slashing",
-    "properties": ["heavy", "two-handed"],
+    "properties": [
+      "heavy",
+      "two-handed"
+    ],
     "weight": 6,
     "acBonus": 0,
     "cost": 50,
@@ -97,7 +112,9 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "bludgeoning",
-    "properties": ["versatile"],
+    "properties": [
+      "versatile"
+    ],
     "weight": 2,
     "acBonus": 0,
     "cost": 15,
@@ -127,7 +144,9 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "piercing",
-    "properties": ["finesse"],
+    "properties": [
+      "finesse"
+    ],
     "weight": 2,
     "acBonus": 0,
     "cost": 25,
@@ -142,7 +161,9 @@
     "equipSlot": "main_hand",
     "damageDice": "1d6",
     "damageType": "bludgeoning",
-    "properties": ["versatile"],
+    "properties": [
+      "versatile"
+    ],
     "weight": 4,
     "acBonus": 0,
     "cost": 1,
@@ -157,12 +178,16 @@
     "equipSlot": "main_hand",
     "damageDice": "1d6",
     "damageType": "piercing",
-    "properties": ["thrown", "versatile"],
+    "properties": [
+      "thrown",
+      "versatile"
+    ],
     "weight": 3,
     "acBonus": 0,
     "cost": 1,
     "icon": "assets/icons/weapons/spear.png",
-    "description": "A versatile pointed polearm capable of being hurled or wielded two-handed."
+    "description": "A versatile pointed polearm capable of being hurled or wielded two-handed.",
+    "rangeFeet": 20
   },
   {
     "id": "hunting-bow",
@@ -172,13 +197,17 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "piercing",
-    "properties": ["ammunition", "two-handed"],
+    "properties": [
+      "ammunition",
+      "two-handed"
+    ],
     "range": 400,
     "weight": 2,
     "acBonus": 0,
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
-    "description": "Carved from aged yew, delivering silent lethal arrows from distance."
+    "description": "Carved from aged yew, delivering silent lethal arrows from distance.",
+    "rangeFeet": 80
   },
   {
     "id": "shortbow",
@@ -188,13 +217,17 @@
     "equipSlot": "main_hand",
     "damageDice": "1d6",
     "damageType": "piercing",
-    "properties": ["ammunition", "two-handed"],
+    "properties": [
+      "ammunition",
+      "two-handed"
+    ],
     "range": 320,
     "weight": 2,
     "acBonus": 0,
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
-    "description": "A compact bow easy to draw while on the march or in confined woods."
+    "description": "A compact bow easy to draw while on the march or in confined woods.",
+    "rangeFeet": 80
   },
   {
     "id": "longbow",
@@ -204,13 +237,18 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "piercing",
-    "properties": ["ammunition", "heavy", "two-handed"],
+    "properties": [
+      "ammunition",
+      "heavy",
+      "two-handed"
+    ],
     "range": 600,
     "weight": 2,
     "acBonus": 0,
     "cost": 50,
     "icon": "assets/icons/weapons/longbow.png",
-    "description": "A tall bow capable of penetrating armor at extreme range."
+    "description": "A tall bow capable of penetrating armor at extreme range.",
+    "rangeFeet": 150
   },
   {
     "id": "light-crossbow",
@@ -220,13 +258,18 @@
     "equipSlot": "main_hand",
     "damageDice": "1d8",
     "damageType": "piercing",
-    "properties": ["ammunition", "loading", "two-handed"],
+    "properties": [
+      "ammunition",
+      "loading",
+      "two-handed"
+    ],
     "range": 320,
     "weight": 5,
     "acBonus": 0,
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
-    "description": "Mechanical bow that shoots iron bolts with high stopping power."
+    "description": "Mechanical bow that shoots iron bolts with high stopping power.",
+    "rangeFeet": 80
   },
   {
     "id": "heavy-crossbow",
@@ -236,13 +279,19 @@
     "equipSlot": "main_hand",
     "damageDice": "1d10",
     "damageType": "piercing",
-    "properties": ["ammunition", "heavy", "loading", "two-handed"],
+    "properties": [
+      "ammunition",
+      "heavy",
+      "loading",
+      "two-handed"
+    ],
     "range": 400,
     "weight": 9,
     "acBonus": 0,
     "cost": 50,
     "icon": "assets/icons/weapons/heavy_crossbow.png",
-    "description": "A powerful steel-spanned crossbow delivering crushing impact."
+    "description": "A powerful steel-spanned crossbow delivering crushing impact.",
+    "rangeFeet": 100
   },
   {
     "id": "padded",
@@ -423,7 +472,10 @@
     "acBonus": 0,
     "cost": 50,
     "icon": "assets/icons/potions/potion_healing.png",
-    "description": "A glowing red draught that magically restores 2d4 + 2 hit points when consumed."
+    "description": "A glowing red draught that magically restores 2d4 + 2 hit points when consumed.",
+    "use": {
+      "heal": "2d4+2"
+    }
   },
   {
     "id": "potion-greater-healing",
@@ -435,7 +487,10 @@
     "acBonus": 0,
     "cost": 150,
     "icon": "assets/icons/potions/potion_greater_healing.png",
-    "description": "A potent curative elixir restoring 4d4 + 4 hit points."
+    "description": "A potent curative elixir restoring 4d4 + 4 hit points.",
+    "use": {
+      "heal": "4d4+4"
+    }
   },
   {
     "id": "potion-speed",
@@ -446,7 +501,11 @@
     "acBonus": 2,
     "cost": 250,
     "icon": "assets/icons/potions/potion_speed.png",
-    "description": "Grants the effect of Haste (+2 AC, doubled movement speed) for 1 minute."
+    "description": "Grants the effect of Haste (+2 AC, doubled movement speed) for 1 minute.",
+    "use": {
+      "condition": "hasted",
+      "duration": 10
+    }
   },
   {
     "id": "potion-invisibility",
@@ -457,7 +516,11 @@
     "acBonus": 0,
     "cost": 180,
     "icon": "assets/icons/potions/potion_invisibility.png",
-    "description": "An ethereal shimmering draught that cloaks the drinker in complete invisibility for 1 minute or until an attack is made."
+    "description": "An ethereal shimmering draught that cloaks the drinker in complete invisibility for 1 minute or until an attack is made.",
+    "use": {
+      "condition": "invisible",
+      "duration": 600
+    }
   },
   {
     "id": "antidote",
@@ -468,7 +531,10 @@
     "acBonus": 0,
     "cost": 25,
     "icon": "assets/icons/potions/antidote.png",
-    "description": "Cleanses the Poisoned status condition immediately."
+    "description": "Cleanses the Poisoned status condition immediately.",
+    "use": {
+      "removeCondition": "poisoned"
+    }
   },
   {
     "id": "thieves-tools",
@@ -535,7 +601,8 @@
     "acBonus": 1,
     "cost": 250,
     "icon": "assets/icons/armor/shield.png",
-    "description": "Signet ring radiating cold energy, granting +1 AC."
+    "description": "Signet ring radiating cold energy, granting +1 AC.",
+    "grants": []
   },
   {
     "id": "item-id-1",
@@ -588,7 +655,10 @@
     "effect": "see_invisibility",
     "cost": 1500,
     "icon": "assets/icons/accessories/gem_of_seeing.png",
-    "description": "A finely cut crystal lens etched with divination sigils. Pierces all veils of invisibility, illusions, and shadows, allowing the wearer to see invisible creatures."
+    "description": "A finely cut crystal lens etched with divination sigils. Pierces all veils of invisibility, illusions, and shadows, allowing the wearer to see invisible creatures.",
+    "grants": [
+      "see_invisibility"
+    ]
   },
   {
     "id": "helm-of-truesight",
@@ -599,6 +669,9 @@
     "effect": "see_invisibility",
     "cost": 2200,
     "icon": "assets/icons/accessories/gem_of_seeing.png",
-    "description": "A crown of burnished silver set with an azure star sapphire that pierces all veils of invisibility and shadows."
+    "description": "A crown of burnished silver set with an azure star sapphire that pierces all veils of invisibility and shadows.",
+    "grants": [
+      "see_invisibility"
+    ]
   }
 ]

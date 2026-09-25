@@ -35,6 +35,21 @@ func _ready() -> void:
 	_create_proof_panel()
 	_create_virtual_cursor()
 	_create_scenario_splash()
+	# Browser builds are for players: keep the game cursor, hide the test panels
+	if OS.has_feature("web"):
+		step_panel.visible = false
+		event_panel.visible = false
+		proof_panel.visible = false
+
+## Demo mode shows the BDD HUD even in browser builds, where it's hidden by default.
+var hud_forced := false
+
+func set_hud_visible(show: bool) -> void:
+	hud_forced = show
+	step_panel.visible = show or not OS.has_feature("web")
+	event_panel.visible = show or not OS.has_feature("web")
+	if not show and OS.has_feature("web"):
+		proof_panel.visible = false
 
 func _create_step_toolbar() -> void:
 	step_panel = Panel.new()
@@ -280,7 +295,7 @@ func clear_proofs(title: String = "") -> void:
 func add_proof(check: String, evidence: String = "", passed: bool = true) -> void:
 	if not proof_list:
 		return
-	proof_panel.visible = true
+	proof_panel.visible = hud_forced or not OS.has_feature("web")
 	var box = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	var l1 = Label.new()

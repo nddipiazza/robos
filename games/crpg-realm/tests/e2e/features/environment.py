@@ -13,6 +13,17 @@ DEFAULT_DISPLAY = os.environ.get("CRPG_DISPLAY", os.environ.get("XVFB_DISPLAY", 
 WIDTH = "1920"
 HEIGHT = "1080"
 WEB_SERVICE_PORT = int(os.environ.get("CRPG_WEB_SERVICE_PORT", "18090"))
+# CRPG_MODE=human   (default) "prove it to a human": Xvfb, video, splash, BDD overlays and pauses.
+# CRPG_MODE=backend fastest possible: headless Godot, no video, no overlays, no pauses.
+MODE = os.environ.get("CRPG_MODE", "human").strip().lower()
+
+def is_backend():
+    return MODE == "backend"
+
+def is_engine_scenario(scenario):
+    feature_path = scenario.feature.filename if getattr(scenario, "feature", None) else ""
+    tags = set(scenario.tags).union(set(scenario.feature.tags if getattr(scenario, "feature", None) else []))
+    return "/engine/" in feature_path.replace("\\", "/") or "engine" in tags
 
 def resolve_godot_bin():
     if "GODOT_BIN" in os.environ and os.path.exists(os.environ["GODOT_BIN"]):
@@ -66,7 +77,9 @@ def before_all(context):
     os.makedirs(VIDEOS_DIR, exist_ok=True)
     os.makedirs(REPORTS_DIR, exist_ok=True)
     context.web_port = WEB_SERVICE_PORT
-    context.use_xvfb = os.environ.get("USE_XVFB", "1").lower() not in ("0", "false", "no")
+    context.mode = MODE
+    context.use_xvfb = os.environ.get("USE_XVFB", "1").lower() not in ("0", "false", "no") and not is_backend()
+    print(f"⚙️ [Mode] CRPG_MODE={MODE}")
     context.display_num = DEFAULT_DISPLAY
 
     xvfb_bin = resolve_xvfb_bin()
@@ -99,6 +112,8 @@ def before_all(context):
         "--path", PROJECT_DIR,
         "--port", str(context.web_port)
     ]
+    if is_backend():
+        godot_cmd.insert(1, "--headless")
     context.godot_log = open(os.path.join(REPORTS_DIR, "godot_output.log"), "w")
     context.godot_proc = subprocess.Popen(godot_cmd, env=env, stdout=context.godot_log, stderr=subprocess.STDOUT)
 
@@ -117,6 +132,11 @@ def before_scenario(context, scenario):
             os.remove(context.mp4_path)
         except Exception:
             pass
+
+    context.engine_scenario = is_engine_scenario(scenario)
+    context.ffmpeg_proc = None
+    if is_backend():
+        return
 
     # 1. Determine whether this scenario is a full start-to-finish playthrough or an isolated scene test
     feature_path = scenario.feature.filename if getattr(scenario, "feature", None) else ""
@@ -140,7 +160,10 @@ def before_scenario(context, scenario):
         any(t in tags for t in ["character_creation", "character_select"])
     )
 
-    if needs_character_creation:
+    if context.engine_scenario:
+        # Engine scenarios load their own map, state and directives in their Given steps
+        pass
+    elif needs_character_creation:
         # Full playthrough or onboarding test: start at Character Creation
         try:
             url = f"http://127.0.0.1:{context.web_port}/api/v1/reset"
@@ -176,10 +199,16 @@ def before_scenario(context, scenario):
             elif any(p in feature_file for p in ["01_fog_of_war", "02_party_rtwp", "03_character_status", "06_", "07_", "08_"]) or \
                  any("homestead" in s.lower() for s in all_step_names):
                 target_scene = "Homestead"
+            elif any("catacomb" in s.lower() or "crypt" in s.lower() or "ancientcatacombs" in s.lower() for s in all_step_names):
+                target_scene = "AncientCatacombs"
 
         if target_scene == "TacticalBattle":
             target_companions = ["elora", "thrumbar"]
             target_inventory = ["service-sword", "chain-mail", "potion-healing"]
+        elif target_scene == "AncientCatacombs":
+            target_companions = ["elora"]
+            target_inventory = ["service-sword", "potion-healing", "thieves-tools"]
+            target_quest_stage = 4
         elif target_scene == "VillageSquare":
             target_companions = ["elora"]
             target_inventory = ["service-sword", "potion-healing", "potion-healing"]
@@ -246,6 +275,9 @@ def before_scenario(context, scenario):
     time.sleep(0.3)
 
     # 3. Trigger 3-second introductory scenario splash card over the loaded starting scene
+    #    (engine scenarios show their own splash once the scenario is loaded)
+    if context.engine_scenario:
+        return
     try:
         desc_lines = getattr(scenario, "description", [])
         if isinstance(desc_lines, list):
@@ -305,6 +337,8 @@ def before_scenario(context, scenario):
 
 def before_step(context, step):
     context.step_proofs = []
+    if is_backend():
+        return
     try:
         from tests.e2e.step_descriptions import get_step_description
         url = f"http://127.0.0.1:{context.web_port}/api/v1/qa/set_step"
@@ -323,6 +357,8 @@ def before_step(context, step):
 
 def after_step(context, step):
     """Post every verification (and the live values it read back) onto the recorded video."""
+    if is_backend():
+        return
     try:
         from tests.e2e.proof_helpers import post_proof
         proofs = getattr(context, "step_proofs", []) or []
@@ -339,6 +375,8 @@ def after_step(context, step):
 
 
 def after_scenario(context, scenario):
+    if is_backend():
+        return
     # Automatic, scenario-wide proof: no visible label renders a "tofu" box
     try:
         from tests.e2e.proof_helpers import _get, post_proof

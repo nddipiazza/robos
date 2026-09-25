@@ -1,0 +1,177 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:scene:cavern-depths",
+  "@type": "robos:CRPGScene",
+  "dcterms:title": "Cavern Depths & Arachnid Lair",
+  "dcterms:description": "Subterranean limestone cavern with narrow corridors, chasm crossings, goblin sentries, and giant wolf spiders.",
+  "robos:map": "urn:robos:crpg:battle-map:cavern-depths",
+  "robos:campaign": "urn:robos:crpg:campaign:underdark-incursion",
+  "robos:dimensions": {
+    "width": 1920,
+    "height": 1440,
+    "feetWidth": 120,
+    "feetHeight": 90
+  },
+  "robos:atmosphere": {
+    "robos:lighting": "Dark Subterranean",
+    "robos:ambientAudio": "cave_drips_echo.ogg",
+    "robos:fogOfWar": true
+  },
+  "robos:entities": [
+    {
+      "id": "hero-valen-spawn",
+      "type": "hero",
+      "name": "Sir Valen",
+      "heroClass": "Human Fighter (Lv 3)",
+      "portrait": "⚔️",
+      "x": 220,
+      "y": 720,
+      "facing": 0,
+      "hpMax": 28,
+      "hpCurrent": 28,
+      "ac": 17
+    },
+    {
+      "id": "hero-lyra-spawn",
+      "type": "hero",
+      "name": "Lyra",
+      "heroClass": "Elf Rogue (Lv 3)",
+      "portrait": "🏹",
+      "x": 160,
+      "y": 660,
+      "facing": 0,
+      "hpMax": 21,
+      "hpCurrent": 21,
+      "ac": 16
+    },
+    {
+      "id": "hero-kaelen-spawn",
+      "type": "hero",
+      "name": "Brother Kaelen",
+      "heroClass": "Dwarf Cleric (Lv 3)",
+      "portrait": "🛡️",
+      "x": 160,
+      "y": 780,
+      "facing": 0,
+      "hpMax": 27,
+      "hpCurrent": 27,
+      "ac": 18
+    },
+    {
+      "id": "hero-sylphira-spawn",
+      "type": "hero",
+      "name": "Sylphira",
+      "heroClass": "High Elf Wizard (Lv 3)",
+      "portrait": "🔮",
+      "x": 110,
+      "y": 720,
+      "facing": 0,
+      "hpMax": 19,
+      "hpCurrent": 19,
+      "ac": 13
+    },
+    {
+      "id": "monster-goblin-scout-1",
+      "type": "monster",
+      "name": "Goblin Sentry",
+      "monsterId": "goblin_scout",
+      "hpMax": 7,
+      "hpCurrent": 7,
+      "ac": 15,
+      "attackBonus": 4,
+      "damageFormula": "1d6+2",
+      "x": 560,
+      "y": 620,
+      "faction": "hostile",
+      "directive": "guard_chokepoint"
+    },
+    {
+      "id": "monster-goblin-scout-2",
+      "type": "monster",
+      "name": "Goblin Sentry",
+      "monsterId": "goblin_scout",
+      "hpMax": 7,
+      "hpCurrent": 7,
+      "ac": 15,
+      "attackBonus": 4,
+      "damageFormula": "1d6+2",
+      "x": 560,
+      "y": 780,
+      "faction": "hostile",
+      "directive": "guard_chokepoint"
+    },
+    {
+      "id": "monster-spider-1",
+      "type": "monster",
+      "name": "Giant Wolf Spider",
+      "monsterId": "giant_spider",
+      "hpMax": 22,
+      "hpCurrent": 22,
+      "ac": 13,
+      "attackBonus": 5,
+      "damageFormula": "1d8+3",
+      "x": 1400,
+      "y": 380,
+      "faction": "hostile",
+      "directive": "web_ambush"
+    },
+    {
+      "id": "monster-spider-2",
+      "type": "monster",
+      "name": "Giant Wolf Spider",
+      "monsterId": "giant_spider",
+      "hpMax": 22,
+      "hpCurrent": 22,
+      "ac": 13,
+      "attackBonus": 5,
+      "damageFormula": "1d8+3",
+      "x": 1520,
+      "y": 480,
+      "faction": "hostile",
+      "directive": "web_ambush"
+    },
+    {
+      "id": "monster-bugbear-chief",
+      "type": "monster",
+      "name": "Bugbear Cave Chieftain",
+      "monsterId": "bugbear_brute",
+      "hpMax": 45,
+      "hpCurrent": 45,
+      "ac": 16,
+      "attackBonus": 5,
+      "damageFormula": "2d8+3",
+      "x": 1480,
+      "y": 920,
+      "faction": "hostile",
+      "directive": "heavy_melee_slam"
+    },
+    {
+      "id": "container-mineral-chest",
+      "type": "container",
+      "name": "Forgotten Delver's Mineral Chest",
+      "x": 1680,
+      "y": 1200,
+      "isLocked": true,
+      "lockDC": 13,
+      "loot": [
+        "180 Gold Coins",
+        "Raw Rough Emerald (x2)",
+        "Potion of Greater Healing",
+        "Scroll of Web"
+      ]
+    },
+    {
+      "id": "portal-surface-return",
+      "type": "portal",
+      "name": "Limestone Ascent Tunnel",
+      "x": 80,
+      "y": 720,
+      "targetScene": "res://scenes/VillageSquare.tscn",
+      "targetSpawn": [1800, 1100]
+    }
+  ]
+}

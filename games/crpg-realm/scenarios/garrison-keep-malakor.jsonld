@@ -1,0 +1,110 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:crpg:test-scenario:garrison-keep-malakor",
+  "@type": [
+    "robos:CRPGTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Captain Malakor's last stand",
+  "dcterms:description": "The level-5 party storms the war room. Malakor and two corrupted guards are told to kill spellcasters first; the party wizard opens with Hold Person on Malakor.",
+  "robos:seed": 1337,
+  "robos:maxRounds": 25,
+  "robos:executionMode": "human",
+  "robos:map": {
+    "@id": "urn:robos:crpg:battle-map:garrison-war-room"
+  },
+  "robos:party": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "vance",
+      "dcterms:title": "Lieutenant Vance",
+      "robos:race": "human",
+      "robos:characterClass": "fighter",
+      "robos:level": 5,
+      "robos:position": [
+        10,
+        30
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "thrumbar",
+      "dcterms:title": "Thrumbar",
+      "robos:race": "dwarf",
+      "robos:characterClass": "cleric",
+      "robos:level": 5,
+      "robos:position": [
+        0,
+        45
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "ignis",
+      "dcterms:title": "Ignis the Evoker",
+      "robos:race": "elf",
+      "robos:characterClass": "wizard",
+      "robos:level": 5,
+      "robos:position": [
+        0,
+        15
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "elora",
+      "dcterms:title": "Elora",
+      "robos:race": "half-elf",
+      "robos:characterClass": "rogue",
+      "robos:level": 5,
+      "robos:position": [
+        10,
+        55
+      ]
+    }
+  ],
+  "robos:enemies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "malakor",
+      "robos:monster": "captain-malakor-boss",
+      "robos:position": [
+        80,
+        35
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "guard",
+      "robos:monster": "corrupted-guard",
+      "robos:position": [
+        70,
+        15
+      ],
+      "robos:count": 2
+    }
+  ],
+  "robos:directives": [
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:side": "enemy",
+      "robos:controller": "infinity_ai",
+      "robos:targetPriority": "spellcaster"
+    },
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:actor": "ignis",
+      "robos:controller": "infinity_ai",
+      "robos:preferSpells": [
+        "hold-person",
+        "fireball"
+      ]
+    }
+  ]
+}

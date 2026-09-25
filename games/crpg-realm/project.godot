@@ -19,6 +19,9 @@ GameControlServer="*res://scripts/GameControlServer.gd"
 AudioManager="*res://scripts/AudioManager.gd"
 QAOverlay="*res://scripts/QAOverlay.gd"
 FloatingTextManager="*res://scripts/FloatingTextManager.gd"
+Dice="*res://scripts/engine/Dice.gd"
+ScenarioEngine="*res://scripts/engine/ScenarioEngine.gd"
+DemoController="*res://scripts/demo/DemoController.gd"
 
 [display]
 
