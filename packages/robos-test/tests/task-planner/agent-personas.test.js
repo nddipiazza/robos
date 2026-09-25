@@ -26,7 +26,7 @@ describe('Task Planner - Agent Personas', () => {
   describe('Core Agent Personas Library & Detection Heuristics', () => {
     it('provides all standard RobOS developer agent personas', () => {
       const personas = loadAgentPersonas();
-      assert.ok(personas.length >= 6, `Expected at least 6 personas, got ${personas.length}`);
+      assert.ok(personas.length >= 8, `Expected at least 8 personas, got ${personas.length}`);
 
       const roles = personas.map(p => p.role);
       assert.ok(roles.includes('Software Architect'), 'Software Architect present');
@@ -35,6 +35,8 @@ describe('Task Planner - Agent Personas', () => {
       assert.ok(roles.includes('Backend Systems Developer'), 'Backend Systems Developer present');
       assert.ok(roles.includes('Data & Storage Engineer'), 'Data & Storage Engineer present');
       assert.ok(roles.includes('DevOps & Cloud Engineer'), 'DevOps & Cloud Engineer present');
+      assert.ok(roles.includes('Non-Headless Developer'), 'Non-Headless Developer present');
+      assert.ok(roles.includes('Human + Agent Desktop Co-Pilot'), 'Human + Agent Desktop Co-Pilot present');
     });
 
     it('each persona contains systemPrompt, developmentGuidance, and implementation directives', () => {
@@ -54,6 +56,12 @@ describe('Task Planner - Agent Personas', () => {
 
       const taskWithLabel = { title: 'Triage Issue', labels: ['bug', 'role:game-dev'] };
       assert.strictEqual(detectPersonaForTask(taskWithLabel).slug, 'game-dev');
+
+      const taskWithNonHeadlessLabel = { title: 'GUI Automation Task', labels: ['role:non-headless-dev'] };
+      assert.strictEqual(detectPersonaForTask(taskWithNonHeadlessLabel).slug, 'non-headless-dev');
+
+      const taskWithCopilotLabel = { title: 'Pair Programming Story', labels: ['role:human-agent-copilot'] };
+      assert.strictEqual(detectPersonaForTask(taskWithCopilotLabel).slug, 'human-agent-copilot');
 
       const taskWithId = { title: 'Do Work', agentPersonaId: 'urn:robos:agent:data-engineer-dev' };
       assert.strictEqual(detectPersonaForTask(taskWithId).slug, 'data-engineer-dev');
@@ -79,6 +87,14 @@ describe('Task Planner - Agent Personas', () => {
       // Software Architect
       const archTask = { title: 'Define C4 container model and evaluate KGraph blast radius', body: 'Author living ADR for microservice decomposition' };
       assert.strictEqual(detectPersonaForTask(archTask).slug, 'software-architect');
+
+      // Non-Headless Developer
+      const nonHeadlessTask = { title: 'Reproduce bug using step debugger and Chrome DevTools MCP', body: 'Run interactive IDE inside ephemeral Xvfb and execute token-saving IDE refactoring' };
+      assert.strictEqual(detectPersonaForTask(nonHeadlessTask).slug, 'non-headless-dev');
+
+      // Human + Agent Desktop Co-Pilot
+      const copilotTask = { title: 'Pair programming session with human developer in same session', body: 'Collaborative co-pilot on active desktop session' };
+      assert.strictEqual(detectPersonaForTask(copilotTask).slug, 'human-agent-copilot');
     });
 
     it('builds comprehensive execution prompt with role directive, guidance, and task specifications', () => {

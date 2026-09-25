@@ -270,13 +270,24 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
     prompt = buildAgentPrompt(task, extraContext, effectivePersona);
   }
 
+  // Determine display and execution environment based on persona execution mode
+  const isEphemeralGui = effectivePersona?.executionMode === 'ephemeral-gui' || effectivePersona?.slug === 'non-headless-dev';
+  const targetDisplay = isEphemeralGui ? (process.env.ROBOS_XVFB_DISPLAY || ':99') : (process.env.DISPLAY || ':0');
+
+  const childEnv = {
+    ...process.env,
+    DISPLAY: targetDisplay,
+    ROBOS_AGENT_ROLE: effectivePersona?.role || 'Autonomous Developer',
+    ROBOS_AGENT_MODE: effectivePersona?.executionMode || 'headless',
+  };
+
   // Claude Code CLI: stream-json outputs one JSON object per line.
   // Each line may be { type:'text', text:'...' } or { type:'result', ... }
   const child = cp.spawn('claude', [
     '-p', prompt,
     '--output-format', 'stream-json',
     '--dangerously-skip-permissions',
-  ], { encoding: 'utf8', env: { ...process.env, DISPLAY: ':0' } });
+  ], { encoding: 'utf8', env: childEnv });
 
   activeAgents.set(taskKey, child);
 

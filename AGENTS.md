@@ -218,6 +218,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `kgraph-validate` — Run full W3C SHACL shape validation across all Modular KGraph Packages
 - `kgraph-visualize` — Generate executable Mermaid diagram syntax or C4 component dependency visualizations
 - `manage-robos-skill` — Add, update, or remove a RobOS skill in the plugin marketplace
+- `manage-agent-personas` — Add, customize, and configure Developer Agent Personas, execution modes (Xvfb ephemeral GUI vs desktop session), and token-saving IDE refactoring suites
 - `pr-review-theater` — Inspect and orchestrate the full-featured PR Review Theater with training knowledge checks, living documentation, in-app file diffs, and IDE branch comparisons
 - `read-error-logs` — Inspect RobOS failure logs and Electron errors
 - `record-demo` — Record text-narrated video walkthrough script

@@ -163,6 +163,7 @@ plugins/
 | **`install-desktop-app`** | `/install-desktop-app` | Install .desktop entries, icons, desktop shortcuts, and GNOME Shell favorites |
 | **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies (QEMU, Electron, Java, Node) |
 | **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove a RobOS skill in the marketplace |
+| **`manage-agent-personas`** | `/manage-agent-personas` | Add, customize, and configure Developer Agent Personas, execution modes (Xvfb ephemeral GUI vs desktop session), and token-saving IDE refactoring suites |
 | **`read-error-logs`** | `/read-error-logs` | Inspect centralized RobOS error stream and system crashes |
 | **`record-demo`** | `/record-demo` | Capture narrated video walkthrough with neural TTS (Piper) and WebVTT |
 | **`remove-robos-app`** | `/remove-robos-app` | Safely remove an Electron app and deregister across manifests |

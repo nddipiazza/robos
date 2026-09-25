@@ -361,6 +361,95 @@ class IDEBridgeService {
       ipcResult,
     };
   }
+
+  async refactorRename(options = {}) {
+    const { file, line, column, symbol, newName } = options;
+    if (!newName) throw new Error('newName is required for refactor rename');
+    const ipcResult = await this.postJetBrainsIPC('refactor/rename', { file, line, column, symbol, newName });
+    return {
+      ok: true,
+      refactorType: 'rename',
+      symbol: symbol || null,
+      newName,
+      file: file || null,
+      line: line || null,
+      column: column || null,
+      ipcResult,
+    };
+  }
+
+  async refactorExtractMethod(options = {}) {
+    const { file, startLine, endLine, methodName } = options;
+    if (!file || !startLine || !endLine || !methodName) {
+      throw new Error('file, startLine, endLine, and methodName are required');
+    }
+    const ipcResult = await this.postJetBrainsIPC('refactor/extract-method', { file, startLine, endLine, methodName });
+    return {
+      ok: true,
+      refactorType: 'extract-method',
+      file,
+      startLine,
+      endLine,
+      methodName,
+      ipcResult,
+    };
+  }
+
+  async refactorExtractVariable(options = {}) {
+    const { file, startLine, endLine, variableName } = options;
+    if (!file || !startLine || !endLine || !variableName) {
+      throw new Error('file, startLine, endLine, and variableName are required');
+    }
+    const ipcResult = await this.postJetBrainsIPC('refactor/extract-variable', { file, startLine, endLine, variableName });
+    return {
+      ok: true,
+      refactorType: 'extract-variable',
+      file,
+      startLine,
+      endLine,
+      variableName,
+      ipcResult,
+    };
+  }
+
+  async refactorMove(options = {}) {
+    const { sourcePath, targetPath, symbol } = options;
+    if (!sourcePath || !targetPath) throw new Error('sourcePath and targetPath are required');
+    const ipcResult = await this.postJetBrainsIPC('refactor/move', { sourcePath, targetPath, symbol });
+    return {
+      ok: true,
+      refactorType: 'move',
+      sourcePath,
+      targetPath,
+      symbol: symbol || null,
+      ipcResult,
+    };
+  }
+
+  async refactorSafeDelete(options = {}) {
+    const { file, line, symbol, searchInComments = true, searchForTextOccurrences = true } = options;
+    if (!file && !symbol) throw new Error('file or symbol is required');
+    const ipcResult = await this.postJetBrainsIPC('refactor/safe-delete', { file, line, symbol, searchInComments, searchForTextOccurrences });
+    return {
+      ok: true,
+      refactorType: 'safe-delete',
+      file: file || null,
+      symbol: symbol || null,
+      ipcResult,
+    };
+  }
+
+  async executeIDEAction(options = {}) {
+    const { actionId, params = {} } = options;
+    if (!actionId) throw new Error('actionId is required');
+    const ipcResult = await this.postJetBrainsIPC('action/execute', { actionId, params });
+    return {
+      ok: true,
+      actionId,
+      params,
+      ipcResult,
+    };
+  }
 }
 
 function createIDEBridgeMCPServer(options = {}) {
@@ -506,6 +595,94 @@ function createIDEBridgeMCPServer(options = {}) {
         description: 'List all currently open editor tabs and cursor positions in the IDE.',
         inputSchema: { type: 'object', properties: {} },
         handler: async () => service.getOpenFiles(),
+      },
+      {
+        name: 'robos_ide_refactor_rename',
+        description: 'Rename a symbol, class, method, or variable across the AST via IDE refactoring engine, avoiding full-file code rewrites to save tokens.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            newName: { type: 'string', description: 'New identifier name' },
+            symbol: { type: 'string', description: 'Current symbol name to rename' },
+            file: { type: 'string', description: 'File path containing the symbol' },
+            line: { type: 'number', description: '1-indexed line number where symbol appears' },
+            column: { type: 'number', description: '1-indexed column number' },
+          },
+          required: ['newName'],
+        },
+        handler: async (args) => service.refactorRename(args),
+      },
+      {
+        name: 'robos_ide_refactor_extract_method',
+        description: 'Extract a selected range of lines into a new method or function using the IDE refactoring engine to avoid generating large code diffs.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            file: { type: 'string', description: 'File path' },
+            startLine: { type: 'number', description: 'Start line (1-indexed)' },
+            endLine: { type: 'number', description: 'End line (1-indexed)' },
+            methodName: { type: 'string', description: 'Name of the extracted method' },
+          },
+          required: ['file', 'startLine', 'endLine', 'methodName'],
+        },
+        handler: async (args) => service.refactorExtractMethod(args),
+      },
+      {
+        name: 'robos_ide_refactor_extract_variable',
+        description: 'Extract an expression into a local variable using the IDE refactoring engine to preserve tokens.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            file: { type: 'string', description: 'File path' },
+            startLine: { type: 'number', description: 'Start line (1-indexed)' },
+            endLine: { type: 'number', description: 'End line (1-indexed)' },
+            variableName: { type: 'string', description: 'Name of the extracted variable' },
+          },
+          required: ['file', 'startLine', 'endLine', 'variableName'],
+        },
+        handler: async (args) => service.refactorExtractVariable(args),
+      },
+      {
+        name: 'robos_ide_refactor_move',
+        description: 'Move a class, file, or module to a new package or directory with automatic import and reference updating.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sourcePath: { type: 'string', description: 'Source file or directory path' },
+            targetPath: { type: 'string', description: 'Target destination directory or package' },
+            symbol: { type: 'string', description: 'Optional specific symbol name being moved' },
+          },
+          required: ['sourcePath', 'targetPath'],
+        },
+        handler: async (args) => service.refactorMove(args),
+      },
+      {
+        name: 'robos_ide_refactor_safe_delete',
+        description: 'Safely delete a symbol or class, checking for usages across the codebase before removal to prevent regressions.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            file: { type: 'string', description: 'File path containing the symbol' },
+            symbol: { type: 'string', description: 'Symbol or class name to delete' },
+            line: { type: 'number', description: 'Line number of declaration' },
+            searchInComments: { type: 'boolean', description: 'Search for text occurrences in comments' },
+            searchForTextOccurrences: { type: 'boolean', description: 'Search for text occurrences in non-code files' },
+          },
+        },
+        handler: async (args) => service.refactorSafeDelete(args),
+      },
+      {
+        name: 'robos_ide_execute_action',
+        description: 'Execute a native IDE action ID (e.g., ReformatCode, OptimizeImports, RenameElement, ExtractMethod) via IDE IPC.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            actionId: { type: 'string', description: 'IDE action ID (e.g. ReformatCode, OptimizeImports)' },
+            params: { type: 'object', description: 'Optional action parameters' },
+          },
+          required: ['actionId'],
+        },
+        handler: async (args) => service.executeIDEAction(args),
       },
     ],
     resources: [

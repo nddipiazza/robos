@@ -55,7 +55,7 @@ describe('Task Implementer - Agent Personas', () => {
     await new Promise(r => setTimeout(r, 300));
 
     const optionsCount = await evalJS(app.port, `document.querySelectorAll('#ws-agent-persona-select option').length`);
-    assert.ok(optionsCount >= 6, `Expected at least 6 persona options, got ${optionsCount}`);
+    assert.ok(optionsCount >= 8, `Expected at least 8 persona options, got ${optionsCount}`);
 
     const optionsText = await evalJS(app.port, `
       [...document.querySelectorAll('#ws-agent-persona-select option')].map(o => o.textContent).join(' ')
@@ -66,6 +66,8 @@ describe('Task Implementer - Agent Personas', () => {
     assert.ok(optionsText.includes('Backend Systems Developer'), 'Backend Systems Developer in dropdown');
     assert.ok(optionsText.includes('Data & Storage Engineer'), 'Data & Storage Engineer in dropdown');
     assert.ok(optionsText.includes('DevOps & Cloud Engineer'), 'DevOps & Cloud Engineer in dropdown');
+    assert.ok(optionsText.includes('Non-Headless Developer'), 'Non-Headless Developer in dropdown');
+    assert.ok(optionsText.includes('Human + Agent Desktop Co-Pilot'), 'Human + Agent Desktop Co-Pilot in dropdown');
   });
 
   it('automatically detects and assigns specialized agent persona when selecting tasks', async () => {
@@ -95,6 +97,22 @@ describe('Task Implementer - Agent Personas', () => {
           labels: ['role:data-engineer-dev', 'database'],
           status: 'open',
           assignee: 'dan'
+        },
+        {
+          key: '#104',
+          title: 'Debug UI crash with step debugger and Chrome DevTools MCP',
+          body: 'Operate in ephemeral Xvfb using mapped IDE and execute token-saving IDE refactorings.',
+          labels: ['role:non-headless-dev', 'automation'],
+          status: 'open',
+          assignee: 'claudia'
+        },
+        {
+          key: '#105',
+          title: 'Collaborative pair programming session with human developer',
+          body: 'Pair on active desktop session in the same session with shared IDE and refactoring tools.',
+          labels: ['role:human-agent-copilot', 'copilot'],
+          status: 'open',
+          assignee: 'ndipiazza'
         }
       ]);
     `);
@@ -137,6 +155,34 @@ describe('Task Implementer - Agent Personas', () => {
       return sel.options[sel.selectedIndex]?.text || '';
     })()`);
     assert.ok(selectedRole.includes('Data & Storage Engineer'), `Data task assigned to Data & Storage Engineer (got "${selectedRole}")`);
+
+    // 4. Select non-headless dev task (#104)
+    await evalJS(app.port, `window._demoSelectTask('#104')`);
+    await new Promise(r => setTimeout(r, 200));
+
+    selectedRole = await evalJS(app.port, `(() => {
+      const sel = document.getElementById('ws-agent-persona-select');
+      return sel.options[sel.selectedIndex]?.text || '';
+    })()`);
+    assert.ok(selectedRole.includes('Non-Headless Developer'), `Non-headless task assigned to Non-Headless Developer (got "${selectedRole}")`);
+
+    directives = await evalJS(app.port, `document.getElementById('persona-prompt-preview').value`);
+    assert.ok(directives.includes('Xvfb') || directives.includes('debugger') || directives.includes('refactoring') || directives.includes('DevTools'),
+      'Directives panel contains non-headless GUI & refactoring guidance');
+
+    // 5. Select human+agent copilot task (#105)
+    await evalJS(app.port, `window._demoSelectTask('#105')`);
+    await new Promise(r => setTimeout(r, 200));
+
+    selectedRole = await evalJS(app.port, `(() => {
+      const sel = document.getElementById('ws-agent-persona-select');
+      return sel.options[sel.selectedIndex]?.text || '';
+    })()`);
+    assert.ok(selectedRole.includes('Human + Agent Desktop Co-Pilot'), `Copilot task assigned to Human + Agent Desktop Co-Pilot (got "${selectedRole}")`);
+
+    directives = await evalJS(app.port, `document.getElementById('persona-prompt-preview').value`);
+    assert.ok(directives.includes('session') || directives.includes('Pair') || directives.includes('refactor'),
+      'Directives panel contains desktop pairing guidance');
   });
 
   it('supports toggling the Directives drawer, editing custom directives, and resetting to defaults', async () => {

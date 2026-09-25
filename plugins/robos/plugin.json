@@ -42,7 +42,8 @@
     "update-app-icon",
     "vm-ssh",
     "vm-status",
-    "robos-voice"
+    "robos-voice",
+    "manage-agent-personas"
   ],
   "commands": [
     "view-task-plan",
@@ -77,7 +78,8 @@
     "update-app-icon",
     "vm-ssh",
     "vm-status",
-    "robos-voice"
+    "robos-voice",
+    "manage-agent-personas"
   ],
   "compatibility": {
     "claude": ">=1.0.0",
