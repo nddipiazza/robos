@@ -100,6 +100,31 @@ describe('RobOS Voice Skills Integration Tests', () => {
       assert.strictEqual(res.data.appId, 'git-projects');
       assert.ok(res.response.includes('I have opened Git Projects for you.'));
     });
+
+    it('executes standalone "task explorer" and opens RobOS Task Explorer', async () => {
+      const res = await executor.executeCommand('task explorer');
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.skill, 'open-app');
+      assert.strictEqual(res.data.appId, 'task-planner');
+      assert.ok(res.response.includes('I have opened RobOS Task Explorer for you.'));
+    });
+
+    it('redirects "add task explorer" to opening RobOS Task Explorer', async () => {
+      const res = await executor.executeCommand('add task explorer');
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.skill, 'open-app');
+      assert.strictEqual(res.data.appId, 'task-planner');
+      assert.ok(res.response.includes('I have opened RobOS Task Explorer for you.'));
+    });
+
+    it('executes compound command "open robos task explorer, then add a task to verify OAuth login"', async () => {
+      const res = await executor.executeCommand('open robos task explorer, then add a task to verify OAuth login');
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.skill, 'compound-open-add-task');
+      assert.ok(res.actionDone.includes('RobOS Task Explorer'));
+      assert.ok(res.actionDone.includes('Verify OAuth login'));
+      assert.ok(res.response.includes('I opened RobOS Task Explorer and added the task'));
+    });
   });
 
   describe('3. Knowledge Graph Skills', () => {

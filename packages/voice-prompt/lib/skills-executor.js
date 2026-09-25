@@ -61,33 +61,73 @@ class SkillsExecutor {
       return await this.executeGreeting();
     }
 
-    // 1. Task Management: Add Task
+    // 1. Compound Command: Open app AND/THEN add task
+    // e.g., "open task explorer, then add a task to verify OAuth login"
+    // e.g., "open robos task explorer and add a task: test payment gateway"
+    const compoundMatch = query.match(/^(?:open|launch|start|show)\s+(?:the\s+)?(?:robos\s+)?([a-z0-9\s\-]+?)[,;]?\s+(?:then|and)\s+(?:add|create|new)\s+(?:a\s+)?task(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)(.+)$/i);
+    if (compoundMatch) {
+      const appTarget = compoundMatch[1].trim().toLowerCase();
+      let rawTitle = compoundMatch[2].trim();
+      rawTitle = rawTitle.replace(/^(?:to|for|about|calling)\s+/i, '').replace(/^[:\-–—]\s*/, '').replace(/[.!?]+$/, '').trim();
+      const taskTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+
+      const appResult = await this.executeOpenApp(appTarget);
+      const taskResult = await this.executeAddTask(taskTitle, context, { skipAutoLaunch: true });
+
+      return {
+        ok: true,
+        skill: 'compound-open-add-task',
+        actionDone: `Opened ${appResult.data?.label || appTarget} and added task "${taskTitle}"`,
+        response: `I opened ${appResult.data?.label || 'RobOS Task Explorer'} and added the task '${taskTitle}' to project ${taskResult.data?.project?.name || 'RobOS Core Project'}.`,
+        data: {
+          app: appResult.data,
+          task: taskResult.data
+        }
+      };
+    }
+
+    // 2. App Launching Intent:
+    // Check if query is explicitly an open/launch command OR if it directly names a known RobOS application
+    // e.g. "open robos task explorer", "open task explorer", "launch git projects", or standalone "task explorer", "robos task explorer"
+    const isExplicitOpen = query.match(/^(?:open|launch|start|switch\s+to|show)\s+(?:the\s+)?(?:robos\s+)?(.+?)(?:\s+app|\s+window)?$/i);
+    const isStandaloneApp = /^(?:robos\s+)?(?:task\s+explorer|task\s+planner|task\s+board|git\s+projects|dev\s+central|kube\s+studio|rest\s+client|knowledge\s+graph|kgraph|elearning|issue\s+manager|search\s+index|software\s+center)[.!?]*$/i.test(query);
+
+    if (isExplicitOpen || isStandaloneApp) {
+      const rawTarget = isExplicitOpen ? isExplicitOpen[1].trim() : query.replace(/^(?:robos\s+)?/i, '').replace(/[.!?]+$/, '').trim();
+      const appTarget = rawTarget.toLowerCase();
+      // Ensure we don't accidentally intercept "open task to..."
+      if (!appTarget.startsWith('task to ') && !appTarget.startsWith('task for ')) {
+        return await this.executeOpenApp(appTarget);
+      }
+    }
+
+    // 3. Task Management: Add Task
     // Matches: "add a task to...", "create a task: ...", "new task ...", "add task ..."
     const addTaskMatch = query.match(/^(?:add|create|new|insert)\s+(?:a\s+)?task(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)(.+)$/i)
-      || query.match(/^task(?:\s*[:|-]\s*|\s+)(.+)$/i)
-      || query.match(/(?:add|create)\s+(?:a\s+)?(?:work\s+item|ticket|issue)(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)(.+)$/i);
+      || query.match(/(?:add|create)\s+(?:a\s+)?(?:work\s+item|ticket|issue)(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)(.+)$/i)
+      || query.match(/^task\s*[:|-]\s*(.+)$/i);
 
     if (addTaskMatch) {
       let rawTitle = addTaskMatch[1].trim();
       // Strip leading prepositions/punctuation
-      rawTitle = rawTitle.replace(/^(?:to|for|about|calling)\s+/i, '').replace(/^[:\-–—]\s*/, '').trim();
+      rawTitle = rawTitle.replace(/^(?:to|for|about|calling)\s+/i, '').replace(/^[:\-–—]\s*/, '').replace(/[.!?]+$/, '').trim();
+
+      // If user said "add task explorer" or the remainder is simply an app name, redirect to opening Task Explorer!
+      const lowerTitle = rawTitle.toLowerCase();
+      if (lowerTitle === 'explorer' || lowerTitle === 'task explorer' || lowerTitle === 'planner' || lowerTitle === 'task planner') {
+        return await this.executeOpenApp('task explorer');
+      }
+
       const taskTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
       return await this.executeAddTask(taskTitle, context);
     }
 
-    // 2. Task Management: List Tasks / View Plan
+    // 4. Task Management: List Tasks / View Plan
     if (q.includes('list tasks') || q.includes('show tasks') || q.includes('view tasks') || q.includes('what are the tasks') || q.includes('view task plan') || q.includes('show task plan')) {
       return await this.executeListTasks(context);
     }
 
-    // 3. App Launching (e.g. "open robos task explorer", "open task explorer", "open git projects")
-    const openAppMatch = query.match(/^(?:open|launch|start|switch\s+to|show)\s+(?:the\s+)?(?:robos\s+)?(.+?)(?:\s+app|\s+window)?$/i);
-    if (openAppMatch && !q.includes('task to') && !q.includes('task for')) {
-      const appTarget = openAppMatch[1].trim().toLowerCase();
-      return await this.executeOpenApp(appTarget);
-    }
-
-    // 4. Knowledge Graph: Validate Shapes
+    // 5. Knowledge Graph: Validate Shapes
     if (q.includes('validate knowledge graph') || q.includes('validate kgraph') || q.includes('check shapes') || q.includes('shacl validate')) {
       return await this.executeKGraphValidate();
     }
@@ -162,7 +202,7 @@ class SkillsExecutor {
   /**
    * Skill: Add Task to RobOS Task Explorer & Project Store
    */
-  async executeAddTask(title, context = {}) {
+  async executeAddTask(title, context = {}, options = {}) {
     fs.mkdirSync(this.projectsDir, { recursive: true });
 
     let targetProject = null;
@@ -230,6 +270,11 @@ class SkillsExecutor {
 
     // Also update KGraph project node if possible
     this._syncToKGraph(targetProject);
+
+    // Auto-launch / bring up RobOS Task Explorer so the user sees the newly created task on screen
+    if (!options.skipAutoLaunch && process.env.ROBOS_TEST !== '1') {
+      this._launchAppProcess('task-planner');
+    }
 
     const actionDone = `Created task "${title}" in project "${targetProject.name}"`;
     const response = `I added the task '${title}' to project ${targetProject.name} in RobOS Task Explorer.`;
@@ -303,6 +348,7 @@ class SkillsExecutor {
       'task-explorer': { id: 'task-planner', label: 'RobOS Task Explorer' },
       'task planner': { id: 'task-planner', label: 'RobOS Task Explorer' },
       'task-planner': { id: 'task-planner', label: 'RobOS Task Explorer' },
+      'explorer': { id: 'task-planner', label: 'RobOS Task Explorer' },
       'task board': { id: 'task-board', label: 'Task Board' },
       'task-board': { id: 'task-board', label: 'Task Board' },
       'task implementer': { id: 'task-implementer', label: 'RobOS Task Implementer' },
@@ -628,36 +674,86 @@ class SkillsExecutor {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
+  _findElectronBin() {
+    if (process.versions && process.versions.electron && process.execPath) {
+      return process.execPath;
+    }
+    const candidates = [
+      path.join(this.rootRepoDir, 'packages', 'task-planner', 'node_modules', '.bin', 'electron'),
+      path.join(this.rootRepoDir, 'packages', 'voice-prompt', 'node_modules', '.bin', 'electron'),
+      path.join(this.rootRepoDir, 'packages', 'app-launcher', 'node_modules', '.bin', 'electron'),
+      path.join(this.rootRepoDir, 'packages', 'robos-test', 'node_modules', '.bin', 'electron'),
+      path.join(this.homeDir, '.local', 'bin', 'electron'),
+      '/usr/local/bin/electron',
+      '/usr/bin/electron',
+    ];
+    for (const c of candidates) {
+      try {
+        if (fs.existsSync(c)) return c;
+      } catch {}
+    }
+    return 'electron';
+  }
+
   _launchAppProcess(appId) {
+    if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
+      return;
+    }
     try {
-      const candidates = [
+      // 1. Try local launcher binary if present in ~/.local/bin or repo
+      const binCandidates = [
+        path.join(this.homeDir, '.local', 'bin', `robos-${appId}`),
+        path.join(this.homeDir, '.local', 'bin', appId),
+      ];
+      if (appId === 'task-planner' || appId === 'task-explorer') {
+        binCandidates.unshift(path.join(this.homeDir, '.local', 'bin', 'robos-task-explorer'));
+        binCandidates.unshift(path.join(this.homeDir, '.local', 'bin', 'robos-task-planner'));
+      }
+
+      const uid = process.getuid ? process.getuid() : null;
+      const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+      if (!env.DBUS_SESSION_BUS_ADDRESS && uid !== null) {
+        env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${uid}/bus`;
+      }
+      if (!env.XDG_RUNTIME_DIR && uid !== null) {
+        env.XDG_RUNTIME_DIR = `/run/user/${uid}`;
+      }
+
+      for (const b of binCandidates) {
+        if (fs.existsSync(b)) {
+          const child = spawn(b, [], { detached: true, stdio: 'ignore', env });
+          child.on('error', (err) => console.warn(`[skills-executor] Binary launch error (${b}):`, err.message));
+          child.unref();
+          console.log(`[skills-executor] Launched ${appId} via binary ${b} (pid=${child.pid})`);
+          return;
+        }
+      }
+
+      // 2. Fall back to spawning Electron with target package
+      const pkgCandidates = [
         path.join(this.rootRepoDir, 'packages', appId),
         `/usr/local/share/robos/${appId}`,
       ];
 
       let targetPkg = null;
-      for (const p of candidates) {
+      for (const p of pkgCandidates) {
         if (fs.existsSync(p)) { targetPkg = p; break; }
       }
 
-      if (!targetPkg) return;
-
-      let electronBin = 'electron';
-      const localElectron = path.join(this.rootRepoDir, 'node_modules', '.bin', 'electron');
-      if (fs.existsSync(localElectron)) {
-        electronBin = localElectron;
-      } else if (fs.existsSync('/usr/bin/electron')) {
-        electronBin = '/usr/bin/electron';
+      if (!targetPkg) {
+        console.warn(`[skills-executor] Target package directory for ${appId} not found`);
+        return;
       }
 
-      const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+      const electronBin = this._findElectronBin();
       const child = spawn(electronBin, [targetPkg, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
         detached: true,
         stdio: 'ignore',
         env,
       });
-      child.on('error', () => {});
+      child.on('error', (err) => console.warn(`[skills-executor] Launch app ${appId} error:`, err.message));
       child.unref();
+      console.log(`[skills-executor] Launched ${appId} via ${electronBin} (pid=${child.pid})`);
     } catch (err) {
       console.warn(`[skills-executor] Launch app ${appId} error:`, err.message);
     }
