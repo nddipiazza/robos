@@ -41,6 +41,19 @@ function listProjectFiles() {
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 }
 
+// ── robos-lib: agent-personas ────────────────────────────────────────────────
+let agentPersonasLib = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'agent-personas'),
+    path.resolve(__dirname, '..', 'robos-lib', 'agent-personas'),
+    '/usr/local/share/robos/robos-lib/agent-personas',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { agentPersonasLib = require(p); break; } catch {}
+  }
+} catch {}
+
 // ── robos-lib: ai-json ────────────────────────────────────────────────────────
 let aiJson = null;
 try {
@@ -281,6 +294,32 @@ ipcMain.handle('fetch-jira-epics', async (_, { jiraUrl, jiraProject, username, t
   }
 });
 
+ipcMain.handle('list-agent-personas', () => {
+  if (agentPersonasLib) {
+    return { ok: true, personas: agentPersonasLib.loadAgentPersonas() };
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
+ipcMain.handle('save-agent-persona', (_, persona) => {
+  if (agentPersonasLib) {
+    try {
+      const saved = agentPersonasLib.saveAgentPersona(persona);
+      return { ok: true, persona: saved };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
+ipcMain.handle('reset-agent-personas', () => {
+  if (agentPersonasLib) {
+    return { ok: true, personas: agentPersonasLib.resetAgentPersonas() };
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
 ipcMain.handle('generate-tasks', async (_, { prompt, serverInfo }) => {
   if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_DEMO_SHOW === '1') {
     const mockTasks = [
@@ -290,36 +329,53 @@ ipcMain.handle('generate-tasks', async (_, { prompt, serverInfo }) => {
         title: 'Epic: Acme Petshop Distributed Platform',
         body: 'Architecture comprising Java 21 Spring Boot 3 REST API, React 18 frontend, and TypeSpec common library.',
         labels: ['epic', 'petshop'],
+        assignedRole: 'Software Architect',
+        agentPersonaId: 'urn:robos:agent:software-architect',
       },
       {
         title: 'PET-101: PostgreSQL Database Schema & Migrations',
         body: 'Define Flyway migrations for petstore catalog, orders, and inventory tables.',
         parentEpicIndex: 0,
         labels: ['database', 'backend'],
+        assignedRole: 'Data & Storage Engineer',
+        agentPersonaId: 'urn:robos:agent:data-engineer-dev',
+        implementationGuidance: 'Define Flyway versioned SQL migrations and table constraints.',
       },
       {
         title: 'PET-102: Java Spring Boot 3 REST API Service',
         body: 'Implement OpenAPI 3.1 REST microservice handling /pets and /orders endpoints.',
         parentEpicIndex: 0,
         labels: ['java', 'spring-boot', 'api'],
+        assignedRole: 'Backend Systems Developer',
+        agentPersonaId: 'urn:robos:agent:backend-dev',
+        implementationGuidance: 'Implement Spring Boot REST controllers with OpenAPI annotations and mock tests.',
       },
       {
         title: 'PET-103: React 18 Web Adoption Portal & Cart',
         body: 'Client web portal consuming OpenAPI 3.1 endpoints with real-time field validation.',
         parentEpicIndex: 0,
         labels: ['frontend', 'react'],
+        assignedRole: 'Frontend Web Developer',
+        agentPersonaId: 'urn:robos:agent:frontend-web-dev',
+        implementationGuidance: 'Build React 18 components with live form validation and accessible dialogs.',
       },
       {
         title: 'PET-104: Kafka Topic & Event Ingestion Pipeline',
         body: 'AsyncAPI topic consumer capturing pet adoption and inventory update events.',
         parentEpicIndex: 0,
         labels: ['streaming', 'kafka'],
+        assignedRole: 'Data & Storage Engineer',
+        agentPersonaId: 'urn:robos:agent:data-engineer-dev',
+        implementationGuidance: 'Configure Kafka producer and consumer with idempotent message processing.',
       },
       {
         title: 'PET-105: Rabies Vaccine Certification Gateway',
         body: 'Delta endpoint verifying rabies vaccination certification and veterinary records.',
         parentEpicIndex: 0,
         labels: ['compliance', 'vaccine'],
+        assignedRole: 'Backend Systems Developer',
+        agentPersonaId: 'urn:robos:agent:backend-dev',
+        implementationGuidance: 'Enforce certificate validation and external veterinary records verification.',
       },
     ];
     return { ok: true, tasks: mockTasks };
@@ -339,13 +395,25 @@ For Jira, organize tasks into a hierarchy of Epics with child issues:
 - Each task should have "issueType": one of the issue type ids above if applicable
 `;
 
-  const fullPrompt = `You are a software project task planner.
+  const personaList = agentPersonasLib
+    ? agentPersonasLib.loadAgentPersonas().map(p => `- ${p.role} ("${p.id}"): ${p.description}`).join('\n')
+    : `- Software Architect ("urn:robos:agent:software-architect")
+- Frontend Web Developer ("urn:robos:agent:frontend-web-dev")
+- Game Developer ("urn:robos:agent:game-dev")
+- Backend Systems Developer ("urn:robos:agent:backend-dev")
+- Data & Storage Engineer ("urn:robos:agent:data-engineer-dev")
+- DevOps & Cloud Engineer ("urn:robos:agent:devops-engineer")`;
+
+  const fullPrompt = `You are a software project task planner in RobOS.
 
 The user has a ${serverInfo.type} task server named "${serverInfo.name}".
 ${isJira ? `Jira project: ${serverInfo.jiraProject}` : `Repository: ${serverInfo.repo}`}
 
 Available issue types:
 ${typeList}
+
+Available RobOS Developer Agent Personas:
+${personaList}
 
 The user wants to create tasks based on this request:
 "${prompt}"
@@ -356,6 +424,9 @@ Generate a JSON array of tasks to create. Each task object must have:
 - "title": string (required, the issue/task title)
 - "body": string (required, detailed description in markdown)
 - "labels": array of strings (optional, relevant labels)
+- "assignedRole": string (required, the optimal role from the personas above, e.g. "Software Architect", "Frontend Web Developer", "Game Developer", "Backend Systems Developer", "Data & Storage Engineer", "DevOps & Cloud Engineer")
+- "agentPersonaId": string (required, matching persona ID like "urn:robos:agent:frontend-web-dev")
+- "implementationGuidance": string (optional, 1-2 concise directives for how this persona should build it)
 ${hierarchyInstructions}
 
 Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
@@ -384,6 +455,19 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
       parsed = JSON.parse(text);
     }
     if (!Array.isArray(parsed)) throw new Error('Expected an array of tasks');
+
+    // Augment any tasks missing assignedRole using heuristic detection
+    if (agentPersonasLib) {
+      parsed = parsed.map(t => {
+        if (!t.assignedRole || !t.agentPersonaId) {
+          const detected = agentPersonasLib.detectPersonaForTask(t);
+          t.assignedRole = t.assignedRole || detected.role;
+          t.agentPersonaId = t.agentPersonaId || detected.id;
+        }
+        return t;
+      });
+    }
+
     log.info('tasks-generated', `Generated ${parsed.length} tasks from AI`, { count: parsed.length, server: serverInfo.name });
     return { ok: true, tasks: parsed };
   } catch (e) {
@@ -395,36 +479,53 @@ Return ONLY a valid JSON array. No explanation, no markdown code fences.`;
           title: 'Epic: Acme Petshop Distributed Platform',
           body: 'Architecture comprising Java 21 Spring Boot 3 REST API, React 18 frontend, and TypeSpec common library.',
           labels: ['epic', 'petshop'],
+          assignedRole: 'Software Architect',
+          agentPersonaId: 'urn:robos:agent:software-architect',
         },
         {
           title: 'PET-101: PostgreSQL Database Schema & Migrations',
           body: 'Define Flyway migrations for petstore catalog, orders, and inventory tables.',
           parentEpicIndex: 0,
           labels: ['database', 'backend'],
+          assignedRole: 'Data & Storage Engineer',
+          agentPersonaId: 'urn:robos:agent:data-engineer-dev',
+          implementationGuidance: 'Define Flyway versioned SQL migrations and table constraints.',
         },
         {
           title: 'PET-102: Java Spring Boot 3 REST API Service',
           body: 'Implement OpenAPI 3.1 REST microservice handling /pets and /orders endpoints.',
           parentEpicIndex: 0,
           labels: ['java', 'spring-boot', 'api'],
+          assignedRole: 'Backend Systems Developer',
+          agentPersonaId: 'urn:robos:agent:backend-dev',
+          implementationGuidance: 'Implement Spring Boot REST controllers with OpenAPI annotations and mock tests.',
         },
         {
           title: 'PET-103: React 18 Web Adoption Portal & Cart',
           body: 'Client web portal consuming OpenAPI 3.1 endpoints with real-time field validation.',
           parentEpicIndex: 0,
           labels: ['frontend', 'react'],
+          assignedRole: 'Frontend Web Developer',
+          agentPersonaId: 'urn:robos:agent:frontend-web-dev',
+          implementationGuidance: 'Build React 18 components with live form validation and accessible dialogs.',
         },
         {
           title: 'PET-104: Kafka Topic & Event Ingestion Pipeline',
           body: 'AsyncAPI topic consumer capturing pet adoption and inventory update events.',
           parentEpicIndex: 0,
           labels: ['streaming', 'kafka'],
+          assignedRole: 'Data & Storage Engineer',
+          agentPersonaId: 'urn:robos:agent:data-engineer-dev',
+          implementationGuidance: 'Configure Kafka producer and consumer with idempotent message processing.',
         },
         {
           title: 'PET-105: Rabies Vaccine Certification Gateway',
           body: 'Delta endpoint verifying rabies vaccination certification and veterinary records.',
           parentEpicIndex: 0,
           labels: ['compliance', 'vaccine'],
+          assignedRole: 'Backend Systems Developer',
+          agentPersonaId: 'urn:robos:agent:backend-dev',
+          implementationGuidance: 'Enforce certificate validation and external veterinary records verification.',
         },
       ];
       return { ok: true, tasks: mockTasks };
@@ -439,13 +540,26 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
   if (serverInfo.type === 'github') {
     for (const task of tasks) {
       try {
-        const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', task.body || ''];
-        if (task.labels && task.labels.length) {
-          for (const lbl of task.labels) {
+        const labels = [...(task.labels || [])];
+        if ((task.agentPersonaId || task.assignedRole) && agentPersonasLib) {
+          const p = agentPersonasLib.detectPersonaForTask(task);
+          const roleLabel = `role:${p.slug}`;
+          if (!labels.includes(roleLabel)) labels.push(roleLabel);
+        }
+        let body = task.body || '';
+        if (task.assignedRole && !body.includes('Assigned Agent Persona:')) {
+          body += `\n\n---\n### 🤖 Assigned Agent Persona: ${task.assignedRole}\n`;
+          if (task.implementationGuidance) {
+            body += `> **Implementation Directives**: ${task.implementationGuidance}\n`;
+          }
+        }
+        const args = ['issue', 'create', '--repo', serverInfo.repo, '--title', task.title, '--body', body];
+        if (labels.length) {
+          for (const lbl of labels) {
             cp.spawnSync('gh', ['label', 'create', lbl, '--repo', serverInfo.repo, '--color', '5319e7', '--force'],
               { timeout: 8000 });
           }
-          args.push('--label', task.labels.join(','));
+          args.push('--label', labels.join(','));
         }
         const r = cp.spawnSync('gh', args, { encoding: 'utf8', timeout: 30000 });
         if (r.status === 0) {

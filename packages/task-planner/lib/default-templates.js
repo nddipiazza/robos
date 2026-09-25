@@ -1,9 +1,24 @@
 'use strict';
 
+let detectPersonaForTask = null;
+try {
+  const ap = require('../../robos-lib/agent-personas');
+  detectPersonaForTask = ap.detectPersonaForTask;
+} catch (_) {
+  try {
+    const ap = require('/usr/local/share/robos/robos-lib/agent-personas');
+    detectPersonaForTask = ap.detectPersonaForTask;
+  } catch (_) {}
+}
+
 /**
- * Helper to build an epic with child tasks.
+ * Helper to build an epic with child tasks and assigned agent personas.
  */
 function makePlan({ prompt, epicTitle, epicName, epicBody, labels = [], stories = [] }) {
+  const epicPersona = detectPersonaForTask
+    ? detectPersonaForTask({ isEpic: true, labels: ['epic', ...labels], title: epicTitle })
+    : null;
+
   const tasks = [
     {
       title: epicTitle,
@@ -13,16 +28,27 @@ function makePlan({ prompt, epicTitle, epicName, epicBody, labels = [], stories 
       epicName: epicName || epicTitle,
       parentEpicIdx: null,
       issueType: 'Epic',
+      assignedRole: epicPersona ? epicPersona.role : 'Software Architect',
+      agentPersonaId: epicPersona ? epicPersona.id : 'urn:robos:agent:software-architect',
     },
-    ...stories.map(s => ({
-      title: s.title,
-      body: s.body,
-      labels: [...(s.labels || labels)],
-      isEpic: false,
-      epicName: '',
-      parentEpicIdx: 0,
-      issueType: s.issueType || 'Story',
-    })),
+    ...stories.map(s => {
+      const taskLabels = [...(s.labels || labels)];
+      const persona = detectPersonaForTask
+        ? detectPersonaForTask({ title: s.title, body: s.body, labels: taskLabels, isEpic: false })
+        : null;
+
+      return {
+        title: s.title,
+        body: s.body,
+        labels: taskLabels,
+        isEpic: false,
+        epicName: '',
+        parentEpicIdx: 0,
+        issueType: s.issueType || 'Story',
+        assignedRole: s.assignedRole || (persona ? persona.role : 'Backend Systems Developer'),
+        agentPersonaId: s.agentPersonaId || (persona ? persona.id : 'urn:robos:agent:backend-dev'),
+      };
+    }),
   ];
   return { prompt, tasks };
 }

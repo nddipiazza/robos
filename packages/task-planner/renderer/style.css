@@ -1063,3 +1063,175 @@ robos-ai-textarea {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 11px;
 }
+
+/* ── Agent Personas Modal & Card Controls ─────────────────────────────────── */
+.personas-layout {
+  display: flex;
+  gap: 16px;
+  min-height: 480px;
+  max-height: 68vh;
+  margin-top: 10px;
+}
+
+.personas-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 6px;
+  border-right: 1px solid var(--border);
+}
+
+.persona-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.persona-tab-item:hover {
+  border-color: #555;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.persona-tab-item.active {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.persona-tab-icon {
+  font-size: 16px;
+}
+
+.persona-tab-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.persona-tab-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-tab-category {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.personas-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.input-split-row {
+  display: flex;
+  gap: 10px;
+}
+
+.input-split-row > * {
+  flex: 1;
+}
+
+.personas-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Task Card Role Badge & Select ────────────────────────────────────────── */
+.task-role-select {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  color: #58a6ff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  cursor: pointer;
+  outline: none;
+  max-width: 170px;
+}
+
+.task-role-select:hover, .task-role-select:focus {
+  border-color: var(--accent);
+}
+
+.task-directives-btn {
+  background: transparent;
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  color: #58a6ff;
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.task-directives-btn:hover {
+  background: rgba(88, 166, 255, 0.1);
+  border-color: #58a6ff;
+}
+
+.task-directives-box {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.task-directives-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.task-directives-input {
+  width: 100%;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  color: #e6edf3;
+  font-size: 11px;
+  padding: 6px 8px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.task-directives-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}

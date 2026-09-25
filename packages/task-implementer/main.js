@@ -24,6 +24,18 @@ try {
   }
 } catch {}
 
+let agentPersonasLib = null;
+try {
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'agent-personas'),
+    path.resolve(__dirname, '..', 'robos-lib', 'agent-personas'),
+    '/usr/local/share/robos/robos-lib/agent-personas',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { agentPersonasLib = require(p); break; } catch {}
+  }
+} catch {}
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); }
@@ -207,12 +219,56 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
   return { ok: false, error: `Unsupported server type: ${server.type}` };
 });
 
-ipcMain.handle('start-agent', (event, { taskKey, task, extraContext }) => {
+ipcMain.handle('list-agent-personas', () => {
+  if (agentPersonasLib) {
+    return { ok: true, personas: agentPersonasLib.loadAgentPersonas() };
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
+ipcMain.handle('save-agent-persona', (_, persona) => {
+  if (agentPersonasLib) {
+    try {
+      const saved = agentPersonasLib.saveAgentPersona(persona);
+      return { ok: true, persona: saved };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
+ipcMain.handle('reset-agent-personas', () => {
+  if (agentPersonasLib) {
+    try {
+      const reset = agentPersonasLib.resetAgentPersonas();
+      return { ok: true, personas: reset };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+  return { ok: false, error: 'agent-personas library not available' };
+});
+
+ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, customPrompt, customDirectives }) => {
   if (activeAgents.has(taskKey)) {
     return { ok: false, error: 'Agent already running for this task' };
   }
 
-  const prompt = buildAgentPrompt(task, extraContext);
+  let prompt = '';
+  if (customPrompt && customPrompt.trim()) {
+    prompt = customPrompt.trim();
+  } else {
+    let effectivePersona = persona;
+    if (customDirectives && customDirectives.trim()) {
+      effectivePersona = {
+        ...(persona || {}),
+        role: persona?.role || 'Autonomous Developer',
+        developmentGuidance: customDirectives.trim(),
+      };
+    }
+    prompt = buildAgentPrompt(task, extraContext, effectivePersona);
+  }
 
   // Claude Code CLI: stream-json outputs one JSON object per line.
   // Each line may be { type:'text', text:'...' } or { type:'result', ... }
@@ -248,7 +304,9 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext }) => {
         } else {
           continue; // skip tool_use, tool_result, etc.
         }
-      } catch {}
+      } catch {
+        text = line;
+      }
       if (text) {
         mainWindow.webContents.send('agent-stream', { taskKey, text, stream: 'stdout' });
       }
@@ -292,7 +350,16 @@ ipcMain.handle('open-task-servers', () => {
   return { ok: true };
 });
 
-function buildAgentPrompt(task, extraContext) {
+function buildAgentPrompt(task, extraContext, persona) {
+  let resolvedPersona = persona;
+  if (!resolvedPersona && agentPersonasLib) {
+    resolvedPersona = agentPersonasLib.detectPersonaForTask(task);
+  }
+
+  if (agentPersonasLib && resolvedPersona) {
+    return agentPersonasLib.buildExecutionPrompt(task, resolvedPersona, extraContext);
+  }
+
   const lines = [
     `You are a software engineer implementing a task from a task tracker.`,
     ``,

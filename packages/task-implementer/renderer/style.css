@@ -84,8 +84,266 @@ html, body { height: 100%; background: var(--bg-primary); color: var(--text); fo
 .btn-outline { background: transparent; color: var(--text-muted); border-color: var(--border); }
 .btn-outline:hover:not(:disabled) { color: var(--text); border-color: var(--text-muted); }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-xs { padding: 2px 6px; font-size: 11px; }
+.btn-success { background: #22c55e22; color: var(--green); border-color: #22c55e44; }
+.btn-success:hover:not(:disabled) { background: #22c55e33; }
 
 /* Misc */
 .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #3b82f633; border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-muted); text-align: center; }
+
+/* ── Persona Workspace Controls ────────────────────────────────────────────── */
+.persona-select-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.persona-icon-label { font-size: 13px; }
+.persona-select {
+  background: transparent;
+  color: var(--accent);
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+.persona-select option {
+  background: var(--bg-card2);
+  color: var(--text);
+}
+
+/* ── Expandable Directives Panel ──────────────────────────────────────────── */
+.persona-directives-box {
+  background: #090d13;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.directives-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.directives-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.directives-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.directives-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.directives-textarea {
+  width: 100%;
+  height: 110px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+}
+.directives-textarea:focus {
+  border-color: var(--accent);
+}
+
+/* ── Agent Personas Modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.personas-modal-card {
+  width: 90%;
+  max-width: 960px;
+  max-height: 88vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+}
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-title-row h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.modal-close-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+}
+.templates-count-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.personas-layout {
+  display: flex;
+  gap: 16px;
+  min-height: 440px;
+  max-height: 65vh;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.personas-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 6px;
+  border-right: 1px solid var(--border);
+}
+.persona-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.persona-tab-item:hover {
+  border-color: #555;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+}
+.persona-tab-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  color: #fff;
+}
+.persona-tab-icon {
+  font-size: 16px;
+}
+.persona-tab-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.persona-tab-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.persona-tab-category {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.personas-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.meta-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.meta-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+}
+.meta-input:focus {
+  border-color: var(--accent);
+}
+.code-font {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+}
+.input-split-row {
+  display: flex;
+  gap: 10px;
+}
+.input-split-row > * {
+  flex: 1;
+}
+.personas-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.modal-actions-right {
+  display: flex;
+  gap: 8px;
+}
