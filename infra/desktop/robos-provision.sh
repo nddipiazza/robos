@@ -258,7 +258,55 @@ else
     for f in "$ROBOS_BASE/$pkg"/*.desktop; do
       [ -f "$f" ] && cp "$f" /usr/share/applications/
     done
+
+    # Install multi-scale icons into hicolor theme and pixmaps
+    if [ -f "$ROBOS_BASE/$pkg/icon.svg" ]; then
+      mkdir -p /usr/share/icons/hicolor/scalable/apps /usr/share/pixmaps
+      cp "$ROBOS_BASE/$pkg/icon.svg" "/usr/share/icons/hicolor/scalable/apps/${pkg}.svg"
+      cp "$ROBOS_BASE/$pkg/icon.svg" "/usr/share/pixmaps/${pkg}.svg"
+
+      python3 -c "
+import gi, os
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import GdkPixbuf
+svg = '$ROBOS_BASE/$pkg/icon.svg'
+pkg = '$pkg'
+try:
+    p256 = GdkPixbuf.Pixbuf.new_from_file_at_scale(svg, 256, 256, True)
+    p256.savev('$ROBOS_BASE/$pkg/icon.png', 'png', [], [])
+except: pass
+
+for s in [16, 24, 32, 48, 64, 128, 256, 512]:
+    s_dir = f'/usr/share/icons/hicolor/{s}x{s}/apps'
+    os.makedirs(s_dir, exist_ok=True)
+    try:
+        pix = GdkPixbuf.Pixbuf.new_from_file_at_scale(svg, s, s, True)
+        pix.savev(os.path.join(s_dir, f'{pkg}.png'), 'png', [], [])
+        if s in [48, 128, 256]:
+            pix.savev(f'/usr/share/pixmaps/{pkg}.png', 'png', [], [])
+    except: pass
+" 2>/dev/null || true
+
+      # Check for StartupWMClass alias in desktop files
+      for f in "$ROBOS_BASE/$pkg"/*.desktop; do
+        if [ -f "$f" ]; then
+          wm_class=$(grep -oP '^StartupWMClass=\K.+' "$f" | tr -d '\r' || true)
+          if [ -n "$wm_class" ] && [ "$wm_class" != "$pkg" ]; then
+            cp "/usr/share/icons/hicolor/scalable/apps/${pkg}.svg" "/usr/share/icons/hicolor/scalable/apps/${wm_class}.svg" 2>/dev/null || true
+            cp "/usr/share/pixmaps/${pkg}.svg" "/usr/share/pixmaps/${wm_class}.svg" 2>/dev/null || true
+            for s in 16 24 32 48 64 128 256 512; do
+              [ -f "/usr/share/icons/hicolor/${s}x${s}/apps/${pkg}.png" ] && \
+                cp "/usr/share/icons/hicolor/${s}x${s}/apps/${pkg}.png" "/usr/share/icons/hicolor/${s}x${s}/apps/${wm_class}.png" 2>/dev/null || true
+            done
+            [ -f "/usr/share/pixmaps/${pkg}.png" ] && cp "/usr/share/pixmaps/${pkg}.png" "/usr/share/pixmaps/${wm_class}.png" 2>/dev/null || true
+          fi
+        fi
+      done
+    fi
   done
+
+  gtk-update-icon-cache -f -t -q /usr/share/icons/hicolor 2>/dev/null || true
+  update-desktop-database -q /usr/share/applications 2>/dev/null || true
 
   rm -rf "$EXTRACT_DIR"
   log "  All apps deployed."

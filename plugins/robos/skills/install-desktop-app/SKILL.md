@@ -104,29 +104,42 @@ plugins/robos/skills/install-desktop-app/scripts/install-desktop-app.sh \
 
 When performing manual setup or customizing entries:
 
-#### Step 1: Icon Placement & Cache Update
+#### Step 1: Multi-Scale Icon Placement & Cache Update
+GNOME Shell and Ubuntu Dock require raster PNGs across standard sizes (`16x16` through `512x512`) in the `hicolor` theme to render taskbar/dock icons reliably without falling back to the missing gear icon.
 1. **Scalable Vector Icons (SVG)**:
    ```bash
-   mkdir -p ~/.local/share/icons/hicolor/scalable/apps
+   mkdir -p ~/.local/share/icons/hicolor/scalable/apps ~/.local/share/pixmaps
    cp icon.svg ~/.local/share/icons/hicolor/scalable/apps/<app-id>.svg
+   cp icon.svg ~/.local/share/pixmaps/<app-id>.svg
    chmod 644 ~/.local/share/icons/hicolor/scalable/apps/<app-id>.svg
    ```
-2. **Raster Icons (PNG)**:
+2. **Multi-Scale Raster Icons (PNG)**:
    ```bash
-   mkdir -p ~/.local/share/icons/hicolor/128x128/apps
-   cp icon.png ~/.local/share/icons/hicolor/128x128/apps/<app-id>.png
+   for s in 16 24 32 48 64 128 256 512; do
+     mkdir -p ~/.local/share/icons/hicolor/${s}x${s}/apps
+     python3 -c "import gi; gi.require_version('GdkPixbuf', '2.0'); from gi.repository import GdkPixbuf; GdkPixbuf.Pixbuf.new_from_file_at_scale('icon.svg', $s, $s, True).savev('$HOME/.local/share/icons/hicolor/${s}x${s}/apps/<app-id>.png', 'png', [], [])"
+   done
+   cp ~/.local/share/icons/hicolor/256x256/apps/<app-id>.png ~/.local/share/pixmaps/<app-id>.png
    ```
-3. **Compatibility Pixmap**:
-   ```bash
-   mkdir -p ~/.local/share/pixmaps
-   cp icon.png ~/.local/share/pixmaps/<app-id>.png
-   ```
+3. **Dual-Key / Alias Installation**:
+   If the running window's `WM_CLASS` differs from `<app-id>` (e.g. `robos-task-planner` vs `robos-task-explorer`), install / symlink icons under `<wm-class>` as well so dock lookups succeed via either key.
 4. **Update GTK Icon Cache**:
    ```bash
    gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor
    ```
 
-#### Step 2: Generate Desktop Entry
+#### Step 2: Native Electron Window Icon (`_NET_WM_ICON`)
+Electron's `BrowserWindow({ icon: ... })` **only supports raster PNG images** on Linux. If passed an SVG, Electron cannot set `_NET_WM_ICON` on the X11 window. Always keep a companion `icon.png` in the package directory and pass:
+```javascript
+const iconPng = path.join(__dirname, 'icon.png');
+const win = new BrowserWindow({
+  title: 'My RobOS App',
+  icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
+  ...
+});
+```
+
+#### Step 3: Generate Desktop Entry
 Create `~/.local/share/applications/<app-id>.desktop`:
 
 ```ini

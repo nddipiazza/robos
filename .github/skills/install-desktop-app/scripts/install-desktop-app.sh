@@ -218,63 +218,144 @@ EOFWRAP
   FINAL_EXEC="${WRAPPER_SCRIPT} %U"
 fi
 
-# Step 2: Icon Resolution & Installation
+# Step 2: Intelligent StartupWMClass Auto-Detection
+if [[ -z "$STARTUP_WM_CLASS" ]]; then
+  DETECT_DIR="${WORK_DIR:-}"
+  if [[ -z "$DETECT_DIR" && -n "$EXEC_CMD" ]]; then
+    for token in $EXEC_CMD; do
+      if [[ -d "$token" && -f "$token/package.json" ]]; then
+        DETECT_DIR="$token"
+        break
+      elif [[ -f "$token" && "$token" == *"/main.js" ]]; then
+        DETECT_DIR="$(dirname "$token")"
+        break
+      fi
+    done
+  fi
+
+  if [[ -n "$DETECT_DIR" && -d "$DETECT_DIR" ]]; then
+    if [[ -f "$DETECT_DIR/main.js" ]]; then
+      FOUND_NAME="$(grep -oP "app\.setName\(['\"]\K[^'\"]+" "$DETECT_DIR/main.js" 2>/dev/null | head -n1 || true)"
+      if [[ -n "$FOUND_NAME" ]]; then
+        STARTUP_WM_CLASS="$FOUND_NAME"
+      fi
+    fi
+    if [[ -z "$STARTUP_WM_CLASS" && -f "$DETECT_DIR/package.json" ]]; then
+      FOUND_PKG="$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DETECT_DIR/package.json" 2>/dev/null | head -n1 || true)"
+      if [[ -n "$FOUND_PKG" ]]; then
+        STARTUP_WM_CLASS="$FOUND_PKG"
+      fi
+    fi
+  fi
+
+  if [[ -z "$STARTUP_WM_CLASS" ]]; then
+    STARTUP_WM_CLASS="$APP_ID"
+  fi
+fi
+
+# Step 3: Icon Resolution & Multi-Scale Rasterization
 FINAL_ICON_NAME="$APP_ID"
 if [[ -n "$ICON_PATH" ]]; then
   if [[ -f "$ICON_PATH" ]]; then
     ICON_EXT="${ICON_PATH##*.}"
     ICON_EXT="$(echo "$ICON_EXT" | tr '[:upper:]' '[:lower:]')"
-    
-    if [[ "$ICON_EXT" == "svg" ]]; then
-      TARGET_ICON_DIR="${ICONS_BASE_DIR}/scalable/apps"
-      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.svg"
-    elif [[ "$ICON_EXT" == "png" ]]; then
-      # Determine PNG dimensions if identify or file available
-      PNG_SIZE="128x128"
-      if command -v identify >/dev/null 2>&1; then
-        DIM="$(identify -format "%wx%h" "$ICON_PATH" 2>/dev/null || echo "")"
-        if [[ -n "$DIM" ]]; then
-          PNG_SIZE="$DIM"
-        fi
-      elif file "$ICON_PATH" | grep -oP '\d+\s*x\s*\d+' >/dev/null 2>&1; then
-        DIM="$(file "$ICON_PATH" | grep -oP '\d+\s*x\s*\d+' | head -n1 | tr -d ' ')"
-        if [[ -n "$DIM" ]]; then
-          PNG_SIZE="$DIM"
-        fi
-      fi
-      TARGET_ICON_DIR="${ICONS_BASE_DIR}/${PNG_SIZE}/apps"
-      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.png"
-    else
-      TARGET_ICON_DIR="${PIXMAPS_DIR}"
-      TARGET_ICON_FILE="${TARGET_ICON_DIR}/${APP_ID}.${ICON_EXT}"
+
+    SIZES=(16 24 32 48 64 128 256 512)
+
+    # Determine all alias names (APP_ID and STARTUP_WM_CLASS)
+    ALIAS_NAMES=("$APP_ID")
+    if [[ -n "$STARTUP_WM_CLASS" && "$STARTUP_WM_CLASS" != "$APP_ID" ]]; then
+      ALIAS_NAMES+=("$STARTUP_WM_CLASS")
     fi
 
-    echo "Installing icon to: ${TARGET_ICON_FILE}..."
-    if [[ "$DRY_RUN" = false ]]; then
-      ${SUDO_PREFIX} mkdir -p "${TARGET_ICON_DIR}"
-      ${SUDO_PREFIX} cp "${ICON_PATH}" "${TARGET_ICON_FILE}"
-      # Also keep a copy in pixmaps for high-compatibility desktop shells
-      ${SUDO_PREFIX} mkdir -p "${PIXMAPS_DIR}"
-      ${SUDO_PREFIX} cp "${ICON_PATH}" "${PIXMAPS_DIR}/${APP_ID}.${ICON_EXT}"
-      ${SUDO_PREFIX} chmod 644 "${PIXMAPS_DIR}/${APP_ID}.${ICON_EXT}"
+    echo "Installing icons for aliases: ${ALIAS_NAMES[*]}..."
 
-      # Also install companion PNG/SVG if available
-      SIBLING_PNG="${ICON_PATH%.*}.png"
-      if [[ "$ICON_EXT" == "svg" && -f "$SIBLING_PNG" ]]; then
-        ${SUDO_PREFIX} mkdir -p "${ICONS_BASE_DIR}/128x128/apps"
-        ${SUDO_PREFIX} cp "${SIBLING_PNG}" "${ICONS_BASE_DIR}/128x128/apps/${APP_ID}.png"
-        ${SUDO_PREFIX} cp "${SIBLING_PNG}" "${PIXMAPS_DIR}/${APP_ID}.png"
-      elif [[ "$ICON_EXT" == "png" && -f "${ICON_PATH%.*}.svg" ]]; then
-        ${SUDO_PREFIX} mkdir -p "${ICONS_BASE_DIR}/scalable/apps"
-        ${SUDO_PREFIX} cp "${ICON_PATH%.*}.svg" "${ICONS_BASE_DIR}/scalable/apps/${APP_ID}.svg"
-        ${SUDO_PREFIX} cp "${ICON_PATH%.*}.svg" "${PIXMAPS_DIR}/${APP_ID}.svg"
+    if [[ "$DRY_RUN" = false ]]; then
+      ${SUDO_PREFIX} mkdir -p "${ICONS_BASE_DIR}/scalable/apps" "${PIXMAPS_DIR}"
+
+      # Scalable SVG
+      if [[ "$ICON_EXT" == "svg" ]]; then
+        for alias in "${ALIAS_NAMES[@]}"; do
+          ${SUDO_PREFIX} cp "${ICON_PATH}" "${ICONS_BASE_DIR}/scalable/apps/${alias}.svg"
+          ${SUDO_PREFIX} chmod 644 "${ICONS_BASE_DIR}/scalable/apps/${alias}.svg"
+          ${SUDO_PREFIX} cp "${ICON_PATH}" "${PIXMAPS_DIR}/${alias}.svg"
+          ${SUDO_PREFIX} chmod 644 "${PIXMAPS_DIR}/${alias}.svg"
+        done
+      fi
+
+      # Generate multi-scale PNGs
+      for s in "${SIZES[@]}"; do
+        SIZE_DIR="${ICONS_BASE_DIR}/${s}x${s}/apps"
+        ${SUDO_PREFIX} mkdir -p "${SIZE_DIR}"
+
+        TMP_PNG="/tmp/${APP_ID}-${s}x${s}.png"
+        rm -f "${TMP_PNG}"
+        if [[ "$ICON_EXT" == "svg" ]]; then
+          python3 -c "
+import gi, sys
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import GdkPixbuf
+try:
+    pix = GdkPixbuf.Pixbuf.new_from_file_at_scale('${ICON_PATH}', ${s}, ${s}, True)
+    pix.savev('${TMP_PNG}', 'png', [], [])
+except Exception:
+    sys.exit(1)
+" 2>/dev/null || {
+            if command -v rsvg-convert >/dev/null 2>&1; then
+              rsvg-convert -w "$s" -h "$s" "${ICON_PATH}" -o "${TMP_PNG}" 2>/dev/null || true
+            fi
+          }
+        elif [[ "$ICON_EXT" == "png" ]]; then
+          python3 -c "
+import gi, sys
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import GdkPixbuf
+try:
+    pix = GdkPixbuf.Pixbuf.new_from_file_at_scale('${ICON_PATH}', ${s}, ${s}, True)
+    pix.savev('${TMP_PNG}', 'png', [], [])
+except Exception:
+    sys.exit(1)
+" 2>/dev/null || cp "${ICON_PATH}" "${TMP_PNG}" 2>/dev/null || true
+        fi
+
+        if [[ -f "${TMP_PNG}" ]]; then
+          for alias in "${ALIAS_NAMES[@]}"; do
+            ${SUDO_PREFIX} cp "${TMP_PNG}" "${SIZE_DIR}/${alias}.png"
+            ${SUDO_PREFIX} chmod 644 "${SIZE_DIR}/${alias}.png"
+          done
+          if [[ "$s" -eq 128 || "$s" -eq 256 ]]; then
+            for alias in "${ALIAS_NAMES[@]}"; do
+              ${SUDO_PREFIX} cp "${TMP_PNG}" "${PIXMAPS_DIR}/${alias}.png"
+              ${SUDO_PREFIX} chmod 644 "${PIXMAPS_DIR}/${alias}.png"
+            done
+          fi
+          rm -f "${TMP_PNG}"
+        fi
+      done
+
+      # Ensure companion icon.png exists in application workspace directory
+      # so Electron apps can set native _NET_WM_ICON window property
+      TARGET_APP_DIR="${WORK_DIR:-}"
+      if [[ -z "$TARGET_APP_DIR" && "$ICON_PATH" == *"/icon.svg" ]]; then
+        TARGET_APP_DIR="$(dirname "$ICON_PATH")"
+      fi
+      if [[ -n "$TARGET_APP_DIR" && -d "$TARGET_APP_DIR" && -f "$TARGET_APP_DIR/icon.svg" && ! -f "$TARGET_APP_DIR/icon.png" ]]; then
+        python3 -c "
+import gi
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import GdkPixbuf
+try:
+    pix = GdkPixbuf.Pixbuf.new_from_file_at_scale('$TARGET_APP_DIR/icon.svg', 256, 256, True)
+    pix.savev('$TARGET_APP_DIR/icon.png', 'png', [], [])
+except Exception:
+    pass
+" 2>/dev/null || true
       fi
     else
-      echo "[DRY-RUN] Copy ${ICON_PATH} -> ${TARGET_ICON_FILE}"
+      echo "[DRY-RUN] Multi-scale PNGs (16-512) and SVG installed for aliases: ${ALIAS_NAMES[*]}"
     fi
     FINAL_ICON_NAME="$APP_ID"
   else
-    # Value is an existing theme icon name or direct URI
     FINAL_ICON_NAME="$ICON_PATH"
   fi
 
@@ -283,9 +364,18 @@ if [[ -n "$ICON_PATH" ]]; then
     echo "Updating GTK icon cache for: ${ICONS_BASE_DIR}..."
     ${SUDO_PREFIX} gtk-update-icon-cache -f -t -q "${ICONS_BASE_DIR}" 2>/dev/null || true
   fi
+
+  # Update user custom icon themes if present in ~/.local/share/icons/
+  if [[ "$DRY_RUN" = false && "$SCOPE" != "system" ]] && command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    for user_theme_dir in "${XDG_DATA_HOME:-$HOME/.local/share}/icons"/*/; do
+      if [[ -f "${user_theme_dir}index.theme" ]]; then
+        gtk-update-icon-cache -f -t -q "${user_theme_dir}" 2>/dev/null || true
+      fi
+    done
+  fi
 fi
 
-# Step 3: Generate .desktop Entry File
+# Step 4: Generate .desktop Entry File
 TEMP_DESKTOP_FILE="$(mktemp "/tmp/${APP_ID}-XXXXXX.desktop")"
 
 cat > "${TEMP_DESKTOP_FILE}" << EOF
@@ -316,7 +406,7 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
   echo "Validation passed."
 fi
 
-# Step 4: Install to Applications Directory
+# Step 5: Install to Applications Directory
 echo "Installing desktop entry to: ${DESKTOP_FILE_PATH}..."
 if [[ "$DRY_RUN" = false ]]; then
   ${SUDO_PREFIX} mkdir -p "${APPS_DIR}"
@@ -329,13 +419,13 @@ else
   rm -f "${TEMP_DESKTOP_FILE}"
 fi
 
-# Step 5: Update Desktop Database
+# Step 6: Update Desktop Database
 if [[ "$DRY_RUN" = false ]] && command -v update-desktop-database >/dev/null 2>&1; then
   echo "Updating desktop application database for: ${APPS_DIR}..."
   ${SUDO_PREFIX} update-desktop-database -q "${APPS_DIR}" 2>/dev/null || true
 fi
 
-# Step 6: Create & Trust Desktop Shortcut (GNOME Shell DING Extension)
+# Step 7: Create & Trust Desktop Shortcut (GNOME Shell DING Extension)
 if [[ "$CREATE_DESKTOP_SHORTCUT" = true ]]; then
   DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
   SHORTCUT_PATH="${DESKTOP_DIR}/${APP_ID}.desktop"
@@ -357,7 +447,7 @@ if [[ "$CREATE_DESKTOP_SHORTCUT" = true ]]; then
   fi
 fi
 
-# Step 7: Pin to GNOME Shell Favorites (Dock)
+# Step 8: Pin to GNOME Shell Favorites (Dock)
 if [[ "$PIN_FAVORITE" = true ]]; then
   if command -v gsettings >/dev/null 2>&1; then
     DESKTOP_BASENAME="${APP_ID}.desktop"
