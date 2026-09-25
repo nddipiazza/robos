@@ -126,6 +126,32 @@ check_dependencies() {
         echo "  [✗] User '$USER' is NOT in 'kvm' group"
     fi
 
+    # Check Video Production & Godot Engine
+    if command -v godot &>/dev/null || command -v godot4 &>/dev/null; then
+        GODOT_V="$( (godot --version 2>/dev/null || godot4 --version 2>/dev/null) | head -n1)"
+        echo "  [✓] Godot Engine installed: $GODOT_V"
+    else
+        echo "  [✗] Godot Engine (godot / godot4) is NOT in PATH"
+    fi
+
+    if [ -f "$REPO_ROOT/packages/robos-test/models/en_US-lessac-medium.onnx" ] || [ -f "$HOME/.local/share/piper/voices/en_US-lessac-medium/en_US-lessac-medium.onnx" ]; then
+        echo "  [✓] Piper TTS voice models installed"
+    else
+        echo "  [✗] Piper TTS voice models missing"
+    fi
+
+    if fc-match Montserrat 2>/dev/null | grep -q "Montserrat"; then
+        echo "  [✓] Video creator typography installed (Montserrat / Bebas Neue)"
+    else
+        echo "  [✗] Video creator fonts missing in ~/.local/share/fonts"
+    fi
+
+    if command -v yt-dlp &>/dev/null; then
+        echo "  [✓] yt-dlp media downloader installed"
+    else
+        echo "  [✗] yt-dlp is NOT installed"
+    fi
+
     if [ ${#missing[@]} -eq 0 ]; then
         echo "  [✓] All required APT packages are installed!"
     else
