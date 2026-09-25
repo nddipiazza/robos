@@ -14,6 +14,8 @@ class WakeWordDetector extends EventEmitter {
     this.wakePatterns = options.patterns || WAKE_PATTERNS;
     this.activeListening = false;
     this.listeningTimeout = null;
+    this.cooldownMs = options.cooldownMs !== undefined ? options.cooldownMs : 0;
+    this.lastTriggerTime = 0;
   }
 
   setEnabled(enabled) {
@@ -22,6 +24,10 @@ class WakeWordDetector extends EventEmitter {
 
   isEnabled() {
     return this.enabled;
+  }
+
+  resetCooldown() {
+    this.lastTriggerTime = 0;
   }
 
   /**
@@ -35,10 +41,16 @@ class WakeWordDetector extends EventEmitter {
       return { matched: false, trigger: null, query: null };
     }
 
+    const now = Date.now();
+    if (now - this.lastTriggerTime < this.cooldownMs) {
+      return { matched: false, trigger: null, query: null, inCooldown: true };
+    }
+
     const trimmed = text.trim();
     for (const pattern of this.wakePatterns) {
       const match = trimmed.match(pattern);
       if (match) {
+        this.lastTriggerTime = now;
         const trigger = match[0].trim().replace(/^[,.!?\s]+/, '').replace(/[,.!?\s]+$/, '');
         const query = trimmed.slice(match.index + match[0].length).trim().replace(/^[,.!?\s]+/, '');
 
