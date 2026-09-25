@@ -155,7 +155,116 @@ describe('IDE Bridge MCP Server (ide-bridge-mcp) Tests with In-Depth Assertions'
     });
     assert.ok(destroyRes.result.content[0].text.includes('ephemeral-ws-petstore'));
 
-    // 11. robos:// resources
+    // 11. robos_ide_refactor_rename
+    const renameRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 11,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_refactor_rename',
+        arguments: {
+          file: 'src/main/java/com/robos/HelloWorld.java',
+          symbol: 'HelloWorld',
+          newName: 'GreetingService',
+          line: 6,
+          column: 9,
+        },
+      },
+    });
+    assert.strictEqual(renameRes.result.isError, undefined);
+    assert.ok(renameRes.result.content[0].text.includes('GreetingService'));
+    assert.ok(renameRes.result.content[0].text.includes('rename'));
+
+    // 12. robos_ide_refactor_extract_method
+    const extractMethodRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 12,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_refactor_extract_method',
+        arguments: {
+          file: 'src/main/java/com/robos/HelloWorld.java',
+          startLine: 10,
+          endLine: 15,
+          methodName: 'formatGreeting',
+        },
+      },
+    });
+    assert.strictEqual(extractMethodRes.result.isError, undefined);
+    assert.ok(extractMethodRes.result.content[0].text.includes('formatGreeting'));
+    assert.ok(extractMethodRes.result.content[0].text.includes('extract-method'));
+
+    // 13. robos_ide_refactor_extract_variable
+    const extractVarRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 13,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_refactor_extract_variable',
+        arguments: {
+          file: 'src/main/java/com/robos/HelloWorld.java',
+          startLine: 12,
+          endLine: 12,
+          variableName: 'defaultGreeting',
+        },
+      },
+    });
+    assert.strictEqual(extractVarRes.result.isError, undefined);
+    assert.ok(extractVarRes.result.content[0].text.includes('defaultGreeting'));
+    assert.ok(extractVarRes.result.content[0].text.includes('extract-variable'));
+
+    // 14. robos_ide_refactor_move
+    const moveRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 14,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_refactor_move',
+        arguments: {
+          sourcePath: 'src/main/java/com/robos/HelloWorld.java',
+          targetPath: 'src/main/java/com/robos/service/HelloWorld.java',
+          symbol: 'HelloWorld',
+        },
+      },
+    });
+    assert.strictEqual(moveRes.result.isError, undefined);
+    assert.ok(moveRes.result.content[0].text.includes('src/main/java/com/robos/service/HelloWorld.java'));
+    assert.ok(moveRes.result.content[0].text.includes('move'));
+
+    // 15. robos_ide_refactor_safe_delete
+    const safeDeleteRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 15,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_refactor_safe_delete',
+        arguments: {
+          file: 'src/main/java/com/robos/DeprecatedClass.java',
+          symbol: 'DeprecatedClass',
+        },
+      },
+    });
+    assert.strictEqual(safeDeleteRes.result.isError, undefined);
+    assert.ok(safeDeleteRes.result.content[0].text.includes('DeprecatedClass'));
+    assert.ok(safeDeleteRes.result.content[0].text.includes('safe-delete'));
+
+    // 16. robos_ide_execute_action
+    const actionRes = await server.handleJsonRpc({
+      jsonrpc: '2.0',
+      id: 16,
+      method: 'tools/call',
+      params: {
+        name: 'robos_ide_execute_action',
+        arguments: {
+          actionId: 'ReformatCode',
+          params: { scope: 'file' },
+        },
+      },
+    });
+    assert.strictEqual(actionRes.result.isError, undefined);
+    assert.ok(actionRes.result.content[0].text.includes('ReformatCode'));
+
+    // 17. robos:// resources
     const statusResource = await server.handleJsonRpc({
       jsonrpc: '2.0',
       id: 11,

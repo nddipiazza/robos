@@ -78,6 +78,30 @@ function getDefaultPersonasFallback() {
       developmentGuidance: 'Kubernetes, Helm, ArgoCD GitOps, CI/CD pipelines, Prometheus metrics.',
       implementationPrompt: 'Configure Kubernetes manifests, Helm charts, Dockerfiles, and deployment automation.',
     },
+    {
+      id: 'urn:robos:agent:non-headless-dev',
+      slug: 'non-headless-dev',
+      role: 'Non-Headless Developer',
+      icon: '💻',
+      title: 'RobOS Non-Headless Ephemeral GUI Developer Agent',
+      category: 'GUI & IDE Automation',
+      executionMode: 'ephemeral-gui',
+      systemPrompt: 'You are an autonomous Non-Headless Developer in RobOS.',
+      developmentGuidance: 'Work in ephemeral storage & Xvfb (:99), drive mapped IDE via simulated inputs/plugins, step debugger, Chrome DevTools MCP, and heavily use IDE refactorings to save tokens.',
+      implementationPrompt: 'Drive IDE via IPC, set breakpoints, use step debugger, inspect UI with Chrome DevTools MCP, and perform AST-based IDE refactorings to avoid rewriting large code blocks.',
+    },
+    {
+      id: 'urn:robos:agent:human-agent-copilot',
+      slug: 'human-agent-copilot',
+      role: 'Human + Agent Desktop Co-Pilot',
+      icon: '👥',
+      title: 'RobOS Human + Agent Desktop Co-Pilot Agent',
+      category: 'Desktop Pairing',
+      executionMode: 'desktop-session',
+      systemPrompt: 'You are an interactive Human + Agent Desktop Co-Pilot in RobOS.',
+      developmentGuidance: 'Run alongside the human in active desktop session (:0), share open IDE and terminal, step-debug collaboratively, and execute IDE refactorings live.',
+      implementationPrompt: 'Pair with developer in active session (:0), invoke IDE refactorings, set debug breakpoints, inspect with Chrome DevTools MCP, and review changes together.',
+    },
   ];
 }
 
@@ -171,6 +195,14 @@ function resolvePersonaForTask(task) {
   }
   if (/\b(architecture|architect|c4|adr|boundary|shacl|kgraph|ontology|spec|design)\b/.test(text)) {
     const found = agentPersonas.find(p => p.slug === 'software-architect');
+    if (found) return found;
+  }
+  if (/\b(non-headless|xvfb|simulated input|step debugger|devtools mcp|chrome-devtools|ide refactor|ide automation)\b/.test(text)) {
+    const found = agentPersonas.find(p => p.slug === 'non-headless-dev');
+    if (found) return found;
+  }
+  if (/\b(human \+ agent|copilot|co-pilot|pair programming|same session|desktop agent|pair-programming)\b/.test(text)) {
+    const found = agentPersonas.find(p => p.slug === 'human-agent-copilot');
     if (found) return found;
   }
   if (/\b(backend|api|rest|grpc|protobuf|service|controller|microservice|spring|spring-boot|fastify|express|endpoint|auth|jwt)\b/.test(text)) {
