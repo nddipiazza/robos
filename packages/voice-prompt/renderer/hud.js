@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnStopAudio = document.getElementById('btn-stop-audio');
   const btnToggleMic = document.getElementById('btn-toggle-mic');
   const micLabel = document.getElementById('mic-label');
+  const btnHelloRobos = document.getElementById('btn-hello-robos');
+  const hudCmdInput = document.getElementById('hud-cmd-input');
+  const btnHudSend = document.getElementById('btn-hud-send');
 
   const positions = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
   const posShort = {
@@ -86,6 +89,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Hello RobOS Button (Click to trigger wake greeting)
+  if (btnHelloRobos) {
+    btnHelloRobos.addEventListener('click', async () => {
+      setAssistantState('LISTENING');
+      if (hudCmdInput) hudCmdInput.focus();
+      if (window.robosVoiceHud && typeof window.robosVoiceHud.triggerWakeWord === 'function') {
+        await window.robosVoiceHud.triggerWakeWord();
+      }
+    });
+  }
+
+  // Command Send & Receive Execution
+  const executeHudCommand = async () => {
+    let cmd = (hudCmdInput?.value || '').trim();
+    if (!cmd && transcriptText && transcriptText.textContent !== 'Listening for speech...') {
+      cmd = transcriptText.textContent.trim();
+    }
+    if (!cmd) cmd = '10-4';
+    if (hudCmdInput) hudCmdInput.value = '';
+
+    setAssistantState('PROCESSING');
+    if (transcriptText) {
+      transcriptText.textContent = `Executing: "${cmd}"...`;
+      transcriptText.classList.add('highlight');
+    }
+
+    if (window.robosVoiceHud && typeof window.robosVoiceHud.askAssistant === 'function') {
+      try {
+        const res = await window.robosVoiceHud.askAssistant(cmd);
+        if (res && res.turn) {
+          if (hudActionCard && actionTitle && actionDetail) {
+            actionTitle.textContent = res.turn.actionDone || 'Action Executed';
+            actionDetail.textContent = res.turn.response || '';
+            hudActionCard.classList.remove('hidden');
+          }
+          if (transcriptText) {
+            transcriptText.textContent = res.turn.response || 'Done.';
+          }
+        }
+      } catch (err) {
+        if (actionDetail) actionDetail.textContent = `Error: ${err.message}`;
+      }
+    }
+  };
+
+  btnHudSend?.addEventListener('click', executeHudCommand);
+  hudCmdInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') executeHudCommand();
+  });
+
   // State Management Helper
   function setAssistantState(state) {
     if (!hudStatusBadge || !hudStatusText) return;
@@ -112,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (window.robosVoiceHud) {
     // 1. Wake Greeting
     window.robosVoiceHud.onWakeGreeting((evt = {}) => {
-      const greeting = evt.greeting || "Go ahead.";
+      const greeting = evt.greeting || "I hear you, what's up? let me know when you're done with a 10/4 or say Done!";
       if (hudGreeting) {
         hudGreeting.textContent = `"${greeting}"`;
       }
@@ -123,6 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (hudActionCard) {
         hudActionCard.classList.add('hidden');
       }
+      if (hudCmdInput) {
+        hudCmdInput.focus();
+      }
       setAssistantState('LISTENING');
     });
 
@@ -132,6 +188,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (transcriptText && text) {
         transcriptText.textContent = text;
         transcriptText.classList.add('highlight');
+      }
+      if (hudCmdInput && text && !hudCmdInput.matches(':focus')) {
+        hudCmdInput.value = text;
       }
       if (evt.state) {
         setAssistantState(evt.state);

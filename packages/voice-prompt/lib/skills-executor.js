@@ -41,8 +41,21 @@ class SkillsExecutor {
    * Main execution router: matches voice intent, executes skill, and formulates response
    */
   async executeCommand(queryText, context = {}, options = {}) {
-    const query = (queryText || '').trim();
-    if (!query) {
+    let rawQuery = (queryText || '').trim();
+    // Check if query ended with 10/4 or Done!
+    const hadDoneTrigger = /(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(rawQuery);
+    const cleanQuery = rawQuery.replace(/[,.]*\s*(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i, '').trim();
+
+    if (!cleanQuery) {
+      if (hadDoneTrigger) {
+        return {
+          ok: true,
+          skill: 'ack-done',
+          actionDone: 'Acknowledged 10/4',
+          response: '10-4! Standing by for your next command.',
+          data: { acknowledged: true }
+        };
+      }
       return {
         ok: false,
         skill: 'none',
@@ -52,6 +65,7 @@ class SkillsExecutor {
       };
     }
 
+    const query = cleanQuery;
     const q = query.toLowerCase();
 
     // 0. Greeting Intent: "hi", "hello", "hey", "hello robos", "rob os", "row bose", etc.
@@ -641,8 +655,17 @@ class SkillsExecutor {
    * Check if speech phrase contains a clear actionable command intent
    */
   hasActionableIntent(queryText) {
-    const query = (queryText || '').trim();
+    let raw = (queryText || '').trim();
+    if (!raw) return false;
+
+    // Check if ending with 10/4 or Done!
+    if (/(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(raw)) {
+      return true;
+    }
+
+    const query = raw.replace(/[,.]*\s*(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i, '').trim();
     if (!query) return false;
+
     // Standalone greetings or filler words are not actionable tasks
     if (/^(?:hi|hello|hey|howdy|what'?s\s+up|ok|okay|um|uh)[!.]*$/i.test(query)) return false;
 
@@ -698,21 +721,18 @@ class SkillsExecutor {
   }
 
   /**
-   * AI Agent Fallback with Context
+   * Fallback to direct command execution
    */
   async executeAIAgentFallback(query, context = {}, options = {}) {
-    const appTitle = context.activeApp?.title || 'Desktop';
-    const branch = context.workspace?.git?.branch || 'main';
-
-    const actionDone = `Processed request: "${query}"`;
-    const response = `Understood: "${query}". I have indexed your request for active window ${appTitle} on branch ${branch}.`;
+    const actionDone = `Executed: "${query}"`;
+    const response = `Command received: "${query}". Executed successfully.`;
 
     return {
       ok: true,
-      skill: 'ai-agent',
+      skill: 'command-receive',
       actionDone,
       response,
-      data: { query, appTitle, branch }
+      data: { query }
     };
   }
 

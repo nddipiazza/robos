@@ -62,20 +62,30 @@ const DEFAULT_GREETINGS = [
   "Audio linked. What's up?",
 ];
 
+const DONE_HINT = "let me know when you're done with a 10/4 or say Done!";
+
 /**
  * Pick a random greeting from the configured list or defaults
  * @param {string[]} customList
+ * @param {boolean} [includeDoneHint=true]
  * @returns {string}
  */
-function getRandomGreeting(customList) {
+function getRandomGreeting(customList, includeDoneHint = true) {
   const list = (Array.isArray(customList) && customList.length > 0)
     ? customList
     : DEFAULT_GREETINGS;
   const index = Math.floor(Math.random() * list.length);
-  return list[index] || "Go ahead.";
+  const base = list[index] || "I hear you, what's up?";
+
+  if (includeDoneHint) {
+    const cleanBase = base.trim().replace(/[!.]*$/, (m) => m ? m : '.');
+    return `${cleanBase} ${DONE_HINT}`;
+  }
+  return base;
 }
 
 module.exports = {
   DEFAULT_GREETINGS,
+  DONE_HINT,
   getRandomGreeting,
 };

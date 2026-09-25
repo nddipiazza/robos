@@ -45,8 +45,21 @@
 
     <!-- Main Live Content -->
     <main class="hud-content">
-      <!-- Greeting Prompt -->
-      <div id="hud-greeting" class="hud-greeting">"Go ahead."</div>
+      <!-- Wake-Word Action Trigger Button -->
+      <div class="hud-wake-row">
+        <button id="btn-hello-robos" class="btn-hello-robos" title="Click or say 'Hello RobOS!' to start dictation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+            <line x1="8" x2="16" y1="22" y2="22"/>
+          </svg>
+          <span>Hello RobOS!</span>
+        </button>
+      </div>
+
+      <!-- Greeting Prompt with 10/4 Completion Hint -->
+      <div id="hud-greeting" class="hud-greeting">"I hear you, what's up? let me know when you're done with a 10/4 or say Done!"</div>
 
       <!-- Live Waveform & Stream Container -->
       <div class="hud-stream-row">
@@ -62,6 +75,14 @@
         </div>
       </div>
 
+      <!-- Command Send & Receive Bar -->
+      <div class="hud-cmd-bar">
+        <input type="text" id="hud-cmd-input" class="hud-cmd-input" placeholder="Speak command or type here... (say '10/4' or 'Done!')" autocomplete="off">
+        <button id="btn-hud-send" class="btn-hud-send" title="Send command and signal completion">
+          <span>10/4 Done!</span>
+        </button>
+      </div>
+
       <!-- Action Executed Card (Populated dynamically when action triggers) -->
       <div id="hud-action-card" class="hud-action-card hidden">
         <div class="action-card-header">
@@ -75,7 +96,7 @@
     <!-- Bottom Action Controls -->
     <footer class="hud-footer">
       <div class="hud-footer-left">
-        <span class="agent-tag">⚡ RobOS Agent</span>
+        <span class="agent-tag">⚡ RobOS Voice Assistant</span>
       </div>
       <div class="hud-footer-right">
         <button id="btn-stop-audio" class="hud-btn-tool" title="Stop Speech Output">

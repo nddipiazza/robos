@@ -397,6 +397,11 @@ function setupEventListeners() {
     if (api && api.toggleBackground) {
       await api.toggleBackground(isBackgroundMode);
     }
+    // Always open/show the bottom-right HUD window when clicking background stream
+    if (api && api.showHud) {
+      if (api.setHudPosition) await api.setHudPosition('bottom-right');
+      await api.showHud();
+    }
   });
 
   chkBgStreamMode?.addEventListener('change', async () => {
@@ -404,6 +409,10 @@ function setupEventListeners() {
     updateBgStreamUI(isBackgroundMode);
     if (api && api.toggleBackground) {
       await api.toggleBackground(isBackgroundMode);
+    }
+    if (isBackgroundMode && api && api.showHud) {
+      if (api.setHudPosition) await api.setHudPosition('bottom-right');
+      await api.showHud();
     }
   });
 
