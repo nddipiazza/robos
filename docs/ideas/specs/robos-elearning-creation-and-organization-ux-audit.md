@@ -11,22 +11,19 @@ This comprehensive UX audit and architectural design evaluates two core function
 RobOS positions training, masterclasses, and developer onboarding as first-class, verifiable SDLC artifacts in the Dual-State Knowledge Graph (`robos:ELearning`, governed by W3C SHACL shape `urn:robos:shape:ELearningShape`). While the current eLearning runtime player (`packages/robos-elearning`) successfully renders interactive modules, executes hands-on lab checklists, and awards cryptographically verified certificates (`robos:CertificateOfCompletion`), it suffers from two foundational UX deficiencies:
 
 ```mermaid
-quadrantChart
-    title RobOS eLearning Feature Maturity vs. User Need
-    x-axis Low User Need --> High User Need
-    y-axis Low UI Maturity --> High UI Maturity
-    quadrant-1 High Value / Well Built
-    quadrant-2 Niche / Over-Engineered
-    quadrant-3 Low Priority
-    quadrant-4 Critical UX Gaps (Action Needed)
-    "Lab Step Checklists & Progress": [0.75, 0.85]
-    "Knowledge Check Quizzes": [0.70, 0.80]
-    "Verified Certificate Issuance": [0.65, 0.75]
-    "Voice Assistant Mutations": [0.45, 0.60]
-    "Creating Course from Scratch": [0.95, 0.05]
-    "Folder Hierarchy & Tracks": [0.90, 0.08]
-    "Drag-and-Drop Reordering": [0.85, 0.05]
-    "Search, Filter & Catalog Grid": [0.80, 0.15]
+flowchart TD
+    subgraph Established ["Established Capabilities (High UI Maturity)"]
+        E1["Interactive Lab Step Checklists & Progress"]
+        E2["Knowledge Check Quizzes & Explanations"]
+        E3["Verifiable Certificates of Completion"]
+        E4["Voice Assistant Mutations (In-Memory)"]
+    end
+    subgraph CriticalGaps ["Critical UX Gaps (Action Needed)"]
+        G1["Course Creation Studio (Zero Authoring UI)"]
+        G2["Hierarchical Folders & Learning Tracks"]
+        G3["Drag-and-Drop Course & Module Reordering"]
+        G4["Catalog Search, Tag Filters & Grid View"]
+    end
 ```
 
 1. **The Course Creation Vacuum**: Users cannot create an eLearning course from within the application. The system assumes courses were pre-generated via external CLI tools (`generate-app-elearning`) or programmatic Node.js scripts. If no courses exist, users hit a dead-end empty state directing them to another app.
@@ -315,24 +312,25 @@ ipcMain.handle('elearning:reorder-lab-steps', async (_, { courseId, moduleIndex,
 ## 6. Implementation Phasing & Next Steps
 
 ```mermaid
-gantt
-    title RobOS eLearning UX Enhancement Roadmap
-    dateFormat  YYYY-MM-DD
-    section Phase 1: Data & IPC
-    Folder Schema in elearning.yaml       :p1_1, 2026-10-01, 3d
-    KGraph robos:LearningFolder Shape    :p1_2, after p1_1, 2d
-    Folder & Movement IPC Handlers       :p1_3, after p1_2, 3d
-    section Phase 2: Organization UI
-    Sidebar Hierarchical Folder Tree     :p2_1, after p1_3, 4d
-    Catalog Grid & Card Overview         :p2_2, after p2_1, 3d
-    Drag-and-Drop Movement Engine        :p2_3, after p2_2, 5d
-    section Phase 3: Creation Studio
-    AI Fast-Track Synthesis Modal        :p3_1, after p2_3, 4d
-    Visual Blank Canvas Wizard           :p3_2, after p3_1, 5d
-    SHACL Pre-Flight Validator Gate      :p3_3, after p3_2, 2d
-    section Phase 4: E2E Verification
-    Containerized Xvfb & DnD Automated Tests :p4_1, after p3_3, 4d
-    1080p Video Walkthrough Recording    :p4_2, after p4_1, 2d
+flowchart LR
+    subgraph P1 ["Phase 1: Data & IPC"]
+        P1A["elearning.yaml Folder Schema"] --> P1B["KGraph robos:LearningFolder"]
+        P1B --> P1C["Folder & Move IPC Handlers"]
+    end
+    subgraph P2 ["Phase 2: Organization UI"]
+        P2A["Sidebar Folder Tree"] --> P2B["Catalog Grid View"]
+        P2B --> P2C["Drag-and-Drop Movement Engine"]
+    end
+    subgraph P3 ["Phase 3: Creation Studio"]
+        P3A["AI Synthesis Modal"] --> P3B["Visual Blank Canvas Builder"]
+        P3B --> P3C["SHACL Validation Gate"]
+    end
+    subgraph P4 ["Phase 4: Verification"]
+        P4A["E2E Automated Tests (Xvfb)"] --> P4B["1080p Video Proof-of-Work"]
+    end
+    P1C --> P2A
+    P2C --> P3A
+    P3C --> P4A
 ```
 
 ### Action Items for Development:
