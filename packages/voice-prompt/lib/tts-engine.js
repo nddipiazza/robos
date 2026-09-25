@@ -1,11 +1,12 @@
 'use strict';
 
 const EventEmitter = require('events');
-const { spawn, exec, execSync } = require('child_process');
+const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const AUDIO_CACHE_DIR = path.join(os.homedir(), '.config', 'robos', 'voice-cache');
 const KOKORO_DIR = path.join(os.homedir(), '.local/share/kokoro');
 const KOKORO_MODEL = path.join(KOKORO_DIR, 'kokoro-v1.0.onnx');
 const KOKORO_VOICES = path.join(KOKORO_DIR, 'voices-v1.0.bin');
@@ -110,10 +111,19 @@ class TTSEngine extends EventEmitter {
 
     const tmpId = `robos-tts-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
+    // Fast path: cached audio for common short phrases (like "Hi!")
+    const isPureHi = /^hi[!.]*$/i.test(cleanText);
+    const cachedHiPath = path.join(AUDIO_CACHE_DIR, 'hi.wav');
+    if (isPureHi && fs.existsSync(cachedHiPath) && fs.statSync(cachedHiPath).size > 100) {
+      return { ok: true, filePath: cachedHiPath, durationMs: 400, engine: 'cache' };
+    }
+
     // In test environment, emit a lightweight wav without running full model if flag is set
     if (process.env.ROBOS_TEST === '1' && options.mockAudio) {
       const outPath = path.join(os.tmpdir(), `${tmpId}.wav`);
-      execSync(`ffmpeg -y -hide_banner -loglevel error -f lavfi -i anullsrc=r=24000:cl=mono -t 0.5 -c:a pcm_s16le "${outPath}"`);
+      await new Promise((resolve) => {
+        exec(`ffmpeg -y -hide_banner -loglevel error -f lavfi -i anullsrc=r=24000:cl=mono -t 0.5 -c:a pcm_s16le "${outPath}"`, () => resolve());
+      });
       return { ok: true, filePath: outPath, durationMs: 500, engine };
     }
 
@@ -162,7 +172,12 @@ class TTSEngine extends EventEmitter {
     // 4. Fallback: lightweight sine wave/silence with ffmpeg so audio pipeline never breaks
     const fallbackWav = path.join(os.tmpdir(), `${tmpId}-fallback.wav`);
     try {
-      execSync(`ffmpeg -y -hide_banner -loglevel error -f lavfi -i anullsrc=r=24000:cl=mono -t 1.0 -c:a pcm_s16le "${fallbackWav}"`);
+      await new Promise((resolve, reject) => {
+        exec(`ffmpeg -y -hide_banner -loglevel error -f lavfi -i anullsrc=r=24000:cl=mono -t 1.0 -c:a pcm_s16le "${fallbackWav}"`, (err) => {
+          if (!err && fs.existsSync(fallbackWav)) resolve();
+          else reject(new Error('ffmpeg fallback failed'));
+        });
+      });
       return { ok: true, filePath: fallbackWav, durationMs: 1000, engine: 'fallback' };
     } catch {
       throw new Error(`Failed to synthesize text: ${cleanText.slice(0, 30)}...`);
@@ -192,14 +207,16 @@ class TTSEngine extends EventEmitter {
     this.isSpeaking = false;
     this.emit('speaking-end', { text: cleanText, engine: synthResult.engine });
 
-    // Clean up temporary audio file after a short delay
-    setTimeout(() => {
-      try {
-        if (fs.existsSync(synthResult.filePath)) {
-          fs.unlinkSync(synthResult.filePath);
-        }
-      } catch {}
-    }, 2000);
+    // Clean up temporary audio file after a short delay (unless cached in voice-cache)
+    if (!synthResult.filePath.includes('voice-cache')) {
+      setTimeout(() => {
+        try {
+          if (fs.existsSync(synthResult.filePath)) {
+            fs.unlinkSync(synthResult.filePath);
+          }
+        } catch {}
+      }, 2000);
+    }
 
     return {
       ok: true,
@@ -328,12 +345,17 @@ except Exception as e:
         return resolve();
       }
 
-      let player = 'aplay';
-      let args = ['-q', filePath];
+      let player = 'pw-play';
+      let args = [filePath];
 
-      if (filePath.endsWith('.mp3')) {
-        player = 'ffplay';
-        args = ['-nodisp', '-autoexit', '-loglevel', 'error', filePath];
+      if (!fs.existsSync('/usr/bin/pw-play')) {
+        if (filePath.endsWith('.mp3')) {
+          player = 'ffplay';
+          args = ['-nodisp', '-autoexit', '-loglevel', 'error', filePath];
+        } else {
+          player = 'aplay';
+          args = ['-q', filePath];
+        }
       }
 
       let proc = null;
@@ -367,13 +389,15 @@ except Exception as e:
 
   _getAudioDurationMs(filePath) {
     try {
-      const out = execSync(`ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "${filePath}"`, {
-        encoding: 'utf8',
-        timeout: 3000,
-      }).trim();
-      return Math.round(parseFloat(out) * 1000) || 1500;
+      if (filePath.endsWith('.wav') && fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        const sampleRate = filePath.includes('16k') ? 16000 : 24000;
+        const dur = Math.round(((stats.size - 44) / (sampleRate * 2)) * 1000);
+        if (dur > 0) return Math.max(300, dur);
+      }
+      return 1200;
     } catch {
-      return 1500;
+      return 1200;
     }
   }
 }
