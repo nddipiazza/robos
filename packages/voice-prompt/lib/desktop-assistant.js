@@ -3,12 +3,14 @@
 const EventEmitter = require('events');
 const path = require('path');
 const contextProvider = require('./context-provider');
+const { SkillsExecutor } = require('./skills-executor');
 
 class DesktopAssistant extends EventEmitter {
   constructor(options = {}) {
     super();
     this.ttsEngine = options.ttsEngine;
     this.wakeDetector = options.wakeDetector;
+    this.skillsExecutor = options.skillsExecutor || new SkillsExecutor();
     this.state = 'IDLE'; // 'IDLE' | 'WAKE_DETECTED' | 'LISTENING' | 'PROCESSING' | 'SPEAKING'
     this.history = [];
     this.listeningTimer = null;
@@ -107,14 +109,26 @@ class DesktopAssistant extends EventEmitter {
     this.setState('PROCESSING', { query });
 
     const context = await contextProvider.getAggregatedContext();
-    const responseText = await this._generateAgentResponse(query, context, options);
+    const result = await this.skillsExecutor.executeCommand(query, context, {
+      ttsEngine: this.ttsEngine,
+      ...options,
+    });
+    const responseText = result.response || `Executed: ${result.actionDone}`;
 
-    this.setState('SPEAKING', { query, response: responseText });
+    this.setState('SPEAKING', {
+      query,
+      response: responseText,
+      skill: result.skill,
+      actionDone: result.actionDone,
+    });
 
     const turn = {
       id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       query,
       response: responseText,
+      skill: result.skill,
+      actionDone: result.actionDone,
+      data: result.data,
       context,
       timestamp: new Date().toISOString(),
     };

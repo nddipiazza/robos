@@ -131,6 +131,26 @@ function getActiveServer(settings) {
 
 // ── App window ────────────────────────────────────────────────────────────────
 let mainWindow;
+let projectsWatcher = null;
+
+function startProjectsWatcher() {
+  ensureProjectsDir();
+  try {
+    if (projectsWatcher) return;
+    let debounceTimer = null;
+    projectsWatcher = fs.watch(PROJECTS_DIR, (eventType, filename) => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('project-files-changed', { filename, eventType });
+        }
+      }, 100);
+    });
+  } catch (err) {
+    console.warn('[task-planner] Could not watch projects directory:', err.message);
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1100, height: 780,
@@ -140,10 +160,11 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
-    title: 'RobOS Task Planner',
+    title: 'RobOS Task Explorer',
     autoHideMenuBar: true,
   });
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  startProjectsWatcher();
   if (_debugServer) {
     _debugServer.registerSnapshotIPC && _debugServer.registerSnapshotIPC(mainWindow);
     _debugServer.startDebugServer(mainWindow, 19134, 'task-planner');

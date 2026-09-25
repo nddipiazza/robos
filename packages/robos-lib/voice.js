@@ -249,6 +249,32 @@ class RobOSVoiceClient {
       try { req.destroy(); } catch {}
     };
   }
+
+  /**
+   * Execute a RobOS skill via voice/assistant
+   */
+  async executeSkill(command, options = {}) {
+    try {
+      const res = await this._request('POST', '/api/skills/execute', { command, ...options }, 25000);
+      if (res.status === 200) return res.data;
+      throw new Error(res.data?.error || `HTTP ${res.status}`);
+    } catch (err) {
+      try {
+        const executorPath = path.resolve(__dirname, '..', 'voice-prompt', 'lib', 'skills-executor');
+        const { SkillsExecutor } = require(executorPath);
+        const executor = new SkillsExecutor();
+        return await executor.executeCommand(command, {}, options);
+      } catch {}
+      throw err;
+    }
+  }
+
+  /**
+   * Add a task to RobOS Task Explorer project
+   */
+  async addTask(title, options = {}) {
+    return this.executeSkill(`add a task: ${title}`, options);
+  }
 }
 
 const voice = new RobOSVoiceClient();

@@ -100,6 +100,11 @@ const APPS = [
   { id: 'kube-studio',             label: 'Kube Studio',            icon: '☸️', desc: 'Multi-cluster Kubernetes & GitOps navigator', category: 'RobOS Dev' },
   { id: 'rest-client',             label: 'REST API Client (Bruno)', icon: '⚡', desc: 'Bruno-powered REST API Client & Collection Runner', category: 'RobOS Dev' },
   { id: 'remote-execution-studio',  label: 'Remote Execution Studio', icon: '🏗️', desc: 'REAPI v2 Distributed Build Clusters & Buildbarn Manager', category: 'RobOS Dev' },
+  { id: 'task-explorer',           label: 'RobOS Task Explorer',    icon: '📋', desc: 'Explore, plan, and create tasks across projects', category: 'RobOS Dev' },
+  { id: 'task-planner',            label: 'Task Planner',           icon: '📋', desc: 'Create tasks on your task server using AI prompts', category: 'RobOS Dev' },
+  { id: 'task-board',              label: 'Task Board',             icon: '▦',  desc: 'Kanban and list views for work items', category: 'RobOS Dev' },
+  { id: 'task-implementer',        label: 'Task Implementer',       icon: '⚙️', desc: 'Implement tasks from task servers with AI', category: 'RobOS Dev' },
+  { id: 'issue-manager',           label: 'Issue Manager',          icon: '🐛', desc: 'GitHub issues client with workflow transitions', category: 'RobOS Dev' },
   // People
   { id: 'people-directory',         label: 'People Directory',       icon: '👤', desc: 'Team people directory',             category: 'RobOS People' },
   // AI
@@ -157,6 +162,11 @@ const APP_BINS = {
   'kube-studio':             mkBin('kube-studio'),
   'rest-client':             mkBin('rest-client'),
   'remote-execution-studio': mkBin('remote-execution-studio'),
+  'task-explorer':           mkBin('task-planner'),
+  'task-planner':            mkBin('task-planner'),
+  'task-board':              mkBin('task-board'),
+  'task-implementer':        mkBin('task-implementer'),
+  'issue-manager':           mkBin('issue-manager'),
   // AI
   'agent-scheduler':         mkBin('agent-scheduler'),
   'agents-manager':          mkBin('agents-manager'),

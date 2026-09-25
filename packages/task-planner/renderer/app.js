@@ -74,6 +74,35 @@ async function init() {
   }
 
   await loadProjectsList();
+  if (projectsList.length === 0) {
+    try {
+      const defaultProj = {
+        id: 'proj-core-sdlc',
+        name: 'RobOS Core Project',
+        description: 'Primary SDLC workspace project',
+        techStack: 'Node.js + Electron + Knowledge Graph',
+        tasks: [],
+        features: [{ id: 'feat-core', name: 'Core Platform & APIs', tasks: [] }]
+      };
+      await window.robos.saveProject(defaultProj);
+      await loadProjectsList();
+      await openProject('proj-core-sdlc');
+    } catch (_) {}
+  } else if (!currentProjectId && projectsList.length > 0) {
+    await openProject(projectsList[0].id);
+  }
+
+  if (window.robos.onProjectsChanged) {
+    window.robos.onProjectsChanged(async () => {
+      await loadProjectsList();
+      if (currentProjectId) {
+        await openProject(currentProjectId);
+      } else if (projectsList.length > 0) {
+        await openProject(projectsList[0].id);
+      }
+    });
+  }
+
   await loadTaskTemplates();
   await loadAgentPersonas();
   setupAgentPersonasModal();

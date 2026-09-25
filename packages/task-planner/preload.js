@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('robos', {
   saveProject:     (p)       => ipcRenderer.invoke('save-project', p),
   deleteProject:   (id)      => ipcRenderer.invoke('delete-project', id),
   dialogConfirm:   (p)       => ipcRenderer.invoke('dialog-confirm', p),
+  onProjectsChanged: (cb)    => { ipcRenderer.on('project-files-changed', (_, data) => cb && cb(data)); },
 
   // Templates
   listTaskTemplates:    ()        => ipcRenderer.invoke('list-task-templates'),
