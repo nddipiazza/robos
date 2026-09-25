@@ -341,11 +341,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         appendUserBubble(text, true);
 
-        // Responsive silence timer: if user stops speaking for 800ms, finalize user bubble
+        // Responsive silence timer: if user stops speaking for 450ms, finalize user bubble
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
           finalizeInterimBubble();
-        }, 800);
+        }, 450);
       }
 
       if (evt.state) {
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (silenceTimer) clearTimeout(silenceTimer);
       silenceTimer = setTimeout(() => {
         finalizeInterimBubble();
-      }, 800);
+      }, 450);
     });
 
     // 4. Assistant State Change

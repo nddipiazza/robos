@@ -19,7 +19,7 @@ class DesktopAssistant extends EventEmitter {
     this.accumulatedInput = '';
     this.autoSpeak = options.autoSpeak !== false;
     this.wakeGreeting = options.wakeGreeting || null;
-    this.silenceTimeoutMs = options.silenceTimeoutMs || 850;
+    this.silenceTimeoutMs = options.silenceTimeoutMs || 450;
     this.isProcessing = false;
     this.lastSpokenText = '';
     this.echoCooldownUntil = 0;
@@ -84,7 +84,7 @@ class DesktopAssistant extends EventEmitter {
       }
 
       // Add cooldown to flush acoustic echo from microphone buffers
-      this.echoCooldownUntil = Date.now() + 800;
+      this.echoCooldownUntil = Date.now() + 150;
 
       // NOW transition to LISTENING for the actual user request
       this.setState('LISTENING', { greeting });
