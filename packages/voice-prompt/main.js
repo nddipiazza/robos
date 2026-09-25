@@ -53,18 +53,37 @@ const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPref
 const wakeDetector = new WakeWordDetector({ enabled: true });
 const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
 
+// Acoustic echo suppression gate
+let echoCooldownUntil = 0;
+
+ttsEngine.on('speaking-start', () => {
+  echoCooldownUntil = Infinity;
+});
+
+ttsEngine.on('speaking-end', () => {
+  echoCooldownUntil = Date.now() + 800;
+});
+
+ttsEngine.on('speaking-stopped', () => {
+  echoCooldownUntil = Date.now() + 400;
+});
+
 sttEngine.on('interim-text', (data) => {
+  const isEchoing = ttsEngine.isSpeaking || Date.now() < echoCooldownUntil;
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-interim-text', data);
   }
-  if (hudWindow && !hudWindow.isDestroyed()) {
+  if (hudWindow && !hudWindow.isDestroyed() && !isEchoing) {
     hudWindow.webContents.send('vp-hud-interim-text', data);
   }
 });
 
 sttEngine.on('stream-text', (data) => {
-  wakeDetector.processText(data.text, data);
-  desktopAssistant.handleStreamText(data);
+  const isEchoing = ttsEngine.isSpeaking || Date.now() < echoCooldownUntil;
+  if (!isEchoing) {
+    wakeDetector.processText(data.text, data);
+    desktopAssistant.handleStreamText(data);
+  }
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-stream-text', data);
   }

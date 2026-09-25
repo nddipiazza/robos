@@ -195,7 +195,8 @@ describe('RobOS Voice Skills Integration Tests', () => {
       const res = await executor.executeCommand('hello robos');
       assert.strictEqual(res.ok, true);
       assert.strictEqual(res.skill, 'greeting');
-      assert.ok(res.response.includes("let me know when you're done with a 10/4 or say Done!"), `Response "${res.response}" should include 10/4 Done hint`);
+      assert.ok(!res.response.includes("10/4"), `Response "${res.response}" should not include 10/4`);
+      assert.ok(res.response.length > 0);
       assert.strictEqual(res.actionDone, 'Responded to greeting');
     });
 
@@ -203,13 +204,13 @@ describe('RobOS Voice Skills Integration Tests', () => {
       const res1 = await executor.executeCommand('row bose');
       assert.strictEqual(res1.ok, true);
       assert.strictEqual(res1.skill, 'greeting');
-      assert.ok(res1.response.includes("let me know when you're done with a 10/4 or say Done!"));
+      assert.ok(!res1.response.includes("10/4"));
+      assert.ok(res1.response.length > 0);
 
       const res2 = await executor.executeCommand('hi', {}, { wakeGreetings: ['Hi!'] });
       assert.strictEqual(res2.ok, true);
       assert.strictEqual(res2.skill, 'greeting');
-      assert.ok(res2.response.includes('Hi!'));
-      assert.ok(res2.response.includes("let me know when you're done with a 10/4 or say Done!"));
+      assert.strictEqual(res2.response, 'Hi!');
     });
   });
 
