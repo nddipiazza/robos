@@ -26,7 +26,7 @@ First-class Gherkin features, scenarios, step definitions, test execution record
 - **Package Store ID**: `testing`
 - **Ontology Namespace**: `robos.testing`
 - **GitOps Package File**: `.robos/kgraphs/testing/package.jsonld`
-- **Schemas Defined**: 14
+- **Schemas Defined**: 20
 
 ---
 
@@ -36,6 +36,12 @@ First-class Gherkin features, scenarios, step definitions, test execution record
 |---|---|---|---|
 | [**Scenario** (`robos:Scenario`)]({{ '/schemas/testing/scenario.html' | relative_url }}) | `urn:robos:shape:ScenarioShape` | `dcterms:title`, `robos:steps` | [View Schema &rarr;]({{ '/schemas/testing/scenario.html' | relative_url }}) |
 | [**Scenario Step** (`robos:ScenarioStep`)]({{ '/schemas/testing/scenario-step.html' | relative_url }}) | `urn:robos:shape:ScenarioStepShape` | `robos:keyword`, `robos:stepText` | [View Schema &rarr;]({{ '/schemas/testing/scenario-step.html' | relative_url }}) |
+| [**CRPG Test Scenario** (`robos:CRPGTestScenario`)]({{ '/schemas/testing/crpg-test-scenario.html' | relative_url }}) | `urn:robos:shape:CRPGTestScenarioShape` | `dcterms:title`, `robos:seed`, `robos:map`, `robos:party`, `robos:enemies`, `robos:directives`, `robos:traps`, `robos:maxRounds`, `robos:executionMode`, `robos:reactions`, `robos:dice` | [View Schema &rarr;]({{ '/schemas/testing/crpg-test-scenario.html' | relative_url }}) |
+| [**CRPG Battle Map** (`robos:CRPGBattleMap`)]({{ '/schemas/testing/crpg-battle-map.html' | relative_url }}) | `urn:robos:shape:CRPGBattleMapShape` | `dcterms:title`, `robos:width`, `robos:height`, `robos:mapZone`, `robos:terrain`, `robos:mapObjects`, `robos:blockout`, `robos:backgroundImage` | [View Schema &rarr;]({{ '/schemas/testing/crpg-battle-map.html' | relative_url }}) |
+| [**CRPG Map Object** (`robos:CRPGMapObject`)]({{ '/schemas/testing/crpg-map-object.html' | relative_url }}) | `urn:robos:shape:CRPGMapObjectShape` | `robos:objectId`, `robos:objectType`, `robos:shape`, `robos:position`, `robos:size`, `robos:radius`, `robos:to`, `robos:thickness`, `robos:points`, `robos:open`, `robos:blocksMovement`, `robos:blocksSight`, `robos:difficultTerrain`, `robos:cover` | [View Schema &rarr;]({{ '/schemas/testing/crpg-map-object.html' | relative_url }}) |
+| [**CRPG Combatant** (`robos:CRPGCombatant`)]({{ '/schemas/testing/crpg-combatant.html' | relative_url }}) | `urn:robos:shape:CRPGCombatantShape` | `robos:actorId`, `robos:characterClass`, `robos:monster`, `robos:position` | [View Schema &rarr;]({{ '/schemas/testing/crpg-combatant.html' | relative_url }}) |
+| [**Infinity AI Directive** (`robos:InfinityAIDirective`)]({{ '/schemas/testing/infinity-ai-directive.html' | relative_url }}) | `urn:robos:shape:InfinityAIDirectiveShape` | `robos:controller`, `robos:actor`, `robos:side`, `robos:targetPriority`, `robos:focusTarget`, `robos:preferSpells`, `robos:forbidSpells`, `robos:healThreshold`, `robos:movement`, `robos:scriptedInputs` | [View Schema &rarr;]({{ '/schemas/testing/infinity-ai-directive.html' | relative_url }}) |
+| [**CRPG Player Input** (`robos:CRPGPlayerInput`)]({{ '/schemas/testing/crpg-player-input.html' | relative_url }}) | `urn:robos:shape:CRPGPlayerInputShape` | `robos:type`, `robos:round`, `robos:target`, `robos:spell`, `robos:item`, `robos:point`, `robos:to` | [View Schema &rarr;]({{ '/schemas/testing/crpg-player-input.html' | relative_url }}) |
 | [**Gherkin Feature** (`robos:GherkinFeature`)]({{ '/schemas/testing/gherkin-feature.html' | relative_url }}) | `urn:robos:shape:GherkinFeatureShape` | `dcterms:title`, `robos:featureFile` | [View Schema &rarr;]({{ '/schemas/testing/gherkin-feature.html' | relative_url }}) |
 | [**Gherkin Background** (`robos:GherkinBackground`)]({{ '/schemas/testing/gherkin-background.html' | relative_url }}) | `urn:robos:shape:GherkinBackgroundShape` | `dcterms:title`, `robos:steps`, `robos:inFeature` | [View Schema &rarr;]({{ '/schemas/testing/gherkin-background.html' | relative_url }}) |
 | [**Gherkin Rule** (`robos:GherkinRule`)]({{ '/schemas/testing/gherkin-rule.html' | relative_url }}) | `urn:robos:shape:GherkinRuleShape` | `dcterms:title`, `robos:inFeature` | [View Schema &rarr;]({{ '/schemas/testing/gherkin-rule.html' | relative_url }}) |

@@ -3,7 +3,7 @@ title: Test Plan
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 12
+nav_order: 18
 permalink: /schemas/testing/test-plan.html
 ---
 

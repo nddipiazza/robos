@@ -3,7 +3,7 @@ title: Code Snippet
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
-nav_order: 5
+nav_order: 6
 permalink: /schemas/documentation/code-snippet.html
 ---
 

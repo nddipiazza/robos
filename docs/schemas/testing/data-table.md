@@ -3,7 +3,7 @@ title: Data Table
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 9
+nav_order: 15
 permalink: /schemas/testing/data-table.html
 ---
 

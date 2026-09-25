@@ -3,7 +3,7 @@ title: Documentation Page
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
-nav_order: 2
+nav_order: 3
 permalink: /schemas/documentation/documentation-page.html
 ---
 

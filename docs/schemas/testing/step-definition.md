@@ -3,7 +3,7 @@ title: Step Definition
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 8
+nav_order: 14
 permalink: /schemas/testing/step-definition.html
 ---
 

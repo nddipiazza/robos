@@ -19,8 +19,9 @@ const ipcMain = isElectronRuntime ? electronPkg.ipcMain : { handle: () => {}, on
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const http = require('http');
+const clipboard = electronPkg && electronPkg.clipboard;
 
 app.setName('robos-elearning');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'robos-elearning'));
@@ -187,6 +188,525 @@ ipcMain.handle('elearning:export-website', async (_, opts = {}) => {
     return store.generateELearningWebsite(opts);
   }
   return { ok: false, error: 'Store or website generator not available' };
+});
+
+// ── Slide Actions, GitOps Source Info & Zip Export ────────────────────────────
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getGitInfo() {
+  const repoRoot = path.resolve(__dirname, '..', '..');
+  let remoteUrl = 'https://github.com/nddipiazza/robos';
+  let branch = 'main';
+  try {
+    const out = execSync('git remote get-url origin', { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+    if (out) {
+      if (out.startsWith('git@github.com:')) {
+        remoteUrl = 'https://github.com/' + out.slice('git@github.com:'.length).replace(/\.git$/, '');
+      } else {
+        remoteUrl = out.replace(/\.git$/, '');
+      }
+    }
+  } catch {}
+  try {
+    const b = execSync('git rev-parse --abbrev-ref HEAD', { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+    if (b) branch = b;
+  } catch {}
+
+  const gitopsPath = path.join(repoRoot, '.robos', 'elearning.yaml');
+  const kgraphPath = path.join(repoRoot, '.robos', 'kgraphs', 'learning', 'package.jsonld');
+
+  return {
+    repoRoot,
+    gitopsPath,
+    gitopsRelative: '.robos/elearning.yaml',
+    kgraphPath,
+    gitRemoteUrl: remoteUrl,
+    gitBranch: branch,
+  };
+}
+
+const crcTable = new Uint32Array(256);
+for (let i = 0; i < 256; i++) {
+  let c = i;
+  for (let k = 0; k < 8; k++) {
+    c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+  }
+  crcTable[i] = c;
+}
+
+function crc32(buf) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) {
+    crc = crcTable[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function createZipBuffer(files) {
+  const fileEntries = [];
+  let offset = 0;
+
+  for (const file of files) {
+    const nameBuf = Buffer.from(file.name, 'utf8');
+    const dataBuf = Buffer.isBuffer(file.data) ? file.data : Buffer.from(file.data, 'utf8');
+    const crc = crc32(dataBuf);
+    const uncompressedSize = dataBuf.length;
+
+    const localHeader = Buffer.alloc(30 + nameBuf.length);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt16LE(0, 6);
+    localHeader.writeUInt16LE(0, 8); // STORE
+    localHeader.writeUInt16LE(0x4a00, 10);
+    localHeader.writeUInt16LE(0x5939, 12);
+    localHeader.writeUInt32LE(crc, 14);
+    localHeader.writeUInt32LE(uncompressedSize, 18);
+    localHeader.writeUInt32LE(uncompressedSize, 22);
+    localHeader.writeUInt16LE(nameBuf.length, 26);
+    localHeader.writeUInt16LE(0, 28);
+    nameBuf.copy(localHeader, 30);
+
+    fileEntries.push({
+      nameBuf,
+      dataBuf,
+      localHeader,
+      crc,
+      uncompressedSize,
+      offset,
+    });
+
+    offset += localHeader.length + dataBuf.length;
+  }
+
+  const cdChunks = [];
+  let cdSize = 0;
+  for (const entry of fileEntries) {
+    const cdHeader = Buffer.alloc(46 + entry.nameBuf.length);
+    cdHeader.writeUInt32LE(0x02014b50, 0);
+    cdHeader.writeUInt16LE(20, 4);
+    cdHeader.writeUInt16LE(20, 6);
+    cdHeader.writeUInt16LE(0, 8);
+    cdHeader.writeUInt16LE(0, 10);
+    cdHeader.writeUInt16LE(0x4a00, 12);
+    cdHeader.writeUInt16LE(0x5939, 14);
+    cdHeader.writeUInt32LE(entry.crc, 16);
+    cdHeader.writeUInt32LE(entry.uncompressedSize, 20);
+    cdHeader.writeUInt32LE(entry.uncompressedSize, 24);
+    cdHeader.writeUInt16LE(entry.nameBuf.length, 28);
+    cdHeader.writeUInt16LE(0, 30);
+    cdHeader.writeUInt16LE(0, 32);
+    cdHeader.writeUInt16LE(0, 34);
+    cdHeader.writeUInt16LE(0, 36);
+    cdHeader.writeUInt32LE(0, 38);
+    cdHeader.writeUInt32LE(entry.offset, 42);
+    entry.nameBuf.copy(cdHeader, 46);
+
+    cdChunks.push(cdHeader);
+    cdSize += cdHeader.length;
+  }
+
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(0, 4);
+  eocd.writeUInt16LE(0, 6);
+  eocd.writeUInt16LE(fileEntries.length, 8);
+  eocd.writeUInt16LE(fileEntries.length, 10);
+  eocd.writeUInt32LE(cdSize, 12);
+  eocd.writeUInt32LE(offset, 16);
+  eocd.writeUInt16LE(0, 20);
+
+  const parts = [];
+  for (const entry of fileEntries) {
+    parts.push(entry.localHeader);
+    parts.push(entry.dataBuf);
+  }
+  for (const cd of cdChunks) {
+    parts.push(cd);
+  }
+  parts.push(eocd);
+
+  return Buffer.concat(parts);
+}
+
+const SLIDE_OFFLINE_CSS = `:root {
+  --bg-primary: #0d1117;
+  --bg-surface: #161b22;
+  --bg-surface-hover: #21262d;
+  --accent: #00bcd4;
+  --accent-cyan: #38bdf8;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-bright: #f0f6fc;
+  --success: #2ea043;
+  --danger: #f85149;
+  --purple: #a371f7;
+  --gold: #f1e05a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg-primary);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  padding: 32px 20px;
+}
+.slide-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.slide-header {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.header-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-brand { background: rgba(0, 188, 212, 0.15); color: var(--accent); border: 1px solid rgba(0, 188, 212, 0.3); }
+.badge-tech { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-difficulty { background: rgba(163, 113, 247, 0.15); color: var(--purple); border: 1px solid rgba(163, 113, 247, 0.3); }
+.badge-duration { background: rgba(240, 246, 252, 0.1); color: var(--text); border: 1px solid var(--border); }
+.badge-counter { background: rgba(241, 224, 90, 0.15); color: var(--gold); border: 1px solid rgba(241, 224, 90, 0.3); }
+.slide-title { font-size: 24px; color: var(--text-bright); margin-bottom: 6px; }
+.course-subtitle { font-size: 13px; color: var(--text-muted); }
+.section-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.section-heading {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.overview-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.lab-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lab-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.lab-step-item input { margin-top: 4px; cursor: pointer; }
+.lab-progress-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.quiz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.quiz-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.quiz-question {
+  font-size: 14px;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quiz-option-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.2s;
+}
+.quiz-option-label:hover { border-color: var(--accent); }
+.quiz-feedback {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  display: none;
+}
+.quiz-feedback.pass { display: block; background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.3); }
+.quiz-feedback.fail { display: block; background: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.3); }
+.slide-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meta-row { display: flex; flex-direction: column; gap: 4px; font-family: ui-monospace, monospace; }
+.footer-brand { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+`;
+
+function buildStandaloneSlideHtml({ slide, course, application, slideIndex, totalSlides, gitInfo }) {
+  const courseTitle = (course && course['dcterms:title']) || 'RobOS Masterclass';
+  const slideTitle = (slide && slide.title) || `Slide ${(slideIndex || 0) + 1}`;
+  const duration = (slide && slide.durationMinutes) || 15;
+  const overview = (slide && slide.overview) || '';
+  const labSteps = (slide && slide.labSteps) || [];
+  const quizzes = (slide && slide.quiz) || [];
+  const courseTopic = (course && course['robos:topic']) || 'Systems Architecture';
+  const difficulty = (course && course['robos:difficulty']) || 'Intermediate';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(slideTitle)} — ${escapeHtml(courseTitle)}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="slide-container">
+    <header class="slide-header">
+      <div class="header-badge-row">
+        <span class="badge badge-brand">🎓 RobOS eLearning</span>
+        <span class="badge badge-tech">${escapeHtml(courseTopic)}</span>
+        <span class="badge badge-difficulty">${escapeHtml(difficulty)}</span>
+        <span class="badge badge-duration">⏱️ ${duration} mins</span>
+        <span class="badge badge-counter">Slide ${(slideIndex || 0) + 1} of ${totalSlides || 1}</span>
+      </div>
+      <h1 class="slide-title">${escapeHtml(slideTitle)}</h1>
+      <div class="course-subtitle">Course: <strong>${escapeHtml(courseTitle)}</strong></div>
+    </header>
+
+    <main class="slide-content">
+      <section class="section-card">
+        <h2 class="section-heading">📖 Slide Overview</h2>
+        <div class="overview-body">${escapeHtml(overview).replace(/\\n/g, '<br>')}</div>
+      </section>
+
+      ${labSteps.length ? `
+      <section class="section-card">
+        <h2 class="section-heading">🧪 Hands-On Lab Exercises (${labSteps.length})</h2>
+        <div class="lab-steps-list">
+          ${labSteps.map((step, sIdx) => `
+            <div class="lab-step-item">
+              <input type="checkbox" id="lab-step-${sIdx}" onchange="updateLabCount()">
+              <label for="lab-step-${sIdx}"><strong>Step ${sIdx + 1}:</strong> ${escapeHtml(step).replace(/`([^`]+)`/g, '<code>$1</code>')}</label>
+            </div>
+          `).join('')}
+        </div>
+        <div class="lab-progress-note" id="lab-status">0 of ${labSteps.length} steps completed</div>
+      </section>` : ''}
+
+      ${quizzes.length ? `
+      <section class="section-card">
+        <h2 class="section-heading">📝 Knowledge Check (${quizzes.length} Questions)</h2>
+        <div class="quiz-list">
+          ${quizzes.map((q, qIdx) => `
+            <div class="quiz-item" id="quiz-block-${qIdx}">
+              <div class="quiz-question"><strong>Question ${qIdx + 1}:</strong> ${escapeHtml(q.question)}</div>
+              <div class="quiz-options">
+                ${(q.options || [q.answer, 'Alternative A', 'Alternative B']).map((opt) => `
+                  <label class="quiz-option-label">
+                    <input type="radio" name="quiz-${qIdx}" value="${escapeHtml(opt)}" onchange="evaluateQuiz(${qIdx}, this.value, '${escapeHtml(q.answer)}')">
+                    <span>${escapeHtml(opt)}</span>
+                  </label>
+                `).join('')}
+              </div>
+              <div class="quiz-feedback" id="feedback-${qIdx}"></div>
+            </div>
+          `).join('')}
+        </div>
+      </section>` : ''}
+    </main>
+
+    <footer class="slide-footer">
+      <div class="meta-row">
+        <div><strong>KGraph URI:</strong> <code>${escapeHtml((course && course['@id']) || 'urn:robos:elearning')}${slide && slide.id ? '#' + escapeHtml(slide.id) : ''}</code></div>
+        ${gitInfo ? `<div><strong>Source:</strong> <code>${escapeHtml(gitInfo.gitopsRelative || '.robos/elearning.yaml')}</code></div>` : ''}
+      </div>
+      <div class="footer-brand">Exported from RobOS Interactive eLearning Platform &middot; Fully Offline-Ready</div>
+    </footer>
+  </div>
+
+  <script>
+    function updateLabCount() {
+      const all = document.querySelectorAll('.lab-step-item input[type="checkbox"]');
+      const checked = document.querySelectorAll('.lab-step-item input[type="checkbox"]:checked');
+      const el = document.getElementById('lab-status');
+      if (el) el.textContent = checked.length + ' of ' + all.length + ' steps completed';
+    }
+    function evaluateQuiz(idx, selected, correct) {
+      const fb = document.getElementById('feedback-' + idx);
+      if (!fb) return;
+      if (selected === correct) {
+        fb.className = 'quiz-feedback pass';
+        fb.textContent = '✅ Correct!';
+      } else {
+        fb.className = 'quiz-feedback fail';
+        fb.textContent = '❌ Incorrect. Try again!';
+      }
+    }
+  </script>
+</body>
+</html>`;
+}
+
+ipcMain.handle('elearning:get-source-info', async () => {
+  return getGitInfo();
+});
+
+ipcMain.handle('elearning:export-slide-zip', async (_, payload = {}) => {
+  try {
+    const { slide, course, application, slideIndex, totalSlides } = payload;
+    if (!slide || !course) {
+      return { ok: false, error: 'Slide and course data are required' };
+    }
+    const gitInfo = getGitInfo();
+    const courseSlug = (course['@id'] || 'course').replace(/.*:/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slideSlug = (slide.id || ('slide-' + ((slideIndex || 0) + 1))).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    const slideHtml = buildStandaloneSlideHtml({
+      slide,
+      course,
+      application,
+      slideIndex: slideIndex || 0,
+      totalSlides: totalSlides || 1,
+      gitInfo,
+    });
+
+    const metadataJson = JSON.stringify({
+      courseId: course['@id'],
+      courseTitle: course['dcterms:title'],
+      slideId: slide.id || `mod-${(slideIndex || 0) + 1}`,
+      slideTitle: slide.title,
+      slideNumber: (slideIndex || 0) + 1,
+      totalSlides: totalSlides || 1,
+      durationMinutes: slide.durationMinutes || 15,
+      labStepsCount: (slide.labSteps || []).length,
+      quizQuestionsCount: (slide.quiz || []).length,
+      gitopsFile: course['robos:gitopsFile'] || '.robos/elearning.yaml',
+      exportedAt: new Date().toISOString(),
+    }, null, 2);
+
+    const readmeMd = `# ${slide.title || 'Slide'} — RobOS Offline eLearning Slide
+**Course**: ${course['dcterms:title'] || 'RobOS Masterclass'}  
+**Duration**: ${slide.durationMinutes || 15} minutes  
+**Source**: \`${gitInfo.gitopsRelative || '.robos/elearning.yaml'}\`  
+**Exported**: ${new Date().toISOString()}
+
+## Offline Usage
+1. Open \`index.html\` in any modern web browser (Google Chrome, Firefox, Safari, Edge).
+2. All interactive lab checklists and module quizzes are 100% offline-ready.
+`;
+
+    const files = [
+      { name: 'index.html', data: slideHtml },
+      { name: 'style.css', data: SLIDE_OFFLINE_CSS },
+      { name: 'metadata.json', data: metadataJson },
+      { name: 'README.md', data: readmeMd },
+    ];
+
+    const zipBuf = createZipBuffer(files);
+    const exportDir = path.join(os.homedir(), '.config', 'robos', 'exports', 'elearning');
+    fs.mkdirSync(exportDir, { recursive: true });
+    const filename = `${courseSlug}-${slideSlug}.zip`;
+    const filePath = path.join(exportDir, filename);
+    fs.writeFileSync(filePath, zipBuf);
+
+    return {
+      ok: true,
+      filePath,
+      filename,
+      sizeBytes: zipBuf.length,
+      base64Zip: zipBuf.toString('base64'),
+      message: `Exported slide archive to ${filePath}`,
+    };
+  } catch (err) {
+    console.error('[robos-elearning] export-slide-zip error:', err);
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('elearning:save-course', async (_, courseData) => {
+  try {
+    if (!courseData || !courseData['@id']) {
+      return { ok: false, error: 'Invalid course payload' };
+    }
+    const store = getGraphStore();
+    if (!store) {
+      return { ok: false, error: 'Knowledge graph store not available' };
+    }
+
+    // Update in knowledge graph store
+    store.updateNode(courseData);
+
+    // Synchronize with declarative GitOps .robos/elearning.yaml
+    if (typeof store.syncToGitOpsELearning === 'function') {
+      store.syncToGitOpsELearning(courseData);
+    }
+
+    return {
+      ok: true,
+      message: `Successfully saved course "${courseData['dcterms:title']}" to Knowledge Graph and .robos/elearning.yaml.`,
+    };
+  } catch (err) {
+    console.error('[robos-elearning] save-course error:', err);
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('elearning:copy-to-clipboard', async (_, text) => {
+  try {
+    if (clipboard && typeof clipboard.writeText === 'function') {
+      clipboard.writeText(String(text || ''));
+      return { ok: true };
+    }
+    return { ok: false, error: 'Clipboard API not available' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
 
 // ── Voice Assistant & Real-Time Course Co-Authoring ─────────────────────────
@@ -443,4 +963,8 @@ module.exports = {
   startVoiceAssistant,
   stopVoiceAssistant,
   getVoiceAssistantState: () => voiceAssistantState,
+  getGitInfo,
+  createZipBuffer,
+  buildStandaloneSlideHtml,
+  SLIDE_OFFLINE_CSS,
 };

@@ -3,7 +3,7 @@ title: Test Execution Record
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 14
+nav_order: 20
 permalink: /schemas/testing/test-execution-record.html
 ---
 

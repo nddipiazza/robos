@@ -46,6 +46,12 @@
         <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
           <option value="">Switch Course…</option>
         </select>
+        <button class="btn btn-outline" id="btn-toggle-editor" onclick="window.toggleEditorMode()" title="Toggle Curriculum Editor Mode" style="font-size: 11px; padding: 5px 10px;">
+          ✏️ Editor Mode
+        </button>
+        <button class="btn btn-primary" id="btn-save-course" onclick="window.saveCurrentCourse()" title="Save all course updates to .robos/elearning.yaml and Knowledge Graph" style="font-size: 11px; padding: 5px 10px; display: none;">
+          💾 Save Course
+        </button>
         <button class="btn btn-outline" id="btn-export-web" onclick="window.exportCourseWebsite()" title="Export self-contained interactive website for GitHub Pages" style="font-size: 11px; padding: 5px 10px;">
           🌐 Export Website
         </button>
@@ -58,7 +64,13 @@
 
     <div class="app-body">
       <aside class="sidebar">
-        <h3>Curriculum Modules</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="margin-bottom: 0;">Curriculum Modules</h3>
+          <span id="editor-indicator-badge" class="badge badge-editor hidden">Editor Mode</span>
+        </div>
+        <button class="btn btn-outline btn-xs" id="btn-add-slide-sidebar" onclick="window.addNewSlide()" style="display:none; width: 100%; margin-bottom: 10px; font-size: 11px;">
+          ➕ Add New Slide
+        </button>
         <ul class="module-list" id="module-nav-list"></ul>
         <div class="cert-status-box" id="cert-status-box">
           <h4>🏆 Completion Certificate</h4>
@@ -68,11 +80,63 @@
       </aside>
 
       <main class="content-panel" id="content-panel">
+        <div id="editor-banner" class="editor-banner hidden">
+          <span>✏️ <strong>Slide Editor Active</strong> — Use the <strong>⋮ Slide Menu</strong> on each slide to copy paths, copy Git URL, export as HTML zip, or edit content.</span>
+          <button class="btn btn-xs btn-primary" onclick="window.saveCurrentCourse()">💾 Save Course</button>
+        </div>
         <div id="voice-feedback-banner" class="voice-feedback-banner hidden"></div>
         <div id="module-content">
           <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
         </div>
       </main>
+    </div>
+
+    <!-- Slide Editor Modal -->
+    <div class="modal-overlay" id="slide-editor-modal" style="display:none;">
+      <div class="modal-card editor-modal-card">
+        <div class="editor-modal-header">
+          <h2 id="slide-editor-title">✏️ Edit Slide</h2>
+          <button class="btn-close-modal" onclick="window.closeSlideEditor()">&times;</button>
+        </div>
+        <div class="editor-modal-body">
+          <div class="form-group">
+            <label for="edit-slide-title">Slide Title</label>
+            <input type="text" id="edit-slide-title" class="form-input" placeholder="e.g. Module 1: Architecture & Rationale">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="edit-slide-id">Slide ID</label>
+              <input type="text" id="edit-slide-id" class="form-input" placeholder="e.g. mod-01-architecture">
+            </div>
+            <div class="form-group" style="width: 140px;">
+              <label for="edit-slide-duration">Duration (mins)</label>
+              <input type="number" id="edit-slide-duration" class="form-input" min="1" max="180" value="15">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-slide-overview">Slide Overview / Notes (Markdown supported)</label>
+            <textarea id="edit-slide-overview" class="form-textarea" rows="4" placeholder="Overview of architectural concepts, theory, and instructions..."></textarea>
+          </div>
+          <div class="form-group">
+            <div class="form-label-row">
+              <label>🧪 Hands-On Lab Steps</label>
+              <button type="button" class="btn btn-outline btn-xs" onclick="window.addEditorLabStep()">+ Add Step</button>
+            </div>
+            <div id="editor-lab-steps-container" class="editor-steps-container"></div>
+          </div>
+          <div class="form-group">
+            <div class="form-label-row">
+              <label>📝 Knowledge Check Quizzes</label>
+              <button type="button" class="btn btn-outline btn-xs" onclick="window.addEditorQuizQuestion()">+ Add Question</button>
+            </div>
+            <div id="editor-quizzes-container" class="editor-quizzes-container"></div>
+          </div>
+        </div>
+        <div class="editor-modal-footer">
+          <button class="btn btn-outline" onclick="window.closeSlideEditor()">Cancel</button>
+          <button class="btn btn-primary" onclick="window.saveSlideEditor()">Apply Changes</button>
+        </div>
+      </div>
     </div>
 
     <!-- Certificate Modal -->
@@ -102,6 +166,9 @@
       </div>
     </div>
   </div>
+
+  <div id="toast-notice" class="toast-notice hidden"></div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ title: Doc String
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 10
+nav_order: 16
 permalink: /schemas/testing/doc-string.html
 ---
 

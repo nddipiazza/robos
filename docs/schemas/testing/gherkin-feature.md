@@ -3,7 +3,7 @@ title: Gherkin Feature
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 3
+nav_order: 9
 permalink: /schemas/testing/gherkin-feature.html
 ---
 

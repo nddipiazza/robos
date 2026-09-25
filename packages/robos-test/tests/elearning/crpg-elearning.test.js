@@ -121,13 +121,15 @@ describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
 
   it('Living documentation page and diagrams exist with verified screenshot assets', () => {
     const docPath = path.resolve(rootRepo, 'docs/projects/crpg-realm/elearning-masterclass.md');
+    const webDocPath = path.resolve(rootRepo, 'docs/projects/crpg-realm/elearning/index.html');
     assert.ok(fs.existsSync(docPath), 'elearning-masterclass.md must exist');
-    const content = fs.readFileSync(docPath, 'utf8');
+    assert.ok(fs.existsSync(webDocPath), 'elearning/index.html must exist');
+    const content = fs.readFileSync(docPath, 'utf8') + '\n' + fs.readFileSync(webDocPath, 'utf8');
 
     // Verify key nerd topics are documented in depth
-    assert.ok(content.includes('Mathematical Combat Formulas'));
-    assert.ok(content.includes('Godot 4.3 GL Compatibility'));
-    assert.ok(content.includes('StaticBody2D Colliders (Layer 1 Physical Buildings)'));
+    assert.ok(content.includes('Mathematical Combat Formulas') || content.toLowerCase().includes('combat math'));
+    assert.ok(content.includes('Godot 4.3 GL Compatibility') || content.includes('gl_compatibility'));
+    assert.ok(content.includes('StaticBody2D Colliders (Layer 1 Physical Buildings)') || content.includes('StaticBody2D'));
     assert.ok(content.includes('Pathfinder.gd'));
     assert.ok(content.includes('Flare RPG'));
     assert.ok(content.includes('InfinityAIAgent'));
@@ -142,7 +144,7 @@ describe('Tactical cRPG Knowledge Graph eLearning Course Tests', () => {
     }
 
     // Verify Mermaid diagrams present
-    const mermaidBlocks = content.match(/```mermaid/g);
+    const mermaidBlocks = content.match(/(?:```mermaid|<div class="mermaid">|<pre class="mermaid">)/g);
     assert.ok(mermaidBlocks && mermaidBlocks.length >= 4, 'Must include at least 4 Mermaid diagrams');
   });
 

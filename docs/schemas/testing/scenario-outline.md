@@ -3,7 +3,7 @@ title: Scenario Outline
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 6
+nav_order: 12
 permalink: /schemas/testing/scenario-outline.html
 ---
 

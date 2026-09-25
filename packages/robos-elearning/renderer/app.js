@@ -8,6 +8,19 @@ let progress = {
   isCertified: false,
   certificate: null
 };
+let isEditorMode = false;
+let sourceInfo = null;
+let editingSlideIdx = null;
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
   await initApp();
@@ -32,6 +45,20 @@ async function initApp() {
   } catch (err) {
     console.error('Error initializing course:', err);
   }
+
+  try {
+    if (window.robosELearning && window.robosELearning.getSourceInfo) {
+      sourceInfo = await window.robosELearning.getSourceInfo();
+    }
+  } catch (err) {
+    console.warn('Could not fetch source info:', err);
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.slide-menu-container')) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+    }
+  });
 
   setupVoiceAssistant();
 }
@@ -88,11 +115,55 @@ function renderModule(idx) {
   const panel = document.getElementById('module-content');
   if (!panel) return;
 
+  const totalMods = (activeCourse['robos:modules'] || []).length;
+
   panel.innerHTML = `
     <div class="module-card">
       <div class="module-header">
-        <h2>${m.title}</h2>
-        <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} minutes</span>
+        <div>
+          <h2>${escapeHtml(m.title || 'Slide ' + (idx + 1))}</h2>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Slide ${idx + 1} of ${totalMods} &middot; ⏱️ ${m.durationMinutes || 15} minutes
+          </div>
+        </div>
+        <div class="slide-header-actions">
+          <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} mins</span>
+          <div class="slide-menu-container">
+            <button class="btn-slide-menu" onclick="window.toggleSlideMenu(event, ${idx})" title="Slide Actions & Exports">
+              ⋮ Slide Menu ▾
+            </button>
+            <div class="slide-dropdown-menu hidden" id="slide-dropdown-${idx}">
+              <div class="slide-menu-label">Slide Actions</div>
+              <button class="slide-menu-item" onclick="window.copySlidePath(${idx})">
+                📋 <span>Copy Path on File System</span>
+              </button>
+              <button class="slide-menu-item" onclick="window.copySlideGitUrl(${idx})">
+                🔗 <span>Copy Git URL Path</span>
+              </button>
+              <button class="slide-menu-item" onclick="window.exportSlideAsZip(${idx})">
+                📦 <span>Export as HTML Zip</span>
+              </button>
+              <div class="slide-menu-divider"></div>
+              <button class="slide-menu-item" onclick="window.openSlideEditor(${idx})">
+                ✏️ <span>Edit Slide Content</span>
+              </button>
+              <button class="slide-menu-item" onclick="window.copySlideMarkdown(${idx})">
+                📄 <span>Copy Slide Markdown</span>
+              </button>
+              <button class="slide-menu-item" onclick="window.copySlideUri(${idx})">
+                🏷️ <span>Copy Slide KGraph URI</span>
+              </button>
+              <div class="slide-menu-divider"></div>
+              <button class="slide-menu-item" onclick="window.addNewSlide(${idx + 1})">
+                ➕ <span>Add New Slide Here</span>
+              </button>
+              ${totalMods > 1 ? `
+              <button class="slide-menu-item danger" onclick="window.deleteSlide(${idx})">
+                🗑️ <span>Delete Slide</span>
+              </button>` : ''}
+            </div>
+          </div>
+        </div>
       </div>
       <div class="module-overview">${m.overview || ''}</div>
 
@@ -402,3 +473,400 @@ window.exportCourseWebsite = async function() {
     if (btn) btn.textContent = originalText;
   }
 };
+
+// ── Slide Menu, Offline HTML Zip Export & Editor Actions ───────────────────
+
+async function copyToClipboardText(text) {
+  try {
+    if (window.robosELearning && window.robosELearning.copyToClipboard) {
+      await window.robosELearning.copyToClipboard(text);
+      return true;
+    }
+  } catch {}
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {}
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  return true;
+}
+
+window.showToast = function(msg, type = 'info') {
+  const el = document.getElementById('toast-notice');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast-notice ' + type;
+  el.classList.remove('hidden');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => {
+    el.classList.add('hidden');
+  }, 4500);
+};
+
+window.toggleSlideMenu = function(event, idx) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const target = document.getElementById('slide-dropdown-' + idx);
+  const wasHidden = target ? target.classList.contains('hidden') : true;
+
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+
+  if (target && wasHidden) {
+    target.classList.remove('hidden');
+  }
+};
+
+window.copySlidePath = async function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  const gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || '/home/ndipiazza/source/robos/.robos/elearning.yaml';
+  const slideId = (m && m.id) || ('slide-' + (idx + 1));
+  const fullPath = `${gitopsPath}#${slideId}`;
+  await copyToClipboardText(fullPath);
+  window.showToast(`📋 Copied file system path: ${fullPath}`, 'success');
+};
+
+window.copySlideGitUrl = async function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  const baseUrl = (sourceInfo && sourceInfo.gitRemoteUrl) || 'https://github.com/nddipiazza/robos';
+  const branch = (sourceInfo && sourceInfo.gitBranch) || 'main';
+  const relPath = (sourceInfo && sourceInfo.gitopsRelative) || '.robos/elearning.yaml';
+  const slideId = (m && m.id) || ('slide-' + (idx + 1));
+  const gitUrl = `${baseUrl}/blob/${branch}/${relPath}#${slideId}`;
+  await copyToClipboardText(gitUrl);
+  window.showToast(`🔗 Copied Git URL path: ${gitUrl}`, 'success');
+};
+
+window.exportSlideAsZip = async function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  if (!m) return;
+
+  window.showToast('⏳ Packaging slide as offline HTML zip…', 'info');
+
+  try {
+    const res = await window.robosELearning.exportSlideZip({
+      slide: m,
+      course: activeCourse,
+      application: activeApp,
+      slideIndex: idx,
+      totalSlides: (activeCourse['robos:modules'] || []).length,
+    });
+
+    if (res && res.ok) {
+      window.showToast(`📦 Exported slide as HTML Zip: ${res.filePath || res.filename}`, 'success');
+
+      // Trigger standard browser download for user convenience
+      if (res.base64Zip) {
+        const a = document.createElement('a');
+        a.href = 'data:application/zip;base64,' + res.base64Zip;
+        a.download = res.filename || 'slide.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } else {
+      window.showToast(`❌ Export failed: ${(res && res.error) || 'Unknown error'}`, 'fail');
+    }
+  } catch (err) {
+    window.showToast(`❌ Export error: ${err.message}`, 'fail');
+  }
+};
+
+window.copySlideMarkdown = async function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  if (!m) return;
+
+  const lines = [
+    `# ${m.title || 'Slide ' + (idx + 1)}`,
+    `**Course**: ${activeCourse['dcterms:title'] || 'RobOS Masterclass'}`,
+    `**Duration**: ${m.durationMinutes || 15} mins`,
+    '',
+    '## Overview',
+    m.overview || '',
+    '',
+  ];
+
+  if (m.labSteps && m.labSteps.length) {
+    lines.push('## Hands-On Lab Exercises');
+    m.labSteps.forEach((s, sIdx) => {
+      lines.push(`${sIdx + 1}. ${s}`);
+    });
+    lines.push('');
+  }
+
+  if (m.quiz && m.quiz.length) {
+    lines.push('## Knowledge Check Quizzes');
+    m.quiz.forEach((q, qIdx) => {
+      lines.push(`### Question ${qIdx + 1}: ${q.question}`);
+      if (q.options) {
+        q.options.forEach(opt => lines.push(`- [ ] ${opt}`));
+      }
+      lines.push(`**Correct Answer**: ${q.answer}`);
+      if (q.explanation) lines.push(`*Explanation*: ${q.explanation}`);
+      lines.push('');
+    });
+  }
+
+  const md = lines.join('\n');
+  await copyToClipboardText(md);
+  window.showToast(`📄 Copied Slide Markdown to clipboard!`, 'success');
+};
+
+window.copySlideUri = async function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  const uri = `${activeCourse['@id'] || 'urn:robos:elearning'}#${(m && m.id) || ('slide-' + (idx + 1))}`;
+  await copyToClipboardText(uri);
+  window.showToast(`🏷️ Copied Slide KGraph URI: ${uri}`, 'success');
+};
+
+window.toggleEditorMode = function() {
+  isEditorMode = !isEditorMode;
+  const btn = document.getElementById('btn-toggle-editor');
+  if (btn) btn.classList.toggle('active', isEditorMode);
+
+  const saveBtn = document.getElementById('btn-save-course');
+  if (saveBtn) saveBtn.style.display = isEditorMode ? 'inline-block' : 'none';
+
+  const banner = document.getElementById('editor-banner');
+  if (banner) banner.classList.toggle('hidden', !isEditorMode);
+
+  const badge = document.getElementById('editor-indicator-badge');
+  if (badge) badge.classList.toggle('hidden', !isEditorMode);
+
+  const addSlideBtn = document.getElementById('btn-add-slide-sidebar');
+  if (addSlideBtn) addSlideBtn.style.display = isEditorMode ? 'block' : 'none';
+
+  window.showToast(`✏️ Editor Mode ${isEditorMode ? 'ON' : 'OFF'}`, 'info');
+  renderModuleNav();
+};
+
+window.openSlideEditor = function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  editingSlideIdx = idx;
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  if (!m) return;
+
+  document.getElementById('slide-editor-title').textContent = `✏️ Edit Slide ${idx + 1}: ${m.title || ''}`;
+  document.getElementById('edit-slide-title').value = m.title || '';
+  document.getElementById('edit-slide-id').value = m.id || ('mod-' + (idx + 1));
+  document.getElementById('edit-slide-duration').value = m.durationMinutes || 15;
+  document.getElementById('edit-slide-overview').value = m.overview || '';
+
+  renderEditorLabSteps(m.labSteps || []);
+  renderEditorQuizzes(m.quiz || []);
+
+  const modal = document.getElementById('slide-editor-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeSlideEditor = function() {
+  const modal = document.getElementById('slide-editor-modal');
+  if (modal) modal.style.display = 'none';
+  editingSlideIdx = null;
+};
+
+function renderEditorLabSteps(steps) {
+  const container = document.getElementById('editor-lab-steps-container');
+  if (!container) return;
+  container.innerHTML = '';
+  steps.forEach((step) => {
+    const row = document.createElement('div');
+    row.className = 'step-row-edit';
+    row.innerHTML = `
+      <input type="text" class="form-input editor-lab-step-input" value="${escapeHtml(step)}" placeholder="Lab step instruction...">
+      <button type="button" class="btn btn-outline btn-xs" onclick="this.parentElement.remove()" style="color:var(--danger);">&times;</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+window.addEditorLabStep = function() {
+  const container = document.getElementById('editor-lab-steps-container');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'step-row-edit';
+  row.innerHTML = `
+    <input type="text" class="form-input editor-lab-step-input" value="" placeholder="Lab step instruction...">
+    <button type="button" class="btn btn-outline btn-xs" onclick="this.parentElement.remove()" style="color:var(--danger);">&times;</button>
+  `;
+  container.appendChild(row);
+  const input = row.querySelector('input');
+  if (input) input.focus();
+};
+
+function renderEditorQuizzes(quizzes) {
+  const container = document.getElementById('editor-quizzes-container');
+  if (!container) return;
+  container.innerHTML = '';
+  quizzes.forEach((q, qIdx) => {
+    const block = document.createElement('div');
+    block.className = 'quiz-edit-block';
+    block.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <strong style="font-size:12px; color:var(--text-bright);">Question ${qIdx + 1}</strong>
+        <button type="button" class="btn btn-outline btn-xs" onclick="this.closest('.quiz-edit-block').remove()" style="color:var(--danger);">&times; Remove</button>
+      </div>
+      <input type="text" class="form-input edit-quiz-q" value="${escapeHtml(q.question)}" placeholder="Question text..." style="margin-bottom:6px;">
+      <div class="form-row" style="margin-bottom:6px;">
+        <div class="flex-1">
+          <label style="font-size:11px; margin-bottom:2px;">Correct Answer</label>
+          <input type="text" class="form-input edit-quiz-ans" value="${escapeHtml(q.answer)}" placeholder="Correct answer text">
+        </div>
+      </div>
+      <div style="margin-bottom:6px;">
+        <label style="font-size:11px; margin-bottom:2px;">Options (comma-separated or include correct answer)</label>
+        <input type="text" class="form-input edit-quiz-opts" value="${escapeHtml((q.options || []).join(', '))}" placeholder="Option A, Option B, Option C">
+      </div>
+      <div>
+        <label style="font-size:11px; margin-bottom:2px;">Pedagogical Explanation</label>
+        <input type="text" class="form-input edit-quiz-exp" value="${escapeHtml(q.explanation || '')}" placeholder="Explanation provided on answer">
+      </div>
+    `;
+    container.appendChild(block);
+  });
+}
+
+window.addEditorQuizQuestion = function() {
+  const container = document.getElementById('editor-quizzes-container');
+  if (!container) return;
+  const count = container.children.length;
+  const block = document.createElement('div');
+  block.className = 'quiz-edit-block';
+  block.innerHTML = `
+    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+      <strong style="font-size:12px; color:var(--text-bright);">Question ${count + 1}</strong>
+      <button type="button" class="btn btn-outline btn-xs" onclick="this.closest('.quiz-edit-block').remove()" style="color:var(--danger);">&times; Remove</button>
+    </div>
+    <input type="text" class="form-input edit-quiz-q" value="" placeholder="Question text..." style="margin-bottom:6px;">
+    <div class="form-row" style="margin-bottom:6px;">
+      <div class="flex-1">
+        <label style="font-size:11px; margin-bottom:2px;">Correct Answer</label>
+        <input type="text" class="form-input edit-quiz-ans" value="True" placeholder="Correct answer text">
+      </div>
+    </div>
+    <div style="margin-bottom:6px;">
+      <label style="font-size:11px; margin-bottom:2px;">Options (comma-separated)</label>
+      <input type="text" class="form-input edit-quiz-opts" value="True, False" placeholder="Option A, Option B">
+    </div>
+    <div>
+      <label style="font-size:11px; margin-bottom:2px;">Pedagogical Explanation</label>
+      <input type="text" class="form-input edit-quiz-exp" value="" placeholder="Explanation provided on answer">
+    </div>
+  `;
+  container.appendChild(block);
+};
+
+window.saveSlideEditor = function() {
+  if (editingSlideIdx === null || !activeCourse) return;
+  const m = (activeCourse['robos:modules'] || [])[editingSlideIdx];
+  if (!m) return;
+
+  m.title = document.getElementById('edit-slide-title').value.trim() || m.title;
+  m.id = document.getElementById('edit-slide-id').value.trim() || m.id;
+  m.durationMinutes = parseInt(document.getElementById('edit-slide-duration').value, 10) || 15;
+  m.overview = document.getElementById('edit-slide-overview').value;
+
+  // Gather lab steps
+  const stepInputs = document.querySelectorAll('.editor-lab-step-input');
+  m.labSteps = Array.from(stepInputs).map(i => i.value.trim()).filter(Boolean);
+
+  // Gather quizzes
+  const quizBlocks = document.querySelectorAll('.quiz-edit-block');
+  m.quiz = Array.from(quizBlocks).map(b => {
+    const q = b.querySelector('.edit-quiz-q').value.trim();
+    const ans = b.querySelector('.edit-quiz-ans').value.trim();
+    const optsStr = b.querySelector('.edit-quiz-opts').value.trim();
+    const exp = b.querySelector('.edit-quiz-exp').value.trim();
+    const options = optsStr ? optsStr.split(',').map(s => s.trim()).filter(Boolean) : [ans, 'Alternative choice'];
+    if (!options.includes(ans)) options.unshift(ans);
+    return { question: q, answer: ans, options, explanation: exp };
+  }).filter(q => q.question);
+
+  window.closeSlideEditor();
+  renderModule(editingSlideIdx);
+  renderModuleNav();
+  window.showToast(`✏️ Updated Slide: "${m.title}". Click "Save Course" to persist.`, 'success');
+};
+
+window.addNewSlide = function(targetIdx) {
+  if (!activeCourse) return;
+  if (!Array.isArray(activeCourse['robos:modules'])) activeCourse['robos:modules'] = [];
+  const count = activeCourse['robos:modules'].length;
+  const insertIdx = (typeof targetIdx === 'number' && targetIdx >= 0) ? targetIdx : count;
+
+  const newSlide = {
+    id: `mod-${Date.now().toString(36).slice(-4)}-slide`,
+    title: `Module ${count + 1}: New Topic`,
+    durationMinutes: 15,
+    overview: 'Overview of topics, architecture, and exercises.',
+    labSteps: ['Verify implementation in sandbox or terminal'],
+    quiz: [{
+      question: 'What is the primary invariant for this module?',
+      answer: 'Correct architectural pattern',
+      options: ['Correct architectural pattern', 'Alternative option A', 'Alternative option B'],
+      explanation: 'Verified by RobOS Knowledge Graph.',
+    }],
+  };
+
+  activeCourse['robos:modules'].splice(insertIdx, 0, newSlide);
+  renderModuleNav();
+  renderModule(insertIdx);
+  window.openSlideEditor(insertIdx);
+  window.showToast(`➕ Added new slide. Configure and save course.`, 'info');
+};
+
+window.deleteSlide = function(idx) {
+  document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+  if (!activeCourse) return;
+  const mods = activeCourse['robos:modules'] || [];
+  if (mods.length <= 1) {
+    alert('A course must retain at least one slide/module.');
+    return;
+  }
+  const title = (mods[idx] && mods[idx].title) || `Slide ${idx + 1}`;
+  if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+  mods.splice(idx, 1);
+  const nextIdx = Math.max(0, Math.min(idx, mods.length - 1));
+  renderModuleNav();
+  renderModule(nextIdx);
+  window.showToast(`🗑️ Deleted slide "${title}". Click "Save Course" to persist.`, 'info');
+};
+
+window.saveCurrentCourse = async function() {
+  if (!activeCourse) return;
+  window.showToast('💾 Saving course to Knowledge Graph & GitOps…', 'info');
+
+  try {
+    const res = await window.robosELearning.saveCourse(activeCourse);
+    if (res && res.ok) {
+      window.showToast(`✅ Successfully saved course to .robos/elearning.yaml and Knowledge Graph!`, 'success');
+    } else {
+      window.showToast(`❌ Save failed: ${(res && res.error) || 'Unknown error'}`, 'fail');
+    }
+  } catch (err) {
+    window.showToast(`❌ Save error: ${err.message}`, 'fail');
+  }
+};
+
