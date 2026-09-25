@@ -41,21 +41,8 @@ class SkillsExecutor {
    * Main execution router: matches voice intent, executes skill, and formulates response
    */
   async executeCommand(queryText, context = {}, options = {}) {
-    let rawQuery = (queryText || '').trim();
-    // Check if query ended with 10/4 or Done!
-    const hadDoneTrigger = /(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(rawQuery);
-    const cleanQuery = rawQuery.replace(/[,.]*\s*(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i, '').trim();
-
-    if (!cleanQuery) {
-      if (hadDoneTrigger) {
-        return {
-          ok: true,
-          skill: 'ack-done',
-          actionDone: 'Acknowledged 10/4',
-          response: '10-4! Standing by for your next command.',
-          data: { acknowledged: true }
-        };
-      }
+    const query = (queryText || '').trim();
+    if (!query) {
       return {
         ok: false,
         skill: 'none',
@@ -64,8 +51,6 @@ class SkillsExecutor {
         data: null
       };
     }
-
-    const query = cleanQuery;
     const q = query.toLowerCase();
 
     // 0. Greeting Intent: "hi", "hello", "hey", "hello robos", "rob os", "row bose", etc.
@@ -655,15 +640,7 @@ class SkillsExecutor {
    * Check if speech phrase contains a clear actionable command intent
    */
   hasActionableIntent(queryText) {
-    let raw = (queryText || '').trim();
-    if (!raw) return false;
-
-    // Check if ending with 10/4 or Done!
-    if (/(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(raw)) {
-      return true;
-    }
-
-    const query = raw.replace(/[,.]*\s*(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i, '').trim();
+    const query = (queryText || '').trim();
     if (!query) return false;
 
     // Standalone greetings or filler words are not actionable tasks
@@ -724,15 +701,16 @@ class SkillsExecutor {
    * Fallback to direct command execution
    */
   async executeAIAgentFallback(query, context = {}, options = {}) {
-    const actionDone = `Executed: "${query}"`;
-    const response = `Command received: "${query}". Executed successfully.`;
+    const cleanQ = query.trim().replace(/[.!]+$/, '');
+    const actionDone = `Executed: "${cleanQ}"`;
+    const response = `Done: ${cleanQ}.`;
 
     return {
       ok: true,
       skill: 'command-receive',
       actionDone,
       response,
-      data: { query }
+      data: { query: cleanQ }
     };
   }
 

@@ -186,7 +186,8 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       await new Promise(r => setTimeout(r, 50));
 
       assert.ok(spokenText, 'Assistant must speak greeting aloud');
-      assert.ok(spokenText.includes("let me know when you're done with a 10/4 or say Done!"), 'Greeting must include 10/4 Done hint');
+      assert.ok(!spokenText.includes("10/4"), 'Greeting must be clean without 10/4');
+      assert.ok(DEFAULT_GREETINGS.includes(spokenText), 'Spoken greeting should be one of the default greetings');
       assert.strictEqual(hudShown, true, 'Assistant must emit show-hud event');
       assert.strictEqual(hudGreeting, spokenText, 'HUD greeting must match spoken greeting');
       assert.strictEqual(assistant.getState(), 'LISTENING');
@@ -226,16 +227,19 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
 
       const res1 = await assistant.processQuery('hello robos');
-      assert.ok(res1.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
+      assert.ok(!res1.turn.response.includes("10/4"));
+      assert.ok(res1.turn.response.length > 0);
 
       const res2 = await assistant.processQuery('hi');
-      assert.ok(res2.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
+      assert.ok(!res2.turn.response.includes("10/4"));
+      assert.ok(res2.turn.response.length > 0);
 
       const res3 = await assistant.processQuery('row bose');
-      assert.ok(res3.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
+      assert.ok(!res3.turn.response.includes("10/4"));
+      assert.ok(res3.turn.response.length > 0);
     });
 
-    it('executes command followed by "10/4" or "done" and strips the suffix', async () => {
+    it('executes command directly on stream and triggers action without requiring 10/4', async () => {
       const tts = new TTSEngine();
       let spokenText = null;
       tts.speak = async (text) => {
@@ -251,14 +255,14 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
         actionDone = evt.actionDone;
       });
 
-      // User says "open task explorer 10-4"
-      await assistant.handleStreamText({ text: 'open task explorer 10-4' });
+      // User says "open task explorer"
+      await assistant.handleStreamText({ text: 'open task explorer' });
       assert.ok(actionDone && actionDone.includes('Task Explorer'));
       assert.ok(spokenText && spokenText.includes('Task Explorer'));
 
-      // Standalone "10/4"
-      const res = await assistant.processQuery('10/4');
-      assert.strictEqual(res.turn.response, '10-4! Standing by for your next command.');
+      // Direct general command fallback returns concise confirmation
+      const res = await assistant.processQuery('run verification audit');
+      assert.strictEqual(res.turn.response, 'Done: run verification audit.');
     });
 
     it('continuously analyzes speech stream and autonomously executes matched action', async () => {

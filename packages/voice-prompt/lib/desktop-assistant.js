@@ -20,6 +20,9 @@ class DesktopAssistant extends EventEmitter {
     this.autoSpeak = options.autoSpeak !== false;
     this.wakeGreeting = options.wakeGreeting || null;
     this.silenceTimeoutMs = options.silenceTimeoutMs || 850;
+    this.isProcessing = false;
+    this.lastSpokenText = '';
+    this.echoCooldownUntil = 0;
 
     if (this.wakeDetector) {
       this.wakeDetector.on('wake-word', async (evt) => {
@@ -69,15 +72,24 @@ class DesktopAssistant extends EventEmitter {
       await this.processQuery(query);
     } else {
       // User just said "hello robos" and nothing else
-      this.setState('LISTENING', { greeting });
+      // First speak the greeting in SPEAKING state to prevent mic echo loop
+      this.setState('SPEAKING', { greeting, trigger: evt.trigger });
       this.emit('wake-greeting', { greeting, trigger: evt.trigger });
+      this.lastSpokenText = greeting;
+
       if (this.autoSpeak && this.ttsEngine) {
         try {
           await this.ttsEngine.speak(greeting);
         } catch {}
       }
 
-      // Start listening window for the subsequent user request (up to 4s to begin speaking)
+      // Add cooldown to flush acoustic echo from microphone buffers
+      this.echoCooldownUntil = Date.now() + 800;
+
+      // NOW transition to LISTENING for the actual user request
+      this.setState('LISTENING', { greeting });
+
+      // Start listening window for subsequent user request
       this.accumulatedInput = '';
       if (this.listeningTimer) clearTimeout(this.listeningTimer);
       this.listeningTimer = setTimeout(async () => {
@@ -90,7 +102,7 @@ class DesktopAssistant extends EventEmitter {
             this.setState('IDLE');
           }
         }
-      }, 4000);
+      }, 5000);
     }
   }
 
@@ -101,62 +113,64 @@ class DesktopAssistant extends EventEmitter {
     const text = (chunk.text || '').trim();
     if (!text) return;
 
+    // Echo & State Guards: Only ingest speech when actively LISTENING and not busy processing/speaking
+    if (this.state !== 'LISTENING' || this.isProcessing) return;
+    if (this.ttsEngine && this.ttsEngine.isSpeaking) return;
+    if (this.echoCooldownUntil && Date.now() < this.echoCooldownUntil) return;
+
+    // Drop acoustic echoes of assistant's own responses
+    const lower = text.toLowerCase();
+    if (this.lastSpokenText && lower.includes(this.lastSpokenText.toLowerCase().slice(0, 15))) {
+      return;
+    }
+    if (/^(?:command received|done:|executed:)/i.test(lower)) {
+      return;
+    }
+
     this.emit('stream-line', { text, isFinal: chunk.isFinal, state: this.state });
 
     // If currently listening after wake word, accumulate words and evaluate actions
-    if (this.state === 'LISTENING') {
-      const incoming = text.trim();
-      if (!this.accumulatedInput) {
-        this.accumulatedInput = incoming;
-      } else if (incoming.startsWith(this.accumulatedInput)) {
-        this.accumulatedInput = incoming;
-      } else if (!this.accumulatedInput.includes(incoming)) {
-        this.accumulatedInput = (this.accumulatedInput + ' ' + incoming).trim();
-      }
+    const incoming = text.trim();
+    if (!this.accumulatedInput) {
+      this.accumulatedInput = incoming;
+    } else if (incoming.startsWith(this.accumulatedInput)) {
+      this.accumulatedInput = incoming;
+    } else if (!this.accumulatedInput.includes(incoming)) {
+      this.accumulatedInput = (this.accumulatedInput + ' ' + incoming).trim();
+    }
 
-      this.emit('stream-line', { text: this.accumulatedInput, isFinal: chunk.isFinal, state: this.state });
+    this.emit('stream-line', { text: this.accumulatedInput, isFinal: chunk.isFinal, state: this.state });
 
-      // Fast silence detection: if user pauses for silenceTimeoutMs, trigger immediately
-      if (this.listeningTimer) clearTimeout(this.listeningTimer);
-      this.listeningTimer = setTimeout(async () => {
-        if (this.state === 'LISTENING') {
-          const q = this.accumulatedInput.trim();
-          if (q) {
-            this.accumulatedInput = '';
-            await this.processQuery(q);
-          } else {
-            this.setState('IDLE');
-          }
-        }
-      }, this.silenceTimeoutMs);
-
-      // Check if user signaled command completion with 10/4 or Done!
-      const isDoneSignal = /(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(this.accumulatedInput);
-      if (isDoneSignal) {
+    // Check if current accumulated input contains a clear actionable command intent
+    if (this.skillsExecutor && typeof this.skillsExecutor.hasActionableIntent === 'function') {
+      if (this.skillsExecutor.hasActionableIntent(this.accumulatedInput)) {
         if (this.listeningTimer) clearTimeout(this.listeningTimer);
         const actionQuery = this.accumulatedInput;
         this.accumulatedInput = '';
         await this.processQuery(actionQuery);
         return;
       }
+    }
 
-      // Check if current accumulated input contains a clear actionable command intent
-      if (this.skillsExecutor && typeof this.skillsExecutor.hasActionableIntent === 'function') {
-        if (this.skillsExecutor.hasActionableIntent(this.accumulatedInput)) {
-          if (this.listeningTimer) clearTimeout(this.listeningTimer);
-          const actionQuery = this.accumulatedInput;
+    // Fast silence detection: if user pauses for silenceTimeoutMs, trigger immediately
+    if (this.listeningTimer) clearTimeout(this.listeningTimer);
+    this.listeningTimer = setTimeout(async () => {
+      if (this.state === 'LISTENING' && !this.isProcessing) {
+        const q = this.accumulatedInput.trim();
+        if (q) {
           this.accumulatedInput = '';
-          await this.processQuery(actionQuery);
-          return;
+          await this.processQuery(q);
+        } else {
+          this.setState('IDLE');
         }
       }
+    }, this.silenceTimeoutMs);
 
-      if (chunk.isFinal || this.accumulatedInput.length > 200) {
-        if (this.listeningTimer) clearTimeout(this.listeningTimer);
-        const queryToProcess = this.accumulatedInput;
-        this.accumulatedInput = '';
-        await this.processQuery(queryToProcess);
-      }
+    if (chunk.isFinal || this.accumulatedInput.length > 200) {
+      if (this.listeningTimer) clearTimeout(this.listeningTimer);
+      const queryToProcess = this.accumulatedInput;
+      this.accumulatedInput = '';
+      await this.processQuery(queryToProcess);
     }
   }
 
@@ -166,54 +180,71 @@ class DesktopAssistant extends EventEmitter {
   async processQuery(queryText, options = {}) {
     const query = (queryText || '').trim();
     if (!query) return { ok: false, error: 'Empty query' };
+    if (this.isProcessing) return { ok: false, error: 'Already processing' };
 
-    this.setState('PROCESSING', { query });
-
-    const context = await contextProvider.getAggregatedContext();
-    const result = await this.skillsExecutor.executeCommand(query, context, {
-      ttsEngine: this.ttsEngine,
-      ...options,
-    });
-    const responseText = result.response || `Executed: ${result.actionDone}`;
-
-    this.setState('SPEAKING', {
-      query,
-      response: responseText,
-      skill: result.skill,
-      actionDone: result.actionDone,
-    });
-
-    const turn = {
-      id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      query,
-      response: responseText,
-      skill: result.skill,
-      actionDone: result.actionDone,
-      data: result.data,
-      context,
-      timestamp: new Date().toISOString(),
-    };
-    this.history.push(turn);
-    this.emit('action-done', {
-      actionDone: result.actionDone,
-      response: responseText,
-      skill: result.skill,
-      data: result.data,
-      query,
-    });
-    this.emit('assistant-turn', turn);
-
-    // Speak response back out loud
-    if (this.autoSpeak && this.ttsEngine && options.silent !== true) {
-      try {
-        await this.ttsEngine.speak(responseText);
-      } catch (err) {
-        console.warn('[desktop-assistant] Speech error:', err.message);
-      }
+    // Drop acoustic recursion triggers
+    const lowerQ = query.toLowerCase();
+    if (/^(?:command received|done:|executed:)/i.test(lowerQ)) {
+      return { ok: false, error: 'Acoustic echo dropped' };
+    }
+    if (this.lastSpokenText && lowerQ.includes(this.lastSpokenText.toLowerCase().slice(0, 15))) {
+      return { ok: false, error: 'Acoustic echo dropped' };
     }
 
-    this.setState('IDLE', { lastTurn: turn });
-    return { ok: true, turn };
+    this.isProcessing = true;
+    try {
+      this.setState('PROCESSING', { query });
+
+      const context = await contextProvider.getAggregatedContext();
+      const result = await this.skillsExecutor.executeCommand(query, context, {
+        ttsEngine: this.ttsEngine,
+        ...options,
+      });
+      const responseText = result.response || `Executed: ${result.actionDone}`;
+      this.lastSpokenText = responseText;
+
+      this.setState('SPEAKING', {
+        query,
+        response: responseText,
+        skill: result.skill,
+        actionDone: result.actionDone,
+      });
+
+      const turn = {
+        id: `turn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        query,
+        response: responseText,
+        skill: result.skill,
+        actionDone: result.actionDone,
+        data: result.data,
+        context,
+        timestamp: new Date().toISOString(),
+      };
+      this.history.push(turn);
+      this.emit('action-done', {
+        actionDone: result.actionDone,
+        response: responseText,
+        skill: result.skill,
+        data: result.data,
+        query,
+      });
+      this.emit('assistant-turn', turn);
+
+      // Speak response back out loud
+      if (this.autoSpeak && this.ttsEngine && options.silent !== true) {
+        try {
+          await this.ttsEngine.speak(responseText);
+        } catch (err) {
+          console.warn('[desktop-assistant] Speech error:', err.message);
+        }
+      }
+
+      this.echoCooldownUntil = Date.now() + 800;
+      this.setState('IDLE', { lastTurn: turn });
+      return { ok: true, turn };
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   /**

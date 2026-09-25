@@ -43,6 +43,8 @@ class TTSEngine extends EventEmitter {
     this.prefs = { ...DEFAULT_PREFS, ...options };
     this.currentPlaybackProcess = null;
     this.isSpeaking = false;
+    this._speechCounter = 0;
+    this._activeSpeechId = 0;
   }
 
   getPrefs() {
@@ -194,18 +196,41 @@ class TTSEngine extends EventEmitter {
     if (!cleanText) return { ok: false, error: 'Empty text' };
 
     this.stop(); // Stop any ongoing playback
+    const speechId = ++this._speechCounter;
+    this._activeSpeechId = speechId;
 
-    const synthResult = await this.synthesize(cleanText, options);
+    let synthResult;
+    try {
+      synthResult = await this.synthesize(cleanText, options);
+    } catch (err) {
+      if (this._activeSpeechId === speechId) {
+        this.isSpeaking = false;
+      }
+      throw err;
+    }
+
+    // If another speech was requested or stop() was called during synthesis, cancel!
+    if (this._activeSpeechId !== speechId) {
+      if (synthResult && synthResult.filePath && !synthResult.filePath.includes('voice-cache')) {
+        try {
+          if (fs.existsSync(synthResult.filePath)) fs.unlinkSync(synthResult.filePath);
+        } catch {}
+      }
+      return { ok: false, cancelled: true };
+    }
+
     this.isSpeaking = true;
     this.emit('speaking-start', { text: cleanText, engine: synthResult.engine, durationMs: synthResult.durationMs });
 
     // Play synthesized audio if not muted/silent
     if (options.silent !== true && options.playback !== false) {
-      await this._playAudioFile(synthResult.filePath, synthResult.durationMs);
+      await this._playAudioFile(synthResult.filePath, synthResult.durationMs, speechId);
     }
 
-    this.isSpeaking = false;
-    this.emit('speaking-end', { text: cleanText, engine: synthResult.engine });
+    if (this._activeSpeechId === speechId) {
+      this.isSpeaking = false;
+      this.emit('speaking-end', { text: cleanText, engine: synthResult.engine });
+    }
 
     // Clean up temporary audio file after a short delay (unless cached in voice-cache)
     if (!synthResult.filePath.includes('voice-cache')) {
@@ -231,6 +256,7 @@ class TTSEngine extends EventEmitter {
    * Stop current speech playback immediately
    */
   stop() {
+    this._activeSpeechId = 0;
     if (this.currentPlaybackProcess) {
       try {
         this.currentPlaybackProcess.kill('SIGKILL');
@@ -242,8 +268,11 @@ class TTSEngine extends EventEmitter {
       exec('spd-say --cancel 2>/dev/null');
     } catch {}
 
+    const wasSpeaking = this.isSpeaking;
     this.isSpeaking = false;
-    this.emit('speaking-stopped');
+    if (wasSpeaking) {
+      this.emit('speaking-stopped');
+    }
   }
 
   // ── Engine Synthesis Implementations ────────────────────────────────────────
@@ -339,9 +368,12 @@ except Exception as e:
 
   // ── Audio Playback Helper ───────────────────────────────────────────────────
 
-  _playAudioFile(filePath, durationMs = 1500) {
+  _playAudioFile(filePath, durationMs = 1500, speechId = null) {
     return new Promise((resolve) => {
       if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1') {
+        return resolve();
+      }
+      if (speechId !== null && this._activeSpeechId !== speechId) {
         return resolve();
       }
 
@@ -364,9 +396,11 @@ except Exception as e:
         if (!finished) {
           finished = true;
           if (proc) {
-            try { proc.kill(); } catch {}
+            try { proc.kill('SIGKILL'); } catch {}
           }
-          this.currentPlaybackProcess = null;
+          if (this.currentPlaybackProcess === proc) {
+            this.currentPlaybackProcess = null;
+          }
           resolve();
         }
       };
