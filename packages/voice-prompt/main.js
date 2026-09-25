@@ -17,6 +17,7 @@ const ipcMain = isElectronRuntime ? electronPkg.ipcMain : { handle: () => {}, on
 const globalShortcut = isElectronRuntime ? electronPkg.globalShortcut : { register: () => {}, unregisterAll: () => {} };
 const dialog = isElectronRuntime ? electronPkg.dialog : { showErrorBox: () => {} };
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const promptStore = require('./lib/prompt-store');
 const contextProvider = require('./lib/context-provider');
@@ -24,6 +25,12 @@ const { STTEngine } = require('./lib/stt-engine');
 const { TTSEngine } = require('./lib/tts-engine');
 const { WakeWordDetector } = require('./lib/wake-word');
 const { DesktopAssistant } = require('./lib/desktop-assistant');
+
+function getAppIcon() {
+  const iconPng = path.join(__dirname, 'icon.png');
+  const iconSvg = path.join(__dirname, 'icon.svg');
+  return fs.existsSync(iconPng) ? iconPng : iconSvg;
+}
 
 app.setName('robos-voice');
 app.commandLine.appendSwitch('no-sandbox');
@@ -602,7 +609,7 @@ function startApiServer(overridePort) {
 function createWindow() {
   mainWindow = new BrowserWindow({
     title: 'RobOS Voice',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: getAppIcon(),
     width: 1060,
     height: 720,
     minWidth: 780,
@@ -716,6 +723,7 @@ function createHudWindow() {
 
   hudWindow = new BrowserWindow({
     title: 'RobOS Voice Assistant HUD',
+    icon: getAppIcon(),
     width: bounds.width,
     height: bounds.height,
     x: bounds.x,

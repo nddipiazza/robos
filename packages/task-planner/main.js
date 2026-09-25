@@ -152,10 +152,12 @@ function startProjectsWatcher() {
 }
 
 function createWindow() {
+  const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     width: 1100, height: 780,
     minWidth: 700, minHeight: 500,
     backgroundColor: '#0d1117',
+    icon: fs.existsSync(iconPng) ? iconPng : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -173,7 +175,9 @@ function createWindow() {
 
 app.setName('robos-task-planner');
 app.setPath('userData', path.join(os.homedir(), '.config', 'robos', 'electron', 'task-planner'));
-if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+  if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+}
 app.on('second-instance', () => {
   if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
 });
