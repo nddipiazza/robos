@@ -26,7 +26,7 @@ Living documentation pages, architecture decision records (ADRs), interactive wa
 - **Package Store ID**: `documentation`
 - **Ontology Namespace**: `robos.docs`
 - **GitOps Package File**: `.robos/kgraphs/documentation/package.jsonld`
-- **Schemas Defined**: 7
+- **Schemas Defined**: 8
 
 ---
 
@@ -35,6 +35,7 @@ Living documentation pages, architecture decision records (ADRs), interactive wa
 | Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |
 |---|---|---|---|
 | [**Flow Diagram** (`robos:FlowDiagram`)]({{ '/schemas/documentation/flow-diagram.html' | relative_url }}) | `urn:robos:shape:FlowDiagramShape` | `dcterms:title`, `dcterms:description`, `robos:mermaidText`, `robos:imagePath`, `robos:tooltip` | [View Schema &rarr;]({{ '/schemas/documentation/flow-diagram.html' | relative_url }}) |
+| [**Documentation** (`robos:Documentation`)]({{ '/schemas/documentation/documentation.html' | relative_url }}) | `urn:robos:shape:DocumentationShape` | `dcterms:title`, `robos:targetEntity`, `robos:docPath`, `robos:gitopsFile` | [View Schema &rarr;]({{ '/schemas/documentation/documentation.html' | relative_url }}) |
 | [**Documentation Page** (`robos:DocumentationPage`)]({{ '/schemas/documentation/documentation-page.html' | relative_url }}) | `urn:robos:shape:DocumentationPageShape` | `dcterms:title`, `robos:slug`, `robos:docPath` | [View Schema &rarr;]({{ '/schemas/documentation/documentation-page.html' | relative_url }}) |
 | [**Architecture Decision Record** (`robos:ArchitectureDecisionRecord`)]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) | `urn:robos:shape:ArchitectureDecisionRecordShape` | `dcterms:title`, `robos:status`, `robos:context`, `robos:decision` | [View Schema &rarr;]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) |
 | [**Interactive Walkthrough** (`robos:InteractiveWalkthrough`)]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) | `urn:robos:shape:InteractiveWalkthroughShape` | `dcterms:title`, `robos:slug`, `robos:targetApp` | [View Schema &rarr;]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) |

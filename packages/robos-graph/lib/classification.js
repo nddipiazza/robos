@@ -28,9 +28,9 @@
     ['work', 'Projects & work items', 'Project Epic Feature UserStory Task Subtask Bug Sprint Milestone TaskServer oslc_rm:Requirement Comment DiscussionThread ReviewComment CommentAttachment'],
     ['source', 'Source control & artifacts', 'GitRepository GitBranch PullRequest GitCommit GitTag SourceArtifact'],
     ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
-    ['documentation', 'Documentation & decisions', 'FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
+    ['documentation', 'Documentation & decisions', 'Documentation SystemDocumentation FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
     ['learning', 'Learning & assessment', 'ELearning CertificateOfCompletion LearningModule LearningLesson HandsOnLab QuizAssessment CurriculumDefinition'],
-    ['testing', 'Testing & behavior', 'Scenario ScenarioStep GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
+    ['testing', 'Testing & behavior', 'Scenario ScenarioStep CRPGTestScenario CRPGBattleMap CRPGMapObject CRPGCombatant InfinityAIDirective CRPGPlayerInput GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
     ['schema', 'Schema & graph metadata', 'SystemGraph KGraphPackage schema:CategoryCode schema:CategoryCodeSet rdfs:Class rdf:Property owl:Class owl:ObjectProperty owl:DatatypeProperty owl:Ontology sh:NodeShape sh:PropertyShape oslc:ServiceProvider'],
   ];
   const CATALOG = DEFINITIONS.map(([code, label], order) => ({ id: NS + 'classification/' + code, code, label, order, '@id': NS + 'classification/' + code, '@type': 'schema:CategoryCode', 'schema:codeValue': code, 'schema:name': label, 'schema:inCodeSet': { '@id': CODE_SET_ID } }));
@@ -1353,6 +1353,156 @@
 };
   // Explicit optional inspector fields and inverse relationships. Categories
   // describe predicate semantics; group visibility is handled by the catalog.
+  // cRPG test scenarios (robos:CRPGTestScenario) and Infinity AI directives
+  Object.assign(PREDICATE_CODES, {
+    "robos:terrain": [
+      "testing"
+    ],
+    "robos:mapObjects": [
+      "testing"
+    ],
+    "robos:blockout": [
+      "testing"
+    ],
+    "robos:backgroundImage": [
+      "testing"
+    ],
+    "robos:objectId": [
+      "testing"
+    ],
+    "robos:objectType": [
+      "testing"
+    ],
+    "robos:shape": [
+      "testing"
+    ],
+    "robos:size": [
+      "testing"
+    ],
+    "robos:radius": [
+      "testing"
+    ],
+    "robos:thickness": [
+      "testing"
+    ],
+    "robos:points": [
+      "testing"
+    ],
+    "robos:open": [
+      "testing"
+    ],
+    "robos:blocksMovement": [
+      "testing"
+    ],
+    "robos:blocksSight": [
+      "testing"
+    ],
+    "robos:difficultTerrain": [
+      "testing"
+    ],
+    "robos:cover": [
+      "testing"
+    ],
+    "robos:seed": [
+      "testing"
+    ],
+    "robos:map": [
+      "testing"
+    ],
+    "robos:party": [
+      "testing"
+    ],
+    "robos:enemies": [
+      "testing"
+    ],
+    "robos:directives": [
+      "testing"
+    ],
+    "robos:traps": [
+      "testing"
+    ],
+    "robos:maxRounds": [
+      "testing"
+    ],
+    "robos:executionMode": [
+      "testing"
+    ],
+    "robos:reactions": [
+      "testing"
+    ],
+    "robos:dice": [
+      "testing"
+    ],
+    "robos:width": [
+      "testing"
+    ],
+    "robos:height": [
+      "testing"
+    ],
+    "robos:mapZone": [
+      "testing"
+    ],
+    "robos:actorId": [
+      "testing"
+    ],
+    "robos:characterClass": [
+      "testing"
+    ],
+    "robos:monster": [
+      "testing"
+    ],
+    "robos:position": [
+      "testing"
+    ],
+    "robos:controller": [
+      "testing"
+    ],
+    "robos:actor": [
+      "testing"
+    ],
+    "robos:side": [
+      "testing"
+    ],
+    "robos:targetPriority": [
+      "testing"
+    ],
+    "robos:focusTarget": [
+      "testing"
+    ],
+    "robos:preferSpells": [
+      "testing"
+    ],
+    "robos:forbidSpells": [
+      "testing"
+    ],
+    "robos:healThreshold": [
+      "testing"
+    ],
+    "robos:movement": [
+      "testing"
+    ],
+    "robos:scriptedInputs": [
+      "testing"
+    ],
+    "robos:type": [
+      "testing"
+    ],
+    "robos:round": [
+      "testing"
+    ],
+    "robos:spell": [
+      "testing"
+    ],
+    "robos:item": [
+      "testing"
+    ],
+    "robos:point": [
+      "testing"
+    ],
+    "robos:to": [
+      "testing"
+    ]
+  });
   Object.assign(PREDICATE_CODES, {
     "robos:acceptanceCriteria": [
       "work"

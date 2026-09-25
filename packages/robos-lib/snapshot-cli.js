@@ -111,6 +111,7 @@ const PORT_REGISTRY = {
   'crpg-maker':        19194,
   'crpg-campaign':     19195,
   'crpg-scene-studio': 19196,
+  'robos-documentation': 19197,
 };
 
 

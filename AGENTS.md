@@ -110,6 +110,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC |
 | **Remote Execution Studio** | REAPI v2 distributed build clusters, Bazel (`.bazelrc`), Buck2 (`.buckconfig`), and Buildbarn / NativeLink configuration manager |
 | **RobOS eLearning** | Interactive eLearning player, hands-on lab runner, and Knowledge Graph completion certificate hub |
+| **RobOS Documentation** | Living documentation hub, selective KGraph asset discovery, persistent artifact maintainer, and static site exporter |
 | **Claude Console** | Enhanced Claude Code GUI |
 | **File Explorer** | Dark-themed file browser |
 | **Icon Manager** | Manage and customize RobOS app icons |

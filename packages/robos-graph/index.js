@@ -15,6 +15,7 @@ const { KGraphPackageManager, DEFAULT_PACKAGES } = require('./lib/package-manage
 const { KGraphRepoManager } = require('./lib/repo-manager');
 const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = require('./lib/devops-integrations');
 const { generateELearningWebsite } = require('./lib/elearning-web-generator');
+const { generateDocumentationWebsite } = require('./lib/documentation-web-generator');
 
 module.exports = {
   OSLCGraphParser,
@@ -43,4 +44,5 @@ module.exports = {
   DEVOPS_CATEGORIES,
   DEVOPS_PROVIDERS,
   generateELearningWebsite,
+  generateDocumentationWebsite,
 };
