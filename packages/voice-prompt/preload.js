@@ -52,6 +52,9 @@ const api = {
   onWakeWord: (callback) => {
     ipcRenderer.on('vp-event-wake-word', (_e, data) => callback(data));
   },
+  onWakeGreeting: (callback) => {
+    ipcRenderer.on('vp-event-wake-greeting', (_e, data) => callback(data));
+  },
   onAssistantState: (callback) => {
     ipcRenderer.on('vp-event-assistant-state', (_e, data) => callback(data));
   },

@@ -48,6 +48,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       // Deactivate in background mode
       const deactResult = await stt.deactivate();
       assert.strictEqual(deactResult.backgroundMode, true);
+      stt.destroy();
 
       // Verify promptStore was NOT modified
       const prompts = promptStore.loadPrompts(testPromptsFile);
@@ -92,6 +93,25 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       const res3 = detector.processText('hi row-bose status report');
       assert.strictEqual(res3.matched, true);
       assert.strictEqual(res3.query, 'status report');
+    });
+
+    it('detects wake-word with standard speech punctuation (commas, periods, capitalizations)', () => {
+      const detector = new WakeWordDetector();
+      const res1 = detector.processText('Hello, Robos.');
+      assert.strictEqual(res1.matched, true);
+      assert.strictEqual(res1.query, '');
+
+      const res2 = detector.processText('Hello, RobOS, what is the git status?');
+      assert.strictEqual(res2.matched, true);
+      assert.strictEqual(res2.query, 'what is the git status?');
+
+      const res3 = detector.processText('Hey, row bose, list active tasks.');
+      assert.strictEqual(res3.matched, true);
+      assert.strictEqual(res3.query, 'list active tasks.');
+
+      const res4 = detector.processText('Hello, robust.');
+      assert.strictEqual(res4.matched, true);
+      assert.strictEqual(res4.query, '');
     });
 
     it('ignores normal conversation without wake word', () => {

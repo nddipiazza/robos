@@ -71,6 +71,12 @@ desktopAssistant.on('assistant-turn', (data) => {
   }
 });
 
+desktopAssistant.on('wake-greeting', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-wake-greeting', data);
+  }
+});
+
 wakeDetector.on('wake-word', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-wake-word', data);

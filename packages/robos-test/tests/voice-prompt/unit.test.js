@@ -1,5 +1,7 @@
 'use strict';
 
+process.env.ROBOS_TEST = '1';
+
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
@@ -214,7 +216,10 @@ describe('Voice Prompt Unit Tests', () => {
 
     after(() => {
       if (server) {
-        try { server.close(); } catch {}
+        try {
+          if (typeof server.closeAllConnections === 'function') server.closeAllConnections();
+          server.close();
+        } catch {}
       }
     });
 

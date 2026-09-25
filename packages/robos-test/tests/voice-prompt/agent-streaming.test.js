@@ -18,7 +18,15 @@ describe('Voice Prompt Agent Streaming Tests', () => {
 
   after(() => {
     if (server) {
-      try { server.close(); } catch {}
+      try {
+        if (typeof server.closeAllConnections === 'function') {
+          server.closeAllConnections();
+        }
+        server.close();
+      } catch {}
+    }
+    if (voiceMain.sttEngine) {
+      voiceMain.sttEngine.destroy();
     }
   });
 

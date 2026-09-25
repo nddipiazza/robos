@@ -2,6 +2,7 @@
 
 const EventEmitter = require('events');
 const { exec, spawn } = require('child_process');
+const { Worker } = require('worker_threads');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -75,10 +76,9 @@ class STTEngine extends EventEmitter {
     this.isTranscribing = false;
     this.lastInterimText = '';
     this.backgroundMode = Boolean(options.backgroundMode);
-
-    if (process.env.ROBOS_TEST !== '1') {
-      this.getTranscriber().catch(() => {});
-    }
+    this.worker = null;
+    this.pendingRequests = new Map();
+    this.reqSeq = 0;
   }
 
   isBackgroundMode() {
@@ -87,6 +87,81 @@ class STTEngine extends EventEmitter {
 
   setBackgroundMode(enabled) {
     this.backgroundMode = Boolean(enabled);
+  }
+
+  getWorker() {
+    if (!this.worker && process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+      try {
+        const workerPath = path.join(__dirname, 'whisper-worker.js');
+        if (fs.existsSync(workerPath)) {
+          this.worker = new Worker(workerPath);
+          this.worker.unref();
+          this.worker.on('message', (msg) => {
+            if (!msg || !msg.id) return;
+            const handler = this.pendingRequests.get(msg.id);
+            if (handler) {
+              this.pendingRequests.delete(msg.id);
+              if (msg.error) handler.reject(new Error(msg.error));
+              else handler.resolve(msg);
+            }
+          });
+          this.worker.on('error', (err) => {
+            console.warn('[stt-engine] Worker error:', err.message);
+            this.worker = null;
+          });
+          this.worker.on('exit', () => {
+            this.worker = null;
+          });
+        }
+      } catch (err) {
+        console.warn('[stt-engine] Could not spawn worker:', err.message);
+        this.worker = null;
+      }
+    }
+    return this.worker;
+  }
+
+  destroy() {
+    if (this.streamInterval) {
+      clearInterval(this.streamInterval);
+      this.streamInterval = null;
+    }
+    if (this.worker) {
+      try {
+        this.worker.postMessage({ type: 'shutdown' });
+        this.worker.terminate();
+      } catch {}
+      this.worker = null;
+    }
+    this.pendingRequests.clear();
+  }
+
+  async transcribeAsync(samples, opts = {}) {
+    const worker = this.getWorker();
+    if (worker) {
+      return new Promise((resolve) => {
+        const id = `req-${++this.reqSeq}-${Date.now()}`;
+        const timeout = setTimeout(() => {
+          this.pendingRequests.delete(id);
+          resolve({ text: '' });
+        }, 8000);
+        this.pendingRequests.set(id, {
+          resolve: (res) => { clearTimeout(timeout); resolve(res); },
+          reject: () => { clearTimeout(timeout); resolve({ text: '' }); },
+        });
+        try {
+          worker.postMessage({ type: 'transcribe', id, samples, opts });
+        } catch {
+          clearTimeout(timeout);
+          this.pendingRequests.delete(id);
+          resolve({ text: '' });
+        }
+      });
+    }
+
+    const transcriber = await this.getTranscriber();
+    if (!transcriber) return { text: '' };
+    return await transcriber(samples, opts);
   }
 
   async getTranscriber() {
@@ -192,7 +267,10 @@ class STTEngine extends EventEmitter {
    * Activate listening / dictating (starts hardware recording)
    */
   async activate(options = {}) {
-    if (this.active) return { ok: true, active: true, alreadyActive: true };
+    if (options.backgroundMode !== undefined || options.background !== undefined) {
+      this.backgroundMode = Boolean(options.backgroundMode || options.background);
+    }
+    if (this.active) return { ok: true, active: true, alreadyActive: true, backgroundMode: this.backgroundMode };
     this.active = true;
     this.backgroundMode = Boolean(options.backgroundMode || options.background);
     this.recordingStartTime = Date.now();
@@ -252,26 +330,26 @@ class STTEngine extends EventEmitter {
           if (stats.size < 48000) return;
 
           this.isTranscribing = true;
-          const samples = readWavToFloat32(recFile);
-          if (samples && samples.length >= 24000) {
-            const transcriber = await this.getTranscriber();
-            if (transcriber && this.active) {
-              const opts = samples.length > 16000 * 30
-                ? { chunk_length_s: 30, stride_length_s: 5 }
-                : {};
-              const res = await transcriber(samples, opts);
-              const text = cleanTranscript(res?.text || '');
-              if (text && this.active && text !== this.lastInterimText) {
-                this.lastInterimText = text;
-                const payload = {
-                  text,
-                  isFinal: false,
-                  elapsedMs: Date.now() - (this.recordingStartTime || Date.now()),
-                  backgroundMode: this.backgroundMode,
-                };
-                this.emit('interim-text', payload);
-                this.emit('stream-text', payload);
-              }
+          const fullSamples = readWavToFloat32(recFile);
+          if (fullSamples && fullSamples.length >= 24000) {
+            // Sliding window: in background streaming mode, only process the last 4s of audio (64,000 samples)
+            // so inference runs in parallel in worker thread in ~150ms and never balloons
+            const samples = (this.backgroundMode && fullSamples.length > 64000)
+              ? fullSamples.slice(-64000)
+              : fullSamples;
+
+            const res = await this.transcribeAsync(samples, {});
+            const text = cleanTranscript(res?.text || '');
+            if (text && this.active && text !== this.lastInterimText) {
+              this.lastInterimText = text;
+              const payload = {
+                text,
+                isFinal: false,
+                elapsedMs: Date.now() - (this.recordingStartTime || Date.now()),
+                backgroundMode: this.backgroundMode,
+              };
+              this.emit('interim-text', payload);
+              this.emit('stream-text', payload);
             }
           }
         } catch (err) {
@@ -279,7 +357,7 @@ class STTEngine extends EventEmitter {
         } finally {
           this.isTranscribing = false;
         }
-      }, 2000);
+      }, 1500);
     }
 
     this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile, backgroundMode: this.backgroundMode });
@@ -290,7 +368,7 @@ class STTEngine extends EventEmitter {
    * Deactivate listening and transcribe recorded audio
    */
   async deactivate() {
-    if (!this.active) return { ok: true, active: false };
+    if (!this.active) return { ok: true, active: false, backgroundMode: this.backgroundMode };
     const durationMs = this.recordingStartTime ? Date.now() - this.recordingStartTime : 0;
     this.active = false;
     this.recordingStartTime = null;
@@ -333,8 +411,8 @@ class STTEngine extends EventEmitter {
       if (recFile && fs.existsSync(recFile)) {
         try { fs.unlinkSync(recFile); } catch {}
       }
-      this.emit('deactivated', { durationMs, text });
-      return { ok: true, active: false, durationMs, text };
+      this.emit('deactivated', { durationMs, text, backgroundMode: this.backgroundMode });
+      return { ok: true, active: false, durationMs, text, backgroundMode: this.backgroundMode };
     }
 
     if (recFile && fs.existsSync(recFile)) {
@@ -343,14 +421,11 @@ class STTEngine extends EventEmitter {
         if (stats.size > 200) {
           const samples = readWavToFloat32(recFile);
           if (samples && samples.length >= 1600) {
-            const transcriber = await this.getTranscriber();
-            if (transcriber) {
-              const opts = samples.length > 16000 * 30
-                ? { chunk_length_s: 30, stride_length_s: 5 }
-                : {};
-              const res = await transcriber(samples, opts);
-              text = cleanTranscript(res?.text || '');
-            }
+            const opts = samples.length > 16000 * 30
+              ? { chunk_length_s: 30, stride_length_s: 5 }
+              : {};
+            const res = await this.transcribeAsync(samples, opts);
+            text = cleanTranscript(res?.text || '');
           }
         }
       } catch (err) {

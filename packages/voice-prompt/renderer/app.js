@@ -550,6 +550,25 @@ function setupEventListeners() {
       });
     }
 
+    if (api.onWakeWord) {
+      api.onWakeWord((data) => {
+        showFeedback(`Wake word detected: "${data.trigger}"! Listening...`, 'success');
+        if (dictationInput && isBackgroundMode) {
+          dictationInput.value = '';
+        }
+      });
+    }
+
+    if (api.onWakeGreeting) {
+      api.onWakeGreeting((data) => {
+        appendChatTurn({
+          query: data.trigger || 'Hello RobOS',
+          response: data.greeting || 'Hi!',
+          timestamp: new Date().toISOString(),
+        });
+      });
+    }
+
     if (api.onAssistantState) {
       api.onAssistantState((data) => {
         updateAssistantState(data.state || 'IDLE');
