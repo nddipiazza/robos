@@ -25,7 +25,7 @@
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
   "dcterms:description": "RobOS SDLC class and predicate ontology, with complete built-in shape coverage and RobOS-owned classification codes expressed using Schema.org CategoryCode and CategoryCodeSet.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 182,
+  "robos:totalClasses": 188,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -350,6 +350,21 @@
         "@id": "https://schema.org/ImageObject"
       },
       "robos:shaclShape": "urn:robos:shape:FlowDiagramShape",
+      "robos:package": "documentation",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/documentation"
+        }
+      ]
+    },
+    {
+      "@id": "robos:Documentation",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Documentation",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/TechArticle"
+      },
+      "robos:shaclShape": "urn:robos:shape:DocumentationShape",
       "robos:package": "documentation",
       "robos:classification": [
         {
@@ -7454,6 +7469,580 @@
       "@id": "robos:e2eEvidence",
       "@type": "rdf:Property",
       "rdfs:label": "e2eEvidence",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGTestScenario",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGTestScenario",
+      "robos:shaclShape": "urn:robos:shape:CRPGTestScenarioShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CheckAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGBattleMap",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGBattleMap",
+      "robos:shaclShape": "urn:robos:shape:CRPGBattleMapShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Place"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGCombatant",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGCombatant",
+      "robos:shaclShape": "urn:robos:shape:CRPGCombatantShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:InfinityAIDirective",
+      "@type": "rdfs:Class",
+      "rdfs:label": "InfinityAIDirective",
+      "robos:shaclShape": "urn:robos:shape:InfinityAIDirectiveShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ControlAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGPlayerInput",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGPlayerInput",
+      "robos:shaclShape": "urn:robos:shape:CRPGPlayerInputShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/InteractAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:seed",
+      "@type": "rdf:Property",
+      "rdfs:label": "seed",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:map",
+      "@type": "rdf:Property",
+      "rdfs:label": "map",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:party",
+      "@type": "rdf:Property",
+      "rdfs:label": "party",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:enemies",
+      "@type": "rdf:Property",
+      "rdfs:label": "enemies",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:directives",
+      "@type": "rdf:Property",
+      "rdfs:label": "directives",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:traps",
+      "@type": "rdf:Property",
+      "rdfs:label": "traps",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:maxRounds",
+      "@type": "rdf:Property",
+      "rdfs:label": "maxRounds",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:executionMode",
+      "@type": "rdf:Property",
+      "rdfs:label": "executionMode",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:reactions",
+      "@type": "rdf:Property",
+      "rdfs:label": "reactions",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:dice",
+      "@type": "rdf:Property",
+      "rdfs:label": "dice",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:width",
+      "@type": "rdf:Property",
+      "rdfs:label": "width",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:height",
+      "@type": "rdf:Property",
+      "rdfs:label": "height",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:mapZone",
+      "@type": "rdf:Property",
+      "rdfs:label": "mapZone",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:actorId",
+      "@type": "rdf:Property",
+      "rdfs:label": "actorId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:characterClass",
+      "@type": "rdf:Property",
+      "rdfs:label": "characterClass",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:monster",
+      "@type": "rdf:Property",
+      "rdfs:label": "monster",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:position",
+      "@type": "rdf:Property",
+      "rdfs:label": "position",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:controller",
+      "@type": "rdf:Property",
+      "rdfs:label": "controller",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:actor",
+      "@type": "rdf:Property",
+      "rdfs:label": "actor",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:side",
+      "@type": "rdf:Property",
+      "rdfs:label": "side",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetPriority",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetPriority",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:focusTarget",
+      "@type": "rdf:Property",
+      "rdfs:label": "focusTarget",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:preferSpells",
+      "@type": "rdf:Property",
+      "rdfs:label": "preferSpells",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:forbidSpells",
+      "@type": "rdf:Property",
+      "rdfs:label": "forbidSpells",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:healThreshold",
+      "@type": "rdf:Property",
+      "rdfs:label": "healThreshold",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:movement",
+      "@type": "rdf:Property",
+      "rdfs:label": "movement",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:scriptedInputs",
+      "@type": "rdf:Property",
+      "rdfs:label": "scriptedInputs",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:type",
+      "@type": "rdf:Property",
+      "rdfs:label": "type",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:round",
+      "@type": "rdf:Property",
+      "rdfs:label": "round",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:spell",
+      "@type": "rdf:Property",
+      "rdfs:label": "spell",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:item",
+      "@type": "rdf:Property",
+      "rdfs:label": "item",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:point",
+      "@type": "rdf:Property",
+      "rdfs:label": "point",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:to",
+      "@type": "rdf:Property",
+      "rdfs:label": "to",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGMapObject",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGMapObject",
+      "robos:shaclShape": "urn:robos:shape:CRPGMapObjectShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Place"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:terrain",
+      "@type": "rdf:Property",
+      "rdfs:label": "terrain",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:mapObjects",
+      "@type": "rdf:Property",
+      "rdfs:label": "mapObjects",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:blockout",
+      "@type": "rdf:Property",
+      "rdfs:label": "blockout",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:backgroundImage",
+      "@type": "rdf:Property",
+      "rdfs:label": "backgroundImage",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:objectId",
+      "@type": "rdf:Property",
+      "rdfs:label": "objectId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:objectType",
+      "@type": "rdf:Property",
+      "rdfs:label": "objectType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:shape",
+      "@type": "rdf:Property",
+      "rdfs:label": "shape",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:size",
+      "@type": "rdf:Property",
+      "rdfs:label": "size",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:radius",
+      "@type": "rdf:Property",
+      "rdfs:label": "radius",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:thickness",
+      "@type": "rdf:Property",
+      "rdfs:label": "thickness",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:points",
+      "@type": "rdf:Property",
+      "rdfs:label": "points",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:open",
+      "@type": "rdf:Property",
+      "rdfs:label": "open",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:blocksMovement",
+      "@type": "rdf:Property",
+      "rdfs:label": "blocksMovement",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:blocksSight",
+      "@type": "rdf:Property",
+      "rdfs:label": "blocksSight",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:difficultTerrain",
+      "@type": "rdf:Property",
+      "rdfs:label": "difficultTerrain",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:cover",
+      "@type": "rdf:Property",
+      "rdfs:label": "cover",
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/testing"

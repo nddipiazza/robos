@@ -605,6 +605,39 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://schema.org/ImageObject"
   },
   {
+    "shapeId": "urn:robos:shape:DocumentationShape",
+    "targetClass": "robos:Documentation",
+    "targetClasses": [
+      "robos:Documentation",
+      "robos:SystemDocumentation"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Documentation must have a title."
+      },
+      {
+        "path": "robos:targetEntity",
+        "minCount": 1,
+        "message": "Documentation must specify the documented target entity identifier or URI."
+      },
+      {
+        "path": "robos:docPath",
+        "minCount": 1,
+        "message": "Documentation must specify its markdown artifact path."
+      },
+      {
+        "path": "robos:gitopsFile",
+        "minCount": 1,
+        "message": "Documentation must declare its GitOps file location (.robos/documentation.yaml)."
+      }
+    ],
+    "refersFrom": "https://schema.org/TechArticle",
+    "schemaOrgType": "https://schema.org/TechArticle",
+    "domainStandard": "https://schema.org/TechArticle"
+  },
+  {
     "shapeId": "urn:robos:shape:DocumentationPageShape",
     "targetClass": "robos:DocumentationPage",
     "targetClasses": [
@@ -2184,6 +2217,348 @@ const BUILTIN_SHACL_SHAPES = [
     "refersFrom": "https://cucumber.io/docs/gherkin/reference/#steps",
     "schemaOrgType": "https://schema.org/HowToStep",
     "domainStandard": "https://cucumber.io/docs/gherkin/reference/#steps"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGTestScenarioShape",
+    "targetClass": "robos:CRPGTestScenario",
+    "targetClasses": [
+      "robos:CRPGTestScenario"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "cRPG Test Scenario must have a title."
+      },
+      {
+        "path": "robos:seed",
+        "minCount": 1,
+        "message": "cRPG Test Scenario must declare a dice seed so every run is reproducible."
+      },
+      {
+        "path": "robos:map",
+        "minCount": 1,
+        "message": "cRPG Test Scenario must declare its battle map (robos:CRPGBattleMap, inline or by URN)."
+      },
+      {
+        "path": "robos:party",
+        "minCount": 1,
+        "message": "cRPG Test Scenario must declare at least one party combatant (robos:CRPGCombatant)."
+      },
+      {
+        "path": "robos:enemies",
+        "minCount": 0,
+        "message": "Enemy combatants (robos:CRPGCombatant) are optional; a scenario may test exploration or traps only."
+      },
+      {
+        "path": "robos:directives",
+        "minCount": 0,
+        "message": "Infinity AI directives (robos:InfinityAIDirective) steering party members or NPCs are optional; the engine's default AI plays everyone else."
+      },
+      {
+        "path": "robos:traps",
+        "minCount": 0,
+        "message": "Traps placed on the map are optional."
+      },
+      {
+        "path": "robos:maxRounds",
+        "minCount": 0,
+        "message": "Round limit before the scenario ends in a timeout (default 30)."
+      },
+      {
+        "path": "robos:executionMode",
+        "minCount": 0,
+        "message": "Preferred run mode: human (video, BDD overlays and pauses) or backend (headless, fastest)."
+      },
+      {
+        "path": "robos:reactions",
+        "minCount": 0,
+        "message": "Set false to disable reactions (Shield, Counterspell, opportunity attacks keep working)."
+      },
+      {
+        "path": "robos:dice",
+        "minCount": 0,
+        "message": "Scripted dice results consumed before random rolls, e.g. [{\"d\": 20, \"v\": 20}]."
+      }
+    ],
+    "refersFrom": "http://open-services.net/ns/qm#TestCase",
+    "schemaOrgType": "https://schema.org/CheckAction",
+    "domainStandard": "http://open-services.net/ns/qm#TestCase"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGBattleMapShape",
+    "targetClass": "robos:CRPGBattleMap",
+    "targetClasses": [
+      "robos:CRPGBattleMap"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Battle map must have a title."
+      },
+      {
+        "path": "robos:width",
+        "minCount": 1,
+        "message": "Battle map must declare its width in feet."
+      },
+      {
+        "path": "robos:height",
+        "minCount": 1,
+        "message": "Battle map must declare its height in feet."
+      },
+      {
+        "path": "robos:mapZone",
+        "minCount": 0,
+        "message": "Optional link to the robos:CRPGMapZone this battle takes place in."
+      },
+      {
+        "path": "robos:terrain",
+        "minCount": 0,
+        "message": "Floor terrain for the blockout image: stone, grass, dirt, sand, wood, snow or cave."
+      },
+      {
+        "path": "robos:mapObjects",
+        "minCount": 0,
+        "message": "Static scene objects (robos:CRPGMapObject): walls, buildings, doors, trees, props."
+      },
+      {
+        "path": "robos:blockout",
+        "minCount": 0,
+        "message": "5-ft collision grid (blocked, opaque, difficult, cover) written by robos-crpg-blockout build."
+      },
+      {
+        "path": "robos:backgroundImage",
+        "minCount": 0,
+        "message": "Blockout background image rendered by robos-crpg-blockout (res:// path)."
+      }
+    ],
+    "refersFrom": "https://schema.org/Place",
+    "schemaOrgType": "https://schema.org/Place",
+    "domainStandard": "https://schema.org/Place"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGMapObjectShape",
+    "targetClass": "robos:CRPGMapObject",
+    "targetClasses": [
+      "robos:CRPGMapObject"
+    ],
+    "properties": [
+      {
+        "path": "robos:objectId",
+        "minCount": 1,
+        "message": "Map object must have an object id."
+      },
+      {
+        "path": "robos:objectType",
+        "minCount": 1,
+        "message": "Map object must declare its type: wall, building, door, pillar, tree, rock, statue, crate, barrel, table, altar, bed, chest, fence, pit, water, bush, rubble, stairs, road, bridge, rug or zone."
+      },
+      {
+        "path": "robos:shape",
+        "minCount": 1,
+        "message": "Map object must declare its shape: rect, circle, line or polygon."
+      },
+      {
+        "path": "robos:position",
+        "minCount": 1,
+        "message": "Map object must have a position in feet (rect top-left, circle centre, line start)."
+      },
+      {
+        "path": "robos:size",
+        "minCount": 0,
+        "message": "Rect width and height in feet."
+      },
+      {
+        "path": "robos:radius",
+        "minCount": 0,
+        "message": "Circle radius in feet."
+      },
+      {
+        "path": "robos:to",
+        "minCount": 0,
+        "message": "Line end point in feet."
+      },
+      {
+        "path": "robos:thickness",
+        "minCount": 0,
+        "message": "Line thickness in feet (default 5)."
+      },
+      {
+        "path": "robos:points",
+        "minCount": 0,
+        "message": "Polygon vertices in feet."
+      },
+      {
+        "path": "robos:open",
+        "minCount": 0,
+        "message": "Doors: true for an open door that creatures and sight pass through."
+      },
+      {
+        "path": "robos:blocksMovement",
+        "minCount": 0,
+        "message": "Override the type default for blocking movement."
+      },
+      {
+        "path": "robos:blocksSight",
+        "minCount": 0,
+        "message": "Override the type default for blocking line of sight."
+      },
+      {
+        "path": "robos:difficultTerrain",
+        "minCount": 0,
+        "message": "Override the type default for difficult terrain (double movement cost)."
+      },
+      {
+        "path": "robos:cover",
+        "minCount": 0,
+        "message": "Override the cover it gives: none, half or three-quarters."
+      }
+    ],
+    "refersFrom": "https://schema.org/Place",
+    "schemaOrgType": "https://schema.org/Place",
+    "domainStandard": "https://robos.dev/ns/crpg#MapObject"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGCombatantShape",
+    "targetClass": "robos:CRPGCombatant",
+    "targetClasses": [
+      "robos:CRPGCombatant"
+    ],
+    "properties": [
+      {
+        "path": "robos:actorId",
+        "minCount": 1,
+        "message": "Combatant must have an actor id that directives, inputs and assertions refer to."
+      },
+      {
+        "path": "robos:characterClass",
+        "minCount": 0,
+        "message": "Party combatants name a robos:CRPGClass (fighter, wizard, ...)."
+      },
+      {
+        "path": "robos:monster",
+        "minCount": 0,
+        "message": "Enemy combatants name a robos:CRPGMonster, or give a custom stat block with robos:attacks."
+      },
+      {
+        "path": "robos:position",
+        "minCount": 0,
+        "message": "Starting position in feet as [x, y]."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/crpg#Combatant"
+  },
+  {
+    "shapeId": "urn:robos:shape:InfinityAIDirectiveShape",
+    "targetClass": "robos:InfinityAIDirective",
+    "targetClasses": [
+      "robos:InfinityAIDirective"
+    ],
+    "properties": [
+      {
+        "path": "robos:controller",
+        "minCount": 1,
+        "message": "Directive must declare its controller: infinity_ai, scripted or idle."
+      },
+      {
+        "path": "robos:actor",
+        "minCount": 0,
+        "message": "The combatant this directive steers; omit and set robos:side to steer a whole side."
+      },
+      {
+        "path": "robos:side",
+        "minCount": 0,
+        "message": "party, enemy or all: steer every combatant on that side."
+      },
+      {
+        "path": "robos:targetPriority",
+        "minCount": 0,
+        "message": "nearest, lowest_hp, highest_hp, weakest_ac or spellcaster."
+      },
+      {
+        "path": "robos:focusTarget",
+        "minCount": 0,
+        "message": "Actor id to attack whenever it is a valid target."
+      },
+      {
+        "path": "robos:preferSpells",
+        "minCount": 0,
+        "message": "Spell ids to try first, in order."
+      },
+      {
+        "path": "robos:forbidSpells",
+        "minCount": 0,
+        "message": "Spell ids the Infinity AI must never cast."
+      },
+      {
+        "path": "robos:healThreshold",
+        "minCount": 0,
+        "message": "Heal an ally below this fraction of max HP (default 0.5)."
+      },
+      {
+        "path": "robos:movement",
+        "minCount": 0,
+        "message": "advance, hold or kite."
+      },
+      {
+        "path": "robos:scriptedInputs",
+        "minCount": 0,
+        "message": "Ordered robos:CRPGPlayerInput commands played before the AI takes over."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/ControlAction",
+    "domainStandard": "https://robos.dev/ns/crpg#InfinityAIDirective"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGPlayerInputShape",
+    "targetClass": "robos:CRPGPlayerInput",
+    "targetClasses": [
+      "robos:CRPGPlayerInput"
+    ],
+    "properties": [
+      {
+        "path": "robos:type",
+        "minCount": 1,
+        "message": "Player input must declare its type: attack, cast, use_item, move, dodge, disengage, search, disarm or wait."
+      },
+      {
+        "path": "robos:round",
+        "minCount": 0,
+        "message": "Round in which to play this input; omitted means the actor's next turn."
+      },
+      {
+        "path": "robos:target",
+        "minCount": 0,
+        "message": "Actor id the input targets."
+      },
+      {
+        "path": "robos:spell",
+        "minCount": 0,
+        "message": "Spell id for cast inputs."
+      },
+      {
+        "path": "robos:item",
+        "minCount": 0,
+        "message": "Item id for use_item inputs."
+      },
+      {
+        "path": "robos:point",
+        "minCount": 0,
+        "message": "[x, y] in feet for area spells."
+      },
+      {
+        "path": "robos:to",
+        "minCount": 0,
+        "message": "[x, y] in feet for move inputs."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/InteractAction",
+    "domainStandard": "https://robos.dev/ns/crpg#PlayerInput"
   },
   {
     "shapeId": "urn:robos:shape:WebRouteShape",

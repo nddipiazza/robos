@@ -1,0 +1,28 @@
+# ============================================================================== #
+# RobOS Declarative GitOps Documentation Catalog                                 #
+# Auto-synchronized with .robos/knowledge-graph.jsonld                           #
+# ============================================================================== #
+version: "1.0"
+kind: DocumentationCatalog
+entries:
+  - id: "forms-api"
+    title: "Forms API Microservice Living Documentation"
+    targetEntity: "urn:robos:service:forms-api"
+    docPath: "docs/architecture/forms-api.md"
+    category: "Services"
+    gitopsFile: ".robos/documentation.yaml"
+    lastUpdated: "2026-09-25T12:00:00.000Z"
+  - id: "billing-api"
+    title: "Billing API Microservice Architecture"
+    targetEntity: "urn:robos:service:billing-api"
+    docPath: "docs/architecture/billing-api.md"
+    category: "Services"
+    gitopsFile: ".robos/documentation.yaml"
+    lastUpdated: "2026-09-25T12:00:00.000Z"
+  - id: "robos-documentation"
+    title: "RobOS Documentation Hub Architecture"
+    targetEntity: "urn:robos:app:robos-documentation"
+    docPath: "docs/architecture/robos-documentation.md"
+    category: "Applications"
+    gitopsFile: ".robos/documentation.yaml"
+    lastUpdated: "2026-09-25T12:00:00.000Z"

@@ -87,6 +87,81 @@
   "dcterms:description": "Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations.",
   "robos:nodes": [
     {
+      "@id": "urn:robos:documentation:forms-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Forms API Microservice Living Documentation",
+      "dcterms:description": "Living architectural documentation, schema contracts, and runtime verification for Forms API Service.",
+      "robos:targetEntity": "urn:robos:service:forms-api",
+      "robos:docPath": "docs/architecture/forms-api.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Services",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:documentation:billing-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Billing API Microservice Architecture",
+      "dcterms:description": "Living architectural documentation and component topology for Billing API Service.",
+      "robos:targetEntity": "urn:robos:service:billing-api",
+      "robos:docPath": "docs/architecture/billing-api.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Services",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:documentation:robos-documentation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "RobOS Documentation Hub Architecture",
+      "dcterms:description": "Living architecture specification for the RobOS Documentation application and GitOps catalog synchronization.",
+      "robos:targetEntity": "urn:robos:app:robos-documentation",
+      "robos:docPath": "docs/architecture/robos-documentation.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Applications",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:app:robos-documentation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Documentation",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "robos:desktopCategory": "Development",
+      "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
+      "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
+    {
       "@id": "urn:robos:diagram:order-lifecycle-flow",
       "@type": [
         "oslc_am:Resource",
@@ -421,6 +496,81 @@
     }
   ],
   "@graph": [
+    {
+      "@id": "urn:robos:documentation:forms-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Forms API Microservice Living Documentation",
+      "dcterms:description": "Living architectural documentation, schema contracts, and runtime verification for Forms API Service.",
+      "robos:targetEntity": "urn:robos:service:forms-api",
+      "robos:docPath": "docs/architecture/forms-api.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Services",
+      "robos:hasFlowDiagram": "urn:robos:diagram:order-lifecycle-flow",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:documentation:billing-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "Billing API Microservice Architecture",
+      "dcterms:description": "Living architectural documentation and component topology for Billing API Service.",
+      "robos:targetEntity": "urn:robos:service:billing-api",
+      "robos:docPath": "docs/architecture/billing-api.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Services",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:documentation:robos-documentation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Documentation",
+        "schema:TechArticle"
+      ],
+      "dcterms:title": "RobOS Documentation Hub Architecture",
+      "dcterms:description": "Living architecture specification for the RobOS Documentation application and GitOps catalog synchronization.",
+      "robos:targetEntity": "urn:robos:app:robos-documentation",
+      "robos:docPath": "docs/architecture/robos-documentation.md",
+      "robos:gitopsFile": ".robos/documentation.yaml",
+      "robos:category": "Applications",
+      "robos:lastUpdated": "2026-09-25T12:00:00.000Z",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/TechArticle",
+      "robos:domainStandard": "https://schema.org/TechArticle"
+    },
+    {
+      "@id": "urn:robos:app:robos-documentation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Documentation",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "robos:desktopCategory": "Development",
+      "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
+      "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    },
     {
       "@id": "urn:robos:diagram:order-lifecycle-flow",
       "@type": [

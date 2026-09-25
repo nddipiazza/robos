@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RobOS Documentation Hub & Living Architecture Verifier</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Mermaid for client-side diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-left">
+      <span class="app-icon">📚</span>
+      <div class="header-title-group">
+        <h1>RobOS Documentation Hub</h1>
+        <div class="header-meta">
+          <span class="badge" id="badge-tech">KGraph-First</span>
+          <span class="badge badge-green" id="badge-coverage">0 Documented</span>
+          <span class="badge" id="badge-gitops">.robos/documentation.yaml</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <select class="entity-selector" id="entity-selector" onchange="window.onSelectDropdownEntity(this.value)">
+        <option value="">Jump to Entity…</option>
+      </select>
+      <button class="btn btn-secondary" id="btn-export-website" onclick="window.exportWebsite()">
+        🌐 Export Website
+      </button>
+      <button class="btn btn-secondary" id="btn-launch-viewer" onclick="window.openTestViewer()">
+        👁️ Open Test Viewer
+      </button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-search-area">
+        <input type="text" id="search-input" class="search-input" placeholder="Filter architectural assets…">
+      </div>
+      <div class="sidebar-filters">
+        <button class="filter-btn active" data-filter="ALL" onclick="window.setFilter('ALL')">All</button>
+        <button class="filter-btn" data-filter="DOCUMENTED" onclick="window.setFilter('DOCUMENTED')">Documented</button>
+        <button class="filter-btn" data-filter="NEEDS_DOCS" onclick="window.setFilter('NEEDS_DOCS')">Needs Docs</button>
+      </div>
+      <ul class="entity-list" id="entity-list"></ul>
+      <div class="sidebar-footer">
+        <div class="coverage-label-row">
+          <span>Documentation Coverage</span>
+          <span id="coverage-percent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content-panel" id="content-panel">
+      <div class="content-topbar" id="content-topbar">
+        <div class="topbar-info">
+          <h2 id="view-title">Select an Architectural Entity</h2>
+          <div class="topbar-meta-tags" id="view-meta-tags"></div>
+        </div>
+        <div class="topbar-actions" id="topbar-actions"></div>
+      </div>
+
+      <nav class="tab-nav" id="tab-nav">
+        <button class="tab-btn active" data-tab="guide" onclick="window.switchTab('guide')">📖 Living Documentation</button>
+        <button class="tab-btn" data-tab="editor" onclick="window.switchTab('editor')">✏️ Edit Markdown Artifact</button>
+        <button class="tab-btn" data-tab="graph" onclick="window.switchTab('graph')">🌐 Architecture & Graph</button>
+        <button class="tab-btn" data-tab="jsonld" onclick="window.switchTab('jsonld')">🔍 KGraph JSON-LD</button>
+      </nav>
+
+      <div class="tab-content" id="tab-content">
+        <div id="pane-guide" class="tab-pane">
+          <div class="markdown-view" id="guide-markdown-body">
+            <div style="padding: 2rem; color: var(--text-muted);">Loading system documentation…</div>
+          </div>
+        </div>
+        <div id="pane-editor" class="tab-pane" style="display: none; height: 100%;">
+          <div class="editor-pane">
+            <textarea id="markdown-editor" class="editor-textarea" spellcheck="false"></textarea>
+            <div class="editor-toolbar">
+              <span id="editor-file-path" style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono);"></span>
+              <button class="btn btn-green" onclick="window.saveCurrentDoc()">💾 Save Artifact</button>
+            </div>
+          </div>
+        </div>
+        <div id="pane-graph" class="tab-pane" style="display: none;">
+          <div id="graph-view-container"></div>
+        </div>
+        <div id="pane-jsonld" class="tab-pane" style="display: none;">
+          <pre id="jsonld-viewer" style="background: var(--bg-panel); padding: 1rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.8rem; overflow-x: auto; color: #a5d6ff;"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-notice" class="toast-notice hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

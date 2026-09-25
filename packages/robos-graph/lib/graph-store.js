@@ -472,6 +472,8 @@ class SDLCKnowledgeGraphStore {
     }
     this.filePath = opts.filePath || (opts.rootDir ? path.join(opts.rootDir, 'knowledge-graph.jsonld') : DEFAULT_GRAPH_PATH);
     const baseDir = opts.baseDir || (opts.rootDir ? (opts.rootDir.endsWith('.robos') ? opts.rootDir : path.join(opts.rootDir, '.robos')) : path.dirname(this.filePath));
+    this.baseDir = baseDir;
+    this.rootDir = opts.rootDir || path.dirname(baseDir);
     this.packageManager = new KGraphPackageManager({ baseDir, packagesDir: path.join(baseDir, 'kgraphs'), readOnly: !!this.workspace, strict: !!this.workspace });
     this.repoManager = new KGraphRepoManager({ workspaceDir: path.dirname(baseDir), rootDir: baseDir, readOnly: !!this.workspace });
     this.devopsManager = new DevOpsIntegrationManager({ packageManager: this.packageManager });
@@ -1916,6 +1918,339 @@ electron packages/${appSlug}-elearning
   generateELearningWebsite(options = {}) {
     const { generateELearningWebsite } = require('./elearning-web-generator');
     return generateELearningWebsite(this, options);
+  }
+
+  isDocumentableNode(node) {
+    if (!node || typeof node !== 'object') return false;
+    const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
+    const typeStr = types.join(' ');
+
+    // Filter out internal/fine-grained items
+    if (
+      typeStr.includes('DocString') ||
+      typeStr.includes('DataTable') ||
+      typeStr.includes('StepDefinition') ||
+      typeStr.includes('ScenarioOutline') ||
+      typeStr.includes('ExamplesTable') ||
+      typeStr.includes('ScenarioStep') ||
+      typeStr.includes('TestExecutionRecord') ||
+      typeStr.includes('CommitRef') ||
+      typeStr.includes('GitCommit') ||
+      typeStr.includes('EvidenceItem') ||
+      typeStr.includes('Parameter') ||
+      typeStr.includes('CategoryCode') ||
+      typeStr.includes('NodeShape') ||
+      typeStr.includes('PropertyShape') ||
+      typeStr.includes('Ontology') ||
+      typeStr.includes('Package') ||
+      typeStr.includes('ServiceProvider') ||
+      typeStr.includes('Comment') ||
+      typeStr.includes('ReviewComment')
+    ) {
+      return false;
+    }
+
+    // Explicit flag
+    if (node['robos:requiresDocumentation'] === true || node['robos:documentable'] === true) {
+      return true;
+    }
+
+    // If it already has documentation linked
+    if (node['robos:hasDocumentation'] || node['robos:hasDocumentationPage']) {
+      return true;
+    }
+
+    // Primary architectural archetypes
+    const isService = typeStr.includes('Microservice') || typeStr.includes('Service');
+    const isApp = typeStr.includes('DesktopApp') || typeStr.includes('FrontEndApp') || typeStr.includes('PCGame') ||
+                  typeStr.includes('ConsoleApp') || typeStr.includes('WebApplication') || typeStr.includes('MobileApp') ||
+                  typeStr.includes('GitProject') || typeStr.includes('Project');
+    const isDataStore = typeStr.includes('Database') || typeStr.includes('RelationalDatabase') ||
+                        typeStr.includes('NoSQLDatabase') || typeStr.includes('SearchIndex') || typeStr.includes('MessageBroker');
+    const isPlatform = typeStr.includes('BuildSystem') || typeStr.includes('RemoteExecutionCluster') ||
+                       typeStr.includes('MCPServer');
+    const isDevOps = typeStr.includes('KubernetesCluster') || typeStr.includes('CICDPipeline');
+
+    return Boolean(isService || isApp || isDataStore || isPlatform || isDevOps);
+  }
+
+  getDocumentableNodes() {
+    const documentable = [];
+    const docNodes = this.getDocumentationNodes();
+    const docMapByTarget = new Map();
+    for (const d of docNodes) {
+      const target = d['robos:targetEntity'] || d['robos:targetNode'];
+      if (target) docMapByTarget.set(target, d);
+    }
+
+    for (const node of this.parser.nodes) {
+      if (!this.isDocumentableNode(node)) continue;
+      const id = node['@id'];
+      if (!id) continue;
+
+      const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
+
+      const existingDoc = docMapByTarget.get(id) || (node['robos:hasDocumentation'] ? this.getNode(Array.isArray(node['robos:hasDocumentation']) ? node['robos:hasDocumentation'][0] : node['robos:hasDocumentation']) : null);
+      const docPath = existingDoc ? existingDoc['robos:docPath'] : null;
+
+      documentable.push({
+        id,
+        title: node['dcterms:title'] || id.replace(/.*:/, '').replace(/-/g, ' '),
+        description: node['dcterms:description'] || '',
+        type: types.find(t => t.startsWith('robos:') && !['robos:Resource', 'robos:Package'].includes(t)) || types[0] || 'Resource',
+        category: this.inferCategoryForNode(node),
+        isDocumented: Boolean(existingDoc),
+        docId: existingDoc ? existingDoc['@id'] : null,
+        docPath,
+        repository: node['robos:repository'] || 'local',
+        technology: node['robos:technology'] || node['robos:desktopFramework'] || node['robos:frontendFramework'] || 'Polyglot',
+        ownerTeam: (node['robos:ownerTeam'] || 'platform-team').replace(/.*:/, ''),
+        rawNode: node,
+      });
+    }
+
+    return documentable;
+  }
+
+  getDocumentationNodes() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+      return types.some(t => t === 'robos:Documentation' || t === 'robos:SystemDocumentation' || t.endsWith(':Documentation'));
+    });
+  }
+
+  findDocumentation(query = '') {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) return null;
+    const docs = this.getDocumentationNodes();
+    return docs.find(d => {
+      const id = (d['@id'] || '').toLowerCase();
+      const target = (d['robos:targetEntity'] || d['robos:targetNode'] || '').toLowerCase();
+      const title = (d['dcterms:title'] || '').toLowerCase();
+      const pathStr = (d['robos:docPath'] || '').toLowerCase();
+      return id === q || target === q || title.includes(q) || pathStr.includes(q);
+    }) || null;
+  }
+
+  inferCategoryForNode(node) {
+    if (!node) return 'Platforms';
+    const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
+    const typeStr = types.join(' ');
+    if (typeStr.includes('Microservice') || typeStr.includes('Service')) return 'Services';
+    if (typeStr.includes('App') || typeStr.includes('Game') || typeStr.includes('Project')) return 'Applications';
+    if (typeStr.includes('Database') || typeStr.includes('SearchIndex') || typeStr.includes('Broker')) return 'Databases & Streams';
+    if (typeStr.includes('Cluster') || typeStr.includes('Pipeline')) return 'DevOps';
+    return 'Platforms';
+  }
+
+  generateEntityDocumentation(options = {}) {
+    const entityId = typeof options === 'string' ? options : (options.entityId || options.appId || options.id || '');
+    let entityNode = this.getNode(entityId);
+    if (!entityNode && typeof this.findApplicationNode === 'function') {
+      entityNode = this.findApplicationNode(entityId);
+    }
+    if (!entityNode) {
+      return { ok: false, error: `Entity not found in Knowledge Graph: ${entityId}` };
+    }
+
+    const slug = (entityNode['@id'] || entityId).replace(/.*:/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const title = options.title || entityNode['dcterms:title'] || slug.replace(/-/g, ' ');
+    const defaultDocPath = `docs/architecture/${slug}.md`;
+    const docPath = options.docPath || defaultDocPath;
+    const repoBase = this.baseDir ? path.dirname(this.baseDir) : process.cwd();
+    const fullDocPath = path.isAbsolute(docPath) ? docPath : path.join(repoBase, docPath);
+
+    const tech = entityNode['robos:technology'] || entityNode['robos:desktopFramework'] || entityNode['robos:frontendFramework'] || 'Polyglot';
+    const team = (entityNode['robos:ownerTeam'] || 'platform-team').replace(/.*:/, '');
+    const repo = entityNode['robos:repository'] || 'local';
+    const desc = options.overview || entityNode['dcterms:description'] || `${title} is a core architectural component governed in the RobOS Knowledge Graph.`;
+
+    const mermaidDiagram = `graph TD
+    Client[Client / Ingress] -->|Request / Invocation| Target[${title}]
+    Target -->|State & Persistence| DB[(Data Store)]
+    Target -->|Event Streaming| Broker[Kafka / Event Bus]
+    Target -->|Verified By| SHACL[W3C SHACL & BDD Tests]`;
+
+    const mdContent = options.markdownContent || `---
+title: ${title} Architecture & System Documentation
+layout: default
+parent: System Architecture
+nav_order: 10
+---
+
+# ${title} — System Documentation
+
+> **Knowledge Graph Entity**: \`${entityNode['@id']}\`  
+> **Type**: \`${Array.isArray(entityNode['@type']) ? entityNode['@type'].join(', ') : entityNode['@type']}\`  
+> **Owner Team**: \`${team}\`  
+> **Repository**: \`${repo}\`  
+> **Technology Stack**: \`${tech}\`  
+> **Last Synchronized**: ${new Date().toISOString()}
+
+---
+
+## 1. Executive Architecture Overview
+
+${desc}
+
+---
+
+## 2. Component Topology & Data Flow
+
+\`\`\`mermaid
+${mermaidDiagram}
+\`\`\`
+
+---
+
+## 3. Specifications, Contracts & Interfaces
+
+- **Target Component URI**: \`${entityNode['@id']}\`
+- **Owner Team**: \`${team}\`
+- **Source Repository**: \`${repo}\`
+- **Contract / API Standard**: \`${entityNode['robos:implementsContract'] || entityNode['robos:openapiContract'] || 'Canonical RobOS Contract'}\`
+
+---
+
+## 4. Verification & SHACL Governance
+
+This system documentation is registered as an official \`robos:Documentation\` entity in the RobOS Knowledge Graph governed by W3C SHACL shape \`urn:robos:shape:DocumentationShape\` and declaratively cataloged in \`.robos/documentation.yaml\`.
+`;
+
+    // Write file to disk
+    try {
+      fs.mkdirSync(path.dirname(fullDocPath), { recursive: true });
+      fs.writeFileSync(fullDocPath, mdContent, 'utf8');
+    } catch (err) {
+      console.warn('[SDLCKnowledgeGraphStore] Could not write doc file:', err.message);
+    }
+
+    // Create or Update robos:Documentation Node
+    const docNodeId = `urn:robos:documentation:${slug}`;
+    const docNode = {
+      '@id': docNodeId,
+      '@type': ['oslc_am:Resource', 'robos:Documentation', 'schema:TechArticle'],
+      'dcterms:title': `${title} Documentation`,
+      'dcterms:description': desc,
+      'robos:targetEntity': entityNode['@id'],
+      'robos:docPath': docPath,
+      'robos:gitopsFile': '.robos/documentation.yaml',
+      'robos:category': this.inferCategoryForNode(entityNode),
+      'robos:lastUpdated': new Date().toISOString(),
+      'robos:package': 'documentation',
+      'robos:namespace': 'robos.docs',
+      'robos:schemaOrgType': 'https://schema.org/TechArticle',
+      'robos:domainStandard': 'https://schema.org/TechArticle',
+    };
+    this.addNode(docNode);
+
+    // Link from Entity Node
+    if (!entityNode['robos:hasDocumentation']) {
+      entityNode['robos:hasDocumentation'] = [docNodeId];
+    } else if (Array.isArray(entityNode['robos:hasDocumentation'])) {
+      if (!entityNode['robos:hasDocumentation'].includes(docNodeId)) {
+        entityNode['robos:hasDocumentation'].push(docNodeId);
+      }
+    } else if (entityNode['robos:hasDocumentation'] !== docNodeId) {
+      entityNode['robos:hasDocumentation'] = [entityNode['robos:hasDocumentation'], docNodeId];
+    }
+    this.addNode(entityNode);
+
+    // Update GitOps .robos/documentation.yaml
+    this.syncDocumentationYaml();
+
+    return {
+      ok: true,
+      docNode,
+      entityNode,
+      filePath: docPath,
+      fullPath: fullDocPath,
+      content: mdContent,
+      message: `Maintained documentation synthesized for ${title} at ${docPath}.`,
+    };
+  }
+
+  saveEntityDocumentation(options = {}) {
+    const entityId = options.entityId || options.id || '';
+    const content = options.content || options.markdownContent;
+    let docNode = this.findDocumentation(entityId);
+    let entityNode = this.getNode(entityId);
+
+    if (!docNode && entityNode) {
+      return this.generateEntityDocumentation({
+        entityId: entityNode['@id'],
+        markdownContent: content,
+        docPath: options.docPath,
+      });
+    }
+
+    if (!docNode) {
+      return { ok: false, error: `Documentation not found for entity: ${entityId}` };
+    }
+
+    const docPath = options.docPath || docNode['robos:docPath'];
+    const repoBase = this.baseDir ? path.dirname(this.baseDir) : process.cwd();
+    const fullDocPath = path.isAbsolute(docPath) ? docPath : path.join(repoBase, docPath);
+
+    if (content) {
+      try {
+        fs.mkdirSync(path.dirname(fullDocPath), { recursive: true });
+        fs.writeFileSync(fullDocPath, content, 'utf8');
+      } catch (err) {
+        return { ok: false, error: `Failed writing doc file: ${err.message}` };
+      }
+    }
+
+    docNode['robos:lastUpdated'] = new Date().toISOString();
+    if (options.title) docNode['dcterms:title'] = options.title;
+    this.addNode(docNode);
+    this.syncDocumentationYaml();
+
+    return {
+      ok: true,
+      docNode,
+      filePath: docPath,
+      message: `Documentation updated for ${docNode['dcterms:title']}.`,
+    };
+  }
+
+  syncDocumentationYaml() {
+    const docs = this.getDocumentationNodes();
+    const yamlPath = this.baseDir ? path.join(this.baseDir, 'documentation.yaml') : path.join(process.cwd(), '.robos', 'documentation.yaml');
+    try {
+      fs.mkdirSync(path.dirname(yamlPath), { recursive: true });
+      let lines = [
+        '# ============================================================================== #',
+        '# RobOS Declarative GitOps Documentation Catalog                                 #',
+        '# Auto-synchronized with .robos/knowledge-graph.jsonld                           #',
+        '# ============================================================================== #',
+        'version: "1.0"',
+        'kind: DocumentationCatalog',
+        'entries:',
+      ];
+      for (const d of docs) {
+        const id = (d['@id'] || '').replace('urn:robos:documentation:', '');
+        const title = (d['dcterms:title'] || '').replace(/"/g, '\\"');
+        const target = d['robos:targetEntity'] || d['robos:targetNode'] || '';
+        const docPath = d['robos:docPath'] || '';
+        const cat = d['robos:category'] || 'Architecture';
+        lines.push(`  - id: "${id}"`);
+        lines.push(`    title: "${title}"`);
+        lines.push(`    targetEntity: "${target}"`);
+        lines.push(`    docPath: "${docPath}"`);
+        lines.push(`    category: "${cat}"`);
+        lines.push(`    gitopsFile: ".robos/documentation.yaml"`);
+        lines.push(`    lastUpdated: "${d['robos:lastUpdated'] || new Date().toISOString()}"`);
+      }
+      fs.writeFileSync(yamlPath, lines.join('\n') + '\n', 'utf8');
+    } catch (err) {
+      console.warn('[SDLCKnowledgeGraphStore] Could not write .robos/documentation.yaml:', err.message);
+    }
+  }
+
+  generateDocumentationWebsite(options = {}) {
+    const { generateDocumentationWebsite } = require('./documentation-web-generator');
+    return generateDocumentationWebsite(this, options);
   }
 
   launchELearningApp(options = {}) {
