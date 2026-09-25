@@ -16,7 +16,9 @@ class DesktopAssistant extends EventEmitter {
     this.listeningTimer = null;
     this.accumulatedInput = '';
     this.autoSpeak = options.autoSpeak !== false;
-    this.wakeGreeting = options.wakeGreeting || "Hello! How can I help you, Lead Architect?";
+    this.wakeGreeting = options.wakeGreeting ||
+      (this.ttsEngine && typeof this.ttsEngine.getPrefs === 'function' && this.ttsEngine.getPrefs().wakeWordGreeting) ||
+      "Hi!";
 
     if (this.wakeDetector) {
       this.wakeDetector.on('wake-word', async (evt) => {
@@ -51,12 +53,16 @@ class DesktopAssistant extends EventEmitter {
     const query = (evt.query || '').trim();
     this.setState('WAKE_DETECTED', { trigger: evt.trigger, query });
 
-    if (query) {
+    // Check if query is actually empty or just a redundant greeting
+    const isPureGreeting = !query || /^(?:hi|hello|hey|howdy|what'?s\s+up)[!.]*$/i.test(query);
+
+    if (!isPureGreeting) {
       // User said wake-word AND query in one breath: "hello robos, what is the git status?"
       await this.processQuery(query);
     } else {
-      // User just said "hello robos"
+      // User just said "hello robos" and nothing else
       this.setState('LISTENING');
+      this.emit('wake-greeting', { greeting: this.wakeGreeting, trigger: evt.trigger });
       if (this.autoSpeak && this.ttsEngine) {
         try {
           await this.ttsEngine.speak(this.wakeGreeting);

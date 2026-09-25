@@ -32,6 +32,7 @@ class SkillsExecutor {
       { id: 'system-status', label: 'RobOS Platform Status', intent: 'Health of all core services and graph packages', patterns: ['system status', 'project status'] },
       { id: 'change-voice', label: 'Change Outgoing Voice', intent: 'Switch TTS voice or speed', patterns: ['change voice to', 'switch voice'] },
       { id: 'stop-speaking', label: 'Stop Audio Playback', intent: 'Silence current TTS playback', patterns: ['stop speaking', 'silence', 'be quiet'] },
+      { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
   }
@@ -52,6 +53,13 @@ class SkillsExecutor {
     }
 
     const q = query.toLowerCase();
+
+    // 0. Greeting Intent: "hi", "hello", "hey", "hello robos", "rob os", "row bose", etc.
+    const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:robos|rob\s+os|row\s+bose|there|assistant))?[!.]*$/i.test(query) ||
+                       /^(?:robos|rob\s+os|row\s+bose)[!.]*$/i.test(query);
+    if (isGreeting) {
+      return await this.executeGreeting();
+    }
 
     // 1. Task Management: Add Task
     // Matches: "add a task to...", "create a task: ...", "new task ...", "add task ..."
@@ -580,6 +588,22 @@ class SkillsExecutor {
       actionDone,
       response,
       data: { stopped: true }
+    };
+  }
+
+  /**
+   * Skill: Casual Greeting
+   */
+  async executeGreeting() {
+    const response = 'Hi!';
+    const actionDone = 'Responded to greeting';
+
+    return {
+      ok: true,
+      skill: 'greeting',
+      actionDone,
+      response,
+      data: { greeting: response }
     };
   }
 

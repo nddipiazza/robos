@@ -250,12 +250,20 @@ function renderPromptsList(prompts) {
       <div class="prompt-meta-row">
         <span class="prompt-context-tag">📱 ${escapeHtml(p.metadata?.activeApp?.appId || 'desktop')}</span>
         <span>${formatTime(p.timestamp)}</span>
-      </div>`;
+        <button class="btn-meta-toggle">Context Metadata</button>
+      </div>
+      <pre class="prompt-json-view hidden">${escapeHtml(JSON.stringify(p.metadata || {}, null, 2))}</pre>`;
 
     item.querySelector('.btn-delete-prompt')?.addEventListener('click', async (e) => {
       e.stopPropagation();
       await api.deletePrompt(p.id);
       await loadPrompts();
+    });
+
+    item.querySelector('.btn-meta-toggle')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const jsonView = item.querySelector('.prompt-json-view');
+      jsonView?.classList.toggle('hidden');
     });
 
     item.addEventListener('click', () => {

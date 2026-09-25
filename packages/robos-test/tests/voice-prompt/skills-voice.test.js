@@ -165,6 +165,26 @@ describe('RobOS Voice Skills Integration Tests', () => {
       assert.strictEqual(res.skill, 'active-app');
       assert.ok(res.response.includes('RobOS Task Explorer'));
     });
+
+    it('executes casual greeting "hello robos" and responds "Hi!"', async () => {
+      const res = await executor.executeCommand('hello robos');
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.skill, 'greeting');
+      assert.strictEqual(res.response, 'Hi!');
+      assert.strictEqual(res.actionDone, 'Responded to greeting');
+    });
+
+    it('executes "row bose" or "hi" and responds "Hi!"', async () => {
+      const res1 = await executor.executeCommand('row bose');
+      assert.strictEqual(res1.ok, true);
+      assert.strictEqual(res1.skill, 'greeting');
+      assert.strictEqual(res1.response, 'Hi!');
+
+      const res2 = await executor.executeCommand('hi');
+      assert.strictEqual(res2.ok, true);
+      assert.strictEqual(res2.skill, 'greeting');
+      assert.strictEqual(res2.response, 'Hi!');
+    });
   });
 
   describe('5. Voice Activation End-to-End with Wake-Word & Assistant', () => {
