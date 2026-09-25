@@ -50,7 +50,7 @@ let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
 const sttEngine = new STTEngine(promptStore.loadPrefs());
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
-const wakeDetector = new WakeWordDetector({ enabled: true });
+const wakeDetector = new WakeWordDetector({ enabled: true, cooldownMs: 4000 });
 const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
 
 // Acoustic echo suppression gate
@@ -81,7 +81,10 @@ sttEngine.on('interim-text', (data) => {
 sttEngine.on('stream-text', (data) => {
   const isEchoing = ttsEngine.isSpeaking || Date.now() < echoCooldownUntil;
   if (!isEchoing) {
-    wakeDetector.processText(data.text, data);
+    // Only detect wake word if the assistant is completely IDLE
+    if (desktopAssistant.getState() === 'IDLE') {
+      wakeDetector.processText(data.text, data);
+    }
     desktopAssistant.handleStreamText(data);
   }
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -93,6 +96,14 @@ sttEngine.on('stream-text', (data) => {
 });
 
 desktopAssistant.on('state-change', (data) => {
+  if (data.state === 'IDLE') {
+    if (typeof wakeDetector.resetCooldown === 'function') {
+      wakeDetector.resetCooldown();
+    }
+    if (typeof sttEngine.resetRecordingBuffer === 'function') {
+      sttEngine.resetRecordingBuffer();
+    }
+  }
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-assistant-state', data);
   }
@@ -102,6 +113,9 @@ desktopAssistant.on('state-change', (data) => {
 });
 
 desktopAssistant.on('assistant-turn', (data) => {
+  if (typeof sttEngine.resetRecordingBuffer === 'function') {
+    sttEngine.resetRecordingBuffer();
+  }
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-assistant-turn', data);
   }
@@ -143,6 +157,10 @@ wakeDetector.on('wake-word', async (data) => {
     } catch {}
   }
   showHudWindow();
+  // Clear the recording buffer so the wake word utterance doesn't linger into command dictation
+  if (typeof sttEngine.resetRecordingBuffer === 'function') {
+    sttEngine.resetRecordingBuffer();
+  }
   await desktopAssistant.handleWakeWord(data);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-wake-word', data);

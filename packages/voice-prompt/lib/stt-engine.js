@@ -263,6 +263,54 @@ class STTEngine extends EventEmitter {
     return this.active;
   }
 
+  _startRecordingProcess(tmpFile, device = this.configuredDevice) {
+    let spawnCmd = 'arecord';
+    let spawnArgs = ['-q', '-D', 'default', '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
+
+    if (/^\d+$/.test(device)) {
+      spawnCmd = 'pw-record';
+      spawnArgs = ['--target', String(device), '--rate', '16000', '--channels', '1', tmpFile];
+    } else if (device && device.startsWith('hw:')) {
+      spawnCmd = 'arecord';
+      spawnArgs = ['-q', '-D', device, '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
+    }
+
+    try {
+      const proc = spawn(spawnCmd, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+      proc.on('error', (err) => {
+        console.warn(`[stt-engine] Recording process error (${spawnCmd}):`, err.message);
+      });
+      return proc;
+    } catch (err) {
+      console.warn(`[stt-engine] Failed to spawn ${spawnCmd}:`, err.message);
+      return null;
+    }
+  }
+
+  resetRecordingBuffer() {
+    this.lastInterimText = '';
+    this.lastSpeechDetectedTime = 0;
+    this.silenceFinalEmitted = false;
+    if (!this.active) return;
+
+    const oldFile = this.currentRecordingFile;
+    const oldProc = this.recordingProcess;
+
+    const tmpFile = path.join(os.tmpdir(), `robos-voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.wav`);
+    this.currentRecordingFile = tmpFile;
+    this.recordingStartTime = Date.now();
+    this.recordingProcess = this._startRecordingProcess(tmpFile, this.configuredDevice);
+
+    if (oldProc) {
+      try { oldProc.kill('SIGINT'); } catch {}
+    }
+    if (oldFile && fs.existsSync(oldFile)) {
+      setTimeout(() => {
+        try { if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile); } catch {}
+      }, 1000);
+    }
+  }
+
   /**
    * Activate listening / dictating (starts hardware recording)
    */
@@ -278,41 +326,7 @@ class STTEngine extends EventEmitter {
 
     const tmpFile = path.join(os.tmpdir(), `robos-voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.wav`);
     this.currentRecordingFile = tmpFile;
-
-    // Pick recording tool based on device
-    let spawnCmd = 'arecord';
-    let spawnArgs = ['-q', '-D', 'default', '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
-
-    if (/^\d+$/.test(device)) {
-      spawnCmd = 'pw-record';
-      spawnArgs = ['--target', String(device), '--rate', '16000', '--channels', '1', tmpFile];
-    } else if (device.startsWith('hw:')) {
-      spawnCmd = 'arecord';
-      spawnArgs = ['-q', '-D', device, '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
-    }
-
-    try {
-      this.recordingProcess = spawn(spawnCmd, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-      this.recordingProcess.on('error', (err) => {
-        console.warn(`[stt-engine] Recording process error (${spawnCmd}):`, err.message);
-        if (spawnCmd !== 'arecord' || spawnArgs[2] !== 'default') {
-          try {
-            this.recordingProcess = spawn('arecord', ['-q', '-D', 'default', '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile]);
-          } catch {}
-        }
-      });
-      this.recordingProcess.once('exit', (code) => {
-        if (this.active && code !== 0 && code !== null) {
-          console.warn(`[stt-engine] ${spawnCmd} exited with code ${code}, falling back to arecord -D default`);
-          try {
-            this.recordingProcess = spawn('arecord', ['-q', '-D', 'default', '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile]);
-          } catch {}
-        }
-      });
-    } catch (err) {
-      console.warn(`[stt-engine] Failed to spawn ${spawnCmd}:`, err.message);
-      this.recordingProcess = null;
-    }
+    this.recordingProcess = this._startRecordingProcess(tmpFile, device);
 
     this.lastInterimText = '';
     this.lastSpeechDetectedTime = 0;
@@ -334,9 +348,9 @@ class STTEngine extends EventEmitter {
           this.isTranscribing = true;
           const fullSamples = readWavToFloat32(recFile);
           if (fullSamples && fullSamples.length >= 8000) {
-            // Sliding window: in background streaming mode, only process the last 4s of audio (64,000 samples)
-            // so inference runs in parallel in worker thread in ~150ms and never balloons
-            const samples = (this.backgroundMode && fullSamples.length > 64000)
+            // Sliding window: ALWAYS process at most the last 4s of audio (64,000 samples)
+            // for real-time streaming so CPU remains low (~15-20%) and inference never balloons
+            const samples = fullSamples.length > 64000
               ? fullSamples.slice(-64000)
               : fullSamples;
 
@@ -374,7 +388,7 @@ class STTEngine extends EventEmitter {
         } finally {
           this.isTranscribing = false;
         }
-      }, 400);
+      }, 700);
     }
 
     this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile, backgroundMode: this.backgroundMode });
