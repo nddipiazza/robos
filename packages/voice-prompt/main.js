@@ -61,11 +61,17 @@ ttsEngine.on('speaking-start', () => {
 });
 
 ttsEngine.on('speaking-end', () => {
-  echoCooldownUntil = Date.now() + 800;
+  echoCooldownUntil = Date.now() + 150;
+  if (typeof sttEngine.resetRecordingBuffer === 'function') {
+    sttEngine.resetRecordingBuffer();
+  }
 });
 
 ttsEngine.on('speaking-stopped', () => {
-  echoCooldownUntil = Date.now() + 400;
+  echoCooldownUntil = Date.now() + 100;
+  if (typeof sttEngine.resetRecordingBuffer === 'function') {
+    sttEngine.resetRecordingBuffer();
+  }
 });
 
 sttEngine.on('interim-text', (data) => {

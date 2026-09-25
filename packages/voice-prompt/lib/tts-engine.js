@@ -5,6 +5,7 @@ const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 
 const AUDIO_CACHE_DIR = path.join(os.homedir(), '.config', 'robos', 'voice-cache');
 const KOKORO_DIR = path.join(os.homedir(), '.local/share/kokoro');
@@ -37,6 +38,15 @@ function prepareSpeechText(text) {
     .replace(/\bRob-OS\b/gi, 'Row Bose');
 }
 
+/**
+ * Generate permanent disk cache filename for text + engine + voice + speed
+ */
+function getCacheKey(text, engine = 'kokoro', voice = 'af_heart', speed = 1.0) {
+  const norm = (text || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
+  const hash = crypto.createHash('md5').update(`${engine}:${voice}:${Number(speed).toFixed(1)}:${(text || '').trim()}`).digest('hex').slice(0, 10);
+  return `tts-${norm}-${hash}.wav`;
+}
+
 class TTSEngine extends EventEmitter {
   constructor(options = {}) {
     super();
@@ -45,6 +55,15 @@ class TTSEngine extends EventEmitter {
     this.isSpeaking = false;
     this._speechCounter = 0;
     this._activeSpeechId = 0;
+    this.kokoroWorker = null;
+    this.kokoroPending = new Map();
+    this.kokoroSeq = 0;
+
+    if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+      setTimeout(() => {
+        try { this._getKokoroWorker(); } catch {}
+      }, 100);
+    }
   }
 
   getPrefs() {
@@ -106,14 +125,30 @@ class TTSEngine extends EventEmitter {
     const cleanText = prepareSpeechText(rawText);
 
     const engine = options.engine || this.prefs.engine || 'kokoro';
-    const voice = options.voice || this.prefs.voice || (engine === 'edge-tts' ? 'en-US-AndrewMultilingualNeural' : 'af_heart');
+    let voice = options.voice;
+    if (!voice || (engine === 'edge-tts' && /^(?:af_|am_|bf_|bm_)/.test(voice))) {
+      voice = engine === 'edge-tts' ? 'en-US-AndrewMultilingualNeural' : (engine === 'piper' ? 'en_US-lessac-medium' : (this.prefs.voice || 'af_heart'));
+    } else if (engine === 'piper' && /^(?:af_|am_|bf_|bm_)/.test(voice)) {
+      voice = 'en_US-lessac-medium';
+    }
     const speed = options.speed || this.prefs.speed || 1.0;
     const pitch = options.pitch || this.prefs.pitch || 0;
     const volume = options.volume != null ? options.volume : this.prefs.volume;
 
     const tmpId = `robos-tts-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-    // Fast path: cached audio for common short phrases (like "Hi!")
+    // Fast path: check pre-cached audio (instant 0ms playback for greetings or prior speech)
+    let cachedFilePath = null;
+    try {
+      fs.mkdirSync(AUDIO_CACHE_DIR, { recursive: true });
+      const cacheFilename = getCacheKey(cleanText, engine, voice, speed);
+      cachedFilePath = path.join(AUDIO_CACHE_DIR, cacheFilename);
+      if (fs.existsSync(cachedFilePath) && fs.statSync(cachedFilePath).size > 100) {
+        const durationMs = this._getAudioDurationMs(cachedFilePath);
+        return { ok: true, filePath: cachedFilePath, durationMs, engine: 'cache' };
+      }
+    } catch {}
+
     const isPureHi = /^hi[!.]*$/i.test(cleanText);
     const cachedHiPath = path.join(AUDIO_CACHE_DIR, 'hi.wav');
     if (isPureHi && fs.existsSync(cachedHiPath) && fs.statSync(cachedHiPath).size > 100) {
@@ -135,6 +170,9 @@ class TTSEngine extends EventEmitter {
         const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
         await this._synthesizeKokoro(cleanText, outWav, { voice, speed });
         if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
+          if (cachedFilePath) {
+            try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
+          }
           const durationMs = this._getAudioDurationMs(outWav);
           return { ok: true, filePath: outWav, durationMs, engine: 'kokoro' };
         }
@@ -149,6 +187,9 @@ class TTSEngine extends EventEmitter {
         const outMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
         await this._synthesizeEdgeTTS(cleanText, outMp3, { voice, speed, pitch, volume });
         if (fs.existsSync(outMp3) && fs.statSync(outMp3).size > 100) {
+          if (cachedFilePath) {
+            try { fs.copyFileSync(outMp3, cachedFilePath); } catch {}
+          }
           const durationMs = this._getAudioDurationMs(outMp3);
           return { ok: true, filePath: outMp3, durationMs, engine: 'edge-tts' };
         }
@@ -275,9 +316,84 @@ class TTSEngine extends EventEmitter {
     }
   }
 
-  // ── Engine Synthesis Implementations ────────────────────────────────────────
+  destroy() {
+    this.stop();
+    if (this.kokoroWorker) {
+      try {
+        this.kokoroWorker.stdin.write(JSON.stringify({ type: 'shutdown' }) + '\n');
+        this.kokoroWorker.kill('SIGTERM');
+      } catch {}
+      this.kokoroWorker = null;
+    }
+    this.kokoroPending.clear();
+  }
+
+  _getKokoroWorker() {
+    if (!this.kokoroWorker && process.env.ROBOS_TEST !== '1') {
+      try {
+        const workerScript = path.join(__dirname, 'kokoro-worker.py');
+        if (fs.existsSync(workerScript)) {
+          const proc = spawn('python3', [workerScript], { stdio: ['pipe', 'pipe', 'pipe'] });
+          try {
+            proc.unref();
+            if (proc.stdin) proc.stdin.unref();
+            if (proc.stdout) proc.stdout.unref();
+            if (proc.stderr) proc.stderr.unref();
+          } catch {}
+          proc.stdout.on('data', (d) => {
+            const lines = d.toString().split('\n').filter(Boolean);
+            for (const line of lines) {
+              try {
+                const msg = JSON.parse(line);
+                if (msg.id && this.kokoroPending.has(msg.id)) {
+                  const handler = this.kokoroPending.get(msg.id);
+                  this.kokoroPending.delete(msg.id);
+                  if (msg.ok) handler.resolve(msg);
+                  else handler.reject(new Error(msg.error || 'Kokoro synthesis failed'));
+                }
+              } catch {}
+            }
+          });
+          proc.on('error', (err) => {
+            console.warn('[tts-engine] Kokoro worker process error:', err.message);
+            this.kokoroWorker = null;
+          });
+          proc.on('exit', () => {
+            this.kokoroWorker = null;
+          });
+          this.kokoroWorker = proc;
+        }
+      } catch (err) {
+        console.warn('[tts-engine] Failed to start Kokoro worker:', err.message);
+        this.kokoroWorker = null;
+      }
+    }
+    return this.kokoroWorker;
+  }
 
   _synthesizeKokoro(text, outWav, { voice = 'af_heart', speed = 1.0 } = {}) {
+    const worker = this._getKokoroWorker();
+    if (worker && worker.stdin && !worker.killed) {
+      return new Promise((resolve, reject) => {
+        const id = `kreq-${++this.kokoroSeq}-${Date.now()}`;
+        const timeout = setTimeout(() => {
+          this.kokoroPending.delete(id);
+          reject(new Error('Kokoro worker timeout'));
+        }, 12000);
+        this.kokoroPending.set(id, {
+          resolve: () => { clearTimeout(timeout); resolve(); },
+          reject: (err) => { clearTimeout(timeout); reject(err); },
+        });
+        try {
+          worker.stdin.write(JSON.stringify({ id, text, outWav, voice, speed }) + '\n');
+        } catch (err) {
+          clearTimeout(timeout);
+          this.kokoroPending.delete(id);
+          reject(err);
+        }
+      });
+    }
+
     return new Promise((resolve, reject) => {
       const pyScript = `
 import soundfile as sf

@@ -62,6 +62,19 @@ function readWavToFloat32(filePath) {
   return null;
 }
 
+function getAudioEnergy(samples) {
+  if (!samples || samples.length === 0) return 0;
+  let sum = 0;
+  const step = 4;
+  let count = 0;
+  for (let i = 0; i < samples.length; i += step) {
+    const s = samples[i];
+    sum += s * s;
+    count++;
+  }
+  return Math.sqrt(sum / count);
+}
+
 class STTEngine extends EventEmitter {
   constructor(options = {}) {
     super();
@@ -79,6 +92,16 @@ class STTEngine extends EventEmitter {
     this.worker = null;
     this.pendingRequests = new Map();
     this.reqSeq = 0;
+
+    // Pre-warm Whisper worker in background
+    if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+      setTimeout(() => {
+        try {
+          const w = this.getWorker();
+          if (w) w.postMessage({ type: 'init' });
+        } catch {}
+      }, 100);
+    }
   }
 
   isBackgroundMode() {
@@ -342,53 +365,72 @@ class STTEngine extends EventEmitter {
 
         try {
           const stats = fs.statSync(recFile);
-          // Need at least ~0.5s of 16kHz 16-bit mono audio (16000 * 2 * 0.5 = 16000 bytes)
-          if (stats.size < 16000) return;
+          // Need at least ~0.35s of 16kHz 16-bit mono audio (16000 * 2 * 0.35 = 11200 bytes)
+          if (stats.size < 11200) return;
+
+          const fullSamples = readWavToFloat32(recFile);
+          if (!fullSamples || fullSamples.length < 5600) return;
+
+          // VAD / Energy check: check energy of recent audio (last 1s / 16000 samples)
+          const recentSamples = fullSamples.length > 16000 ? fullSamples.slice(-16000) : fullSamples;
+          const energy = getAudioEnergy(recentSamples);
+
+          // If room is silent (ambient noise < 0.003) and no speech is in-flight, skip Whisper inference!
+          // This keeps CPU near 0% and worker immediately ready the moment the user speaks!
+          if (energy < 0.003 && !this.lastInterimText) {
+            return;
+          }
 
           this.isTranscribing = true;
-          const fullSamples = readWavToFloat32(recFile);
-          if (fullSamples && fullSamples.length >= 8000) {
-            // Sliding window: ALWAYS process at most the last 4s of audio (64,000 samples)
-            // for real-time streaming so CPU remains low (~15-20%) and inference never balloons
-            const samples = fullSamples.length > 64000
-              ? fullSamples.slice(-64000)
-              : fullSamples;
 
-            const res = await this.transcribeAsync(samples, {});
-            const text = cleanTranscript(res?.text || '');
-            const now = Date.now();
-            if (text && this.active) {
-              if (text !== this.lastInterimText) {
-                this.lastInterimText = text;
-                this.lastSpeechDetectedTime = now;
-                this.silenceFinalEmitted = false;
-                const payload = {
-                  text,
-                  isFinal: false,
-                  elapsedMs: now - (this.recordingStartTime || now),
-                  backgroundMode: this.backgroundMode,
-                };
-                this.emit('interim-text', payload);
-                this.emit('stream-text', payload);
-              } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && (now - this.lastSpeechDetectedTime >= 850)) {
-                // User paused for >850ms: emit final utterance flag to finalize the bubble
-                this.silenceFinalEmitted = true;
-                const payload = {
-                  text: this.lastInterimText,
-                  isFinal: true,
-                  elapsedMs: now - (this.recordingStartTime || now),
-                  backgroundMode: this.backgroundMode,
-                };
-                this.emit('stream-text', payload);
-              }
+          // Sliding window: process at most the last 2.5s (40,000 samples) of audio for fast response
+          const samples = fullSamples.length > 40000
+            ? fullSamples.slice(-40000)
+            : fullSamples;
+
+          const res = await this.transcribeAsync(samples, {});
+          const text = cleanTranscript(res?.text || '');
+          const now = Date.now();
+          if (text && this.active) {
+            if (text !== this.lastInterimText) {
+              this.lastInterimText = text;
+              this.lastSpeechDetectedTime = now;
+              this.silenceFinalEmitted = false;
+              const payload = {
+                text,
+                isFinal: false,
+                elapsedMs: now - (this.recordingStartTime || now),
+                backgroundMode: this.backgroundMode,
+              };
+              this.emit('interim-text', payload);
+              this.emit('stream-text', payload);
+            } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && (now - this.lastSpeechDetectedTime >= 450)) {
+              // User paused for >=450ms: emit final utterance flag to finalize the bubble
+              this.silenceFinalEmitted = true;
+              const payload = {
+                text: this.lastInterimText,
+                isFinal: true,
+                elapsedMs: now - (this.recordingStartTime || now),
+                backgroundMode: this.backgroundMode,
+              };
+              this.emit('stream-text', payload);
             }
+          } else if (!text && this.lastInterimText && (now - this.lastSpeechDetectedTime >= 450) && !this.silenceFinalEmitted) {
+            this.silenceFinalEmitted = true;
+            const payload = {
+              text: this.lastInterimText,
+              isFinal: true,
+              elapsedMs: now - (this.recordingStartTime || now),
+              backgroundMode: this.backgroundMode,
+            };
+            this.emit('stream-text', payload);
           }
         } catch (err) {
           console.warn('[stt-engine] Streaming transcribe error:', err.message);
         } finally {
           this.isTranscribing = false;
         }
-      }, 700);
+      }, 400);
     }
 
     this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile, backgroundMode: this.backgroundMode });
