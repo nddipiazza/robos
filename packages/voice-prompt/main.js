@@ -664,7 +664,7 @@ function createWindow() {
 /**
  * Calculate on-screen coordinates for floating HUD window
  */
-function getHudBounds(pos = 'bottom-right', width = 440, height = 230, customWorkArea = null) {
+function getHudBounds(pos = 'bottom-right', width = 460, height = 290, customWorkArea = null) {
   let workArea = customWorkArea;
   if (!workArea) {
     const screen = electronPkg ? electronPkg.screen : null;
@@ -894,6 +894,8 @@ ipcMain.handle('vp-tts-save-prefs', (_e, prefs) => {
 // Background stream & Desktop Assistant IPC handlers
 ipcMain.handle('vp-background-toggle', async (_e, enable) => {
   if (enable) {
+    repositionHudWindow('bottom-right');
+    showHudWindow();
     const res = await sttEngine.activate({ backgroundMode: true });
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('vp-event-activated', res);
@@ -906,6 +908,10 @@ ipcMain.handle('vp-background-toggle', async (_e, enable) => {
     }
     return res;
   }
+});
+
+ipcMain.handle('vp-trigger-wake-word', async () => {
+  return desktopAssistant.handleWakeWord({ trigger: 'hello robos', query: '' });
 });
 
 ipcMain.handle('vp-assistant-chat', async (_e, query, options) => {

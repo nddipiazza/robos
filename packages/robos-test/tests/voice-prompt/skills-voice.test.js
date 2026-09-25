@@ -192,25 +192,24 @@ describe('RobOS Voice Skills Integration Tests', () => {
     });
 
     it('executes casual greeting "hello robos" and responds with casual greeting', async () => {
-      const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
       const res = await executor.executeCommand('hello robos');
       assert.strictEqual(res.ok, true);
       assert.strictEqual(res.skill, 'greeting');
-      assert.ok(DEFAULT_GREETINGS.includes(res.response), `Response "${res.response}" should be in DEFAULT_GREETINGS`);
+      assert.ok(res.response.includes("let me know when you're done with a 10/4 or say Done!"), `Response "${res.response}" should include 10/4 Done hint`);
       assert.strictEqual(res.actionDone, 'Responded to greeting');
     });
 
     it('executes "row bose" or "hi" and responds with casual greeting or custom override', async () => {
-      const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
       const res1 = await executor.executeCommand('row bose');
       assert.strictEqual(res1.ok, true);
       assert.strictEqual(res1.skill, 'greeting');
-      assert.ok(DEFAULT_GREETINGS.includes(res1.response));
+      assert.ok(res1.response.includes("let me know when you're done with a 10/4 or say Done!"));
 
       const res2 = await executor.executeCommand('hi', {}, { wakeGreetings: ['Hi!'] });
       assert.strictEqual(res2.ok, true);
       assert.strictEqual(res2.skill, 'greeting');
-      assert.strictEqual(res2.response, 'Hi!');
+      assert.ok(res2.response.includes('Hi!'));
+      assert.ok(res2.response.includes("let me know when you're done with a 10/4 or say Done!"));
     });
   });
 

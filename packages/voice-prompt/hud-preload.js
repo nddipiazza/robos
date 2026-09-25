@@ -10,6 +10,7 @@ const hudApi = {
   showHud: () => ipcRenderer.invoke('vp-hud-show'),
   toggleMic: () => ipcRenderer.invoke('vp-hud-toggle-mic'),
   stopTts: () => ipcRenderer.invoke('vp-tts-stop'),
+  triggerWakeWord: () => ipcRenderer.invoke('vp-trigger-wake-word'),
   executeSkill: (cmd, opts) => ipcRenderer.invoke('vp-skills-execute', cmd, opts),
   askAssistant: (query, opts) => ipcRenderer.invoke('vp-assistant-chat', query, opts),
 

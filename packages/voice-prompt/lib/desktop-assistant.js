@@ -121,6 +121,16 @@ class DesktopAssistant extends EventEmitter {
         }
       }, 6000);
 
+      // Check if user signaled command completion with 10/4 or Done!
+      const isDoneSignal = /(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(this.accumulatedInput);
+      if (isDoneSignal) {
+        if (this.listeningTimer) clearTimeout(this.listeningTimer);
+        const actionQuery = this.accumulatedInput;
+        this.accumulatedInput = '';
+        await this.processQuery(actionQuery);
+        return;
+      }
+
       // Check if current accumulated input contains a clear actionable command intent
       if (this.skillsExecutor && typeof this.skillsExecutor.hasActionableIntent === 'function') {
         if (this.skillsExecutor.hasActionableIntent(this.accumulatedInput)) {

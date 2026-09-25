@@ -186,7 +186,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       await new Promise(r => setTimeout(r, 50));
 
       assert.ok(spokenText, 'Assistant must speak greeting aloud');
-      assert.ok(DEFAULT_GREETINGS.includes(spokenText), `Spoken greeting "${spokenText}" must be from DEFAULT_GREETINGS list`);
+      assert.ok(spokenText.includes("let me know when you're done with a 10/4 or say Done!"), 'Greeting must include 10/4 Done hint');
       assert.strictEqual(hudShown, true, 'Assistant must emit show-hud event');
       assert.strictEqual(hudGreeting, spokenText, 'HUD greeting must match spoken greeting');
       assert.strictEqual(assistant.getState(), 'LISTENING');
@@ -223,17 +223,42 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
         return { ok: true, text };
       };
 
-      const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
       const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
 
       const res1 = await assistant.processQuery('hello robos');
-      assert.ok(DEFAULT_GREETINGS.includes(res1.turn.response), 'Should respond with casual greeting');
+      assert.ok(res1.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
 
       const res2 = await assistant.processQuery('hi');
-      assert.ok(DEFAULT_GREETINGS.includes(res2.turn.response), 'Should respond with casual greeting');
+      assert.ok(res2.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
 
       const res3 = await assistant.processQuery('row bose');
-      assert.ok(DEFAULT_GREETINGS.includes(res3.turn.response), 'Should respond with casual greeting');
+      assert.ok(res3.turn.response.includes("let me know when you're done with a 10/4 or say Done!"));
+    });
+
+    it('executes command followed by "10/4" or "done" and strips the suffix', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => {
+        spokenText = text;
+        return { ok: true, text };
+      };
+
+      const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
+      assistant.setState('LISTENING');
+
+      let actionDone = null;
+      assistant.on('action-done', (evt) => {
+        actionDone = evt.actionDone;
+      });
+
+      // User says "open task explorer 10-4"
+      await assistant.handleStreamText({ text: 'open task explorer 10-4' });
+      assert.ok(actionDone && actionDone.includes('Task Explorer'));
+      assert.ok(spokenText && spokenText.includes('Task Explorer'));
+
+      // Standalone "10/4"
+      const res = await assistant.processQuery('10/4');
+      assert.strictEqual(res.turn.response, '10-4! Standing by for your next command.');
     });
 
     it('continuously analyzes speech stream and autonomously executes matched action', async () => {
