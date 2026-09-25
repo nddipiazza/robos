@@ -1,0 +1,183 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:scene:dungeon-crypt-vault",
+  "@type": "robos:CRPGScene",
+  "dcterms:title": "Subterranean Crypt & Reliquary Vault",
+  "dcterms:description": "Sealed subterranean dungeon crypt guarded by skeletal archers, concealed floor traps, and an armored wight lord.",
+  "robos:map": "urn:robos:crpg:battle-map:dungeon-crypt-vault",
+  "robos:campaign": "urn:robos:crpg:campaign:crypt-of-the-archmage",
+  "robos:dimensions": {
+    "width": 1600,
+    "height": 1280,
+    "feetWidth": 100,
+    "feetHeight": 80
+  },
+  "robos:atmosphere": {
+    "robos:lighting": "Subterranean Torchlight",
+    "robos:ambientAudio": "tomb_chant_ambient.ogg",
+    "robos:fogOfWar": true
+  },
+  "robos:entities": [
+    {
+      "id": "hero-vance-vet-spawn",
+      "type": "hero",
+      "name": "Commander Vance",
+      "heroClass": "Human Fighter (Lv 5)",
+      "portrait": "⚔️",
+      "x": 200,
+      "y": 800,
+      "facing": 0,
+      "hpMax": 48,
+      "hpCurrent": 48,
+      "ac": 19
+    },
+    {
+      "id": "hero-elora-vet-spawn",
+      "type": "hero",
+      "name": "Lady Elora",
+      "heroClass": "Half-Elf Rogue (Lv 4)",
+      "portrait": "🗡️",
+      "x": 140,
+      "y": 740,
+      "facing": 0,
+      "hpMax": 33,
+      "hpCurrent": 33,
+      "ac": 16
+    },
+    {
+      "id": "hero-ignis-vet-spawn",
+      "type": "hero",
+      "name": "Master Ignis",
+      "heroClass": "High Elf Wizard (Lv 5)",
+      "portrait": "🔥",
+      "x": 140,
+      "y": 860,
+      "facing": 0,
+      "hpMax": 28,
+      "hpCurrent": 28,
+      "ac": 16
+    },
+    {
+      "id": "hero-faerun-vet-spawn",
+      "type": "hero",
+      "name": "High Priestess Faerûn",
+      "heroClass": "Human Cleric (Lv 5)",
+      "portrait": "✨",
+      "x": 90,
+      "y": 800,
+      "facing": 0,
+      "hpMax": 43,
+      "hpCurrent": 43,
+      "ac": 20
+    },
+    {
+      "id": "trap-corridor-darts",
+      "type": "trap",
+      "name": "Concealed Poison Dart Pressure Plate",
+      "x": 640,
+      "y": 800,
+      "trapType": "poison_dart",
+      "detectDC": 13,
+      "disarmDC": 14,
+      "damage": "2d6 poison + Poisoned Condition"
+    },
+    {
+      "id": "trap-vault-glyph",
+      "type": "trap",
+      "name": "Concealed Flame Glyph of Warding",
+      "x": 1040,
+      "y": 800,
+      "trapType": "fire_glyph",
+      "detectDC": 14,
+      "disarmDC": 15,
+      "damage": "5d8 fire (DEX save DC 14 half)"
+    },
+    {
+      "id": "monster-skeleton-archer-1",
+      "type": "monster",
+      "name": "Crypt Skeleton Archer",
+      "monsterId": "skeleton_archer",
+      "hpMax": 18,
+      "hpCurrent": 18,
+      "ac": 13,
+      "attackBonus": 4,
+      "damageFormula": "1d6+2",
+      "x": 420,
+      "y": 240,
+      "faction": "hostile",
+      "directive": "ranged_sniper"
+    },
+    {
+      "id": "monster-skeleton-archer-2",
+      "type": "monster",
+      "name": "Crypt Skeleton Archer",
+      "monsterId": "skeleton_archer",
+      "hpMax": 18,
+      "hpCurrent": 18,
+      "ac": 13,
+      "attackBonus": 4,
+      "damageFormula": "1d6+2",
+      "x": 780,
+      "y": 240,
+      "faction": "hostile",
+      "directive": "ranged_sniper"
+    },
+    {
+      "id": "monster-wight-lord",
+      "type": "monster",
+      "name": "Armored Wight Lord",
+      "monsterId": "wight_champion",
+      "hpMax": 65,
+      "hpCurrent": 65,
+      "ac": 16,
+      "attackBonus": 6,
+      "damageFormula": "1d10+4 + Life Drain",
+      "x": 1320,
+      "y": 800,
+      "faction": "hostile",
+      "directive": "undead_champion_drain"
+    },
+    {
+      "id": "container-grand-sarcophagus",
+      "type": "container",
+      "name": "Grand Sarcophagus of the Archmage",
+      "x": 1350,
+      "y": 720,
+      "isLocked": true,
+      "lockDC": 16,
+      "loot": [
+        "Crown of the Archmage (+1 Spell Slots)",
+        "Tome of Ancient Mysteries",
+        "420 Platinum Coins"
+      ]
+    },
+    {
+      "id": "container-reliquary-chest",
+      "type": "container",
+      "name": "Gilded Archmage Reliquary Chest",
+      "x": 1440,
+      "y": 800,
+      "isLocked": true,
+      "lockDC": 14,
+      "loot": [
+        "Scroll of Fireball",
+        "Scroll of Revivify",
+        "Potion of Greater Healing (x2)",
+        "300 Gold Coins"
+      ]
+    },
+    {
+      "id": "portal-crypt-exit",
+      "type": "portal",
+      "name": "Catacomb Iron Portcullis Exit",
+      "x": 80,
+      "y": 800,
+      "targetScene": "res://scenes/AncientCatacombs.tscn",
+      "targetSpawn": [240, 680]
+    }
+  ]
+}

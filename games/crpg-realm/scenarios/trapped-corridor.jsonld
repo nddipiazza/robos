@@ -1,0 +1,113 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:crpg:test-scenario:trapped-corridor",
+  "@type": [
+    "robos:CRPGTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Trapped corridor",
+  "dcterms:description": "A rogue leads the party down a corridor with a hidden poison-dart plate. The rogue's inputs are scripted like a player's clicks: search, step up, disarm, then advance; the Infinity AI plays everyone else.",
+  "robos:seed": 5,
+  "robos:maxRounds": 25,
+  "robos:executionMode": "human",
+  "robos:map": {
+    "@id": "urn:robos:crpg:battle-map:catacomb-corridor"
+  },
+  "robos:party": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "elora",
+      "dcterms:title": "Elora",
+      "robos:race": "half-elf",
+      "robos:characterClass": "rogue",
+      "robos:level": 3,
+      "robos:position": [
+        5,
+        15
+      ],
+      "robos:inventory": [
+        "thieves-tools"
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "vance",
+      "dcterms:title": "Lieutenant Vance",
+      "robos:race": "human",
+      "robos:characterClass": "fighter",
+      "robos:level": 3,
+      "robos:position": [
+        0,
+        15
+      ]
+    }
+  ],
+  "robos:enemies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "zombie",
+      "robos:monster": "zombie",
+      "robos:position": [
+        90,
+        15
+      ]
+    }
+  ],
+  "robos:directives": [
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:actor": "elora",
+      "robos:controller": "infinity_ai",
+      "robos:scriptedInputs": [
+        {
+          "@type": "robos:CRPGPlayerInput",
+          "robos:type": "move",
+          "robos:to": [
+            25,
+            15
+          ]
+        },
+        {
+          "@type": "robos:CRPGPlayerInput",
+          "robos:type": "search"
+        },
+        {
+          "@type": "robos:CRPGPlayerInput",
+          "robos:type": "move",
+          "robos:to": [
+            35,
+            15
+          ]
+        },
+        {
+          "@type": "robos:CRPGPlayerInput",
+          "robos:type": "disarm",
+          "robos:trap": "dart_plate"
+        }
+      ]
+    },
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:actor": "vance",
+      "robos:controller": "infinity_ai",
+      "robos:movement": "hold"
+    }
+  ],
+  "robos:traps": [
+    {
+      "@type": "robos:CRPGTrap",
+      "robos:actorId": "dart_plate",
+      "robos:trapType": "poison-dart-trap",
+      "robos:position": [
+        40,
+        15
+      ]
+    }
+  ]
+}

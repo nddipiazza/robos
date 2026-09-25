@@ -4,3 +4,4 @@
 *.tmp
 *.log
 tests/e2e/reports/
+build/

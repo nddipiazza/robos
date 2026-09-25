@@ -1,0 +1,169 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:test-wall-room",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Test: wall, cover and rubble",
+  "robos:width": 60,
+  "robos:height": 40,
+  "robos:terrain": "stone",
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "divider",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        30,
+        0
+      ],
+      "robos:to": [
+        30,
+        25
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "crate",
+      "robos:objectType": "crate",
+      "robos:shape": "rect",
+      "robos:position": [
+        10,
+        35
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "statue",
+      "robos:objectType": "statue",
+      "robos:shape": "rect",
+      "robos:position": [
+        45,
+        35
+      ],
+      "robos:size": [
+        5,
+        5
+      ],
+      "dcterms:title": "Statue"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "rubble",
+      "robos:objectType": "rubble",
+      "robos:shape": "rect",
+      "robos:position": [
+        40,
+        5
+      ],
+      "robos:size": [
+        10,
+        5
+      ]
+    }
+  ],
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 13,
+    "rows": 9,
+    "blocked": [
+      [
+        2,
+        7
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        9,
+        7
+      ]
+    ],
+    "opaque": [
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        6,
+        5
+      ]
+    ],
+    "difficult": [
+      [
+        8,
+        1
+      ],
+      [
+        9,
+        1
+      ]
+    ],
+    "cover": {
+      "half": [
+        [
+          2,
+          7
+        ]
+      ],
+      "three-quarters": [
+        [
+          9,
+          7
+        ]
+      ]
+    },
+    "objectsHash": "ad5c9b212967bf1f",
+    "image": "res://assets/blockouts/test-wall-room.png",
+    "imagePxPerFoot": 16
+  },
+  "robos:backgroundImage": "res://assets/blockouts/test-wall-room.png"
+}

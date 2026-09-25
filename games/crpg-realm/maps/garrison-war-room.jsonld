@@ -1,0 +1,315 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:garrison-war-room",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Royal Garrison Keep war room",
+  "robos:width": 110,
+  "robos:height": 70,
+  "robos:terrain": "wood",
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "war_table",
+      "robos:objectType": "table",
+      "robos:shape": "rect",
+      "robos:position": [
+        45,
+        30
+      ],
+      "robos:size": [
+        15,
+        10
+      ],
+      "dcterms:title": "War table"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_1",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        35,
+        5
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_2",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        35,
+        60
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_3",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        95,
+        5
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar_4",
+      "robos:objectType": "pillar",
+      "robos:shape": "rect",
+      "robos:position": [
+        95,
+        60
+      ],
+      "robos:size": [
+        5,
+        5
+      ]
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "weapon_rack",
+      "robos:objectType": "crate",
+      "robos:shape": "rect",
+      "robos:position": [
+        100,
+        40
+      ],
+      "robos:size": [
+        5,
+        10
+      ],
+      "dcterms:title": "Weapon rack"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "banner_rug",
+      "robos:objectType": "rug",
+      "robos:shape": "rect",
+      "robos:position": [
+        70,
+        25
+      ],
+      "robos:size": [
+        20,
+        20
+      ],
+      "dcterms:title": "Malakor's banner"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "west_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        0,
+        0
+      ],
+      "robos:to": [
+        0,
+        10
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "west_wall_2",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        0,
+        60
+      ],
+      "robos:to": [
+        0,
+        70
+      ],
+      "robos:thickness": 5
+    }
+  ],
+  "robos:mapZone": {
+    "@id": "urn:robos:crpg:zone:garrison-keep"
+  },
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 23,
+    "rows": 15,
+    "blocked": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        12
+      ],
+      [
+        0,
+        13
+      ],
+      [
+        0,
+        14
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        12
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        9,
+        7
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        10,
+        7
+      ],
+      [
+        11,
+        6
+      ],
+      [
+        11,
+        7
+      ],
+      [
+        19,
+        1
+      ],
+      [
+        19,
+        12
+      ],
+      [
+        20,
+        8
+      ],
+      [
+        20,
+        9
+      ]
+    ],
+    "opaque": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        12
+      ],
+      [
+        0,
+        13
+      ],
+      [
+        0,
+        14
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        12
+      ],
+      [
+        19,
+        1
+      ],
+      [
+        19,
+        12
+      ]
+    ],
+    "difficult": [],
+    "cover": {
+      "half": [
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          20,
+          8
+        ],
+        [
+          20,
+          9
+        ]
+      ],
+      "three-quarters": []
+    },
+    "objectsHash": "d96a8007461bd248",
+    "image": "res://assets/blockouts/garrison-war-room.png",
+    "imagePxPerFoot": 16
+  },
+  "robos:backgroundImage": "res://assets/blockouts/garrison-war-room.png"
+}

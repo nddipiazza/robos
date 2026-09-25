@@ -9,6 +9,10 @@ var _active_clients: Array[StreamPeerTCP] = []
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
+	# Browsers can't open raw TCP servers; the E2E control API only runs in desktop builds
+	if OS.has_feature("web"):
+		set_process(false)
+		return
 	_determine_port()
 	_start_server()
 
@@ -74,7 +78,7 @@ func _handle_client(client: StreamPeerTCP) -> void:
 			var cl_str = raw_request.substr(cl_idx + 15, end_cl - (cl_idx + 15)).strip_edges()
 			var content_len = cl_str.to_int()
 			var body_start = raw_request.find("\r\n\r\n")
-			var body_len = (raw_request.length() - (body_start + 4)) if body_start != -1 else 0
+			var body_len = raw_request.substr(body_start + 4).to_utf8_buffer().size() if body_start != -1 else 0
 			var extra_retries = 0
 			while body_len < content_len and extra_retries < 100:
 				client.poll()
@@ -84,7 +88,7 @@ func _handle_client(client: StreamPeerTCP) -> void:
 					if extra_data[0] == OK:
 						raw_request += extra_data[1].get_string_from_utf8()
 						body_start = raw_request.find("\r\n\r\n")
-						body_len = (raw_request.length() - (body_start + 4)) if body_start != -1 else 0
+						body_len = raw_request.substr(body_start + 4).to_utf8_buffer().size() if body_start != -1 else 0
 				else:
 					OS.delay_msec(2)
 				extra_retries += 1
@@ -211,8 +215,74 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			var evs = GameState.get_engine_events(since, tfilter)
 			_send_http_response(client, 200, {"events": evs, "count": evs.size(), "latest_seq": GameState.engine_event_seq,
 				"ie_round": GameState.ie_round, "ie_round_elapsed": GameState.ie_round_elapsed, "ie_round_seconds": GameState.IE_ROUND_SECONDS})
+		["POST", "/api/v1/scenario/load"]:
+			_send_http_response(client, 200, await _scenario_load(body_dict))
+		["POST", "/api/v1/scenario/dice"]:
+			if body_dict.has("seed"):
+				Dice.reseed(int(body_dict["seed"]))
+			if body_dict.has("force"):
+				Dice.force(body_dict["force"])
+			_send_http_response(client, 200, {"success": true, "seed": Dice.seed_value, "pending": Dice.pending()})
+		["POST", "/api/v1/scenario/act"]:
+			_send_http_response(client, 200, ScenarioEngine.act(str(body_dict.get("actor", "")), body_dict))
+		["POST", "/api/v1/scenario/input"]:
+			_send_http_response(client, 200, ScenarioEngine.test_input(str(body_dict.get("actor", "")), body_dict))
+		["POST", "/api/v1/scenario/turn"]:
+			_send_http_response(client, 200, ScenarioEngine.play_turn_api(str(body_dict.get("actor", ""))))
+		["POST", "/api/v1/scenario/run"]:
+			_send_http_response(client, 200, await _scenario_run(body_dict))
+		["POST", "/api/v1/scenario/patch"]:
+			_send_http_response(client, 200, ScenarioEngine.patch(body_dict))
+		["GET", "/api/v1/scenario/state"]:
+			_send_http_response(client, 200, ScenarioEngine.state())
+		["POST", "/api/v1/scenario/events"]:
+			var since = int(body_dict.get("since", 0))
+			var tfilter = str(body_dict.get("type", ""))
+			var evs = ScenarioEngine.events.filter(func(e): return int(e["seq"]) > since and (tfilter == "" or e["type"] == tfilter))
+			_send_http_response(client, 200, {"events": evs, "count": evs.size()})
+		["GET", "/api/v1/scenario/audit"]:
+			_send_http_response(client, 200, {"violations": ScenarioEngine.violations, "count": ScenarioEngine.violations.size(), "events": ScenarioEngine.events.size(), "dice_rolls": Dice.log.size()})
+		["GET", "/api/v1/scenario/dice_log"]:
+			_send_http_response(client, 200, {"log": Dice.log, "seed": Dice.seed_value})
+		["GET", "/api/v1/scenario/coverage"]:
+			_send_http_response(client, 200, ScenarioEngine.coverage_report())
+		["POST", "/api/v1/scenario/coverage/reset"]:
+			ScenarioEngine.reset_coverage()
+			_send_http_response(client, 200, {"success": true})
+		["GET", "/api/v1/scenario/content"]:
+			_send_http_response(client, 200, ScenarioEngine.content_ids())
+		["POST", "/api/v1/scenario/fuzz"]:
+			_send_http_response(client, 200, ScenarioEngine.fuzz(int(body_dict.get("seed", 1)), int(body_dict.get("count", 10)), int(body_dict.get("max_rounds", 20))))
+		["POST", "/api/v1/demo/run_all"]:
+			# Runs every engine-layer scenario through the in-game runner (the demo mode's step port)
+			var runner = preload("res://scripts/demo/DemoRunner.gd").new()
+			add_child(runner)
+			var results: Array = await runner.run_all()
+			runner.queue_free()
+			var counts := {}
+			for r in results:
+				counts[r["status"]] = int(counts.get(r["status"], 0)) + 1
+			_send_http_response(client, 200, {"results": results, "counts": counts})
 		["GET", "/ui/glyphs"], ["GET", "/api/v1/ui/glyphs"]:
 			_send_http_response(client, 200, _scan_ui_glyphs())
+		["GET", "/api/v1/screenshot"], ["POST", "/api/v1/screenshot"]:
+			var img: Image = get_viewport().get_texture().get_image()
+			var shot_path = str(body_dict.get("path", "/tmp/godot_screenshot.png")) if typeof(body_dict) == TYPE_DICTIONARY and body_dict.has("path") else "/tmp/godot_screenshot.png"
+			var err = img.save_png(shot_path)
+			_send_http_response(client, 200, {"success": err == OK, "path": shot_path})
+		["POST", "/api/v1/demo/start"]:
+			var m = int(body_dict.get("mode", 0))
+			if has_node("/root/DemoController"):
+				get_node("/root/DemoController").start_demo(m)
+			_send_http_response(client, 200, {"success": true, "mode": m})
+		["POST", "/api/v1/demo/toggle_mode"]:
+			if has_node("/root/DemoController"):
+				get_node("/root/DemoController")._toggle_mode()
+			_send_http_response(client, 200, {"success": true})
+		["POST", "/api/v1/demo/exit"]:
+			if has_node("/root/DemoController"):
+				get_node("/root/DemoController")._exit()
+			_send_http_response(client, 200, {"success": true})
 		["POST", "/qa/proof"], ["POST", "/api/v1/qa/proof"]:
 			if has_node("/root/QAOverlay"):
 				get_node("/root/QAOverlay").add_proof(str(body_dict.get("check", "")), str(body_dict.get("evidence", "")), bool(body_dict.get("passed", true)))
@@ -1437,6 +1507,24 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				return {"success": true, "scroll": al_node.get_scroll_info()}
 			return {"success": false, "error": "ActionLog not found"}
 
+		"log_message", "add_log_message":
+			var cat = str(args.get("category", "combat"))
+			var txt = str(args.get("text", args.get("message", "")))
+			GameState.log_message(cat, txt)
+			var al_node: ActionLog = cur_scene.find_child("ActionLog", true, false) if cur_scene else null
+			if al_node:
+				al_node.append_line(txt)
+			return {"success": true, "message": txt}
+
+		"add_kill":
+			GameState.add_kill()
+			return {"success": true, "kills": GameState.kills}
+
+		"add_inventory_item":
+			var itm = str(args.get("item", args.get("item_id", "")))
+			GameState.add_item(itm)
+			return {"success": true, "item": itm}
+
 		"set_fog_of_war":
 			var en = bool(args.get("enabled", true))
 			GameState.settings["fog_of_war"] = en
@@ -2486,3 +2574,40 @@ func _send_http_response(client: StreamPeerTCP, status_code: int, data: Variant)
 	client.put_data(headers.to_utf8_buffer())
 	client.put_data(body_bytes)
 	client.poll()
+
+
+# ── Scenario engine (Infinity AI) ─────────────────────────────────────────────
+# mode "human": show the fight in the ScenarioArena scene (video + BDD overlays).
+# mode "backend": engine only, no scene change, fastest possible.
+func _scenario_load(body: Dictionary) -> Dictionary:
+	var res: Dictionary
+	if body.has("file"):
+		res = ScenarioEngine.load_scenario_file(str(body["file"]))
+	else:
+		res = ScenarioEngine.load_scenario(body.get("scenario", {}))
+	var mode = str(body.get("mode", "human"))
+	res["mode"] = mode
+	if res.get("success", false) and mode == "human":
+		var arena = "res://scenes/ScenarioArena.tscn"
+		if get_tree().current_scene == null or get_tree().current_scene.scene_file_path != arena:
+			get_tree().change_scene_to_file(arena)
+			await get_tree().process_frame
+			await get_tree().process_frame
+		elif get_tree().current_scene.has_method("rebuild"):
+			get_tree().current_scene.rebuild()
+	return res
+
+func _scenario_run(body: Dictionary) -> Dictionary:
+	var pace = float(body.get("pace", 0.0))
+	var rounds = int(body.get("max_rounds", -1))
+	if pace <= 0.0:
+		return ScenarioEngine.run(rounds)
+	if rounds > 0:
+		ScenarioEngine.max_rounds = rounds if ScenarioEngine.round_num == 0 else min(ScenarioEngine.max_rounds, ScenarioEngine.round_num + rounds)
+	var guard = 0
+	while ScenarioEngine.status == "active" and guard < 5000:
+		guard += 1
+		if ScenarioEngine.step_turn() == "" and ScenarioEngine.status == "active":
+			break
+		await get_tree().create_timer(pace).timeout
+	return ScenarioEngine.summary()

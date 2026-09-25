@@ -1,0 +1,202 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:scene:candlekeep-siege",
+  "@type": "robos:CRPGScene",
+  "dcterms:title": "Candlekeep Citadel Siege (Outer Ward)",
+  "dcterms:description": "A massive assault on the exterior grounds and library sanctum of Candlekeep monastery by an invading Iron Throne mercenary warband.",
+  "robos:map": "urn:robos:crpg:battle-map:candlekeep",
+  "robos:campaign": "urn:robos:crpg:campaign:candlekeep-prologue",
+  "robos:dimensions": {
+    "width": 5120,
+    "height": 3840,
+    "feetWidth": 320,
+    "feetHeight": 240
+  },
+  "robos:atmosphere": {
+    "robos:lighting": "Stormy Overcast",
+    "robos:ambientAudio": "siege_wardrums.ogg",
+    "robos:fogOfWar": false
+  },
+  "robos:entities": [
+    {
+      "id": "hero-vance-siege",
+      "type": "hero",
+      "name": "Commander Vance",
+      "heroClass": "Human Fighter (Lv 5)",
+      "portrait": "⚔️",
+      "x": 1820,
+      "y": 1400,
+      "facing": 225,
+      "hpMax": 48,
+      "hpCurrent": 48,
+      "ac": 19
+    },
+    {
+      "id": "hero-elora-siege",
+      "type": "hero",
+      "name": "Lady Elora",
+      "heroClass": "Elf Rogue (Lv 4)",
+      "portrait": "🏹",
+      "x": 1860,
+      "y": 1360,
+      "facing": 225,
+      "hpMax": 33,
+      "hpCurrent": 33,
+      "ac": 16
+    },
+    {
+      "id": "hero-ignis-siege",
+      "type": "hero",
+      "name": "Master Ignis",
+      "heroClass": "High Elf Wizard (Lv 5)",
+      "portrait": "🔥",
+      "x": 1880,
+      "y": 1440,
+      "facing": 225,
+      "hpMax": 28,
+      "hpCurrent": 28,
+      "ac": 16
+    },
+    {
+      "id": "hero-faerun-siege",
+      "type": "hero",
+      "name": "High Priestess Faerûn",
+      "heroClass": "Human Cleric (Lv 5)",
+      "portrait": "✨",
+      "x": 1780,
+      "y": 1440,
+      "facing": 225,
+      "hpMax": 43,
+      "hpCurrent": 43,
+      "ac": 20
+    },
+    {
+      "id": "npc-gorion-sanctum",
+      "type": "npc",
+      "name": "Sage Gorion",
+      "role": "Foster Father & Archmage",
+      "portrait": "🧙‍♂️",
+      "x": 1940,
+      "y": 1350,
+      "dialogue": "Gorion: 'Stand firm, Vance! Do not let them breach the Great Library!'"
+    },
+    {
+      "id": "npc-winthrop-barricade",
+      "type": "npc",
+      "name": "Winthrop",
+      "role": "Innkeeper & Militia Captain",
+      "portrait": "🍺",
+      "x": 1150,
+      "y": 680,
+      "dialogue": "Winthrop: 'The inn is barred tight, my friend! Hold the courtyard path!'"
+    },
+    {
+      "id": "monster-mercenary-captain",
+      "type": "monster",
+      "name": "Iron Throne Commander",
+      "monsterId": "mercenary_captain",
+      "hpMax": 68,
+      "hpCurrent": 68,
+      "ac": 17,
+      "attackBonus": 7,
+      "damageFormula": "1d10+4 + Battle Cry",
+      "x": 1200,
+      "y": 2100,
+      "faction": "hostile",
+      "directive": "command_assault_charge"
+    },
+    {
+      "id": "monster-mercenary-grunt-1",
+      "type": "monster",
+      "name": "Iron Throne Mercenary",
+      "monsterId": "mercenary_grunt",
+      "hpMax": 22,
+      "hpCurrent": 22,
+      "ac": 15,
+      "attackBonus": 5,
+      "damageFormula": "1d8+3",
+      "x": 1320,
+      "y": 1900,
+      "faction": "hostile",
+      "directive": "swarm_heroes"
+    },
+    {
+      "id": "monster-mercenary-grunt-2",
+      "type": "monster",
+      "name": "Iron Throne Mercenary",
+      "monsterId": "mercenary_grunt",
+      "hpMax": 22,
+      "hpCurrent": 22,
+      "ac": 15,
+      "attackBonus": 5,
+      "damageFormula": "1d8+3",
+      "x": 1400,
+      "y": 1950,
+      "faction": "hostile",
+      "directive": "swarm_heroes"
+    },
+    {
+      "id": "monster-mercenary-sniper-1",
+      "type": "monster",
+      "name": "Mercenary Heavy Crossbowman",
+      "monsterId": "mercenary_sniper",
+      "hpMax": 16,
+      "hpCurrent": 16,
+      "ac": 14,
+      "attackBonus": 6,
+      "damageFormula": "1d10+3",
+      "x": 1050,
+      "y": 1700,
+      "faction": "hostile",
+      "directive": "ranged_suppression"
+    },
+    {
+      "id": "monster-mercenary-sniper-2",
+      "type": "monster",
+      "name": "Mercenary Heavy Crossbowman",
+      "monsterId": "mercenary_sniper",
+      "hpMax": 16,
+      "hpCurrent": 16,
+      "ac": 14,
+      "attackBonus": 6,
+      "damageFormula": "1d10+3",
+      "x": 1100,
+      "y": 1800,
+      "faction": "hostile",
+      "directive": "ranged_suppression"
+    },
+    {
+      "id": "monster-ogrillon-brute-1",
+      "type": "monster",
+      "name": "Armored Ogrillon Shocktrooper",
+      "monsterId": "ogrillon_brute",
+      "hpMax": 42,
+      "hpCurrent": 42,
+      "ac": 14,
+      "attackBonus": 6,
+      "damageFormula": "2d6+4",
+      "x": 1550,
+      "y": 1800,
+      "faction": "hostile",
+      "directive": "ram_gate"
+    },
+    {
+      "id": "container-citadel-armory",
+      "type": "container",
+      "name": "Candlekeep Emergency Armory Cache",
+      "x": 1980,
+      "y": 1420,
+      "isLocked": false,
+      "loot": [
+        "Potion of Superior Healing (x3)",
+        "Scroll of Fireball",
+        "Scroll of Lightning Bolt",
+        "500 Gold Coins"
+      ]
+    }
+  ]
+}

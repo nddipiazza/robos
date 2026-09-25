@@ -1,0 +1,101 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:crpg:test-scenario:crypt-skeleton-patrol",
+  "@type": [
+    "robos:CRPGTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Crypt skeleton patrol",
+  "dcterms:description": "A level-3 party meets a patrol of skeleton archers and swordsmen in the catacomb antechamber. The Infinity AI plays both sides: the party focuses the weakest skeleton and the cleric heals anyone below 60% HP.",
+  "robos:seed": 42,
+  "robos:maxRounds": 25,
+  "robos:executionMode": "human",
+  "robos:map": {
+    "@id": "urn:robos:crpg:battle-map:catacomb-antechamber"
+  },
+  "robos:party": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "vance",
+      "dcterms:title": "Lieutenant Vance",
+      "robos:race": "human",
+      "robos:characterClass": "fighter",
+      "robos:level": 3,
+      "robos:position": [
+        15,
+        30
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "thrumbar",
+      "dcterms:title": "Thrumbar",
+      "robos:race": "dwarf",
+      "robos:characterClass": "cleric",
+      "robos:level": 3,
+      "robos:position": [
+        5,
+        45
+      ],
+      "robos:inventory": [
+        "potion-healing"
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "ignis",
+      "dcterms:title": "Ignis the Evoker",
+      "robos:race": "elf",
+      "robos:characterClass": "wizard",
+      "robos:level": 3,
+      "robos:position": [
+        0,
+        20
+      ]
+    },
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "elora",
+      "dcterms:title": "Elora",
+      "robos:race": "half-elf",
+      "robos:characterClass": "rogue",
+      "robos:level": 3,
+      "robos:position": [
+        15,
+        55
+      ]
+    }
+  ],
+  "robos:enemies": [
+    {
+      "@type": "robos:CRPGCombatant",
+      "robos:actorId": "skeleton",
+      "robos:monster": "skeleton",
+      "robos:position": [
+        75,
+        20
+      ],
+      "robos:count": 5
+    }
+  ],
+  "robos:directives": [
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:side": "party",
+      "robos:controller": "infinity_ai",
+      "robos:targetPriority": "lowest_hp"
+    },
+    {
+      "@type": "robos:InfinityAIDirective",
+      "robos:actor": "thrumbar",
+      "robos:controller": "infinity_ai",
+      "robos:healThreshold": 0.6
+    }
+  ]
+}

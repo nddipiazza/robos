@@ -1,0 +1,145 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:test-doors",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Test: open and closed doors",
+  "robos:width": 40,
+  "robos:height": 30,
+  "robos:terrain": "wood",
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "hall_wall",
+      "robos:objectType": "wall",
+      "robos:shape": "line",
+      "robos:position": [
+        0,
+        15
+      ],
+      "robos:to": [
+        40,
+        15
+      ],
+      "robos:thickness": 5
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "closed_door",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        10,
+        15
+      ],
+      "robos:size": [
+        5,
+        5
+      ],
+      "robos:open": false
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "open_door",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        30,
+        15
+      ],
+      "robos:size": [
+        5,
+        5
+      ],
+      "robos:open": true
+    }
+  ],
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 9,
+    "rows": 7,
+    "blocked": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        8,
+        3
+      ]
+    ],
+    "opaque": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        8,
+        3
+      ]
+    ],
+    "difficult": [],
+    "cover": {
+      "half": [],
+      "three-quarters": []
+    },
+    "objectsHash": "8896f91f80007a84",
+    "image": "res://assets/blockouts/test-doors.png",
+    "imagePxPerFoot": 16
+  },
+  "robos:backgroundImage": "res://assets/blockouts/test-doors.png"
+}

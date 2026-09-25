@@ -94,6 +94,20 @@ def main() -> int:
             target_dir = FEATURES_DIR / "spells"
             suite_name = "Spells & Tactical Magic Arsenal"
             suite_selected = True
+        elif arg in ("--scenarios", "--scenario", "--adventures", "--real-scenarios"):
+            target_dir = FEATURES_DIR / "scenarios"
+            suite_name = "Real cRPG Scenario Adventures"
+            suite_selected = True
+        elif arg in ("--engine",):
+            target_dir = FEATURES_DIR / "engine"
+            suite_name = "Infinity AI Scenario Engine"
+            suite_selected = True
+        elif arg in ("--backend", "--fast"):
+            # Headless, no video, no overlays or pauses: as fast as the rules resolve
+            os.environ["CRPG_MODE"] = "backend"
+        elif arg in ("--human", "--prove"):
+            # Video, BDD overlays and pauses: prove it to a human
+            os.environ["CRPG_MODE"] = "human"
         elif arg in ("--all", "--both"):
             target_dir = FEATURES_DIR
             suite_name = "All Suites (Normal + Full Playthroughs + Spells)"
@@ -110,6 +124,7 @@ def main() -> int:
     print("=================================================================")
     print(f"   RobOS cRPG Cucumber E2E Verification (Xvfb)                  ")
     print(f"   Suite: {suite_name}")
+    print(f"   Mode:  {os.environ.get('CRPG_MODE', 'human')} (--backend for headless speed, --human for video proof)")
     if not suite_selected and not has_custom_path:
         print("   (Tip: Use --playthrough for full playthroughs, --all for both)")
     print("=================================================================")

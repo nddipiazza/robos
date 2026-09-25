@@ -1,5 +1,7 @@
 extends Control
 
+static var _cli_demo_checked := false
+
 var name_input: LineEdit
 var desc_label: Label
 var embark_btn: Button
@@ -104,6 +106,70 @@ func _ready() -> void:
 	select_race("human")
 	select_class("fighter")
 	update_stat_displays()
+
+	# Demo mode buttons (top-right)
+	var demo_arena_btn = Button.new()
+	demo_arena_btn.text = "🎭 Demo Arena"
+	demo_arena_btn.anchor_left = 1.0
+	demo_arena_btn.anchor_right = 1.0
+	demo_arena_btn.anchor_top = 0.0
+	demo_arena_btn.anchor_bottom = 0.0
+	demo_arena_btn.offset_left = -380.0
+	demo_arena_btn.offset_top = 16.0
+	demo_arena_btn.offset_right = -205.0
+	demo_arena_btn.offset_bottom = 54.0
+	demo_arena_btn.focus_mode = Control.FOCUS_NONE
+	demo_arena_btn.add_theme_font_size_override("font_size", 14)
+	demo_arena_btn.add_theme_color_override("font_color", Color(0.4, 0.85, 1.0))
+	demo_arena_btn.tooltip_text = "Watch the in-engine scenario arena demo (engine tests)"
+	demo_arena_btn.pressed.connect(func(): _start_demo(0))
+	add_child(demo_arena_btn)
+
+	var demo_real_btn = Button.new()
+	demo_real_btn.text = "🎮 Real cRPG Demo"
+	demo_real_btn.anchor_left = 1.0
+	demo_real_btn.anchor_right = 1.0
+	demo_real_btn.anchor_top = 0.0
+	demo_real_btn.anchor_bottom = 0.0
+	demo_real_btn.offset_left = -195.0
+	demo_real_btn.offset_top = 16.0
+	demo_real_btn.offset_right = -20.0
+	demo_real_btn.offset_bottom = 54.0
+	demo_real_btn.focus_mode = Control.FOCUS_NONE
+	demo_real_btn.add_theme_font_size_override("font_size", 14)
+	demo_real_btn.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5))
+	demo_real_btn.tooltip_text = "Watch live autonomous playthroughs in the real cRPG app"
+	demo_real_btn.pressed.connect(func(): _start_demo(1))
+	add_child(demo_real_btn)
+
+	# Auto-start demo if requested via CLI or URL query param (only on first boot)
+	var auto_demo := -1
+	if _cli_demo_checked:
+		auto_demo = -1
+	else:
+		_cli_demo_checked = true
+		if OS.has_feature("web"):
+			var web_real = JavaScriptBridge.eval("new URLSearchParams(location.search).has('real')", true)
+			var web_demo = JavaScriptBridge.eval("new URLSearchParams(location.search).has('demo')", true)
+			if web_real:
+				auto_demo = 1
+			elif web_demo:
+				auto_demo = 0
+		else:
+			var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+			if "--real-demo" in cmd_args or "--demo=real" in cmd_args:
+				auto_demo = 1
+			elif "--demo" in cmd_args:
+				auto_demo = 0
+
+	if auto_demo >= 0:
+		_start_demo.call_deferred(auto_demo)
+
+func _start_demo(target_mode: int = 0) -> void:
+	if has_node("/root/DemoController"):
+		get_node("/root/DemoController").start_demo(target_mode)
+	else:
+		get_tree().change_scene_to_file("res://scenes/DemoMode.tscn")
 
 func _pascal_case(s: String) -> String:
 	var parts = s.replace("-", "_").split("_")
