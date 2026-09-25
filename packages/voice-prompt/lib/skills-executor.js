@@ -58,7 +58,7 @@ class SkillsExecutor {
     const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:robos|rob\s+os|row\s+bose|there|assistant))?[!.]*$/i.test(query) ||
                        /^(?:robos|rob\s+os|row\s+bose)[!.]*$/i.test(query);
     if (isGreeting) {
-      return await this.executeGreeting();
+      return await this.executeGreeting(options);
     }
 
     // 1. Compound Command: Open app AND/THEN add task
@@ -638,18 +638,62 @@ class SkillsExecutor {
   }
 
   /**
+   * Check if speech phrase contains a clear actionable command intent
+   */
+  hasActionableIntent(queryText) {
+    const query = (queryText || '').trim();
+    if (!query) return false;
+    // Standalone greetings or filler words are not actionable tasks
+    if (/^(?:hi|hello|hey|howdy|what'?s\s+up|ok|okay|um|uh)[!.]*$/i.test(query)) return false;
+
+    // Compound command: open app then/and add task
+    if (/^(?:open|launch|start|show)\s+.+?\s+(?:then|and)\s+(?:add|create|new)\s+(?:a\s+)?task\s*[:|-]?\s*\S+/i.test(query)) return true;
+
+    // Incomplete compound command in flight (e.g. "open task explorer and add a task" without title yet) -> wait
+    if (/^(?:open|launch|start|show)\s+.+?\s+(?:then|and)\s+(?:add|create|new)\s+(?:a\s+)?task\s*$/i.test(query)) return false;
+
+    // Explicit app open
+    if (/^(?:open|launch|start|switch\s+to|show)\s+(?:the\s+)?(?:robos\s+)?[a-z0-9\s\-]+(?:\s+app|\s+window)?$/i.test(query)) return true;
+
+    // Standalone known app name
+    if (/^(?:robos\s+)?(?:task\s+explorer|task\s+planner|task\s+board|git\s+projects|dev\s+central|kube\s+studio|rest\s+client|knowledge\s+graph|kgraph|elearning|issue\s+manager|search\s+index|software\s+center)[.!?]*$/i.test(query)) return true;
+
+    // Add task (with title)
+    if (/^(?:add|create|new|insert)\s+(?:a\s+)?(?:task|work\s+item|ticket|issue)(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)\S+/i.test(query)) return true;
+
+    // List tasks
+    if (/(?:list|show|view)\s+tasks?/i.test(query) || /what\s+are\s+the\s+tasks/i.test(query) || /(?:view|show)\s+task\s+plan/i.test(query)) return true;
+
+    // Knowledge Graph
+    if (/(?:validate|search|lookup)\s+(?:the\s+)?(?:knowledge\s+graph|kgraph)/i.test(query)) return true;
+    if (/(?:impact\s+analysis|blast\s+radius)\s+(?:for\s+)?\S+/i.test(query)) return true;
+    if (/(?:visualize|draw\s+diagram|graph\s+for)\s+(?:the\s+)?\S+/i.test(query)) return true;
+
+    // System commands
+    if (/(?:restart\s+(?:taskbar|dock)|error\s+logs?|git\s+status|active\s+(?:app|window)|system\s+status)/i.test(query)) return true;
+    if (/(?:change|set|switch)\s+voice\s+to\s+\S+/i.test(query)) return true;
+    if (/^(?:stop\s+speaking|be\s+quiet|silence|shut\s+up|stop)[!.]*$/i.test(query)) return true;
+
+    return false;
+  }
+
+  /**
    * Skill: Casual Greeting
    */
-  async executeGreeting() {
-    const response = 'Hi!';
+  async executeGreeting(options = {}) {
+    let greeting = 'Hi!';
+    try {
+      const { getRandomGreeting } = require('./greetings');
+      greeting = getRandomGreeting(options.wakeGreetings || options.greetings);
+    } catch {}
     const actionDone = 'Responded to greeting';
 
     return {
       ok: true,
       skill: 'greeting',
       actionDone,
-      response,
-      data: { greeting: response }
+      response: greeting,
+      data: { greeting }
     };
   }
 

@@ -155,7 +155,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(states.includes('IDLE'));
     });
 
-    it('responds casually with "Hi!" when user says "hello robos" and nothing else', async () => {
+    it('responds casually with one of 50+ greetings and emits show-hud when user says "hello robos"', async () => {
       const tts = new TTSEngine();
       let spokenText = null;
       tts.speak = async (text) => {
@@ -166,6 +166,17 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       const detector = new WakeWordDetector();
       const assistant = new DesktopAssistant({ ttsEngine: tts, wakeDetector: detector, autoSpeak: true });
 
+      let hudShown = false;
+      let hudGreeting = null;
+      assistant.on('show-hud', (evt) => {
+        hudShown = true;
+        hudGreeting = evt.greeting;
+      });
+
+      // Assert at least 50 greeting options exist
+      const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
+      assert.ok(DEFAULT_GREETINGS.length >= 50, `Must have at least 50 greeting varieties, found ${DEFAULT_GREETINGS.length}`);
+
       // User says "hello robos" on the stream and nothing else
       const wakeRes = detector.processText('hello robos');
       assert.strictEqual(wakeRes.matched, true);
@@ -174,11 +185,58 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       // Allow microtask ticks for handleWakeWord
       await new Promise(r => setTimeout(r, 50));
 
-      assert.strictEqual(spokenText, 'Hi!', 'Assistant must respond "Hi!" when greeted with just wake word');
+      assert.ok(spokenText, 'Assistant must speak greeting aloud');
+      assert.ok(DEFAULT_GREETINGS.includes(spokenText), `Spoken greeting "${spokenText}" must be from DEFAULT_GREETINGS list`);
+      assert.strictEqual(hudShown, true, 'Assistant must emit show-hud event');
+      assert.strictEqual(hudGreeting, spokenText, 'HUD greeting must match spoken greeting');
       assert.strictEqual(assistant.getState(), 'LISTENING');
     });
 
-    it('responds with "Hi!" when direct query is a greeting ("hello robos", "hi", "row bose")', async () => {
+    it('respects custom user-configured greeting override', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => {
+        spokenText = text;
+        return { ok: true, text };
+      };
+
+      const detector = new WakeWordDetector();
+      const assistant = new DesktopAssistant({
+        ttsEngine: tts,
+        wakeDetector: detector,
+        autoSpeak: true,
+        wakeGreeting: 'Ready to build.'
+      });
+
+      detector.processText('hello robos');
+      await new Promise(r => setTimeout(r, 50));
+
+      assert.strictEqual(spokenText, 'Ready to build.');
+      assert.strictEqual(assistant.getState(), 'LISTENING');
+    });
+
+    it('responds with casual greeting when direct query is a greeting ("hello robos", "hi", "row bose")', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => {
+        spokenText = text;
+        return { ok: true, text };
+      };
+
+      const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
+      const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
+
+      const res1 = await assistant.processQuery('hello robos');
+      assert.ok(DEFAULT_GREETINGS.includes(res1.turn.response), 'Should respond with casual greeting');
+
+      const res2 = await assistant.processQuery('hi');
+      assert.ok(DEFAULT_GREETINGS.includes(res2.turn.response), 'Should respond with casual greeting');
+
+      const res3 = await assistant.processQuery('row bose');
+      assert.ok(DEFAULT_GREETINGS.includes(res3.turn.response), 'Should respond with casual greeting');
+    });
+
+    it('continuously analyzes speech stream and autonomously executes matched action', async () => {
       const tts = new TTSEngine();
       let spokenText = null;
       tts.speak = async (text) => {
@@ -187,18 +245,19 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       };
 
       const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
+      assistant.setState('LISTENING');
 
-      const res1 = await assistant.processQuery('hello robos');
-      assert.strictEqual(res1.turn.response, 'Hi!');
-      assert.strictEqual(spokenText, 'Hi!');
+      let actionDoneData = null;
+      assistant.on('action-done', (evt) => {
+        actionDoneData = evt;
+      });
 
-      const res2 = await assistant.processQuery('hi');
-      assert.strictEqual(res2.turn.response, 'Hi!');
-      assert.strictEqual(spokenText, 'Hi!');
+      // Stream in words: "open task explorer"
+      await assistant.handleStreamText({ text: 'open task explorer' });
 
-      const res3 = await assistant.processQuery('row bose');
-      assert.strictEqual(res3.turn.response, 'Hi!');
-      assert.strictEqual(spokenText, 'Hi!');
+      assert.ok(actionDoneData, 'Should emit action-done when actionable command is heard on stream');
+      assert.ok(actionDoneData.actionDone.includes('Task Explorer'), 'Should execute open task explorer action');
+      assert.ok(spokenText && spokenText.includes('Task Explorer'), 'Should voice back action response');
     });
   });
 
@@ -221,4 +280,54 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(res.turn.response);
     });
   });
+
+  describe('5. RobOS Voice Assistant HUD Overlay & Intent Engine', () => {
+    const { getHudBounds } = require('../../../voice-prompt/main');
+    const { SkillsExecutor } = require('../../../voice-prompt/lib/skills-executor');
+
+    it('calculates screen positions for all 4 HUD dock corners', () => {
+      const br = getHudBounds('bottom-right', 400, 200);
+      assert.ok(br.x > 0 && br.y > 0);
+      assert.strictEqual(br.width, 400);
+      assert.strictEqual(br.height, 200);
+
+      const bl = getHudBounds('bottom-left', 400, 200);
+      assert.strictEqual(bl.x, 24);
+      assert.ok(bl.y > 0);
+
+      const tr = getHudBounds('top-right', 400, 200);
+      assert.ok(tr.x > 0);
+      assert.strictEqual(tr.y, 24);
+
+      const tl = getHudBounds('top-left', 400, 200);
+      assert.strictEqual(tl.x, 24);
+      assert.strictEqual(tl.y, 24);
+    });
+
+    it('detects actionable commands in continuous stream and rejects fillers', () => {
+      const executor = new SkillsExecutor();
+
+      assert.strictEqual(executor.hasActionableIntent('open task explorer'), true);
+      assert.strictEqual(executor.hasActionableIntent('open task explorer and add a task: implement auth'), true);
+      assert.strictEqual(executor.hasActionableIntent('add a task to verify payment gateway'), true);
+      assert.strictEqual(executor.hasActionableIntent('what is the git status'), true);
+      assert.strictEqual(executor.hasActionableIntent('validate knowledge graph'), true);
+      assert.strictEqual(executor.hasActionableIntent('restart taskbar'), true);
+
+      // Rejects non-actionable speech
+      assert.strictEqual(executor.hasActionableIntent('hello robos'), false);
+      assert.strictEqual(executor.hasActionableIntent('hi'), false);
+      assert.strictEqual(executor.hasActionableIntent('um yeah okay'), false);
+      assert.strictEqual(executor.hasActionableIntent(''), false);
+    });
+
+    it('verifies promptStore defaults contain HUD configuration and 50+ greetings', () => {
+      const prefs = promptStore.loadPrefs();
+      assert.strictEqual(prefs.hudPosition, 'bottom-right');
+      assert.strictEqual(prefs.showHudOnWake, true);
+      assert.ok(Array.isArray(prefs.wakeGreetings));
+      assert.ok(prefs.wakeGreetings.length >= 50);
+    });
+  });
 });
+

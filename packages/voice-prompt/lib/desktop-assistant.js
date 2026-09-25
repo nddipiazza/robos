@@ -4,6 +4,7 @@ const EventEmitter = require('events');
 const path = require('path');
 const contextProvider = require('./context-provider');
 const { SkillsExecutor } = require('./skills-executor');
+const { getRandomGreeting } = require('./greetings');
 
 class DesktopAssistant extends EventEmitter {
   constructor(options = {}) {
@@ -11,14 +12,13 @@ class DesktopAssistant extends EventEmitter {
     this.ttsEngine = options.ttsEngine;
     this.wakeDetector = options.wakeDetector;
     this.skillsExecutor = options.skillsExecutor || new SkillsExecutor();
+    this.promptStore = options.promptStore || require('./prompt-store');
     this.state = 'IDLE'; // 'IDLE' | 'WAKE_DETECTED' | 'LISTENING' | 'PROCESSING' | 'SPEAKING'
     this.history = [];
     this.listeningTimer = null;
     this.accumulatedInput = '';
     this.autoSpeak = options.autoSpeak !== false;
-    this.wakeGreeting = options.wakeGreeting ||
-      (this.ttsEngine && typeof this.ttsEngine.getPrefs === 'function' && this.ttsEngine.getPrefs().wakeWordGreeting) ||
-      "Hi!";
+    this.wakeGreeting = options.wakeGreeting || null;
 
     if (this.wakeDetector) {
       this.wakeDetector.on('wake-word', async (evt) => {
@@ -51,36 +51,45 @@ class DesktopAssistant extends EventEmitter {
    */
   async handleWakeWord(evt = {}) {
     const query = (evt.query || '').trim();
-    this.setState('WAKE_DETECTED', { trigger: evt.trigger, query });
+    const prefs = this.promptStore ? this.promptStore.loadPrefs() : {};
+    const greeting = this.wakeGreeting ||
+      getRandomGreeting(prefs.wakeGreetings || (this.ttsEngine && typeof this.ttsEngine.getPrefs === 'function' && this.ttsEngine.getPrefs().wakeGreetings));
+
+    this.setState('WAKE_DETECTED', { trigger: evt.trigger, query, greeting });
 
     // Check if query is actually empty or just a redundant greeting
     const isPureGreeting = !query || /^(?:hi|hello|hey|howdy|what'?s\s+up)[!.]*$/i.test(query);
+
+    // Emit show-hud to bring up the floating assistant HUD on top
+    this.emit('show-hud', { greeting, trigger: evt.trigger });
 
     if (!isPureGreeting) {
       // User said wake-word AND query in one breath: "hello robos, what is the git status?"
       await this.processQuery(query);
     } else {
       // User just said "hello robos" and nothing else
-      this.setState('LISTENING');
-      this.emit('wake-greeting', { greeting: this.wakeGreeting, trigger: evt.trigger });
+      this.setState('LISTENING', { greeting });
+      this.emit('wake-greeting', { greeting, trigger: evt.trigger });
       if (this.autoSpeak && this.ttsEngine) {
         try {
-          await this.ttsEngine.speak(this.wakeGreeting);
+          await this.ttsEngine.speak(greeting);
         } catch {}
       }
 
-      // Start listening window for the subsequent user request (up to 8s)
+      // Start listening window for the subsequent user request (up to 12s)
       this.accumulatedInput = '';
       if (this.listeningTimer) clearTimeout(this.listeningTimer);
       this.listeningTimer = setTimeout(async () => {
         if (this.state === 'LISTENING') {
           if (this.accumulatedInput.trim()) {
-            await this.processQuery(this.accumulatedInput.trim());
+            const q = this.accumulatedInput.trim();
+            this.accumulatedInput = '';
+            await this.processQuery(q);
           } else {
             this.setState('IDLE');
           }
         }
-      }, 8000);
+      }, 12000);
     }
   }
 
@@ -91,10 +100,37 @@ class DesktopAssistant extends EventEmitter {
     const text = (chunk.text || '').trim();
     if (!text) return;
 
-    // If currently listening after wake word, accumulate words
+    this.emit('stream-line', { text, isFinal: chunk.isFinal, state: this.state });
+
+    // If currently listening after wake word, accumulate words and evaluate actions
     if (this.state === 'LISTENING') {
       this.accumulatedInput = (this.accumulatedInput + ' ' + text).trim();
-      this.emit('stream-line', { text: this.accumulatedInput, isFinal: chunk.isFinal });
+      this.emit('stream-line', { text: this.accumulatedInput, isFinal: chunk.isFinal, state: this.state });
+
+      // Extend listening timer while user is actively speaking
+      if (this.listeningTimer) clearTimeout(this.listeningTimer);
+      this.listeningTimer = setTimeout(async () => {
+        if (this.state === 'LISTENING') {
+          if (this.accumulatedInput.trim()) {
+            const q = this.accumulatedInput.trim();
+            this.accumulatedInput = '';
+            await this.processQuery(q);
+          } else {
+            this.setState('IDLE');
+          }
+        }
+      }, 6000);
+
+      // Check if current accumulated input contains a clear actionable command intent
+      if (this.skillsExecutor && typeof this.skillsExecutor.hasActionableIntent === 'function') {
+        if (this.skillsExecutor.hasActionableIntent(this.accumulatedInput)) {
+          if (this.listeningTimer) clearTimeout(this.listeningTimer);
+          const actionQuery = this.accumulatedInput;
+          this.accumulatedInput = '';
+          await this.processQuery(actionQuery);
+          return;
+        }
+      }
 
       if (chunk.isFinal || this.accumulatedInput.length > 200) {
         if (this.listeningTimer) clearTimeout(this.listeningTimer);
@@ -139,6 +175,13 @@ class DesktopAssistant extends EventEmitter {
       timestamp: new Date().toISOString(),
     };
     this.history.push(turn);
+    this.emit('action-done', {
+      actionDone: result.actionDone,
+      response: responseText,
+      skill: result.skill,
+      data: result.data,
+      query,
+    });
     this.emit('assistant-turn', turn);
 
     // Speak response back out loud
