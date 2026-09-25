@@ -442,6 +442,9 @@ function setupEventListeners() {
       await api.deactivate();
     } else {
       await api.activate({ device: selectDevice.value });
+      if (api && api.showHud) {
+        await api.showHud();
+      }
     }
   });
 

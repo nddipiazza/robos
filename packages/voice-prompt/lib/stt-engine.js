@@ -315,6 +315,8 @@ class STTEngine extends EventEmitter {
     }
 
     this.lastInterimText = '';
+    this.lastSpeechDetectedTime = 0;
+    this.silenceFinalEmitted = false;
 
     // Start streaming interim transcription interval if not in test mode
     if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
@@ -326,12 +328,12 @@ class STTEngine extends EventEmitter {
 
         try {
           const stats = fs.statSync(recFile);
-          // Need at least ~1.5s of 16kHz 16-bit mono audio (16000 * 2 * 1.5 = 48000 bytes)
-          if (stats.size < 48000) return;
+          // Need at least ~0.5s of 16kHz 16-bit mono audio (16000 * 2 * 0.5 = 16000 bytes)
+          if (stats.size < 16000) return;
 
           this.isTranscribing = true;
           const fullSamples = readWavToFloat32(recFile);
-          if (fullSamples && fullSamples.length >= 24000) {
+          if (fullSamples && fullSamples.length >= 8000) {
             // Sliding window: in background streaming mode, only process the last 4s of audio (64,000 samples)
             // so inference runs in parallel in worker thread in ~150ms and never balloons
             const samples = (this.backgroundMode && fullSamples.length > 64000)
@@ -340,16 +342,31 @@ class STTEngine extends EventEmitter {
 
             const res = await this.transcribeAsync(samples, {});
             const text = cleanTranscript(res?.text || '');
-            if (text && this.active && text !== this.lastInterimText) {
-              this.lastInterimText = text;
-              const payload = {
-                text,
-                isFinal: false,
-                elapsedMs: Date.now() - (this.recordingStartTime || Date.now()),
-                backgroundMode: this.backgroundMode,
-              };
-              this.emit('interim-text', payload);
-              this.emit('stream-text', payload);
+            const now = Date.now();
+            if (text && this.active) {
+              if (text !== this.lastInterimText) {
+                this.lastInterimText = text;
+                this.lastSpeechDetectedTime = now;
+                this.silenceFinalEmitted = false;
+                const payload = {
+                  text,
+                  isFinal: false,
+                  elapsedMs: now - (this.recordingStartTime || now),
+                  backgroundMode: this.backgroundMode,
+                };
+                this.emit('interim-text', payload);
+                this.emit('stream-text', payload);
+              } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && (now - this.lastSpeechDetectedTime >= 850)) {
+                // User paused for >850ms: emit final utterance flag to finalize the bubble
+                this.silenceFinalEmitted = true;
+                const payload = {
+                  text: this.lastInterimText,
+                  isFinal: true,
+                  elapsedMs: now - (this.recordingStartTime || now),
+                  backgroundMode: this.backgroundMode,
+                };
+                this.emit('stream-text', payload);
+              }
             }
           }
         } catch (err) {
@@ -357,7 +374,7 @@ class STTEngine extends EventEmitter {
         } finally {
           this.isTranscribing = false;
         }
-      }, 1500);
+      }, 400);
     }
 
     this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile, backgroundMode: this.backgroundMode });

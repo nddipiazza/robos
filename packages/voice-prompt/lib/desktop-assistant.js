@@ -19,6 +19,7 @@ class DesktopAssistant extends EventEmitter {
     this.accumulatedInput = '';
     this.autoSpeak = options.autoSpeak !== false;
     this.wakeGreeting = options.wakeGreeting || null;
+    this.silenceTimeoutMs = options.silenceTimeoutMs || 850;
 
     if (this.wakeDetector) {
       this.wakeDetector.on('wake-word', async (evt) => {
@@ -76,7 +77,7 @@ class DesktopAssistant extends EventEmitter {
         } catch {}
       }
 
-      // Start listening window for the subsequent user request (up to 12s)
+      // Start listening window for the subsequent user request (up to 4s to begin speaking)
       this.accumulatedInput = '';
       if (this.listeningTimer) clearTimeout(this.listeningTimer);
       this.listeningTimer = setTimeout(async () => {
@@ -89,7 +90,7 @@ class DesktopAssistant extends EventEmitter {
             this.setState('IDLE');
           }
         }
-      }, 12000);
+      }, 4000);
     }
   }
 
@@ -104,22 +105,30 @@ class DesktopAssistant extends EventEmitter {
 
     // If currently listening after wake word, accumulate words and evaluate actions
     if (this.state === 'LISTENING') {
-      this.accumulatedInput = (this.accumulatedInput + ' ' + text).trim();
+      const incoming = text.trim();
+      if (!this.accumulatedInput) {
+        this.accumulatedInput = incoming;
+      } else if (incoming.startsWith(this.accumulatedInput)) {
+        this.accumulatedInput = incoming;
+      } else if (!this.accumulatedInput.includes(incoming)) {
+        this.accumulatedInput = (this.accumulatedInput + ' ' + incoming).trim();
+      }
+
       this.emit('stream-line', { text: this.accumulatedInput, isFinal: chunk.isFinal, state: this.state });
 
-      // Extend listening timer while user is actively speaking
+      // Fast silence detection: if user pauses for silenceTimeoutMs, trigger immediately
       if (this.listeningTimer) clearTimeout(this.listeningTimer);
       this.listeningTimer = setTimeout(async () => {
         if (this.state === 'LISTENING') {
-          if (this.accumulatedInput.trim()) {
-            const q = this.accumulatedInput.trim();
+          const q = this.accumulatedInput.trim();
+          if (q) {
             this.accumulatedInput = '';
             await this.processQuery(q);
           } else {
             this.setState('IDLE');
           }
         }
-      }, 6000);
+      }, this.silenceTimeoutMs);
 
       // Check if user signaled command completion with 10/4 or Done!
       const isDoneSignal = /(?:10[\/\-]4|10\s+4|ten\s+four|\bdone\b)[!.]*$/i.test(this.accumulatedInput);

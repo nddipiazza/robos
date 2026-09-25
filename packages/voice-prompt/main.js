@@ -124,6 +124,7 @@ wakeDetector.on('wake-word', async (data) => {
     } catch {}
   }
   showHudWindow();
+  await desktopAssistant.handleWakeWord(data);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-wake-word', data);
   }
@@ -330,6 +331,7 @@ function startApiServer(overridePort) {
       if (pathname === '/api/activate' && method === 'POST') {
         const body = await parseBody(req);
         const result = await sttEngine.activate(body);
+        showHudWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('vp-event-activated', result);
         }
@@ -658,6 +660,7 @@ function createWindow() {
         }
       } else {
         const res = await sttEngine.activate();
+        showHudWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('vp-event-activated', res);
         }
@@ -671,7 +674,7 @@ function createWindow() {
 /**
  * Calculate on-screen coordinates for floating HUD window
  */
-function getHudBounds(pos = 'bottom-right', width = 460, height = 290, customWorkArea = null) {
+function getHudBounds(pos = 'bottom-right', width = 380, height = 480, customWorkArea = null) {
   let workArea = customWorkArea;
   if (!workArea) {
     const screen = electronPkg ? electronPkg.screen : null;
@@ -716,54 +719,67 @@ function getHudBounds(pos = 'bottom-right', width = 460, height = 290, customWor
  * Create always-on-top HUD BrowserWindow
  */
 function createHudWindow() {
+  if (!isElectronRuntime) return null;
   if (hudWindow && !hudWindow.isDestroyed()) return hudWindow;
 
-  const prefs = promptStore.loadPrefs();
-  const bounds = getHudBounds(prefs.hudPosition || 'bottom-right');
+  try {
+    const prefs = promptStore.loadPrefs();
+    const bounds = getHudBounds(prefs.hudPosition || 'bottom-right');
 
-  hudWindow = new BrowserWindow({
-    title: 'RobOS Voice Assistant HUD',
-    icon: getAppIcon(),
-    width: bounds.width,
-    height: bounds.height,
-    x: bounds.x,
-    y: bounds.y,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    show: false,
-    hasShadow: true,
-    backgroundColor: '#00000000',
-    webPreferences: {
-      preload: path.join(__dirname, 'hud-preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
+    hudWindow = new BrowserWindow({
+      title: 'RobOS Voice',
+      icon: getAppIcon(),
+      width: bounds.width,
+      height: bounds.height,
+      x: bounds.x,
+      y: bounds.y,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: true,
+      minWidth: 320,
+      minHeight: 360,
+      show: false,
+      hasShadow: true,
+      backgroundColor: '#00000000',
+      webPreferences: {
+        preload: path.join(__dirname, 'hud-preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
 
-  hudWindow.setAlwaysOnTop(true, 'screen-saver');
-  if (typeof hudWindow.setVisibleOnAllWorkspaces === 'function') {
-    hudWindow.setVisibleOnAllWorkspaces(true);
+    hudWindow.setAlwaysOnTop(true, 'screen-saver');
+    if (typeof hudWindow.setVisibleOnAllWorkspaces === 'function') {
+      hudWindow.setVisibleOnAllWorkspaces(true);
+    }
+
+    hudWindow.loadFile(path.join(__dirname, 'renderer', 'hud.html'));
+
+    hudWindow.on('closed', () => {
+      hudWindow = null;
+    });
+
+    return hudWindow;
+  } catch (err) {
+    console.warn('[voice-prompt] createHudWindow notice:', err.message);
+    return null;
   }
-
-  hudWindow.loadFile(path.join(__dirname, 'renderer', 'hud.html'));
-
-  hudWindow.on('closed', () => {
-    hudWindow = null;
-  });
-
-  return hudWindow;
 }
 
 function showHudWindow() {
-  if (!hudWindow || hudWindow.isDestroyed()) {
-    createHudWindow();
-  }
-  if (hudWindow && !hudWindow.isDestroyed()) {
-    hudWindow.showInactive();
-    hudWindow.setAlwaysOnTop(true, 'screen-saver');
+  if (!isElectronRuntime) return;
+  try {
+    if (!hudWindow || hudWindow.isDestroyed()) {
+      createHudWindow();
+    }
+    if (hudWindow && !hudWindow.isDestroyed()) {
+      hudWindow.showInactive();
+      hudWindow.setAlwaysOnTop(true, 'screen-saver');
+    }
+  } catch (err) {
+    console.warn('[voice-prompt] showHudWindow notice:', err.message);
   }
 }
 
@@ -813,6 +829,7 @@ ipcMain.handle('vp-list-devices', async () => {
 
 ipcMain.handle('vp-activate', async (_e, options) => {
   const res = await sttEngine.activate(options);
+  showHudWindow();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-activated', res);
   }
@@ -919,6 +936,7 @@ ipcMain.handle('vp-background-toggle', async (_e, enable) => {
 });
 
 ipcMain.handle('vp-trigger-wake-word', async () => {
+  showHudWindow();
   return desktopAssistant.handleWakeWord({ trigger: 'hello robos', query: '' });
 });
 
