@@ -3,7 +3,7 @@ title: Gherkin Rule
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 5
+nav_order: 11
 permalink: /schemas/testing/gherkin-rule.html
 ---
 

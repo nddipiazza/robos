@@ -93,6 +93,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
   "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
   "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+  "robos:hasDocumentation": "urn:robos:documentation:billing-api",
   "robos:implementsContract": [
     "urn:robos:contract:orders-grpc"
   ],
@@ -209,6 +210,7 @@ const result = validator.validateGraph(new OSLCGraphParser({
         "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
         "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
         "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
+        "robos:hasDocumentation": "urn:robos:documentation:billing-api",
         "robos:implementsContract": [
             "urn:robos:contract:orders-grpc"
         ],

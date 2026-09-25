@@ -3,7 +3,7 @@ title: Testing Library
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 11
+nav_order: 17
 permalink: /schemas/testing/testing-library.html
 ---
 

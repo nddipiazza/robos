@@ -1,11 +1,15 @@
 ---
 name: e2e-driven-dev
-description: Execute task development using an End-to-End Driven Development (EDD) workflow where narrated E2E tests and video walkthroughs guide and validate feature implementation.
+description: Execute task development using an End-to-End Driven Development (EDD) workflow on localhost (Docker/Xvfb) where text-narrated E2E tests, structured step proofs, on-screen text narration, and video walkthroughs validate feature implementation.
 ---
 
 # E2E-Driven Development (EDD) Skill
 
-Perform feature development or bug fixing on a generic task using an **End-to-End Driven Development (EDD)** methodology. In this workflow, development begins by creating a narrated E2E test scenario that records video with neural voice narration (Piper TTS) and WebVTT captions. The test serves as both the executable specification and the user-facing verification artifact.
+Perform feature development or bug fixing on a generic task using an **End-to-End Driven Development (EDD)** methodology. In this workflow, development begins by creating a text-narrated E2E test scenario that records video with clear on-screen text narration cards and WebVTT step descriptions. The test serves as both the executable specification and the user-facing verification artifact.
+
+> [!IMPORTANT]
+> - **Zero VM Requirement**: E2E testing and demonstration recording run entirely on **localhost** using isolated Docker containers (`./scripts/e2e-container.sh`) or local virtual framebuffers (`Xvfb`) and headless test runs. Never rely on slow QEMU virtual machines or SSH deployment for E2E-driven development feedback loops.
+> - **Text-Only Step Narration**: Verification videos use on-screen text narration cards, element callout badges, and WebVTT captions explaining each step. No audio voice narration is needed. Pacing is fast, responsive, and continuous.
 
 ---
 
@@ -13,8 +17,8 @@ Perform feature development or bug fixing on a generic task using an **End-to-En
 
 Use this skill when:
 - The user requests building a new feature, flow, or bug fix using E2E-driven development (`/e2e-driven-dev` or `/do-e2e-driven-dev`).
-- You need to deliver visual proof of feature completion accompanied by step-by-step spoken narration and synced captions.
-- Implementing UI/UX workflows across any RobOS app (`dev-central`, `git-projects`, `task-board`, etc.).
+- You need to deliver visual proof of feature completion accompanied by step-by-step text narration, synced captions, and scenario step logs.
+- Implementing UI/UX workflows across any RobOS app (`dev-central`, `git-projects`, `task-board`, `robos-desktop`, etc.).
 
 ---
 
@@ -23,6 +27,7 @@ Use this skill when:
 `$ARGUMENTS` — `<app-id> "<task description or acceptance criteria>"`
 
 Examples:
+- `robos-desktop "Pin and unpin applications from taskbar and resize dock"`
 - `dev-central "Add sprint filter dropdown and show active sprint summary"`
 - `git-projects "Add git worktree creation modal with branch selection"`
 - `task-board "Add swimlane grouping by priority with drag-and-drop"`
@@ -34,7 +39,7 @@ Examples:
 ```
 ┌────────────────────────────────────────────────────────┐
 │ 1. Spec & Script Design                                │
-│    Define user story & narrated test script (cues)     │
+│    Define user story & text-narrated test script (cues)│
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
@@ -49,13 +54,14 @@ Examples:
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
-│ 4. Run Narrated E2E & Produce Video Artifact           │
-│    Execute demo-runner -> record WebM + Piper TTS + VTT│
+│ 4. Run Isolated Narrated E2E & Produce Video Artifact  │
+│    Execute demo-runner in Docker / local Xvfb          │
+│    Record WebM + on-screen text narration + WebVTT     │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
-│ 5. Review & Verification Artifact                      │
-│    Present final video, VTT transcript, and assertions │
+│ 5. Structured Verification Report                      │
+│    Present final video, VTT transcript, and step logs  │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -66,11 +72,22 @@ Examples:
 ### Phase 1 — Spec & Script Design
 
 1. **Analyze Requirements**: Extract the user journey, UI controls, backend/IPC operations, and acceptance criteria.
-2. **Design Test Script Cues**:
-   Each step in the script must contain:
-   - `narration`: Clear, natural English explanation of what the user is doing and what the app should display.
-   - `js` / `action`: DOM manipulation, element interaction, or state assertion.
-   - `minHold`: Display duration (2000–5000ms) matching the narration audio length.
+2. **Design Test Script Cues with Targeted Text Narration Callouts**:
+   Every web element interaction (button press, text input, textarea edit, dropdown select, hover) **MUST** include targeted visual callouts explaining what the test is doing:
+   - `target`: CSS selector for the targeted web element (e.g. `'#sprint-filter'`, `'button.btn-primary'`, `'textarea#issue-desc'`).
+   - `action`: Interaction type (`'click'`, `'type'`, `'hover'`, `'select'`).
+   - `value`: (Optional) String to type into input/textarea or option value to select.
+   - `callout`: (Optional) Concise explanation displayed in the floating callout directly adjacent to the element.
+   - `narration`: Text explanation describing the purpose and outcome of the step.
+   - `minHold`: Display duration (1500–3500ms) providing ample time to observe the on-screen action and text callout.
+
+> [!CAUTION]
+> ### THE CARDINAL LAW OF E2E DEMOS: 100% VISUAL GROUNDING
+> **NEVER write a narration or click action that refers to a concept, file, or feature unless that exact item is rendered and visually visible on screen!**
+> 1. **No Phantom Narrations**: If the narration talks about `topology.yaml` or `teams.yaml`, the UI MUST be rendering that file or a dedicated card for it—NEVER point to an unrelated search bar or generic table while narrating about a different concept.
+> 2. **Explicit View / Tab Activation First**: Before targeting components within sub-panels or tabs, the demo script must explicitly activate the target view first (e.g. `action: 'click', target: '#tab-btn-gitops'`).
+> 3. **Explicit Semantic IDs**: Always use explicit semantic IDs (`#gitops-file-topology`, `#btn-probe-acme-tax`, `#chapter-item-3`) rather than ambiguous positional selectors (`tr:first-child`).
+> 4. **Smart Callout Positioning**: Callouts are automatically positioned adjacent to the target element's bounding rect with `pointer-events: none` and translucent styling, ensuring the callout never covers or hides the interactive element or underlying functionality.
 
 ---
 
@@ -87,24 +104,29 @@ const scenarios  = require('../lib/scenarios');
 const SCRIPT = [
   {
     narration: 'We begin on the main dashboard to verify the new feature integration.',
-    js: null,
-    minHold: 4000,
+    minHold: 2500,
   },
   {
     narration: 'The user opens the sprint filter dropdown to select the active sprint.',
-    js: `(() => {
-      const el = document.querySelector('#sprint-filter');
-      if (el) el.click();
-    })()`,
-    minHold: 3500,
+    target: '#sprint-filter',
+    action: 'click',
+    callout: 'Open Sprint Filter Dropdown',
+    minHold: 2500,
   },
   {
     narration: 'Selecting Sprint 24 filters the task cards and updates the sprint metrics banner.',
-    js: `(() => {
-      const option = document.querySelector('[data-sprint-id="sprint-24"]');
-      if (option) option.click();
-    })()`,
-    minHold: 4000,
+    target: '[data-sprint-id="sprint-24"]',
+    action: 'click',
+    callout: 'Select Sprint 24',
+    minHold: 3000,
+  },
+  {
+    narration: 'The developer enters a quick search term to find high-priority defect tickets.',
+    target: 'input#filter-search',
+    action: 'type',
+    value: 'P0 blocker',
+    callout: 'Filter tickets by "P0 blocker"',
+    minHold: 3000,
   },
   {
     narration: 'The active sprint cards are rendered with updated story point totals.',
@@ -112,7 +134,7 @@ const SCRIPT = [
       const count = document.querySelectorAll('.task-card').length;
       console.log('Filtered task count:', count);
     })()`,
-    minHold: 4500,
+    minHold: 3000,
   },
 ];
 
@@ -137,45 +159,67 @@ Implement the application code across the standard RobOS layers:
 2. **Main Process (`packages/<app-id>/main.js`)**: Register `ipcMain.handle()` handlers for data operations.
 3. **Renderer HTML/CSS/JS (`packages/<app-id>/renderer/`)**: Add UI components adhering to RobOS dark theme (`--bg-primary: #0d1117`, `--accent: #00bcd4`).
 
+#### Phase 3b — Knowledge Graph & GitOps Continuous Synchronization
+RobOS development skills strictly ensure the Knowledge Graph is kept up to date:
+- Register or update all affected entities in Modular KGraph Packages (services, contracts, requirements, eLearning courses).
+- Ensure declarative GitOps files under `.robos/` (`topology.yaml`, `teams.yaml`, `packages.yaml`, `elearning.yaml`) reflect the state.
+
+#### Phase 3c — Documentation Synchronization Prompt
+**Cardinal Rule**: Whenever Knowledge Graph objects are updated, the AI coding agent must be prompted to discern any noticeable updates to system documentation and update the documentation accordingly:
+1. Examine what was added or altered in Modular KGraph Packages.
+2. Discern any noticeable updates needed across `docs/why-robos.md`, `README.md`, `docs/project-plan/`, and specs.
+3. Automatically update the corresponding documentation files to maintain perfect documentation alignment.
+
 ---
 
-### Phase 4 — Execute Narrated E2E & Generate Video
+### Phase 4 — Execute Narrated E2E on Localhost (Isolated)
 
-Run the narrated E2E test in the container or VM:
+Run the text-narrated E2E test using the containerized test harness or local virtual display:
 
-#### In Docker E2E Container:
+#### In Docker E2E Container (Recommended):
 ```bash
 ./scripts/e2e-container.sh node packages/robos-test/demos/<app-id>-<feature-slug>-demo.js
 ```
 
-#### On VM (or local dev environment):
+#### On Local Host (with Xvfb / Headless Display):
 ```bash
-node packages/robos-test/demos/<app-id>-<feature-slug>-demo.js
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/<app-id>-<feature-slug>-demo.js
 ```
 
 This pipeline automatically:
-1. Synthesizes neural TTS voice audio for every narration cue using Piper.
-2. Launches the Electron app inside the virtual display.
+1. Launches the Electron app inside the virtual display (isolated, no host popups).
+2. Displays step text narration banners and pointer callouts on active elements.
 3. Records video with `ffmpeg` while executing each scripted action.
-4. Generates synchronized WebVTT captions (`.vtt`).
-5. Muxes video, speech audio, and captions into `<slug>-final.webm`.
+4. Generates synchronized WebVTT captions (`.vtt`) for the step transcript.
+5. Saves the final verified video into `<slug>-final.webm`.
 
 ---
 
-### Phase 5 — Verification & Deliverable Package
+### Phase 5 — Structured Verification Report
 
-Deliver the completed verification package:
-1. **Final Narrated Video**: `packages/robos-test/run/demos/<slug>/<slug>-final.webm`
-2. **Captions / Transcript**: `packages/robos-test/run/demos/<slug>/<slug>.vtt`
-3. **DOM Assertions**: Verified text snapshots from the test run.
+Reports delivered to the user must provide **actionable evidence showing the feature works**, rather than generic test counts:
+
+1. **Embedded Video Artifact**: Embed the generated `<slug>-final.webm` video demonstration.
+2. **Scenario Step Definitions Table**: Present a chronological step table mapping:
+   - Timeline timestamps (`00:00:00 - 00:00:15`)
+   - Step title / action
+   - Text explanation of what the step executed and verified
+3. **Synchronized Transcript**: Full WebVTT captions transcript.
+4. **File Deliverables & Local Walkthrough Archive**:
+   - Local Test Run: `packages/robos-test/run/demos/<slug>/<slug>-final.webm` & `<slug>.vtt`
+   - Persistent Archive: `~/.robos/development/walkthroughs/<slug>/`
+     - `<slug>-final.webm` (video)
+     - `<slug>.vtt` (captions)
+     - `walkthrough.md` (summary, metadata, and step transcript table)
+     - Historical timestamped runs: `~/.robos/development/walkthroughs/<slug>/history/<timestamp>/`
 
 ---
 
 ## Validation Checklist
 
-- [ ] Narrated test script created with clear step-by-step user explanations.
+- [ ] Text-narrated test script created with clear step-by-step user explanations.
 - [ ] DOM selectors in `js:` actions verified against actual renderer HTML/JS.
-- [ ] No hanging async calls (`minHold` kept between 2000–5000ms).
-- [ ] Application code implemented and tested against the scenario.
-- [ ] Video output (`<slug>-final.webm`) generated with synced audio and WebVTT captions.
-- [ ] Walkthrough documentation updated with test results.
+- [ ] Executed on localhost (Docker/Xvfb container) without QEMU VM overhead and without host desktop popups.
+- [ ] Video output (`<slug>-final.webm`) generated with on-screen text banners and WebVTT captions.
+- [ ] Walkthrough deliverables verified in persistent archive `~/.robos/development/walkthroughs/<slug>/`.
+- [ ] Verification report documents step definitions and proof table in order.

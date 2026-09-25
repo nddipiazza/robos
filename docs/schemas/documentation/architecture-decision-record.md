@@ -3,7 +3,7 @@ title: Architecture Decision Record
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
-nav_order: 3
+nav_order: 4
 permalink: /schemas/documentation/architecture-decision-record.html
 ---
 

@@ -629,6 +629,102 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       font-size: 20px;
       color: var(--text-bright);
     }
+    .slide-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slide-menu-container {
+      position: relative;
+      display: inline-block;
+    }
+    .btn-slide-menu {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-slide-menu:hover {
+      border-color: var(--accent);
+      background: var(--bg-surface-hover);
+      color: var(--accent);
+    }
+    .slide-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #161b22;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      min-width: 230px;
+      z-index: 100;
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .slide-dropdown-menu.hidden {
+      display: none !important;
+    }
+    .slide-menu-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 6px 14px 4px;
+    }
+    .slide-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .slide-menu-item:hover {
+      background: rgba(0, 188, 212, 0.12);
+      color: var(--text-bright);
+    }
+    .slide-menu-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .web-toast-notice {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #161b22;
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      color: var(--text-bright);
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      z-index: 9999;
+      transition: opacity 0.25s, transform 0.25s;
+      max-width: 480px;
+      word-break: break-word;
+    }
+    .web-toast-notice.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
     .module-overview {
       color: var(--text);
       font-size: 14px;
@@ -1331,12 +1427,21 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     </div>
   </div>
 
+  <!-- Toast Notification Overlay -->
+  <div id="web-toast-notice" class="web-toast-notice hidden"></div>
+
   <!-- Embedded Client-Side Application Script -->
   <script>
     const COURSE_DATA = ${serializedCourse};
     const MODULES_DATA = ${serializedModules};
     const APP_DATA = ${serializedApp};
     const STORAGE_KEY = 'robos_elearning_' + (${JSON.stringify(courseSlug)});
+    const GIT_INFO = {
+      gitRemoteUrl: 'https://github.com/nddipiazza/robos',
+      gitBranch: 'main',
+      gitopsPath: '/home/ndipiazza/source/robos/.robos/elearning.yaml',
+      gitopsRelative: '.robos/elearning.yaml'
+    };
 
     let currentModIdx = 0;
     let progress = {
@@ -2407,7 +2512,33 @@ flowchart LR
                 Module \${currentModIdx + 1} of \${MODULES_DATA.length} &middot; Estimated Time: \${m.durationMinutes || 15} minutes
               </div>
             </div>
-            <span class="badge badge-duration">⏱️ \${m.durationMinutes || 15} mins</span>
+            <div class="slide-header-actions">
+              <span class="badge badge-duration">⏱️ \${m.durationMinutes || 15} mins</span>
+              <div class="slide-menu-container">
+                <button class="btn-slide-menu" onclick="toggleSlideMenu(event, \${currentModIdx})" title="Slide Actions & Exports">
+                  ⋮ Slide Actions ▾
+                </button>
+                <div class="slide-dropdown-menu hidden" id="slide-dropdown-\${currentModIdx}">
+                  <div class="slide-menu-label">Slide &middot; Actions</div>
+                  <button class="slide-menu-item" onclick="copySlidePath(\${currentModIdx})">
+                    📋 <span>Copy Path on File System</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="copySlideGitUrl(\${currentModIdx})">
+                    🔗 <span>Copy Git URL Path</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="exportSlideAsZip(\${currentModIdx})">
+                    📦 <span>Export as HTML Zip</span>
+                  </button>
+                  <div class="slide-menu-divider"></div>
+                  <button class="slide-menu-item" onclick="copySlideMarkdown(\${currentModIdx})">
+                    📄 <span>Copy Slide Markdown</span>
+                  </button>
+                  <button class="slide-menu-item" onclick="copySlideUri(\${currentModIdx})">
+                    🏷️ <span>Copy Slide KGraph URI</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="module-overview">
@@ -2521,6 +2652,364 @@ flowchart LR
       saveProgress();
       renderActiveModule();
       announceA11y('All labs in Module ' + (mIdx + 1) + ' marked completed.');
+    }
+
+    // ── Slide Menu & Offline HTML Zip Actions ──────────────────────────────
+    async function copyToClipboard(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch {}
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    }
+
+    function showWebToast(msg) {
+      const el = document.getElementById('web-toast-notice');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => {
+        el.classList.add('hidden');
+      }, 4000);
+    }
+
+    function toggleSlideMenu(event, idx) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const target = document.getElementById('slide-dropdown-' + idx);
+      const wasHidden = target ? target.classList.contains('hidden') : true;
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      if (target && wasHidden) {
+        target.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('click', () => {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+    });
+
+    async function copySlidePath(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const slideId = (m && m.id) || ('slide-' + (idx + 1));
+      const fullPath = GIT_INFO.gitopsPath + '#' + slideId;
+      await copyToClipboard(fullPath);
+      showWebToast('📋 Copied file system path: ' + fullPath);
+    }
+
+    async function copySlideGitUrl(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const slideId = (m && m.id) || ('slide-' + (idx + 1));
+      const gitUrl = GIT_INFO.gitRemoteUrl + '/blob/' + GIT_INFO.gitBranch + '/' + GIT_INFO.gitopsRelative + '#' + slideId;
+      await copyToClipboard(gitUrl);
+      showWebToast('🔗 Copied Git URL path: ' + gitUrl);
+    }
+
+    async function copySlideMarkdown(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      if (!m) return;
+      const lines = [
+        '# ' + (m.title || ('Slide ' + (idx + 1))),
+        '**Course**: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass'),
+        '**Duration**: ' + (m.durationMinutes || 15) + ' mins',
+        '',
+        '## Overview',
+        m.overview || '',
+        ''
+      ];
+      if (m.labSteps && m.labSteps.length) {
+        lines.push('## Hands-On Lab Exercises');
+        m.labSteps.forEach((s, sIdx) => {
+          lines.push((sIdx + 1) + '. ' + s);
+        });
+        lines.push('');
+      }
+      if (m.quiz && m.quiz.length) {
+        lines.push('## Knowledge Check Quizzes');
+        m.quiz.forEach((q, qIdx) => {
+          lines.push('### Question ' + (qIdx + 1) + ': ' + q.question);
+          if (q.options) {
+            q.options.forEach(opt => lines.push('- [ ] ' + opt));
+          }
+          lines.push('**Correct Answer**: ' + q.answer);
+          if (q.explanation) lines.push('*Explanation*: ' + q.explanation);
+          lines.push('');
+        });
+      }
+      const md = lines.join('\n');
+      await copyToClipboard(md);
+      showWebToast('📄 Copied Slide Markdown to clipboard!');
+    }
+
+    async function copySlideUri(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      const uri = (COURSE_DATA['@id'] || 'urn:robos:elearning') + '#' + ((m && m.id) || ('slide-' + (idx + 1)));
+      await copyToClipboard(uri);
+      showWebToast('🏷️ Copied Slide KGraph URI: ' + uri);
+    }
+
+    function createZipBlob(files) {
+      const enc = new TextEncoder();
+      let crcTable = window._crcTable;
+      if (!crcTable) {
+        crcTable = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          crcTable[i] = c >>> 0;
+        }
+        window._crcTable = crcTable;
+      }
+      function calcCrc(bytes) {
+        let crc = 0xFFFFFFFF;
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      const entries = [];
+      for (const f of files) {
+        const nameBytes = enc.encode(f.name);
+        const dataBytes = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+        const crc = calcCrc(dataBytes);
+        entries.push({ nameBytes, dataBytes, crc, offset: 0 });
+      }
+
+      let offset = 0;
+      const localHeaders = [];
+      for (const e of entries) {
+        e.offset = offset;
+        const lh = new Uint8Array(30 + e.nameBytes.length);
+        const view = new DataView(lh.buffer);
+        view.setUint32(0, 0x04034b50, true);
+        view.setUint16(4, 20, true);
+        view.setUint16(6, 0, true);
+        view.setUint16(8, 0, true);
+        view.setUint16(10, 0x4a00, true);
+        view.setUint16(12, 0x5939, true);
+        view.setUint32(14, e.crc, true);
+        view.setUint32(18, e.dataBytes.length, true);
+        view.setUint32(22, e.dataBytes.length, true);
+        view.setUint16(26, e.nameBytes.length, true);
+        view.setUint16(28, 0, true);
+        lh.set(e.nameBytes, 30);
+        localHeaders.push(lh);
+        offset += lh.length + e.dataBytes.length;
+      }
+
+      const cdHeaders = [];
+      let cdSize = 0;
+      for (const e of entries) {
+        const cdh = new Uint8Array(46 + e.nameBytes.length);
+        const view = new DataView(cdh.buffer);
+        view.setUint32(0, 0x02014b50, true);
+        view.setUint16(4, 20, true);
+        view.setUint16(6, 20, true);
+        view.setUint16(8, 0, true);
+        view.setUint16(10, 0, true);
+        view.setUint16(12, 0x4a00, true);
+        view.setUint16(14, 0x5939, true);
+        view.setUint32(16, e.crc, true);
+        view.setUint32(20, e.dataBytes.length, true);
+        view.setUint32(24, e.dataBytes.length, true);
+        view.setUint16(28, e.nameBytes.length, true);
+        view.setUint16(30, 0, true);
+        view.setUint16(32, 0, true);
+        view.setUint16(34, 0, true);
+        view.setUint16(36, 0, true);
+        view.setUint32(38, 0, true);
+        view.setUint32(42, e.offset, true);
+        cdh.set(e.nameBytes, 46);
+        cdHeaders.push(cdh);
+        cdSize += cdh.length;
+      }
+
+      const eocd = new Uint8Array(22);
+      const eView = new DataView(eocd.buffer);
+      eView.setUint32(0, 0x06054b50, true);
+      eView.setUint16(4, 0, true);
+      eView.setUint16(6, 0, true);
+      eView.setUint16(8, entries.length, true);
+      eView.setUint16(10, entries.length, true);
+      eView.setUint32(12, cdSize, true);
+      eView.setUint32(16, offset, true);
+      eView.setUint16(20, 0, true);
+
+      const parts = [];
+      for (let i = 0; i < entries.length; i++) {
+        parts.push(localHeaders[i]);
+        parts.push(entries[i].dataBytes);
+      }
+      for (const cdh of cdHeaders) parts.push(cdh);
+      parts.push(eocd);
+
+      return new Blob(parts, { type: 'application/zip' });
+    }
+
+    function exportSlideAsZip(idx) {
+      document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
+      const m = MODULES_DATA[idx];
+      if (!m) return;
+      showWebToast('⏳ Packaging slide as offline HTML zip…');
+
+      const slideTitle = m.title || ('Slide ' + (idx + 1));
+      const safeSlug = slideTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('slide-' + (idx + 1));
+      const filename = 'elearning-slide-' + (idx + 1) + '-' + safeSlug + '.zip';
+
+      const labsHtml = (m.labSteps && m.labSteps.length) ?
+        '<h3 style="color:var(--accent); font-size:16px; margin:24px 0 12px;">🧪 Hands-On Lab Exercises</h3><ol style="padding-left:24px; display:flex; flex-direction:column; gap:8px;">' +
+        m.labSteps.map(s => '<li>' + s + '</li>').join('') +
+        '</ol>' : '';
+
+      const quizzesHtml = (m.quiz && m.quiz.length) ?
+        '<h3 style="color:var(--gold); font-size:16px; margin:24px 0 12px;">📝 Knowledge Check</h3><div style="display:flex; flex-direction:column; gap:16px;">' +
+        m.quiz.map((q, qIdx) => {
+          const optsHtml = q.options ? '<ul style="list-style:none; padding-left:0; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">' +
+            q.options.map(opt => '<li style="background:#0d1117; border:1px solid #30363d; padding:6px 10px; border-radius:4px; font-size:13px;">' + opt + '</li>').join('') + '</ul>' : '';
+          const expHtml = q.explanation ? '<div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><em>Explanation:</em> ' + q.explanation + '</div>' : '';
+          return '<div style="background:#161b22; border:1px solid #30363d; border-radius:6px; padding:14px;">' +
+            '<p style="font-weight:600; margin-bottom:8px;">Q' + (qIdx + 1) + ': ' + q.question + '</p>' +
+            optsHtml +
+            '<div style="font-size:12px; color:var(--success);">✅ <strong>Answer:</strong> ' + q.answer + '</div>' +
+            expHtml +
+            '</div>';
+        }).join('') +
+        '</div>' : '';
+
+      const offlineHtml = '<!DOCTYPE html>\\n<html lang="en">\\n<head>\\n' +
+        '  <meta charset="UTF-8">\\n' +
+        '  <title>' + slideTitle + ' &middot; Offline RobOS Slide</title>\\n' +
+        '  <link rel="stylesheet" href="style.css">\\n' +
+        '</head>\\n<body>\\n' +
+        '  <div class="slide-offline-container">\\n' +
+        '    <div class="slide-offline-header">\n' +
+        '      <span class="slide-offline-badge">RobOS Offline Learning Slide &middot; ' + (idx + 1) + ' of ' + MODULES_DATA.length + '</span>\\n' +
+        '      <h1>' + slideTitle + '</h1>\\n' +
+        '      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">\\n' +
+        '        Course: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass') + ' &middot; Duration: ' + (m.durationMinutes || 15) + ' mins\\n' +
+        '      </p>\\n' +
+        '    </div>\\n' +
+        '    <div class="slide-offline-card">\\n' +
+        '      <div style="font-size:15px; margin-bottom:20px; line-height:1.6;">\\n' +
+        '        ' + (m.overview || '') + '\\n' +
+        '      </div>\\n' +
+        '      ' + labsHtml + '\\n' +
+        '      ' + quizzesHtml + '\\n' +
+        '    </div>\\n' +
+        '  </div>\\n</body>\\n</html>';
+
+      const offlineCss = ':root {\\n' +
+        '  --bg-primary: #0d1117;\\n' +
+        '  --bg-surface: #161b22;\\n' +
+        '  --accent: #00bcd4;\\n' +
+        '  --accent-cyan: #38bdf8;\\n' +
+        '  --border: #30363d;\\n' +
+        '  --text: #c9d1d9;\\n' +
+        '  --text-muted: #8b949e;\\n' +
+        '  --text-bright: #f0f6fc;\\n' +
+        '  --success: #2ea043;\\n' +
+        '  --gold: #f1e05a;\\n' +
+        '}\\n' +
+        '* { box-sizing: border-box; margin: 0; padding: 0; }\\n' +
+        'body {\\n' +
+        '  background: var(--bg-primary);\\n' +
+        '  color: var(--text);\\n' +
+        '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;\\n' +
+        '  line-height: 1.6;\\n' +
+        '  padding: 30px 20px;\\n' +
+        '}\\n' +
+        '.slide-offline-container {\\n' +
+        '  max-width: 900px;\\n' +
+        '  margin: 0 auto;\\n' +
+        '}\\n' +
+        '.slide-offline-header {\\n' +
+        '  border-bottom: 1px solid var(--border);\\n' +
+        '  padding-bottom: 20px;\\n' +
+        '  margin-bottom: 24px;\\n' +
+        '}\\n' +
+        '.slide-offline-badge {\\n' +
+        '  display: inline-block;\\n' +
+        '  background: rgba(0, 188, 212, 0.15);\\n' +
+        '  color: var(--accent);\\n' +
+        '  border: 1px solid var(--accent);\\n' +
+        '  padding: 4px 10px;\\n' +
+        '  border-radius: 4px;\\n' +
+        '  font-size: 11px;\\n' +
+        '  font-weight: 600;\\n' +
+        '  text-transform: uppercase;\\n' +
+        '  margin-bottom: 10px;\\n' +
+        '}\\n' +
+        '.slide-offline-card {\\n' +
+        '  background: var(--bg-surface);\\n' +
+        '  border: 1px solid var(--border);\\n' +
+        '  border-radius: 8px;\\n' +
+        '  padding: 24px;\\n' +
+        '}\\n' +
+        'code {\\n' +
+        '  font-family: monospace;\\n' +
+        '  background: #0d1117;\\n' +
+        '  padding: 2px 6px;\\n' +
+        '  border-radius: 4px;\\n' +
+        '  border: 1px solid var(--border);\\n' +
+        '  color: var(--accent-cyan);\\n' +
+        '}';
+
+      const metadataJson = JSON.stringify({
+        slideIndex: idx,
+        slideId: m.id || ('slide-' + (idx + 1)),
+        title: m.title,
+        durationMinutes: m.durationMinutes,
+        courseId: COURSE_DATA['@id'],
+        courseTitle: COURSE_DATA['dcterms:title'],
+        exportedAt: new Date().toISOString()
+      }, null, 2);
+
+      const readmeMd = '# ' + slideTitle + '\\n' +
+        'Offline HTML Export for RobOS eLearning Slide ' + (idx + 1) + ' of ' + MODULES_DATA.length + '.\\n\\n' +
+        '- Course: ' + (COURSE_DATA['dcterms:title'] || 'RobOS Masterclass') + '\\n' +
+        '- Export Date: ' + new Date().toISOString() + '\\n\\n' +
+        'To view this slide offline, open index.html in any standard web browser.\\n';
+
+      const files = [
+        { name: 'index.html', data: offlineHtml },
+        { name: 'style.css', data: offlineCss },
+        { name: 'metadata.json', data: metadataJson },
+        { name: 'README.md', data: readmeMd }
+      ];
+
+      try {
+        const blob = createZipBlob(files);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showWebToast('📦 Successfully downloaded: ' + filename);
+      } catch (err) {
+        showWebToast('❌ Failed to create zip: ' + err.message);
+      }
     }
 
     // Global Escape Key Listener for Accessible Modals

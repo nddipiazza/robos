@@ -3,7 +3,7 @@ title: Interactive Walkthrough
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
-nav_order: 4
+nav_order: 5
 permalink: /schemas/documentation/interactive-walkthrough.html
 ---
 

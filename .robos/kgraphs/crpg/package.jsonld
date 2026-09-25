@@ -58,7 +58,16 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6"
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z"
       ]
     },
     {
@@ -839,7 +848,8 @@
       "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
       "robos:maxPartySize": 4,
       "robos:hasELearning": [
-        "urn:robos:elearning:course:robos-crpg"
+        "urn:robos:elearning:course:robos-crpg",
+        "urn:robos:elearning:course:crpg-game-builder"
       ],
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg",
@@ -853,7 +863,16 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
-        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6"
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
+        "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z"
       ]
     },
     {

@@ -3,7 +3,7 @@ title: Test Suite
 layout: default
 parent: Testing, Quality & BDD (robos.testing)
 grand_parent: KGraph Schemas
-nav_order: 13
+nav_order: 19
 permalink: /schemas/testing/test-suite.html
 ---
 

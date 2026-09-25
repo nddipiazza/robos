@@ -3,7 +3,7 @@ title: Doc Section
 layout: default
 parent: Documentation & Diagrams (robos.docs)
 grand_parent: KGraph Schemas
-nav_order: 6
+nav_order: 7
 permalink: /schemas/documentation/doc-section.html
 ---
 

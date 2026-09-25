@@ -99,7 +99,12 @@ Add the new app to the appropriate section in the App Suite tables in `AGENTS.md
 
 Then give the app its page on the docs site: run `node scripts/sync-app-docs.js`, which creates `docs/_apps/<app-id>.md` from the `.desktop` entry. Set its `category:` to an id from `docs/_data/app_categories.yml` and write a short guide in the page body.
 
-### 4. Deploy to VM
+### 4. Register in Knowledge Graph & Prompt Documentation Synchronization
+
+1. Add package node to Modular KGraph Packages (`.robos/kgraphs/` & `.robos/kgraph.yaml`) and `.robos/packages.yaml`.
+2. **Documentation Synchronization Prompt**: When KGraph objects are updated, discern noticeable updates to system documentation (`docs/why-robos.md`, `README.md`, `docs/project-plan/`) and update them accordingly.
+
+### 5. Deploy to VM
 
 After creating the app locally, deploy it to the running RobOS VM. Use `-o StrictHostKeyChecking=no` for all SSH/SCP commands.
 
