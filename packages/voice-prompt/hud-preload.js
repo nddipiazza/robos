@@ -10,9 +10,12 @@ const hudApi = {
   showHud: () => ipcRenderer.invoke('vp-hud-show'),
   toggleMic: () => ipcRenderer.invoke('vp-hud-toggle-mic'),
   stopTts: () => ipcRenderer.invoke('vp-tts-stop'),
+  speak: (text, opts) => ipcRenderer.invoke('vp-tts-speak', text, opts),
   triggerWakeWord: () => ipcRenderer.invoke('vp-trigger-wake-word'),
   executeSkill: (cmd, opts) => ipcRenderer.invoke('vp-skills-execute', cmd, opts),
   askAssistant: (query, opts) => ipcRenderer.invoke('vp-assistant-chat', query, opts),
+  getAssistantHistory: () => ipcRenderer.invoke('vp-assistant-get-history'),
+  clearAssistantHistory: () => ipcRenderer.invoke('vp-assistant-clear-history'),
 
   // Events from main process
   onWakeGreeting: (callback) => {

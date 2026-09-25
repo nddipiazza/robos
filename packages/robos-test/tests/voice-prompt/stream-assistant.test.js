@@ -353,6 +353,69 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(Array.isArray(prefs.wakeGreetings));
       assert.ok(prefs.wakeGreetings.length >= 50);
     });
+
+    it('executes speech after silenceTimeoutMs without requiring long silence or manual completion suffix', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => { spokenText = text; return { ok: true, text }; };
+
+      const assistant = new DesktopAssistant({
+        ttsEngine: tts,
+        autoSpeak: true,
+        silenceTimeoutMs: 120, // fast silence timeout for test
+      });
+      assistant.setState('LISTENING');
+
+      // User speaks conversational query without eager intent or done suffix
+      let actionFired = false;
+      assistant.on('action-done', () => { actionFired = true; });
+      const actionPromise = new Promise(resolve => assistant.once('action-done', resolve));
+      await assistant.handleStreamText({ text: 'how is our cluster deployment running', isFinal: false });
+
+      // Immediately after speech: should be buffering/waiting for silence
+      assert.strictEqual(actionFired, false);
+
+      // Wait for silence timeout to trigger processQuery
+      const evt = await Promise.race([
+        actionPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out waiting for silence trigger')), 1500)),
+      ]);
+
+      assert.ok(evt, 'Assistant should execute query automatically upon silence timeout');
+      assert.ok(spokenText);
+    });
+
+    it('verifies HUD HTML was simplified to chatbot chat-feed without old buttons', () => {
+      const hudHtml = fs.readFileSync(path.join(__dirname, '../../../voice-prompt/renderer/hud.html'), 'utf8');
+      assert.ok(hudHtml.includes('id="chat-feed"'));
+      assert.ok(hudHtml.includes('id="chat-input"'));
+      assert.ok(hudHtml.includes('id="chat-form"'));
+      assert.ok(!hudHtml.includes('btn-hello-robos'), 'Old btn-hello-robos should be removed');
+      assert.ok(!hudHtml.includes('btn-hud-send'), 'Old btn-hud-send 10/4 button should be removed');
+      assert.ok(!hudHtml.includes('hud-waveform'), 'Old waveform bars should be removed');
+    });
+
+    it('routes wake-word with query directly to desktop assistant without manual trigger', async () => {
+      const tts = new TTSEngine();
+      let spokenText = null;
+      tts.speak = async (text) => { spokenText = text; return { ok: true, text }; };
+
+      const detector = new WakeWordDetector();
+      const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
+
+      let actionExecuted = null;
+      assistant.on('action-done', (evt) => { actionExecuted = evt.actionDone; });
+
+      // Simulate wake detector matching wake-word with trailing query
+      const wakeMatch = detector.processText('Hello RobOS, what is the git status?');
+      assert.strictEqual(wakeMatch.matched, true);
+      assert.strictEqual(wakeMatch.query, 'what is the git status?');
+
+      await assistant.handleWakeWord(wakeMatch);
+
+      assert.ok(actionExecuted);
+      assert.ok(spokenText && spokenText.includes('branch'));
+    });
   });
 });
 
