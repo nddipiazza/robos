@@ -32,6 +32,9 @@ const api = {
   toggleWakeWord: (enabled) => ipcRenderer.invoke('vp-wake-word-toggle', enabled),
   listSkills: () => ipcRenderer.invoke('vp-skills-list'),
   executeSkill: (command, options) => ipcRenderer.invoke('vp-skills-execute', command, options),
+  showHud: () => ipcRenderer.invoke('vp-hud-show'),
+  hideHud: () => ipcRenderer.invoke('vp-hud-hide'),
+  setHudPosition: (pos) => ipcRenderer.invoke('vp-hud-set-position', pos),
 
   // Event Listeners
   onActivated: (callback) => {

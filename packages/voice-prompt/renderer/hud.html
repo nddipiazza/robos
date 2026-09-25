@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Voice Assistant HUD</title>
+  <link rel="stylesheet" href="hud.css">
+</head>
+<body class="hud-body">
+  <div class="hud-window">
+    <!-- Header -->
+    <header class="hud-header">
+      <div class="hud-title-group">
+        <div class="hud-icon-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+            <line x1="8" x2="16" y1="22" y2="22"/>
+          </svg>
+        </div>
+        <span class="hud-title">RobOS Voice</span>
+        <div id="hud-status-badge" class="hud-status-badge listening">
+          <span class="hud-status-dot"></span>
+          <span id="hud-status-text">LISTENING</span>
+        </div>
+      </div>
+
+      <div class="hud-window-controls">
+        <button id="btn-pos-cycle" class="hud-btn-icon" title="Change Screen Corner (Bottom-Right, Bottom-Left, Top-Right, Top-Left)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="16" cy="16" r="2" fill="currentColor"/>
+          </svg>
+          <span id="pos-label" class="pos-label">BR</span>
+        </button>
+        <button id="btn-close-hud" class="hud-btn-icon btn-close" title="Close HUD">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Live Content -->
+    <main class="hud-content">
+      <!-- Greeting Prompt -->
+      <div id="hud-greeting" class="hud-greeting">"Go ahead."</div>
+
+      <!-- Live Waveform & Stream Container -->
+      <div class="hud-stream-row">
+        <div id="hud-waveform" class="hud-waveform active">
+          <span class="wbar b1"></span>
+          <span class="wbar b2"></span>
+          <span class="wbar b3"></span>
+          <span class="wbar b4"></span>
+          <span class="wbar b5"></span>
+        </div>
+        <div id="hud-transcript" class="hud-transcript">
+          <span id="transcript-text" class="transcript-text">Listening for speech...</span>
+        </div>
+      </div>
+
+      <!-- Action Executed Card (Populated dynamically when action triggers) -->
+      <div id="hud-action-card" class="hud-action-card hidden">
+        <div class="action-card-header">
+          <span class="action-icon">🚀</span>
+          <span id="action-title" class="action-title">Action Executed</span>
+        </div>
+        <div id="action-detail" class="action-detail">Response text here...</div>
+      </div>
+    </main>
+
+    <!-- Bottom Action Controls -->
+    <footer class="hud-footer">
+      <div class="hud-footer-left">
+        <span class="agent-tag">⚡ RobOS Agent</span>
+      </div>
+      <div class="hud-footer-right">
+        <button id="btn-stop-audio" class="hud-btn-tool" title="Stop Speech Output">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="6" width="12" height="12"/>
+          </svg>
+          <span>Stop</span>
+        </button>
+        <button id="btn-toggle-mic" class="hud-btn-tool active" title="Toggle Microphone">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
+          <span id="mic-label">Mic ON</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="hud.js"></script>
+</body>
+</html>

@@ -37,17 +37,21 @@ if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
 }
 
 let mainWindow = null;
+let hudWindow = null;
 let apiServer = null;
 let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
 const sttEngine = new STTEngine(promptStore.loadPrefs());
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
 const wakeDetector = new WakeWordDetector({ enabled: true });
-const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector });
+const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
 
 sttEngine.on('interim-text', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-interim-text', data);
+  }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-interim-text', data);
   }
 });
 
@@ -57,11 +61,17 @@ sttEngine.on('stream-text', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-stream-text', data);
   }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-stream-text', data);
+  }
 });
 
 desktopAssistant.on('state-change', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-assistant-state', data);
+  }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-assistant-state', data);
   }
 });
 
@@ -69,15 +79,44 @@ desktopAssistant.on('assistant-turn', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-assistant-turn', data);
   }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-assistant-turn', data);
+  }
+});
+
+desktopAssistant.on('action-done', (data) => {
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-action-done', data);
+  }
 });
 
 desktopAssistant.on('wake-greeting', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-wake-greeting', data);
   }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-wake-greeting', data);
+  }
 });
 
-wakeDetector.on('wake-word', (data) => {
+desktopAssistant.on('show-hud', (data) => {
+  showHudWindow();
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.webContents.send('vp-hud-wake-greeting', data);
+  }
+});
+
+wakeDetector.on('wake-word', async (data) => {
+  // Wake-word starts dictation & displays floating HUD
+  if (sttEngine.isBackgroundMode()) {
+    sttEngine.setBackgroundMode(false);
+  }
+  if (!sttEngine.isActive()) {
+    try {
+      await sttEngine.activate({ backgroundMode: false });
+    } catch {}
+  }
+  showHudWindow();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-wake-word', data);
   }
@@ -622,6 +661,122 @@ function createWindow() {
   }
 }
 
+/**
+ * Calculate on-screen coordinates for floating HUD window
+ */
+function getHudBounds(pos = 'bottom-right', width = 440, height = 230, customWorkArea = null) {
+  let workArea = customWorkArea;
+  if (!workArea) {
+    const screen = electronPkg ? electronPkg.screen : null;
+    if (screen && typeof screen.getPrimaryDisplay === 'function') {
+      try {
+        const primary = screen.getPrimaryDisplay();
+        if (primary && primary.workArea) {
+          workArea = primary.workArea;
+        }
+      } catch {}
+    }
+  }
+  if (!workArea) {
+    workArea = { x: 0, y: 0, width: 1920, height: 1080 };
+  }
+
+  const margin = 24;
+  let x, y;
+  switch (pos) {
+    case 'bottom-left':
+      x = Math.round(workArea.x + margin);
+      y = Math.round(workArea.y + workArea.height - height - margin);
+      break;
+    case 'top-right':
+      x = Math.round(workArea.x + workArea.width - width - margin);
+      y = Math.round(workArea.y + margin);
+      break;
+    case 'top-left':
+      x = Math.round(workArea.x + margin);
+      y = Math.round(workArea.y + margin);
+      break;
+    case 'bottom-right':
+    default:
+      x = Math.round(workArea.x + workArea.width - width - margin);
+      y = Math.round(workArea.y + workArea.height - height - margin);
+      break;
+  }
+  return { x, y, width, height };
+}
+
+/**
+ * Create always-on-top HUD BrowserWindow
+ */
+function createHudWindow() {
+  if (hudWindow && !hudWindow.isDestroyed()) return hudWindow;
+
+  const prefs = promptStore.loadPrefs();
+  const bounds = getHudBounds(prefs.hudPosition || 'bottom-right');
+
+  hudWindow = new BrowserWindow({
+    title: 'RobOS Voice Assistant HUD',
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    show: false,
+    hasShadow: true,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload: path.join(__dirname, 'hud-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  hudWindow.setAlwaysOnTop(true, 'screen-saver');
+  if (typeof hudWindow.setVisibleOnAllWorkspaces === 'function') {
+    hudWindow.setVisibleOnAllWorkspaces(true);
+  }
+
+  hudWindow.loadFile(path.join(__dirname, 'renderer', 'hud.html'));
+
+  hudWindow.on('closed', () => {
+    hudWindow = null;
+  });
+
+  return hudWindow;
+}
+
+function showHudWindow() {
+  if (!hudWindow || hudWindow.isDestroyed()) {
+    createHudWindow();
+  }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.showInactive();
+    hudWindow.setAlwaysOnTop(true, 'screen-saver');
+  }
+}
+
+function hideHudWindow() {
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.hide();
+  }
+}
+
+function repositionHudWindow(position) {
+  const prefs = promptStore.loadPrefs();
+  prefs.hudPosition = position;
+  promptStore.savePrefs(prefs);
+
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    const bounds = getHudBounds(position);
+    hudWindow.setBounds(bounds);
+  }
+  return { ok: true, position };
+}
+
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('vp-get-status', async () => {
@@ -779,10 +934,39 @@ ipcMain.handle('vp-skills-execute', async (_e, command, options) => {
   return desktopAssistant.skillsExecutor.executeCommand(command, context, options || {});
 });
 
+// Floating HUD IPC Handlers
+ipcMain.handle('vp-hud-show', () => {
+  showHudWindow();
+  return { ok: true, shown: true };
+});
+
+ipcMain.handle('vp-hud-hide', () => {
+  hideHudWindow();
+  return { ok: true, hidden: true };
+});
+
+ipcMain.handle('vp-hud-set-position', (_e, pos) => {
+  return repositionHudWindow(pos);
+});
+
+ipcMain.handle('vp-hud-toggle-mic', async (_e, enable) => {
+  if (enable === false) {
+    return sttEngine.deactivate();
+  } else {
+    return sttEngine.activate({ backgroundMode: false });
+  }
+});
+
 // App lifecycle
 app.whenReady().then(() => {
   startApiServer();
-  createWindow();
+  const isHudOnly = process.argv.includes('--hud') || process.argv.includes('--hud-only');
+  createHudWindow();
+  if (isHudOnly) {
+    showHudWindow();
+  } else {
+    createWindow();
+  }
 });
 
 app.on('second-instance', () => {
@@ -811,4 +995,9 @@ module.exports = {
   desktopAssistant,
   promptStore,
   contextProvider,
+  createHudWindow,
+  showHudWindow,
+  hideHudWindow,
+  getHudBounds,
+  repositionHudWindow,
 };

@@ -8,6 +8,7 @@ const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
 const PROMPTS_FILE = process.env.ROBOS_VOICE_PROMPTS_FILE || path.join(CONFIG_DIR, 'voice-prompts.json');
 const PREFS_FILE = process.env.ROBOS_VOICE_PREFS_FILE || path.join(CONFIG_DIR, 'voice-prompt-prefs.json');
+const { DEFAULT_GREETINGS } = require('./greetings');
 
 const DEFAULT_PREFS = {
   configuredDevice: 'default',
@@ -16,6 +17,11 @@ const DEFAULT_PREFS = {
   pushToTalkKey: 'Super+V',
   autoSaveContext: true,
   streamTranscriptions: true,
+  hudPosition: 'bottom-right',
+  hudAutoCloseMs: 15000,
+  wakeGreetings: DEFAULT_GREETINGS,
+  showHudOnWake: true,
+  activeVoiceAgent: 'robos-desktop-assistant',
 };
 
 function ensureDir(filePath) {

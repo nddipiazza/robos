@@ -1,0 +1,37 @@
+'use strict';
+
+const { contextBridge, ipcRenderer } = require('electron');
+
+const hudApi = {
+  getPrefs: () => ipcRenderer.invoke('vp-get-prefs'),
+  savePrefs: (prefs) => ipcRenderer.invoke('vp-save-prefs', prefs),
+  setHudPosition: (pos) => ipcRenderer.invoke('vp-hud-set-position', pos),
+  hideHud: () => ipcRenderer.invoke('vp-hud-hide'),
+  showHud: () => ipcRenderer.invoke('vp-hud-show'),
+  toggleMic: () => ipcRenderer.invoke('vp-hud-toggle-mic'),
+  stopTts: () => ipcRenderer.invoke('vp-tts-stop'),
+  executeSkill: (cmd, opts) => ipcRenderer.invoke('vp-skills-execute', cmd, opts),
+  askAssistant: (query, opts) => ipcRenderer.invoke('vp-assistant-chat', query, opts),
+
+  // Events from main process
+  onWakeGreeting: (callback) => {
+    ipcRenderer.on('vp-hud-wake-greeting', (_e, data) => callback(data));
+  },
+  onStreamText: (callback) => {
+    ipcRenderer.on('vp-hud-stream-text', (_e, data) => callback(data));
+  },
+  onAssistantState: (callback) => {
+    ipcRenderer.on('vp-hud-assistant-state', (_e, data) => callback(data));
+  },
+  onActionDone: (callback) => {
+    ipcRenderer.on('vp-hud-action-done', (_e, data) => callback(data));
+  },
+  onAssistantTurn: (callback) => {
+    ipcRenderer.on('vp-hud-assistant-turn', (_e, data) => callback(data));
+  },
+  onInterimText: (callback) => {
+    ipcRenderer.on('vp-hud-interim-text', (_e, data) => callback(data));
+  },
+};
+
+contextBridge.exposeInMainWorld('robosVoiceHud', hudApi);
