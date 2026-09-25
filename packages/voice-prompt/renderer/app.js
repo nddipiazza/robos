@@ -1,13 +1,17 @@
 'use strict';
 
 let isRecording = false;
+let isBackgroundMode = false;
 let currentPrompts = [];
+let availableVoices = {};
 let audioCtx = null;
 let mediaStream = null;
 let analyserNode = null;
 let animFrameId = null;
 
-// DOM Elements
+const api = window.robosVoice || window.voicePrompt;
+
+// ── DOM Elements ─────────────────────────────────────────────────────────────
 const statusPill = document.getElementById('status-pill');
 const statusText = document.getElementById('status-text');
 const btnToggleMic = document.getElementById('btn-toggle-mic');
@@ -16,10 +20,6 @@ const selectDevice = document.getElementById('select-device');
 const waveform = document.getElementById('recording-waveform');
 const dictationInput = document.getElementById('dictation-input');
 const streamingIndicator = document.getElementById('streaming-indicator');
-const chkStreamAgent = document.getElementById('chk-stream-agent');
-const selectAgentTarget = document.getElementById('select-agent-target');
-const btnSendAgent = document.getElementById('btn-send-agent');
-const agentStatusBadge = document.getElementById('agent-status-badge');
 const btnSaveDictation = document.getElementById('btn-save-dictation');
 const btnClearDictation = document.getElementById('btn-clear-dictation');
 const btnRefreshContext = document.getElementById('btn-refresh-context');
@@ -32,7 +32,38 @@ const promptsCount = document.getElementById('prompts-count');
 const inputSearch = document.getElementById('input-search');
 const btnClearAll = document.getElementById('btn-clear-all');
 const statDevice = document.getElementById('stat-device');
+const statTtsEngine = document.getElementById('stat-tts-engine');
+const statStreamMode = document.getElementById('stat-stream-mode');
 const feedbackBanner = document.getElementById('feedback-banner');
+const btnToggleBgStream = document.getElementById('btn-toggle-bg-stream');
+const bgStreamLabel = document.getElementById('bg-stream-label');
+
+// Outgoing TTS Elements
+const selectTtsEngine = document.getElementById('select-tts-engine');
+const selectTtsVoice = document.getElementById('select-tts-voice');
+const sliderTtsSpeed = document.getElementById('slider-tts-speed');
+const valTtsSpeed = document.getElementById('val-tts-speed');
+const sliderTtsPitch = document.getElementById('slider-tts-pitch');
+const valTtsPitch = document.getElementById('val-tts-pitch');
+const sliderTtsVolume = document.getElementById('slider-tts-volume');
+const valTtsVolume = document.getElementById('val-tts-volume');
+const chkAutoSpeak = document.getElementById('chk-auto-speak');
+const btnSaveTtsPrefs = document.getElementById('btn-save-tts-prefs');
+const ttsPreviewInput = document.getElementById('tts-preview-input');
+const btnTestSpeak = document.getElementById('btn-test-speak');
+const btnStopSpeak = document.getElementById('btn-stop-speak');
+const ttsPlayingBadge = document.getElementById('tts-playing-badge');
+
+// Desktop Assistant Elements
+const chkWakeWord = document.getElementById('chk-wake-word');
+const chkBgStreamMode = document.getElementById('chk-bg-stream-mode');
+const assistantStateBadge = document.getElementById('assistant-state-badge');
+const streamLiveBanner = document.getElementById('stream-live-banner');
+const streamLiveText = document.getElementById('stream-live-text');
+const assistantChatFeed = document.getElementById('assistant-chat-feed');
+const assistantTextInput = document.getElementById('assistant-text-input');
+const btnSendAssistant = document.getElementById('btn-send-assistant');
+const btnClearChat = document.getElementById('btn-clear-chat');
 
 function showFeedback(msg, type = 'success') {
   if (!feedbackBanner) return;
@@ -45,23 +76,95 @@ function showFeedback(msg, type = 'success') {
   }, 6000);
 }
 
-// Initialize
+// ── Initialize App ───────────────────────────────────────────────────────────
 async function init() {
+  setupTabs();
   await loadDevices();
   await refreshAppContext();
   await loadPrompts();
+  await loadTTSConfig();
+  await loadAssistantHistory();
   setupEventListeners();
 
   // Periodic background context refresh
-  setInterval(refreshAppContext, 5000);
+  setInterval(refreshAppContext, 6000);
 }
 
-// Load audio devices
-async function loadDevices() {
-  if (!window.voicePrompt) return;
+// ── Tabs Setup ───────────────────────────────────────────────────────────────
+function setupTabs() {
+  const tabs = document.querySelectorAll('.nav-tab');
+  const panels = document.querySelectorAll('.tab-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetId = tab.getAttribute('data-tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(targetId);
+      if (panel) panel.classList.add('active');
+    });
+  });
+}
+
+// ── Outgoing TTS Setup ───────────────────────────────────────────────────────
+async function loadTTSConfig() {
+  if (!api || typeof api.listVoices !== 'function') return;
   try {
-    const devices = await window.voicePrompt.listDevices();
-    const prefs = await window.voicePrompt.getPrefs();
+    availableVoices = await api.listVoices();
+    renderVoiceOptions();
+
+    if (api.getTTSPrefs) {
+      const prefs = await api.getTTSPrefs();
+      if (prefs) {
+        if (prefs.engine && selectTtsEngine) selectTtsEngine.value = prefs.engine;
+        renderVoiceOptions();
+        if (prefs.voice && selectTtsVoice) selectTtsVoice.value = prefs.voice;
+        if (prefs.speed != null && sliderTtsSpeed) {
+          sliderTtsSpeed.value = prefs.speed;
+          valTtsSpeed.textContent = `${Number(prefs.speed).toFixed(2)}x`;
+        }
+        if (prefs.pitch != null && sliderTtsPitch) {
+          sliderTtsPitch.value = prefs.pitch;
+          valTtsPitch.textContent = `${prefs.pitch} Hz`;
+        }
+        if (prefs.volume != null && sliderTtsVolume) {
+          sliderTtsVolume.value = prefs.volume;
+          valTtsVolume.textContent = `${prefs.volume}%`;
+        }
+        if (prefs.autoSpeakResponses != null && chkAutoSpeak) {
+          chkAutoSpeak.checked = Boolean(prefs.autoSpeakResponses);
+        }
+        if (statTtsEngine) {
+          statTtsEngine.textContent = `${prefs.engine || 'kokoro'} (${prefs.voice || 'af_heart'})`;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load TTS config:', err);
+  }
+}
+
+function renderVoiceOptions() {
+  if (!selectTtsVoice) return;
+  const currentEngine = selectTtsEngine?.value || 'kokoro';
+  const voices = availableVoices[currentEngine] || [];
+  selectTtsVoice.innerHTML = '';
+
+  voices.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.id;
+    opt.textContent = `${v.name}${v.recommended ? ' ★' : ''}`;
+    selectTtsVoice.appendChild(opt);
+  });
+}
+
+// ── Audio Device Loading ─────────────────────────────────────────────────────
+async function loadDevices() {
+  if (!api || !api.listDevices) return;
+  try {
+    const devices = await api.listDevices();
+    const prefs = await api.getPrefs();
     selectDevice.innerHTML = '';
     devices.forEach(d => {
       const opt = document.createElement('option');
@@ -72,368 +175,415 @@ async function loadDevices() {
       }
       selectDevice.appendChild(opt);
     });
-    statDevice.textContent = selectDevice.options[selectDevice.selectedIndex]?.text || 'Default';
+    if (statDevice) {
+      statDevice.textContent = selectDevice.options[selectDevice.selectedIndex]?.text || 'Default';
+    }
   } catch (err) {
     console.warn('Failed to load devices:', err);
   }
 }
 
-// Live audio waveform using Web Audio API
-async function startAudioWaveform() {
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaStreamSource(mediaStream);
-    analyserNode = audioCtx.createAnalyser();
-    analyserNode.fftSize = 64;
-    source.connect(analyserNode);
-
-    const bufferLength = analyserNode.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const bars = waveform.querySelectorAll('.wave-bar');
-
-    function animate() {
-      if (!isRecording) return;
-      animFrameId = requestAnimationFrame(animate);
-      analyserNode.getByteFrequencyData(dataArray);
-
-      bars.forEach((bar, index) => {
-        const val = dataArray[index % bufferLength] || 0;
-        const height = Math.max(4, (val / 255) * 36);
-        bar.style.height = `${height}px`;
-      });
-    }
-    animate();
-  } catch (err) {
-    console.warn('Microphone audio waveform preview notice:', err.message);
-  }
-}
-
-function stopAudioWaveform() {
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(t => t.stop());
-    mediaStream = null;
-  }
-  if (audioCtx) {
-    try { audioCtx.close(); } catch {}
-    audioCtx = null;
-  }
-  const bars = waveform.querySelectorAll('.wave-bar');
-  bars.forEach(b => { b.style.height = '4px'; });
-}
-
-// Refresh Active RobOS App Context
+// ── App Context ──────────────────────────────────────────────────────────────
 async function refreshAppContext() {
-  if (!window.voicePrompt) return;
+  if (!api || !api.getAppContext) return;
   try {
-    const ctx = await window.voicePrompt.getAppContext();
+    const ctx = await api.getAppContext();
     if (!ctx) return;
 
-    // Active App Badge
-    const appId = ctx.activeApp?.appId || 'desktop';
-    ctxActiveApp.textContent = appId.toUpperCase();
-    ctxActiveApp.title = ctx.activeApp?.wmClass || appId;
-
-    // Window Title
-    ctxWindowTitle.textContent = ctx.activeApp?.title || 'Desktop';
-    ctxWindowTitle.title = ctx.activeApp?.title || '';
-
-    // Running Apps Chips
-    ctxRunningApps.innerHTML = '';
-    const apps = ctx.runningApps || [];
-    if (apps.length === 0) {
-      ctxRunningApps.innerHTML = '<span class="chip">desktop</span>';
-    } else {
-      apps.slice(0, 8).forEach(a => {
+    if (ctxActiveApp) {
+      ctxActiveApp.textContent = ctx.activeApp?.title ? `${ctx.activeApp.appId || 'desktop'}: ${ctx.activeApp.title.slice(0, 26)}` : 'Desktop';
+    }
+    if (ctxWindowTitle) {
+      ctxWindowTitle.textContent = ctx.activeApp?.title || 'None';
+    }
+    if (ctxWorkspace) {
+      const ws = ctx.workspace || {};
+      ctxWorkspace.textContent = `${ws.name || 'robos'} (${ws.branch || 'main'})${ws.git?.dirty ? ' *' : ''}`;
+    }
+    if (ctxRunningApps && ctx.runningApps) {
+      ctxRunningApps.innerHTML = '';
+      ctx.runningApps.slice(0, 5).forEach(a => {
         const chip = document.createElement('span');
         chip.className = 'chip';
         chip.textContent = a.appId;
         ctxRunningApps.appendChild(chip);
       });
     }
-
-    // Workspace
-    if (ctx.workspace) {
-      ctxWorkspace.textContent = `${ctx.workspace.name} (branch: ${ctx.workspace.branch || 'main'})`;
-    }
   } catch (err) {
-    console.warn('Context refresh error:', err);
+    console.warn('Failed to refresh context:', err);
   }
 }
 
-// Set UI Recording State
-function setRecordingState(active) {
-  isRecording = active;
-  if (active) {
-    statusPill.className = 'status-pill recording';
-    statusText.textContent = 'LISTENING ● STREAMING LIVE';
-    btnToggleMic.className = 'btn-mic-toggle recording';
-    btnMicLabel.textContent = 'Stop Listening';
-    btnToggleMic.disabled = false;
-    waveform.classList.remove('hidden');
-    if (streamingIndicator) streamingIndicator.classList.remove('hidden');
-    startAudioWaveform();
-  } else {
-    stopAudioWaveform();
-    statusPill.className = 'status-pill idle';
-    statusText.textContent = 'STANDBY';
-    btnToggleMic.className = 'btn-mic-toggle idle';
-    btnMicLabel.textContent = 'Activate Microphone';
-    btnToggleMic.disabled = false;
-    waveform.classList.add('hidden');
-    if (streamingIndicator) streamingIndicator.classList.add('hidden');
-  }
-}
-
-// Toggle Mic Activation
-async function toggleActivation() {
-  if (!window.voicePrompt) return;
-  if (isRecording) {
-    statusPill.className = 'status-pill transcribing';
-    statusText.textContent = 'FINALIZING TRANSCRIPTION...';
-    btnMicLabel.textContent = 'Finalizing...';
-    btnToggleMic.disabled = true;
-
-    try {
-      const res = await window.voicePrompt.deactivate();
-      setRecordingState(false);
-      if (res && res.prompt) {
-        dictationInput.value = res.prompt.text;
-        await loadPrompts();
-        showFeedback(`Captured & Saved: "${res.prompt.text}"`, 'success');
-      } else if (res && res.text) {
-        dictationInput.value = res.text;
-        showFeedback(`Transcribed: "${res.text}"`, 'success');
-      } else {
-        showFeedback('Listening stopped. No clear speech detected (silence or background noise). Speak clearly into your mic and try again.', 'warning');
-      }
-    } catch (err) {
-      setRecordingState(false);
-      showFeedback('Transcription error: ' + err.message, 'error');
-    }
-  } else {
-    const selectedDeviceId = selectDevice.value;
-    await window.voicePrompt.activate({ device: selectedDeviceId });
-    setRecordingState(true);
-    showFeedback('Microphone active! Speak now — text streams live as you speak.', 'success');
-  }
-}
-
-// Save Current Dictation (manual edit or typing)
-async function saveCurrentDictation() {
-  const text = dictationInput.value.trim();
-  if (!text || !window.voicePrompt) return;
-
-  const result = await window.voicePrompt.dictate({
-    text,
-    device: selectDevice.value,
-  });
-
-  dictationInput.value = '';
-  await loadPrompts();
-  showFeedback('Voice prompt saved with active app context!', 'success');
-}
-
-// Stream Current Dictated Text to RobOS Agent
-async function sendCurrentTextToAgent(isAuto = false) {
-  const text = dictationInput.value.trim();
-  if (!text || !window.voicePrompt) return;
-
-  const targetAgent = selectAgentTarget ? selectAgentTarget.value : 'fast-reactive';
-  if (agentStatusBadge) {
-    agentStatusBadge.className = 'agent-status-badge streaming';
-    agentStatusBadge.textContent = 'Agent: Streaming...';
-  }
-
-  try {
-    const res = await window.voicePrompt.streamToAgent({
-      text,
-      agentId: targetAgent,
-      isAuto,
-    });
-
-    if (agentStatusBadge) {
-      agentStatusBadge.className = 'agent-status-badge sent';
-      agentStatusBadge.textContent = 'Agent: Dispatched';
-      setTimeout(() => {
-        if (agentStatusBadge) {
-          agentStatusBadge.className = 'agent-status-badge idle';
-          agentStatusBadge.textContent = 'Agent: Standby';
-        }
-      }, 3000);
-    }
-
-    if (res && res.response) {
-      showFeedback(`Streamed to ${targetAgent}: "${res.response.slice(0, 50)}${res.response.length > 50 ? '...' : ''}"`, 'success');
-    } else {
-      showFeedback(`Streamed to RobOS agent (${targetAgent})!`, 'success');
-    }
-  } catch (err) {
-    if (agentStatusBadge) {
-      agentStatusBadge.className = 'agent-status-badge idle';
-      agentStatusBadge.textContent = 'Agent: Error';
-    }
-    showFeedback(`Agent stream error: ${err.message}`, 'error');
-  }
-}
-
-// Load and Render Prompts
+// ── Prompts History ──────────────────────────────────────────────────────────
 async function loadPrompts() {
-  if (!window.voicePrompt) return;
+  if (!api || !api.getPrompts) return;
   try {
-    currentPrompts = await window.voicePrompt.getPrompts();
-    renderPrompts();
+    currentPrompts = await api.getPrompts();
+    renderPromptsList(currentPrompts);
   } catch (err) {
     console.warn('Failed to load prompts:', err);
   }
 }
 
-function renderPrompts() {
-  const filter = (inputSearch.value || '').toLowerCase().trim();
-  const filtered = currentPrompts.filter(p => {
-    if (!filter) return true;
-    const textMatch = (p.text || '').toLowerCase().includes(filter);
-    const appMatch = (p.metadata?.activeApp?.appId || '').toLowerCase().includes(filter);
-    return textMatch || appMatch;
-  });
+function renderPromptsList(prompts) {
+  if (!promptsList) return;
+  if (promptsCount) promptsCount.textContent = prompts.length;
 
-  promptsCount.textContent = filtered.length;
-
-  if (filtered.length === 0) {
+  if (prompts.length === 0) {
     promptsList.innerHTML = `
       <div class="empty-state">
-        <p>No voice prompts match your search.</p>
+        <p>No voice prompts recorded yet.</p>
         <p class="empty-sub">Activate microphone or type text to record your first prompt.</p>
       </div>`;
     return;
   }
 
-  promptsList.innerHTML = filtered.map(p => {
-    const app = p.metadata?.activeApp?.appId || 'desktop';
-    const title = p.metadata?.activeApp?.title || '';
-    const dateStr = new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const jsonStr = JSON.stringify(p.metadata, null, 2);
-
-    return `
-      <div class="prompt-item" id="item-${p.id}">
-        <div class="prompt-top">
-          <span class="prompt-text">${escapeHtml(p.text)}</span>
-          <button class="btn-icon" onclick="deletePromptItem('${p.id}')" title="Delete Prompt">✕</button>
-        </div>
-        <div class="prompt-meta-row">
-          <div class="prompt-context-tag">
-            <span>📱 ${escapeHtml(app)}</span>
-            ${title ? `<span>&bull; ${escapeHtml(title.slice(0, 30))}</span>` : ''}
-          </div>
-          <div>
-            <span>${dateStr}</span>
-            &bull;
-            <button class="btn-meta-toggle" onclick="toggleJsonView('${p.id}')">Context Metadata</button>
-          </div>
-        </div>
-        <div id="json-${p.id}" class="prompt-json-view hidden">${escapeHtml(jsonStr)}</div>
+  promptsList.innerHTML = '';
+  prompts.slice().reverse().forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'prompt-item';
+    item.innerHTML = `
+      <div class="prompt-top">
+        <span class="prompt-text">${escapeHtml(p.text)}</span>
+        <button class="btn-icon btn-delete-prompt" data-id="${p.id}" title="Delete prompt">🗑️</button>
       </div>
-    `;
-  }).join('');
+      <div class="prompt-meta-row">
+        <span class="prompt-context-tag">📱 ${escapeHtml(p.metadata?.activeApp?.appId || 'desktop')}</span>
+        <span>${formatTime(p.timestamp)}</span>
+      </div>`;
+
+    item.querySelector('.btn-delete-prompt')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await api.deletePrompt(p.id);
+      await loadPrompts();
+    });
+
+    item.addEventListener('click', () => {
+      if (dictationInput) dictationInput.value = p.text;
+    });
+
+    promptsList.appendChild(item);
+  });
 }
 
-window.deletePromptItem = async function(id) {
-  if (!window.voicePrompt) return;
-  await window.voicePrompt.deletePrompt(id);
-  await loadPrompts();
-};
-
-window.toggleJsonView = function(id) {
-  const el = document.getElementById(`json-${id}`);
-  if (el) {
-    el.classList.toggle('hidden');
+// ── Desktop Assistant ────────────────────────────────────────────────────────
+async function loadAssistantHistory() {
+  if (!api || !api.getAssistantHistory) return;
+  try {
+    const history = await api.getAssistantHistory();
+    if (history && history.length > 0) {
+      if (assistantChatFeed) assistantChatFeed.innerHTML = '';
+      history.forEach(turn => appendChatTurn(turn));
+    }
+  } catch (err) {
+    console.warn('Failed to load assistant history:', err);
   }
-};
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
-// Event Listeners
+function appendChatTurn(turn) {
+  if (!assistantChatFeed) return;
+  const turnEl = document.createElement('div');
+  turnEl.className = 'chat-turn';
+
+  turnEl.innerHTML = `
+    <div class="chat-bubble user">
+      <div class="bubble-text">${escapeHtml(turn.query)}</div>
+      <div class="bubble-meta">
+        <span>You</span> • <span>${formatTime(turn.timestamp)}</span>
+      </div>
+    </div>
+    <div class="chat-bubble assistant">
+      <div class="bubble-text">${escapeHtml(turn.response)}</div>
+      <div class="bubble-meta">
+        <span>RobOS Assistant</span> •
+        <button class="btn-icon btn-sm btn-replay-turn" title="Replay spoken audio">🔊 Play</button>
+      </div>
+    </div>`;
+
+  turnEl.querySelector('.btn-replay-turn')?.addEventListener('click', () => {
+    if (api && api.speak) {
+      api.speak(turn.response);
+    }
+  });
+
+  assistantChatFeed.appendChild(turnEl);
+  assistantChatFeed.scrollTop = assistantChatFeed.scrollHeight;
+}
+
+function updateAssistantState(state) {
+  if (!assistantStateBadge) return;
+  assistantStateBadge.className = `state-badge ${state.toLowerCase()}`;
+  assistantStateBadge.textContent = state;
+}
+
+// ── Event Listeners ──────────────────────────────────────────────────────────
 function setupEventListeners() {
-  btnToggleMic.addEventListener('click', toggleActivation);
+  // Navigation & sliders
+  selectTtsEngine?.addEventListener('change', () => {
+    renderVoiceOptions();
+  });
 
-  selectDevice.addEventListener('change', async () => {
-    const deviceId = selectDevice.value;
-    statDevice.textContent = selectDevice.options[selectDevice.selectedIndex]?.text || 'Default';
-    if (window.voicePrompt) {
-      await window.voicePrompt.savePrefs({ configuredDevice: deviceId });
+  sliderTtsSpeed?.addEventListener('input', () => {
+    valTtsSpeed.textContent = `${Number(sliderTtsSpeed.value).toFixed(2)}x`;
+  });
+
+  sliderTtsPitch?.addEventListener('input', () => {
+    valTtsPitch.textContent = `${sliderTtsPitch.value} Hz`;
+  });
+
+  sliderTtsVolume?.addEventListener('input', () => {
+    valTtsVolume.textContent = `${sliderTtsVolume.value}%`;
+  });
+
+  // Outgoing TTS save preferences
+  btnSaveTtsPrefs?.addEventListener('click', async () => {
+    const prefs = {
+      engine: selectTtsEngine.value,
+      voice: selectTtsVoice.value,
+      speed: parseFloat(sliderTtsSpeed.value),
+      pitch: parseInt(sliderTtsPitch.value, 10),
+      volume: parseInt(sliderTtsVolume.value, 10),
+      autoSpeakResponses: chkAutoSpeak.checked,
+    };
+    if (api && api.saveTTSPrefs) {
+      await api.saveTTSPrefs(prefs);
+      if (statTtsEngine) statTtsEngine.textContent = `${prefs.engine} (${prefs.voice})`;
+      showFeedback('Voice preferences saved successfully!');
     }
   });
 
-  btnSaveDictation.addEventListener('click', saveCurrentDictation);
-  btnClearDictation.addEventListener('click', () => { dictationInput.value = ''; });
-  btnRefreshContext.addEventListener('click', refreshAppContext);
+  // Outgoing TTS Test Speak
+  btnTestSpeak?.addEventListener('click', async () => {
+    const text = (ttsPreviewInput?.value || '').trim();
+    if (!text) return;
+    if (ttsPlayingBadge) ttsPlayingBadge.classList.remove('hidden');
 
-  if (btnSendAgent) {
-    btnSendAgent.addEventListener('click', () => sendCurrentTextToAgent(false));
+    try {
+      const opts = {
+        engine: selectTtsEngine?.value,
+        voice: selectTtsVoice?.value,
+        speed: parseFloat(sliderTtsSpeed?.value || 1.0),
+        pitch: parseInt(sliderTtsPitch?.value || 0, 10),
+        volume: parseInt(sliderTtsVolume?.value || 100, 10),
+      };
+      await api.speak(text, opts);
+    } catch (err) {
+      showFeedback(`Speech error: ${err.message}`, 'error');
+    } finally {
+      if (ttsPlayingBadge) ttsPlayingBadge.classList.add('hidden');
+    }
+  });
+
+  btnStopSpeak?.addEventListener('click', async () => {
+    if (api && api.stopSpeaking) {
+      await api.stopSpeaking();
+    }
+    if (ttsPlayingBadge) ttsPlayingBadge.classList.add('hidden');
+  });
+
+  // Background stream mode toggles
+  btnToggleBgStream?.addEventListener('click', async () => {
+    isBackgroundMode = !isBackgroundMode;
+    updateBgStreamUI(isBackgroundMode);
+    if (api && api.toggleBackground) {
+      await api.toggleBackground(isBackgroundMode);
+    }
+  });
+
+  chkBgStreamMode?.addEventListener('change', async () => {
+    isBackgroundMode = chkBgStreamMode.checked;
+    updateBgStreamUI(isBackgroundMode);
+    if (api && api.toggleBackground) {
+      await api.toggleBackground(isBackgroundMode);
+    }
+  });
+
+  function updateBgStreamUI(enabled) {
+    if (btnToggleBgStream) {
+      btnToggleBgStream.className = `btn-badge-toggle ${enabled ? 'active' : ''}`;
+    }
+    if (bgStreamLabel) {
+      bgStreamLabel.textContent = `Background Stream: ${enabled ? 'ON' : 'OFF'}`;
+    }
+    if (chkBgStreamMode) chkBgStreamMode.checked = enabled;
+    if (statStreamMode) statStreamMode.textContent = enabled ? 'Continuous Topic' : 'Standard';
+    showFeedback(enabled ? 'Continuous background streaming topic active (ephemeral).' : 'Background streaming stopped.');
   }
 
-  inputSearch.addEventListener('input', renderPrompts);
+  // Wake-word toggle
+  chkWakeWord?.addEventListener('change', async () => {
+    if (api && api.toggleWakeWord) {
+      await api.toggleWakeWord(chkWakeWord.checked);
+      showFeedback(chkWakeWord.checked ? 'Wake-word detection enabled ("hello robos" / "row bose").' : 'Wake-word detection disabled.');
+    }
+  });
 
-  btnClearAll.addEventListener('click', async () => {
-    if (confirm('Clear all recorded voice prompts?')) {
-      if (window.voicePrompt) {
-        await window.voicePrompt.clearPrompts();
-        await loadPrompts();
+  // Microphone toggle button
+  btnToggleMic?.addEventListener('click', async () => {
+    if (isRecording) {
+      await api.deactivate();
+    } else {
+      await api.activate({ device: selectDevice.value });
+    }
+  });
+
+  // Send to assistant
+  const sendAssistantQuery = async () => {
+    const query = (assistantTextInput?.value || '').trim();
+    if (!query) return;
+    assistantTextInput.value = '';
+
+    appendChatTurn({
+      query,
+      response: 'Thinking...',
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      const res = await api.askAssistant(query, {
+        engine: selectTtsEngine?.value,
+        voice: selectTtsVoice?.value,
+      });
+      if (res && res.turn) {
+        // Remove temporary turn and add real one
+        assistantChatFeed.lastElementChild?.remove();
+        appendChatTurn(res.turn);
+      }
+    } catch (err) {
+      showFeedback(`Assistant query failed: ${err.message}`, 'error');
+    }
+  };
+
+  btnSendAssistant?.addEventListener('click', sendAssistantQuery);
+  assistantTextInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendAssistantQuery();
+  });
+
+  btnClearChat?.addEventListener('click', async () => {
+    if (api && api.clearAssistantHistory) {
+      await api.clearAssistantHistory();
+      if (assistantChatFeed) {
+        assistantChatFeed.innerHTML = `
+          <div class="chat-welcome">
+            <div class="welcome-icon">🤖</div>
+            <h4>RobOS Desktop Assistant Ready</h4>
+            <p>Conversation history cleared.</p>
+          </div>`;
       }
     }
   });
 
-  // Hotkey triggers and IPC events from main process
-  if (window.voicePrompt) {
-    window.voicePrompt.onActivated(() => {
-      setRecordingState(true);
-      showFeedback('Microphone listening via hotkey Super+V... Speak now!', 'success');
-    });
-    window.voicePrompt.onDeactivated(async (data) => {
-      setRecordingState(false);
-      btnToggleMic.disabled = false;
-      if (data && data.prompt) {
-        dictationInput.value = data.prompt.text;
-        await loadPrompts();
-        showFeedback(`Captured & Saved: "${data.prompt.text}"`, 'success');
-        if (chkStreamAgent && chkStreamAgent.checked) {
-          sendCurrentTextToAgent(true);
-        }
-      } else if (data && data.text) {
-        dictationInput.value = data.text;
-        showFeedback(`Transcribed: "${data.text}"`, 'success');
-        if (chkStreamAgent && chkStreamAgent.checked) {
-          sendCurrentTextToAgent(true);
-        }
-      } else {
-        showFeedback('Listening stopped. No clear speech detected.', 'warning');
-      }
-    });
-    window.voicePrompt.onDictation(() => {
-      loadPrompts();
-    });
-    if (typeof window.voicePrompt.onInterimText === 'function') {
-      window.voicePrompt.onInterimText((data) => {
-        if (data && data.text) {
+  // Save manual dictation
+  btnSaveDictation?.addEventListener('click', async () => {
+    const text = (dictationInput?.value || '').trim();
+    if (!text) return;
+    await api.dictate({ text });
+    dictationInput.value = '';
+    await loadPrompts();
+    showFeedback('Voice prompt saved!');
+  });
+
+  btnClearDictation?.addEventListener('click', () => {
+    if (dictationInput) dictationInput.value = '';
+  });
+
+  btnClearAll?.addEventListener('click', async () => {
+    if (confirm('Clear all recorded voice prompts?')) {
+      await api.clearPrompts();
+      await loadPrompts();
+      showFeedback('All prompts cleared.');
+    }
+  });
+
+  inputSearch?.addEventListener('input', () => {
+    const q = inputSearch.value.toLowerCase();
+    const filtered = currentPrompts.filter(p =>
+      p.text.toLowerCase().includes(q) || (p.metadata?.activeApp?.appId || '').toLowerCase().includes(q)
+    );
+    renderPromptsList(filtered);
+  });
+
+  // IPC Event Subscriptions
+  if (api) {
+    if (api.onActivated) {
+      api.onActivated(() => {
+        isRecording = true;
+        updateStatus(true);
+      });
+    }
+
+    if (api.onDeactivated) {
+      api.onDeactivated(async (res) => {
+        isRecording = false;
+        updateStatus(false);
+        if (res.prompt) await loadPrompts();
+      });
+    }
+
+    if (api.onInterimText) {
+      api.onInterimText((data) => {
+        if (dictationInput && !data.backgroundMode) {
           dictationInput.value = data.text;
-          dictationInput.scrollTop = dictationInput.scrollHeight;
         }
+      });
+    }
+
+    if (api.onStreamText) {
+      api.onStreamText((data) => {
+        if (streamLiveBanner && streamLiveText) {
+          streamLiveBanner.classList.remove('hidden');
+          streamLiveText.textContent = data.text;
+          clearTimeout(streamLiveBanner._timer);
+          streamLiveBanner._timer = setTimeout(() => {
+            streamLiveBanner.classList.add('hidden');
+          }, 4000);
+        }
+      });
+    }
+
+    if (api.onAssistantState) {
+      api.onAssistantState((data) => {
+        updateAssistantState(data.state || 'IDLE');
+      });
+    }
+
+    if (api.onAssistantTurn) {
+      api.onAssistantTurn((data) => {
+        appendChatTurn(data);
       });
     }
   }
 }
 
-// Run on load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+function updateStatus(active) {
+  if (statusPill && statusText) {
+    if (active) {
+      statusPill.className = 'status-pill active';
+      statusText.textContent = 'LISTENING';
+      btnToggleMic.className = 'btn-mic-toggle recording';
+      btnMicLabel.textContent = 'Stop Listening';
+      if (waveform) waveform.classList.remove('hidden');
+      if (streamingIndicator) streamingIndicator.classList.remove('hidden');
+    } else {
+      statusPill.className = 'status-pill idle';
+      statusText.textContent = 'STANDBY';
+      btnToggleMic.className = 'btn-mic-toggle idle';
+      btnMicLabel.textContent = 'Activate Microphone';
+      if (waveform) waveform.classList.add('hidden');
+      if (streamingIndicator) streamingIndicator.classList.add('hidden');
+    }
+  }
 }
+
+function formatTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+document.addEventListener('DOMContentLoaded', init);

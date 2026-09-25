@@ -21,8 +21,11 @@ const http = require('http');
 const promptStore = require('./lib/prompt-store');
 const contextProvider = require('./lib/context-provider');
 const { STTEngine } = require('./lib/stt-engine');
+const { TTSEngine } = require('./lib/tts-engine');
+const { WakeWordDetector } = require('./lib/wake-word');
+const { DesktopAssistant } = require('./lib/desktop-assistant');
 
-app.setName('robos-voice-prompt');
+app.setName('robos-voice');
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
@@ -38,10 +41,39 @@ let apiServer = null;
 let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
 const sttEngine = new STTEngine(promptStore.loadPrefs());
+const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
+const wakeDetector = new WakeWordDetector({ enabled: true });
+const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector });
 
 sttEngine.on('interim-text', (data) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('vp-event-interim-text', data);
+  }
+});
+
+sttEngine.on('stream-text', (data) => {
+  wakeDetector.processText(data.text, data);
+  desktopAssistant.handleStreamText(data);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-stream-text', data);
+  }
+});
+
+desktopAssistant.on('state-change', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-assistant-state', data);
+  }
+});
+
+desktopAssistant.on('assistant-turn', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-assistant-turn', data);
+  }
+});
+
+wakeDetector.on('wake-word', (data) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('vp-event-wake-word', data);
   }
 });
 
@@ -210,12 +242,16 @@ function startApiServer(overridePort) {
         return res.end(JSON.stringify({
           ok: true,
           active: sttEngine.isActive(),
+          backgroundMode: sttEngine.isBackgroundMode(),
           configuredDevice: prefs.configuredDevice,
           activeApp: activeWin.appId || 'desktop',
           activeWindowTitle: activeWin.title,
           totalPrompts: prompts.length,
           interimText: sttEngine.lastInterimText || '',
           port: currentApiPort,
+          ttsEngine: ttsEngine.getPrefs().engine,
+          assistantState: desktopAssistant.getState(),
+          wakeWordEnabled: wakeDetector.isEnabled(),
         }));
       }
 
@@ -226,12 +262,14 @@ function startApiServer(overridePort) {
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         });
-        const onInterim = (data) => {
+        const onStream = (data) => {
           try { res.write(`data: ${JSON.stringify(data)}\n\n`); } catch {}
         };
-        sttEngine.on('interim-text', onInterim);
+        sttEngine.on('stream-text', onStream);
+        sttEngine.on('interim-text', onStream);
         req.on('close', () => {
-          sttEngine.off('interim-text', onInterim);
+          sttEngine.off('stream-text', onStream);
+          sttEngine.off('interim-text', onStream);
         });
         return;
       }
@@ -251,7 +289,7 @@ function startApiServer(overridePort) {
       if (pathname === '/api/deactivate' && method === 'POST') {
         const result = await sttEngine.deactivate();
         let promptEntry = null;
-        if (result.text && result.text.trim()) {
+        if (!result.backgroundMode && result.text && result.text.trim()) {
           promptEntry = await handleDictation(result.text, {
             durationMs: result.durationMs,
             confidence: 0.95,
@@ -353,6 +391,104 @@ function startApiServer(overridePort) {
         }
       }
 
+      // 10.1 POST /api/speak or POST /api/tts/speak — outgoing speech synthesis
+      if ((pathname === '/api/speak' || pathname === '/api/tts/speak') && method === 'POST') {
+        const body = await parseBody(req);
+        const text = typeof body === 'string' ? body : (body.text || '');
+        const result = await ttsEngine.speak(text, typeof body === 'object' ? body : {});
+        res.writeHead(result.ok ? 200 : 400);
+        return res.end(JSON.stringify(result));
+      }
+
+      // 10.2 POST /api/stop-speaking — stop active audio playback
+      if (pathname === '/api/stop-speaking' && method === 'POST') {
+        ttsEngine.stop();
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, stopped: true }));
+      }
+
+      // 10.3 GET /api/voices — enumerate available TTS voices
+      if (pathname === '/api/voices' && method === 'GET') {
+        const voices = await ttsEngine.listVoices();
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, voices }));
+      }
+
+      // 10.4 GET /api/tts/config & POST /api/tts/config — TTS preferences
+      if (pathname === '/api/tts/config') {
+        if (method === 'GET') {
+          res.writeHead(200);
+          return res.end(JSON.stringify({ ok: true, config: ttsEngine.getPrefs() }));
+        }
+        if (method === 'POST') {
+          const body = await parseBody(req);
+          const updated = ttsEngine.savePrefs(body);
+          res.writeHead(200);
+          return res.end(JSON.stringify({ ok: true, config: updated }));
+        }
+      }
+
+      // 10.5 POST /api/background/start & POST /api/background/stop — ephemeral stream mode
+      if (pathname === '/api/background/start' && method === 'POST') {
+        const body = await parseBody(req);
+        const result = await sttEngine.activate({ ...body, backgroundMode: true });
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('vp-event-activated', result);
+        }
+        res.writeHead(200);
+        return res.end(JSON.stringify(result));
+      }
+
+      if (pathname === '/api/background/stop' && method === 'POST') {
+        const result = await sttEngine.deactivate();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('vp-event-deactivated', result);
+        }
+        res.writeHead(200);
+        return res.end(JSON.stringify(result));
+      }
+
+      // 10.6 POST /api/assistant/chat — interact directly with Desktop Assistant
+      if (pathname === '/api/assistant/chat' && method === 'POST') {
+        const body = await parseBody(req);
+        const query = typeof body === 'string' ? body : (body.message || body.text || body.query || '');
+        const result = await desktopAssistant.processQuery(query, typeof body === 'object' ? body : {});
+        res.writeHead(result.ok ? 200 : 400);
+        return res.end(JSON.stringify(result));
+      }
+
+      // 10.7 GET /api/assistant/history & DELETE /api/assistant/history
+      if (pathname === '/api/assistant/history') {
+        if (method === 'GET') {
+          res.writeHead(200);
+          return res.end(JSON.stringify({ ok: true, history: desktopAssistant.getHistory() }));
+        }
+        if (method === 'DELETE') {
+          const result = desktopAssistant.clearHistory();
+          res.writeHead(200);
+          return res.end(JSON.stringify(result));
+        }
+      }
+
+      // 10.8 POST /api/wake-word/toggle — enable or disable wake-word detection
+      if (pathname === '/api/wake-word/toggle' && method === 'POST') {
+        const body = await parseBody(req);
+        const enabled = body.enabled !== false;
+        wakeDetector.setEnabled(enabled);
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, enabled: wakeDetector.isEnabled() }));
+      }
+
+      // 10.9 POST /api/stream/simulate — push simulated speech chunk into the stream
+      if (pathname === '/api/stream/simulate' && method === 'POST') {
+        const body = await parseBody(req);
+        const text = typeof body === 'string' ? body : (body.text || '');
+        const isFinal = Boolean(body.isFinal);
+        const chunk = sttEngine.simulateStreamChunk(text, isFinal);
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, chunk }));
+      }
+
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health
       if (pathname === '/eval' && method === 'POST') {
         const body = await parseBody(req);
@@ -405,7 +541,7 @@ function startApiServer(overridePort) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    title: 'RobOS Voice Prompt',
+    title: 'RobOS Voice',
     icon: path.join(__dirname, 'icon.svg'),
     width: 1060,
     height: 720,
@@ -472,10 +608,14 @@ ipcMain.handle('vp-get-status', async () => {
   const prefs = promptStore.loadPrefs();
   return {
     active: sttEngine.isActive(),
+    backgroundMode: sttEngine.isBackgroundMode(),
     configuredDevice: prefs.configuredDevice,
     activeApp: activeWin.appId || 'desktop',
     activeWindowTitle: activeWin.title,
     totalPrompts: promptStore.loadPrompts().length,
+    ttsEngine: ttsEngine.getPrefs().engine,
+    assistantState: desktopAssistant.getState(),
+    wakeWordEnabled: wakeDetector.isEnabled(),
   };
 });
 
@@ -498,7 +638,7 @@ ipcMain.handle('vp-activate', async (_e, options) => {
 ipcMain.handle('vp-deactivate', async () => {
   const res = await sttEngine.deactivate();
   let promptEntry = null;
-  if (res.text && res.text.trim()) {
+  if (!res.backgroundMode && res.text && res.text.trim()) {
     promptEntry = await handleDictation(res.text, {
       durationMs: res.durationMs,
       confidence: 0.95,
@@ -553,6 +693,62 @@ ipcMain.handle('vp-save-prefs', (_e, prefs) => {
   return saved;
 });
 
+// Outgoing TTS IPC handlers
+ipcMain.handle('vp-tts-speak', async (_e, text, options) => {
+  return ttsEngine.speak(text, options || {});
+});
+
+ipcMain.handle('vp-tts-stop', () => {
+  ttsEngine.stop();
+  return { ok: true, stopped: true };
+});
+
+ipcMain.handle('vp-tts-get-voices', async () => {
+  return ttsEngine.listVoices();
+});
+
+ipcMain.handle('vp-tts-get-prefs', () => {
+  return ttsEngine.getPrefs();
+});
+
+ipcMain.handle('vp-tts-save-prefs', (_e, prefs) => {
+  return ttsEngine.savePrefs(prefs);
+});
+
+// Background stream & Desktop Assistant IPC handlers
+ipcMain.handle('vp-background-toggle', async (_e, enable) => {
+  if (enable) {
+    const res = await sttEngine.activate({ backgroundMode: true });
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('vp-event-activated', res);
+    }
+    return res;
+  } else {
+    const res = await sttEngine.deactivate();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('vp-event-deactivated', res);
+    }
+    return res;
+  }
+});
+
+ipcMain.handle('vp-assistant-chat', async (_e, query, options) => {
+  return desktopAssistant.processQuery(query, options || {});
+});
+
+ipcMain.handle('vp-assistant-get-history', () => {
+  return desktopAssistant.getHistory();
+});
+
+ipcMain.handle('vp-assistant-clear-history', () => {
+  return desktopAssistant.clearHistory();
+});
+
+ipcMain.handle('vp-wake-word-toggle', (_e, enabled) => {
+  wakeDetector.setEnabled(enabled !== false);
+  return { ok: true, enabled: wakeDetector.isEnabled() };
+});
+
 // App lifecycle
 app.whenReady().then(() => {
   startApiServer();
@@ -580,6 +776,9 @@ module.exports = {
   handleDictation,
   handleAgentStream,
   sttEngine,
+  ttsEngine,
+  wakeDetector,
+  desktopAssistant,
   promptStore,
   contextProvider,
 };

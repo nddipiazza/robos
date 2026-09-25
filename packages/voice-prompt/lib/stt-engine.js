@@ -74,10 +74,19 @@ class STTEngine extends EventEmitter {
     this.streamInterval = null;
     this.isTranscribing = false;
     this.lastInterimText = '';
+    this.backgroundMode = Boolean(options.backgroundMode);
 
     if (process.env.ROBOS_TEST !== '1') {
       this.getTranscriber().catch(() => {});
     }
+  }
+
+  isBackgroundMode() {
+    return this.backgroundMode;
+  }
+
+  setBackgroundMode(enabled) {
+    this.backgroundMode = Boolean(enabled);
   }
 
   async getTranscriber() {
@@ -185,6 +194,7 @@ class STTEngine extends EventEmitter {
   async activate(options = {}) {
     if (this.active) return { ok: true, active: true, alreadyActive: true };
     this.active = true;
+    this.backgroundMode = Boolean(options.backgroundMode || options.background);
     this.recordingStartTime = Date.now();
     const device = options.device || this.configuredDevice;
 
@@ -253,11 +263,14 @@ class STTEngine extends EventEmitter {
               const text = cleanTranscript(res?.text || '');
               if (text && this.active && text !== this.lastInterimText) {
                 this.lastInterimText = text;
-                this.emit('interim-text', {
+                const payload = {
                   text,
                   isFinal: false,
                   elapsedMs: Date.now() - (this.recordingStartTime || Date.now()),
-                });
+                  backgroundMode: this.backgroundMode,
+                };
+                this.emit('interim-text', payload);
+                this.emit('stream-text', payload);
               }
             }
           }
@@ -269,8 +282,8 @@ class STTEngine extends EventEmitter {
       }, 2000);
     }
 
-    this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile });
-    return { ok: true, active: true, device, startTime: this.recordingStartTime };
+    this.emit('activated', { device, startTime: this.recordingStartTime, recordingFile: tmpFile, backgroundMode: this.backgroundMode });
+    return { ok: true, active: true, device, startTime: this.recordingStartTime, backgroundMode: this.backgroundMode };
   }
 
   /**
@@ -350,11 +363,26 @@ class STTEngine extends EventEmitter {
     if (!text && this.lastInterimText) {
       text = this.lastInterimText;
     }
-    this.lastInterimText = text;
+    const wasBackground = this.backgroundMode;
+    this.backgroundMode = false;
 
-    this.emit('interim-text', { text, isFinal: true, durationMs });
-    this.emit('deactivated', { durationMs, text });
-    return { ok: true, active: false, durationMs, text };
+    this.emit('interim-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
+    this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
+    this.emit('deactivated', { durationMs, text, backgroundMode: wasBackground });
+    return { ok: true, active: false, durationMs, text, backgroundMode: wasBackground };
+  }
+
+  simulateStreamChunk(text, isFinal = false) {
+    const data = {
+      text,
+      isFinal,
+      elapsedMs: 1000,
+      backgroundMode: this.backgroundMode,
+      timestamp: new Date().toISOString(),
+    };
+    this.emit('interim-text', data);
+    this.emit('stream-text', data);
+    return data;
   }
 
   /**

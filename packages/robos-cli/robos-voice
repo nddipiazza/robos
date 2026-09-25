@@ -2,11 +2,16 @@
 'use strict';
 
 /**
- * robos-voice — CLI tool to interact with RobOS Voice Prompt Agent
+ * robos-voice — CLI tool to interact with RobOS Voice Subsystem
  *
  * Usage:
  *   robos-voice status
  *   robos-voice context
+ *   robos-voice speak "Hello from RobOS Voice" [--engine <engine>] [--voice <voice>]
+ *   robos-voice stop-speaking
+ *   robos-voice voices
+ *   robos-voice assistant "What is the git status?"
+ *   robos-voice background <start|stop>
  *   robos-voice dictate "Refactor user authentication service"
  *   robos-voice activate
  *   robos-voice deactivate
@@ -17,6 +22,17 @@
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+
+let voiceClient = null;
+try {
+  const lib = require('../robos-lib');
+  voiceClient = lib.voiceClient;
+} catch {
+  try {
+    const { RobOSVoiceClient } = require('../robos-lib/voice');
+    voiceClient = new RobOSVoiceClient();
+  } catch {}
+}
 
 const API_PORT = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 const API_BASE = `http://127.0.0.1:${API_PORT}`;
@@ -29,7 +45,7 @@ function request(method, pathname, body = null) {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 3000,
+      timeout: 15000,
     }, (res) => {
       let data = '';
       res.on('data', c => { data += c; });
@@ -53,12 +69,12 @@ function request(method, pathname, body = null) {
   });
 }
 
-// Direct library fallback when the background daemon isn't running
 function getLocalFallback() {
   try {
     const contextProvider = require('../voice-prompt/lib/context-provider');
     const promptStore = require('../voice-prompt/lib/prompt-store');
-    return { contextProvider, promptStore };
+    const { TTSEngine } = require('../voice-prompt/lib/tts-engine');
+    return { contextProvider, promptStore, ttsEngine: new TTSEngine() };
   } catch {
     return null;
   }
@@ -70,11 +86,16 @@ async function main() {
 
   if (command === '--help' || command === '-h' || command === 'help') {
     console.log(`
-RobOS Voice Prompt CLI
+RobOS Voice CLI
 
 Usage:
-  robos-voice status                  Check Voice Prompt Agent running status
+  robos-voice status                  Check RobOS Voice running status and modes
   robos-voice context                 Query context of RobOS apps in use right now
+  robos-voice speak <text>            Speak text out loud in natural human voice (Kokoro/Edge-TTS)
+  robos-voice stop-speaking           Stop ongoing speech playback immediately
+  robos-voice voices                  List available natural voice models
+  robos-voice assistant <query>       Ask RobOS Desktop Assistant with active context & speech reply
+  robos-voice background <start|stop> Toggle continuous background streaming topic mode
   robos-voice dictate <prompt text>   Dictate a voice prompt with real-time app context
   robos-voice activate                Activate microphone listening
   robos-voice deactivate              Deactivate microphone listening
@@ -86,20 +107,99 @@ Usage:
 
   try {
     if (command === 'status') {
-      try {
+      if (voiceClient) {
+        const res = await voiceClient.getStatus();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
         const res = await request('GET', '/api/status');
         console.log(JSON.stringify(res.data, null, 2));
-      } catch {
-        const local = getLocalFallback();
-        const activeWin = local ? await local.contextProvider.getActiveWindow() : null;
-        console.log(JSON.stringify({
-          ok: true,
-          agentRunning: false,
-          activeApp: activeWin?.appId || 'desktop',
-          note: 'Voice Prompt daemon is not active on HTTP port; query was handled via local fallback.',
-        }, null, 2));
       }
       return;
+    }
+
+    if (command === 'speak') {
+      let engine = null;
+      let voice = null;
+      const textParts = [];
+      for (let i = 1; i < args.length; i++) {
+        if (args[i] === '--engine' && args[i + 1]) {
+          engine = args[++i];
+        } else if (args[i] === '--voice' && args[i + 1]) {
+          voice = args[++i];
+        } else {
+          textParts.push(args[i]);
+        }
+      }
+      const text = textParts.join(' ').trim();
+      if (!text) {
+        console.error('Error: Text to speak is required. Usage: robos-voice speak "text" [--engine <eng>] [--voice <v>]');
+        process.exit(1);
+      }
+
+      console.log(`Speaking: "${text}"...`);
+      if (voiceClient) {
+        const res = await voiceClient.speak(text, { engine, voice });
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/speak', { text, engine, voice });
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'stop-speaking') {
+      if (voiceClient) {
+        const res = await voiceClient.stopSpeaking();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/stop-speaking');
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'voices') {
+      if (voiceClient) {
+        const res = await voiceClient.getVoices();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('GET', '/api/voices');
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'assistant') {
+      const query = args.slice(1).join(' ').trim();
+      if (!query) {
+        console.error('Error: Query is required. Usage: robos-voice assistant "What is the git status?"');
+        process.exit(1);
+      }
+      console.log(`Asking RobOS Desktop Assistant: "${query}"...`);
+      if (voiceClient) {
+        const res = await voiceClient.askAssistant(query);
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/assistant/chat', { message: query });
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'background') {
+      const sub = (args[1] || '').toLowerCase();
+      if (sub === 'start') {
+        const res = voiceClient ? await voiceClient.startBackgroundStream() : (await request('POST', '/api/background/start')).data;
+        console.log('Background stream topic started:', res);
+        return;
+      }
+      if (sub === 'stop') {
+        const res = voiceClient ? await voiceClient.stopBackgroundStream() : (await request('POST', '/api/background/stop')).data;
+        console.log('Background stream topic stopped:', res);
+        return;
+      }
+      console.error('Usage: robos-voice background <start|stop>');
+      process.exit(1);
     }
 
     if (command === 'context') {
@@ -157,9 +257,9 @@ Usage:
     if (command === 'activate') {
       try {
         const res = await request('POST', '/api/activate');
-        console.log('Voice Prompt Agent activated (listening):', res.data);
+        console.log('RobOS Voice activated (listening):', res.data);
       } catch (e) {
-        console.error('Error connecting to Voice Prompt daemon:', e.message);
+        console.error('Error connecting to Voice daemon:', e.message);
       }
       return;
     }
@@ -167,9 +267,9 @@ Usage:
     if (command === 'deactivate') {
       try {
         const res = await request('POST', '/api/deactivate');
-        console.log('Voice Prompt Agent deactivated:', res.data);
+        console.log('RobOS Voice deactivated:', res.data);
       } catch (e) {
-        console.error('Error connecting to Voice Prompt daemon:', e.message);
+        console.error('Error connecting to Voice daemon:', e.message);
       }
       return;
     }
