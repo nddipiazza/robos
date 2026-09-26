@@ -20,8 +20,8 @@
   "portrait": "👑",
   "robos:alignment": "Lawful Good",
   "alignment": "Lawful Good",
-  "robos:backstory": "Monarch of Tantegel Castle who chronicles deeds of valor on the Imperial Scrolls of Honor.",
-  "backstory": "Monarch of Tantegel Castle who chronicles deeds of valor on the Imperial Scrolls of Honor.",
+  "robos:backstory": "Monarch of Alefgard who guides the descendant of Erdrick on the quest to restore the Ball of Light.",
+  "backstory": "Monarch of Alefgard who guides the descendant of Erdrick on the quest to restore the Ball of Light.",
   "robos:npcRole": "king",
   "role": "king",
   "robos:interactionType": "save",
@@ -30,20 +30,16 @@
   "location": "tantegel-throne-room",
   "robos:facing": "down",
   "facing": "down",
-  "robos:col": 4,
-  "col": 4,
+  "robos:col": 8,
+  "col": 8,
   "robos:row": 4,
   "row": 4,
   "robos:dialogue": [
     "Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.",
-    "Then came the Dragonlord who stole the precious globe and hid it in the darkness.",
-    "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. Take now whatever thou may find in these Treasure Chests.",
-    "May the light shine upon thee, Hero."
+    "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated."
   ],
   "dialogue": [
     "Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.",
-    "Then came the Dragonlord who stole the precious globe and hid it in the darkness.",
-    "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. Take now whatever thou may find in these Treasure Chests.",
-    "May the light shine upon thee, Hero."
+    "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated."
   ]
 }

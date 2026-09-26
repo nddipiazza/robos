@@ -12,6 +12,9 @@ const ROBOS_ROOT = "/home/ndipiazza/source/robos";
 
 const MAP_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "maps", "tantegel-throne-room.jsonld");
 const PNG_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "assets", "blockouts", "tantegel-throne-room.png");
+const HERO_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "hero-of-alefgard.jsonld");
+const NPC_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "npc-king-loric.jsonld");
+const GWAELIN_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "npc-princess-gwaelin.jsonld");
 
 const SCRIPT = [
   {
@@ -425,13 +428,268 @@ const SCRIPT = [
     })()`,
     minHold: 4500,
   },
+
+  // ==========================================
+  // SCREEN 2: CHARACTERS & NPCS STUDIO
+  // ==========================================
+  {
+    narration: "Next, we move to Screen 2: authoring the Dragon Warrior characters from scratch in the Characters & NPCs Studio.",
+    target: ".nav-tab-btn[data-pane='pane-characters']",
+    action: "click",
+    callout: "Switch to Characters & NPCs Studio",
+    js: `(() => {
+      const btn = document.querySelector(".nav-tab-btn[data-pane='pane-characters']");
+      if (btn) btn.click();
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "The character studio opens in a clean empty state with no character selected and prompt cards to create a hero or NPC.",
+    target: "#character-empty-state",
+    action: "hover",
+    callout: "Verify Clean Character Empty State",
+    js: `(() => {
+      const emptyState = document.getElementById('character-empty-state');
+      if (emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Character studio did not start in empty state!');
+      }
+      const sheetContainer = document.getElementById('character-sheet-form-container');
+      if (!sheetContainer.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Character sheet form container should be hidden initially!');
+      }
+      if (state.activeCharacterSlug !== null) {
+        throw new Error('Assertion failed: state.activeCharacterSlug is not null: ' + state.activeCharacterSlug);
+      }
+      console.log('✔ Verified: Character studio in clean empty state.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We click '➕ Create Hero' to open a fresh Hero character sheet.",
+    target: "#btn-empty-new-hero",
+    action: "click",
+    callout: "Initialize New Hero Blueprint",
+    js: `(() => {
+      document.getElementById('btn-empty-new-hero')?.click();
+      const emptyState = document.getElementById('character-empty-state');
+      if (!emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Empty state was not dismissed on New Hero!');
+      }
+      const sheetContainer = document.getElementById('character-sheet-form-container');
+      if (sheetContainer.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Sheet form container is still hidden!');
+      }
+      console.log('✔ Initialized new hero character blueprint.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We configure the Hero of Alefgard: Level 1 Human Fighter, Descendant of Erdrick, STR 16, DEX 14, CON 15, HP 16, and AC 14.",
+    target: "#sheet-hero-title",
+    action: "hover",
+    callout: "Configure Hero: Hero of Alefgard (Lvl 1 Fighter)",
+    js: `(() => {
+      document.getElementById('hero-name').value = 'Hero of Alefgard';
+      document.getElementById('hero-slug').value = 'hero-of-alefgard';
+      document.getElementById('hero-portrait').value = '⚔️';
+      document.getElementById('hero-avatar-display').textContent = '⚔️';
+      document.getElementById('hero-alignment').value = 'Lawful Good';
+      document.getElementById('hero-level').value = 1;
+      document.getElementById('hero-race').value = 'Human';
+      document.getElementById('hero-class').value = 'Fighter';
+      document.getElementById('hero-subclass').value = 'Champion';
+      document.getElementById('hero-background').value = 'Descendant of Erdrick';
+      document.getElementById('hero-xp').value = 0;
+
+      const stats = { str: 16, dex: 14, con: 15, int: 12, wis: 13, cha: 14 };
+      Object.entries(stats).forEach(([attr, val]) => {
+        const input = document.getElementById('attr-' + attr);
+        if (input) input.value = val;
+        if (typeof updateAbilityModifier === 'function') updateAbilityModifier(attr, val);
+      });
+
+      document.getElementById('vital-ac').value = 14;
+      document.getElementById('vital-hp-max').value = 16;
+      document.getElementById('vital-hp-cur').value = 16;
+      document.getElementById('vital-speed').value = 30;
+      document.getElementById('vital-init').value = 2;
+      document.getElementById('vital-prof').value = 2;
+      document.getElementById('hero-backstory').value = 'Descendant of the legendary hero Erdrick, summoned to Tantegel Castle to retrieve the Ball of Light and vanquish the Dragonlord.';
+
+      const titleEl = document.getElementById('sheet-hero-title');
+      if (titleEl) titleEl.textContent = 'Hero of Alefgard (Hero)';
+      console.log('✔ Hero of Alefgard form populated.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We click 'Save Character' to persist Hero of Alefgard JSON-LD to the Knowledge Graph.",
+    target: "#btn-save-character",
+    action: "click",
+    callout: "Save Hero: Hero of Alefgard JSON-LD",
+    js: `(async () => {
+      await saveCurrentCharacter();
+      await new Promise(r => setTimeout(r, 800));
+      if (state.activeCharacterSlug !== 'hero-of-alefgard') {
+        throw new Error('Failed to save Hero of Alefgard: slug is ' + state.activeCharacterSlug);
+      }
+      console.log('✔ Hero of Alefgard saved.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "Now we click '+ NPC' in the header to author King Loric of Tantegel Castle.",
+    target: "#btn-header-new-npc",
+    action: "click",
+    callout: "Initialize New NPC Blueprint",
+    js: `(() => {
+      document.getElementById('btn-header-new-npc')?.click();
+      console.log('✔ Initialized new NPC blueprint.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We configure King Loric: Monarch role, Save Game interaction, assigned to Tantegel Throne Room at col 8, row 4, with his legendary quest dialogue.",
+    target: "#sheet-hero-title",
+    action: "hover",
+    callout: "Configure NPC: King Loric of Tantegel",
+    js: `(() => {
+      document.getElementById('hero-name').value = 'King Loric';
+      document.getElementById('hero-slug').value = 'npc-king-loric';
+      document.getElementById('hero-portrait').value = '👑';
+      document.getElementById('hero-avatar-display').textContent = '👑';
+      document.getElementById('hero-alignment').value = 'Lawful Good';
+
+      document.getElementById('npc-role').value = 'king';
+      document.getElementById('npc-interaction').value = 'save';
+      populateNpcLocationDropdown();
+      document.getElementById('npc-location').value = 'tantegel-throne-room';
+      document.getElementById('npc-facing').value = 'down';
+      document.getElementById('npc-col').value = 8;
+      document.getElementById('npc-row').value = 4;
+      document.getElementById('npc-dialogue').value = 'Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.\\n\\nNow, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated.';
+      document.getElementById('hero-backstory').value = 'Monarch of Alefgard who guides the descendant of Erdrick on the quest to restore the Ball of Light.';
+
+      const titleEl = document.getElementById('sheet-hero-title');
+      if (titleEl) titleEl.textContent = 'King Loric (NPC)';
+      console.log('✔ King Loric NPC form populated.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We click 'Save Character' to persist King Loric JSON-LD, establishing his spatial link to the Tantegel Throne Room map.",
+    target: "#btn-save-character",
+    action: "click",
+    callout: "Save NPC: King Loric JSON-LD",
+    js: `(async () => {
+      await saveCurrentCharacter();
+      await new Promise(r => setTimeout(r, 800));
+      if (state.activeCharacterSlug !== 'npc-king-loric') {
+        throw new Error('Failed to save King Loric: slug is ' + state.activeCharacterSlug);
+      }
+      console.log('✔ King Loric saved.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We test the live roster search filter by searching for 'loric' to filter directly to King Loric.",
+    target: "#character-search-input",
+    action: "hover",
+    callout: "Search 'loric' in Character Roster",
+    js: `(() => {
+      const input = document.getElementById('character-search-input');
+      input.value = 'loric';
+      characterSearchQuery = 'loric';
+      renderCharactersList();
+
+      const items = document.querySelectorAll('#heroes-list .hero-list-item');
+      if (items.length !== 1) {
+        throw new Error('Expected 1 filtered item for "loric", found: ' + items.length);
+      }
+      console.log('✔ Search filter "loric" verified: 1 result.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We search for 'alefgard' to isolate the Hero of Alefgard, then reset the filter to display all characters.",
+    target: "#character-search-input",
+    action: "hover",
+    callout: "Search 'alefgard' & Clear Filter",
+    js: `(() => {
+      const input = document.getElementById('character-search-input');
+      input.value = 'alefgard';
+      characterSearchQuery = 'alefgard';
+      renderCharactersList();
+
+      let items = document.querySelectorAll('#heroes-list .hero-list-item');
+      if (items.length !== 1) {
+        throw new Error('Expected 1 filtered item for "alefgard", found: ' + items.length);
+      }
+
+      // Reset filter
+      input.value = '';
+      characterSearchQuery = '';
+      renderCharactersList();
+      console.log('✔ Search filter verified and reset.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We click 'Close' to close the active character sheet and verify the editor returns cleanly to the empty character state.",
+    target: "#btn-close-character",
+    action: "click",
+    callout: "Close Character -> Empty State",
+    js: `(() => {
+      document.getElementById('btn-close-character')?.click();
+      const emptyState = document.getElementById('character-empty-state');
+      if (emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Empty state not shown after closing character!');
+      }
+      const sheetContainer = document.getElementById('character-sheet-form-container');
+      if (!sheetContainer.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Sheet container not hidden after closing character!');
+      }
+      if (state.activeCharacterSlug !== null) {
+        throw new Error('Assertion failed: activeCharacterSlug not cleared on close!');
+      }
+      console.log('✔ Character closed successfully, returned to empty state.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "Finally, we select 'Hero of Alefgard' from the roster to reload his complete sheet and verify all stats are preserved.",
+    target: "#heroes-list",
+    action: "hover",
+    callout: "Select & Reload Hero of Alefgard",
+    js: `(async () => {
+      const heroEl = document.querySelector('#heroes-list .hero-list-item[data-slug="hero-of-alefgard"]');
+      if (!heroEl) throw new Error('Hero of Alefgard item not found in roster!');
+      heroEl.click();
+
+      await new Promise(r => setTimeout(r, 600));
+
+      const emptyState = document.getElementById('character-empty-state');
+      if (!emptyState.classList.contains('hidden')) {
+        throw new Error('Empty state should be hidden after selecting character!');
+      }
+      const name = document.getElementById('hero-name').value;
+      const str = document.getElementById('attr-str').value;
+      const cls = document.getElementById('hero-class').value;
+
+      if (name !== 'Hero of Alefgard') throw new Error('Hero name mismatch: ' + name);
+      if (str !== '16') throw new Error('STR stat mismatch: ' + str);
+      if (cls !== 'Fighter') throw new Error('Class mismatch: ' + cls);
+      console.log('✔ Hero of Alefgard reloaded and fully verified in DOM: Lvl 1 Fighter, STR 16.');
+    })()`,
+    minHold: 4500,
+  },
 ];
 
 async function main() {
-  console.log("=== RobOS cRPG Editor E2E: Screen 1 - Tantegel Throne Room Map ===");
+  console.log("=== RobOS cRPG Editor E2E: Screens 1 & 2 - Map & Characters ===");
 
   // 1. Pre-test cleanup: Guarantee blank sandboxed state
-  console.log("Pre-test sandboxing: Cleaning any existing Tantegel map files...");
+  console.log("Pre-test sandboxing: Cleaning any existing Dragon Warrior files...");
   if (fs.existsSync(MAP_PATH)) {
     fs.unlinkSync(MAP_PATH);
     console.log(`Removed pre-existing map: ${MAP_PATH}`);
@@ -439,6 +697,18 @@ async function main() {
   if (fs.existsSync(PNG_PATH)) {
     fs.unlinkSync(PNG_PATH);
     console.log(`Removed pre-existing blockout PNG: ${PNG_PATH}`);
+  }
+  if (fs.existsSync(HERO_PATH)) {
+    fs.unlinkSync(HERO_PATH);
+    console.log(`Removed pre-existing hero: ${HERO_PATH}`);
+  }
+  if (fs.existsSync(NPC_PATH)) {
+    fs.unlinkSync(NPC_PATH);
+    console.log(`Removed pre-existing npc: ${NPC_PATH}`);
+  }
+  if (fs.existsSync(GWAELIN_PATH)) {
+    fs.unlinkSync(GWAELIN_PATH);
+    console.log(`Removed pre-existing princess gwaelin: ${GWAELIN_PATH}`);
   }
 
   // 2. Run the E2E Demo via runDemo
@@ -459,15 +729,16 @@ async function main() {
 
   console.log("\n=== E2E Run Complete: Running Assertions ===");
 
-  // Assertion 1: Map JSON-LD file exists
+  // ==========================================
+  // SCREEN 1 ASSERTIONS: MAP
+  // ==========================================
   if (!fs.existsSync(MAP_PATH)) {
     throw new Error(`Assertion failed: Map file does not exist at ${MAP_PATH}`);
   }
   console.log("✔ Assertion 1 Passed: Map file exists at", MAP_PATH);
 
-  // Assertion 2: Validate JSON-LD contents
-  const rawJson = fs.readFileSync(MAP_PATH, "utf8");
-  const mapData = JSON.parse(rawJson);
+  const rawMapJson = fs.readFileSync(MAP_PATH, "utf8");
+  const mapData = JSON.parse(rawMapJson);
 
   if (mapData["@id"] !== "urn:robos:crpg:battle-map:tantegel-throne-room") {
     throw new Error(`Assertion failed: Unexpected @id: ${mapData["@id"]}`);
@@ -483,7 +754,6 @@ async function main() {
   }
   console.log("✔ Assertion 2 Passed: Map metadata validated (60x40 ft stone arena)");
 
-  // Assertion 3: Validate Map Objects
   const objects = mapData["robos:mapObjects"] || [];
   const expectedObjects = [
     "throne-dais",
@@ -504,7 +774,6 @@ async function main() {
   }
   console.log(`✔ Assertion 3 Passed: All ${expectedObjects.length} Dragon Warrior 1 map objects verified`);
 
-  // Assertion 4: Blockout PNG exists and is valid
   if (!fs.existsSync(PNG_PATH)) {
     throw new Error(`Assertion failed: Blockout PNG does not exist at ${PNG_PATH}`);
   }
@@ -514,7 +783,6 @@ async function main() {
   }
   console.log(`✔ Assertion 4 Passed: Blockout PNG exists (${stat.size} bytes)`);
 
-  // Assertion 5: Headless Python Compiler verification
   console.log("Running Python blockout compiler verification on generated map...");
   const buildOutput = execSync(`python3 -m robos_crpg_blockout build "${MAP_PATH}"`, {
     encoding: "utf8",
@@ -523,6 +791,71 @@ async function main() {
   });
   console.log("Compiler output:\n" + buildOutput.trim());
   console.log("✔ Assertion 5 Passed: Python blockout compiler validated map successfully");
+
+  // ==========================================
+  // SCREEN 2 ASSERTIONS: CHARACTERS
+  // ==========================================
+  // Assertion 6: Hero of Alefgard JSON-LD exists
+  if (!fs.existsSync(HERO_PATH)) {
+    throw new Error(`Assertion failed: Hero file does not exist at ${HERO_PATH}`);
+  }
+  console.log("✔ Assertion 6 Passed: Hero file exists at", HERO_PATH);
+
+  // Assertion 7: Validate Hero of Alefgard JSON-LD
+  const heroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
+  if (heroData["@id"] !== "urn:robos:crpg:character:hero-of-alefgard") {
+    throw new Error(`Assertion failed: Unexpected hero @id: ${heroData["@id"]}`);
+  }
+  const heroTypes = Array.isArray(heroData["@type"]) ? heroData["@type"] : [heroData["@type"]];
+  if (!heroTypes.includes("robos:CRPGHero")) {
+    throw new Error(`Assertion failed: Hero @type missing robos:CRPGHero: ${JSON.stringify(heroTypes)}`);
+  }
+  if (heroData.name !== "Hero of Alefgard" || heroData["schema:name"] !== "Hero of Alefgard") {
+    throw new Error(`Assertion failed: Hero name mismatch: ${heroData.name}`);
+  }
+  if (heroData["robos:class"] !== "Fighter" || Number(heroData["robos:level"]) !== 1) {
+    throw new Error(`Assertion failed: Hero class/level mismatch: Lvl ${heroData["robos:level"]} ${heroData["robos:class"]}`);
+  }
+  if (Number(heroData["robos:str"]) !== 16 || Number(heroData["robos:hpMax"]) !== 16) {
+    throw new Error(`Assertion failed: Hero stats mismatch: STR ${heroData["robos:str"]}, HP ${heroData["robos:hpMax"]}`);
+  }
+  if (!heroData["robos:backstory"] || !heroData["robos:backstory"].includes("Descendant of the legendary hero Erdrick")) {
+    throw new Error(`Assertion failed: Hero backstory missing Erdrick lore`);
+  }
+  console.log("✔ Assertion 7 Passed: Hero of Alefgard JSON-LD metadata and 5e stats verified");
+
+  // Assertion 8: King Loric NPC JSON-LD exists
+  if (!fs.existsSync(NPC_PATH)) {
+    throw new Error(`Assertion failed: NPC file does not exist at ${NPC_PATH}`);
+  }
+  console.log("✔ Assertion 8 Passed: NPC file exists at", NPC_PATH);
+
+  // Assertion 9: Validate King Loric NPC JSON-LD
+  const npcData = JSON.parse(fs.readFileSync(NPC_PATH, "utf8"));
+  if (npcData["@id"] !== "urn:robos:crpg:character:npc-king-loric") {
+    throw new Error(`Assertion failed: Unexpected NPC @id: ${npcData["@id"]}`);
+  }
+  const npcTypes = Array.isArray(npcData["@type"]) ? npcData["@type"] : [npcData["@type"]];
+  if (!npcTypes.includes("robos:CRPGNPC")) {
+    throw new Error(`Assertion failed: NPC @type missing robos:CRPGNPC: ${JSON.stringify(npcTypes)}`);
+  }
+  if (npcData.name !== "King Loric" || npcData["schema:name"] !== "King Loric") {
+    throw new Error(`Assertion failed: NPC name mismatch: ${npcData.name}`);
+  }
+  if (npcData["robos:npcRole"] !== "king" || npcData["robos:interactionType"] !== "save") {
+    throw new Error(`Assertion failed: NPC role/interaction mismatch: ${npcData["robos:npcRole"]}/${npcData["robos:interactionType"]}`);
+  }
+  if (npcData["robos:location"] !== "tantegel-throne-room") {
+    throw new Error(`Assertion failed: NPC location not linked to tantegel-throne-room: ${npcData["robos:location"]}`);
+  }
+  if (Number(npcData["robos:col"]) !== 8 || Number(npcData["robos:row"]) !== 4) {
+    throw new Error(`Assertion failed: NPC grid position mismatch: ${npcData["robos:col"]}, ${npcData["robos:row"]}`);
+  }
+  const dialogue = Array.isArray(npcData["robos:dialogue"]) ? npcData["robos:dialogue"].join(" ") : (npcData["robos:dialogue"] || "");
+  if (!dialogue.includes("Ball of Light") || !dialogue.includes("Dragonlord")) {
+    throw new Error(`Assertion failed: NPC dialogue missing Ball of Light quest decree: ${dialogue}`);
+  }
+  console.log("✔ Assertion 9 Passed: King Loric NPC JSON-LD, map link, and dialogue verified");
 
   // 3. Copy artifacts to persistent walkthrough and brain directories
   fs.mkdirSync(PERSIST_DIR, { recursive: true });
@@ -540,13 +873,21 @@ async function main() {
     // Extract high-resolution review frames
     const frameEmptyPath = path.join(BRAIN_DIR, "crpg_editor_empty_state.png");
     const frameModalPath = path.join(BRAIN_DIR, "crpg_editor_open_tree_modal.png");
-    const framePath = path.join(BRAIN_DIR, "crpg_editor_tantegel_map_screen.png");
+    const frameMapPath = path.join(BRAIN_DIR, "crpg_editor_tantegel_map_screen.png");
+    const frameCharEmptyPath = path.join(BRAIN_DIR, "crpg_editor_char_empty_state.png");
+    const frameHeroPath = path.join(BRAIN_DIR, "crpg_editor_hero_alefgard_authored.png");
+    const frameKingPath = path.join(BRAIN_DIR, "crpg_editor_king_loric_authored.png");
+    const frameCharSearchPath = path.join(BRAIN_DIR, "crpg_editor_char_search_filter.png");
 
     try {
       execSync(`ffmpeg -y -ss 00:00:04 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
       execSync(`ffmpeg -y -ss 00:00:30 -i "${finalVideo}" -vframes 1 "${frameModalPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:38 -i "${finalVideo}" -vframes 1 "${framePath}"`, { stdio: "ignore" });
-      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${framePath}`);
+      execSync(`ffmpeg -y -ss 00:00:38 -i "${finalVideo}" -vframes 1 "${frameMapPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:00:52 -i "${finalVideo}" -vframes 1 "${frameCharEmptyPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:05 -i "${finalVideo}" -vframes 1 "${frameHeroPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:19 -i "${finalVideo}" -vframes 1 "${frameKingPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:25 -i "${finalVideo}" -vframes 1 "${frameCharSearchPath}"`, { stdio: "ignore" });
+      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}`);
     } catch (err) {
       console.warn("Could not extract frames:", err.message);
     }
@@ -558,13 +899,13 @@ async function main() {
   }
 
   console.log("\n=======================================================");
-  console.log("🎉 SCREEN 1 (MAP) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
+  console.log("🎉 SCREENS 1 & 2 (MAP & CHARACTERS) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
   console.log("=======================================================");
 }
 
 if (require.main === module) {
   main().catch((err) => {
-    console.error("FATAL ERROR in E2E Map Test:", err);
+    console.error("FATAL ERROR in E2E Test:", err);
     process.exit(1);
   });
 }

@@ -385,6 +385,8 @@ function switchModule(paneId) {
     renderCharactersList();
     if (state.activeCharacterSlug) {
       loadCharacterSheet(state.activeCharacterSlug);
+    } else {
+      showEmptyCharacterState();
     }
   } else if (paneId === 'pane-inventory') {
     renderInventoryViews();
@@ -1011,28 +1013,78 @@ function renderStoryFlags() {
 // ========================================================
 // MODULE 2: cRPG CHARACTER EDITOR & NPC STUDIO
 // ========================================================
+let characterSearchQuery = '';
+
 function setupCharacterHandlers() {
   // Sidebar Add Buttons
   document.getElementById('btn-add-hero')?.addEventListener('click', addNewHero);
   document.getElementById('btn-add-npc')?.addEventListener('click', addNewNpc);
+
+  // File menu dropdown
+  const btnCharFileMenu = document.getElementById('btn-char-file-menu');
+  const charFileDropdown = document.getElementById('menu-char-file-dropdown');
+
+  btnCharFileMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    charFileDropdown?.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (charFileDropdown && !charFileDropdown.contains(e.target) && e.target !== btnCharFileMenu) {
+      charFileDropdown.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('menu-item-new-hero')?.addEventListener('click', () => {
+    charFileDropdown?.classList.add('hidden');
+    addNewHero();
+  });
+  document.getElementById('menu-item-new-npc')?.addEventListener('click', () => {
+    charFileDropdown?.classList.add('hidden');
+    addNewNpc();
+  });
+  document.getElementById('menu-item-save-char')?.addEventListener('click', () => {
+    charFileDropdown?.classList.add('hidden');
+    saveCurrentCharacter();
+  });
+  document.getElementById('menu-item-close-char')?.addEventListener('click', () => {
+    charFileDropdown?.classList.add('hidden');
+    closeActiveCharacter();
+  });
 
   // Top Header Context Controls
   document.getElementById('btn-header-new-hero')?.addEventListener('click', addNewHero);
   document.getElementById('btn-hdr-new-hero')?.addEventListener('click', addNewHero);
   document.getElementById('btn-header-new-npc')?.addEventListener('click', addNewNpc);
   document.getElementById('btn-hdr-new-npc')?.addEventListener('click', addNewNpc);
+  document.getElementById('btn-header-close-char')?.addEventListener('click', closeActiveCharacter);
   document.getElementById('btn-header-save-char')?.addEventListener('click', saveCurrentCharacter);
   document.getElementById('btn-hdr-save-char')?.addEventListener('click', saveCurrentCharacter);
   document.getElementById('btn-header-delete-char')?.addEventListener('click', deleteActiveCharacter);
   document.getElementById('btn-hdr-del-char')?.addEventListener('click', deleteActiveCharacter);
   document.getElementById('header-char-select')?.addEventListener('change', (e) => {
-    if (e.target.value) loadCharacterSheet(e.target.value);
+    if (e.target.value) {
+      loadCharacterSheet(e.target.value);
+    } else {
+      closeActiveCharacter();
+    }
   });
 
-  // Action Buttons
+  // Action Buttons inside Sheet Area
   document.getElementById('btn-save-character')?.addEventListener('click', saveCurrentCharacter);
+  document.getElementById('btn-close-character')?.addEventListener('click', closeActiveCharacter);
   document.getElementById('btn-clone-hero')?.addEventListener('click', cloneActiveCharacter);
   document.getElementById('btn-delete-hero')?.addEventListener('click', deleteActiveCharacter);
+
+  // Empty State Buttons
+  document.getElementById('btn-empty-new-hero')?.addEventListener('click', addNewHero);
+  document.getElementById('btn-empty-new-npc')?.addEventListener('click', addNewNpc);
+
+  // Live Roster Search Bar
+  document.getElementById('character-search-input')?.addEventListener('input', (e) => {
+    characterSearchQuery = (e.target.value || '').trim().toLowerCase();
+    renderCharactersList();
+  });
 
   // Filter Pills
   document.getElementById('pill-filter-all')?.addEventListener('click', () => setCharacterFilter('all'));
@@ -1076,6 +1128,29 @@ function setupCharacterHandlers() {
   });
 }
 
+function showEmptyCharacterState() {
+  state.activeCharacterSlug = null;
+  state.activeCharacterData = null;
+
+  const emptyOverlay = document.getElementById('character-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.remove('hidden');
+
+  const sheetForm = document.getElementById('character-sheet-form-container');
+  if (sheetForm) sheetForm.classList.add('hidden');
+
+  const hdrSelect = document.getElementById('header-char-select');
+  if (hdrSelect) hdrSelect.value = '';
+
+  document.querySelectorAll('.hero-list-item').forEach(el => el.classList.remove('active'));
+
+  setStatus('No character selected.');
+}
+
+function closeActiveCharacter() {
+  showEmptyCharacterState();
+  setStatus('Character closed.');
+}
+
 function setCharacterFilter(filter) {
   state.characterFilter = filter;
   document.getElementById('pill-filter-all')?.classList.toggle('active', filter === 'all');
@@ -1102,7 +1177,8 @@ function updateAbilityModifier(attr, val) {
   if (label) label.textContent = sign;
 }
 
-async function loadAllCharacters() {
+async function loadAllCharacters(options = {}) {
+  const { autoSelect = false, targetSlug = null } = options;
   try {
     const res = await window.robos.listCharacters();
     if (res.success) {
@@ -1111,7 +1187,7 @@ async function loadAllCharacters() {
       // Update header dropdown
       const hdrSelect = document.getElementById('header-char-select');
       if (hdrSelect) {
-        hdrSelect.innerHTML = '<option value="">(Select character...)</option>' +
+        hdrSelect.innerHTML = '<option value="">(No character selected)</option>' +
           state.characters.map(c => {
             const isNpc = c.characterType === 'npc' || !!c.role;
             return `<option value="${c.slug}">${c.portrait || (isNpc ? '👑' : '👤')} ${c.name || c.slug}</option>`;
@@ -1123,10 +1199,14 @@ async function loadAllCharacters() {
 
       renderCharactersList();
 
-      if (!state.activeCharacterSlug && state.characters.length > 0) {
-        await loadCharacterSheet(state.characters[0].slug);
-      } else if (state.activeCharacterSlug) {
+      if (targetSlug && state.characters.some(c => c.slug === targetSlug)) {
+        await loadCharacterSheet(targetSlug);
+      } else if (state.activeCharacterSlug && state.characters.some(c => c.slug === state.activeCharacterSlug)) {
         await loadCharacterSheet(state.activeCharacterSlug);
+      } else if (autoSelect && state.characters.length > 0) {
+        await loadCharacterSheet(state.characters[0].slug);
+      } else if (!state.activeCharacterSlug) {
+        showEmptyCharacterState();
       }
     }
   } catch (err) {
@@ -1140,8 +1220,17 @@ function renderCharactersList() {
 
   const filtered = state.characters.filter(c => {
     const isNpc = c.characterType === 'npc' || !!c.role;
-    if (state.characterFilter === 'hero') return !isNpc;
-    if (state.characterFilter === 'npc') return isNpc;
+    if (state.characterFilter === 'hero' && isNpc) return false;
+    if (state.characterFilter === 'npc' && !isNpc) return false;
+    if (characterSearchQuery) {
+      const name = (c.name || '').toLowerCase();
+      const slug = (c.slug || '').toLowerCase();
+      const role = (c.role || '').toLowerCase();
+      const cls = (c.class || '').toLowerCase();
+      if (!name.includes(characterSearchQuery) && !slug.includes(characterSearchQuery) && !role.includes(characterSearchQuery) && !cls.includes(characterSearchQuery)) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -1149,7 +1238,7 @@ function renderCharactersList() {
   if (countEl) countEl.textContent = filtered.length;
 
   if (filtered.length === 0) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No characters found for this filter. Click + Hero or + NPC.</div>';
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No characters found matching search filter. Click + Hero or + NPC.</div>';
     return;
   }
 
@@ -1184,6 +1273,11 @@ async function loadCharacterSheet(slug) {
     setStatus(`Loading character ${slug}...`);
     const res = await window.robos.loadCharacter(slug);
     if (res.success) {
+      const emptyOverlay = document.getElementById('character-empty-state');
+      if (emptyOverlay) emptyOverlay.classList.add('hidden');
+      const sheetForm = document.getElementById('character-sheet-form-container');
+      if (sheetForm) sheetForm.classList.remove('hidden');
+
       const data = res.data;
       state.activeCharacterSlug = slug;
       state.activeCharacterData = data;
@@ -1401,6 +1495,11 @@ async function saveCurrentCharacter() {
 }
 
 function addNewHero() {
+  const emptyOverlay = document.getElementById('character-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.add('hidden');
+  const sheetForm = document.getElementById('character-sheet-form-container');
+  if (sheetForm) sheetForm.classList.remove('hidden');
+
   const safeSlug = `hero-${Date.now().toString().slice(-4)}`;
   state.activeCharacterSlug = safeSlug;
   state.activeCharacterData = null;
@@ -1441,6 +1540,11 @@ function addNewHero() {
 }
 
 function addNewNpc() {
+  const emptyOverlay = document.getElementById('character-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.add('hidden');
+  const sheetForm = document.getElementById('character-sheet-form-container');
+  if (sheetForm) sheetForm.classList.remove('hidden');
+
   const safeSlug = `npc-${Date.now().toString().slice(-4)}`;
   state.activeCharacterSlug = safeSlug;
   state.activeCharacterData = null;
@@ -1503,6 +1607,11 @@ async function deleteActiveCharacter() {
 }
 
 function applyArchetype(arch, archKey) {
+  const emptyOverlay = document.getElementById('character-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.add('hidden');
+  const sheetForm = document.getElementById('character-sheet-form-container');
+  if (sheetForm) sheetForm.classList.remove('hidden');
+
   const isNpc = arch.characterType === 'npc';
   const safeSlug = `${arch.slug || arch.id || archKey}-${Date.now().toString().slice(-4)}`;
 
