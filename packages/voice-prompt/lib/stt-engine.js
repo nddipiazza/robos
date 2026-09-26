@@ -393,14 +393,19 @@ class STTEngine extends EventEmitter {
 
           this.isTranscribing = true;
 
-          // Process current utterance audio from unconsumed buffer (max 40000 samples / 2.5s)
-          const samples = unconsumedSamples.length > 40000
-            ? unconsumedSamples.slice(-40000)
+          // Process current utterance audio from unconsumed buffer (max 240000 samples / 15s)
+          const samples = unconsumedSamples.length > 240000
+            ? unconsumedSamples.slice(-240000)
             : unconsumedSamples;
 
           const res = await this.transcribeAsync(samples, {});
           const text = cleanTranscript(res?.text || '');
           const now = Date.now();
+
+          // If recent audio has speech energy, refresh speech timestamp
+          if (energy >= 0.0035) {
+            this.lastSpeechDetectedTime = now;
+          }
 
           if (text && this.active) {
             if (text !== this.lastInterimText) {
@@ -414,8 +419,8 @@ class STTEngine extends EventEmitter {
                 backgroundMode: this.backgroundMode,
               };
               this.emit('interim-text', payload);
-            } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && (now - this.lastSpeechDetectedTime >= 450)) {
-              // User paused for >=450ms: finalize this utterance!
+            } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && ((energy < 0.0035 && now - this.lastSpeechDetectedTime >= 1400) || (now - this.lastSpeechDetectedTime >= 3000))) {
+              // User paused for >=1400ms with low audio energy (or 3s hard timeout): finalize this utterance!
               this.silenceFinalEmitted = true;
               const payload = {
                 text: this.lastInterimText,
@@ -431,7 +436,7 @@ class STTEngine extends EventEmitter {
               this.lastSpeechDetectedTime = 0;
               this.silenceFinalEmitted = false;
             }
-          } else if (!text && this.lastInterimText && (now - this.lastSpeechDetectedTime >= 450) && !this.silenceFinalEmitted) {
+          } else if (!text && this.lastInterimText && ((energy < 0.0035 && now - this.lastSpeechDetectedTime >= 1400) || (now - this.lastSpeechDetectedTime >= 3000)) && !this.silenceFinalEmitted) {
             // Energy dropped or transcription produced silence: finalize previous in-flight utterance!
             this.silenceFinalEmitted = true;
             const payload = {

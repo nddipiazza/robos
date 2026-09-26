@@ -302,4 +302,51 @@ describe('Voice Prompt Unit Tests', () => {
       assert.ok(devRes.data.devices.length >= 1);
     });
   });
+
+  describe('Speech Stream Overlap & Recall Prevention', () => {
+    const { mergeWithPrevious, normalize } = require('../../../voice-prompt/renderer/hud');
+
+    it('normalizes punctuation and whitespace', () => {
+      assert.strictEqual(normalize("Hello, world!  How's it?"), "hello world hows it");
+    });
+
+    it('drops exact duplicate speech strings', () => {
+      const res = mergeWithPrevious("That's pretty good.", "that's pretty good");
+      assert.strictEqual(res.action, 'ignore');
+    });
+
+    it('drops substring recall fragments from sliding window', () => {
+      const res = mergeWithPrevious("The link data section is really stupid.", "really stupid.");
+      assert.strictEqual(res.action, 'ignore');
+    });
+
+    it('drops middle or prefix substring echoes', () => {
+      const res = mergeWithPrevious("How is it going can you hear me yet", "can you hear me yet");
+      assert.strictEqual(res.action, 'ignore');
+    });
+
+    it('replaces when newText extends prevText prefix', () => {
+      const res = mergeWithPrevious("The", "The Json LD link data");
+      assert.strictEqual(res.action, 'replace');
+      assert.strictEqual(res.text, "The Json LD link data");
+    });
+
+    it('stitches sliding window overlapping word sequences', () => {
+      const res = mergeWithPrevious("The Json LD link data", "link data section is really stupid.");
+      assert.strictEqual(res.action, 'replace');
+      assert.strictEqual(res.text, "The Json LD link data section is really stupid.");
+    });
+
+    it('stitches sliding window with 1-word offset', () => {
+      const res = mergeWithPrevious("The Json LD link data", "the link data section is really stupid.");
+      assert.strictEqual(res.action, 'replace');
+      assert.strictEqual(res.text, "The Json LD link data section is really stupid.");
+    });
+
+    it('appends truly distinct new sentences', () => {
+      const res = mergeWithPrevious("Can you hear me yet?", "That's pretty good.");
+      assert.strictEqual(res.action, 'append');
+    });
+  });
 });
+
