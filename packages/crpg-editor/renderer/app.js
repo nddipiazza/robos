@@ -26,7 +26,8 @@ const ARCHETYPES = {
     boots: "Stout Boots",
     ring1: "Ring of Princes (+1 AC/Saves)",
     quickItems: "2x Potion of Healing, Torch",
-    spells: "Second Wind (1d10+1 hp/rest)",
+    spells: "",
+    abilities: ["second-wind", "action-surge"],
     backstory: "Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers."
   },
   rogue: {
@@ -50,7 +51,8 @@ const ARCHETYPES = {
     boots: "Soft Leather Boots",
     ring1: "Ring of Lockpicking",
     quickItems: "Thieves' Tools, 20x Arrows, Potion of Speed",
-    spells: "Sneak Attack (1d6), Cunning Action",
+    spells: "",
+    abilities: ["sneak-attack", "cunning-action"],
     backstory: "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures."
   },
   wizard: {
@@ -146,7 +148,8 @@ const ARCHETYPES = {
     boots: "Plate Greaves",
     ring1: "Signet Ring of the Watchers",
     quickItems: "2x Healing Potion, Holy Relic",
-    spells: "Divine Smite, Lay on Hands (5 hp), Bless",
+    spells: "Bless",
+    abilities: ["divine-smite"],
     backstory: "Sworn champion dispatched to ensure safe passage across the Sword Coast."
   },
   // NPC Archetypes & Roles
@@ -301,6 +304,11 @@ const state = {
   abilityCategoryFilter: 'all',
   abilityActionFilter: 'all',
 
+  // Game Events State (Knowledge Graph & Infinity Engine interactions)
+  gameEvents: [],
+  activeEventSlug: null,
+  activeEventData: null,
+
   // Character Active Spells, Abilities & Directives
   activeCharPreparedSpells: [],
   activeCharAssignedAbilities: [],
@@ -367,6 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAllItems();
   await loadAllSpells();
   await loadAllAbilities();
+  await loadAllGameEvents();
   await loadAllCharacters();
   await loadCampaignsList();
 
@@ -1221,6 +1230,32 @@ function getNodeTypeLabel(type) {
     case 'combat_trial': return 'Combat';
     case 'end_game_state': return 'End Game';
     default: return 'Story Node';
+  }
+}
+
+function getEventIcon(eventType) {
+  switch (eventType) {
+    case 'dialogue': return '💬';
+    case 'combat_victory': return '⚔️';
+    case 'area_transition': return '🚪';
+    case 'cutscene': return '🎬';
+    case 'item_acquisition': return '🔮';
+    case 'quest_milestone': return '📜';
+    case 'decision_branch': return '⚖️';
+    default: return '⚡';
+  }
+}
+
+async function loadAllGameEvents() {
+  try {
+    if (window.robos && window.robos.listGameEvents) {
+      const res = await window.robos.listGameEvents();
+      if (res.success) {
+        state.gameEvents = res.events || [];
+      }
+    }
+  } catch (err) {
+    console.error('Error loading game events:', err);
   }
 }
 
@@ -2114,10 +2149,24 @@ function renderStoryTreeCanvas(nodes, filterAct) {
           const isCrossPage = targetNode && state.activeFlowPageId !== 'all' && (targetNode['robos:flowPage'] || targetNode.flowPage) !== state.activeFlowPageId;
           const targetPage = isCrossPage ? pages.find(p => p.id === (targetNode['robos:flowPage'] || targetNode.flowPage)) : null;
 
+          const boundEvt = (state.gameEvents || []).find(e =>
+            e.slug === c.boundEventId ||
+            e.id === c['robos:boundEvent'] ||
+            e.urn === c['robos:boundEvent'] ||
+            e.id === c.boundEventId
+          );
+
+          const eventBadge = boundEvt ? `
+            <span class="choice-event-badge ${boundEvt.eventType}" title="Bound Infinity Engine Event: ${escapeXml(boundEvt.title)}\nType: ${boundEvt.eventType}\nBCS Trigger: ${escapeXml(boundEvt.infinityInteraction?.bcsTrigger || 'None')}\nBCS Action: ${escapeXml(boundEvt.infinityInteraction?.bcsAction || 'None')}">
+              ${getEventIcon(boundEvt.eventType)} ${escapeXml(boundEvt.title.length > 22 ? boundEvt.title.slice(0, 20) + '…' : boundEvt.title)}
+            </span>
+          ` : '';
+
           if (isCrossPage && targetPage) {
             return `
               <div class="cross-page-jump-pill" data-target-page="${targetPage.id}" data-target-node="${targetNode.id}" title="Branch leads to ${escapeXml(targetPage.name)} — click to navigate">
                 <span>↳ 📄 ${targetPage.name.split(':')[0]}: ${escapeXml(targetNode['dcterms:title'] || targetNode.id)}</span>
+                ${eventBadge}
                 <span>↗</span>
               </div>
             `;
@@ -2125,7 +2174,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
           return `
             <div class="node-choice-pill" title="${escapeXml(c.label || '')}">
               <span>↳</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeXml(c.label || c.targetNodeId)}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${escapeXml(c.label || c.targetNodeId)}</span>
+              ${eventBadge}
             </div>
           `;
         }).join('')}
@@ -2270,7 +2320,15 @@ function renderStoryNodeChoices(node) {
     return;
   }
 
-  container.innerHTML = choices.map((ch, idx) => `
+  container.innerHTML = choices.map((ch, idx) => {
+    const boundEvt = (state.gameEvents || []).find(e =>
+      e.slug === ch.boundEventId ||
+      e.id === ch['robos:boundEvent'] ||
+      e.urn === ch['robos:boundEvent'] ||
+      e.id === ch.boundEventId
+    );
+
+    return `
     <div class="choice-edit-item" data-idx="${idx}">
       <div class="choice-edit-header">
         <span>Choice #${idx + 1}</span>
@@ -2278,24 +2336,83 @@ function renderStoryNodeChoices(node) {
       </div>
       <div class="form-group" style="margin-bottom:4px;">
         <label style="font-size:10px;">Player Choice Label</label>
-        <input type="text" class="input-text choice-label-inp" value="${ch.label || ''}" placeholder="e.g. Draw weapon and attack">
+        <input type="text" class="input-text choice-label-inp" value="${escapeXml(ch.label || '')}" placeholder="e.g. Draw weapon and attack">
       </div>
       <div class="choice-edit-grid">
         <div class="form-group">
           <label style="font-size:10px;">Target Node</label>
           <select class="dropdown-select choice-target-select">
             ${allNodes.filter(n => n.id !== node.id).map(n => `
-              <option value="${n.id}" ${n.id === ch.targetNodeId ? 'selected' : ''}>${getNodeTypeIcon(n['robos:nodeType'] || n.type)} ${n['dcterms:title'] || n.title || n.id}</option>
+              <option value="${n.id}" ${n.id === ch.targetNodeId ? 'selected' : ''}>${getNodeTypeIcon(n['robos:nodeType'] || n.type)} ${escapeXml(n['dcterms:title'] || n.title || n.id)}</option>
             `).join('')}
           </select>
         </div>
         <div class="form-group">
           <label style="font-size:10px;">Required Flag (Prerequisite)</label>
-          <input type="text" class="input-text choice-req-flag-inp" value="${ch.requiredFlag || ''}" placeholder="e.g. spoke_to_gorion">
+          <input type="text" class="input-text choice-req-flag-inp" value="${escapeXml(ch.requiredFlag || '')}" placeholder="e.g. spoke_to_gorion">
         </div>
       </div>
+
+      <div class="choice-edit-grid" style="margin-top:6px;">
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label style="font-size:10px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Bound Game Event (Knowledge Graph)</span>
+            <span style="color:#38bdf8; font-weight:600; font-size:9px;">⚙️ Infinity Engine</span>
+          </label>
+          <select class="dropdown-select choice-bound-event-select">
+            <option value="">(None — Pure Narrative / Flag Transition)</option>
+            ${(state.gameEvents || []).map(ev => `
+              <option value="${ev.slug}" ${ev.slug === ch.boundEventId || ev.id === ch['robos:boundEvent'] || ev.urn === ch['robos:boundEvent'] ? 'selected' : ''}>
+                ${getEventIcon(ev.eventType)} ${escapeXml(ev.title)} (${ev.eventType})
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      </div>
+
+      ${boundEvt ? `
+        <div class="infinity-interaction-card">
+          <div class="infinity-card-header">
+            <span class="infinity-engine-badge">⚙️ GemRB Infinity Engine</span>
+            <span class="infinity-type-tag">${boundEvt.eventType.toUpperCase()}</span>
+          </div>
+          <div class="infinity-card-title">${getEventIcon(boundEvt.eventType)} ${escapeXml(boundEvt.title)}</div>
+          ${boundEvt.description ? `<div class="infinity-card-desc">${escapeXml(boundEvt.description)}</div>` : ''}
+
+          <div class="infinity-details-grid">
+            <div class="infinity-detail-row">
+              <span class="infinity-detail-label">Script VM:</span>
+              <span class="infinity-detail-val" title="Virtual Machine Subsystem">urn:robos:infinity:subsystem:bcs-script-vm</span>
+            </div>
+            ${boundEvt.infinityInteraction?.dialogueRef ? `
+              <div class="infinity-detail-row">
+                <span class="infinity-detail-label">DLG State:</span>
+                <span class="infinity-detail-val" style="color:#38bdf8; font-weight:600;">💬 ${escapeXml(boundEvt.infinityInteraction.dialogueRef)}</span>
+              </div>
+            ` : ''}
+            ${boundEvt.infinityInteraction?.bcsTrigger ? `
+              <div class="infinity-code-section">
+                <div class="infinity-code-label">BCS Trigger (IF Condition):</div>
+                <pre class="bcs-code-block">${escapeXml(boundEvt.infinityInteraction.bcsTrigger)}</pre>
+              </div>
+            ` : ''}
+            ${boundEvt.infinityInteraction?.bcsAction ? `
+              <div class="infinity-code-section">
+                <div class="infinity-code-label">BCS Action Queue (THEN Execution):</div>
+                <pre class="bcs-code-block">${escapeXml(boundEvt.infinityInteraction.bcsAction)}</pre>
+              </div>
+            ` : ''}
+            ${boundEvt.infinityInteraction?.journalEntry ? `
+              <div class="infinity-detail-row">
+                <span class="infinity-detail-label">Journal:</span>
+                <span class="infinity-detail-val" style="color:#fcd34d; font-style:italic;">📜 "${escapeXml(boundEvt.infinityInteraction.journalEntry)}"</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      ` : ''}
     </div>
-  `).join('');
+  `}).join('');
 
   container.querySelectorAll('.choice-label-inp').forEach(inp => {
     inp.addEventListener('input', (e) => {
@@ -2317,6 +2434,23 @@ function renderStoryNodeChoices(node) {
     inp.addEventListener('input', (e) => {
       const idx = e.target.closest('.choice-edit-item').getAttribute('data-idx');
       choices[idx].requiredFlag = e.target.value.trim();
+    });
+  });
+
+  container.querySelectorAll('.choice-bound-event-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const idx = Number(e.target.closest('.choice-edit-item').getAttribute('data-idx'));
+      const val = e.target.value.trim();
+      if (val) {
+        choices[idx].boundEventId = val;
+        choices[idx]['robos:boundEvent'] = `urn:robos:crpg:event:${val}`;
+      } else {
+        delete choices[idx].boundEventId;
+        delete choices[idx]['robos:boundEvent'];
+      }
+      saveCampaignJson();
+      renderStoryNodeChoices(node);
+      renderQuestScenarioTree(true);
     });
   });
 
@@ -2444,6 +2578,7 @@ function resetStoryWalkthrough() {
   const rootId = flow['robos:rootNodeId'] || (flow['robos:storyNodes'] || [])[0]?.id;
   state.storyWalkthrough.currentNodeId = rootId;
   state.storyWalkthrough.visitedNodeIds = rootId ? [rootId] : [];
+  state.storyWalkthrough.lastFiredEvent = null;
   document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
   renderStoryWalkthroughHUD();
   renderQuestScenarioTree();
@@ -2477,11 +2612,39 @@ function renderStoryWalkthroughHUD() {
   if (actEl) actEl.textContent = node['robos:act'] || node.act || 'Prologue';
   if (locEl) locEl.textContent = `📍 ${node['robos:location'] || node.location || 'World General'}`;
   if (giverEl) giverEl.textContent = `👑 ${node['robos:giver'] || node.giver || 'Narrator'}`;
-  if (narrativeEl) narrativeEl.textContent = node['robos:summary'] || node.summary || 'No narrative description provided.';
 
   // If node is an end game state, automatically display the Epilogue Modal!
   if (type === 'end_game_state') {
     showEpilogueModal(node);
+  }
+
+  // Fired Event Banner
+  let firedBannerHtml = '';
+  if (state.storyWalkthrough.lastFiredEvent) {
+    const ev = state.storyWalkthrough.lastFiredEvent;
+    const bcsActionDisplay = ev.infinityInteraction?.bcsAction
+      ? ev.infinityInteraction.bcsAction.replace(/\n/g, ' ➔ ')
+      : '';
+    firedBannerHtml = `
+      <div class="hud-fired-event-banner">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:700; color:#38bdf8; font-size:11px;">⚡ Infinity Engine Event Fired: ${getEventIcon(ev.eventType)} ${escapeXml(ev.title)}</span>
+          <span style="font-size:9px; background:rgba(56,189,248,0.2); padding:1px 5px; border-radius:3px; color:#bae6fd; font-family:monospace;">${escapeXml(ev.infinityInteraction?.interactionType || 'bcs_script_action')}</span>
+        </div>
+        ${bcsActionDisplay ? `
+          <div style="font-size:10px; color:#e2e8f0; font-family:monospace; margin-top:4px; background:#020617; padding:3px 6px; border-radius:3px; border:1px solid #1e293b;">
+            <span style="color:#10b981; font-weight:700;">EXEC:</span> ${escapeXml(bcsActionDisplay)}
+          </div>
+        ` : ''}
+        ${ev.infinityInteraction?.dialogueRef ? `
+          <div style="font-size:10px; color:#c084fc; margin-top:2px;">💬 Dialogue State: <strong>${escapeXml(ev.infinityInteraction.dialogueRef)}</strong></div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  if (narrativeEl) {
+    narrativeEl.innerHTML = `${firedBannerHtml}<div>${escapeXml(node['robos:summary'] || node.summary || 'No narrative description provided.')}</div>`;
   }
 
   // Render choice action buttons
@@ -2506,10 +2669,28 @@ function renderStoryWalkthroughHUD() {
       isLocked = true;
       lockReason = ` (Requires: ${ch.requiredFlag})`;
     }
+
+    const boundEvt = (state.gameEvents || []).find(e =>
+      e.slug === ch.boundEventId ||
+      e.id === ch['robos:boundEvent'] ||
+      e.urn === ch['robos:boundEvent'] ||
+      e.id === ch.boundEventId
+    );
+
+    const icon = isLocked ? '🔒' : (boundEvt ? getEventIcon(boundEvt.eventType) : '⚔️');
+    const eventBadge = boundEvt
+      ? `<span class="hud-bound-event-tag" title="Fires Infinity Engine Event: ${escapeXml(boundEvt.title)}">⚡ ${escapeXml(boundEvt.title.length > 22 ? boundEvt.title.slice(0, 20) + '…' : boundEvt.title)}</span>`
+      : '';
+
     return `
       <button class="hud-choice-btn ${isLocked ? 'disabled' : ''}" data-target="${ch.targetNodeId}" data-idx="${idx}" ${isLocked ? 'disabled title="Prerequisite flag not met"' : ''}>
-        <span>${isLocked ? '🔒' : '⚔️'}</span>
-        <span>${ch.label || 'Advance to next stage'}${lockReason}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>${icon}</span>
+            <span>${escapeXml(ch.label || 'Advance to next stage')}${lockReason}</span>
+          </div>
+          ${eventBadge}
+        </div>
       </button>
     `;
   }).join('');
@@ -2520,10 +2701,41 @@ function renderStoryWalkthroughHUD() {
       const idx = Number(btn.getAttribute('data-idx'));
       const choice = choices[idx];
 
-      // Apply any setFlags
+      // Apply any choice setFlags
       if (choice.setFlags && typeof choice.setFlags === 'object') {
         Object.assign(flags, choice.setFlags);
         renderStoryFlags();
+      }
+
+      // Fire Bound Game Event if linked!
+      const boundEvt = (state.gameEvents || []).find(e =>
+        e.slug === choice.boundEventId ||
+        e.id === choice['robos:boundEvent'] ||
+        e.urn === choice['robos:boundEvent'] ||
+        e.id === choice.boundEventId
+      );
+
+      if (boundEvt) {
+        state.storyWalkthrough.lastFiredEvent = boundEvt;
+        // Apply state mutations from the bound game event
+        if (boundEvt.stateMutations) {
+          if (boundEvt.stateMutations.setFlags) {
+            Object.assign(flags, boundEvt.stateMutations.setFlags);
+            renderStoryFlags();
+          }
+          if (boundEvt.stateMutations.xpAward) {
+            const heroes = state.activeCampaignData?.heroes || [];
+            heroes.forEach(h => { h.xp = (h.xp || 0) + boundEvt.stateMutations.xpAward; });
+            renderCampaignTacticsRoster();
+          }
+          if (boundEvt.stateMutations.goldChange && gs['robos:sharedInventory']) {
+            gs['robos:sharedInventory'].gold = Math.max(0, (gs['robos:sharedInventory'].gold || 0) + boundEvt.stateMutations.goldChange);
+            renderInventoryOverview();
+          }
+        }
+        setStatus(`Infinity Engine Event [${boundEvt.title}] fired. BCS action queue executed.`);
+      } else {
+        state.storyWalkthrough.lastFiredEvent = null;
       }
 
       state.storyWalkthrough.currentNodeId = targetId;
@@ -2785,12 +2997,7 @@ function setupCharacterHandlers() {
     const sel = document.getElementById('char-spells-select');
     const spellSlug = sel?.value;
     if (!spellSlug) return;
-    if (!state.activeCharPreparedSpells) state.activeCharPreparedSpells = [];
-    if (!state.activeCharPreparedSpells.includes(spellSlug)) {
-      state.activeCharPreparedSpells.push(spellSlug);
-      renderCharSpellChips();
-      updateCharSpellStats();
-    }
+    addSpellToActiveCharacter(spellSlug);
   });
 
   // Abilities handlers
@@ -2798,11 +3005,7 @@ function setupCharacterHandlers() {
     const sel = document.getElementById('char-abilities-select');
     const abilitySlug = sel?.value;
     if (!abilitySlug) return;
-    if (!state.activeCharAssignedAbilities) state.activeCharAssignedAbilities = [];
-    if (!state.activeCharAssignedAbilities.includes(abilitySlug)) {
-      state.activeCharAssignedAbilities.push(abilitySlug);
-      renderCharAbilityChips();
-    }
+    addAbilityToActiveCharacter(abilitySlug);
   });
 
   // Infinity AI Directives handlers
@@ -2975,6 +3178,102 @@ function renderCharactersList() {
   });
 }
 
+// Canonical abilities lookup & normalization
+const KNOWN_ABILITY_SLUGS = [
+  'sneak-attack',
+  'cunning-action',
+  'action-surge',
+  'second-wind',
+  'divine-smite',
+  'turn-undead',
+  'rage',
+  'uncanny-dodge',
+  'defensive-flurry',
+  'flank-advantage',
+  'rallying-stomp',
+  'trip-attack'
+];
+
+function normalizeAbilitySlug(str) {
+  if (!str) return null;
+  const s = String(str).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (!s) return null;
+
+  // Direct exact match
+  if (KNOWN_ABILITY_SLUGS.includes(s)) return s;
+  if (state.abilities && state.abilities.some(a => a.slug === s)) return s;
+
+  // Prefix match (e.g. sneak-attack-1d6-, sneak-attack-2d6-, cunning-action-dash...)
+  for (const slug of KNOWN_ABILITY_SLUGS) {
+    if (s === slug || s.startsWith(slug + '-') || s.startsWith(slug)) {
+      return slug;
+    }
+  }
+
+  // State abilities match by name or prefix
+  if (state.abilities) {
+    for (const a of state.abilities) {
+      if (s.startsWith(a.slug + '-') || s.startsWith(a.slug)) return a.slug;
+      if (a.name) {
+        const normName = a.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        if (s === normName || s.startsWith(normName + '-') || s.startsWith(normName)) return a.slug;
+      }
+    }
+  }
+
+  return null;
+}
+
+function partitionSpellsAndAbilities(rawSpells, rawAbilities) {
+  const preparedSpells = [];
+  const assignedAbilities = [];
+
+  const parseTokens = (input) => {
+    if (!input) return [];
+    if (Array.isArray(input)) {
+      return input.map(item => {
+        if (!item) return '';
+        if (typeof item === 'string') return item;
+        return item.slug || item.name || '';
+      }).filter(Boolean);
+    }
+    if (typeof input === 'string') {
+      return input.split(/[\n,]/).map(t => t.trim()).filter(Boolean);
+    }
+    return [];
+  };
+
+  const rawSpellTokens = parseTokens(rawSpells);
+  const rawAbilityTokens = parseTokens(rawAbilities);
+
+  // Process ability tokens first
+  for (const token of rawAbilityTokens) {
+    const abSlug = normalizeAbilitySlug(token) || token.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (abSlug && !assignedAbilities.includes(abSlug)) {
+      assignedAbilities.push(abSlug);
+    }
+  }
+
+  // Process spell tokens, strictly extracting any abilities that were mistakenly categorized as spells
+  for (const token of rawSpellTokens) {
+    const cleanToken = token.trim();
+    if (!cleanToken) continue;
+    const abilityMatch = normalizeAbilitySlug(cleanToken);
+    if (abilityMatch) {
+      if (!assignedAbilities.includes(abilityMatch)) {
+        assignedAbilities.push(abilityMatch);
+      }
+    } else {
+      const spellSlug = cleanToken.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (spellSlug && !preparedSpells.includes(spellSlug)) {
+        preparedSpells.push(spellSlug);
+      }
+    }
+  }
+
+  return { preparedSpells, assignedAbilities };
+}
+
 async function loadCharacterSheet(slug) {
   if (!slug) return;
   try {
@@ -3058,32 +3357,17 @@ async function loadCharacterSheet(slug) {
       document.getElementById('vital-prof').value = data['robos:prof'] || data.prof || 2;
 
       // Spellbook, Abilities & Infinity AI Directives
-      let preparedSpells = data['robos:preparedSpells'] || data.preparedSpells || [];
-      if (!Array.isArray(preparedSpells)) {
-        if (typeof preparedSpells === 'string' && preparedSpells.trim()) {
-          preparedSpells = preparedSpells.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
-        } else {
-          preparedSpells = [];
-        }
-      }
-      if (preparedSpells.length === 0 && (data['robos:spells'] || data.spells)) {
-        const legacySpells = String(data['robos:spells'] || data.spells);
-        preparedSpells = legacySpells.split(/[\n,]/).map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
-      }
-      state.activeCharPreparedSpells = preparedSpells;
+      const rawSpells = data['robos:preparedSpells'] || data.preparedSpells || data['robos:spells'] || data.spells || [];
+      const rawAbilities = data['robos:abilities'] || data.abilities || [];
+      const partitioned = partitionSpellsAndAbilities(rawSpells, rawAbilities);
+
+      state.activeCharPreparedSpells = partitioned.preparedSpells;
+      state.activeCharAssignedAbilities = partitioned.assignedAbilities;
+
       populateCharSpellsDropdown();
       renderCharSpellChips();
       updateCharSpellStats();
 
-      let assignedAbilities = data['robos:abilities'] || data.abilities || [];
-      if (!Array.isArray(assignedAbilities)) {
-        if (typeof assignedAbilities === 'string' && assignedAbilities.trim()) {
-          assignedAbilities = assignedAbilities.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
-        } else {
-          assignedAbilities = [];
-        }
-      }
-      state.activeCharAssignedAbilities = assignedAbilities;
       populateCharAbilitiesDropdown();
       renderCharAbilityChips();
 
@@ -5033,6 +5317,12 @@ function populateBagPickers() {
 
 function addSpellToActiveCharacter(spellSlug) {
   if (!spellSlug) return;
+  const abilityMatch = normalizeAbilitySlug(spellSlug);
+  if (abilityMatch) {
+    addAbilityToActiveCharacter(abilityMatch);
+    setStatus(`"${spellSlug}" is a class ability/feature and was routed to Special Abilities & Feats.`);
+    return;
+  }
   if (!state.activeCharPreparedSpells) state.activeCharPreparedSpells = [];
   if (!state.activeCharPreparedSpells.includes(spellSlug)) {
     state.activeCharPreparedSpells.push(spellSlug);
@@ -5043,9 +5333,10 @@ function addSpellToActiveCharacter(spellSlug) {
 
 function addAbilityToActiveCharacter(abilitySlug) {
   if (!abilitySlug) return;
+  const canonical = normalizeAbilitySlug(abilitySlug) || abilitySlug;
   if (!state.activeCharAssignedAbilities) state.activeCharAssignedAbilities = [];
-  if (!state.activeCharAssignedAbilities.includes(abilitySlug)) {
-    state.activeCharAssignedAbilities.push(abilitySlug);
+  if (!state.activeCharAssignedAbilities.includes(canonical)) {
+    state.activeCharAssignedAbilities.push(canonical);
     renderCharAbilityChips();
   }
 }
@@ -5069,6 +5360,8 @@ function setupDragAndDrop() {
         const data = JSON.parse(e.dataTransfer.getData('application/json'));
         if (data.source === 'spell' && data.slug) {
           addSpellToActiveCharacter(data.slug);
+        } else if (data.source === 'ability' && data.slug) {
+          addAbilityToActiveCharacter(data.slug);
         }
       } catch (err) {}
     });
@@ -5091,6 +5384,8 @@ function setupDragAndDrop() {
         const data = JSON.parse(e.dataTransfer.getData('application/json'));
         if (data.source === 'ability' && data.slug) {
           addAbilityToActiveCharacter(data.slug);
+        } else if (data.source === 'spell' && data.slug) {
+          addSpellToActiveCharacter(data.slug);
         }
       } catch (err) {}
     });
@@ -5818,8 +6113,31 @@ function renderCharSpellChips() {
   if (!container) return;
 
   const spells = state.activeCharPreparedSpells || [];
+
+  // Strict safety check: if any ability slug leaked into preparedSpells, migrate it immediately
+  const abilityLeaks = spells.filter(s => normalizeAbilitySlug(s));
+  if (abilityLeaks.length > 0) {
+    state.activeCharPreparedSpells = spells.filter(s => !normalizeAbilitySlug(s));
+    if (!state.activeCharAssignedAbilities) state.activeCharAssignedAbilities = [];
+    abilityLeaks.forEach(slug => {
+      const canonical = normalizeAbilitySlug(slug);
+      if (canonical && !state.activeCharAssignedAbilities.includes(canonical)) {
+        state.activeCharAssignedAbilities.push(canonical);
+      }
+    });
+    renderCharAbilityChips();
+    renderCharSpellChips();
+    return;
+  }
+
   if (spells.length === 0) {
-    container.innerHTML = '<span style="color: var(--text-muted); font-size: 11px;">No spells prepared in spellbook.</span>';
+    const charClass = (document.getElementById('hero-class')?.value || state.activeCharacterData?.class || '').toLowerCase();
+    const isNonCaster = ['rogue', 'fighter', 'barbarian'].includes(charClass);
+    if (isNonCaster) {
+      container.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Non-spellcasting class (${charClass.toUpperCase()}). Class features and special abilities (e.g. Sneak Attack, Cunning Action) are managed in the Abilities section below.</span>`;
+    } else {
+      container.innerHTML = '<span style="color: var(--text-muted); font-size: 11px;">No spells prepared in spellbook.</span>';
+    }
     const compField = document.getElementById('hero-spells');
     if (compField) compField.value = '';
     return;
@@ -6745,32 +7063,36 @@ function initSimState() {
   const partyCharacters = getCampaignActiveCharacters();
   simParty = partyCharacters.map(c => {
     const hpMax = c['robos:hpMax'] || c.hpMax || 24;
-    return {
-      slug: c.slug,
-      name: c['schema:name'] || c.name || c.slug,
-      portrait: c['robos:portrait'] || c.portrait || '👤',
-      charClass: c['robos:class'] || c.class || 'Fighter',
-      level: c['robos:level'] || c.level || 1,
-      ac: c['robos:ac'] || c.ac || 14,
-      hpMax,
-      hpCurrent: hpMax,
-      spellSlots: 3,
-      directive: c['robos:directive'] || c.directive || {
-        controller: 'infinity_ai',
-        role: 'striker',
-        targetPriority: 'nearest',
-        movement: 'advance',
-        healThreshold: 0.5,
-        potionThreshold: 0.4,
-        useSpells: true
-      },
-      spells: c['robos:preparedSpells'] || c.preparedSpells || [],
-      abilities: c['robos:abilities'] || c.abilities || [],
-      quickItems: Array.isArray(c['robos:quickItems'] || c.quickItems) 
-        ? (c['robos:quickItems'] || c.quickItems).slice() 
-        : [c['robos:quickItems'] || c.quickItems].filter(Boolean),
-      alive: true
-    };
+      const partitioned = partitionSpellsAndAbilities(
+        c['robos:preparedSpells'] || c.preparedSpells || c['robos:spells'] || c.spells || [],
+        c['robos:abilities'] || c.abilities || []
+      );
+      return {
+        slug: c.slug,
+        name: c['schema:name'] || c.name || c.slug,
+        portrait: c['robos:portrait'] || c.portrait || '👤',
+        charClass: c['robos:class'] || c.class || 'Fighter',
+        level: c['robos:level'] || c.level || 1,
+        ac: c['robos:ac'] || c.ac || 14,
+        hpMax,
+        hpCurrent: hpMax,
+        spellSlots: 3,
+        directive: c['robos:directive'] || c.directive || {
+          controller: 'infinity_ai',
+          role: 'striker',
+          targetPriority: 'nearest',
+          movement: 'advance',
+          healThreshold: 0.5,
+          potionThreshold: 0.4,
+          useSpells: true
+        },
+        spells: partitioned.preparedSpells,
+        abilities: partitioned.assignedAbilities,
+        quickItems: Array.isArray(c['robos:quickItems'] || c.quickItems) 
+          ? (c['robos:quickItems'] || c.quickItems).slice() 
+          : [c['robos:quickItems'] || c.quickItems].filter(Boolean),
+        alive: true
+      };
   });
 
   const scenario = document.getElementById('sim-scenario-select')?.value || 'crypt-skeleton-patrol';
@@ -6828,8 +7150,12 @@ function renderCampaignTacticsRoster() {
     const role = dir.role || 'striker';
     const priority = (dir.targetPriority || 'nearest').replace('_', ' ');
     const stance = (dir.movement || 'advance').replace('_', ' ');
-    const spells = c['robos:preparedSpells'] || c.preparedSpells || [];
-    const abilities = c['robos:abilities'] || c.abilities || [];
+    const partitioned = partitionSpellsAndAbilities(
+      c['robos:preparedSpells'] || c.preparedSpells || c['robos:spells'] || c.spells || [],
+      c['robos:abilities'] || c.abilities || []
+    );
+    const spells = partitioned.preparedSpells;
+    const abilities = partitioned.assignedAbilities;
     const quickItems = Array.isArray(c['robos:quickItems'] || c.quickItems) 
       ? (c['robos:quickItems'] || c.quickItems) 
       : [c['robos:quickItems'] || c.quickItems].filter(Boolean);

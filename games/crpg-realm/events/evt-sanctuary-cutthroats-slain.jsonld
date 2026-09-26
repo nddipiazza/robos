@@ -1,0 +1,55 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-sanctuary-cutthroats-slain",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Cutthroats Shank & Carbos Slain",
+  "schema:name": "Cutthroats Shank & Carbos Slain",
+  "robos:slug": "evt-sanctuary-cutthroats-slain",
+  "slug": "evt-sanctuary-cutthroats-slain",
+  "dcterms:description": "Defeating the two assassins lying in ambush within the darkened Candlekeep storehouse.",
+  "description": "Defeating the two assassins lying in ambush within the darkened Candlekeep storehouse.",
+  "robos:eventType": "combat_victory",
+  "eventType": "combat_victory",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "combat_encounter",
+    "interactionType": "combat_encounter",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Dead(\"shank\") && Dead(\"carbos\")",
+    "bcsTrigger": "Dead(\"shank\") && Dead(\"carbos\")",
+    "robos:bcsAction": "SetGlobal(\"shank_defeated\", \"GLOBAL\", 1)\nSetGlobal(\"carbos_defeated\", \"GLOBAL\", 1)\nGiveItemCreate(\"SCRL_BOUNTY\", Player1, 1, 0, 0)\nAddJournalEntry(3002, QUEST)",
+    "bcsAction": "SetGlobal(\"shank_defeated\", \"GLOBAL\", 1)\nSetGlobal(\"carbos_defeated\", \"GLOBAL\", 1)\nGiveItemCreate(\"SCRL_BOUNTY\", Player1, 1, 0, 0)\nAddJournalEntry(3002, QUEST)",
+    "robos:journalEntry": "Slain cutthroats Shank and Carbos in the storehouse; recovered an assassin contract scroll.",
+    "journalEntry": "Slain cutthroats Shank and Carbos in the storehouse; recovered an assassin contract scroll.",
+    "robos:scenarioRef": "urn:robos:crpg:scenario:homestead-hound-pack",
+    "scenarioRef": "urn:robos:crpg:scenario:homestead-hound-pack"
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "shank_defeated": true,
+      "carbos_defeated": true,
+      "bounty_scroll_found": true
+    },
+    "xpAward": 150
+  },
+  "stateMutations": {
+    "setFlags": {
+      "shank_defeated": true,
+      "carbos_defeated": true,
+      "bounty_scroll_found": true
+    },
+    "xpAward": 150
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

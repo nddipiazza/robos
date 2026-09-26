@@ -1,0 +1,49 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-coastway-flee-wilderness",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Flight into the Foggy Wilderness",
+  "schema:name": "Flight into the Foggy Wilderness",
+  "robos:slug": "evt-coastway-flee-wilderness",
+  "slug": "evt-coastway-flee-wilderness",
+  "dcterms:description": "Heeding Gorion desperate order and escaping into the dense Coast Way woods.",
+  "description": "Heeding Gorion desperate order and escaping into the dense Coast Way woods.",
+  "robos:eventType": "area_transition",
+  "eventType": "area_transition",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "bcs_script_action",
+    "interactionType": "bcs_script_action",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "HPPercentLT(Player1, 100) || Global(\"GorionCommandsFlee\", \"GLOBAL\", 1)",
+    "bcsTrigger": "HPPercentLT(Player1, 100) || Global(\"GorionCommandsFlee\", \"GLOBAL\", 1)",
+    "robos:bcsAction": "SetGlobal(\"fled_into_woods\", \"GLOBAL\", 1)\nEscapeAreaMove(\"AR2700\", 350, 420, 0)",
+    "bcsAction": "SetGlobal(\"fled_into_woods\", \"GLOBAL\", 1)\nEscapeAreaMove(\"AR2700\", 350, 420, 0)",
+    "robos:journalEntry": "Fled into the dark forest as lightning ripped through the tree canopy.",
+    "journalEntry": "Fled into the dark forest as lightning ripped through the tree canopy.",
+    "robos:cutsceneRef": "Cut01B",
+    "cutsceneRef": "Cut01B"
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "fled_into_woods": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "fled_into_woods": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

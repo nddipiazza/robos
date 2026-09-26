@@ -40,6 +40,12 @@ contextBridge.exposeInMainWorld('robos', {
   saveAbility: (payload) => ipcRenderer.invoke('abilities:save', payload),
   deleteAbility: (slug) => ipcRenderer.invoke('abilities:delete', slug),
 
+  // Game Event APIs (Knowledge Graph & Infinity Engine interactions)
+  listGameEvents: () => ipcRenderer.invoke('events:list'),
+  loadGameEvent: (slug) => ipcRenderer.invoke('events:load', slug),
+  saveGameEvent: (payload) => ipcRenderer.invoke('events:save', payload),
+  deleteGameEvent: (slug) => ipcRenderer.invoke('events:delete', slug),
+
   // Scene APIs
   listScenes: () => ipcRenderer.invoke('scenes:list'),
 

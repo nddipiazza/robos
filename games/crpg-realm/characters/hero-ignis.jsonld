@@ -44,6 +44,23 @@
   "boots": "Cloth Slippers",
   "ring1": "Ring of Wizardry",
   "quickItems": "Scroll of Magic Missile, Wand of Frost (3 ch)",
-  "spells": "Cantrips: Fire Bolt, Light, Prestidigitation. Spells: Magic Missile, Shield, Mage Armor, Burning Hands",
+  "robos:preparedSpells": [
+    "fire-bolt",
+    "magic-missile",
+    "shield",
+    "mage-armor",
+    "burning-hands"
+  ],
+  "preparedSpells": [
+    "fire-bolt",
+    "magic-missile",
+    "shield",
+    "mage-armor",
+    "burning-hands"
+  ],
+  "robos:spells": "fire-bolt, magic-missile, shield, mage-armor, burning-hands",
+  "spells": "fire-bolt, magic-missile, shield, mage-armor, burning-hands",
+  "robos:abilities": [],
+  "abilities": [],
   "backstory": "Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic."
 }

@@ -1,0 +1,53 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-loric-decree",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "King Loric's Royal Mandate",
+  "schema:name": "King Loric's Royal Mandate",
+  "robos:slug": "evt-dw-loric-decree",
+  "slug": "evt-dw-loric-decree",
+  "dcterms:description": "King Loric charges the descendant of Erdrick with retrieving the stolen Ball of Light.",
+  "description": "King Loric charges the descendant of Erdrick with retrieving the stolen Ball of Light.",
+  "robos:eventType": "dialogue",
+  "eventType": "dialogue",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "dialogue_branch",
+    "interactionType": "dialogue_branch",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "NumTimesTalkedTo(0) && AreaCheck(\"tantegel-throne-room\")",
+    "bcsTrigger": "NumTimesTalkedTo(0) && AreaCheck(\"tantegel-throne-room\")",
+    "robos:bcsAction": "SetGlobal(\"received_royal_blessing\", \"GLOBAL\", 1)\nGiveGoldForce(120)\nGiveItemCreate(\"TORCH\", Player1, 1, 0, 0)\nGiveItemCreate(\"HERB\", Player1, 1, 0, 0)",
+    "bcsAction": "SetGlobal(\"received_royal_blessing\", \"GLOBAL\", 1)\nGiveGoldForce(120)\nGiveItemCreate(\"TORCH\", Player1, 1, 0, 0)\nGiveItemCreate(\"HERB\", Player1, 1, 0, 0)",
+    "robos:dialogueRef": "LORIC.DLG:1:1",
+    "dialogueRef": "LORIC.DLG:1:1",
+    "robos:journalEntry": "King Loric blessed our quest and provided 120 gold, a torch, and healing herbs.",
+    "journalEntry": "King Loric blessed our quest and provided 120 gold, a torch, and healing herbs."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "received_royal_blessing": true,
+      "spoke_to_king_loric": true
+    },
+    "goldChange": 120
+  },
+  "stateMutations": {
+    "setFlags": {
+      "received_royal_blessing": true,
+      "spoke_to_king_loric": true
+    },
+    "goldChange": 120
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

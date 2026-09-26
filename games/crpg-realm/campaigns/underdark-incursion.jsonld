@@ -43,7 +43,11 @@
       "boots": "Iron-shod Sabatons",
       "ring1": "Ring of Minor Fortitude (+1 CON saves)",
       "quickItems": "3x Potion of Healing, Whetstone, Torch",
-      "spells": "Second Wind (1d10+3 hp), Action Surge (1 extra action/rest)",
+      "spells": "",
+      "abilities": [
+        "second-wind",
+        "action-surge"
+      ],
       "backstory": "Frontline mercenary captain veteran of three subterranean cavern campaigns."
     },
     {
@@ -77,7 +81,11 @@
       "boots": "Boots of Soft Stepping",
       "ring1": "Band of Keen Eyes (+2 Perception)",
       "quickItems": "Thieves' Tools (Fine), Potion of Invisibility, 20x Iron Arrows",
-      "spells": "Mage Hand Legerdemain, Disguise Self, Sleep, Sneak Attack (2d6)",
+      "spells": "Disguise Self, Sleep",
+      "abilities": [
+        "sneak-attack",
+        "cunning-action"
+      ],
       "backstory": "Infiltration specialist who navigates cavern fissures and detects concealed tripwires."
     },
     {

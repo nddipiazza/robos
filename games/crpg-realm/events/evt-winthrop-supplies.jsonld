@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-winthrop-supplies",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Winthrop's Hospitality & Provisions",
+  "schema:name": "Winthrop's Hospitality & Provisions",
+  "robos:slug": "evt-winthrop-supplies",
+  "slug": "evt-winthrop-supplies",
+  "dcterms:description": "Winthrop provides travel provisions and advice inside the bustling Candlekeep Inn.",
+  "description": "Winthrop provides travel provisions and advice inside the bustling Candlekeep Inn.",
+  "robos:eventType": "dialogue",
+  "eventType": "dialogue",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "dialogue_branch",
+    "interactionType": "dialogue_branch",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "See(Player1) && AreaCheck(\"candlekeep-inn-interior\")",
+    "bcsTrigger": "See(Player1) && AreaCheck(\"candlekeep-inn-interior\")",
+    "robos:bcsAction": "SetGlobal(\"spoke_to_winthrop\", \"GLOBAL\", 1)\nGiveGoldForce(15)\nStartStore(\"WINTHROP\", LastTalkedToBy)",
+    "bcsAction": "SetGlobal(\"spoke_to_winthrop\", \"GLOBAL\", 1)\nGiveGoldForce(15)\nStartStore(\"WINTHROP\", LastTalkedToBy)",
+    "robos:dialogueRef": "WINTHROP.DLG:3:1",
+    "dialogueRef": "WINTHROP.DLG:3:1",
+    "robos:journalEntry": "Purchased travel rations and iron daggers from innkeeper Winthrop.",
+    "journalEntry": "Purchased travel rations and iron daggers from innkeeper Winthrop."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "spoke_to_winthrop": true
+    },
+    "goldChange": -10
+  },
+  "stateMutations": {
+    "setFlags": {
+      "spoke_to_winthrop": true
+    },
+    "goldChange": -10
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

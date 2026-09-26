@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-hero-slain-charlock",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Ashes in Charlock",
+  "schema:name": "Ashes in Charlock",
+  "robos:slug": "evt-dw-hero-slain-charlock",
+  "slug": "evt-dw-hero-slain-charlock",
+  "dcterms:description": "Falling in battle against the Dragonlord infernal breath.",
+  "description": "Falling in battle against the Dragonlord infernal breath.",
+  "robos:eventType": "cutscene",
+  "eventType": "cutscene",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "cutscene_trigger",
+    "interactionType": "cutscene_trigger",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "HP(Player1, 0) && AreaCheck(\"castle-charlock-throne\")",
+    "bcsTrigger": "HP(Player1, 0) && AreaCheck(\"castle-charlock-throne\")",
+    "robos:bcsAction": "SetGlobal(\"hero_slain_charlock\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+    "bcsAction": "SetGlobal(\"hero_slain_charlock\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+    "robos:journalEntry": "Fell in Charlock Castle; darkness claims Alefgard.",
+    "journalEntry": "Fell in Charlock Castle; darkness claims Alefgard."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "hero_slain_charlock": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "hero_slain_charlock": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

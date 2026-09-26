@@ -59,8 +59,8 @@
   "initiative": 2,
   "robos:prof": 2,
   "prof": 2,
-  "robos:spells": "fireball, magic-missile",
-  "spells": "fireball, magic-missile",
+  "robos:spells": "",
+  "spells": "",
   "robos:mainHand": "Longsword (+5 to hit, 1d8+3 sl)",
   "mainHand": "Longsword (+5 to hit, 1d8+3 sl)",
   "robos:offHand": "Steel Shield (+2 AC)",
@@ -87,14 +87,8 @@
     { "slug": "leather-boots", "quantity": 1, "slot": 4 },
     { "slug": "copper-sword", "quantity": 1, "slot": 5 }
   ],
-  "robos:preparedSpells": [
-    "fireball",
-    "magic-missile"
-  ],
-  "preparedSpells": [
-    "fireball",
-    "magic-missile"
-  ],
+  "robos:preparedSpells": [],
+  "preparedSpells": [],
   "robos:abilities": [
     "second-wind",
     "action-surge"

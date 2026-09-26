@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-hasty-departure",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Hasty Departure to Gates",
+  "schema:name": "Hasty Departure to Gates",
+  "robos:slug": "evt-hasty-departure",
+  "slug": "evt-hasty-departure",
+  "dcterms:description": "Choosing not to linger for preparations, heading directly to the monastery gates.",
+  "description": "Choosing not to linger for preparations, heading directly to the monastery gates.",
+  "robos:eventType": "area_transition",
+  "eventType": "area_transition",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "bcs_script_action",
+    "interactionType": "bcs_script_action",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "True()",
+    "bcsTrigger": "True()",
+    "robos:bcsAction": "SetGlobal(\"hasty_departure\", \"GLOBAL\", 1)\nMoveToPoint([1450, 920])",
+    "bcsAction": "SetGlobal(\"hasty_departure\", \"GLOBAL\", 1)\nMoveToPoint([1450, 920])",
+    "robos:journalEntry": "Decided not to linger for provisions; heading straight for the monastery gates.",
+    "journalEntry": "Decided not to linger for provisions; heading straight for the monastery gates."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "hasty_departure": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "hasty_departure": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

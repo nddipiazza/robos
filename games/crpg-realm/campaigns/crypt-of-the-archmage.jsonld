@@ -43,7 +43,11 @@
       "boots": "Steel Greaves of Grounding",
       "ring1": "Ring of Protection (+1 AC and Saving Throws)",
       "quickItems": "3x Potion of Greater Healing, Potion of Heroism",
-      "spells": "Action Surge (1/rest), Second Wind (1d10+5 hp), Extra Attack (2 strikes/turn)",
+      "spells": "",
+      "abilities": [
+        "action-surge",
+        "second-wind"
+      ],
       "backstory": "Renowned commander of the garrison forces, leading the purge of desecrated tombs."
     },
     {
@@ -77,7 +81,11 @@
       "boots": "Boots of Speed",
       "ring1": "Ring of Evasion (3 charges)",
       "quickItems": "Thieves' Tools (Masterwork), 2x Potion of Invisibility, Antitoxin",
-      "spells": "Sneak Attack (2d6), Assassinate, Cunning Action (Dash/Disengage/Hide as Bonus Action)",
+      "spells": "",
+      "abilities": [
+        "sneak-attack",
+        "cunning-action"
+      ],
       "backstory": "Veteran scout unmatched in detecting pressure plates, tripwires, and disarming mechanisms."
     },
     {

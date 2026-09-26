@@ -1,0 +1,49 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-iron-throne-ascension",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Embrace of Bhaal: Sovereign of Murder",
+  "schema:name": "Embrace of Bhaal: Sovereign of Murder",
+  "robos:slug": "evt-iron-throne-ascension",
+  "slug": "evt-iron-throne-ascension",
+  "dcterms:description": "Unlocking the dormant divine spark to seize command of the Iron Throne syndicates.",
+  "description": "Unlocking the dormant divine spark to seize command of the Iron Throne syndicates.",
+  "robos:eventType": "quest_milestone",
+  "eventType": "quest_milestone",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "bcs_script_action",
+    "interactionType": "bcs_script_action",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Global(\"fled_into_woods\", \"GLOBAL\", 1) && Dead(\"sarevok\")",
+    "bcsTrigger": "Global(\"fled_into_woods\", \"GLOBAL\", 1) && Dead(\"sarevok\")",
+    "robos:bcsAction": "SetGlobal(\"embraced_dark_heritage\", \"GLOBAL\", 1)\nSetGlobal(\"tyrant_ascension\", \"GLOBAL\", 1)\nAddSpecialAbility(\"SPIN101\")",
+    "bcsAction": "SetGlobal(\"embraced_dark_heritage\", \"GLOBAL\", 1)\nSetGlobal(\"tyrant_ascension\", \"GLOBAL\", 1)\nAddSpecialAbility(\"SPIN101\")",
+    "robos:journalEntry": "Claimed the dark divine heritage and subjugated the Iron Throne syndicates under iron tyranny.",
+    "journalEntry": "Claimed the dark divine heritage and subjugated the Iron Throne syndicates under iron tyranny."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "embraced_dark_heritage": true,
+      "tyrant_ascension": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "embraced_dark_heritage": true,
+      "tyrant_ascension": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

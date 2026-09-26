@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Descent into the Swamp Cave",
+  "schema:name": "Descent into the Swamp Cave",
+  "robos:slug": "evt-dw-swamp-cave-discovery",
+  "slug": "evt-dw-swamp-cave-discovery",
+  "dcterms:description": "Descending into the noxious swamp cave south of Tantegel Castle.",
+  "description": "Descending into the noxious swamp cave south of Tantegel Castle.",
+  "robos:eventType": "area_transition",
+  "eventType": "area_transition",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "area_transition",
+    "interactionType": "area_transition",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "AreaCheck(\"tantegel-exterior\") && Entered(\"ExitSwampCave\")",
+    "bcsTrigger": "AreaCheck(\"tantegel-exterior\") && Entered(\"ExitSwampCave\")",
+    "robos:bcsAction": "SetGlobal(\"discovered_swamp_cave\", \"GLOBAL\", 1)\nAddJournalEntry(4002, QUEST)",
+    "bcsAction": "SetGlobal(\"discovered_swamp_cave\", \"GLOBAL\", 1)\nAddJournalEntry(4002, QUEST)",
+    "robos:journalEntry": "Entered the subterranean swamp cave searching for Princess Gwaelin.",
+    "journalEntry": "Entered the subterranean swamp cave searching for Princess Gwaelin."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "discovered_swamp_cave": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "discovered_swamp_cave": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

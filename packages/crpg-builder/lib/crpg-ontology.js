@@ -170,6 +170,17 @@ const CRPG_SHACL_SHAPES = [
       { path: 'robos:nodeType', minCount: 1, message: 'Story node must specify node type.' },
       { path: 'robos:act', minCount: 1, message: 'Story node must specify narrative act or chapter.' }
     ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGGameEventShape',
+    targetClass: 'robos:CRPGGameEvent',
+    refersFrom: 'https://schema.org/Event',
+    domainStandard: 'https://robos.dev/ns/crpg#GameEvent',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Game event must have a title.' },
+      { path: 'robos:eventType', minCount: 1, message: 'Game event must declare an event type (e.g. dialogue, combat_victory, area_transition, cutscene, item_acquisition, quest_milestone, decision_branch).' },
+      { path: 'robos:infinityInteraction', minCount: 1, message: 'Game event must declare an Infinity Engine interaction specification.' }
+    ]
   }
 ];
 

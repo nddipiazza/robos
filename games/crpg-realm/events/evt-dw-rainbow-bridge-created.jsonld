@@ -1,0 +1,49 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "The Rainbow Bridge Spanned",
+  "schema:name": "The Rainbow Bridge Spanned",
+  "robos:slug": "evt-dw-rainbow-bridge-created",
+  "slug": "evt-dw-rainbow-bridge-created",
+  "dcterms:description": "Combining the Staff of Rain and Sunstone at the sacred shrine to forge the Rainbow Drop.",
+  "description": "Combining the Staff of Rain and Sunstone at the sacred shrine to forge the Rainbow Drop.",
+  "robos:eventType": "item_acquisition",
+  "eventType": "item_acquisition",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "bcs_script_action",
+    "interactionType": "bcs_script_action",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "PartyHasItem(\"staff-of-rain\") && PartyHasItem(\"sunstone\")",
+    "bcsTrigger": "PartyHasItem(\"staff-of-rain\") && PartyHasItem(\"sunstone\")",
+    "robos:bcsAction": "SetGlobal(\"rainbow_bridge_created\", \"GLOBAL\", 1)\nTakePartyItem(\"staff-of-rain\")\nTakePartyItem(\"sunstone\")\nGiveItemCreate(\"RAINBOW_DROP\", Player1, 1, 0, 0)\nStartCutScene(\"CutRainbowBridge\")",
+    "bcsAction": "SetGlobal(\"rainbow_bridge_created\", \"GLOBAL\", 1)\nTakePartyItem(\"staff-of-rain\")\nTakePartyItem(\"sunstone\")\nGiveItemCreate(\"RAINBOW_DROP\", Player1, 1, 0, 0)\nStartCutScene(\"CutRainbowBridge\")",
+    "robos:journalEntry": "Forged the Rainbow Drop and created the bridge of light across the sea to Castle Charlock.",
+    "journalEntry": "Forged the Rainbow Drop and created the bridge of light across the sea to Castle Charlock.",
+    "robos:cutsceneRef": "CutRainbowBridge",
+    "cutsceneRef": "CutRainbowBridge"
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "rainbow_bridge_created": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "rainbow_bridge_created": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

@@ -59,8 +59,8 @@
   "initiative": 4,
   "robos:prof": 2,
   "prof": 2,
-  "robos:spells": "sneak-attack-1d6-, cunning-action",
-  "spells": "sneak-attack-1d6-, cunning-action",
+  "robos:spells": "",
+  "spells": "",
   "robos:mainHand": "Shortbow (+6 to hit, 1d6+4 pierc)",
   "mainHand": "Shortbow (+6 to hit, 1d6+4 pierc)",
   "robos:offHand": "Dagger (+6 to hit, 1d4+4)",
@@ -77,16 +77,16 @@
     "potion-healing",
     "torch"
   ],
-  "robos:preparedSpells": [
-    "sneak-attack-1d6-",
+  "robos:preparedSpells": [],
+  "preparedSpells": [],
+  "robos:abilities": [
+    "sneak-attack",
     "cunning-action"
   ],
-  "preparedSpells": [
-    "sneak-attack-1d6-",
+  "abilities": [
+    "sneak-attack",
     "cunning-action"
   ],
-  "robos:abilities": [],
-  "abilities": [],
   "robos:directive": {
     "controller": "infinity_ai",
     "role": "striker",

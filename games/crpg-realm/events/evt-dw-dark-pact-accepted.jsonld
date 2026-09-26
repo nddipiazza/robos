@@ -1,0 +1,49 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-dark-pact-accepted",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "The Dark Pact of Charlock",
+  "schema:name": "The Dark Pact of Charlock",
+  "robos:slug": "evt-dw-dark-pact-accepted",
+  "slug": "evt-dw-dark-pact-accepted",
+  "dcterms:description": "Accepting the Dragonlord offer to rule half the realm in shadow.",
+  "description": "Accepting the Dragonlord offer to rule half the realm in shadow.",
+  "robos:eventType": "dialogue",
+  "eventType": "dialogue",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "dialogue_branch",
+    "interactionType": "dialogue_branch",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Global(\"DRAGONLORD_OFFER\", \"GLOBAL\", 1)",
+    "bcsTrigger": "Global(\"DRAGONLORD_OFFER\", \"GLOBAL\", 1)",
+    "robos:bcsAction": "SetGlobal(\"dark_pact_accepted\", \"GLOBAL\", 1)\nKill(\"king-loric\")\nStartCutScene(\"CutDarkReign\")",
+    "bcsAction": "SetGlobal(\"dark_pact_accepted\", \"GLOBAL\", 1)\nKill(\"king-loric\")\nStartCutScene(\"CutDarkReign\")",
+    "robos:dialogueRef": "DRAGONLORD.DLG:2:2",
+    "dialogueRef": "DRAGONLORD.DLG:2:2",
+    "robos:journalEntry": "Accepted the Dragonlord bargain; betrayed King Loric to rule Alefgard in shadow.",
+    "journalEntry": "Accepted the Dragonlord bargain; betrayed King Loric to rule Alefgard in shadow."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "dark_pact_accepted": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "dark_pact_accepted": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

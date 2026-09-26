@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-guardian-sarevok-vanquished",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Sarevok Vanquished: Savior of Candlekeep",
+  "schema:name": "Sarevok Vanquished: Savior of Candlekeep",
+  "robos:slug": "evt-guardian-sarevok-vanquished",
+  "slug": "evt-guardian-sarevok-vanquished",
+  "dcterms:description": "Defeating the armored warlord Sarevok and saving Candlekeep from the mercenary conspiracy.",
+  "description": "Defeating the armored warlord Sarevok and saving Candlekeep from the mercenary conspiracy.",
+  "robos:eventType": "combat_victory",
+  "eventType": "combat_victory",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "combat_encounter",
+    "interactionType": "combat_encounter",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Dead(\"sarevok\") && Global(\"stood_with_gorion\", \"GLOBAL\", 1)",
+    "bcsTrigger": "Dead(\"sarevok\") && Global(\"stood_with_gorion\", \"GLOBAL\", 1)",
+    "robos:bcsAction": "SetGlobal(\"sarevok_vanquished\", \"GLOBAL\", 1)\nSetGlobal(\"realm_saved\", \"GLOBAL\", 1)\nStartMovie(\"ENDMOVIE\")",
+    "bcsAction": "SetGlobal(\"sarevok_vanquished\", \"GLOBAL\", 1)\nSetGlobal(\"realm_saved\", \"GLOBAL\", 1)\nStartMovie(\"ENDMOVIE\")",
+    "robos:journalEntry": "Sarevok lies defeated. Candlekeep and the Sword Coast are delivered from darkness.",
+    "journalEntry": "Sarevok lies defeated. Candlekeep and the Sword Coast are delivered from darkness."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "sarevok_vanquished": true,
+      "realm_saved": true
+    },
+    "xpAward": 1000
+  },
+  "stateMutations": {
+    "setFlags": {
+      "sarevok_vanquished": true,
+      "realm_saved": true
+    },
+    "xpAward": 1000
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

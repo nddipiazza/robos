@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-dragonlord-slain",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Dragonlord Defeated & Ball of Light Restored",
+  "schema:name": "Dragonlord Defeated & Ball of Light Restored",
+  "robos:slug": "evt-dw-dragonlord-slain",
+  "slug": "evt-dw-dragonlord-slain",
+  "dcterms:description": "Striking down the Dragonlord atop Charlock throne and recovering the radiant Ball of Light.",
+  "description": "Striking down the Dragonlord atop Charlock throne and recovering the radiant Ball of Light.",
+  "robos:eventType": "combat_victory",
+  "eventType": "combat_victory",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "combat_encounter",
+    "interactionType": "combat_encounter",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Dead(\"dragonlord\")",
+    "bcsTrigger": "Dead(\"dragonlord\")",
+    "robos:bcsAction": "SetGlobal(\"dragonlord_slain\", \"GLOBAL\", 1)\nSetGlobal(\"ball_of_light_restored\", \"GLOBAL\", 1)\nGiveItemCreate(\"BALL_OF_LIGHT\", Player1, 1, 0, 0)\nStartMovie(\"ALEFGARD_RESTORED\")",
+    "bcsAction": "SetGlobal(\"dragonlord_slain\", \"GLOBAL\", 1)\nSetGlobal(\"ball_of_light_restored\", \"GLOBAL\", 1)\nGiveItemCreate(\"BALL_OF_LIGHT\", Player1, 1, 0, 0)\nStartMovie(\"ALEFGARD_RESTORED\")",
+    "robos:journalEntry": "Vanquished the Dragonlord! The Ball of Light returns radiant dawn to Alefgard.",
+    "journalEntry": "Vanquished the Dragonlord! The Ball of Light returns radiant dawn to Alefgard."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "dragonlord_slain": true,
+      "ball_of_light_restored": true
+    },
+    "xpAward": 2500
+  },
+  "stateMutations": {
+    "setFlags": {
+      "dragonlord_slain": true,
+      "ball_of_light_restored": true
+    },
+    "xpAward": 2500
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

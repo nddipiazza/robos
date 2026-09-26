@@ -52,6 +52,19 @@ class CRPGGameBuilder {
       }
     }
 
+    const gameEvents = byType('robos:CRPGGameEvent');
+    for (const evt of gameEvents) {
+      if (!evt['dcterms:title']) {
+        report.errors.push(`Game event ${evt['@id']} is missing dcterms:title`);
+      }
+      if (!evt['robos:eventType']) {
+        report.errors.push(`Game event ${evt['@id']} is missing robos:eventType`);
+      }
+      if (!evt['robos:infinityInteraction']) {
+        report.errors.push(`Game event ${evt['@id']} is missing robos:infinityInteraction`);
+      }
+    }
+
     report.valid = report.errors.length === 0;
     return report;
   }
@@ -303,6 +316,18 @@ class CRPGGameBuilder {
       };
     });
     fs.writeFileSync(path.join(dataDir, 'dialogue.json'), JSON.stringify(dialogueData, null, 2), 'utf8');
+
+    // 11. events.json
+    const eventNodes = byType('robos:CRPGGameEvent');
+    const eventsData = eventNodes.map(e => ({
+      id: e['@id'].split(':').pop(),
+      urn: e['@id'],
+      title: e['dcterms:title'],
+      eventType: e['robos:eventType'],
+      infinityInteraction: e['robos:infinityInteraction'] || {},
+      stateMutations: e['robos:stateMutations'] || {}
+    }));
+    fs.writeFileSync(path.join(dataDir, 'events.json'), JSON.stringify(eventsData, null, 2), 'utf8');
 
     return { dataDir, count: nodes.length };
   }

@@ -204,7 +204,12 @@
           {
             "targetNodeId": "node-dw-brecconary",
             "label": "Take the royal treasure chests and depart for Brecconary Town",
-            "setFlags": { "received_royal_blessing": true, "spoke_to_king_loric": true }
+            "setFlags": {
+              "received_royal_blessing": true,
+              "spoke_to_king_loric": true
+            },
+            "boundEventId": "evt-dw-loric-decree",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-loric-decree"
           }
         ]
       },
@@ -222,12 +227,20 @@
           {
             "targetNodeId": "node-dw-quagmire",
             "label": "Descend into the swamp cave to rescue Princess Gwaelin",
-            "setFlags": { "discovered_swamp_cave": true }
+            "setFlags": {
+              "discovered_swamp_cave": true
+            },
+            "boundEventId": "evt-dw-swamp-cave-discovery",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery"
           },
           {
             "targetNodeId": "node-dw-rainbow-drop",
             "label": "Seek the sacred relics across Rimuldar and Cantlin first",
-            "setFlags": { "quest_for_relics": true }
+            "setFlags": {
+              "quest_for_relics": true
+            },
+            "boundEventId": "evt-dw-relic-search",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-relic-search"
           }
         ]
       },
@@ -245,7 +258,12 @@
           {
             "targetNodeId": "node-dw-rainbow-drop",
             "label": "Slay the Green Dragon, rescue the Princess, and carry her to Tantegel",
-            "setFlags": { "green_dragon_slain": true, "princess_rescued": true }
+            "setFlags": {
+              "green_dragon_slain": true,
+              "princess_rescued": true
+            },
+            "boundEventId": "evt-dw-green-dragon-slain",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-green-dragon-slain"
           }
         ]
       },
@@ -263,7 +281,11 @@
           {
             "targetNodeId": "node-dw-charlock",
             "label": "Cross the Rainbow Bridge into Castle Charlock",
-            "setFlags": { "rainbow_bridge_created": true }
+            "setFlags": {
+              "rainbow_bridge_created": true
+            },
+            "boundEventId": "evt-dw-rainbow-bridge-created",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created"
           }
         ]
       },
@@ -281,17 +303,30 @@
           {
             "targetNodeId": "node-dw-ending-savior",
             "label": "Refuse the evil bargain! Draw Erdrick's Sword and strike him down",
-            "setFlags": { "dragonlord_slain": true, "ball_of_light_restored": true }
+            "setFlags": {
+              "dragonlord_slain": true,
+              "ball_of_light_restored": true
+            },
+            "boundEventId": "evt-dw-dragonlord-slain",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dragonlord-slain"
           },
           {
             "targetNodeId": "node-dw-ending-dark-pact",
             "label": "Accept the dark pact and kneel before the Dragonlord",
-            "setFlags": { "dark_pact_accepted": true }
+            "setFlags": {
+              "dark_pact_accepted": true
+            },
+            "boundEventId": "evt-dw-dark-pact-accepted",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dark-pact-accepted"
           },
           {
             "targetNodeId": "node-dw-ending-defeat",
             "label": "Waver in hesitation as the Dragonlord unleashes searing flames",
-            "setFlags": { "hero_slain_charlock": true }
+            "setFlags": {
+              "hero_slain_charlock": true
+            },
+            "boundEventId": "evt-dw-hero-slain-charlock",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-hero-slain-charlock"
           }
         ]
       },

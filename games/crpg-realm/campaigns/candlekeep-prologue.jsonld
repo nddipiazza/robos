@@ -67,7 +67,11 @@
       "boots": "Stout Boots",
       "ring1": "Ring of Princes (+1 AC/Saves)",
       "quickItems": "Herb, Torch, Magic Key",
-      "spells": "Second Wind (1d10+1 hp/rest)",
+      "spells": "",
+      "abilities": [
+        "second-wind",
+        "action-surge"
+      ],
       "backstory": "Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers."
     },
     {
@@ -101,7 +105,11 @@
       "boots": "Soft Leather Boots",
       "ring1": "Ring of Lockpicking",
       "quickItems": "Thieves' Tools, 20x Arrows, Potion of Speed",
-      "spells": "Sneak Attack (1d6), Cunning Action",
+      "spells": "",
+      "abilities": [
+        "sneak-attack",
+        "cunning-action"
+      ],
       "backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures."
     },
     {
@@ -373,7 +381,11 @@
           {
             "targetNodeId": "node-prep-supplies",
             "label": "Gather equipment and speak to Winthrop at the inn",
-            "setFlags": { "spoke_to_gorion": true }
+            "setFlags": {
+              "spoke_to_gorion": true
+            },
+            "boundEventId": "evt-gorion-awakening",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-gorion-awakening"
           }
         ]
       },
@@ -391,12 +403,20 @@
           {
             "targetNodeId": "node-assassin-ambush",
             "label": "Search the bunkhouse and storehouse for supplies",
-            "setFlags": { "spoke_to_winthrop": true }
+            "setFlags": {
+              "spoke_to_winthrop": true
+            },
+            "boundEventId": "evt-winthrop-supplies",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-winthrop-supplies"
           },
           {
             "targetNodeId": "node-departure-steps",
             "label": "Head directly to Gorion without lingering",
-            "setFlags": { "hasty_departure": true }
+            "setFlags": {
+              "hasty_departure": true
+            },
+            "boundEventId": "evt-hasty-departure",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-hasty-departure"
           }
         ]
       },
@@ -414,7 +434,13 @@
           {
             "targetNodeId": "node-departure-steps",
             "label": "Defeat the cutthroats and recover the assassin bounty scroll",
-            "setFlags": { "shank_defeated": true, "carbos_defeated": true, "bounty_scroll_found": true }
+            "setFlags": {
+              "shank_defeated": true,
+              "carbos_defeated": true,
+              "bounty_scroll_found": true
+            },
+            "boundEventId": "evt-sanctuary-cutthroats-slain",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-sanctuary-cutthroats-slain"
           }
         ]
       },
@@ -432,7 +458,12 @@
           {
             "targetNodeId": "node-coastway-ambush",
             "label": "Travel into the Lion's Way under cover of fog",
-            "setFlags": { "gate_unlocked": true, "departed_candlekeep": true }
+            "setFlags": {
+              "gate_unlocked": true,
+              "departed_candlekeep": true
+            },
+            "boundEventId": "evt-candlekeep-gate-departure",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-candlekeep-gate-departure"
           }
         ]
       },
@@ -450,12 +481,20 @@
           {
             "targetNodeId": "node-stand-and-fight",
             "label": "Refuse to abandon Gorion; unleash spells and stand your ground",
-            "setFlags": { "stood_with_gorion": true }
+            "setFlags": {
+              "stood_with_gorion": true
+            },
+            "boundEventId": "evt-coastway-stand-with-gorion",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-coastway-stand-with-gorion"
           },
           {
             "targetNodeId": "node-flee-wilderness",
             "label": "Obey Gorion's desperate shout and flee into the dark forest",
-            "setFlags": { "fled_into_woods": true }
+            "setFlags": {
+              "fled_into_woods": true
+            },
+            "boundEventId": "evt-coastway-flee-wilderness",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-coastway-flee-wilderness"
           }
         ]
       },
@@ -474,12 +513,21 @@
             "targetNodeId": "node-ending-guardian",
             "label": "Shatter the armored warlord's blade and preserve the Coast",
             "requiredFlag": "stood_with_gorion",
-            "setFlags": { "sarevok_vanquished": true, "realm_saved": true }
+            "setFlags": {
+              "sarevok_vanquished": true,
+              "realm_saved": true
+            },
+            "boundEventId": "evt-guardian-sarevok-vanquished",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-guardian-sarevok-vanquished"
           },
           {
             "targetNodeId": "node-ending-martyr",
             "label": "Shield Gorion from the fatal blow, taking the dark spear yourself",
-            "setFlags": { "sacrificed_for_gorion": true }
+            "setFlags": {
+              "sacrificed_for_gorion": true
+            },
+            "boundEventId": "evt-martyr-sacrifice",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-martyr-sacrifice"
           }
         ]
       },
@@ -497,12 +545,21 @@
           {
             "targetNodeId": "node-ending-lord-of-murder",
             "label": "Embrace the bloodline's dark power to claim absolute dominion",
-            "setFlags": { "embraced_dark_heritage": true, "tyrant_ascension": true }
+            "setFlags": {
+              "embraced_dark_heritage": true,
+              "tyrant_ascension": true
+            },
+            "boundEventId": "evt-iron-throne-ascension",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-iron-throne-ascension"
           },
           {
             "targetNodeId": "node-ending-defeat",
             "label": "Succumb to despair without guidance, hunted in the wilderness",
-            "setFlags": { "lost_in_wilds": true }
+            "setFlags": {
+              "lost_in_wilds": true
+            },
+            "boundEventId": "evt-shadow-succumb-defeat",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-shadow-succumb-defeat"
           }
         ]
       },

@@ -1,0 +1,49 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-martyr-sacrifice",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "The Martyr's Sacrifice",
+  "schema:name": "The Martyr's Sacrifice",
+  "robos:slug": "evt-martyr-sacrifice",
+  "slug": "evt-martyr-sacrifice",
+  "dcterms:description": "Interposing yourself to shield Gorion from Sarevok lethal spear thrust.",
+  "description": "Interposing yourself to shield Gorion from Sarevok lethal spear thrust.",
+  "robos:eventType": "cutscene",
+  "eventType": "cutscene",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "cutscene_trigger",
+    "interactionType": "cutscene_trigger",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Range(\"sarevok\", 5) && HP(\"gorion\", 1)",
+    "bcsTrigger": "Range(\"sarevok\", 5) && HP(\"gorion\", 1)",
+    "robos:bcsAction": "SetGlobal(\"sacrificed_for_gorion\", \"GLOBAL\", 1)\nKill(Player1)\nStartCutScene(\"CutSacrifice\")",
+    "bcsAction": "SetGlobal(\"sacrificed_for_gorion\", \"GLOBAL\", 1)\nKill(Player1)\nStartCutScene(\"CutSacrifice\")",
+    "robos:journalEntry": "Gave my mortal life to save Gorion; the prophecy is broken by selflessness.",
+    "journalEntry": "Gave my mortal life to save Gorion; the prophecy is broken by selflessness.",
+    "robos:cutsceneRef": "CutSacrifice",
+    "cutsceneRef": "CutSacrifice"
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "sacrificed_for_gorion": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "sacrificed_for_gorion": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

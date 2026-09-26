@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-dw-green-dragon-slain",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Green Dragon Slain & Princess Rescued",
+  "schema:name": "Green Dragon Slain & Princess Rescued",
+  "robos:slug": "evt-dw-green-dragon-slain",
+  "slug": "evt-dw-green-dragon-slain",
+  "dcterms:description": "Slaying the fearsome Green Dragon deep in the swamp cave and freeing Princess Gwaelin.",
+  "description": "Slaying the fearsome Green Dragon deep in the swamp cave and freeing Princess Gwaelin.",
+  "robos:eventType": "combat_victory",
+  "eventType": "combat_victory",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "combat_encounter",
+    "interactionType": "combat_encounter",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "Dead(\"green-dragon\")",
+    "bcsTrigger": "Dead(\"green-dragon\")",
+    "robos:bcsAction": "SetGlobal(\"green_dragon_slain\", \"GLOBAL\", 1)\nSetGlobal(\"princess_rescued\", \"GLOBAL\", 1)\nGiveItemCreate(\"GWAELIN_LOVE\", Player1, 1, 0, 0)\nAddJournalEntry(4004, QUEST_DONE)",
+    "bcsAction": "SetGlobal(\"green_dragon_slain\", \"GLOBAL\", 1)\nSetGlobal(\"princess_rescued\", \"GLOBAL\", 1)\nGiveItemCreate(\"GWAELIN_LOVE\", Player1, 1, 0, 0)\nAddJournalEntry(4004, QUEST_DONE)",
+    "robos:journalEntry": "Slew the Green Dragon and rescued Princess Gwaelin from her cage.",
+    "journalEntry": "Slew the Green Dragon and rescued Princess Gwaelin from her cage."
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "green_dragon_slain": true,
+      "princess_rescued": true
+    },
+    "xpAward": 950
+  },
+  "stateMutations": {
+    "setFlags": {
+      "green_dragon_slain": true,
+      "princess_rescued": true
+    },
+    "xpAward": 950
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

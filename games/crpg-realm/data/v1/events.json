@@ -1,0 +1,388 @@
+[
+  {
+    "id": "evt-gorion-awakening",
+    "urn": "urn:robos:crpg:event:evt-gorion-awakening",
+    "title": "Gorion's Departure Directive",
+    "eventType": "dialogue",
+    "infinityInteraction": {
+      "robos:interactionType": "dialogue_branch",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "NumTimesTalkedTo(0) && Range(Player1, 15)",
+      "robos:bcsAction": "SetGlobal(\"spoke_to_gorion\", \"GLOBAL\", 1)\nAddJournalEntry(3001, QUEST)",
+      "robos:dialogueRef": "GORION.DLG:1:1",
+      "robos:journalEntry": "Gorion urgently demands we gather provisions and depart Candlekeep before nightfall."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "spoke_to_gorion": true
+      },
+      "xpAward": 50
+    }
+  },
+  {
+    "id": "evt-winthrop-supplies",
+    "urn": "urn:robos:crpg:event:evt-winthrop-supplies",
+    "title": "Winthrop's Hospitality & Provisions",
+    "eventType": "dialogue",
+    "infinityInteraction": {
+      "robos:interactionType": "dialogue_branch",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "See(Player1) && AreaCheck(\"candlekeep-inn-interior\")",
+      "robos:bcsAction": "SetGlobal(\"spoke_to_winthrop\", \"GLOBAL\", 1)\nGiveGoldForce(15)\nStartStore(\"WINTHROP\", LastTalkedToBy)",
+      "robos:dialogueRef": "WINTHROP.DLG:3:1",
+      "robos:journalEntry": "Purchased travel rations and iron daggers from innkeeper Winthrop."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "spoke_to_winthrop": true
+      },
+      "goldChange": -10
+    }
+  },
+  {
+    "id": "evt-hasty-departure",
+    "urn": "urn:robos:crpg:event:evt-hasty-departure",
+    "title": "Hasty Departure to Gates",
+    "eventType": "area_transition",
+    "infinityInteraction": {
+      "robos:interactionType": "bcs_script_action",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "True()",
+      "robos:bcsAction": "SetGlobal(\"hasty_departure\", \"GLOBAL\", 1)\nMoveToPoint([1450, 920])",
+      "robos:journalEntry": "Decided not to linger for provisions; heading straight for the monastery gates."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "hasty_departure": true
+      }
+    }
+  },
+  {
+    "id": "evt-sanctuary-cutthroats-slain",
+    "urn": "urn:robos:crpg:event:evt-sanctuary-cutthroats-slain",
+    "title": "Cutthroats Shank & Carbos Slain",
+    "eventType": "combat_victory",
+    "infinityInteraction": {
+      "robos:interactionType": "combat_encounter",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Dead(\"shank\") && Dead(\"carbos\")",
+      "robos:bcsAction": "SetGlobal(\"shank_defeated\", \"GLOBAL\", 1)\nSetGlobal(\"carbos_defeated\", \"GLOBAL\", 1)\nGiveItemCreate(\"SCRL_BOUNTY\", Player1, 1, 0, 0)\nAddJournalEntry(3002, QUEST)",
+      "robos:journalEntry": "Slain cutthroats Shank and Carbos in the storehouse; recovered an assassin contract scroll.",
+      "robos:scenarioRef": "urn:robos:crpg:scenario:homestead-hound-pack"
+    },
+    "stateMutations": {
+      "setFlags": {
+        "shank_defeated": true,
+        "carbos_defeated": true,
+        "bounty_scroll_found": true
+      },
+      "xpAward": 150
+    }
+  },
+  {
+    "id": "evt-candlekeep-gate-departure",
+    "urn": "urn:robos:crpg:event:evt-candlekeep-gate-departure",
+    "title": "The Iron Gates Clang Shut",
+    "eventType": "area_transition",
+    "infinityInteraction": {
+      "robos:interactionType": "area_transition",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "AreaCheck(\"candlekeep-exterior\") && Entered(\"ExitCoastWay\")",
+      "robos:bcsAction": "SetGlobal(\"gate_unlocked\", \"GLOBAL\", 1)\nSetGlobal(\"Chapter\", \"GLOBAL\", 1)\nStartCutSceneMode()\nStartCutScene(\"Cut01A\")",
+      "robos:journalEntry": "Departed Candlekeep into the dark fog of the Coast Way alongside Gorion.",
+      "robos:cutsceneRef": "Cut01A"
+    },
+    "stateMutations": {
+      "setFlags": {
+        "gate_unlocked": true,
+        "departed_candlekeep": true
+      }
+    }
+  },
+  {
+    "id": "evt-coastway-stand-with-gorion",
+    "urn": "urn:robos:crpg:event:evt-coastway-stand-with-gorion",
+    "title": "The Valorous Stand Alongside Gorion",
+    "eventType": "decision_branch",
+    "infinityInteraction": {
+      "robos:interactionType": "dialogue_branch",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Global(\"SarevokAmbush\", \"GLOBAL\", 1)",
+      "robos:bcsAction": "SetGlobal(\"stood_with_gorion\", \"GLOBAL\", 1)\nAttack(\"sarevok\")\nPlaySong(22)",
+      "robos:dialogueRef": "SAREVOK.DLG:1:3",
+      "robos:journalEntry": "Refused Gorion's command to flee; stood with him against the armored warlord Sarevok."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "stood_with_gorion": true
+      }
+    }
+  },
+  {
+    "id": "evt-coastway-flee-wilderness",
+    "urn": "urn:robos:crpg:event:evt-coastway-flee-wilderness",
+    "title": "Flight into the Foggy Wilderness",
+    "eventType": "area_transition",
+    "infinityInteraction": {
+      "robos:interactionType": "bcs_script_action",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "HPPercentLT(Player1, 100) || Global(\"GorionCommandsFlee\", \"GLOBAL\", 1)",
+      "robos:bcsAction": "SetGlobal(\"fled_into_woods\", \"GLOBAL\", 1)\nEscapeAreaMove(\"AR2700\", 350, 420, 0)",
+      "robos:journalEntry": "Fled into the dark forest as lightning ripped through the tree canopy.",
+      "robos:cutsceneRef": "Cut01B"
+    },
+    "stateMutations": {
+      "setFlags": {
+        "fled_into_woods": true
+      }
+    }
+  },
+  {
+    "id": "evt-guardian-sarevok-vanquished",
+    "urn": "urn:robos:crpg:event:evt-guardian-sarevok-vanquished",
+    "title": "Sarevok Vanquished: Savior of Candlekeep",
+    "eventType": "combat_victory",
+    "infinityInteraction": {
+      "robos:interactionType": "combat_encounter",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Dead(\"sarevok\") && Global(\"stood_with_gorion\", \"GLOBAL\", 1)",
+      "robos:bcsAction": "SetGlobal(\"sarevok_vanquished\", \"GLOBAL\", 1)\nSetGlobal(\"realm_saved\", \"GLOBAL\", 1)\nStartMovie(\"ENDMOVIE\")",
+      "robos:journalEntry": "Sarevok lies defeated. Candlekeep and the Sword Coast are delivered from darkness."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "sarevok_vanquished": true,
+        "realm_saved": true
+      },
+      "xpAward": 1000
+    }
+  },
+  {
+    "id": "evt-martyr-sacrifice",
+    "urn": "urn:robos:crpg:event:evt-martyr-sacrifice",
+    "title": "The Martyr's Sacrifice",
+    "eventType": "cutscene",
+    "infinityInteraction": {
+      "robos:interactionType": "cutscene_trigger",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Range(\"sarevok\", 5) && HP(\"gorion\", 1)",
+      "robos:bcsAction": "SetGlobal(\"sacrificed_for_gorion\", \"GLOBAL\", 1)\nKill(Player1)\nStartCutScene(\"CutSacrifice\")",
+      "robos:journalEntry": "Gave my mortal life to save Gorion; the prophecy is broken by selflessness.",
+      "robos:cutsceneRef": "CutSacrifice"
+    },
+    "stateMutations": {
+      "setFlags": {
+        "sacrificed_for_gorion": true
+      }
+    }
+  },
+  {
+    "id": "evt-iron-throne-ascension",
+    "urn": "urn:robos:crpg:event:evt-iron-throne-ascension",
+    "title": "Embrace of Bhaal: Sovereign of Murder",
+    "eventType": "quest_milestone",
+    "infinityInteraction": {
+      "robos:interactionType": "bcs_script_action",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Global(\"fled_into_woods\", \"GLOBAL\", 1) && Dead(\"sarevok\")",
+      "robos:bcsAction": "SetGlobal(\"embraced_dark_heritage\", \"GLOBAL\", 1)\nSetGlobal(\"tyrant_ascension\", \"GLOBAL\", 1)\nAddSpecialAbility(\"SPIN101\")",
+      "robos:journalEntry": "Claimed the dark divine heritage and subjugated the Iron Throne syndicates under iron tyranny."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "embraced_dark_heritage": true,
+        "tyrant_ascension": true
+      }
+    }
+  },
+  {
+    "id": "evt-shadow-succumb-defeat",
+    "urn": "urn:robos:crpg:event:evt-shadow-succumb-defeat",
+    "title": "Consumed by Shadows: Game Over",
+    "eventType": "cutscene",
+    "infinityInteraction": {
+      "robos:interactionType": "cutscene_trigger",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "HP(Player1, 0)",
+      "robos:bcsAction": "SetGlobal(\"lost_in_wilds\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+      "robos:journalEntry": "Succumbed in the cold wilderness of the Coast Way."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "lost_in_wilds": true
+      }
+    }
+  },
+  {
+    "id": "evt-dw-loric-decree",
+    "urn": "urn:robos:crpg:event:evt-dw-loric-decree",
+    "title": "King Loric's Royal Mandate",
+    "eventType": "dialogue",
+    "infinityInteraction": {
+      "robos:interactionType": "dialogue_branch",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "NumTimesTalkedTo(0) && AreaCheck(\"tantegel-throne-room\")",
+      "robos:bcsAction": "SetGlobal(\"received_royal_blessing\", \"GLOBAL\", 1)\nGiveGoldForce(120)\nGiveItemCreate(\"TORCH\", Player1, 1, 0, 0)\nGiveItemCreate(\"HERB\", Player1, 1, 0, 0)",
+      "robos:dialogueRef": "LORIC.DLG:1:1",
+      "robos:journalEntry": "King Loric blessed our quest and provided 120 gold, a torch, and healing herbs."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "received_royal_blessing": true,
+        "spoke_to_king_loric": true
+      },
+      "goldChange": 120
+    }
+  },
+  {
+    "id": "evt-dw-swamp-cave-discovery",
+    "urn": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery",
+    "title": "Descent into the Swamp Cave",
+    "eventType": "area_transition",
+    "infinityInteraction": {
+      "robos:interactionType": "area_transition",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "AreaCheck(\"tantegel-exterior\") && Entered(\"ExitSwampCave\")",
+      "robos:bcsAction": "SetGlobal(\"discovered_swamp_cave\", \"GLOBAL\", 1)\nAddJournalEntry(4002, QUEST)",
+      "robos:journalEntry": "Entered the subterranean swamp cave searching for Princess Gwaelin."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "discovered_swamp_cave": true
+      }
+    }
+  },
+  {
+    "id": "evt-dw-relic-search",
+    "urn": "urn:robos:crpg:event:evt-dw-relic-search",
+    "title": "Quest for Erdrick's Sacred Relics",
+    "eventType": "quest_milestone",
+    "infinityInteraction": {
+      "robos:interactionType": "bcs_script_action",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "PartyHasItem(\"erdrick-tablet\")",
+      "robos:bcsAction": "SetGlobal(\"quest_for_relics\", \"GLOBAL\", 1)\nAddJournalEntry(4003, QUEST)",
+      "robos:journalEntry": "Set out across Alefgard to locate the sacred Staff of Rain and Sunstone."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "quest_for_relics": true
+      }
+    }
+  },
+  {
+    "id": "evt-dw-green-dragon-slain",
+    "urn": "urn:robos:crpg:event:evt-dw-green-dragon-slain",
+    "title": "Green Dragon Slain & Princess Rescued",
+    "eventType": "combat_victory",
+    "infinityInteraction": {
+      "robos:interactionType": "combat_encounter",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Dead(\"green-dragon\")",
+      "robos:bcsAction": "SetGlobal(\"green_dragon_slain\", \"GLOBAL\", 1)\nSetGlobal(\"princess_rescued\", \"GLOBAL\", 1)\nGiveItemCreate(\"GWAELIN_LOVE\", Player1, 1, 0, 0)\nAddJournalEntry(4004, QUEST_DONE)",
+      "robos:journalEntry": "Slew the Green Dragon and rescued Princess Gwaelin from her cage."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "green_dragon_slain": true,
+        "princess_rescued": true
+      },
+      "xpAward": 950
+    }
+  },
+  {
+    "id": "evt-dw-rainbow-bridge-created",
+    "urn": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created",
+    "title": "The Rainbow Bridge Spanned",
+    "eventType": "item_acquisition",
+    "infinityInteraction": {
+      "robos:interactionType": "bcs_script_action",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "PartyHasItem(\"staff-of-rain\") && PartyHasItem(\"sunstone\")",
+      "robos:bcsAction": "SetGlobal(\"rainbow_bridge_created\", \"GLOBAL\", 1)\nTakePartyItem(\"staff-of-rain\")\nTakePartyItem(\"sunstone\")\nGiveItemCreate(\"RAINBOW_DROP\", Player1, 1, 0, 0)\nStartCutScene(\"CutRainbowBridge\")",
+      "robos:journalEntry": "Forged the Rainbow Drop and created the bridge of light across the sea to Castle Charlock.",
+      "robos:cutsceneRef": "CutRainbowBridge"
+    },
+    "stateMutations": {
+      "setFlags": {
+        "rainbow_bridge_created": true
+      }
+    }
+  },
+  {
+    "id": "evt-dw-dragonlord-slain",
+    "urn": "urn:robos:crpg:event:evt-dw-dragonlord-slain",
+    "title": "Dragonlord Defeated & Ball of Light Restored",
+    "eventType": "combat_victory",
+    "infinityInteraction": {
+      "robos:interactionType": "combat_encounter",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Dead(\"dragonlord\")",
+      "robos:bcsAction": "SetGlobal(\"dragonlord_slain\", \"GLOBAL\", 1)\nSetGlobal(\"ball_of_light_restored\", \"GLOBAL\", 1)\nGiveItemCreate(\"BALL_OF_LIGHT\", Player1, 1, 0, 0)\nStartMovie(\"ALEFGARD_RESTORED\")",
+      "robos:journalEntry": "Vanquished the Dragonlord! The Ball of Light returns radiant dawn to Alefgard."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "dragonlord_slain": true,
+        "ball_of_light_restored": true
+      },
+      "xpAward": 2500
+    }
+  },
+  {
+    "id": "evt-dw-dark-pact-accepted",
+    "urn": "urn:robos:crpg:event:evt-dw-dark-pact-accepted",
+    "title": "The Dark Pact of Charlock",
+    "eventType": "dialogue",
+    "infinityInteraction": {
+      "robos:interactionType": "dialogue_branch",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "Global(\"DRAGONLORD_OFFER\", \"GLOBAL\", 1)",
+      "robos:bcsAction": "SetGlobal(\"dark_pact_accepted\", \"GLOBAL\", 1)\nKill(\"king-loric\")\nStartCutScene(\"CutDarkReign\")",
+      "robos:dialogueRef": "DRAGONLORD.DLG:2:2",
+      "robos:journalEntry": "Accepted the Dragonlord bargain; betrayed King Loric to rule Alefgard in shadow."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "dark_pact_accepted": true
+      }
+    }
+  },
+  {
+    "id": "evt-dw-hero-slain-charlock",
+    "urn": "urn:robos:crpg:event:evt-dw-hero-slain-charlock",
+    "title": "Ashes in Charlock",
+    "eventType": "cutscene",
+    "infinityInteraction": {
+      "robos:interactionType": "cutscene_trigger",
+      "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+      "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+      "robos:bcsTrigger": "HP(Player1, 0) && AreaCheck(\"castle-charlock-throne\")",
+      "robos:bcsAction": "SetGlobal(\"hero_slain_charlock\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+      "robos:journalEntry": "Fell in Charlock Castle; darkness claims Alefgard."
+    },
+    "stateMutations": {
+      "setFlags": {
+        "hero_slain_charlock": true
+      }
+    }
+  }
+]

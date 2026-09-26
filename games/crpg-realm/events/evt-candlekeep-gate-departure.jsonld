@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "infinity": "https://robos.dev/ns/infinity#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:event:evt-candlekeep-gate-departure",
+  "@type": [
+    "robos:CRPGGameEvent",
+    "schema:Event",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "The Iron Gates Clang Shut",
+  "schema:name": "The Iron Gates Clang Shut",
+  "robos:slug": "evt-candlekeep-gate-departure",
+  "slug": "evt-candlekeep-gate-departure",
+  "dcterms:description": "Passing through Candlekeep main gate onto the Coast Way as night envelops the monastery.",
+  "description": "Passing through Candlekeep main gate onto the Coast Way as night envelops the monastery.",
+  "robos:eventType": "area_transition",
+  "eventType": "area_transition",
+  "robos:infinityInteraction": {
+    "robos:interactionType": "area_transition",
+    "interactionType": "area_transition",
+    "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+    "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+    "robos:bcsTrigger": "AreaCheck(\"candlekeep-exterior\") && Entered(\"ExitCoastWay\")",
+    "bcsTrigger": "AreaCheck(\"candlekeep-exterior\") && Entered(\"ExitCoastWay\")",
+    "robos:bcsAction": "SetGlobal(\"gate_unlocked\", \"GLOBAL\", 1)\nSetGlobal(\"Chapter\", \"GLOBAL\", 1)\nStartCutSceneMode()\nStartCutScene(\"Cut01A\")",
+    "bcsAction": "SetGlobal(\"gate_unlocked\", \"GLOBAL\", 1)\nSetGlobal(\"Chapter\", \"GLOBAL\", 1)\nStartCutSceneMode()\nStartCutScene(\"Cut01A\")",
+    "robos:journalEntry": "Departed Candlekeep into the dark fog of the Coast Way alongside Gorion.",
+    "journalEntry": "Departed Candlekeep into the dark fog of the Coast Way alongside Gorion.",
+    "robos:cutsceneRef": "Cut01A",
+    "cutsceneRef": "Cut01A"
+  },
+  "robos:stateMutations": {
+    "setFlags": {
+      "gate_unlocked": true,
+      "departed_candlekeep": true
+    }
+  },
+  "stateMutations": {
+    "setFlags": {
+      "gate_unlocked": true,
+      "departed_candlekeep": true
+    }
+  },
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg"
+}

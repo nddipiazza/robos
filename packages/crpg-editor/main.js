@@ -24,6 +24,7 @@ function getPaths() {
   const itemsDir = path.join(baseDir, 'items');
   const spellsDir = path.join(baseDir, 'spells');
   const abilitiesDir = path.join(baseDir, 'abilities');
+  const eventsDir = path.join(baseDir, 'events');
   const mapsDir = path.join(baseDir, 'maps');
   const scenesDir = path.join(baseDir, 'scenes');
   const blockoutsDir = path.join(baseDir, 'assets/blockouts');
@@ -37,6 +38,7 @@ function getPaths() {
     itemsDir,
     spellsDir,
     abilitiesDir,
+    eventsDir,
     mapsDir,
     scenesDir,
     blockoutsDir,
@@ -52,6 +54,7 @@ function ensureWorkspaceDirs(paths) {
     paths.itemsDir,
     paths.spellsDir,
     paths.abilitiesDir,
+    paths.eventsDir,
     paths.mapsDir,
     paths.scenesDir,
     paths.blockoutsDir,
@@ -144,7 +147,8 @@ function ensureSeedCharacters(charactersDir) {
         boots: 'Stout Boots',
         ring1: 'Ring of Princes (+1 AC/Saves)',
         quickItems: '2x Potion of Healing, Torch',
-        spells: 'Second Wind (1d10+1 hp/rest)',
+        spells: '',
+        abilities: ['second-wind', 'action-surge'],
         backstory: 'Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers.'
       },
       {
@@ -169,7 +173,8 @@ function ensureSeedCharacters(charactersDir) {
         boots: 'Soft Leather Boots',
         ring1: 'Ring of Lockpicking',
         quickItems: "Thieves' Tools, 20x Arrows, Potion of Speed",
-        spells: 'Sneak Attack (1d6), Cunning Action',
+        spells: '',
+        abilities: ['sneak-attack', 'cunning-action'],
         backstory: 'Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures.'
       },
       {
@@ -1091,6 +1096,156 @@ function setupIpcHandlers() {
   ipcMain.handle('abilities:delete', async (_event, slug) => {
     try {
       const filePath = path.join(paths.abilitiesDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 8. Game Events API (Knowledge Graph & Infinity Engine interactions)
+  ipcMain.handle('events:list', async () => {
+    try {
+      if (!fs.existsSync(paths.eventsDir)) {
+        fs.mkdirSync(paths.eventsDir, { recursive: true });
+      }
+      const files = fs.readdirSync(paths.eventsDir).filter(f => f.endsWith('.jsonld'));
+      const events = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.eventsDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          const infinity = data['robos:infinityInteraction'] || data.infinityInteraction || {};
+          const mutations = data['robos:stateMutations'] || data.stateMutations || {};
+
+          events.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:event:${slug}`,
+            urn: data['@id'] || `urn:robos:crpg:event:${slug}`,
+            title: data['dcterms:title'] || data['schema:name'] || data.title || slug,
+            name: data['schema:name'] || data['dcterms:title'] || data.name || slug,
+            description: data['dcterms:description'] || data.description || '',
+            eventType: data['robos:eventType'] || data.eventType || 'dialogue',
+            infinityInteraction: {
+              interactionType: infinity['robos:interactionType'] || infinity.interactionType || 'bcs_script_action',
+              scriptVm: infinity['robos:scriptVm'] || infinity.scriptVm || 'urn:robos:infinity:subsystem:bcs-script-vm',
+              dialogueMachine: infinity['robos:dialogueMachine'] || infinity.dialogueMachine || 'urn:robos:infinity:subsystem:dialogue-state-machine',
+              bcsTrigger: infinity['robos:bcsTrigger'] || infinity.bcsTrigger || '',
+              bcsAction: infinity['robos:bcsAction'] || infinity.bcsAction || '',
+              dialogueRef: infinity['robos:dialogueRef'] || infinity.dialogueRef || '',
+              journalEntry: infinity['robos:journalEntry'] || infinity.journalEntry || '',
+              cutsceneRef: infinity['robos:cutsceneRef'] || infinity.cutsceneRef || '',
+              scenarioRef: infinity['robos:scenarioRef'] || infinity.scenarioRef || '',
+            },
+            stateMutations: {
+              setFlags: mutations['robos:setFlags'] || mutations.setFlags || {},
+              xpAward: mutations['robos:xpAward'] || mutations.xpAward || 0,
+              goldChange: mutations['robos:goldChange'] || mutations.goldChange || 0,
+            },
+            raw: data,
+          });
+        } catch (e) {
+          events.push({ slug, fileName: file, path: fullPath, title: slug, error: e.message });
+        }
+      }
+      events.sort((a, b) => a.title.localeCompare(b.title));
+      return { success: true, events };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('events:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.eventsDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Game event file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('events:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Game event slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.eventsDir, `${safeSlug}.jsonld`);
+
+      const infinity = data.infinityInteraction || {};
+      const mutations = data.stateMutations || {};
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          infinity: 'https://robos.dev/ns/infinity#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          xsd: 'http://www.w3.org/2001/XMLSchema#',
+        },
+        '@id': data['@id'] || `urn:robos:crpg:event:${safeSlug}`,
+        '@type': [
+          'robos:CRPGGameEvent',
+          'schema:Event',
+          'oslc_am:Resource',
+        ],
+        'dcterms:title': data.title || data.name || safeSlug,
+        'schema:name': data.title || data.name || safeSlug,
+        'robos:slug': safeSlug,
+        slug: safeSlug,
+        'dcterms:description': data.description || '',
+        description: data.description || '',
+        'robos:eventType': data.eventType || 'dialogue',
+        eventType: data.eventType || 'dialogue',
+        'robos:infinityInteraction': {
+          'robos:interactionType': infinity.interactionType || 'bcs_script_action',
+          interactionType: infinity.interactionType || 'bcs_script_action',
+          'robos:scriptVm': infinity.scriptVm || 'urn:robos:infinity:subsystem:bcs-script-vm',
+          'robos:dialogueMachine': infinity.dialogueMachine || 'urn:robos:infinity:subsystem:dialogue-state-machine',
+          'robos:bcsTrigger': infinity.bcsTrigger || '',
+          bcsTrigger: infinity.bcsTrigger || '',
+          'robos:bcsAction': infinity.bcsAction || '',
+          bcsAction: infinity.bcsAction || '',
+          ...(infinity.dialogueRef ? { 'robos:dialogueRef': infinity.dialogueRef, dialogueRef: infinity.dialogueRef } : {}),
+          ...(infinity.journalEntry ? { 'robos:journalEntry': infinity.journalEntry, journalEntry: infinity.journalEntry } : {}),
+          ...(infinity.cutsceneRef ? { 'robos:cutsceneRef': infinity.cutsceneRef, cutsceneRef: infinity.cutsceneRef } : {}),
+          ...(infinity.scenarioRef ? { 'robos:scenarioRef': infinity.scenarioRef, scenarioRef: infinity.scenarioRef } : {}),
+        },
+        'robos:stateMutations': mutations,
+        stateMutations: mutations,
+        'robos:package': 'crpg',
+        'robos:namespace': 'robos.crpg',
+      };
+
+      if (!fs.existsSync(paths.eventsDir)) {
+        fs.mkdirSync(paths.eventsDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('events:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.eventsDir, `${slug}.jsonld`);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

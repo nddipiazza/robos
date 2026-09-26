@@ -2637,6 +2637,33 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
   },
   {
+    "shapeId": "urn:robos:shape:CRPGGameEventShape",
+    "targetClass": "robos:CRPGGameEvent",
+    "targetClasses": [
+      "robos:CRPGGameEvent"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game event must have a title."
+      },
+      {
+        "path": "robos:eventType",
+        "minCount": 1,
+        "message": "Game event must declare an event type (dialogue, combat_victory, area_transition, cutscene, item_acquisition, quest_milestone, decision_branch)."
+      },
+      {
+        "path": "robos:infinityInteraction",
+        "minCount": 1,
+        "message": "Game event must declare an Infinity Engine interaction specification."
+      }
+    ],
+    "refersFrom": "https://schema.org/Event",
+    "schemaOrgType": "https://schema.org/Event",
+    "domainStandard": "https://robos.dev/ns/crpg#GameEvent"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [
