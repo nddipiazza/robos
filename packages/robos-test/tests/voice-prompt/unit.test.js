@@ -348,5 +348,40 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(res.action, 'append');
     });
   });
+
+  describe('AdaptiveEnergyVad & cleanTranscript Loop Collapse', () => {
+    const { AdaptiveEnergyVad, cleanTranscript } = require('../../../voice-prompt/lib/stt-engine');
+
+    it('AdaptiveEnergyVad detects speech vs silence and updates noise floor', () => {
+      const vad = new AdaptiveEnergyVad();
+      // Quiet chunk (energy ~ 0.001)
+      const quiet = new Float32Array(3200).fill(0.001);
+      const resQuiet = vad.analyze(quiet);
+      assert.strictEqual(resQuiet.speech, false);
+
+      // Loud speech chunk (energy ~ 0.05)
+      const loud = new Float32Array(3200).fill(0.05);
+      const resLoud = vad.analyze(loud);
+      assert.strictEqual(resLoud.speech, true);
+    });
+
+    it('cleanTranscript removes non-speech markers like [BLANK_AUDIO], [sigh], [sound]', () => {
+      const cleaned = cleanTranscript('[BLANK_AUDIO] [sigh] Hello there [sound]');
+      assert.strictEqual(cleaned, 'Hello there');
+    });
+
+    it('cleanTranscript collapses Whisper autoregressive repetition loops', () => {
+      const raw = 'hyperactive silence cutoff previously science finalization finalization finalization finalization finalization';
+      const cleaned = cleanTranscript(raw);
+      assert.strictEqual(cleaned, 'hyperactive silence cutoff previously science finalization');
+    });
+
+    it('cleanTranscript collapses repeated phrase loops', () => {
+      const raw = 'science finalization science finalization science finalization fired';
+      const cleaned = cleanTranscript(raw);
+      assert.strictEqual(cleaned, 'science finalization fired');
+    });
+  });
 });
+
 
