@@ -17,6 +17,9 @@ const hudApi = {
   askAssistant: (query, opts) => ipcRenderer.invoke('vp-assistant-chat', query, opts),
   getAssistantHistory: () => ipcRenderer.invoke('vp-assistant-get-history'),
   clearAssistantHistory: () => ipcRenderer.invoke('vp-assistant-clear-history'),
+  getVoiceCommands: (opts) => ipcRenderer.invoke('vp-voice-commands-list', opts),
+  matchVoiceCommand: (text) => ipcRenderer.invoke('vp-voice-command-match', text),
+  executeVoiceCommand: (commandId, args, text) => ipcRenderer.invoke('vp-voice-command-execute', { commandId, args, text }),
 
   // Events from main process
   onRecordingState: (callback) => {

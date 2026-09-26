@@ -123,6 +123,7 @@
       "robos:globalHotkey": "Super+V",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:refersFrom": "https://schema.org/SoftwareApplication"
@@ -359,6 +360,29 @@
       "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
       "robos:domainStandard": "https://schema.org/WebApplication"
+    },
+    {
+      "@id": "urn:robos:voice-command:voice-prompt",
+      "@type": [
+        "robos:VoiceCommand",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Open RobOS Voice",
+      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
+      "robos:commandMatcher": [
+        "open robos voice",
+        "open voice",
+        "launch robos voice",
+        "robos voice"
+      ],
+      "robos:targetType": "app",
+      "robos:targetId": "voice-prompt",
+      "robos:action": "open-app",
+      "robos:schemaOrgType": "https://schema.org/ControlAction",
+      "robos:domainStandard": "https://schema.org/ControlAction",
+      "robos:refersFrom": "https://schema.org/ControlAction",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
     }
   ],
   "@graph": [
@@ -399,6 +423,7 @@
       "robos:globalHotkey": "Super+V",
       "robos:ownerTeam": "urn:robos:team:core-platform",
       "robos:hasProject": "urn:robos:project:enterprise-core",
+      "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:domainStandard": "https://schema.org/SoftwareApplication",
       "robos:refersFrom": "https://schema.org/SoftwareApplication"
@@ -635,6 +660,29 @@
       "robos:e2eEvidence": "https://rowbose.com/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
       "robos:domainStandard": "https://schema.org/WebApplication"
+    },
+    {
+      "@id": "urn:robos:voice-command:voice-prompt",
+      "@type": [
+        "robos:VoiceCommand",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Open RobOS Voice",
+      "dcterms:description": "Launch and focus the RobOS Voice offline dictation assistant HUD",
+      "robos:commandMatcher": [
+        "open robos voice",
+        "open voice",
+        "launch robos voice",
+        "robos voice"
+      ],
+      "robos:targetType": "app",
+      "robos:targetId": "voice-prompt",
+      "robos:action": "open-app",
+      "robos:schemaOrgType": "https://schema.org/ControlAction",
+      "robos:domainStandard": "https://schema.org/ControlAction",
+      "robos:refersFrom": "https://schema.org/ControlAction",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications"
     }
   ]
 }

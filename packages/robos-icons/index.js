@@ -19,6 +19,18 @@
 
 const BUILTIN_APPS = [
   {
+    appId: 'app-launcher',
+    label: 'App Launcher',
+    category: 'System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>'
+  },
+  {
+    appId: 'dev-central',
+    label: 'Dev Central',
+    category: 'Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/><circle cx="6" cy="6" r="1" fill="#00bcd4"/></svg>'
+  },
+  {
     appId: 'agent-chat',
     label: 'Agent Chat',
     category: 'RobOS AI',

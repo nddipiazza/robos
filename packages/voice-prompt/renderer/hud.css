@@ -405,3 +405,403 @@ html, body {
   word-break: break-word;
   user-select: text;
 }
+
+/* ── Command Matched Bounce Animation ────────────────────────────────────────── */
+@keyframes commandBounce {
+  0% {
+    transform: scale(1);
+  }
+  22% {
+    transform: scale(1.045) translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 188, 212, 0.55), 0 0 16px rgba(0, 188, 212, 0.4);
+    border-color: #00bcd4;
+  }
+  45% {
+    transform: scale(0.985) translateY(2px);
+  }
+  65% {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 188, 212, 0.35);
+  }
+  82% {
+    transform: scale(0.995) translateY(1px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    border-color: rgba(0, 188, 212, 0.5);
+  }
+}
+
+.dictation-bubble.command-matched-bounce {
+  animation: commandBounce 0.75s cubic-bezier(0.28, 0.84, 0.42, 1);
+  border-color: rgba(0, 188, 212, 0.6);
+  background: linear-gradient(180deg, rgba(22, 27, 34, 0.95) 0%, rgba(0, 188, 212, 0.05) 100%);
+}
+
+/* ── Bubble Command Card (Formatted on match) ─────────────────────────────────── */
+.bubble-command-card {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fade-in 0.2s ease;
+}
+
+.command-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.command-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.command-card-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--cyan-primary);
+  font-size: 13px;
+}
+
+.command-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.command-type-badge.app {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.command-type-badge.skill {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.command-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-status-badge {
+  font-size: 10px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.command-status-badge.running {
+  background: rgba(240, 136, 62, 0.15);
+  color: var(--orange);
+  border: 1px solid rgba(240, 136, 62, 0.35);
+}
+
+.command-status-badge.done {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(63, 185, 80, 0.35);
+}
+
+.command-status-badge.failed {
+  background: rgba(248, 81, 73, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(248, 81, 73, 0.35);
+}
+
+.command-card-result {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  padding: 5px 8px;
+  word-break: break-word;
+  user-select: text;
+}
+
+.command-card-result strong {
+  color: var(--cyan-primary);
+}
+
+/* ── Voice Activated Commands Configuration Modal ────────────────────────────── */
+.voice-commands-modal {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 17, 23, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-fade-in 0.18s ease;
+}
+
+.voice-commands-modal.hidden {
+  display: none !important;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.commands-modal-header {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  background: rgba(22, 27, 34, 0.9);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.commands-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.commands-modal-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyan-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.commands-count-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 188, 212, 0.15);
+  color: var(--cyan-primary);
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.commands-modal-toolbar {
+  padding: 8px 10px;
+  background: rgba(22, 27, 34, 0.5);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commands-search-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 28px;
+  gap: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.commands-search-wrap:focus-within {
+  border-color: var(--cyan-primary);
+  box-shadow: 0 0 8px rgba(0, 188, 212, 0.25);
+}
+
+.commands-search-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 11px;
+  color: var(--text-main);
+  font-family: inherit;
+}
+
+.btn-clear-search {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.btn-clear-search:hover {
+  color: #fff;
+}
+
+.btn-clear-search.hidden {
+  display: none;
+}
+
+.commands-filter-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.commands-tab-btn {
+  flex: 1;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.commands-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.commands-tab-btn.active {
+  background: rgba(0, 188, 212, 0.18);
+  border-color: var(--cyan-primary);
+  color: var(--cyan-primary);
+  font-weight: 600;
+}
+
+.commands-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commands-modal-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.commands-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(48, 54, 61, 0.7);
+  border-radius: 4px;
+}
+
+/* Command Item Card */
+.command-item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.command-item-card:hover {
+  border-color: rgba(0, 188, 212, 0.45);
+}
+
+.command-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.command-item-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.command-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-item-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.command-item-phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.cmd-phrase-badge {
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(0, 188, 212, 0.08);
+  border: 1px solid rgba(0, 188, 212, 0.25);
+  color: #7ee7f8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cmd-phrase-badge:hover {
+  background: rgba(0, 188, 212, 0.2);
+  border-color: var(--cyan-primary);
+  color: #fff;
+}
+
+.btn-test-cmd {
+  background: rgba(0, 188, 212, 0.12);
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  border-radius: 4px;
+  color: var(--cyan-primary);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-test-cmd:hover {
+  background: var(--cyan-primary);
+  color: #0d1117;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.4);
+}
+
+.commands-empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 30px 10px;
+}
+

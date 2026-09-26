@@ -23,6 +23,12 @@
       </div>
 
       <div class="hud-window-controls">
+        <button id="btn-voice-commands" class="hud-btn-icon" title="Voice Activated Commands Configuration">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" x2="20" y1="19" y2="19"/>
+          </svg>
+        </button>
         <button id="btn-copy-all" class="hud-btn-action" title="Copy all dictated messages to clipboard">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -77,6 +83,46 @@
         <div class="welcome-desc">Click <strong>Start Recording</strong> above and speak. Dictated text will appear here in bubbles with timestamps.</div>
       </div>
     </main>
+
+    <!-- Voice Activated Commands Configuration Modal -->
+    <div id="voice-commands-modal" class="voice-commands-modal hidden">
+      <div class="commands-modal-header">
+        <div class="commands-title-group">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" x2="20" y1="19" y2="19"/>
+          </svg>
+          <span class="commands-modal-title">Voice Activated Commands</span>
+          <span id="commands-count-badge" class="commands-count-badge">0</span>
+        </div>
+        <button id="btn-close-commands-modal" class="hud-btn-icon" title="Close Configuration">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="commands-modal-toolbar">
+        <div class="commands-search-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+          </svg>
+          <input type="text" id="commands-search-input" placeholder="Search commands, apps, or skills..." autocomplete="off" spellcheck="false" />
+          <button id="btn-clear-commands-search" class="btn-clear-search hidden">&times;</button>
+        </div>
+        <div class="commands-filter-tabs">
+          <button class="commands-tab-btn active" data-tab="all">All</button>
+          <button class="commands-tab-btn" data-tab="apps">Apps</button>
+          <button class="commands-tab-btn" data-tab="skills">Skills</button>
+        </div>
+      </div>
+
+      <div class="commands-modal-body" id="commands-list-container">
+        <!-- Rendered list of commands -->
+      </div>
+    </div>
   </div>
 
   <script src="hud.js"></script>
