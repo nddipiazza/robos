@@ -219,5 +219,47 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     assert.ok(htmlFromHtml.includes('<dl><dt>gRPC</dt><dd>The RPC protocol</dd></dl>'), 'Must preserve dl/dt/dd');
     assert.ok(htmlFromHtml.includes('<figure class="flow-diagram"><img src="data:image/jpeg;base64,123"></figure>'), 'Must preserve figure');
   });
+
+  it('9. Zoom controls (Ctrl +, Ctrl -, Ctrl 0) are wired in Electron main, preload, renderer, and web generator', () => {
+    // 1. Verify preload.js exposes zoom controls
+    const preloadJs = fs.readFileSync(path.join(rootRepo, 'packages/robos-elearning/preload.js'), 'utf8');
+    assert.ok(preloadJs.includes('getZoom:'), 'preload.js must expose getZoom');
+    assert.ok(preloadJs.includes('setZoom:'), 'preload.js must expose setZoom');
+    assert.ok(preloadJs.includes('zoomIn:'), 'preload.js must expose zoomIn');
+    assert.ok(preloadJs.includes('zoomOut:'), 'preload.js must expose zoomOut');
+    assert.ok(preloadJs.includes('zoomReset:'), 'preload.js must expose zoomReset');
+    assert.ok(preloadJs.includes('onZoomChanged:'), 'preload.js must expose onZoomChanged');
+
+    // 2. Verify main.js handles before-input-event and IPC handlers
+    const mainJs = fs.readFileSync(path.join(rootRepo, 'packages/robos-elearning/main.js'), 'utf8');
+    assert.ok(mainJs.includes('before-input-event'), 'main.js must listen for before-input-event');
+    assert.ok(mainJs.includes("elearning:get-zoom"), 'main.js must handle elearning:get-zoom');
+    assert.ok(mainJs.includes("elearning:set-zoom"), 'main.js must handle elearning:set-zoom');
+    assert.ok(mainJs.includes("elearning:zoom-in"), 'main.js must handle elearning:zoom-in');
+    assert.ok(mainJs.includes("elearning:zoom-out"), 'main.js must handle elearning:zoom-out');
+    assert.ok(mainJs.includes("elearning:zoom-reset"), 'main.js must handle elearning:zoom-reset');
+    assert.ok(mainJs.includes("elearning:zoom-changed"), 'main.js must broadcast elearning:zoom-changed');
+
+    // 3. Verify renderer app.js defines zoom controls and indicator
+    const appJs = fs.readFileSync(path.join(rootRepo, 'packages/robos-elearning/renderer/app.js'), 'utf8');
+    assert.ok(appJs.includes('function showZoomIndicator'), 'app.js must define showZoomIndicator');
+    assert.ok(appJs.includes('function initZoomControls'), 'app.js must define initZoomControls');
+    assert.ok(appJs.includes('initZoomControls()'), 'app.js must initialize zoom controls in initApp');
+    assert.ok(appJs.includes('async function zoomIn'), 'app.js must define zoomIn');
+    assert.ok(appJs.includes('async function zoomOut'), 'app.js must define zoomOut');
+    assert.ok(appJs.includes('async function zoomReset'), 'app.js must define zoomReset');
+
+    // 4. Verify style.css defines .zoom-indicator and .zoom-indicator.visible
+    const styleCss = fs.readFileSync(path.join(rootRepo, 'packages/robos-elearning/renderer/style.css'), 'utf8');
+    assert.ok(styleCss.includes('.zoom-indicator {'), 'style.css must style .zoom-indicator');
+    assert.ok(styleCss.includes('.zoom-indicator.visible {'), 'style.css must style .zoom-indicator.visible');
+
+    // 5. Verify standalone exported slides and web generator include zoom controls
+    assert.ok(SLIDE_OFFLINE_CSS.includes('.zoom-indicator {'), 'SLIDE_OFFLINE_CSS must include .zoom-indicator');
+    const webGenJs = fs.readFileSync(path.join(rootRepo, 'packages/robos-graph/lib/elearning-web-generator.js'), 'utf8');
+    assert.ok(webGenJs.includes('.zoom-indicator {'), 'web generator must include .zoom-indicator style');
+    assert.ok(webGenJs.includes('function showZoomIndicator'), 'web generator must define showZoomIndicator');
+  });
 });
+
 

@@ -99,6 +99,39 @@ function createWindow() {
     title: 'RobOS — Interactive eLearning & Verification Hub',
   });
 
+  if (win.webContents && typeof win.webContents.on === 'function') {
+    win.webContents.on('before-input-event', (event, input) => {
+      if (input.type !== 'keyDown') return;
+      const isCtrl = input.control || input.meta;
+      if (!isCtrl) return;
+
+      const isPlus = input.key === '=' || input.key === '+' || input.code === 'NumpadAdd' || input.code === 'Equal';
+      const isMinus = input.key === '-' || input.key === '_' || input.code === 'NumpadSubtract' || input.code === 'Minus';
+      const isZero = input.key === '0' || input.code === 'Digit0' || input.code === 'Numpad0';
+
+      if (isPlus) {
+        const cur = (typeof win.webContents.getZoomFactor === 'function') ? win.webContents.getZoomFactor() : _moduleZoomFactor;
+        const next = Math.min(3.0, Math.round((cur + 0.1) * 10) / 10);
+        _moduleZoomFactor = next;
+        if (typeof win.webContents.setZoomFactor === 'function') win.webContents.setZoomFactor(next);
+        if (typeof win.webContents.send === 'function') win.webContents.send('elearning:zoom-changed', next);
+        event.preventDefault();
+      } else if (isMinus) {
+        const cur = (typeof win.webContents.getZoomFactor === 'function') ? win.webContents.getZoomFactor() : _moduleZoomFactor;
+        const next = Math.max(0.5, Math.round((cur - 0.1) * 10) / 10);
+        _moduleZoomFactor = next;
+        if (typeof win.webContents.setZoomFactor === 'function') win.webContents.setZoomFactor(next);
+        if (typeof win.webContents.send === 'function') win.webContents.send('elearning:zoom-changed', next);
+        event.preventDefault();
+      } else if (isZero) {
+        _moduleZoomFactor = 1.0;
+        if (typeof win.webContents.setZoomFactor === 'function') win.webContents.setZoomFactor(1.0);
+        if (typeof win.webContents.send === 'function') win.webContents.send('elearning:zoom-changed', 1.0);
+        event.preventDefault();
+      }
+    });
+  }
+
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   if (_debugServer) _debugServer.startDebugServer(win, PORT);
@@ -110,7 +143,68 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+let _moduleZoomFactor = 1.0;
+
 // IPC Handlers
+ipcMain.handle('elearning:get-zoom', () => {
+  if (win && win.webContents && typeof win.webContents.getZoomFactor === 'function') {
+    return win.webContents.getZoomFactor();
+  }
+  return _moduleZoomFactor;
+});
+
+ipcMain.handle('elearning:set-zoom', (_, factor) => {
+  const clamped = Math.min(3.0, Math.max(0.5, Math.round(Number(factor) * 10) / 10));
+  _moduleZoomFactor = clamped;
+  if (win && win.webContents && typeof win.webContents.setZoomFactor === 'function') {
+    win.webContents.setZoomFactor(clamped);
+    if (typeof win.webContents.send === 'function') {
+      win.webContents.send('elearning:zoom-changed', clamped);
+    }
+  }
+  return clamped;
+});
+
+ipcMain.handle('elearning:zoom-in', () => {
+  const current = (win && win.webContents && typeof win.webContents.getZoomFactor === 'function')
+    ? win.webContents.getZoomFactor()
+    : _moduleZoomFactor;
+  const next = Math.min(3.0, Math.round((current + 0.1) * 10) / 10);
+  _moduleZoomFactor = next;
+  if (win && win.webContents && typeof win.webContents.setZoomFactor === 'function') {
+    win.webContents.setZoomFactor(next);
+    if (typeof win.webContents.send === 'function') {
+      win.webContents.send('elearning:zoom-changed', next);
+    }
+  }
+  return next;
+});
+
+ipcMain.handle('elearning:zoom-out', () => {
+  const current = (win && win.webContents && typeof win.webContents.getZoomFactor === 'function')
+    ? win.webContents.getZoomFactor()
+    : _moduleZoomFactor;
+  const next = Math.max(0.5, Math.round((current - 0.1) * 10) / 10);
+  _moduleZoomFactor = next;
+  if (win && win.webContents && typeof win.webContents.setZoomFactor === 'function') {
+    win.webContents.setZoomFactor(next);
+    if (typeof win.webContents.send === 'function') {
+      win.webContents.send('elearning:zoom-changed', next);
+    }
+  }
+  return next;
+});
+
+ipcMain.handle('elearning:zoom-reset', () => {
+  _moduleZoomFactor = 1.0;
+  if (win && win.webContents && typeof win.webContents.setZoomFactor === 'function') {
+    win.webContents.setZoomFactor(1.0);
+    if (typeof win.webContents.send === 'function') {
+      win.webContents.send('elearning:zoom-changed', 1.0);
+    }
+  }
+  return 1.0;
+});
 ipcMain.handle('elearning:get-initial-target', () => ({
   appId: initialAppId,
   courseId: initialCourseId,
@@ -766,6 +860,33 @@ body {
 }
 .meta-row { display: flex; flex-direction: column; gap: 4px; font-family: ui-monospace, monospace; }
 .footer-brand { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+.zoom-indicator {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid var(--accent);
+  color: var(--text-bright);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.zoom-indicator.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 `;
 
 function buildStandaloneSlideHtml({ slide, course, application, slideIndex, totalSlides, gitInfo }) {
@@ -869,6 +990,43 @@ function buildStandaloneSlideHtml({ slide, course, application, slideIndex, tota
         fb.textContent = '❌ Incorrect. Try again!';
       }
     }
+
+    // Zoom Controls (Ctrl +, Ctrl -, Ctrl 0)
+    let currentZoom = 1.0;
+    let zoomTimeout = null;
+    function showZoom(f) {
+      currentZoom = f;
+      let ind = document.getElementById('zoom-indicator');
+      if (!ind) {
+        ind = document.createElement('div');
+        ind.id = 'zoom-indicator';
+        ind.className = 'zoom-indicator';
+        document.body.appendChild(ind);
+      }
+      const pct = Math.round(f * 100);
+      ind.textContent = '🔍 ' + pct + '%' + (pct === 100 ? ' (Default)' : '');
+      ind.classList.add('visible');
+      if (zoomTimeout) clearTimeout(zoomTimeout);
+      zoomTimeout = setTimeout(() => ind.classList.remove('visible'), 1200);
+    }
+    window.addEventListener('keydown', (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.key === '=' || e.key === '+' || e.code === 'NumpadAdd' || e.code === 'Equal') {
+        e.preventDefault();
+        const next = Math.min(3.0, Math.round((currentZoom + 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoom(next);
+      } else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus') {
+        e.preventDefault();
+        const next = Math.max(0.5, Math.round((currentZoom - 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoom(next);
+      } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
+        e.preventDefault();
+        document.body.style.zoom = '1.0';
+        showZoom(1.0);
+      }
+    });
   </script>
 </body>
 </html>`;

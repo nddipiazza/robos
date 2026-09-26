@@ -179,6 +179,7 @@ async function initApp() {
   });
 
   setupVoiceAssistant();
+  initZoomControls();
 }
 
 async function loadCourse(courseOrAppId) {
@@ -1068,4 +1069,107 @@ window.saveCurrentCourse = async function() {
     window.showToast(`❌ Save error: ${err.message}`, 'fail');
   }
 };
+
+// ── Zoom Management & Visual Indicator (Ctrl +, Ctrl -, Ctrl 0) ───────────
+let currentZoomFactor = 1.0;
+let zoomIndicatorTimeout = null;
+
+function showZoomIndicator(factor) {
+  currentZoomFactor = Math.min(3.0, Math.max(0.5, Math.round(Number(factor) * 10) / 10));
+  let indicator = document.getElementById('zoom-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'zoom-indicator';
+    indicator.className = 'zoom-indicator';
+    document.body.appendChild(indicator);
+  }
+  const pct = Math.round(currentZoomFactor * 100);
+  indicator.textContent = `🔍 ${pct}%${pct === 100 ? ' (Default)' : ''}`;
+  indicator.classList.add('visible');
+
+  if (zoomIndicatorTimeout) clearTimeout(zoomIndicatorTimeout);
+  zoomIndicatorTimeout = setTimeout(() => {
+    indicator.classList.remove('visible');
+  }, 1200);
+}
+
+async function zoomIn() {
+  if (window.robosELearning && typeof window.robosELearning.zoomIn === 'function') {
+    const next = await window.robosELearning.zoomIn();
+    showZoomIndicator(next);
+    return next;
+  }
+  const next = Math.min(3.0, Math.round((currentZoomFactor + 0.1) * 10) / 10);
+  document.body.style.zoom = next;
+  showZoomIndicator(next);
+  return next;
+}
+
+async function zoomOut() {
+  if (window.robosELearning && typeof window.robosELearning.zoomOut === 'function') {
+    const next = await window.robosELearning.zoomOut();
+    showZoomIndicator(next);
+    return next;
+  }
+  const next = Math.max(0.5, Math.round((currentZoomFactor - 0.1) * 10) / 10);
+  document.body.style.zoom = next;
+  showZoomIndicator(next);
+  return next;
+}
+
+async function zoomReset() {
+  if (window.robosELearning && typeof window.robosELearning.zoomReset === 'function') {
+    const next = await window.robosELearning.zoomReset();
+    showZoomIndicator(next);
+    return next;
+  }
+  currentZoomFactor = 1.0;
+  document.body.style.zoom = '1.0';
+  showZoomIndicator(1.0);
+  return 1.0;
+}
+
+function initZoomControls() {
+  if (window.robosELearning && typeof window.robosELearning.onZoomChanged === 'function') {
+    window.robosELearning.onZoomChanged((factor) => {
+      showZoomIndicator(factor);
+    });
+  }
+
+  // Keyboard shortcut listener for web/fallback mode and direct browser usage
+  window.addEventListener('keydown', async (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+
+    const isPlus = e.key === '=' || e.key === '+' || e.code === 'NumpadAdd' || e.code === 'Equal';
+    const isMinus = e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus';
+    const isZero = e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0';
+
+    if (isPlus) {
+      e.preventDefault();
+      await zoomIn();
+    } else if (isMinus) {
+      e.preventDefault();
+      await zoomOut();
+    } else if (isZero) {
+      e.preventDefault();
+      await zoomReset();
+    }
+  });
+
+  // Ctrl + Mouse Wheel Zoom
+  window.addEventListener('wheel', async (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      await zoomIn();
+    } else if (e.deltaY > 0) {
+      await zoomOut();
+    }
+  }, { passive: false });
+}
+
+window.zoomIn = zoomIn;
+window.zoomOut = zoomOut;
+window.zoomReset = zoomReset;
+window.showZoomIndicator = showZoomIndicator;
 

@@ -1257,6 +1257,35 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       .cert-frame h2, .cert-recipient, .cert-course-name { color: #000 !important; }
       .cert-footer, .modal-close { display: none !important; }
     }
+
+    /* ── Zoom Indicator Overlay (Ctrl +, Ctrl -, Ctrl 0) ── */
+    .zoom-indicator {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(22, 27, 34, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text-bright);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .zoom-indicator.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -3064,14 +3093,72 @@ flowchart LR
       }
     }
 
-    // Global Escape Key Listener for Accessible Modals
+    // Global Escape Key & Zoom Shortcuts (Ctrl +, Ctrl -, Ctrl 0)
+    let currentZoomFactor = 1.0;
+    let zoomIndicatorTimeout = null;
+
+    function showZoomIndicator(factor) {
+      currentZoomFactor = Math.min(3.0, Math.max(0.5, Math.round(Number(factor) * 10) / 10));
+      let indicator = document.getElementById('zoom-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'zoom-indicator';
+        indicator.className = 'zoom-indicator';
+        document.body.appendChild(indicator);
+      }
+      const pct = Math.round(currentZoomFactor * 100);
+      indicator.textContent = '🔍 ' + pct + '%' + (pct === 100 ? ' (Default)' : '');
+      indicator.classList.add('visible');
+
+      if (zoomIndicatorTimeout) clearTimeout(zoomIndicatorTimeout);
+      zoomIndicatorTimeout = setTimeout(() => {
+        indicator.classList.remove('visible');
+      }, 1200);
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeCertificateModal();
         closeJsonLdModal();
         closeLightbox();
+        return;
+      }
+
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const isPlus = e.key === '=' || e.key === '+' || e.code === 'NumpadAdd' || e.code === 'Equal';
+      const isMinus = e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus';
+      const isZero = e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0';
+
+      if (isPlus) {
+        e.preventDefault();
+        const next = Math.min(3.0, Math.round((currentZoomFactor + 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (isMinus) {
+        e.preventDefault();
+        const next = Math.max(0.5, Math.round((currentZoomFactor - 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (isZero) {
+        e.preventDefault();
+        document.body.style.zoom = '1.0';
+        showZoomIndicator(1.0);
       }
     });
+
+    window.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        const next = Math.min(3.0, Math.round((currentZoomFactor + 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      } else if (e.deltaY > 0) {
+        const next = Math.max(0.5, Math.round((currentZoomFactor - 0.1) * 10) / 10);
+        document.body.style.zoom = next;
+        showZoomIndicator(next);
+      }
+    }, { passive: false });
 
     // Initialize application on load
     window.addEventListener('DOMContentLoaded', () => {
