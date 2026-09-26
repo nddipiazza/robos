@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=RobOS cRPG Editor
+GenericName=cRPG Unified Game Editor
+Comment=Unified studio for cRPG campaigns, character sheets, party inventory, and 5-ft blockmap level design
+Exec=/usr/bin/electron /usr/local/share/robos/crpg-editor/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/crpg-editor/icon.svg
+Terminal=false
+Categories=Development;Game;RolePlaying;
+Keywords=robos;crpg;editor;campaign;character;inventory;blockmap;godot;level;dnd5e;
+StartupWMClass=robos-crpg-editor
+StartupNotify=true
+X-RobOS-App=true
+X-RobOS-Category=Games

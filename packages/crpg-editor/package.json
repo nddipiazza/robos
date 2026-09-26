@@ -1,0 +1,25 @@
+{
+  "name": "robos-crpg-editor",
+  "version": "0.1.0",
+  "description": "RobOS cRPG Unified Editor — Campaign, Character, Inventory & Blockmap Studio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "keywords": [
+    "robos",
+    "crpg",
+    "editor",
+    "campaign",
+    "character",
+    "inventory",
+    "blockmap",
+    "godot4",
+    "dnd5e"
+  ],
+  "author": "RobOS AI Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

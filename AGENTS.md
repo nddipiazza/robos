@@ -120,7 +120,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Security Setup** | First-run GPG + SSH key initialization |
 | **Search Index** | File system indexer for @-search in AI textareas |
 | **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
-| **RobOS cRPG Maker** | Visual map builder, static scene background image creator, and KGraph level designer for RobOS cRPG |
+| **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
 
 ## Shared Libraries
 

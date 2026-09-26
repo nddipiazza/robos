@@ -108,9 +108,10 @@ const PORT_REGISTRY = {
   'dev-discussions':   19187,
   'voice-prompt':      19188,
   'kgraph-parse-portal': 19192,
+  'crpg-editor':       19194,
   'crpg-maker':        19194,
-  'crpg-campaign':     19195,
-  'crpg-scene-studio': 19196,
+  'crpg-campaign':     19194,
+  'crpg-scene-studio': 19194,
   'robos-documentation': 19197,
 };
 
