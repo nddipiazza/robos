@@ -20,14 +20,17 @@
           </svg>
         </div>
         <span class="hud-title">RobOS Voice</span>
-        <div id="hud-status-badge" class="hud-status-badge listening" title="Voice Assistant Status">
-          <span class="hud-status-dot"></span>
-          <span id="hud-status-text">LISTENING</span>
-        </div>
       </div>
 
       <div class="hud-window-controls">
-        <button id="btn-clear-chat" class="hud-btn-icon" title="Clear Chat History">
+        <button id="btn-copy-all" class="hud-btn-action" title="Copy all dictated messages to clipboard">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span id="copy-all-label">Copy All</span>
+        </button>
+        <button id="btn-clear-chat" class="hud-btn-icon" title="Clear all messages">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
           </svg>
@@ -39,7 +42,7 @@
           </svg>
           <span id="pos-label" class="pos-label">BR</span>
         </button>
-        <button id="btn-close-hud" class="hud-btn-icon btn-close" title="Close Overlay">
+        <button id="btn-close-hud" class="hud-btn-icon btn-close" title="Close">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -48,54 +51,32 @@
       </div>
     </header>
 
-    <!-- Main Chat Feed -->
-    <main id="chat-feed" class="chat-feed">
-      <!-- Welcome Empty State -->
-      <div id="chat-welcome" class="chat-welcome">
-        <div class="welcome-avatar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Prominent Record On/Off Bar -->
+    <div class="record-bar">
+      <button type="button" id="btn-toggle-record" class="btn-toggle-record" title="Toggle voice dictation recording">
+        <span class="record-dot"></span>
+        <span id="record-btn-label">Start Recording</span>
+        <span class="shortcut-tag">Super+V</span>
+      </button>
+      <div id="record-status-hint" class="record-status-hint">Click Record or press Super+V to dictate</div>
+    </div>
+
+    <!-- Dictation Messages Feed -->
+    <main id="chat-feed" class="dictation-feed">
+      <!-- Empty State -->
+      <div id="chat-welcome" class="dictation-welcome">
+        <div class="welcome-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" x2="12" y1="19" y2="22"/>
             <line x1="8" x2="16" y1="22" y2="22"/>
           </svg>
         </div>
-        <div class="welcome-title">RobOS Voice Assistant</div>
-        <div class="welcome-hint">Say <strong>"Hello RobOS [command]"</strong> or type below</div>
-        <div class="quick-prompts">
-          <button type="button" class="quick-chip" data-prompt="open task explorer">Task Explorer</button>
-          <button type="button" class="quick-chip" data-prompt="what is the git status">Git Status</button>
-          <button type="button" class="quick-chip" data-prompt="validate knowledge graph">Validate KGraph</button>
-        </div>
+        <div class="welcome-heading">Speech Dictation</div>
+        <div class="welcome-desc">Click <strong>Start Recording</strong> above and speak. Dictated text will appear here in bubbles with timestamps.</div>
       </div>
     </main>
-
-    <!-- Bottom Input Bar -->
-    <footer class="hud-input-footer">
-      <form id="chat-form" class="chat-form" autocomplete="off">
-        <input
-          type="text"
-          id="chat-input"
-          class="chat-input"
-          placeholder="Say 'Hello RobOS...' or type..."
-          autocomplete="off"
-        />
-        <button type="button" id="btn-toggle-mic" class="btn-chat-tool active" title="Microphone Active">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" x2="12" y1="19" y2="22"/>
-            <line x1="8" x2="16" y1="22" y2="22"/>
-          </svg>
-        </button>
-        <button type="submit" id="btn-chat-send" class="btn-chat-send" title="Send message">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
-      </form>
-    </footer>
   </div>
 
   <script src="hud.js"></script>

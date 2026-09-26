@@ -88,6 +88,7 @@ class STTEngine extends EventEmitter {
     this.streamInterval = null;
     this.isTranscribing = false;
     this.lastInterimText = '';
+    this.processedSampleOffset = 0;
     this.backgroundMode = Boolean(options.backgroundMode);
     this.worker = null;
     this.pendingRequests = new Map();
@@ -314,6 +315,7 @@ class STTEngine extends EventEmitter {
     this.lastInterimText = '';
     this.lastSpeechDetectedTime = 0;
     this.silenceFinalEmitted = false;
+    this.processedSampleOffset = 0;
     if (!this.active) return;
 
     const oldFile = this.currentRecordingFile;
@@ -354,6 +356,7 @@ class STTEngine extends EventEmitter {
     this.lastInterimText = '';
     this.lastSpeechDetectedTime = 0;
     this.silenceFinalEmitted = false;
+    this.processedSampleOffset = 0;
 
     // Start streaming interim transcription interval if not in test mode
     if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
@@ -369,28 +372,36 @@ class STTEngine extends EventEmitter {
           if (stats.size < 11200) return;
 
           const fullSamples = readWavToFloat32(recFile);
-          if (!fullSamples || fullSamples.length < 5600) return;
+          if (!fullSamples) return;
+
+          // Only inspect audio starting from the end of the previous finalized utterance
+          const unconsumedSamples = fullSamples.slice(this.processedSampleOffset);
+          if (unconsumedSamples.length < 5600) return;
 
           // VAD / Energy check: check energy of recent audio (last 1s / 16000 samples)
-          const recentSamples = fullSamples.length > 16000 ? fullSamples.slice(-16000) : fullSamples;
+          const recentSamples = unconsumedSamples.length > 16000 ? unconsumedSamples.slice(-16000) : unconsumedSamples;
           const energy = getAudioEnergy(recentSamples);
 
-          // If room is silent (ambient noise < 0.003) and no speech is in-flight, skip Whisper inference!
-          // This keeps CPU near 0% and worker immediately ready the moment the user speaks!
+          // If room is silent (ambient noise < 0.003) and no speech is in-flight:
+          // Keep a short 0.3s (4800 samples) rolling buffer so the start of words is preserved, advance the rest.
           if (energy < 0.003 && !this.lastInterimText) {
+            if (unconsumedSamples.length > 9600) {
+              this.processedSampleOffset = fullSamples.length - 4800;
+            }
             return;
           }
 
           this.isTranscribing = true;
 
-          // Sliding window: process at most the last 2.5s (40,000 samples) of audio for fast response
-          const samples = fullSamples.length > 40000
-            ? fullSamples.slice(-40000)
-            : fullSamples;
+          // Process current utterance audio from unconsumed buffer (max 40000 samples / 2.5s)
+          const samples = unconsumedSamples.length > 40000
+            ? unconsumedSamples.slice(-40000)
+            : unconsumedSamples;
 
           const res = await this.transcribeAsync(samples, {});
           const text = cleanTranscript(res?.text || '');
           const now = Date.now();
+
           if (text && this.active) {
             if (text !== this.lastInterimText) {
               this.lastInterimText = text;
@@ -403,9 +414,8 @@ class STTEngine extends EventEmitter {
                 backgroundMode: this.backgroundMode,
               };
               this.emit('interim-text', payload);
-              this.emit('stream-text', payload);
             } else if (this.lastSpeechDetectedTime > 0 && !this.silenceFinalEmitted && (now - this.lastSpeechDetectedTime >= 450)) {
-              // User paused for >=450ms: emit final utterance flag to finalize the bubble
+              // User paused for >=450ms: finalize this utterance!
               this.silenceFinalEmitted = true;
               const payload = {
                 text: this.lastInterimText,
@@ -414,8 +424,15 @@ class STTEngine extends EventEmitter {
                 backgroundMode: this.backgroundMode,
               };
               this.emit('stream-text', payload);
+
+              // Advance audio offset past this finalized utterance & clean up state
+              this.processedSampleOffset = fullSamples.length;
+              this.lastInterimText = '';
+              this.lastSpeechDetectedTime = 0;
+              this.silenceFinalEmitted = false;
             }
           } else if (!text && this.lastInterimText && (now - this.lastSpeechDetectedTime >= 450) && !this.silenceFinalEmitted) {
+            // Energy dropped or transcription produced silence: finalize previous in-flight utterance!
             this.silenceFinalEmitted = true;
             const payload = {
               text: this.lastInterimText,
@@ -424,6 +441,12 @@ class STTEngine extends EventEmitter {
               backgroundMode: this.backgroundMode,
             };
             this.emit('stream-text', payload);
+
+            // Advance audio offset past this finalized utterance & clean up state
+            this.processedSampleOffset = fullSamples.length;
+            this.lastInterimText = '';
+            this.lastSpeechDetectedTime = 0;
+            this.silenceFinalEmitted = false;
           }
         } catch (err) {
           console.warn('[stt-engine] Streaming transcribe error:', err.message);
@@ -438,7 +461,7 @@ class STTEngine extends EventEmitter {
   }
 
   /**
-   * Deactivate listening and transcribe recorded audio
+   * Deactivate listening and clean up
    */
   async deactivate() {
     if (!this.active) return { ok: true, active: false, backgroundMode: this.backgroundMode };
@@ -479,43 +502,71 @@ class STTEngine extends EventEmitter {
       await new Promise(r => setTimeout(r, 100));
     }
 
-    let text = '';
+    const wasBackground = this.backgroundMode;
+    this.backgroundMode = false;
+
     if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
       if (recFile && fs.existsSync(recFile)) {
         try { fs.unlinkSync(recFile); } catch {}
       }
-      this.emit('deactivated', { durationMs, text, backgroundMode: this.backgroundMode });
-      return { ok: true, active: false, durationMs, text, backgroundMode: this.backgroundMode };
+      this.processedSampleOffset = 0;
+      this.silenceFinalEmitted = false;
+      this.lastSpeechDetectedTime = 0;
+      this.lastInterimText = '';
+      this.emit('deactivated', { durationMs, text: '', backgroundMode: wasBackground });
+      return { ok: true, active: false, durationMs, text: '', backgroundMode: wasBackground };
     }
 
-    if (recFile && fs.existsSync(recFile)) {
-      try {
-        const stats = fs.statSync(recFile);
-        if (stats.size > 200) {
-          const samples = readWavToFloat32(recFile);
-          if (samples && samples.length >= 1600) {
-            const opts = samples.length > 16000 * 30
-              ? { chunk_length_s: 30, stride_length_s: 5 }
-              : {};
-            const res = await this.transcribeAsync(samples, opts);
-            text = cleanTranscript(res?.text || '');
-          }
+    let text = '';
+
+    if (wasBackground) {
+      // In background/continuous streaming dictation mode:
+      // Utterances were already streamed and finalized into individual bubbles!
+      // If there was an unfinalized utterance in flight when user clicked stop, emit it as final.
+      if (this.lastInterimText && !this.silenceFinalEmitted) {
+        text = this.lastInterimText.trim();
+        this.lastInterimText = '';
+        if (text) {
+          this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
         }
-      } catch (err) {
-        console.warn('[stt-engine] Transcription error:', err.message);
-      } finally {
+      }
+      if (recFile && fs.existsSync(recFile)) {
         try { fs.unlinkSync(recFile); } catch {}
+      }
+    } else {
+      // Push-to-talk mode: transcribe recorded file once on release
+      if (recFile && fs.existsSync(recFile)) {
+        try {
+          const stats = fs.statSync(recFile);
+          if (stats.size > 200) {
+            const samples = readWavToFloat32(recFile);
+            if (samples && samples.length >= 1600) {
+              const opts = samples.length > 16000 * 30
+                ? { chunk_length_s: 30, stride_length_s: 5 }
+                : {};
+              const res = await this.transcribeAsync(samples, opts);
+              text = cleanTranscript(res?.text || '');
+            }
+          }
+        } catch (err) {
+          console.warn('[stt-engine] Transcription error:', err.message);
+        } finally {
+          try { fs.unlinkSync(recFile); } catch {}
+        }
+      }
+      if (!text && this.lastInterimText) {
+        text = this.lastInterimText;
+      }
+      if (text) {
+        this.emit('interim-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
+        this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
       }
     }
 
-    if (!text && this.lastInterimText) {
-      text = this.lastInterimText;
-    }
-    const wasBackground = this.backgroundMode;
-    this.backgroundMode = false;
+    this.processedSampleOffset = 0;
+    this.silenceFinalEmitted = false;
+    this.lastSpeechDetectedTime = 0;
 
-    this.emit('interim-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
-    this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
     this.emit('deactivated', { durationMs, text, backgroundMode: wasBackground });
     return { ok: true, active: false, durationMs, text, backgroundMode: wasBackground };
   }

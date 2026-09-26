@@ -3,12 +3,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const hudApi = {
+  getStatus: () => ipcRenderer.invoke('vp-get-status'),
   getPrefs: () => ipcRenderer.invoke('vp-get-prefs'),
   savePrefs: (prefs) => ipcRenderer.invoke('vp-save-prefs', prefs),
   setHudPosition: (pos) => ipcRenderer.invoke('vp-hud-set-position', pos),
   hideHud: () => ipcRenderer.invoke('vp-hud-hide'),
   showHud: () => ipcRenderer.invoke('vp-hud-show'),
-  toggleMic: () => ipcRenderer.invoke('vp-hud-toggle-mic'),
+  toggleMic: (enable) => ipcRenderer.invoke('vp-hud-toggle-mic', enable),
   stopTts: () => ipcRenderer.invoke('vp-tts-stop'),
   speak: (text, opts) => ipcRenderer.invoke('vp-tts-speak', text, opts),
   triggerWakeWord: () => ipcRenderer.invoke('vp-trigger-wake-word'),
@@ -18,6 +19,9 @@ const hudApi = {
   clearAssistantHistory: () => ipcRenderer.invoke('vp-assistant-clear-history'),
 
   // Events from main process
+  onRecordingState: (callback) => {
+    ipcRenderer.on('vp-hud-recording-state', (_e, data) => callback(data));
+  },
   onWakeGreeting: (callback) => {
     ipcRenderer.on('vp-hud-wake-greeting', (_e, data) => callback(data));
   },
