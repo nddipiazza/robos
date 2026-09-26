@@ -175,4 +175,26 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     assert.ok(resolvedPath.includes('.robos/elearning.yaml'), 'Resolved path must point to elearning.yaml');
     assert.ok(resolvedPath.endsWith('#mod-01-architecture'), 'Resolved path must end with module anchor ID');
   });
+
+  it('7. Multi-repo courses resolve correct checkout path and clean slug anchor', () => {
+    const appJs = fs.readFileSync(path.join(rootRepo, 'packages/robos-elearning/renderer/app.js'), 'utf8');
+    assert.ok(appJs.includes('resolveGitopsPathForCourse'), 'app.js must define resolveGitopsPathForCourse');
+    assert.ok(appJs.includes('getCourseAnchorSlug'), 'app.js must define getCourseAnchorSlug');
+
+    const resolveFn = new Function('course', 'srcInfo', appJs.match(/function resolveGitopsPathForCourse[\s\S]*?^}/m)[0] + '; return resolveGitopsPathForCourse(course, srcInfo);');
+    const slugFn = new Function('course', appJs.match(/function getCourseAnchorSlug[\s\S]*?^}/m)[0] + '; return getCourseAnchorSlug(course);');
+
+    const hermetiqCourse = {
+      '@id': 'urn:hermetiq:elearning:grpc-cache-proxy',
+      'robos:gitopsFile': 'projects/grpc-cache-proxy/elearning/course.json',
+      'robos:evidence': [{ repository: 'Hermetiq/hermetiq-genai-agent' }],
+    };
+
+    const resolved = resolveFn(hermetiqCourse, { repoRoot: '/home/ndipiazza/source/robos' });
+    const slug = slugFn(hermetiqCourse);
+
+    assert.equal(resolved, '/home/ndipiazza/source/hermetiq/hermetiq-genai-agent/projects/grpc-cache-proxy/elearning/course.json');
+    assert.equal(slug, 'grpc-cache-proxy', 'Anchor slug must strip urn:*:elearning: prefix');
+    assert.ok(fs.existsSync(resolved), 'Resolved path must physically exist on disk');
+  });
 });
