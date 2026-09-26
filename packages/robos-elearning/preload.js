@@ -23,4 +23,13 @@ contextBridge.exposeInMainWorld('robosELearning', {
   onVoiceStreamEvent: (callback) => {
     ipcRenderer.on('elearning:voice-stream-event', (_e, data) => callback(data));
   },
+  // Zoom Controls (Ctrl +, Ctrl -, Ctrl 0)
+  getZoom: () => ipcRenderer.invoke('elearning:get-zoom'),
+  setZoom: (factor) => ipcRenderer.invoke('elearning:set-zoom', factor),
+  zoomIn: () => ipcRenderer.invoke('elearning:zoom-in'),
+  zoomOut: () => ipcRenderer.invoke('elearning:zoom-out'),
+  zoomReset: () => ipcRenderer.invoke('elearning:zoom-reset'),
+  onZoomChanged: (callback) => {
+    ipcRenderer.on('elearning:zoom-changed', (_e, factor) => callback(factor));
+  },
 });
