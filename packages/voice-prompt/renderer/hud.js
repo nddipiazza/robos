@@ -3,16 +3,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const chatFeed = document.getElementById('chat-feed');
   const chatWelcome = document.getElementById('chat-welcome');
-  const chatForm = document.getElementById('chat-form');
-  const chatInput = document.getElementById('chat-input');
-  const btnChatSend = document.getElementById('btn-chat-send');
-  const btnToggleMic = document.getElementById('btn-toggle-mic');
+  const btnToggleRecord = document.getElementById('btn-toggle-record');
+  const recordBtnLabel = document.getElementById('record-btn-label');
+  const recordStatusHint = document.getElementById('record-status-hint');
+  const btnCopyAll = document.getElementById('btn-copy-all');
+  const copyAllLabel = document.getElementById('copy-all-label');
   const btnClearChat = document.getElementById('btn-clear-chat');
   const btnPosCycle = document.getElementById('btn-pos-cycle');
   const posLabel = document.getElementById('pos-label');
   const btnCloseHud = document.getElementById('btn-close-hud');
-  const hudStatusBadge = document.getElementById('hud-status-badge');
-  const hudStatusText = document.getElementById('hud-status-text');
 
   const positions = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
   const posShort = {
@@ -23,13 +22,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   let currentPos = 'bottom-right';
-  let micActive = true;
-  let currentInterimEl = null;
-  let thinkingBubbleEl = null;
+  let isRecording = false;
+  let currentInterimBubble = null;
   let silenceTimer = null;
-  let lastAssistantResponse = null;
+  const finalizedMessages = [];
 
-  // Initialize from saved prefs
+  // Load position from saved preferences
   if (window.robosVoiceHud && typeof window.robosVoiceHud.getPrefs === 'function') {
     try {
       const prefs = await window.robosVoiceHud.getPrefs();
@@ -40,20 +38,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch {}
   }
 
-  // Load existing assistant history if any
-  if (window.robosVoiceHud && typeof window.robosVoiceHud.getAssistantHistory === 'function') {
+  // Check initial recording status
+  if (window.robosVoiceHud && typeof window.robosVoiceHud.getStatus === 'function') {
     try {
-      const history = await window.robosVoiceHud.getAssistantHistory();
-      if (Array.isArray(history) && history.length > 0) {
-        history.slice(-10).forEach(turn => {
-          if (turn.query) appendUserBubble(turn.query, false);
-          if (turn.response) appendAssistantBubble(turn.response, turn.actionDone);
-        });
-      }
+      const status = await window.robosVoiceHud.getStatus();
+      updateRecordingUI(Boolean(status && status.active));
     } catch {}
   }
 
-  // Helper: Escape HTML
+  function formatTime(isoOrDate = new Date()) {
+    const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : (isoOrDate || new Date());
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -64,13 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/'/g, '&#039;');
   }
 
-  function formatTime(isoString) {
-    const d = isoString ? new Date(isoString) : new Date();
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-
   function hideWelcome() {
-    if (chatWelcome && !chatWelcome.classList.contains('hidden')) {
+    if (chatWelcome) {
       chatWelcome.style.display = 'none';
       chatWelcome.classList.add('hidden');
     }
@@ -78,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function showWelcomeIfEmpty() {
     if (!chatFeed) return;
-    const bubbles = chatFeed.querySelectorAll('.chat-bubble');
+    const bubbles = chatFeed.querySelectorAll('.dictation-bubble:not(.interim)');
     if (bubbles.length === 0 && chatWelcome) {
       chatWelcome.style.display = 'flex';
       chatWelcome.classList.remove('hidden');
@@ -91,200 +83,203 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // State Management
-  function setAssistantState(state) {
-    if (!hudStatusBadge || !hudStatusText) return;
-    const cleanState = (state || 'IDLE').toUpperCase();
-    hudStatusText.textContent = cleanState;
+  function updateRecordingUI(active) {
+    isRecording = Boolean(active);
+    if (!btnToggleRecord) return;
 
-    hudStatusBadge.className = 'hud-status-badge';
-    if (cleanState === 'LISTENING') {
-      hudStatusBadge.classList.add('listening');
-      hideThinking();
-    } else if (cleanState === 'PROCESSING') {
-      hudStatusBadge.classList.add('processing');
-      showThinking();
-    } else if (cleanState === 'SPEAKING') {
-      hudStatusBadge.classList.add('speaking');
-      hideThinking();
+    if (isRecording) {
+      btnToggleRecord.classList.add('recording');
+      btnToggleRecord.title = 'Stop Recording (Super+V)';
+      if (recordBtnLabel) recordBtnLabel.textContent = 'Stop Recording';
+      if (recordStatusHint) recordStatusHint.textContent = 'Recording live... Dictate naturally';
     } else {
-      hudStatusBadge.classList.add('idle');
-      hideThinking();
+      btnToggleRecord.classList.remove('recording');
+      btnToggleRecord.title = 'Start Recording (Super+V)';
+      if (recordBtnLabel) recordBtnLabel.textContent = 'Start Recording';
+      if (recordStatusHint) recordStatusHint.textContent = 'Click to record or press Super+V';
     }
   }
 
-  // Thinking Bubble Indicator
-  function showThinking() {
-    if (thinkingBubbleEl || !chatFeed) return;
-    hideWelcome();
-    thinkingBubbleEl = document.createElement('div');
-    thinkingBubbleEl.className = 'chat-bubble thinking';
-    thinkingBubbleEl.innerHTML = `
-      <div class="dot-wave">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>`;
-    chatFeed.appendChild(thinkingBubbleEl);
-    scrollToBottom();
+  async function copyTextToClipboard(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {}
+    // Fallback using temporary textarea
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      return true;
+    } catch {}
+    return false;
   }
 
-  function hideThinking() {
-    if (thinkingBubbleEl) {
-      thinkingBubbleEl.remove();
-      thinkingBubbleEl = null;
-    }
-  }
-
-  // User Bubble Creation & Live Interim Updates
-  function appendUserBubble(text, isInterim = false) {
+  // Update or create live interim text bubble
+  function updateInterimBubble(text) {
     const cleanText = (text || '').trim();
     if (!cleanText || !chatFeed) return;
 
     hideWelcome();
 
-    if (isInterim) {
-      if (currentInterimEl) {
-        const textSpan = currentInterimEl.querySelector('.bubble-text');
-        if (textSpan) textSpan.textContent = cleanText;
-      } else {
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble user interim';
-        bubble.innerHTML = `
-          <span class="bubble-text">${escapeHtml(cleanText)}</span>
-          <span class="bubble-live-dots"><span></span><span></span><span></span></span>`;
-        chatFeed.appendChild(bubble);
-        currentInterimEl = bubble;
-      }
+    if (!currentInterimBubble) {
+      currentInterimBubble = document.createElement('div');
+      currentInterimBubble.className = 'dictation-bubble interim';
+      currentInterimBubble.innerHTML = `
+        <div class="bubble-header">
+          <span class="bubble-time">${formatTime()}</span>
+          <span class="bubble-live-badge">
+            <span class="live-dot"></span>
+            <span>Listening</span>
+          </span>
+        </div>
+        <div class="bubble-text">${escapeHtml(cleanText)}</div>`;
+      chatFeed.appendChild(currentInterimBubble);
     } else {
-      if (currentInterimEl) {
-        const textSpan = currentInterimEl.querySelector('.bubble-text');
-        if (textSpan) textSpan.textContent = cleanText;
-        currentInterimEl.classList.remove('interim');
-        const liveDots = currentInterimEl.querySelector('.bubble-live-dots');
-        if (liveDots) liveDots.remove();
-        currentInterimEl = null;
-      } else {
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble user';
-        bubble.innerHTML = `<span class="bubble-text">${escapeHtml(cleanText)}</span>`;
-        chatFeed.appendChild(bubble);
-      }
+      const textEl = currentInterimBubble.querySelector('.bubble-text');
+      if (textEl) textEl.textContent = cleanText;
     }
 
     scrollToBottom();
   }
 
-  function finalizeInterimBubble() {
-    if (currentInterimEl) {
-      currentInterimEl.classList.remove('interim');
-      const liveDots = currentInterimEl.querySelector('.bubble-live-dots');
-      if (liveDots) liveDots.remove();
-      currentInterimEl = null;
-    }
-  }
-
-  // Assistant Bubble Creation
-  function appendAssistantBubble(text, actionDone = null) {
+  // Finalize an interim bubble into a permanent bubble with timestamp & copy button
+  function finalizeBubble(text, time = new Date()) {
     const cleanText = (text || '').trim();
-    if (!cleanText || !chatFeed) return;
+    if (!cleanText) {
+      if (currentInterimBubble) {
+        currentInterimBubble.remove();
+        currentInterimBubble = null;
+      }
+      return;
+    }
+
+    // Ignore duplicate text if identical to the last message within 2.5 seconds
+    const now = Date.now();
+    const lastMsg = finalizedMessages[finalizedMessages.length - 1];
+    if (lastMsg && lastMsg.text.toLowerCase() === cleanText.toLowerCase() && (now - (lastMsg.ts || 0) < 2500)) {
+      if (currentInterimBubble) {
+        currentInterimBubble.remove();
+        currentInterimBubble = null;
+      }
+      return;
+    }
 
     hideWelcome();
-    hideThinking();
-    finalizeInterimBubble();
 
-    // Deduplicate rapid repeat rendering
-    if (lastAssistantResponse === cleanText) return;
-    lastAssistantResponse = cleanText;
-    setTimeout(() => { if (lastAssistantResponse === cleanText) lastAssistantResponse = null; }, 1000);
+    const formattedTime = formatTime(time);
+    const msgId = `msg-${now}-${Math.random().toString(36).slice(2, 6)}`;
+    finalizedMessages.push({ id: msgId, text: cleanText, time: formattedTime, ts: now });
 
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble assistant';
-
-    let actionHtml = '';
-    if (actionDone) {
-      actionHtml = `<div class="action-tag">⚡ ${escapeHtml(actionDone)}</div>`;
+    let bubbleEl = currentInterimBubble;
+    if (bubbleEl) {
+      bubbleEl.className = 'dictation-bubble';
+      bubbleEl.setAttribute('data-id', msgId);
+      currentInterimBubble = null;
+    } else {
+      bubbleEl = document.createElement('div');
+      bubbleEl.className = 'dictation-bubble';
+      bubbleEl.setAttribute('data-id', msgId);
+      chatFeed.appendChild(bubbleEl);
     }
 
-    bubble.innerHTML = `
+    bubbleEl.innerHTML = `
       <div class="bubble-header">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span>RobOS Voice</span>
+        <span class="bubble-time">${formattedTime}</span>
+        <button type="button" class="btn-copy-msg" title="Copy this message">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span class="copy-label">Copy</span>
+        </button>
       </div>
-      <div class="bubble-text">${escapeHtml(cleanText)}</div>
-      ${actionHtml}
-      <div class="bubble-meta-row">
-        <span>${formatTime()}</span>
-        <button type="button" class="btn-replay-audio" title="Play audio response">🔊 Play</button>
-      </div>`;
+      <div class="bubble-text">${escapeHtml(cleanText)}</div>`;
 
-    bubble.querySelector('.btn-replay-audio')?.addEventListener('click', () => {
-      if (window.robosVoiceHud && typeof window.robosVoiceHud.speak === 'function') {
-        window.robosVoiceHud.speak(cleanText);
+    const copyBtn = bubbleEl.querySelector('.btn-copy-msg');
+    const copyLabel = bubbleEl.querySelector('.copy-label');
+    copyBtn?.addEventListener('click', async () => {
+      const ok = await copyTextToClipboard(cleanText);
+      if (ok && copyLabel) {
+        copyLabel.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyLabel.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 1500);
       }
     });
 
-    chatFeed.appendChild(bubble);
     scrollToBottom();
   }
 
-  // Submit User Message
-  async function submitQuery(queryText) {
-    const text = (queryText || '').trim();
-    if (!text) return;
+  // Toggle Record Button Click
+  btnToggleRecord?.addEventListener('click', async () => {
+    const nextState = !isRecording;
+    updateRecordingUI(nextState);
 
-    if (silenceTimer) clearTimeout(silenceTimer);
-    appendUserBubble(text, false);
-    setAssistantState('PROCESSING');
-
-    if (window.robosVoiceHud && typeof window.robosVoiceHud.askAssistant === 'function') {
+    if (window.robosVoiceHud && typeof window.robosVoiceHud.toggleMic === 'function') {
       try {
-        const res = await window.robosVoiceHud.askAssistant(text);
-        if (res && res.turn) {
-          appendAssistantBubble(res.turn.response || 'Done.', res.turn.actionDone);
+        const res = await window.robosVoiceHud.toggleMic(nextState);
+        if (res && res.active !== undefined) {
+          updateRecordingUI(Boolean(res.active));
         }
       } catch (err) {
-        appendAssistantBubble(`Error: ${err.message}`);
-      } finally {
-        setAssistantState('IDLE');
+        console.warn('Failed to toggle mic:', err);
       }
     }
-  }
-
-  // Chat Form Submit
-  chatForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const text = (chatInput?.value || '').trim();
-    if (text) {
-      chatInput.value = '';
-      submitQuery(text);
-    }
   });
 
-  // Quick Chips
-  document.querySelectorAll('.quick-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const prompt = chip.getAttribute('data-prompt');
-      if (prompt) submitQuery(prompt);
+  // Copy All Button Click
+  btnCopyAll?.addEventListener('click', async () => {
+    const bubbles = chatFeed?.querySelectorAll('.dictation-bubble:not(.interim)');
+    if (!bubbles || bubbles.length === 0) {
+      if (copyAllLabel) {
+        copyAllLabel.textContent = 'Nothing to copy';
+        setTimeout(() => { copyAllLabel.textContent = 'Copy All'; }, 1200);
+      }
+      return;
+    }
+
+    const lines = [];
+    bubbles.forEach(b => {
+      const time = b.querySelector('.bubble-time')?.textContent || '';
+      const text = b.querySelector('.bubble-text')?.textContent || '';
+      if (text.trim()) {
+        lines.push(`[${time}] ${text.trim()}`);
+      }
     });
+
+    const fullContent = lines.join('\n');
+    const ok = await copyTextToClipboard(fullContent);
+    if (ok && copyAllLabel) {
+      copyAllLabel.textContent = 'Copied All!';
+      btnCopyAll.classList.add('copied');
+      setTimeout(() => {
+        copyAllLabel.textContent = 'Copy All';
+        btnCopyAll.classList.remove('copied');
+      }, 1500);
+    }
   });
 
-  // Clear Chat History
-  btnClearChat?.addEventListener('click', async () => {
-    if (silenceTimer) clearTimeout(silenceTimer);
-    currentInterimEl = null;
-    hideThinking();
-    if (chatFeed) {
-      const bubbles = chatFeed.querySelectorAll('.chat-bubble');
-      bubbles.forEach(b => b.remove());
-      showWelcomeIfEmpty();
+  // Clear Chat Feed
+  btnClearChat?.addEventListener('click', () => {
+    if (currentInterimBubble) {
+      currentInterimBubble.remove();
+      currentInterimBubble = null;
     }
-    if (window.robosVoiceHud && typeof window.robosVoiceHud.clearAssistantHistory === 'function') {
-      await window.robosVoiceHud.clearAssistantHistory();
+    finalizedMessages.length = 0;
+    if (chatFeed) {
+      chatFeed.querySelectorAll('.dictation-bubble').forEach(b => b.remove());
+      showWelcomeIfEmpty();
     }
   });
 
@@ -305,87 +300,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Toggle Mic Button
-  btnToggleMic?.addEventListener('click', async () => {
-    micActive = !micActive;
-    if (micActive) {
-      btnToggleMic.classList.add('active');
-      btnToggleMic.title = 'Microphone Active';
-    } else {
-      btnToggleMic.classList.remove('active');
-      btnToggleMic.title = 'Microphone Muted';
-    }
-    if (window.robosVoiceHud && typeof window.robosVoiceHud.toggleMic === 'function') {
-      await window.robosVoiceHud.toggleMic(micActive);
-    }
-  });
-
-  // Handle incoming IPC events from main process
+  // IPC Event Listeners from Main Process
   if (window.robosVoiceHud) {
-    // 1. Wake Greeting from voice assistant
-    window.robosVoiceHud.onWakeGreeting((evt = {}) => {
-      const greeting = evt.greeting || "I hear you, what's up?";
-      appendAssistantBubble(greeting);
-      setAssistantState('LISTENING');
-      if (chatInput) chatInput.focus();
+    // 1. Live interim speech stream (words being spoken in real-time)
+    window.robosVoiceHud.onInterimText((evt = {}) => {
+      const text = (evt.text || '').trim();
+      if (!text) return;
+      updateInterimBubble(text);
+
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (currentInterimBubble) {
+          const interimText = currentInterimBubble.querySelector('.bubble-text')?.textContent || '';
+          if (interimText.trim()) finalizeBubble(interimText);
+        }
+      }, 700);
     });
 
-    // 2. Continuous Speech Stream & Fast Silence Detection
+    // 2. Finalized speech stream
     window.robosVoiceHud.onStreamText((evt = {}) => {
       const text = (evt.text || '').trim();
       if (!text) return;
 
       if (evt.isFinal) {
         if (silenceTimer) clearTimeout(silenceTimer);
-        appendUserBubble(text, false);
+        finalizeBubble(text);
       } else {
-        appendUserBubble(text, true);
-
-        // Responsive silence timer: if user stops speaking for 450ms, finalize user bubble
-        if (silenceTimer) clearTimeout(silenceTimer);
-        silenceTimer = setTimeout(() => {
-          finalizeInterimBubble();
-        }, 450);
-      }
-
-      if (evt.state) {
-        setAssistantState(evt.state);
+        updateInterimBubble(text);
       }
     });
 
-    // 3. Interim Speech Updates
-    window.robosVoiceHud.onInterimText((evt = {}) => {
-      const text = (evt.text || '').trim();
-      if (!text) return;
-      appendUserBubble(text, true);
-
-      if (silenceTimer) clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(() => {
-        finalizeInterimBubble();
-      }, 450);
-    });
-
-    // 4. Assistant State Change
-    window.robosVoiceHud.onAssistantState((evt = {}) => {
-      setAssistantState(evt.state);
-    });
-
-    // 5. Assistant Turn Completed
-    window.robosVoiceHud.onAssistantTurn((turn = {}) => {
-      if (turn.query) {
-        appendUserBubble(turn.query, false);
-      }
-      if (turn.response) {
-        appendAssistantBubble(turn.response, turn.actionDone);
-      }
-      setAssistantState('IDLE');
-    });
-
-    // 6. Action Done Event
-    window.robosVoiceHud.onActionDone((evt = {}) => {
-      if (evt.response) {
-        appendAssistantBubble(evt.response, evt.actionDone);
-      }
-    });
+    // 3. Recording state changes (e.g. from hotkey Super+V)
+    if (typeof window.robosVoiceHud.onRecordingState === 'function') {
+      window.robosVoiceHud.onRecordingState((evt = {}) => {
+        updateRecordingUI(Boolean(evt && evt.active));
+      });
+    }
   }
 });

@@ -389,14 +389,16 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(spokenText);
     });
 
-    it('verifies HUD HTML was simplified to chatbot chat-feed without old buttons', () => {
+    it('verifies HUD HTML was simplified to dictation feed with record on/off toggle and copy all', () => {
       const hudHtml = fs.readFileSync(path.join(__dirname, '../../../voice-prompt/renderer/hud.html'), 'utf8');
-      assert.ok(hudHtml.includes('id="chat-feed"'));
-      assert.ok(hudHtml.includes('id="chat-input"'));
-      assert.ok(hudHtml.includes('id="chat-form"'));
+      assert.ok(hudHtml.includes('id="chat-feed"'), 'Should have dictation chat-feed');
+      assert.ok(hudHtml.includes('id="btn-toggle-record"'), 'Should have record toggle button');
+      assert.ok(hudHtml.includes('id="btn-copy-all"'), 'Should have copy-all button');
       assert.ok(!hudHtml.includes('btn-hello-robos'), 'Old btn-hello-robos should be removed');
       assert.ok(!hudHtml.includes('btn-hud-send'), 'Old btn-hud-send 10/4 button should be removed');
       assert.ok(!hudHtml.includes('hud-waveform'), 'Old waveform bars should be removed');
+      assert.ok(!hudHtml.includes('id="chat-form"'), 'Old chat-form should be removed');
+      assert.ok(!hudHtml.includes('id="chat-input"'), 'Old chat-input should be removed');
     });
 
     it('routes wake-word with query directly to desktop assistant without manual trigger', async () => {

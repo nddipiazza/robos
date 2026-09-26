@@ -48,6 +48,15 @@ let hudWindow = null;
 let apiServer = null;
 let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
+function broadcastToWindows(channel, data) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try { mainWindow.webContents.send(channel, data); } catch {}
+  }
+  if (hudWindow && hudWindow !== mainWindow && !hudWindow.isDestroyed()) {
+    try { hudWindow.webContents.send(channel, data); } catch {}
+  }
+}
+
 const sttEngine = new STTEngine(promptStore.loadPrefs());
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
 const wakeDetector = new WakeWordDetector({ enabled: true, cooldownMs: 4000 });
@@ -75,30 +84,23 @@ ttsEngine.on('speaking-stopped', () => {
 });
 
 sttEngine.on('interim-text', (data) => {
-  const isEchoing = ttsEngine.isSpeaking || Date.now() < echoCooldownUntil;
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('vp-event-interim-text', data);
-  }
-  if (hudWindow && !hudWindow.isDestroyed() && !isEchoing) {
-    hudWindow.webContents.send('vp-hud-interim-text', data);
-  }
+  broadcastToWindows('vp-hud-interim-text', data);
+  broadcastToWindows('vp-event-interim-text', data);
 });
 
 sttEngine.on('stream-text', (data) => {
-  const isEchoing = ttsEngine.isSpeaking || Date.now() < echoCooldownUntil;
-  if (!isEchoing) {
-    // Only detect wake word if the assistant is completely IDLE
-    if (desktopAssistant.getState() === 'IDLE') {
-      wakeDetector.processText(data.text, data);
-    }
-    desktopAssistant.handleStreamText(data);
-  }
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('vp-event-stream-text', data);
-  }
-  if (hudWindow && !hudWindow.isDestroyed()) {
-    hudWindow.webContents.send('vp-hud-stream-text', data);
-  }
+  broadcastToWindows('vp-hud-stream-text', data);
+  broadcastToWindows('vp-event-stream-text', data);
+});
+
+sttEngine.on('activated', (data) => {
+  broadcastToWindows('vp-hud-recording-state', { active: true, ...data });
+  broadcastToWindows('vp-event-activated', data);
+});
+
+sttEngine.on('deactivated', (data) => {
+  broadcastToWindows('vp-hud-recording-state', { active: false, ...data });
+  broadcastToWindows('vp-event-deactivated', data);
 });
 
 desktopAssistant.on('state-change', (data) => {
@@ -652,27 +654,50 @@ function startApiServer(overridePort) {
 }
 
 function createWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    return mainWindow;
+  }
+
+  const prefs = promptStore.loadPrefs();
+  const bounds = getHudBounds(prefs.hudPosition || 'bottom-right', 380, 520);
+
   mainWindow = new BrowserWindow({
     title: 'RobOS Voice',
     icon: getAppIcon(),
-    width: 1060,
-    height: 720,
-    minWidth: 780,
-    minHeight: 520,
-    backgroundColor: '#0d1117',
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
+    minWidth: 320,
+    minHeight: 380,
+    backgroundColor: '#00000000',
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: true,
+    hasShadow: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'hud-preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
     autoHideMenuBar: true,
   });
 
-  mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  hudWindow = mainWindow;
+
+  mainWindow.loadFile(path.join(__dirname, 'renderer', 'hud.html'));
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    hudWindow = null;
   });
 
   // Connect dom-snapshot debug IPC if available
@@ -684,40 +709,25 @@ function createWindow() {
 
   // Register push-to-talk hotkey Super+V
   try {
-    const prefs = promptStore.loadPrefs();
     const key = prefs.pushToTalkKey || 'Super+V';
     globalShortcut.register(key, async () => {
       if (sttEngine.isActive()) {
-        const res = await sttEngine.deactivate();
-        let promptEntry = null;
-        if (res.text && res.text.trim()) {
-          promptEntry = await handleDictation(res.text, {
-            durationMs: res.durationMs,
-            confidence: 0.95,
-            device: sttEngine.configuredDevice,
-          });
-        }
-        const fullResult = { ...res, prompt: promptEntry };
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('vp-event-deactivated', fullResult);
-        }
+        await sttEngine.deactivate();
       } else {
-        const res = await sttEngine.activate();
-        showHudWindow();
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('vp-event-activated', res);
-        }
+        await sttEngine.activate({ backgroundMode: true });
       }
     });
   } catch (err) {
     console.warn('[voice-prompt] hotkey registration notice:', err.message);
   }
+
+  return mainWindow;
 }
 
 /**
  * Calculate on-screen coordinates for floating HUD window
  */
-function getHudBounds(pos = 'bottom-right', width = 380, height = 480, customWorkArea = null) {
+function getHudBounds(pos = 'bottom-right', width = 380, height = 520, customWorkArea = null) {
   let workArea = customWorkArea;
   if (!workArea) {
     const screen = electronPkg ? electronPkg.screen : null;
@@ -759,67 +769,26 @@ function getHudBounds(pos = 'bottom-right', width = 380, height = 480, customWor
 }
 
 /**
- * Create always-on-top HUD BrowserWindow
+ * Create always-on-top HUD BrowserWindow (delegates to createWindow)
  */
 function createHudWindow() {
-  if (!isElectronRuntime) return null;
-  if (hudWindow && !hudWindow.isDestroyed()) return hudWindow;
-
-  try {
-    const prefs = promptStore.loadPrefs();
-    const bounds = getHudBounds(prefs.hudPosition || 'bottom-right');
-
-    hudWindow = new BrowserWindow({
-      title: 'RobOS Voice',
-      icon: getAppIcon(),
-      width: bounds.width,
-      height: bounds.height,
-      x: bounds.x,
-      y: bounds.y,
-      frame: false,
-      transparent: true,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      resizable: true,
-      minWidth: 320,
-      minHeight: 360,
-      show: false,
-      hasShadow: true,
-      backgroundColor: '#00000000',
-      webPreferences: {
-        preload: path.join(__dirname, 'hud-preload.js'),
-        contextIsolation: true,
-        nodeIntegration: false,
-      },
-    });
-
-    hudWindow.setAlwaysOnTop(true, 'screen-saver');
-    if (typeof hudWindow.setVisibleOnAllWorkspaces === 'function') {
-      hudWindow.setVisibleOnAllWorkspaces(true);
-    }
-
-    hudWindow.loadFile(path.join(__dirname, 'renderer', 'hud.html'));
-
-    hudWindow.on('closed', () => {
-      hudWindow = null;
-    });
-
-    return hudWindow;
-  } catch (err) {
-    console.warn('[voice-prompt] createHudWindow notice:', err.message);
-    return null;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    hudWindow = mainWindow;
+    return mainWindow;
   }
+  return createWindow();
 }
 
 function showHudWindow() {
   if (!isElectronRuntime) return;
   try {
-    if (!hudWindow || hudWindow.isDestroyed()) {
-      createHudWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      createWindow();
     }
-    if (hudWindow && !hudWindow.isDestroyed()) {
-      hudWindow.showInactive();
-      hudWindow.setAlwaysOnTop(true, 'screen-saver');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+      mainWindow.focus();
     }
   } catch (err) {
     console.warn('[voice-prompt] showHudWindow notice:', err.message);
@@ -827,8 +796,8 @@ function showHudWindow() {
 }
 
 function hideHudWindow() {
-  if (hudWindow && !hudWindow.isDestroyed()) {
-    hudWindow.hide();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.hide();
   }
 }
 
@@ -837,9 +806,10 @@ function repositionHudWindow(position) {
   prefs.hudPosition = position;
   promptStore.savePrefs(prefs);
 
-  if (hudWindow && !hudWindow.isDestroyed()) {
-    const bounds = getHudBounds(position);
-    hudWindow.setBounds(bounds);
+  const targetWin = (mainWindow && !mainWindow.isDestroyed()) ? mainWindow : hudWindow;
+  if (targetWin && !targetWin.isDestroyed()) {
+    const bounds = getHudBounds(position, 380, 520);
+    targetWin.setBounds(bounds);
   }
   return { ok: true, position };
 }
@@ -1025,30 +995,26 @@ ipcMain.handle('vp-hud-set-position', (_e, pos) => {
 });
 
 ipcMain.handle('vp-hud-toggle-mic', async (_e, enable) => {
-  if (enable === false) {
+  if (enable === false || (enable === undefined && sttEngine.isActive())) {
     return sttEngine.deactivate();
   } else {
-    return sttEngine.activate({ backgroundMode: false });
+    return sttEngine.activate({ backgroundMode: true });
   }
 });
 
 // App lifecycle
 app.whenReady().then(() => {
   startApiServer();
-  const isHudOnly = process.argv.includes('--hud') || process.argv.includes('--hud-only');
-  createHudWindow();
-  if (isHudOnly) {
-    showHudWindow();
-  } else {
-    createWindow();
-  }
+  createWindow();
 });
 
 app.on('second-instance', () => {
-  if (mainWindow) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
+  } else {
+    createWindow();
   }
 });
 
