@@ -202,6 +202,122 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function renderOverviewContent(raw) {
+  if (!raw) return '';
+  let content = String(raw).trim();
+  if (!content) return '';
+
+  const tokens = [];
+  function saveToken(html) {
+    const placeholder = `<!--ROBOS_TOKEN_${tokens.length}-->`;
+    tokens.push({ placeholder, html });
+    return placeholder;
+  }
+
+  // 1. Preserve pre-existing <pre><code>...</code></pre> blocks
+  content = content.replace(/<pre[\s\S]*?<\/pre>/gi, (match) => saveToken(match));
+
+  // 2. Fenced code blocks ```lang ... ```
+  content = content.replace(/```([a-zA-Z0-9_\-]*)([\s\S]*?)```/g, (_match, lang, code) => {
+    const esc = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    const cls = lang ? ` class="language-${lang}"` : '';
+    return saveToken(`<pre><code${cls}>${esc}</code></pre>`);
+  });
+
+  // 3. Preserve HTML figures, images, tables, details, dl, div, video, iframe blocks
+  content = content.replace(/<figure[\s\S]*?<\/figure>/gi, (match) => saveToken(match));
+  content = content.replace(/<table[\s\S]*?<\/table>/gi, (match) => saveToken(match));
+  content = content.replace(/<dl[\s\S]*?<\/dl>/gi, (match) => saveToken(match));
+  content = content.replace(/<details[\s\S]*?<\/details>/gi, (match) => saveToken(match));
+  content = content.replace(/<div[\s\S]*?<\/div>/gi, (match) => saveToken(match));
+  content = content.replace(/<(?:video|iframe|audio)[\s\S]*?<\/(?:video|iframe|audio)>/gi, (match) => saveToken(match));
+
+  // 4. Markdown tables (| col | col |)
+  content = content.replace(/((?:\|[^\n]+\|\r?\n)+)/g, (match) => {
+    const lines = match.trim().split('\n').filter(l => l.trim().startsWith('|'));
+    if (lines.length < 2) return match;
+    let html = '<table>';
+    lines.forEach((line, idx) => {
+      if (line.includes('---')) return;
+      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      if (idx === 0) {
+        html += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+      } else {
+        html += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    return saveToken(html);
+  });
+
+  // 5. Markdown headers (# h1, ## h2, ### h3, #### h4)
+  content = content.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  content = content.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  content = content.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  content = content.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // 6. Horizontal rules
+  content = content.replace(/^---$/gm, '<hr>');
+
+  // 7. Blockquotes
+  content = content.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 8. Markdown unordered lists (- item or * item)
+  content = content.replace(/(?:^|\n)((?:[ \t]*[-*] .+(?:\n|$))+)/g, (match) => {
+    const items = match.trim().split('\n').map(l => {
+      const clean = l.trim().replace(/^[-*]\s+/, '');
+      return `<li>${clean}</li>`;
+    }).join('');
+    return saveToken(`<ul>${items}</ul>`);
+  });
+
+  // 9. Markdown ordered lists (1. item)
+  content = content.replace(/(?:^|\n)((?:[ \t]*\d+\. .+(?:\n|$))+)/g, (match) => {
+    const items = match.trim().split('\n').map(l => {
+      const clean = l.trim().replace(/^\d+\.\s+/, '');
+      return `<li>${clean}</li>`;
+    }).join('');
+    return saveToken(`<ol>${items}</ol>`);
+  });
+
+  // 10. Inline bold / italic / code / links
+  content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  content = content.replace(/(^|[^\*])\*([^*]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+  content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+  content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // 11. Wrap loose paragraphs
+  const chunks = content.split(/\n\s*\n/).map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<!--ROBOS_TOKEN_') ||
+        trimmed.startsWith('<h') ||
+        trimmed.startsWith('<table') ||
+        trimmed.startsWith('<pre') ||
+        trimmed.startsWith('<div') ||
+        trimmed.startsWith('<hr') ||
+        trimmed.startsWith('<blockquote') ||
+        trimmed.startsWith('<ul') ||
+        trimmed.startsWith('<ol') ||
+        trimmed.startsWith('<p') ||
+        trimmed.startsWith('<dl') ||
+        trimmed.startsWith('<figure') ||
+        trimmed.startsWith('<details')) {
+      return trimmed;
+    }
+    return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  let result = chunks.join('\n\n');
+
+  // 12. Restore tokens
+  for (const { placeholder, html } of tokens) {
+    result = result.replace(placeholder, html);
+  }
+
+  return result;
+}
+
 function getGitInfo() {
   const repoRoot = path.resolve(__dirname, '..', '..');
   let remoteUrl = 'https://github.com/nddipiazza/robos';
@@ -405,9 +521,174 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .overview-body {
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 15px;
+  line-height: 1.75;
   color: var(--text);
+}
+.overview-body p {
+  margin: 12px 0 16px;
+  line-height: 1.75;
+}
+.overview-body h1, .overview-body h2, .overview-body h3, .overview-body h4 {
+  color: var(--text-bright);
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+.overview-body h3 {
+  font-size: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  color: var(--accent);
+}
+.overview-body strong, .overview-body b {
+  color: var(--text-bright);
+  font-weight: 700;
+}
+.overview-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.overview-body a:hover {
+  text-decoration: underline;
+}
+.overview-body ul, .overview-body ol {
+  padding-left: 26px;
+  margin: 14px 0 18px;
+}
+.overview-body li {
+  margin: 8px 0;
+  line-height: 1.65;
+}
+.overview-body dl {
+  margin: 20px 0;
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 22px;
+}
+.overview-body dt {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+  margin-top: 14px;
+}
+.overview-body dt:first-child {
+  margin-top: 0;
+}
+.overview-body dd {
+  margin: 6px 0 14px 0;
+  color: var(--text);
+  line-height: 1.65;
+  padding-left: 14px;
+  border-left: 2px solid rgba(0, 188, 212, 0.3);
+}
+.overview-body pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 16px 20px;
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  line-height: 1.65;
+  margin: 18px 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+.overview-body code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+  background: rgba(110, 118, 129, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #38bdf8;
+}
+.overview-body pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--text-bright);
+}
+.overview-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.overview-body th, .overview-body td {
+  text-align: left;
+  vertical-align: top;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+}
+.overview-body th {
+  color: var(--text-bright);
+  background: #161b22;
+  font-weight: 600;
+  font-size: 13px;
+}
+.overview-body td {
+  font-size: 13px;
+}
+.overview-body tr:nth-child(even) {
+  background: rgba(22, 27, 34, 0.4);
+}
+.overview-body blockquote {
+  border-left: 4px solid var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+  padding: 12px 18px;
+  border-radius: 0 6px 6px 0;
+  margin: 18px 0;
+  color: var(--text-bright);
+}
+.overview-body .flow {
+  padding: 16px 20px;
+  border-left: 3px solid #67d9ec;
+  background: #0d1117;
+  border-radius: 0 8px 8px 0;
+  margin: 20px 0;
+  line-height: 1.8;
+  font-weight: 500;
+  color: #e6edf3;
+}
+.overview-body .flow-diagram {
+  margin: 28px 0;
+  text-align: center;
+}
+.overview-body .flow-diagram img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  display: block;
+  margin: 0 auto;
+}
+.overview-body .flow-diagram figcaption {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.overview-body details {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 18px 0;
+}
+.overview-body summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  outline: none;
+  margin-bottom: 8px;
+}
+.overview-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
 }
 .lab-steps-list {
   display: flex;
@@ -522,7 +803,7 @@ function buildStandaloneSlideHtml({ slide, course, application, slideIndex, tota
     <main class="slide-content">
       <section class="section-card">
         <h2 class="section-heading">📖 Slide Overview</h2>
-        <div class="overview-body">${escapeHtml(overview).replace(/\\n/g, '<br>')}</div>
+        <div class="overview-body">${renderOverviewContent(overview)}</div>
       </section>
 
       ${labSteps.length ? `
@@ -966,5 +1247,6 @@ module.exports = {
   getGitInfo,
   createZipBuffer,
   buildStandaloneSlideHtml,
+  renderOverviewContent,
   SLIDE_OFFLINE_CSS,
 };
