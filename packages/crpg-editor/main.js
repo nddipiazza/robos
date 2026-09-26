@@ -217,7 +217,11 @@ function ensureSeedCharacters(charactersDir) {
           schema: 'https://schema.org/',
         },
         '@id': `urn:robos:crpg:character:${slug}`,
-        '@type': ['robos:CRPGCharacter', isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero', 'schema:Person'],
+        '@type': [
+          'robos:CRPGCharacter',
+          ...(isNpc ? ['robos:CRPGNPC'] : ['robos:CRPGPlayerCharacter', 'robos:CRPGHero']),
+          'schema:Person',
+        ],
         'dcterms:title': char.name,
         'robos:characterType': char.characterType,
         'robos:name': char.name,
@@ -445,7 +449,7 @@ function setupIpcHandlers() {
         '@id': data['@id'] || `urn:robos:crpg:character:${safeSlug}`,
         '@type': [
           'robos:CRPGCharacter',
-          isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero',
+          ...(isNpc ? ['robos:CRPGNPC'] : ['robos:CRPGPlayerCharacter', 'robos:CRPGHero']),
           'schema:Person',
         ],
         'dcterms:title': data.name || data['dcterms:title'] || safeSlug,
