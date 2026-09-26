@@ -472,7 +472,7 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: "The character studio opens in a clean empty state with no character selected and prompt cards to create a hero or NPC.",
+    narration: "The character studio opens in a clean empty state with no character selected and prompt cards to create a player character or NPC.",
     target: "#character-empty-state",
     action: "hover",
     callout: "Verify Clean Character Empty State",
@@ -500,29 +500,29 @@ const SCRIPT = [
     minHold: 3500,
   },
   {
-    narration: "We click '➕ Create Hero' to open a fresh Hero character sheet.",
+    narration: "We click '➕ Create Player Character' to open a fresh Player Character sheet.",
     target: "#btn-empty-new-hero",
     action: "click",
-    callout: "Initialize New Hero Blueprint",
+    callout: "Initialize New Player Character Blueprint",
     js: `(() => {
       document.getElementById('btn-empty-new-hero')?.click();
       const emptyState = document.getElementById('character-empty-state');
       if (!emptyState.classList.contains('hidden')) {
-        throw new Error('Assertion failed: Empty state was not dismissed on New Hero!');
+        throw new Error('Assertion failed: Empty state was not dismissed on New Player Character!');
       }
       const sheetContainer = document.getElementById('character-sheet-form-container');
       if (sheetContainer.classList.contains('hidden')) {
         throw new Error('Assertion failed: Sheet form container is still hidden!');
       }
-      console.log('✔ Initialized new hero character blueprint.');
+      console.log('✔ Initialized new player character blueprint.');
     })()`,
     minHold: 3500,
   },
   {
-    narration: "We configure the Hero of Alefgard: Level 1 Human Fighter, Descendant of Erdrick, STR 16, DEX 14, CON 15, HP 16, and AC 14.",
+    narration: "We configure the Hero of Alefgard: Level 1 Human Fighter Player Character, Descendant of Erdrick, STR 16, DEX 14, CON 15, HP 16, and AC 14.",
     target: "#sheet-hero-title",
     action: "hover",
-    callout: "Configure Hero: Hero of Alefgard (Lvl 1 Fighter)",
+    callout: "Configure Player Character: Hero of Alefgard (Lvl 1 Fighter)",
     js: `(() => {
       document.getElementById('hero-name').value = 'Hero of Alefgard';
       document.getElementById('hero-slug').value = 'hero-of-alefgard';
@@ -552,7 +552,7 @@ const SCRIPT = [
       document.getElementById('hero-backstory').value = 'Descendant of the legendary hero Erdrick, summoned to Tantegel Castle to retrieve the Ball of Light and vanquish the Dragonlord.';
 
       const titleEl = document.getElementById('sheet-hero-title');
-      if (titleEl) titleEl.textContent = 'Hero of Alefgard (Hero)';
+      if (titleEl) titleEl.textContent = 'Hero of Alefgard (Player Character)';
       console.log('✔ Hero of Alefgard form populated.');
     })()`,
     minHold: 4500,
@@ -561,7 +561,7 @@ const SCRIPT = [
     narration: "We click 'Save Character' to persist Hero of Alefgard JSON-LD to the Knowledge Graph.",
     target: "#btn-save-character",
     action: "click",
-    callout: "Save Hero: Hero of Alefgard JSON-LD",
+    callout: "Save Player Character: Hero of Alefgard JSON-LD",
     js: `(async () => {
       await saveCurrentCharacter();
       await new Promise(r => setTimeout(r, 800));
@@ -695,7 +695,7 @@ const SCRIPT = [
     narration: "Finally, we select 'Hero of Alefgard' from the roster to reload his complete sheet and verify all stats are preserved.",
     target: "#heroes-list",
     action: "hover",
-    callout: "Select & Reload Hero of Alefgard",
+    callout: "Select & Reload Hero of Alefgard (Player Character)",
     js: `(async () => {
       const heroEl = document.querySelector('#heroes-list .hero-list-item[data-slug="hero-of-alefgard"]');
       if (!heroEl) throw new Error('Hero of Alefgard item not found in roster!');
@@ -711,7 +711,7 @@ const SCRIPT = [
       const str = document.getElementById('attr-str').value;
       const cls = document.getElementById('hero-class').value;
 
-      if (name !== 'Hero of Alefgard') throw new Error('Hero name mismatch: ' + name);
+      if (name !== 'Hero of Alefgard') throw new Error('Character name mismatch: ' + name);
       if (str !== '16') throw new Error('STR stat mismatch: ' + str);
       if (cls !== 'Fighter') throw new Error('Class mismatch: ' + cls);
       console.log('✔ Hero of Alefgard reloaded and fully verified in DOM: Lvl 1 Fighter, STR 16.');
@@ -818,34 +818,34 @@ async function main() {
   // ==========================================
   // SCREEN 2 ASSERTIONS: CHARACTERS
   // ==========================================
-  // Assertion 6: Hero of Alefgard JSON-LD exists
+  // Assertion 6: Hero of Alefgard Player Character JSON-LD exists
   if (!fs.existsSync(HERO_PATH)) {
-    throw new Error(`Assertion failed: Hero file does not exist at ${HERO_PATH}`);
+    throw new Error(`Assertion failed: Player Character file does not exist at ${HERO_PATH}`);
   }
-  console.log("✔ Assertion 6 Passed: Hero file exists at", HERO_PATH);
+  console.log("✔ Assertion 6 Passed: Player Character file exists at", HERO_PATH);
 
   // Assertion 7: Validate Hero of Alefgard JSON-LD
   const heroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
   if (heroData["@id"] !== "urn:robos:crpg:character:hero-of-alefgard") {
-    throw new Error(`Assertion failed: Unexpected hero @id: ${heroData["@id"]}`);
+    throw new Error(`Assertion failed: Unexpected character @id: ${heroData["@id"]}`);
   }
   const heroTypes = Array.isArray(heroData["@type"]) ? heroData["@type"] : [heroData["@type"]];
-  if (!heroTypes.includes("robos:CRPGHero")) {
-    throw new Error(`Assertion failed: Hero @type missing robos:CRPGHero: ${JSON.stringify(heroTypes)}`);
+  if (!heroTypes.includes("robos:CRPGPlayerCharacter") && !heroTypes.includes("robos:CRPGHero")) {
+    throw new Error(`Assertion failed: Character @type missing robos:CRPGPlayerCharacter: ${JSON.stringify(heroTypes)}`);
   }
   if (heroData.name !== "Hero of Alefgard" || heroData["schema:name"] !== "Hero of Alefgard") {
-    throw new Error(`Assertion failed: Hero name mismatch: ${heroData.name}`);
+    throw new Error(`Assertion failed: Character name mismatch: ${heroData.name}`);
   }
   if (heroData["robos:class"] !== "Fighter" || Number(heroData["robos:level"]) !== 1) {
-    throw new Error(`Assertion failed: Hero class/level mismatch: Lvl ${heroData["robos:level"]} ${heroData["robos:class"]}`);
+    throw new Error(`Assertion failed: Character class/level mismatch: Lvl ${heroData["robos:level"]} ${heroData["robos:class"]}`);
   }
   if (Number(heroData["robos:str"]) !== 16 || Number(heroData["robos:hpMax"]) !== 16) {
-    throw new Error(`Assertion failed: Hero stats mismatch: STR ${heroData["robos:str"]}, HP ${heroData["robos:hpMax"]}`);
+    throw new Error(`Assertion failed: Character stats mismatch: STR ${heroData["robos:str"]}, HP ${heroData["robos:hpMax"]}`);
   }
   if (!heroData["robos:backstory"] || !heroData["robos:backstory"].includes("Descendant of the legendary hero Erdrick")) {
-    throw new Error(`Assertion failed: Hero backstory missing Erdrick lore`);
+    throw new Error(`Assertion failed: Character backstory missing Erdrick lore`);
   }
-  console.log("✔ Assertion 7 Passed: Hero of Alefgard JSON-LD metadata and 5e stats verified");
+  console.log("✔ Assertion 7 Passed: Hero of Alefgard Player Character JSON-LD metadata and 5e stats verified");
 
   // Assertion 8: King Loric NPC JSON-LD exists
   if (!fs.existsSync(NPC_PATH)) {
@@ -903,13 +903,13 @@ async function main() {
     const frameCharSearchPath = path.join(BRAIN_DIR, "crpg_editor_char_search_filter.png");
 
     try {
-      execSync(`ffmpeg -y -ss 00:00:04 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:30 -i "${finalVideo}" -vframes 1 "${frameModalPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:38 -i "${finalVideo}" -vframes 1 "${frameMapPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:52 -i "${finalVideo}" -vframes 1 "${frameCharEmptyPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:01:05 -i "${finalVideo}" -vframes 1 "${frameHeroPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:01:19 -i "${finalVideo}" -vframes 1 "${frameKingPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:01:25 -i "${finalVideo}" -vframes 1 "${frameCharSearchPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:00:03 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:00:51 -i "${finalVideo}" -vframes 1 "${frameModalPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:01 -i "${finalVideo}" -vframes 1 "${frameMapPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:09 -i "${finalVideo}" -vframes 1 "${frameCharEmptyPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:18 -i "${finalVideo}" -vframes 1 "${frameHeroPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:33 -i "${finalVideo}" -vframes 1 "${frameKingPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:01:43 -i "${finalVideo}" -vframes 1 "${frameCharSearchPath}"`, { stdio: "ignore" });
       console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}`);
     } catch (err) {
       console.warn("Could not extract frames:", err.message);

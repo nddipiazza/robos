@@ -780,7 +780,7 @@ function renderCampaignCharactersChecklist() {
       <label class="camp-check-item">
         <input type="checkbox" class="camp-char-chk" data-slug="${c.slug}" data-is-npc="${isNpc}" ${isChecked ? 'checked' : ''}>
         <span>${c.portrait || (isNpc ? '👑' : '👤')} ${c.name || c.slug}</span>
-        <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Hero'}</span>
+        <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Player Character'}</span>
       </label>
     `;
   }).join('');
@@ -914,7 +914,7 @@ function scaffoldStandardParty() {
   loadHeroSheet(state.activeHeroId);
   renderInventoryViews();
   updateCampaignSummaryStats();
-  setStatus('Scaffolded standard 6-hero party.');
+  setStatus('Scaffolded standard 6-PC party.');
 }
 
 function renderQuestLog() {
@@ -1133,7 +1133,7 @@ function setupCharacterHandlers() {
   document.getElementById('hero-name')?.addEventListener('input', (e) => {
     const isNpc = document.getElementById('radio-type-npc')?.checked;
     const titleEl = document.getElementById('sheet-hero-title');
-    if (titleEl) titleEl.textContent = `${e.target.value || 'Character'} (${isNpc ? 'NPC' : 'Hero'})`;
+    if (titleEl) titleEl.textContent = `${e.target.value || 'Character'} (${isNpc ? 'NPC' : 'Player Character'})`;
   });
 }
 
@@ -1176,7 +1176,7 @@ function toggleCharacterTypeUI(isNpc) {
 
   const charName = document.getElementById('hero-name')?.value || 'Character';
   const titleEl = document.getElementById('sheet-hero-title');
-  if (titleEl) titleEl.textContent = `${charName} (${isNpc ? 'NPC' : 'Hero'})`;
+  if (titleEl) titleEl.textContent = `${charName} (${isNpc ? 'NPC' : 'Player Character'})`;
 }
 
 function updateAbilityModifier(attr, val) {
@@ -1249,7 +1249,7 @@ function renderCharactersList() {
   if (filtered.length === 0) {
     const msg = characterSearchQuery
       ? 'No characters found matching search filter.'
-      : 'No characters in workspace. Click + Hero or + NPC to create one.';
+      : 'No characters in workspace. Click + Player Character or + NPC to create one.';
     listEl.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:8px;">${msg}</div>`;
     return;
   }
@@ -1263,7 +1263,7 @@ function renderCharactersList() {
         <div class="hero-info-text">
           <div style="display:flex;align-items:center;gap:6px;">
             <span class="hero-name-label">${c.name || c.slug}</span>
-            <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Hero'}</span>
+            <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Player Character'}</span>
           </div>
           <span class="hero-class-label">${isNpc ? `Role: ${c.role || 'NPC'}` : `Lvl ${c.level || 1} ${c.race || ''} ${c.class || ''}`}</span>
         </div>
@@ -1318,7 +1318,7 @@ async function loadCharacterSheet(slug) {
       const name = data['schema:name'] || data.name || slug;
       const portrait = data['robos:portrait'] || data.portrait || (isNpc ? '👑' : '👤');
 
-      document.getElementById('sheet-hero-title').textContent = `${name} (${isNpc ? 'NPC' : 'Hero'})`;
+      document.getElementById('sheet-hero-title').textContent = `${name} (${isNpc ? 'NPC' : 'Player Character'})`;
       document.getElementById('hero-avatar-display').textContent = portrait;
       document.getElementById('hero-name').value = name;
       document.getElementById('hero-slug').value = slug;
@@ -1389,7 +1389,9 @@ async function saveCurrentCharacter() {
   const alignment = document.getElementById('hero-alignment').value;
   const backstory = document.getElementById('hero-backstory').value.trim();
 
-  const types = ['robos:CRPGCharacter', isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero', 'schema:Person'];
+  const types = isNpc
+    ? ['robos:CRPGCharacter', 'robos:CRPGNPC', 'schema:Person']
+    : ['robos:CRPGCharacter', 'robos:CRPGPlayerCharacter', 'robos:CRPGHero', 'schema:Person'];
 
   const charData = {
     '@context': {
@@ -1520,9 +1522,9 @@ function addNewHero() {
   document.getElementById('radio-type-npc').checked = false;
   toggleCharacterTypeUI(false);
 
-  document.getElementById('sheet-hero-title').textContent = 'New Hero Character';
+  document.getElementById('sheet-hero-title').textContent = 'New Player Character';
   document.getElementById('hero-avatar-display').textContent = '⚔️';
-  document.getElementById('hero-name').value = 'New Hero';
+  document.getElementById('hero-name').value = 'New Player Character';
   document.getElementById('hero-slug').value = safeSlug;
   document.getElementById('hero-portrait').value = '⚔️';
   document.getElementById('hero-alignment').value = 'Neutral Good';
@@ -1548,7 +1550,7 @@ function addNewHero() {
   document.getElementById('hero-spells').value = '';
   document.getElementById('hero-backstory').value = 'A brave adventurer setting forth on a quest.';
 
-  setStatus(`Ready to configure new hero: ${safeSlug}`);
+  setStatus(`Ready to configure new player character: ${safeSlug}`);
 }
 
 function addNewNpc() {
@@ -1596,7 +1598,7 @@ function cloneActiveCharacter() {
 
   document.getElementById('hero-name').value = newName;
   document.getElementById('hero-slug').value = newSlug;
-  document.getElementById('sheet-hero-title').textContent = `${newName} (${isNpc ? 'NPC' : 'Hero'})`;
+  document.getElementById('sheet-hero-title').textContent = `${newName} (${isNpc ? 'NPC' : 'Player Character'})`;
 
   saveCurrentCharacter();
 }
@@ -1631,7 +1633,7 @@ function applyArchetype(arch, archKey) {
   document.getElementById('radio-type-npc').checked = isNpc;
   toggleCharacterTypeUI(isNpc);
 
-  document.getElementById('sheet-hero-title').textContent = `${arch.name} (${isNpc ? 'NPC' : 'Hero'})`;
+  document.getElementById('sheet-hero-title').textContent = `${arch.name} (${isNpc ? 'NPC' : 'Player Character'})`;
   document.getElementById('hero-avatar-display').textContent = arch.portrait || (isNpc ? '👑' : '👤');
   document.getElementById('hero-name').value = arch.name;
   document.getElementById('hero-slug').value = safeSlug;
@@ -1760,7 +1762,7 @@ function renderInventoryViews() {
   const equipHeroSelect = document.getElementById('equip-hero-select');
   if (equipHeroSelect) {
     if (heroes.length === 0) {
-      equipHeroSelect.innerHTML = '<option value="">(No heroes available)</option>';
+      equipHeroSelect.innerHTML = '<option value="">(No player characters available)</option>';
       state.activeEquipHeroId = null;
       loadEquipSlotsForHero(null);
     } else {
@@ -1787,7 +1789,7 @@ function updateLeaderDropdown() {
 
   const activeHeroes = heroes.filter(h => activeParty.has(h.id || h['@id']));
   if (activeHeroes.length === 0) {
-    leaderSelect.innerHTML = '<option value="">(No active heroes)</option>';
+    leaderSelect.innerHTML = '<option value="">(No active party members)</option>';
     return;
   }
 
