@@ -1357,7 +1357,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
                 <span>⏱️ ${m.durationMinutes || 15} mins</span>
                 <span>🧪 ${(m.labSteps || []).length} labs</span>
                 <span>📝 ${(m.quiz || []).length} quiz</span>
-                <span class="copy-tab-path-link" onclick="copyTabPath(event, ${idx})" role="button" tabindex="0" title="Copy file system path for AI agents">📋 Copy as Path</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, ${idx})" role="button" tabindex="0" title="Copy as Path" aria-label="Copy as Path">📋</span>
               </div>
             </button>
           </li>
